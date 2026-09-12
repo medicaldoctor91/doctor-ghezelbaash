@@ -196,14 +196,24 @@ ex:PersonalFacebookProfileShape a sh:NodeShape ;
 ex:ClinicFacebookProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-doctor-ghezelbaash ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
-  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:ClinicInstagramProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-instagram-doctor-ghezelbaash ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
-  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+# Only these shared professional pages describe both existing entities. The
+# canonical homepage and personal Facebook retain their single-person contracts.
+# The evidence representation of Instagram must describe the same two subjects.
+ex:ProfessionalSocialSubjectShape a sh:NodeShape ;
+  sh:targetNode ex:profile-facebook-doctor-ghezelbaash,
+    ex:profile-instagram-doctor-ghezelbaash, ex:evidence-instagram ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:minCount 2 ; sh:maxCount 2 ;
+    sh:in ( ex:saeed-ghezelbash ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] .
 
 ex:RetiredIdentifierExclusionShape a sh:NodeShape ;
   sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;

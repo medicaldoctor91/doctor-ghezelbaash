@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { assertActiveAuthoredIdentifiers } from "./lib/active-identifier-contract.mjs";
 import { assertMojavezEvidence, readMojavezObservation } from "./lib/mojavez-evidence.mjs";
+import { assertSocialIdentity } from "./lib/social-identity-contract.mjs";
 
 const BASE = "https://www.ghezelbaash.ir/";
 const graph = JSON.parse(fs.readFileSync("src/data/semantic/knowledge-graph.jsonld", "utf8"));
@@ -17,7 +18,6 @@ if (new Set(ids).size !== ids.length) throw new Error("Duplicate canonical @id")
 const byId = new Map(nodes.map((n) => [n["@id"], n]));
 const arr = (v) => Array.isArray(v) ? v : v == null ? [] : [v];
 const id = (v) => typeof v === "string" ? v : v?.["@id"];
-const refs = (v) => new Set(arr(v).map(id).filter(Boolean));
 const get = (suffix) => { const value = byId.get(`${BASE}${suffix}`); if (!value) throw new Error(`Missing node: ${suffix}`); return value; };
 const PERSON = `${BASE}#saeed-ghezelbash`;
 const CLINIC = `${BASE}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
@@ -30,12 +30,7 @@ if (irimc["@type"] !== "Organization" || irimc.sameAs !== "https://www.wikidata.
 if (arr(person.sameAs).map(id).includes(irimc.sameAs)) throw new Error("IRIMC QID leaked into Person.sameAs");
 for (const alias of ["Ghezelbash MS", "Doctor Ghezelbaash"]) if (!arr(person.alternateName).includes(alias)) throw new Error(`Missing alias: ${alias}`);
 if (head.nodes?.[PERSON]?.valueAllow && Object.hasOwn(head.nodes[PERSON].valueAllow, "alternateName")) throw new Error("Duplicate alternateName truth remains in head profile");
-const social = [
-  ["#profile-facebook-ghezelbaash", PERSON, PERSON],
-  ["#profile-facebook-doctor-ghezelbaash", PERSON, CLINIC],
-  ["#profile-instagram-doctor-ghezelbaash", PERSON, CLINIC],
-];
-for (const [suffix, owner, main] of social) { const n = get(suffix); if (id(n.owner) !== owner || id(n.mainEntity) !== main) throw new Error(`Social ownership/mainEntity drift: ${suffix}`); if (!refs(person.owns).has(n["@id"])) throw new Error(`Person.owns missing: ${suffix}`); }
+assertSocialIdentity({ graph, release });
 if (byId.has(`${BASE}#profile-instagram-ghezelbaash`)) throw new Error("Unverified personal Instagram asserted");
 const drdrId = get("#identifier-person-drdr");
 if (drdrId.value !== "92014") throw new Error("DrDr structured identifier drift");

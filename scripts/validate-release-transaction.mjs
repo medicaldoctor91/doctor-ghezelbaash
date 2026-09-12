@@ -146,6 +146,8 @@ assert.ok(
 );
 for (const pathFilter of [
   ".nvmrc",
+  "package.json",
+  "package-lock.json",
   "scripts/lib/**",
   "src/content-source/**",
   "src/data/**",
@@ -155,6 +157,16 @@ for (const pathFilter of [
     githubPagesBridge.includes(`- ${pathFilter}`),
     `GitHub Pages bridge trigger misses ${pathFilter}`,
   );
+const bridgeInstallPosition = githubPagesBridge.indexOf(
+  "run: npm ci --ignore-scripts --no-audit --no-fund",
+);
+const bridgeBuildPosition = githubPagesBridge.indexOf(
+  "run: node scripts/github-pages-bridge.mjs build",
+);
+assert.ok(
+  bridgeInstallPosition >= 0 && bridgeBuildPosition > bridgeInstallPosition,
+  "GitHub Pages bridge must install locked compiler dependencies before building",
+);
 assert.match(
   workflow,
   /FROZEN_SOURCE_SHA="\$\(git rev-list -n 1 "v\$CURRENT_VERSION"\)"/,

@@ -18,6 +18,7 @@ Static-only Astro source for the canonical physician entity home at `https://www
 - `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
 - `src/data/evidence-registry.json`: canonical evidence source for the generated release snapshot.
 - `src/data/render-calibration.json`: measured chunk geometry used to derive responsive calibration CSS.
+- `src/data/visible-text-contract.json`: approved source, emitted HTML and actual Chromium text/name fingerprints; validation never refreshes this baseline.
 - `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.
 
 The physician uses one canonical ID with `Person` and `IndividualPhysician` types. The clinic, `ProfilePage`, 18 `WebPageElement` sections, medical procedures, answers, images, videos, credentials and external identifiers all reference that graph. DOM Microdata and both inline JSON-LD projections are derived from the same graph and projection profiles.
@@ -25,6 +26,38 @@ The physician uses one canonical ID with `Person` and `IndividualPhysician` type
 Mojavez record `19949827` is scoped to the physician's medical practice license, holder name and practice jurisdiction. The source observation and field-to-claim bindings are recorded in `.release/evidence/mojavez-19949827.json`; the historical evidence ID remains stable. This record does not explicitly establish ownership of the canonical Clinic. `npm run verify:mojavez` re-fetches the official record with no-cache headers and checks its visible labelled fields. It only reports; source or scope changes require a fresh review. A captured response can be checked with `npm run verify:mojavez -- --html /path/to/response.html`. Hermetic validators enforce the reviewed scope, subject, neutral title, URLs and projection selector; `npm run test:final-entity-contract` exercises their failure paths. These checks bind the observation to authored claims; CI does not independently certify the live source on every build.
 
 The forbidden identifier guard inspects explicit canonical input families in `scripts/lib/active-identifier-contract.mjs`, including new authored files. Necessary validator/test literals have exact-path exceptions; migration history and release archives have explicit non-active boundaries. Generated files and dependencies are outside this authored-source check.
+
+Professional Facebook and Instagram pages describe both the physician and clinic. Representations of the same professional Instagram URL have the same `mainEntity` set. Personal Facebook describes the physician only. These are subjects of a profile, not an assertion that the physician and clinic are the same entity; the homepage retains the physician as its primary entity.
+
+## Closed visible-text contract
+
+Preparation validates the approved source before generating files. The final HTML gate compares both the mega-landing and 404 with the original baseline: ordered NFC-normalized text nodes, reading text, title, description, existing accessible labels, resolved ARIA references and social presentation strings. Authored answer text and video cue text are also protected. Raw source and original HTML hashes bind the baseline to its starting commit. Generated fingerprints are compared, never substituted as a new baseline during a build.
+
+`npm run test:visible-text-browser` additionally checks actual Chromium rendered text, generated CSS text and accessible names at mobile and desktop widths, with JavaScript enabled and disabled, with disclosures open, in search states, and on the 404. CI requires this check after the pinned browser is installed. The browser evidence is specific to its recorded version and states; it is not universal assistive-technology or WCAG certification.
+
+An intentional text change requires separate review of a new baseline. This includes a scheduled change to the visible rating or review count: the closed-set gate will stop that candidate before publication. Do not exempt those strings or refresh the baseline automatically merely to make a scheduled build pass. Non-text graph and runtime changes must preserve the approved text and browser fingerprints.
+
+## Distribution standards and consumer boundaries
+
+The 2026-09-12 review keeps existing representations with distinct consumers. Version labels below identify the applicable public specifications, not a claim that every optional feature or consumer outcome has been achieved. Draft successors do not replace Recommendations merely because their version number is higher.
+
+| Representation | Consumer and governing contract | Verification |
+| --- | --- | --- |
+| Root HTML and real 404 | HTML Living Standard; Schema.org 30.0 JSON-LD/Microdata; WCAG 2.2 and ARIA 1.2 apply to human interaction | HTML, semantic, source/dist text, browser focus and name gates; Nu and vocabulary validation in CI |
+| Full JSON-LD and Turtle graph | JSON-LD 1.1, RDF 1.1/Turtle; RDF Dataset Canonicalization 1.0 | Full-graph vocabulary/domain/range checks, graph identity checks, SHACL and independent RDF byte/roundtrip proof |
+| CSV and CSVW companion | RFC 4180 media registration; W3C CSVW metadata and declared dialect | Exact columns, typed rows, stable keys, dialect, RDF roundtrip; reciprocal `describedby` / `describes` discovery |
+| DCAT, VoID, Croissant and Data Package | DCAT 3, VoID vocabulary, MLCommons Croissant 1.1, Data Package 2 | Shared Dataset/distribution IDs, native DCAT version/issue date, declared fields and actual resource hashes |
+| Provenance, evidence and fact map | PROV-O / Schema.org plus explicit project field contracts | Evidence subject, source-role, observation and fragment/hash consistency; preservation is not independent corroboration |
+| Linkset, robots and sitemaps | RFC 9264, RFC 9309 and Sitemaps 0.9 with applicable Google extensions | Registry-derived discovery, exact relation direction, route policy and parser checks |
+| Markdown, retrieval text and knowledge XML | GFM/CommonMark, UTF-8 and XML; documented project retrieval contracts | Shared passages, source fragments, answer text, coverage and evidence bindings; no special Google AI eligibility claim |
+| Contact cards and manifest | vCard 4.0 / RFC 6350; Web App Manifest | CRLF/card identity and authored manifest fields/media types |
+| CSS, runtime JS and font | Applicable CSS modules, ECMAScript, WOFF2 | CSS/compiler limits, minimal static-page runtime, pinned browser geometry, no-JS and font delivery checks |
+| Images, video, tracks and aliases | Their actual AVIF/WebP/JPEG/PNG/SVG, WebM/MP4 and WebVTT formats | Intrinsic dimensions, references, metadata scope, exact aliases, media probing and byte-range/browser seek tests; no claim of exhaustive codec certification |
+| `_headers`, `_redirects`, IndexNow key | Cloudflare Pages public static configuration limits and IndexNow protocol | Expanded header line/rule limits, exact CSP, redirect registry, key/body policy; these configuration files are not extra human pages |
+
+Current normative references include [Schema.org releases](https://schema.org/docs/releases.html), [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/), [Turtle](https://www.w3.org/TR/turtle/), [RDF canonicalization](https://www.w3.org/TR/rdf-canon/), [DCAT 3](https://www.w3.org/TR/vocab-dcat-3/), [CSVW](https://www.w3.org/TR/tabular-metadata/), [Croissant 1.1](https://docs.mlcommons.org/croissant/docs/croissant-spec-1.1.html), [Data Package](https://datapackage.org/standard/data-package/), [IANA link relations](https://www.iana.org/assignments/link-relations/link-relations.xhtml) and [Cloudflare static headers](https://developers.cloudflare.com/pages/configuration/headers/). The asset formats retain the technical profile appropriate to their existing media; no image or clinical copy is invented to fill optional metadata.
+
+Googlebot's Search HTML envelope uses a conservative 2,000,000 uncompressed bytes, following the [March 2026 crawler documentation](https://developers.google.com/search/blog/2026/03/crawler-blog-post). The compiler reserves 20,000 bytes for response headers and 30,000 for safety, limiting HTML to 1,950,000 bytes. Live checks count decoded body bytes and raw response-header fields with framing; compressed transfer size cannot stand in for the crawl envelope. The primary identity graph remains early in the head. The earlier 2,100,000-byte assumption is not an allowable budget.
 
 ## Build flow
 
@@ -68,3 +101,5 @@ npm run release
 The website deploys a static-only `dist/` on Cloudflare Pages from `main`. The production contract requires `uses_functions === false`, no dynamic routes and no runtime bindings. Runtime, automation and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json`, CodeMeta and the scheduled reputation workflow.
 
 The canonical Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`. GitHub is its version-controlled source, Zenodo is its immutable DOI distribution, Hugging Face `main` is its current AI/retrieval distribution, and versioned Hugging Face tags preserve frozen release snapshots. Release promotion updates the release record, graph, package metadata and citation metadata as one transaction; the public evidence snapshot is derived from the evidence registry during generation, and external publication remains an explicit release operation.
+
+Cloudflare preflight is a read-only check using an existing credential. It refuses writes, token creation and automatic drift repair. A configured credential needs direct Zone Read and Zone Settings Read; missing permissions or live drift fail the check. The explicit authorized `configure-cloudflare-edge.py --apply` operation remains responsible for reconciliation. A build without the API token skips the optional live check and does not imply that production settings were independently verified.

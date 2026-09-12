@@ -5,6 +5,7 @@ import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { HERO_EARLY_HINT_HREF } from "../src/lib/hero-image-contract.mjs";
+import { assertGooglebotResponseBudget } from "./lib/googlebot-budget.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -130,6 +131,11 @@ const headers = compileHeadersTemplate(headersTemplate, {
   heroEarlyHintHref: HERO_EARLY_HINT_HREF,
   httpResourceLinks,
 });
+const invariants = JSON.parse(await readFile(path.join(data, "release-invariants.json"), "utf8"));
+const responseBudget = assertGooglebotResponseBudget({
+  bodyBytes: Buffer.byteLength(html),
+  responseHeaderBytes: invariants.googlebotReservedResponseHeaderBytes,
+}, invariants);
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
 await writeFile(path.join(dist, "_headers"), headers);
@@ -170,6 +176,7 @@ console.log(
     {
       deploymentHeadersGenerated: true,
       htmlBytes: Buffer.byteLength(html),
+      responseBudget,
       activeCss,
       publicMachineResources: STATIC_ARTIFACTS.length,
       descriptorResources: (dataPackage.resources || []).length,

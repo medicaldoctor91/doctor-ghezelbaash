@@ -180,6 +180,39 @@ def mutation_tests(data: Graph, shapes: Graph) -> list[dict[str, str]]:
             False,
         ),
     ]
+    person = SITE["saeed-ghezelbash"]
+    clinic = SITE["dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"]
+    for suffix in ("profile-facebook-doctor-ghezelbaash",
+                   "profile-instagram-doctor-ghezelbaash", "evidence-instagram"):
+        profile = SITE[suffix]
+        if set(data.objects(profile, SCHEMA.mainEntity)) != {person, clinic}:
+            raise AssertionError(f"Shared professional subject fixture is invalid: {suffix}")
+        for subject, label in ((person, "physician"), (clinic, "clinic")):
+            cases.append((
+                f"{suffix} cannot omit its {label} subject",
+                profile,
+                SH.HasValueConstraintComponent,
+                (profile, SCHEMA.mainEntity, subject),
+                False,
+            ))
+        cases.append((
+            f"{suffix} rejects a third or unrelated subject",
+            profile,
+            SH.InConstraintComponent,
+            (profile, SCHEMA.mainEntity, URIRef("https://example.test/unrelated-person")),
+            True,
+        ))
+    for suffix in ("webpage", "profile-facebook-ghezelbaash"):
+        profile = SITE[suffix]
+        if set(data.objects(profile, SCHEMA.mainEntity)) != {person}:
+            raise AssertionError(f"Single-person subject fixture is invalid: {suffix}")
+        cases.append((
+            f"{suffix} remains exclusively about the physician as mainEntity",
+            profile,
+            SH.MaxCountConstraintComponent,
+            (profile, SCHEMA.mainEntity, clinic),
+            True,
+        ))
     # Release-history entries are Datasets too. Mutate the exact target of
     # the canonical contract rather than whichever Dataset RDF iteration yields.
     dataset = shapes.value(SITE.CanonicalDatasetRoleShape, SH.targetNode)

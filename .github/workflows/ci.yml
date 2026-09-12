@@ -84,6 +84,8 @@ jobs:
           fi
       - name: Install pinned Chromium for media verification
         run: npx playwright install --with-deps --only-shell chromium
+      - name: Require frozen rendered text and accessible names
+        run: npm run test:visible-text-browser
       - name: Verify video deep links and rejection of unseekable transport
         run: npm run test:video-deeplinks
       - name: Verify production dialog, focus and keyboard behavior

@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-12T01:16:45.282Z",
-    "sourceSha256": "4a2d5f6f3fa63cb879c755b4f83ac95ddf38d185105c3a75cb76b0973eeeb083",
+    "measuredAt": "2026-09-12T13:37:24.365Z",
+    "sourceSha256": "2d311afe682d2b288eb9279c4db0e6de04e098e2d2423262e4831d5426c86915",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4889,7 +4889,7 @@
       ],
       [
         "src/components/GuideNavigator.astro",
-        "9855cb7d6e2bbc4b371bba7796bc0c0990eb75fb5ce0808afdfee5f48a985b3c"
+        "f721b6b877e974754a55a6dd7ef369f691ecda122894384ed2d2bcb291b8ca78"
       ],
       [
         "src/components/SiteFooter.astro",
@@ -4924,7 +4924,7 @@
       "engine": "chromium",
       "browserVersion": "153.0.8010.12",
       "playwrightVersion": "1.63.0",
-      "platform": "linux 6.17.0-1022-azure x64",
+      "platform": "linux 6.18.35 x64",
       "viewportHeight": 936,
       "deviceScaleFactor": 1,
       "locale": "fa-IR",
