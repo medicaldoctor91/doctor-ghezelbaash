@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import os
+import sys
 import tempfile
 import urllib.parse
 from pathlib import Path
@@ -655,49 +656,196 @@ class FakeCompressionApi:
         raise AssertionError((method, path, body))
 
 
-def test_machine_compression() -> None:
+def test_compression_transactions(
+    rule_builder: Any, reconcile: Any, rollback: Any, other_rule_builder: Any
+) -> None:
     host = "www.ghezelbaash.ir"
-    desired = edge.machine_compression_rule(host)
-    assert desired["action_parameters"] == {"algorithms": [{"name": "auto"}]}
-    assert 'http.response.code eq 200' in desired["expression"]
-    assert '{"csv" "ttl"}' in desired["expression"]
+    desired = rule_builder(host)
+    owned_ref = desired["ref"]
     foreign = {"id": "foreign-1", "ref": "unrelated_compression", "action": "compress_response"}
+    other = {"id": "other-1", **other_rule_builder(host)}
+    protected = [foreign, other]
     prior_owned = {"id": "owned-1", **copy.deepcopy(desired)}
     prior_owned["enabled"] = False
     with tempfile.TemporaryDirectory() as tmp:
-        for index, original in enumerate([None, [foreign], [prior_owned, foreign], [{"id": "owned-1", **desired}, foreign]]):
+        for index, original in enumerate([
+            None, protected, [prior_owned, *protected],
+            [foreign, prior_owned, other], [{"id": "owned-1", **desired}, *protected],
+        ]):
             fake = FakeCompressionApi(original)
             snapshot = Path(tmp) / f"before-{index}.json"
-            edge.reconcile_machine_compression(fake, "test-zone", host, snapshot)
+            reconcile(fake, "test-zone", host, snapshot)
             assert snapshot.exists()
-            assert len([row for row in fake.ruleset["rules"] if row["ref"] == edge.COMPRESSION_RULE_REF]) == 1
+            assert len([row for row in fake.ruleset["rules"] if row["ref"] == owned_ref]) == 1
+            assert fake.ruleset["rules"][-1]["ref"] == owned_ref
+            assert [row for row in fake.ruleset["rules"] if row["ref"] != owned_ref] == [
+                row for row in (original or []) if row["ref"] != owned_ref
+            ], "Reconciliation changed another compression rule"
             initial_mutations = fake.mutations
-            edge.reconcile_machine_compression(fake, "test-zone", host, Path(tmp) / f"repeat-{index}.json")
+            reconcile(fake, "test-zone", host, Path(tmp) / f"repeat-{index}.json")
             assert fake.mutations == initial_mutations, "Compression reconciliation must be idempotent"
             try:
-                edge.reconcile_machine_compression(fake, "test-zone", host, snapshot)
+                reconcile(fake, "test-zone", host, snapshot)
                 raise AssertionError("Rollback snapshot was overwritten")
             except FileExistsError:
                 assert fake.mutations == initial_mutations
-            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            rollback(fake, "test-zone", host, snapshot)
             assert (fake.ruleset or {}).get("rules") == original
             after_rollback = fake.mutations
-            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            rollback(fake, "test-zone", host, snapshot)
             assert fake.mutations == after_rollback
-        fake = FakeCompressionApi([foreign])
+        fake = FakeCompressionApi(protected)
         snapshot = Path(tmp) / "concurrent.json"
-        edge.reconcile_machine_compression(fake, "test-zone", host, snapshot)
-        fake.ruleset["rules"][-1]["action_parameters"] = {"algorithms": [{"name": "gzip"}]}
+        reconcile(fake, "test-zone", host, snapshot)
+        fake.ruleset["rules"][-1]["enabled"] = False
         before_refusal = fake.mutations
         try:
-            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            rollback(fake, "test-zone", host, snapshot)
             raise AssertionError("Rollback overwrote a concurrent change")
         except edge.CloudflareError:
             assert fake.mutations == before_refusal
 
+        fake = FakeCompressionApi(protected)
+        with mock.patch.object(edge.os, "fsync", side_effect=OSError("offline disk failure")):
+            try:
+                reconcile(fake, "test-zone", host, Path(tmp) / "disk-failure.json")
+                raise AssertionError("Reconciliation ignored a rollback snapshot failure")
+            except OSError:
+                assert fake.mutations == 0
+
+        fake = FakeCompressionApi([prior_owned, copy.deepcopy(prior_owned)])
+        try:
+            reconcile(fake, "test-zone", host, Path(tmp) / "duplicate.json")
+            raise AssertionError("Duplicate owned rules were accepted")
+        except edge.CloudflareError:
+            assert fake.mutations == 0
+
+        fake = FakeCompressionApi(protected)
+        original_expect = fake.expect
+
+        def stale_readback(method: str, path: str, body: Any = None, **kwargs: Any) -> dict[str, Any]:
+            result = original_expect(method, path, body, **kwargs)
+            if method == "GET" and path.endswith("/compression-set") and fake.mutations:
+                result["result"]["rules"][-1]["enabled"] = False
+            return result
+
+        with mock.patch.object(fake, "expect", side_effect=stale_readback):
+            try:
+                reconcile(fake, "test-zone", host, Path(tmp) / "readback-drift.json")
+                raise AssertionError("Compression read-back drift was accepted")
+            except edge.CloudflareError as exc:
+                assert "read-back drift" in str(exc)
+
+        fake = FakeCompressionApi(None)
+        snapshot = Path(tmp) / "added-foreign.json"
+        reconcile(fake, "test-zone", host, snapshot)
+        fake.ruleset["rules"].append(copy.deepcopy(foreign))
+        rollback(fake, "test-zone", host, snapshot)
+        assert fake.ruleset["rules"] == [foreign], "Rollback deleted a concurrently added foreign rule"
+
+
+def test_machine_compression() -> None:
+    desired = edge.machine_compression_rule("www.ghezelbaash.ir")
+    assert desired["ref"] == "ghezelbaash_machine_text_compression_v1"
+    assert desired["action_parameters"] == {"algorithms": [{"name": "auto"}]}
+    assert 'http.response.code eq 200' in desired["expression"]
+    assert '{"csv" "ttl"}' in desired["expression"]
+    test_compression_transactions(
+        edge.machine_compression_rule, edge.reconcile_machine_compression,
+        edge.rollback_machine_compression, edge.canonical_html_compression_rule,
+    )
+
+
+def test_html_compression() -> None:
+    host = "www.ghezelbaash.ir"
+    desired = edge.canonical_html_compression_rule(host)
+    assert desired["ref"] == edge.HTML_COMPRESSION_RULE_REF != edge.COMPRESSION_RULE_REF
+    assert desired["expression"] == (
+        '(http.host eq "www.ghezelbaash.ir" and '
+        'http.request.method in {"GET" "HEAD"} and '
+        'http.request.uri.path eq "/" and http.response.code eq 200 and '
+        'http.response.content_type.media_type eq "text/html")'
+    )
+    assert desired["action_parameters"] == {"algorithms": [{"name": "gzip"}, {"name": "auto"}]}
+    for wrong_host in ("ghezelbaash.ir", "example.com", "www.ghezelbaash.ir.evil"):
+        try:
+            edge.canonical_html_compression_rule(wrong_host)
+            raise AssertionError("HTML compression accepted a non-canonical host")
+        except edge.CloudflareError:
+            pass
+    test_compression_transactions(
+        edge.canonical_html_compression_rule, edge.reconcile_html_compression,
+        edge.rollback_html_compression, edge.machine_compression_rule,
+    )
+    with tempfile.TemporaryDirectory() as tmp:
+        fake = FakeCompressionApi(None)
+        snapshot = Path(tmp) / "html.json"
+        edge.reconcile_html_compression(fake, "test-zone", host, snapshot)
+        mutations = fake.mutations
+        # Snapshots are bound to both rule family and the exact deployment scope.
+        original = json.loads(snapshot.read_text(encoding="utf-8"))
+        for index, (key, value) in enumerate([
+            ("zoneId", "other-zone"), ("host", "example.com"),
+            ("phase", "http_request_cache_settings"), ("schemaVersion", 2),
+            ("desiredRule", edge.machine_compression_rule(host)),
+        ]):
+            tampered = Path(tmp) / f"wrong-scope-{index}.json"
+            tampered.write_text(json.dumps({**original, key: value}), encoding="utf-8")
+            try:
+                edge.rollback_html_compression(fake, "test-zone", host, tampered)
+                raise AssertionError("HTML compression accepted a mismatched snapshot")
+            except edge.CloudflareError:
+                assert fake.mutations == mutations
+        try:
+            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            raise AssertionError("Machine rollback accepted an HTML snapshot")
+        except edge.CloudflareError:
+            assert fake.mutations == mutations
+
+    # Planning never instantiates a client or reads credentials; missing snapshots
+    # fail before either action wrapper can access the configured environment.
+    def no_credential_reads(key: str, default: Any = None) -> Any:
+        if key in {"CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "ZONE_NAME", "CANONICAL_HOST"}:
+            raise AssertionError("Unexpected credential environment read")
+        return default  # argparse/gettext may inspect ordinary locale settings.
+
+    with mock.patch.object(edge, "CloudflareApi", side_effect=AssertionError("Unexpected API client")), \
+         mock.patch.object(edge.os.environ, "get", side_effect=no_credential_reads):
+        output = io.StringIO()
+        with mock.patch.object(sys, "argv", [str(EDGE_PATH), "--plan-html-compression"]), contextlib.redirect_stdout(output):
+            assert edge.main() == 0
+        assert json.loads(output.getvalue()) == desired
+        for mode in ("--apply-html-compression", "--rollback-html-compression"):
+            with mock.patch.object(sys, "argv", [str(EDGE_PATH), mode]), contextlib.redirect_stderr(io.StringIO()):
+                assert edge.main() == 1
+            with mock.patch.object(sys, "argv", [
+                str(EDGE_PATH), mode, "--rollback-snapshot", "same.json", "--outcome", "same.json",
+            ]), contextlib.redirect_stderr(io.StringIO()):
+                assert edge.main() == 1
+
+    # All mutations are explicitly dispatched; ordinary --apply must not opt in.
+    with tempfile.TemporaryDirectory() as tmp:
+        for mode, should_rollback in (("--apply-html-compression", False), ("--rollback-html-compression", True)):
+            snapshot = Path(tmp) / "snapshot.json"
+            with mock.patch.object(edge, "html_compression_action", return_value={"offline": True}) as action, \
+                 mock.patch.object(edge, "apply", side_effect=AssertionError("Unexpected general apply")), \
+                 mock.patch.object(sys, "argv", [
+                     str(EDGE_PATH), mode, "--rollback-snapshot", str(snapshot),
+                     "--outcome", str(Path(tmp) / "outcome.json"),
+                 ]), contextlib.redirect_stdout(io.StringIO()):
+                assert edge.main() == 0
+                action.assert_called_once_with(snapshot.resolve(), rollback=should_rollback)
+        with mock.patch.object(edge, "apply", return_value={"offline": True}) as general, \
+             mock.patch.object(edge, "html_compression_action", side_effect=AssertionError("Unexpected HTML opt-in")), \
+             mock.patch.object(sys, "argv", [str(EDGE_PATH), "--apply", "--outcome", str(Path(tmp) / "general.json")]), \
+             contextlib.redirect_stdout(io.StringIO()):
+            assert edge.main() == 0
+            general.assert_called_once()
+
 
 test_read_only_preflight()
 test_machine_compression()
+test_html_compression()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False
 identity_locked_cache = copy.deepcopy(cache_contract)
@@ -812,6 +960,11 @@ print(
             "idempotent": True,
             "machineCompressionTransaction": True,
             "machineCompressionRollback": True,
+            "htmlCompressionTransaction": True,
+            "htmlCompressionRollback": True,
+            "htmlCompressionExplicitOptIn": True,
+            "compressionSnapshotsScopeBound": True,
+            "compressionPreservesUnrelatedRules": True,
             "readOnlyPreflight": True,
             "preflightDriftFailsClosed": True,
             "preflightNeverCreatesCredentials": True,

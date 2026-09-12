@@ -114,6 +114,41 @@ expect(criticalRules, ".entity-hero .hero-action", "padding", ".72rem 1rem", {
   maxWidth: 720,
 });
 
+for (const property of ["margin", "padding", "border"])
+  expect(criticalRules, ".caption-disclosure", property, "0");
+expect(criticalRules, ".hero-caption-title", "font-weight", "780");
+const disclosureSelectors = [
+  ["details:where(:not(.caption-disclosure))", "details", "padding", ".85rem 1rem"],
+  ["details[open]:where(:not(.caption-disclosure))", "details[open]", "background", "#fbfdfc"],
+  [":where(details:not(.caption-disclosure)) > summary", "summary", "font-weight", "700"],
+];
+const validateCaptionStyleOwnership = (rules) => {
+  for (const [scoped, unscoped, property, value] of disclosureSelectors) {
+    expect(rules, scoped, property, value);
+    assert(
+      !selectorRules(rules, unscoped).some(
+        (rule) => !rule.conditions.some((condition) =>
+          compactCssValue(condition).includes("forced-colors:active"),
+        ),
+      ),
+      `Deferred ${unscoped} must not override the critical caption component`,
+    );
+  }
+};
+validateCaptionStyleOwnership(deferredRules);
+for (const [scoped, unscoped] of disclosureSelectors) {
+  let rejected = false;
+  try {
+    validateCaptionStyleOwnership([
+      ...deferredRules,
+      ...selectorRules(deferredRules, scoped).map((rule) => ({ ...rule, selector: unscoped })),
+    ]);
+  } catch (error) {
+    rejected = String(error.message).includes("must not override the critical caption component");
+  }
+  assert(rejected, `Unscoped disclosure selector was not rejected: ${unscoped}`);
+}
+
 const allRules = [...criticalRules, ...deferredRules];
 expect(criticalRules, ".quick-actions__item", "display", "inline-flex");
 const telephoneLinkRules = selectorRules(allRules, 'a[href^="tel:"]');
@@ -588,6 +623,8 @@ console.log(
       backdropFilterCount,
       imageFilterCount,
       crossBoundaryDuplicateDeclarations: 0,
+      captionStyleOwnership: "PASS",
+      captionSelectorMutationsRejected: disclosureSelectors.length,
       heroMobileColumns: 1,
       heroImageHintCount: imageHints.length,
       heroImageSizingStates: 6,

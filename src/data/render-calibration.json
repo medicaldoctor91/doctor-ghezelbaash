@@ -1,6 +1,6 @@
 {
   "360": {
-    "total": 773836,
+    "total": 773682,
     "chunks": [
       {
         "i": 0,
@@ -809,7 +809,7 @@
     ]
   },
   "390": {
-    "total": 723354,
+    "total": 723200,
     "chunks": [
       {
         "i": 0,
@@ -1618,7 +1618,7 @@
     ]
   },
   "430": {
-    "total": 667353,
+    "total": 667199,
     "chunks": [
       {
         "i": 0,
@@ -2427,7 +2427,7 @@
     ]
   },
   "768": {
-    "total": 467595,
+    "total": 467518,
     "chunks": [
       {
         "i": 0,
@@ -3236,7 +3236,7 @@
     ]
   },
   "1024": {
-    "total": 490361,
+    "total": 490284,
     "chunks": [
       {
         "i": 0,
@@ -4045,7 +4045,7 @@
     ]
   },
   "1440": {
-    "total": 502038,
+    "total": 501961,
     "chunks": [
       {
         "i": 0,
@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-12T13:37:24.365Z",
-    "sourceSha256": "2d311afe682d2b288eb9279c4db0e6de04e098e2d2423262e4831d5426c86915",
+    "measuredAt": "2026-09-12T19:21:12.169Z",
+    "sourceSha256": "1a1f21793844fffc795fb500e93fab6919e013d8104ff950888c2920024f6db9",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4913,7 +4913,7 @@
       ],
       [
         "src/styles/global.css",
-        "7a1413d5f73cb867e282b50d4b245bc55809cb91a71722f3fe8d2c1db2a16fd5"
+        "ca6d298c27e05fa3efaf0e130b36d76f384a55a2a298c91ad29beed093994e93"
       ],
       [
         "assembled-render-chunk-content",

@@ -78,6 +78,8 @@
     "test:render-calibration": "node --test scripts/test-render-calibration.mjs",
     "test:render-navigation": "node scripts/test-render-navigation.mjs",
     "test:performance": "node scripts/test-performance.mjs",
+    "test:performance-gate": "node --test scripts/test-performance-gate.mjs",
+    "test:critical-caption": "node scripts/test-critical-caption.mjs",
     "test:dist-interactions": "node scripts/test-dist-interactions.mjs",
     "test:video-deeplinks": "node scripts/test-video-deeplinks.mjs",
     "validate:final-entity-contract": "node scripts/validate-final-entity-contract.mjs",

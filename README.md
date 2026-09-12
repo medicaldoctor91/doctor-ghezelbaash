@@ -92,6 +92,47 @@ After a full build, `npm run test:video-deeplinks` checks the published Clip lin
 
 `npm run verify:video-production` requires the exact deployment's `dist/` locally. It checks a real 1024-byte Range from every published MP4/WebM against the local artifact, including 206 status, Content-Range and strong ETag, then verifies all three Clip links in Chromium against the exact deployed HTML. It runs after production convergence and fails on transport or browser drift. It performs no Cloudflare mutation; the existing full-representation digest verifier continues to reject partial responses. Neither verification command is included in the site's browser runtime.
 
+## Performance measurement boundary
+
+After a full build, `npm run test:performance` measures three cold, isolated
+navigations per profile: mobile at 412 × 823 CSS pixels / DPR 1.75, and desktop at
+1440 × 936 / DPR 1. Each profile must independently meet the release budgets,
+including FCP ≤ 1800 ms; a fast desktop cannot compensate for a slow mobile run.
+The report identifies the browser, profile, cache policy and document
+encoded/decoded/transfer sizes. Initial page resources are recorded before the
+separate forced-font and search-interaction checks. Missing required metrics
+fail closed. `npm run test:performance-gate` tests these failure boundaries.
+
+This is an **unthrottled, observed local regression gate**, served without
+compression. It is not a PSI score, a Slow 4G simulation, field Core Web Vitals,
+or Lighthouse TBT measurement. A live mobile improvement requires repeated comparable Lighthouse
+or PSI runs against the deployed response; passing this gate does not establish
+mobile 100.
+
+`npm run test:critical-caption` holds the deferred stylesheet until the critical
+caption has rendered, then requires identical caption box metrics and hero
+action position after activation at 360, 412, 430 and 1440 pixels. Generic article
+disclosure styles exclude `.caption-disclosure`; the caption keeps its authored
+critical styles instead of acquiring a second padded card after first paint.
+
+The optional canonical-HTML compression experiment uses Cloudflare's native
+[Compression Rules](https://developers.cloudflare.com/rules/compression-rules/settings/),
+not a Worker or precompressed sidecar. Preview its exact rule offline with
+`python scripts/configure-cloudflare-edge.py --plan-html-compression`. It matches
+only canonical-host GET/HEAD `/`, status 200 and `text/html`, preferring gzip with
+`auto` negotiation fallback. Captured equivalent live responses were 434,067
+bytes with gzip versus 449,558 with Brotli; this observation is deployment-specific,
+not a universal preference for gzip or proof of a PSI gain.
+
+The separate `--apply-html-compression` and `--rollback-html-compression` modes
+require `--rollback-snapshot /absolute/path/to/snapshot.json` and the existing
+scoped Cloudflare environment. Apply creates a new snapshot exclusively before
+mutation; rollback rejects scope or owned-rule drift and preserves other rules,
+including machine-resource compression. These modes are never invoked by a
+normal build, general `--apply`, or CI. Production application requires explicit
+authorization, followed by decoded SHA equality, negotiated response-byte checks
+and repeated comparable mobile PSI tests; roll back if the improvement is absent.
+
 ## Release and deployment
 
 ```bash

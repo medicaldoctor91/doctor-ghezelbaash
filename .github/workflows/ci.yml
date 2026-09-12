@@ -90,8 +90,10 @@ jobs:
         run: npm run test:video-deeplinks
       - name: Verify production dialog, focus and keyboard behavior
         run: npm run test:dist-interactions
-      - name: Enforce production performance budgets
-        run: npm run test:performance
+      - name: Enforce separate local mobile and desktop performance budgets
+        run: npm run test:performance-gate && npm run test:performance
+      - name: Prevent deferred CSS from changing critical caption geometry
+        run: npm run test:critical-caption
       - name: Export exact checked-out source for branch audit
         shell: bash
         run: |

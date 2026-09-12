@@ -814,7 +814,7 @@ nav {
   transform: translateX(-2px);
   background: linear-gradient(90deg, transparent, rgb(232 244 240 / 0.5));
 }
-details {
+details:where(:not(.caption-disclosure)) {
   content-visibility: visible;
   contain: none;
   overflow: clip;
@@ -824,10 +824,10 @@ details {
   border-radius: 0.8rem;
   background: var(--surface);
 }
-details[open] {
+details[open]:where(:not(.caption-disclosure)) {
   background: #fbfdfc;
 }
-summary {
+:where(details:not(.caption-disclosure)) > summary {
   cursor: pointer;
   font-weight: 700;
 }

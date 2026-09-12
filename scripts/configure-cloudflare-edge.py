@@ -20,6 +20,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,7 @@ PLATFORM_CONTRACT = json.loads(PLATFORM_CONTRACT_PATH.read_text(encoding="utf-8"
 PLATFORM_CF = PLATFORM_CONTRACT["cloudflare"]
 CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 COMPRESSION_RULE_REF = "ghezelbaash_machine_text_compression_v1"
+HTML_COMPRESSION_RULE_REF = "ghezelbaash_canonical_html_compression_v1"
 COMPRESSION_PHASE = "http_response_compression"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF_PREFIX = "ghezelbaash_real_404_headers_"
@@ -223,6 +225,27 @@ def machine_compression_rule(host: str) -> dict[str, Any]:
     }
 
 
+def canonical_html_compression_rule(host: str) -> dict[str, Any]:
+    if host != "www.ghezelbaash.ir":
+        raise CloudflareError("HTML compression is scoped to the canonical host")
+    return {
+        "ref": HTML_COMPRESSION_RULE_REF,
+        "expression": (
+            f'(http.host eq "{host}" and '
+            'http.request.method in {"GET" "HEAD"} and '
+            'http.request.uri.path eq "/" and http.response.code eq 200 and '
+            'http.response.content_type.media_type eq "text/html")'
+        ),
+        "description": "Prefer measured smaller gzip for canonical HTML with negotiated fallback",
+        "action": "compress_response",
+        # This is an opt-in delivery experiment, not a Lighthouse score claim.
+        # Auto preserves negotiated compression for clients that do not offer gzip.
+        # https://developers.cloudflare.com/rules/compression-rules/settings/
+        "action_parameters": {"algorithms": [{"name": "gzip"}, {"name": "auto"}]},
+        "enabled": True,
+    }
+
+
 def read_compression_ruleset(api: CloudflareApi, zone: str) -> dict[str, Any] | None:
     listing = api.expect("GET", f"/zones/{zone}/rulesets").get("result") or []
     candidates = [
@@ -238,14 +261,14 @@ def read_compression_ruleset(api: CloudflareApi, zone: str) -> dict[str, Any] | 
     ).get("result") or {}
 
 
-def reconcile_machine_compression(
-    api: CloudflareApi, zone: str, host: str, snapshot_path: Path
+def _reconcile_compression_rule(
+    api: CloudflareApi, zone: str, host: str, snapshot_path: Path,
+    desired: dict[str, Any], ruleset_name: str, ruleset_description: str,
 ) -> dict[str, Any]:
-    desired = machine_compression_rule(host)
     before = read_compression_ruleset(api, zone)
     owned = [
         row for row in (before or {}).get("rules", [])
-        if row.get("ref") == COMPRESSION_RULE_REF
+        if row.get("ref") == desired["ref"]
     ]
     if len(owned) > 1:
         raise CloudflareError("Duplicate owned compression rule")
@@ -260,17 +283,16 @@ def reconcile_machine_compression(
         handle.flush()
         os.fsync(handle.fileno())
     rule = reconcile_phase_rule(
-        api, zone, COMPRESSION_PHASE, "Canonical machine text compression",
-        "Git-managed compression for canonical CSV and Turtle resources", desired,
+        api, zone, COMPRESSION_PHASE, ruleset_name, ruleset_description, desired,
     )
     return {"rule": rule, "rollbackSnapshot": str(snapshot_path)}
 
 
-def rollback_machine_compression(
-    api: CloudflareApi, zone: str, host: str, snapshot_path: Path
+def _rollback_compression_rule(
+    api: CloudflareApi, zone: str, host: str, snapshot_path: Path,
+    desired: dict[str, Any],
 ) -> dict[str, Any]:
     snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
-    desired = machine_compression_rule(host)
     if (
         snapshot.get("schemaVersion") != 1 or snapshot.get("zoneId") != zone
         or snapshot.get("host") != host or snapshot.get("phase") != COMPRESSION_PHASE
@@ -279,10 +301,10 @@ def rollback_machine_compression(
         raise CloudflareError("Compression rollback snapshot scope or contract mismatch")
     before = snapshot.get("before")
     previous_rules = (before or {}).get("rules", [])
-    previous = [row for row in previous_rules if row.get("ref") == COMPRESSION_RULE_REF]
+    previous = [row for row in previous_rules if row.get("ref") == desired["ref"]]
     current = read_compression_ruleset(api, zone)
     rules = (current or {}).get("rules", [])
-    owned = [row for row in rules if row.get("ref") == COMPRESSION_RULE_REF]
+    owned = [row for row in rules if row.get("ref") == desired["ref"]]
     if len(previous) > 1 or len(owned) > 1:
         raise CloudflareError("Ambiguous owned compression rule during rollback")
     if not owned:
@@ -308,7 +330,7 @@ def rollback_machine_compression(
     if not previous:
         api.expect("DELETE", rule_path)
         after = read_compression_ruleset(api, zone)
-        if any(row.get("ref") == COMPRESSION_RULE_REF for row in (after or {}).get("rules", [])):
+        if any(row.get("ref") == desired["ref"] for row in (after or {}).get("rules", [])):
             raise CloudflareError("Owned compression rule was not removed")
         # Keep any unrelated rule created since the snapshot.
         if before is None and after and not after.get("rules"):
@@ -325,7 +347,7 @@ def rollback_machine_compression(
             restored["position"] = {"index": 1}
         api.expect("PATCH", rule_path, restored)
         after = read_compression_ruleset(api, zone)
-        recovered = [row for row in (after or {}).get("rules", []) if row.get("ref") == COMPRESSION_RULE_REF]
+        recovered = [row for row in (after or {}).get("rules", []) if row.get("ref") == desired["ref"]]
         expected = {key: value for key, value in restored.items() if key != "position"}
         if len(recovered) != 1 or not rule_matches(recovered[0], expected):
             raise CloudflareError("Compression rollback read-back drift")
@@ -341,18 +363,66 @@ def rollback_machine_compression(
     return {"rolledBack": True, "alreadyExact": False}
 
 
-def machine_compression_action(snapshot_path: Path, *, rollback: bool = False) -> dict[str, Any]:
+def reconcile_machine_compression(
+    api: CloudflareApi, zone: str, host: str, snapshot_path: Path
+) -> dict[str, Any]:
+    return _reconcile_compression_rule(
+        api, zone, host, snapshot_path, machine_compression_rule(host),
+        "Canonical machine text compression",
+        "Git-managed compression for canonical CSV and Turtle resources",
+    )
+
+
+def rollback_machine_compression(
+    api: CloudflareApi, zone: str, host: str, snapshot_path: Path
+) -> dict[str, Any]:
+    return _rollback_compression_rule(
+        api, zone, host, snapshot_path, machine_compression_rule(host),
+    )
+
+
+def reconcile_html_compression(
+    api: CloudflareApi, zone: str, host: str, snapshot_path: Path
+) -> dict[str, Any]:
+    return _reconcile_compression_rule(
+        api, zone, host, snapshot_path, canonical_html_compression_rule(host),
+        "Canonical HTML compression",
+        "Opt-in negotiated compression for the canonical HTML document",
+    )
+
+
+def rollback_html_compression(
+    api: CloudflareApi, zone: str, host: str, snapshot_path: Path
+) -> dict[str, Any]:
+    return _rollback_compression_rule(
+        api, zone, host, snapshot_path, canonical_html_compression_rule(host),
+    )
+
+
+def _compression_action(
+    snapshot_path: Path,
+    operation: Callable[[CloudflareApi, str, str, Path], dict[str, Any]],
+) -> dict[str, Any]:
     values = {name: os.environ.get(name, "").strip() for name in (
         "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "ZONE_NAME", "CANONICAL_HOST"
     )}
     if not all(values.values()):
-        raise CloudflareError("Machine compression requires the existing Cloudflare environment")
+        raise CloudflareError("Compression requires the existing Cloudflare environment")
     if values["ZONE_NAME"] != "ghezelbaash.ir" or values["CANONICAL_HOST"] != "www.ghezelbaash.ir":
-        raise CloudflareError("Machine compression environment scope mismatch")
+        raise CloudflareError("Compression environment scope mismatch")
     api = CloudflareApi(values["CLOUDFLARE_API_TOKEN"])
     zone = zone_id(api, values["CLOUDFLARE_ACCOUNT_ID"], values["ZONE_NAME"])
-    operation = rollback_machine_compression if rollback else reconcile_machine_compression
     return operation(api, zone, values["CANONICAL_HOST"], snapshot_path)
+
+
+def machine_compression_action(snapshot_path: Path, *, rollback: bool = False) -> dict[str, Any]:
+    operation = rollback_machine_compression if rollback else reconcile_machine_compression
+    return _compression_action(snapshot_path, operation)
+
+
+def html_compression_action(snapshot_path: Path, *, rollback: bool = False) -> dict[str, Any]:
+    operation = rollback_html_compression if rollback else reconcile_html_compression
+    return _compression_action(snapshot_path, operation)
 
 
 def load_redirect_registry(root: Path) -> dict[str, Any]:
@@ -2407,6 +2477,9 @@ def main() -> int:
     mode.add_argument("--plan-machine-compression", action="store_true")
     mode.add_argument("--apply-machine-compression", action="store_true")
     mode.add_argument("--rollback-machine-compression", action="store_true")
+    mode.add_argument("--plan-html-compression", action="store_true")
+    mode.add_argument("--apply-html-compression", action="store_true")
+    mode.add_argument("--rollback-html-compression", action="store_true")
     parser.add_argument("--dist", default="dist")
     parser.add_argument("--outcome", default="edge-reconciliation.json")
     parser.add_argument("--rollback-snapshot")
@@ -2419,12 +2492,24 @@ def main() -> int:
         if args.plan_machine_compression:
             print(json.dumps(machine_compression_rule("www.ghezelbaash.ir"), indent=2))
             return 0
+        if args.plan_html_compression:
+            print(json.dumps(canonical_html_compression_rule("www.ghezelbaash.ir"), indent=2))
+            return 0
+        if args.rollback_snapshot and Path(args.outcome).resolve() == Path(args.rollback_snapshot).resolve():
+            raise CloudflareError("Outcome must not overwrite the compression rollback snapshot")
         if args.apply_machine_compression or args.rollback_machine_compression:
             if not args.rollback_snapshot:
                 raise CloudflareError("Machine compression actions require --rollback-snapshot")
             outcome = machine_compression_action(
                 Path(args.rollback_snapshot).resolve(),
                 rollback=args.rollback_machine_compression,
+            )
+        elif args.apply_html_compression or args.rollback_html_compression:
+            if not args.rollback_snapshot:
+                raise CloudflareError("HTML compression actions require --rollback-snapshot")
+            outcome = html_compression_action(
+                Path(args.rollback_snapshot).resolve(),
+                rollback=args.rollback_html_compression,
             )
         else:
             outcome = purge_cache_only() if args.purge_cache_only else apply(dist_dir)
