@@ -86,6 +86,10 @@ jobs:
         run: npx playwright install --with-deps --only-shell chromium
       - name: Verify video deep links and rejection of unseekable transport
         run: npm run test:video-deeplinks
+      - name: Verify production dialog, focus and keyboard behavior
+        run: npm run test:dist-interactions
+      - name: Enforce production performance budgets
+        run: npm run test:performance
       - name: Export exact checked-out source for branch audit
         shell: bash
         run: |

@@ -24,6 +24,7 @@ const codeMetaContext = await readJson("src/data/standards/codemeta-3.1-context.
 const expected = new Map([
   ["entity-facts.csv", { media: "text/csv", params: { charset: "utf-8", header: "present" } }],
   ["entity-facts.csv-metadata.json", { media: "application/csvm+json", params: {} }],
+  ["fact-map.json", { media: "application/json", params: {} }],
   ["index.md", { media: "text/markdown", params: { charset: "utf-8", variant: "GFM" } }],
   ["doctor.vcf", { media: "text/vcard", params: { charset: "utf-8", version: "4.0" } }],
   ["clinic.vcf", { media: "text/vcard", params: { charset: "utf-8", version: "4.0" } }],

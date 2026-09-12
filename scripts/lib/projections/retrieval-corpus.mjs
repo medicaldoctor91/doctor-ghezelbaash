@@ -66,6 +66,12 @@ export function buildRetrievalBlocks(html, { canonicalUrl, language }) {
       tag,
       id: attribute(node, "id"),
       retrievalAlias: attribute(node, "data-retrieval-alias"),
+      answerId:
+        String(attribute(node, "class") || "")
+          .split(/\s+/u)
+          .includes("answer-projection")
+          ? attribute(node, "id")
+          : undefined,
       lang,
     };
     if (tag === "table") {
@@ -322,6 +328,8 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       if (block.retrievalAlias)
         markdown += `<!-- retrieval-alias: ${block.retrievalAlias} -->\n`;
     }
+    if (block.answerId)
+      markdown += `<!-- answer-id: ${release.canonicalUrl}#${block.answerId} -->\n`;
     markdown += "\n";
   }
   markdown = markdown.replace(/\n{3,}/g, "\n\n");
@@ -365,7 +373,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       }
       current.parts.push({
         text: renderRetrievalBlock(block),
-        atomic: ["table", "definition"].includes(block.tag),
+        atomic: ["table", "definition"].includes(block.tag) ||
+          Boolean(block.answerId),
+        answerId: block.answerId,
       });
     }
   }
@@ -378,10 +388,26 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   for (const section of sections) {
     const chunks = [];
     let pending = "";
+    let pendingAnswerIds = [];
+    const flushPending = () => {
+      if (!pending) return;
+      chunks.push({ text: pending, answerIds: pendingAnswerIds });
+      pending = "";
+      pendingAnswerIds = [];
+    };
     for (const part of section.parts) {
       const units = part.atomic
         ? [part.text]
         : sentenceChunks(part.text, maxPassage);
+      if (part.answerId) {
+        flushPending();
+        for (const text of units)
+          chunks.push({
+            text,
+            answerIds: [`${release.canonicalUrl}#${part.answerId}`],
+          });
+        continue;
+      }
       for (const text of units) {
         if (text.length > maxPassage)
           throw new Error(
@@ -389,13 +415,13 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
           );
         const candidate = pending ? `${pending}\n${text}` : text;
         if (candidate.length > maxPassage) {
-          chunks.push(pending);
+          flushPending();
           pending = text;
         } else pending = candidate;
       }
     }
-    if (pending) chunks.push(pending);
-    chunks.forEach((text, index) => {
+    flushPending();
+    chunks.forEach(({ text, answerIds }, index) => {
       const anchor = `${release.canonicalUrl}#${section.id}`;
       const hash = sha256(Buffer.from(`${anchor}|${index}|${text}`)).slice(
         0,
@@ -444,6 +470,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         claimEvidenceIds,
         entityEvidenceIds,
         tierAEvidenceIds: tierA,
+        answerIds,
       });
     });
   }
@@ -492,6 +519,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       `ANCHOR: ${passage.anchor}`,
       ...(passage.graphNodeIds.length
         ? [`GRAPH_NODE_IDS: ${passage.graphNodeIds.join(" | ")}`]
+        : []),
+      ...(passage.answerIds.length
+        ? [`ANSWER_IDS: ${passage.answerIds.join(" | ")}`]
         : []),
       `PART: ${passage.part}/${passage.partsTotal}`,
       `LANGUAGE: ${passage.lang}`,

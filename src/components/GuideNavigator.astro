@@ -14,10 +14,9 @@ const entityAliases = [
   data-entity-aliases={entityAliases}
   id="guide-search"
 >
-  <div
+  <search
     aria-label="جست‌وجوی درون راهنمای پزشکی زیبایی"
     class="guide-search__panel"
-    role="search"
   >
     <header class="guide-search__header">
       <div>
@@ -62,7 +61,7 @@ const entityAliases = [
         مطالب کامل بدون جاوااسکریپت در صفحه فعال است.
       </p>
     </noscript>
-  </div>
+  </search>
 </dialog>
 <script is:inline id="site-runtime">
 (() => {
@@ -83,7 +82,7 @@ const entityAliases = [
     results = d.getElementById("guide-search-results"),
     status = d.getElementById("guide-search-status"),
     top = d.querySelector("[data-quick-actions-top]");
-  let index;
+  let index, lastOpener;
   const build = () => {
     if (index) return index;
     const aliasKey = (dialog?.dataset.entityAliases || "")
@@ -164,15 +163,17 @@ const entityAliases = [
       }
       return d.getElementById(id);
     };
-  const open = () => {
+  const open = (opener) => {
     if (!searchReady) return false;
+    lastOpener = opener || (d.activeElement !== d.body ? d.activeElement : null);
     if (!dialog.open) dialog.showModal();
     requestAnimationFrame(() => input.focus());
     return true;
   };
   d.addEventListener("click", (e) => {
     if (!plainClick(e) || e.defaultPrevented) return;
-    if (e.target.closest?.("[data-guide-search-open]") && open())
+    const opener = e.target.closest?.("[data-guide-search-open]");
+    if (opener && open(opener))
       e.preventDefault();
     if (searchReady && e.target.closest?.("[data-guide-search-close]"))
       dialog.close();
@@ -193,6 +194,12 @@ const entityAliases = [
     }
   });
   if (searchReady) {
+    dialog.addEventListener("close", () => {
+      const opener = lastOpener;
+      lastOpener = null;
+      if (opener && typeof opener.focus === "function")
+        requestAnimationFrame(() => opener.focus({ preventScroll: true }));
+    });
     input.addEventListener("input", render);
     results.addEventListener("click", (e) => {
       if (!plainClick(e) || e.defaultPrevented) return;

@@ -25,6 +25,7 @@ const required = [
   "src/data/release.json",
   "src/data/semantic/head-profile.json",
   "src/data/semantic/support-profile.json",
+  "src/lib/answer-projection.mjs",
   "src/lib/google-page-microdata.mjs",
   "src/lib/resources.mjs",
   "src/pages/favicon.png.ts",
@@ -41,6 +42,11 @@ const required = [
   "scripts/lib/projections/semantic-corpus.mjs",
   "scripts/lib/projections/retrieval-corpus.mjs",
   "scripts/lib/projections/contact-discovery.mjs",
+  "scripts/validate-dist-production.mjs",
+  "scripts/test-performance.mjs",
+  "scripts/test-dist-interactions.mjs",
+  "scripts/test-answer-projection.mjs",
+  ".github/workflows/ci.yml",
 ];
 for (const file of required) await access(path.join(root, file));
 const routes = (
@@ -126,6 +132,7 @@ const [
   machineResourceRegistry,
   headProfile,
   supportProfile,
+  ciWorkflow,
 ] = await Promise.all([
   readJson("package.json"),
   read("scripts/generate-projections.mjs"),
@@ -157,6 +164,7 @@ const [
   readJson("src/data/machine-resources.json"),
   readJson("src/data/semantic/head-profile.json"),
   readJson("src/data/semantic/support-profile.json"),
+  read(".github/workflows/ci.yml"),
 ]);
 const { default: astroConfig } = await import(
   pathToFileURL(path.join(root, "astro.config.mjs")).href
@@ -252,6 +260,15 @@ assert(
   "Semantic corpus must target the generated projections path",
 );
 assert(
+  semanticCompiler.includes("deriveCanonicalAnswerProjection") &&
+    semanticCompiler.includes("fact-map.json") &&
+    contentAssembler.includes("deriveCanonicalAnswerProjection") &&
+    contentAssembler.includes("projectCanonicalAnswerHtml") &&
+    retrievalCompiler.includes("answerId") &&
+    retrievalCompiler.includes("ANSWER_IDS:"),
+  "Canonical answer projection must own visible HTML, fact-map and retrieval bindings",
+);
+assert(
   retrievalCompiler.includes("generatedContent") &&
     retrievalCompiler.includes("projections"),
   "Retrieval corpus must use generated content and projections paths",
@@ -328,7 +345,7 @@ assert(
 );
 assert(
   !projectionContext.includes("graphByUrl") &&
-    /const\s+sourceNodes\s*=\s*sourceNodesForUrl\(sourceUrl\)/.test(
+    /const\s+sourceNodes\s*=\s*sourceNodesForUrl\((?:sourceUrl|projection\.sourceUrl)\)/.test(
       semanticCompiler,
     ) &&
     /const\s+graphNodes\s*=\s*sourceNodesForUrl\(anchor\)/.test(
@@ -590,6 +607,7 @@ for (const step of [
   "npm run materialize:static",
   "node scripts/generate-deployment-headers.mjs",
   "node scripts/validate-dist.mjs",
+  "npm run validate:dist-production",
 ])
   assert(
     String(pkg.scripts?.["compile:dist"] || "").includes(step),
@@ -599,6 +617,17 @@ assert(
   String(pkg.scripts?.release || "").includes("npm run compile:dist") &&
     String(pkg.scripts?.release || "").includes("npm run release:attest"),
   "Release must reuse the DIST compiler before attestation",
+);
+assert(
+  pkg.scripts?.["test:performance"] === "node scripts/test-performance.mjs" &&
+    pkg.scripts?.["test:dist-interactions"] ===
+      "node scripts/test-dist-interactions.mjs" &&
+    pkg.scripts?.["test:answer-projection"] ===
+      "node --test scripts/test-answer-projection.mjs" &&
+    ciWorkflow.includes("npm run test:dist-interactions") &&
+    ciWorkflow.includes("npm run test:performance") &&
+    ciWorkflow.includes("npx playwright install --with-deps --only-shell chromium"),
+  "Production browser regression gates must be explicit CI commands",
 );
 
 console.log(

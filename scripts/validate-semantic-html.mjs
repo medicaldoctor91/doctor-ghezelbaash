@@ -427,9 +427,10 @@ const searchSemantics =
   /<dialog\b(?=[^>]*\bid=["']guide-search["'])(?=[^>]*\baria-modal=["']true["'])[^>]*>/i.test(
     guideNavigator,
   ) &&
-  /<div\b(?=[^>]*\bclass=["']guide-search__panel["'])(?=[^>]*\brole=["']search["'])[^>]*>/i.test(
+  /<search\b(?=[^>]*\bclass=["']guide-search__panel["'])[^>]*>/i.test(
     guideNavigator,
   ) &&
+  !/<search\b[^>]*\brole=["']search["'][^>]*>/i.test(guideNavigator) &&
   /<input\b(?=[^>]*\btype=["']search["'])(?=[^>]*\baria-describedby=["']guide-search-status["'])[^>]*>/i.test(
     guideNavigator,
   ) &&

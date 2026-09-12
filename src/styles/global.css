@@ -1,3 +1,5 @@
+@layer reset, tokens, base, components, utilities;
+
 @font-face {
   font-family: "Vazirmatn";
   src: url("/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2") format("woff2");
@@ -48,12 +50,18 @@ body {
   line-height: 1.92;
 }
 main {
+  container: page-shell / inline-size;
   width: min(100% - 2rem, 78rem);
   margin-inline: auto;
   padding: clamp(1.2rem, 2.6vw, 2.6rem) clamp(1rem, 3vw, 3rem) 6rem;
   background: rgb(255 255 255 / 0.94);
   border-inline: 1px solid rgb(220 229 224 / 0.75);
   box-shadow: none;
+}
+@container page-shell (max-width: 48rem) {
+  .entity-hero .hero-actions {
+    gap: 0.55rem;
+  }
 }
 main
   > :where(
@@ -65,6 +73,7 @@ main
     address,
     .section-answer,
     .micro-answer,
+    .answer-projection,
     .semantic-alias
   ),
 .medical-guide
@@ -77,6 +86,7 @@ main
     address,
     .section-answer,
     .micro-answer,
+    .answer-projection,
     .semantic-alias
   ),
 .content-section
@@ -89,6 +99,7 @@ main
     address,
     .section-answer,
     .micro-answer,
+    .answer-projection,
     .semantic-alias
   ) {
   max-width: var(--reading-measure);
@@ -189,6 +200,13 @@ figcaption {
   border-inline-start: 0.28rem solid var(--accent);
   border-radius: 0.8rem;
   background: linear-gradient(135deg, #f7fbf9, #edf7f3);
+}
+.answer-projection {
+  margin-block: 1.15rem 1.45rem;
+  padding: 0.9rem 1.05rem;
+  border-inline-start: 0.24rem solid var(--accent-strong);
+  border-radius: 0.65rem;
+  background: var(--accent-soft);
 }
 .micro-answer,
 .semantic-alias {

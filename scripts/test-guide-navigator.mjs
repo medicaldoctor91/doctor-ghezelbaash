@@ -57,7 +57,7 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
     input = new Element("input", "guide-search-input"),
     results = new Element("ol", "guide-search-results"),
     status = new Element("p", "guide-search-status"),
-    opener = new Element("a"),
+    opener = new Element("button"),
     close = new Element("button"),
     top = new Element("a"),
     section = new Element("section", "botox", ["content-section"]),
@@ -65,7 +65,6 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
     heading = new Element("h3", "botox-heading"),
     physician = new Element("h2", "saeed-ghezelbash"),
     tocLink = new Element("a");
-  opener.href = "#aesthetic-medicine-table-of-contents";
   opener.setAttribute("data-guide-search-open", "");
   close.setAttribute("data-guide-search-close", "");
   top.hidden = true;
@@ -77,7 +76,7 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
   dialog.open = false;
   if (modal) {
     dialog.showModal = () => { dialog.open = true; };
-    dialog.close = () => { dialog.open = false; };
+    dialog.close = () => { dialog.open = false; emit(dialog, "close"); };
   }
   for (const x of [dialog, opener, top, section, physician, tocLink]) body.append(x);
   for (const x of [input, results, status, close]) dialog.append(x);
@@ -163,7 +162,7 @@ export async function guideNavigatorContract() {
     runtime = source.match(/<script\b[^>]*\bid="site-runtime"[^>]*>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(runtime, "The actual shipped site runtime is required");
   const page = await readFile(new URL("../src/content-source/page.md", import.meta.url), "utf8");
-  assert.match(page, /<a\b(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*\bhref="#aesthetic-medicine-table-of-contents")[^>]*>/);
+  assert.match(page, /<button\b(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*\btype="button")[^>]*>/);
   const f = fixture(runtime),
     headingQuery = "main h2[id],main h3[id],main h4[id]",
     tocQuery = '#aesthetic-medicine-table-of-contents a[href^="#"]';
@@ -210,6 +209,8 @@ export async function guideNavigatorContract() {
   }
   f.emit(f.close, "click");
   assert.equal(f.dialog.open, false);
+  f.flushFrames();
+  assert.equal(f.document.activeElement, f.opener, "Dialog close restores launcher focus");
   f.body.focus();
   assert.equal(f.emit(f.document, "keydown", { key: "/" }).defaultPrevented, true);
   f.flushFrames();

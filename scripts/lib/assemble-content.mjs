@@ -4,6 +4,10 @@ import { bindHeroPictureSizes } from "../../src/lib/hero-image-contract.mjs";
 import { bindReleaseTokens } from "../../src/lib/release-tokens.mjs";
 import { bindSiteTokens, deriveSiteData } from "../../src/lib/site-data.mjs";
 import { bindClinicReputation } from "../../src/lib/reputation-observation.mjs";
+import {
+  deriveCanonicalAnswerProjection,
+  projectCanonicalAnswerHtml,
+} from "../../src/lib/answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 
 const compactAuthoredHtmlLayout = (source) =>
@@ -83,5 +87,11 @@ export async function assembleCanonicalContent({
     release,
     mapsUrl: site.mapsUrl,
   });
-  return { content: compactAuthoredHtmlLayout(content), names };
+  const answerProjection = deriveCanonicalAnswerProjection(graph, release);
+  content = projectCanonicalAnswerHtml(content, answerProjection);
+  return {
+    content: compactAuthoredHtmlLayout(content),
+    names,
+    answerProjection,
+  };
 }

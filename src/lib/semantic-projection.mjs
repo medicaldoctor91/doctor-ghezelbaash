@@ -1,3 +1,5 @@
+import { deriveCanonicalAnswerProjection } from "./answer-projection.mjs";
+
 const values = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
 const refId = (value) =>
@@ -147,78 +149,14 @@ export const deriveCanonicalSemanticSets = (graph, release) => {
   if (!person || !clinic)
     throw new Error("Canonical physician or clinic graph node is missing");
 
-  const answers = nodes
-    .filter((node) => nodeTypes(node).includes("Question"))
-    .map((question) => {
-      const questionId = question?.["@id"];
-      const answerId = refId(question?.acceptedAnswer);
-      requiredCanonicalFragment(questionId, "Question ID", canonicalDocument);
-      requiredCanonicalFragment(answerId, "Answer ID", canonicalDocument);
-      const answer = byId.get(answerId);
-      if (
-        typeof questionId !== "string" ||
-        !answer ||
-        !nodeTypes(answer).includes("Answer") ||
-        typeof answer.text !== "string" ||
-        !answer.text.trim()
-      )
-        throw new Error(
-          `Question lacks a canonical Answer: ${questionId || "(missing ID)"}`,
-        );
-      const sourceUrl = question.url;
-      const language = question.inLanguage;
-      if (
-        typeof sourceUrl !== "string" ||
-        typeof language !== "string" ||
-        answer.url !== sourceUrl ||
-        answer.inLanguage !== language
-      )
-        throw new Error(`Question/Answer source or language drift: ${questionId}`);
-      requiredCanonicalFragment(
-        sourceUrl,
-        "Question source URL",
-        canonicalDocument,
-      );
-      return {
-        questionId,
-        answerId,
-        sourceUrl,
-      };
-    });
-  const answerIds = new Set(answers.map((answer) => answer.answerId));
-  const graphAnswers = nodes.filter((node) =>
-    nodeTypes(node).includes("Answer"),
+  const answerProjection = deriveCanonicalAnswerProjection(graph, release);
+  const answers = answerProjection.answers.map(
+    ({ questionId, answerId, sourceUrl }) => ({
+      questionId,
+      answerId,
+      sourceUrl,
+    }),
   );
-  if (
-    graphAnswers.some(
-      (node) => typeof node?.["@id"] !== "string" || !node["@id"],
-    )
-  )
-    throw new Error("Every canonical Answer must have an ID");
-  const graphAnswerIds = graphAnswers.map((node) => node["@id"]);
-  if (
-    answerIds.size !== answers.length ||
-    graphAnswerIds.length !== answers.length ||
-    graphAnswerIds.some((answerId) => !answerIds.has(answerId))
-  )
-    throw new Error("Canonical Question/Answer topology is not one-to-one");
-
-  // Both projections describe the same answer subject. Missing about is
-  // permitted, but it must not route a Question and its Answer differently.
-  for (const { questionId, answerId } of answers) {
-    const subjects = (node) => values(node.about).map(refId).sort();
-    const questionSubjects = subjects(byId.get(questionId));
-    const answerSubjects = subjects(byId.get(answerId));
-    if (
-      questionSubjects.includes(null) ||
-      answerSubjects.includes(null) ||
-      new Set(questionSubjects).size !== questionSubjects.length ||
-      new Set(answerSubjects).size !== answerSubjects.length ||
-      questionSubjects.length !== answerSubjects.length ||
-      questionSubjects.some((subject, index) => subject !== answerSubjects[index])
-    )
-      throw new Error(`Question/Answer subject drift: ${questionId}`);
-  }
 
   const personServiceIds = values(person.availableService).map(refId);
   const clinicServiceIds = values(clinic.availableService).map(refId);
@@ -289,7 +227,7 @@ export const deriveCanonicalSemanticSets = (graph, release) => {
       left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
     );
 
-  return { answers, services };
+  return { answers, services, answerProjection };
 };
 
 /**

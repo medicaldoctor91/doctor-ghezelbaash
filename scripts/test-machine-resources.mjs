@@ -70,8 +70,8 @@ test("registry preserves existing graph distribution identities and distinct des
     const relative = new URL(download.contentUrl).pathname.slice(1);
     assert.equal(machineResourceForPath(relative).distributionIri, download["@id"]);
   }
-  assert.equal(MACHINE_RESOURCES.filter((resource) => resource.descriptorRoles.includes("dcat")).length, 11);
-  for (const resource of MACHINE_RESOURCES.filter((item) => item.descriptorRoles.length))
+  assert.equal(MACHINE_RESOURCES.filter((resource) => (resource.descriptorRoles || []).includes("dcat")).length, 12);
+  for (const resource of MACHINE_RESOURCES.filter((item) => (item.descriptorRoles || []).length))
     assert.ok(resource.distributionIri && resource.descriptorTitle);
   assert.equal(machineResourceForPath("croissant.json").descriptorRoles.length, 0);
 });
@@ -303,11 +303,16 @@ test("descriptor generator emits joinable RDF, correct typed hashes and usable C
     "src/data/release.json", "src/data/retrieval/query-matrix-policy.json",
     "src/data/semantic/knowledge-graph.jsonld", "src/data/machine-resources.json",
     ".generated/semantic/rdf-lock.json",
-    ...MACHINE_RESOURCES.filter((resource) => resource.descriptorRoles.length).map((resource) => resource.source),
+    ...MACHINE_RESOURCES.filter((resource) => (resource.descriptorRoles || []).length).map((resource) => resource.source),
   ]);
   for (const input of inputs) {
     await mkdir(path.dirname(path.join(workspace, input)), { recursive: true });
-    await copyFile(path.join(root, input), path.join(workspace, input));
+    try {
+      await copyFile(path.join(root, input), path.join(workspace, input));
+    } catch (error) {
+      if (input !== ".generated/projections/fact-map.json" || error.code !== "ENOENT") throw error;
+      await writeFile(path.join(workspace, input), JSON.stringify({ fixture: true }) + "\n");
+    }
   }
   await cp(path.join(root, "public/media/video-tracks"), path.join(workspace, "public/media/video-tracks"), { recursive: true });
   const generated = spawnSync(process.execPath, [path.join(root, "scripts/generate-descriptors.mjs")], { cwd: workspace, encoding: "utf8" });
@@ -344,7 +349,7 @@ root=Path(sys.argv[1]); registry=json.loads((root/'src/data/machine-resources.js
 dcat=Namespace('http://www.w3.org/ns/dcat#');spdx=Namespace('http://spdx.org/rdf/terms#')
 g=Graph().parse(root/'.generated/projections/dcat.ttl',format='turtle')
 expected=[r for r in registry['resources'] if 'dcat' in r.get('descriptorRoles',[])]
-assert len(set(g.subjects(RDF.type,dcat.Distribution)))==len(expected)==11
+assert len(set(g.subjects(RDF.type,dcat.Distribution)))==len(expected)==12
 for resource in expected:
  node=URIRef(resource['distributionIri']); media=g.value(node,dcat.mediaType)
  assert isinstance(media,URIRef) and str(media)=='https://www.iana.org/assignments/media-types/'+resource['mediaType']

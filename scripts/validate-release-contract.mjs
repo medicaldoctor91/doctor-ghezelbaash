@@ -66,8 +66,20 @@ const invariantKeys = [
   "googlebotReservedResponseHeaderBytes",
   "googlebotSafetyMarginBytes",
   "maxCriticalCssBytes",
+  "maxDeferredCssBrotliBytes",
+  "maxDeferredCssBytes",
+  "maxFontBytes",
+  "maxFontLoadMs",
   "maxHtmlBytes",
+  "maxInitialImageBytes",
+  "maxInpMs",
+  "maxJavaScriptBytes",
+  "maxLcpMs",
   "maxRagPassageChars",
+  "maxScriptDurationMs",
+  "maxTbtMs",
+  "maxTotalAssetBytes",
+  "maxCls",
 ];
 exactKeys(invariants, invariantKeys, "release-invariants");
 const redirectsBytes = Buffer.from(

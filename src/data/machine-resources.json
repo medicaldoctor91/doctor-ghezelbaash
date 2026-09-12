@@ -170,6 +170,30 @@
       }
     },
     {
+      "path": "fact-map.json",
+      "distributionIri": "https://www.ghezelbaash.ir/fact-map.json#download",
+      "descriptorRoles": [
+        "dcat",
+        "data-package",
+        "croissant"
+      ],
+      "publishInHttpHeader": true,
+      "source": ".generated/projections/fact-map.json",
+      "mediaType": "application/json",
+      "targets": [
+        "website",
+        "huggingFace",
+        "zenodo"
+      ],
+      "materialize": true,
+      "descriptorTitle": "Canonical answer fact map with evidence bindings",
+      "head": {
+        "rel": "describedby",
+        "title": "Canonical fact map — answer and evidence bindings"
+      },
+      "footerLabel": "Fact map"
+    },
+    {
       "path": "knowledge.xml",
       "distributionIri": "https://www.ghezelbaash.ir/knowledge.xml#download",
       "descriptorRoles": [

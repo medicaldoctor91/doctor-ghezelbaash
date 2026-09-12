@@ -351,7 +351,7 @@ assert(
   "Unexpected Hero actions consumer count",
 );
 assert(
-  /<a\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*href="#aesthetic-medicine-table-of-contents")(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(
+  /<button\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*type=["']button["'])(?=[^>]*data-guide-search-open\b)(?=[^>]*aria-controls=["']guide-search["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(
     content,
   ),
   "Accessible search launcher left the Hero action contract",
