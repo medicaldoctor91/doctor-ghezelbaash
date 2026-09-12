@@ -51,7 +51,7 @@ The 2026-09-12 review keeps existing representations with distinct consumers. Ve
 | Linkset, robots and sitemaps | RFC 9264, RFC 9309 and Sitemaps 0.9 with applicable Google extensions | Registry-derived discovery, exact relation direction, route policy and parser checks |
 | Markdown, retrieval text and knowledge XML | GFM/CommonMark, UTF-8 and XML; documented project retrieval contracts | Shared passages, source fragments, answer text, coverage and evidence bindings; no special Google AI eligibility claim |
 | Contact cards and manifest | vCard 4.0 / RFC 6350; Web App Manifest | CRLF/card identity and authored manifest fields/media types |
-| CSS, runtime JS and font | Applicable CSS modules, ECMAScript, WOFF2 | CSS/compiler limits, minimal static-page runtime, pinned browser geometry, no-JS and font delivery checks |
+| CSS, runtime JS and font | Applicable CSS modules, ECMAScript, WOFF2 | Independent CSS syntax/value/variable and selector checks; compiler limits; pinned browser geometry, no-JS and font delivery checks |
 | Images, video, tracks and aliases | Their actual AVIF/WebP/JPEG/PNG/SVG, WebM/MP4 and WebVTT formats | Intrinsic dimensions, references, metadata scope, exact aliases, media probing and byte-range/browser seek tests; no claim of exhaustive codec certification |
 | `_headers`, `_redirects`, IndexNow key | Cloudflare Pages public static configuration limits and IndexNow protocol | Expanded header line/rule limits, exact CSP, redirect registry, key/body policy; these configuration files are not extra human pages |
 
@@ -100,6 +100,37 @@ the deferred calibration becomes available.
 After a full build, `npm run test:render-calibration-browser` checks all chunk
 intrinsic lengths computed from the minified stylesheet at thirteen reference,
 intermediate and out-of-range widths; this complements the arithmetic unit tests.
+
+`npm run validate:css` checks authored CSS, every HTML style block and style
+attribute (including templates), and all linked/preloaded/noscript DIST stylesheets.
+Orphan or remote CSS fails the inventory. The pinned CSS-tree 3.2.1 parser and
+lexer check syntax, property/descriptor values and supported query features;
+truncated input and parser recovery fail. Root custom-property tokens are resolved
+before value checks, including fallbacks and cycles. Calibration formulas are
+checked against every six-height profile; actual computed dimensions remain the
+responsibility of the calibration browser test. New at-rules, query features or
+custom-property scopes require explicit validation coverage, not silent acceptance.
+
+`npm run validate:html-css` adds pinned Chromium selector and resolved-value checks
+(including calculation dimensions and font descriptors), and Nu 26.8.30
+HTML validation. Nu's CSS parser lacks container-query support and has no switch
+to disable only that parser. After the original CSS passes, this command creates
+temporary HTML projections that mask only CSS value ranges while preserving
+HTML tokens and offsets; it never serializes/rebuilds HTML or modifies DIST.
+Nu checks those projections without error filters, and reports bind original HTML,
+original CSS and projection hashes. The full file inventory and hashes are checked
+again before success. This is combined independent CSS and Nu HTML
+validation, not a claim that unmodified HTML passed Nu's CSS checker. The existing
+Safari-only `::-webkit-details-marker` spelling is checked explicitly and its
+selector host is checked using the standard `::marker` counterpart; this is not a
+cross-browser rendering certification. The existing iOS `-webkit-overflow-scrolling`
+extension is checked against Apple's documented `auto | touch` grammar and reported
+separately because Chromium does not implement it (see the
+[Safari CSS reference](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariCSSRef/Articles/StandardCSSProperties.html)).
+`npm run test:css-validation` proves that
+broken CSS, selector typos, HTML conformance errors and misplaced style elements
+still fail. CI and deployment verification require the combined check; normal
+builds run the static CSS check without launching a browser or Java.
 
 After a full build, `npm run test:video-deeplinks` checks the published Clip links at 7, 25 and 46 seconds against the actual `dist/` HTML and media. Its dedicated server provides correct 206 responses and a gated, gradual full-body 200 response that ignores Range. The 206 cases must reach a stable, paused destination and deliver its decoded frame; the 200 cases prove that the verifier rejects an unseekable player even when it reports ready data. In the pinned Chromium, this finite HTTP stream exposes only time zero as seekable, so retrying `currentTime` or increasing preload cannot repair that transport. These negative cases do not claim 200 compatibility or a reproduced production outage. The shipped runtime and the geometry server remain unchanged.
 

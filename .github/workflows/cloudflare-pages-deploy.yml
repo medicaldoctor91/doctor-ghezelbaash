@@ -79,6 +79,9 @@ jobs:
         run: |
           npm run test:visible-text-browser
           npm run test:dist-interactions
+      - name: Require original CSS and HTML validation before reconciliation
+        if: steps.tip.outputs.current == 'true'
+        run: npm run validate:html-css
       - name: Converge Cloudflare Pages to canonical Git deployment
         if: steps.tip.outputs.current == 'true'
         id: pages-config

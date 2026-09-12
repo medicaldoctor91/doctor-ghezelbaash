@@ -639,6 +639,9 @@ assert(
     ciWorkflow.includes("npm run test:dist-interactions") &&
     ciWorkflow.includes("npm run test:visible-text-browser") &&
     ciWorkflow.includes("npm run test:performance") &&
+    ciWorkflow.includes("npm run test:css-validation") &&
+    ciWorkflow.includes("npm run validate:html-css") &&
+    String(pkg.scripts?.["compile:dist"] || "").includes("npm run validate:css") &&
     ciWorkflow.includes("npx playwright install --with-deps --only-shell chromium"),
   "Production browser regression gates must be explicit CI commands",
 );

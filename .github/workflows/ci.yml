@@ -109,8 +109,10 @@ jobs:
           path: /tmp/doctor-ghezelbaash-source-${{ env.SOURCE_COMMIT }}.zip
           if-no-files-found: error
           retention-days: 1
-      - name: Validate HTML with Nu HTML Checker 26.8.30
-        run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+      - name: Prove HTML and CSS validation rejects broken fixtures
+        run: npm run test:css-validation
+      - name: Validate original CSS and HTML structure with independent checkers
+        run: npm run validate:html-css
       - name: Validate JSON-LD and Microdata against pinned Schema.org 30.0
         run: npm run validate:schemaorg-vocabulary
       - name: Upload canonical distribution
