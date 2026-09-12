@@ -1,3 +1,5 @@
+@layer reset, tokens, base, components, utilities;
+
 @font-face {
   font-family: "Vazirmatn";
   src: url("/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2") format("woff2");
@@ -65,6 +67,7 @@ main
     address,
     .section-answer,
     .micro-answer,
+    .answer-projection,
     .semantic-alias
   ),
 .medical-guide
@@ -77,6 +80,7 @@ main
     address,
     .section-answer,
     .micro-answer,
+    .answer-projection,
     .semantic-alias
   ),
 .content-section
@@ -89,6 +93,7 @@ main
     address,
     .section-answer,
     .micro-answer,
+    .answer-projection,
     .semantic-alias
   ) {
   max-width: var(--reading-measure);
@@ -189,6 +194,13 @@ figcaption {
   border-inline-start: 0.28rem solid var(--accent);
   border-radius: 0.8rem;
   background: linear-gradient(135deg, #f7fbf9, #edf7f3);
+}
+.answer-projection {
+  margin-block: 1.15rem 1.45rem;
+  padding: 0.9rem 1.05rem;
+  border-inline-start: 0.24rem solid var(--accent-strong);
+  border-radius: 0.65rem;
+  background: var(--accent-soft);
 }
 .micro-answer,
 .semantic-alias {
@@ -689,6 +701,14 @@ blockquote {
 }
 /*DIST_CRITICAL_HERO_GEOMETRY_END*/
 /*DIST_CRITICAL_CSS_END*/
+main {
+  container: page-shell / inline-size;
+}
+@container page-shell (max-width: 48rem) {
+  .entity-hero .hero-actions {
+    gap: 0.55rem;
+  }
+}
 img,
 video {
   border-radius: 0.85rem;

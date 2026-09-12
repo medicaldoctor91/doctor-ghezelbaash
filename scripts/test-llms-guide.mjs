@@ -104,7 +104,7 @@ test("guide destinations resolve to registered files, shipped media or canonical
     }
   }
   for (const filename of [
-    "index.md", "answers.txt", "llms-full.txt", "graph.jsonld", "graph.ttl",
+    "index.md", "answers.txt", "fact-map.json", "llms-full.txt", "graph.jsonld", "graph.ttl",
     "entity-facts.csv", "knowledge.xml", "datapackage.json", "croissant.json",
     "linkset.json", "provenance.jsonld", "evidence-snapshot.json", "shapes.ttl",
     "void.ttl", "dcat.ttl",

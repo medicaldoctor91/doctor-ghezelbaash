@@ -351,7 +351,7 @@ assert(
   "Unexpected Hero actions consumer count",
 );
 assert(
-  /<a\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*href="#aesthetic-medicine-table-of-contents")(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(
+  /<button\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*type=["']button["'])(?=[^>]*data-guide-search-open\b)(?=[^>]*aria-controls=["']guide-search["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(
     content,
   ),
   "Accessible search launcher left the Hero action contract",
@@ -498,7 +498,7 @@ const functionalCssRequirements = [
     selector: ":focus-visible",
     purpose: "Keyboard focus must retain an explicit visible outline",
     accepts: (rule) =>
-      !rule.conditions.length &&
+      rule.conditions.every((condition) => /^@layer\s+/i.test(condition)) &&
       /\b(solid|dashed|dotted|double|auto)\b/.test(
         rule.declarations.outline || "",
       ),
@@ -514,7 +514,7 @@ const functionalCssRequirements = [
     selector: ".guide-search__results",
     purpose: "Search results must scroll within a bounded result region",
     accepts: (rule) =>
-      !rule.conditions.length &&
+      rule.conditions.every((condition) => /^@layer\s+/i.test(condition)) &&
       /^(auto|scroll)$/.test(normalized(rule.declarations.overflow || "")) &&
       Boolean(rule.declarations["max-height"]) &&
       normalized(rule.declarations["max-height"]) !== "none",

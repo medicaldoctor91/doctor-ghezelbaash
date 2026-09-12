@@ -217,7 +217,23 @@ export async function compileContactDiscovery(context) {
     clinicPhoto.contentUrl,
     "owned clinic contact photo contentUrl",
   );
-  const rev = `${release.dateModified.replaceAll("-", "")}T000000Z`;
+  const vCardRev = (documentId, label) => {
+    const dateModified = requiredText(
+      requiredNode(byId, documentId, label).dateModified,
+      `${label} dateModified`,
+    );
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateModified))
+      throw new Error(`Contact discovery: ${label} dateModified is invalid`);
+    return `${dateModified.replaceAll("-", "")}T000000Z`;
+  };
+  const doctorRev = vCardRev(
+    `${release.canonicalUrl}doctor.vcf#document`,
+    "physician vCard document",
+  );
+  const clinicRev = vCardRev(
+    `${release.canonicalUrl}clinic.vcf#document`,
+    "clinic vCard document",
+  );
   await mkdir(generatedPublic, { recursive: true });
 
   const doctorVcf = vCard(
@@ -230,7 +246,7 @@ export async function compileContactDiscovery(context) {
       `FN:${doctorName}`,
       `N:${doctorFamilyName};${doctorGivenName};;${doctorHonorific};`,
       ...doctorTitles.map((title) => `TITLE:${title}`),
-      `TEL;TYPE=work,voice:${telephone}`,
+      `TEL;VALUE=uri;TYPE=work,voice:tel:${telephone}`,
       `ADR;TYPE=work:;;${vEsc(streetAddress)};${vEsc(addressLocality)};${vEsc(addressRegion)};${vEsc(postalCode)};${vEsc(addressCountry)}`,
       `URL:${release.canonicalUrl}`,
       `SOURCE:${release.canonicalUrl}doctor.vcf`,
@@ -241,7 +257,7 @@ export async function compileContactDiscovery(context) {
       `X-ORCID:${release.primaryEntity.orcid}`,
       `X-OWNED-CLINIC:${release.clinic.id}`,
       `X-ENTITY-VERSION:${release.release}`,
-      `REV:${rev}`,
+      `REV:${doctorRev}`,
       "END:VCARD",
     ].filter(Boolean),
   );
@@ -254,7 +270,7 @@ export async function compileContactDiscovery(context) {
       `UID:${release.clinic.id}`,
       `FN:${clinicName}`,
       `ORG:${clinicName}`,
-      `TEL;TYPE=work,voice:${telephone}`,
+      `TEL;VALUE=uri;TYPE=work,voice:tel:${telephone}`,
       `ADR;TYPE=work:;;${vEsc(streetAddress)};${vEsc(addressLocality)};${vEsc(addressRegion)};${vEsc(postalCode)};${vEsc(addressCountry)}`,
       `URL:${release.canonicalUrl}`,
       `SOURCE:${release.canonicalUrl}clinic.vcf`,
@@ -266,7 +282,7 @@ export async function compileContactDiscovery(context) {
       `X-PRICE-RANGE:${release.clinic.priceRange}`,
       `X-HOURS:${release.clinic.hours}`,
       `X-ENTITY-VERSION:${release.release}`,
-      `REV:${rev}`,
+      `REV:${clinicRev}`,
       "END:VCARD",
     ].filter(Boolean),
   );

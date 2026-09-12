@@ -2,6 +2,13 @@ import { createHash } from "node:crypto";
 import { minify } from "csso";
 
 export const CSS_SPLIT_MARKER = "/*DIST_CRITICAL_CSS_END*/";
+export const CSS_LAYER_ORDER = Object.freeze([
+  "reset",
+  "tokens",
+  "base",
+  "components",
+  "utilities",
+]);
 export const RENDER_CALIBRATION_SLOT = "/*DIST_CHUNK_INTRINSIC_SLOT*/";
 const RENDER_CALIBRATION_START = "/*DIST_CHUNK_INTRINSIC_START*/";
 const RENDER_CALIBRATION_END = "/*DIST_CHUNK_INTRINSIC_END*/";
@@ -172,15 +179,23 @@ const minifyCss = (source) => {
 };
 
 export function deriveCssDelivery(cssSource) {
-  const source = String(cssSource);
+  const sourceWithLayers = String(cssSource);
+  const layerPrelude = `@layer ${CSS_LAYER_ORDER.join(", ")};`;
+  if (sourceWithLayers.split(layerPrelude).length !== 2)
+    throw new Error("Authored CSS must contain exactly one cascade layer order");
+  const source = sourceWithLayers.replace(`${layerPrelude}\n`, "").replace(layerPrelude, "");
   if (source.includes(RENDER_CALIBRATION_SLOT))
     throw new Error("CSS source must be assembled before delivery derivation");
   if (source.split(CSS_SPLIT_MARKER).length !== 2)
     throw new Error("Critical CSS split marker must occur exactly once");
   const splitAt = source.indexOf(CSS_SPLIT_MARKER);
   const externalAt = splitAt + CSS_SPLIT_MARKER.length;
-  const criticalCss = `${minifyCss(source.slice(0, splitAt))}${CSS_SPLIT_MARKER}`;
-  const externalCss = minifyCss(source.slice(externalAt));
+  const criticalCss = `${layerPrelude}@layer base{${minifyCss(
+    source.slice(0, splitAt),
+  )}}${CSS_SPLIT_MARKER}`;
+  const externalCss = `${layerPrelude}@layer components{${minifyCss(
+    source.slice(externalAt),
+  )}}`;
   const externalCssHash = createHash("sha256")
     .update(externalCss)
     .digest("hex")

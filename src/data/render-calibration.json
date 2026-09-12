@@ -1,6 +1,6 @@
 {
   "360": {
-    "total": 750897,
+    "total": 773836,
     "chunks": [
       {
         "i": 0,
@@ -12,7 +12,7 @@
         "i": 1,
         "id": "rc117",
         "key": "diagnosis-before-aesthetic-treatment-selection/rc117",
-        "h": 3655.75
+        "h": 4069.03125
       },
       {
         "i": 2,
@@ -24,19 +24,19 @@
         "i": 3,
         "id": "rc3",
         "key": "facial-aging-differential-diagnosis/rc3",
-        "h": 6393.625
+        "h": 7138.109375
       },
       {
         "i": 4,
         "id": "rc4",
         "key": "botox/rc4",
-        "h": 6398.6875
+        "h": 6427.46875
       },
       {
         "i": 5,
         "id": "rc5",
         "key": "botox/rc5",
-        "h": 5205.578125
+        "h": 5890.90625
       },
       {
         "i": 6,
@@ -96,19 +96,19 @@
         "i": 15,
         "id": "rc12",
         "key": "botox/rc12",
-        "h": 7744.609375
+        "h": 7803.5
       },
       {
         "i": 16,
         "id": "rc13",
         "key": "botox/rc13",
-        "h": 7520.734375
+        "h": 8738.71875
       },
       {
         "i": 17,
         "id": "rc14",
         "key": "botox/rc14",
-        "h": 4759.78125
+        "h": 5383.828125
       },
       {
         "i": 18,
@@ -120,7 +120,7 @@
         "i": 19,
         "id": "rc15",
         "key": "botox/rc15",
-        "h": 4914.390625
+        "h": 5416.671875
       },
       {
         "i": 20,
@@ -144,13 +144,13 @@
         "i": 23,
         "id": "rc17",
         "key": "botox/rc17",
-        "h": 7792.4375
+        "h": 8063.953125
       },
       {
         "i": 24,
         "id": "rc18",
         "key": "botox/rc18",
-        "h": 6921.8125
+        "h": 7812.859375
       },
       {
         "i": 25,
@@ -162,7 +162,7 @@
         "i": 26,
         "id": "rc20",
         "key": "filler/rc20",
-        "h": 7530.3125
+        "h": 7589.203125
       },
       {
         "i": 27,
@@ -216,25 +216,25 @@
         "i": 35,
         "id": "rc27",
         "key": "filler/rc27",
-        "h": 4483.671875
+        "h": 4901.484375
       },
       {
         "i": 36,
         "id": "rc131",
         "key": "filler/rc131",
-        "h": 4694.265625
+        "h": 5945.28125
       },
       {
         "i": 37,
         "id": "rc28",
         "key": "filler/rc28",
-        "h": 6899.28125
+        "h": 7169.46875
       },
       {
         "i": 38,
         "id": "rc29",
         "key": "thread-lift/rc29",
-        "h": 7123.5
+        "h": 7867.984375
       },
       {
         "i": 39,
@@ -258,25 +258,25 @@
         "i": 42,
         "id": "rc101",
         "key": "thread-lift/rc101",
-        "h": 6305.296875
+        "h": 6305.3125
       },
       {
         "i": 43,
         "id": "rc33",
         "key": "thread-lift/rc33",
-        "h": 6463.703125
+        "h": 6463.6875
       },
       {
         "i": 44,
         "id": "rc34",
         "key": "thread-lift/rc34",
-        "h": 6825.625
+        "h": 6891.6875
       },
       {
         "i": 45,
         "id": "rc35",
         "key": "thread-lift/rc35",
-        "h": 5330.84375
+        "h": 5330.8125
       },
       {
         "i": 46,
@@ -312,7 +312,7 @@
         "i": 51,
         "id": "rc39",
         "key": "thread-lift/rc39",
-        "h": 7012.09375
+        "h": 7012.125
       },
       {
         "i": 52,
@@ -324,13 +324,13 @@
         "i": 53,
         "id": "rc41",
         "key": "thread-lift/rc41",
-        "h": 6945.15625
+        "h": 7179.40625
       },
       {
         "i": 54,
         "id": "rc42",
         "key": "thread-lift/rc42",
-        "h": 6800.75
+        "h": 7606.25
       },
       {
         "i": 55,
@@ -354,7 +354,7 @@
         "i": 58,
         "id": "rc45",
         "key": "acne-pigmentation-and-scars/rc45",
-        "h": 8510.25
+        "h": 8510.21875
       },
       {
         "i": 59,
@@ -372,7 +372,7 @@
         "i": 61,
         "id": "rc125",
         "key": "acne-pigmentation-and-scars/rc125",
-        "h": 1448.59375
+        "h": 1448.625
       },
       {
         "i": 62,
@@ -390,19 +390,19 @@
         "i": 64,
         "id": "rc48",
         "key": "acne-pigmentation-and-scars/rc48",
-        "h": 6353.03125
+        "h": 6353
       },
       {
         "i": 65,
         "id": "rc49",
         "key": "acne-pigmentation-and-scars/rc49",
-        "h": 6655.34375
+        "h": 6714.25
       },
       {
         "i": 66,
         "id": "rc50",
         "key": "acne-pigmentation-and-scars/rc50",
-        "h": 2737.53125
+        "h": 3730.875
       },
       {
         "i": 67,
@@ -414,7 +414,7 @@
         "i": 68,
         "id": "rc52",
         "key": "skin-rejuvenation/rc52",
-        "h": 6603.09375
+        "h": 6603.0625
       },
       {
         "i": 69,
@@ -432,7 +432,7 @@
         "i": 71,
         "id": "rc54",
         "key": "skin-rejuvenation/rc54",
-        "h": 7416.34375
+        "h": 8122.46875
       },
       {
         "i": 72,
@@ -450,7 +450,7 @@
         "i": 74,
         "id": "rc57",
         "key": "skin-rejuvenation/rc57",
-        "h": 6714.84375
+        "h": 8149.46875
       },
       {
         "i": 75,
@@ -468,19 +468,19 @@
         "i": 77,
         "id": "rc60",
         "key": "hair-loss/rc60",
-        "h": 7140.5625
+        "h": 7885.0625
       },
       {
         "i": 78,
         "id": "rc61",
         "key": "hair-loss/rc61",
-        "h": 6532.3125
+        "h": 7162.21875
       },
       {
         "i": 79,
         "id": "rc62",
         "key": "hair-loss/rc62",
-        "h": 2986.5625
+        "h": 3244.96875
       },
       {
         "i": 80,
@@ -504,7 +504,7 @@
         "i": 83,
         "id": "rc65",
         "key": "chin-jawline-and-facial-contouring/rc65",
-        "h": 6518.40625
+        "h": 6518.4375
       },
       {
         "i": 84,
@@ -522,7 +522,7 @@
         "i": 86,
         "id": "rc68",
         "key": "chin-jawline-and-facial-contouring/rc68",
-        "h": 7759.96875
+        "h": 7760
       },
       {
         "i": 87,
@@ -534,7 +534,7 @@
         "i": 88,
         "id": "rc70",
         "key": "chin-jawline-and-facial-contouring/rc70",
-        "h": 6754.375
+        "h": 7468.75
       },
       {
         "i": 89,
@@ -546,13 +546,13 @@
         "i": 90,
         "id": "rc71",
         "key": "chin-jawline-and-facial-contouring/rc71",
-        "h": 6342.3125
+        "h": 6514.75
       },
       {
         "i": 91,
         "id": "rc72",
         "key": "chin-jawline-and-facial-contouring/rc72",
-        "h": 3802.1875
+        "h": 6208.0625
       },
       {
         "i": 92,
@@ -570,7 +570,7 @@
         "i": 94,
         "id": "rc74",
         "key": "aesthetic-treatment-selection/rc74",
-        "h": 6874.375
+        "h": 7498.4375
       },
       {
         "i": 95,
@@ -588,19 +588,19 @@
         "i": 97,
         "id": "rc77",
         "key": "aesthetic-treatment-selection/rc77",
-        "h": 8354.875
+        "h": 8901.375
       },
       {
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 4774.9375
+        "h": 5453.125
       },
       {
         "i": 99,
         "id": "rc133",
         "key": "aesthetic-treatment-selection/rc133",
-        "h": 3762.5625
+        "h": 3762.625
       },
       {
         "i": 100,
@@ -612,7 +612,7 @@
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 3961.5
+        "h": 4029.9375
       },
       {
         "i": 102,
@@ -762,7 +762,7 @@
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 5510.5
+        "h": 6788.6875
       },
       {
         "i": 127,
@@ -774,13 +774,13 @@
         "i": 128,
         "id": "rc96",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc96",
-        "h": 752.375
+        "h": 752.3125
       },
       {
         "i": 129,
         "id": "rc97",
         "key": "aesthetic-treatment-failure-from-diagnostic-error/rc97",
-        "h": 8836.4375
+        "h": 10196.75
       },
       {
         "i": 130,
@@ -792,7 +792,7 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 2827.9375
+        "h": 3271.3125
       },
       {
         "i": 132,
@@ -804,12 +804,12 @@
         "i": 133,
         "id": "rc109",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc109",
-        "h": 2092.625
+        "h": 2475.75
       }
     ]
   },
   "390": {
-    "total": 701986,
+    "total": 723354,
     "chunks": [
       {
         "i": 0,
@@ -821,7 +821,7 @@
         "i": 1,
         "id": "rc117",
         "key": "diagnosis-before-aesthetic-treatment-selection/rc117",
-        "h": 3340.9375
+        "h": 3725.140625
       },
       {
         "i": 2,
@@ -833,19 +833,19 @@
         "i": 3,
         "id": "rc3",
         "key": "facial-aging-differential-diagnosis/rc3",
-        "h": 6078.65625
+        "h": 6764.890625
       },
       {
         "i": 4,
         "id": "rc4",
         "key": "botox/rc4",
-        "h": 5933.578125
+        "h": 5992.5625
       },
       {
         "i": 5,
         "id": "rc5",
         "key": "botox/rc5",
-        "h": 4857.625
+        "h": 5514.625
       },
       {
         "i": 6,
@@ -905,19 +905,19 @@
         "i": 15,
         "id": "rc12",
         "key": "botox/rc12",
-        "h": 7169.984375
+        "h": 7228.96875
       },
       {
         "i": 16,
         "id": "rc13",
         "key": "botox/rc13",
-        "h": 7089.015625
+        "h": 8219.859375
       },
       {
         "i": 17,
         "id": "rc14",
         "key": "botox/rc14",
-        "h": 4410.65625
+        "h": 4976.078125
       },
       {
         "i": 18,
@@ -929,7 +929,7 @@
         "i": 19,
         "id": "rc15",
         "key": "botox/rc15",
-        "h": 4595.875
+        "h": 5069.265625
       },
       {
         "i": 20,
@@ -953,13 +953,13 @@
         "i": 23,
         "id": "rc17",
         "key": "botox/rc17",
-        "h": 7322.171875
+        "h": 7533.65625
       },
       {
         "i": 24,
         "id": "rc18",
         "key": "botox/rc18",
-        "h": 6577.890625
+        "h": 7380.671875
       },
       {
         "i": 25,
@@ -971,7 +971,7 @@
         "i": 26,
         "id": "rc20",
         "key": "filler/rc20",
-        "h": 6867.921875
+        "h": 6926.90625
       },
       {
         "i": 27,
@@ -1025,25 +1025,25 @@
         "i": 35,
         "id": "rc27",
         "key": "filler/rc27",
-        "h": 4374.828125
+        "h": 4793.015625
       },
       {
         "i": 36,
         "id": "rc131",
         "key": "filler/rc131",
-        "h": 4435.390625
+        "h": 5598.890625
       },
       {
         "i": 37,
         "id": "rc28",
         "key": "filler/rc28",
-        "h": 6546.90625
+        "h": 6817.375
       },
       {
         "i": 38,
         "id": "rc29",
         "key": "thread-lift/rc29",
-        "h": 6629.890625
+        "h": 7316.125
       },
       {
         "i": 39,
@@ -1079,13 +1079,13 @@
         "i": 44,
         "id": "rc34",
         "key": "thread-lift/rc34",
-        "h": 6443.609375
+        "h": 6479.578125
       },
       {
         "i": 45,
         "id": "rc35",
         "key": "thread-lift/rc35",
-        "h": 4923.3125
+        "h": 4923.296875
       },
       {
         "i": 46,
@@ -1115,7 +1115,7 @@
         "i": 50,
         "id": "rc38",
         "key": "thread-lift/rc38",
-        "h": 7209.1875
+        "h": 7209.15625
       },
       {
         "i": 51,
@@ -1133,13 +1133,13 @@
         "i": 53,
         "id": "rc41",
         "key": "thread-lift/rc41",
-        "h": 6476.84375
+        "h": 6741.5625
       },
       {
         "i": 54,
         "id": "rc42",
         "key": "thread-lift/rc42",
-        "h": 6372.0625
+        "h": 7179.625
       },
       {
         "i": 55,
@@ -1169,7 +1169,7 @@
         "i": 59,
         "id": "rc46",
         "key": "acne-pigmentation-and-scars/rc46",
-        "h": 3111.375
+        "h": 3111.40625
       },
       {
         "i": 60,
@@ -1187,7 +1187,7 @@
         "i": 62,
         "id": "rc47",
         "key": "acne-pigmentation-and-scars/rc47",
-        "h": 3394.0625
+        "h": 3394.03125
       },
       {
         "i": 63,
@@ -1205,19 +1205,19 @@
         "i": 65,
         "id": "rc49",
         "key": "acne-pigmentation-and-scars/rc49",
-        "h": 6341.375
+        "h": 6400.375
       },
       {
         "i": 66,
         "id": "rc50",
         "key": "acne-pigmentation-and-scars/rc50",
-        "h": 2564.125
+        "h": 3469.5
       },
       {
         "i": 67,
         "id": "rc51",
         "key": "skin-rejuvenation/rc51",
-        "h": 6424.375
+        "h": 6424.40625
       },
       {
         "i": 68,
@@ -1241,7 +1241,7 @@
         "i": 71,
         "id": "rc54",
         "key": "skin-rejuvenation/rc54",
-        "h": 7156.6875
+        "h": 7774.0625
       },
       {
         "i": 72,
@@ -1259,7 +1259,7 @@
         "i": 74,
         "id": "rc57",
         "key": "skin-rejuvenation/rc57",
-        "h": 6189.96875
+        "h": 7447.40625
       },
       {
         "i": 75,
@@ -1271,25 +1271,25 @@
         "i": 76,
         "id": "rc59",
         "key": "hair-loss/rc59",
-        "h": 7466.375
+        "h": 7466.40625
       },
       {
         "i": 77,
         "id": "rc60",
         "key": "hair-loss/rc60",
-        "h": 6601.5625
+        "h": 7287.78125
       },
       {
         "i": 78,
         "id": "rc61",
         "key": "hair-loss/rc61",
-        "h": 6104.6875
+        "h": 6675.875
       },
       {
         "i": 79,
         "id": "rc62",
         "key": "hair-loss/rc62",
-        "h": 2723.375
+        "h": 2982.28125
       },
       {
         "i": 80,
@@ -1343,7 +1343,7 @@
         "i": 88,
         "id": "rc70",
         "key": "chin-jawline-and-facial-contouring/rc70",
-        "h": 6386.9375
+        "h": 7043
       },
       {
         "i": 89,
@@ -1355,13 +1355,13 @@
         "i": 90,
         "id": "rc71",
         "key": "chin-jawline-and-facial-contouring/rc71",
-        "h": 5967.03125
+        "h": 6109.625
       },
       {
         "i": 91,
         "id": "rc72",
         "key": "chin-jawline-and-facial-contouring/rc72",
-        "h": 3601.375
+        "h": 5742.25
       },
       {
         "i": 92,
@@ -1373,13 +1373,13 @@
         "i": 93,
         "id": "rc104",
         "key": "aesthetic-treatment-selection/rc104",
-        "h": 4403.40625
+        "h": 4403.375
       },
       {
         "i": 94,
         "id": "rc74",
         "key": "aesthetic-treatment-selection/rc74",
-        "h": 6376.03125
+        "h": 6971.6875
       },
       {
         "i": 95,
@@ -1397,19 +1397,19 @@
         "i": 97,
         "id": "rc77",
         "key": "aesthetic-treatment-selection/rc77",
-        "h": 7704
+        "h": 8281.375
       },
       {
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 4463.4375
+        "h": 5143.1875
       },
       {
         "i": 99,
         "id": "rc133",
         "key": "aesthetic-treatment-selection/rc133",
-        "h": 3501.625
+        "h": 3501.5625
       },
       {
         "i": 100,
@@ -1421,7 +1421,7 @@
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 3549.5
+        "h": 3618.0625
       },
       {
         "i": 102,
@@ -1481,7 +1481,7 @@
         "i": 111,
         "id": "rc128",
         "key": "aesthetic-treatment-candidacy/rc128",
-        "h": 4458.625
+        "h": 4458.5625
       },
       {
         "i": 112,
@@ -1571,13 +1571,13 @@
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 5041.5
+        "h": 6262.9375
       },
       {
         "i": 127,
         "id": "rc108",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc108",
-        "h": 4281.4375
+        "h": 4281.375
       },
       {
         "i": 128,
@@ -1589,7 +1589,7 @@
         "i": 129,
         "id": "rc97",
         "key": "aesthetic-treatment-failure-from-diagnostic-error/rc97",
-        "h": 8194.25
+        "h": 9467.6875
       },
       {
         "i": 130,
@@ -1601,7 +1601,7 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 2774.6875
+        "h": 3189.0625
       },
       {
         "i": 132,
@@ -1613,12 +1613,12 @@
         "i": 133,
         "id": "rc109",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc109",
-        "h": 1977.1875
+        "h": 2331.1875
       }
     ]
   },
   "430": {
-    "total": 648294,
+    "total": 667353,
     "chunks": [
       {
         "i": 0,
@@ -1630,7 +1630,7 @@
         "i": 1,
         "id": "rc117",
         "key": "diagnosis-before-aesthetic-treatment-selection/rc117",
-        "h": 3143.359375
+        "h": 3498.921875
       },
       {
         "i": 2,
@@ -1642,19 +1642,19 @@
         "i": 3,
         "id": "rc3",
         "key": "facial-aging-differential-diagnosis/rc3",
-        "h": 5589.296875
+        "h": 6218.09375
       },
       {
         "i": 4,
         "id": "rc4",
         "key": "botox/rc4",
-        "h": 5513.125
+        "h": 5572.265625
       },
       {
         "i": 5,
         "id": "rc5",
         "key": "botox/rc5",
-        "h": 4473.40625
+        "h": 5042.296875
       },
       {
         "i": 6,
@@ -1714,19 +1714,19 @@
         "i": 15,
         "id": "rc12",
         "key": "botox/rc12",
-        "h": 6538.578125
+        "h": 6597.71875
       },
       {
         "i": 16,
         "id": "rc13",
         "key": "botox/rc13",
-        "h": 6484.5625
+        "h": 7499.28125
       },
       {
         "i": 17,
         "id": "rc14",
         "key": "botox/rc14",
-        "h": 4157.5625
+        "h": 4664.921875
       },
       {
         "i": 18,
@@ -1738,7 +1738,7 @@
         "i": 19,
         "id": "rc15",
         "key": "botox/rc15",
-        "h": 4252.5625
+        "h": 4636.90625
       },
       {
         "i": 20,
@@ -1762,13 +1762,13 @@
         "i": 23,
         "id": "rc17",
         "key": "botox/rc17",
-        "h": 6772.265625
+        "h": 7044.78125
       },
       {
         "i": 24,
         "id": "rc18",
         "key": "botox/rc18",
-        "h": 6075.90625
+        "h": 6791.046875
       },
       {
         "i": 25,
@@ -1780,7 +1780,7 @@
         "i": 26,
         "id": "rc20",
         "key": "filler/rc20",
-        "h": 6504.34375
+        "h": 6533.125
       },
       {
         "i": 27,
@@ -1834,25 +1834,25 @@
         "i": 35,
         "id": "rc27",
         "key": "filler/rc27",
-        "h": 3907.421875
+        "h": 4356.59375
       },
       {
         "i": 36,
         "id": "rc131",
         "key": "filler/rc131",
-        "h": 4158.09375
+        "h": 5204.84375
       },
       {
         "i": 37,
         "id": "rc28",
         "key": "filler/rc28",
-        "h": 5951.96875
+        "h": 6192.546875
       },
       {
         "i": 38,
         "id": "rc29",
         "key": "thread-lift/rc29",
-        "h": 6181.703125
+        "h": 6810.5
       },
       {
         "i": 39,
@@ -1888,7 +1888,7 @@
         "i": 44,
         "id": "rc34",
         "key": "thread-lift/rc34",
-        "h": 5970.921875
+        "h": 6037.25
       },
       {
         "i": 45,
@@ -1930,7 +1930,7 @@
         "i": 51,
         "id": "rc39",
         "key": "thread-lift/rc39",
-        "h": 6068.078125
+        "h": 6068.0625
       },
       {
         "i": 52,
@@ -1942,13 +1942,13 @@
         "i": 53,
         "id": "rc41",
         "key": "thread-lift/rc41",
-        "h": 6026.78125
+        "h": 6201.0625
       },
       {
         "i": 54,
         "id": "rc42",
         "key": "thread-lift/rc42",
-        "h": 5913.9375
+        "h": 6573.15625
       },
       {
         "i": 55,
@@ -1990,13 +1990,13 @@
         "i": 61,
         "id": "rc125",
         "key": "acne-pigmentation-and-scars/rc125",
-        "h": 1487.53125
+        "h": 1487.5
       },
       {
         "i": 62,
         "id": "rc47",
         "key": "acne-pigmentation-and-scars/rc47",
-        "h": 3015.3125
+        "h": 3015.34375
       },
       {
         "i": 63,
@@ -2008,19 +2008,19 @@
         "i": 64,
         "id": "rc48",
         "key": "acne-pigmentation-and-scars/rc48",
-        "h": 5535.53125
+        "h": 5535.5
       },
       {
         "i": 65,
         "id": "rc49",
         "key": "acne-pigmentation-and-scars/rc49",
-        "h": 5739.6875
+        "h": 5798.84375
       },
       {
         "i": 66,
         "id": "rc50",
         "key": "acne-pigmentation-and-scars/rc50",
-        "h": 2333.25
+        "h": 3090.71875
       },
       {
         "i": 67,
@@ -2038,7 +2038,7 @@
         "i": 69,
         "id": "rc53",
         "key": "skin-rejuvenation/rc53",
-        "h": 2957.28125
+        "h": 2957.3125
       },
       {
         "i": 70,
@@ -2050,13 +2050,13 @@
         "i": 71,
         "id": "rc54",
         "key": "skin-rejuvenation/rc54",
-        "h": 6688.4375
+        "h": 7278.125
       },
       {
         "i": 72,
         "id": "rc55",
         "key": "skin-rejuvenation/rc55",
-        "h": 6294.46875
+        "h": 6294.4375
       },
       {
         "i": 73,
@@ -2068,7 +2068,7 @@
         "i": 74,
         "id": "rc57",
         "key": "skin-rejuvenation/rc57",
-        "h": 5686.75
+        "h": 6828.5
       },
       {
         "i": 75,
@@ -2086,19 +2086,19 @@
         "i": 77,
         "id": "rc60",
         "key": "hair-loss/rc60",
-        "h": 6062.5
+        "h": 6660.9375
       },
       {
         "i": 78,
         "id": "rc61",
         "key": "hair-loss/rc61",
-        "h": 5616.0625
+        "h": 6129.03125
       },
       {
         "i": 79,
         "id": "rc62",
         "key": "hair-loss/rc62",
-        "h": 2530.09375
+        "h": 2759.4375
       },
       {
         "i": 80,
@@ -2110,7 +2110,7 @@
         "i": 81,
         "id": "rc64",
         "key": "chin-jawline-and-facial-contouring/rc64",
-        "h": 6500.4375
+        "h": 6500.46875
       },
       {
         "i": 82,
@@ -2128,7 +2128,7 @@
         "i": 84,
         "id": "rc66",
         "key": "chin-jawline-and-facial-contouring/rc66",
-        "h": 5584.375
+        "h": 5584.40625
       },
       {
         "i": 85,
@@ -2152,7 +2152,7 @@
         "i": 88,
         "id": "rc70",
         "key": "chin-jawline-and-facial-contouring/rc70",
-        "h": 5967.3125
+        "h": 6565.75
       },
       {
         "i": 89,
@@ -2164,13 +2164,13 @@
         "i": 90,
         "id": "rc71",
         "key": "chin-jawline-and-facial-contouring/rc71",
-        "h": 5538.3125
+        "h": 5681.34375
       },
       {
         "i": 91,
         "id": "rc72",
         "key": "chin-jawline-and-facial-contouring/rc72",
-        "h": 3359.34375
+        "h": 5328.0625
       },
       {
         "i": 92,
@@ -2188,13 +2188,13 @@
         "i": 94,
         "id": "rc74",
         "key": "aesthetic-treatment-selection/rc74",
-        "h": 5900.0625
+        "h": 6407.40625
       },
       {
         "i": 95,
         "id": "rc75",
         "key": "aesthetic-treatment-selection/rc75",
-        "h": 5502.75
+        "h": 5502.78125
       },
       {
         "i": 96,
@@ -2206,13 +2206,13 @@
         "i": 97,
         "id": "rc77",
         "key": "aesthetic-treatment-selection/rc77",
-        "h": 7130.4375
+        "h": 7587.59375
       },
       {
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 4179.53125
+        "h": 4710.125
       },
       {
         "i": 99,
@@ -2230,7 +2230,7 @@
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 3018.96875
+        "h": 3087.6875
       },
       {
         "i": 102,
@@ -2242,7 +2242,7 @@
         "i": 103,
         "id": "rc120",
         "key": "aesthetic-treatment-candidacy/rc120",
-        "h": 3393.59375
+        "h": 3393.625
       },
       {
         "i": 104,
@@ -2380,7 +2380,7 @@
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 4516.6875
+        "h": 5592.1875
       },
       {
         "i": 127,
@@ -2398,7 +2398,7 @@
         "i": 129,
         "id": "rc97",
         "key": "aesthetic-treatment-failure-from-diagnostic-error/rc97",
-        "h": 7499.375
+        "h": 8626.8125
       },
       {
         "i": 130,
@@ -2410,24 +2410,24 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 2814.625
+        "h": 3170.25
       },
       {
         "i": 132,
         "id": "rc129",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc129",
-        "h": 2531.1875
+        "h": 2531.125
       },
       {
         "i": 133,
         "id": "rc109",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc109",
-        "h": 1803.375
+        "h": 2128.5625
       }
     ]
   },
   "768": {
-    "total": 455070,
+    "total": 467595,
     "chunks": [
       {
         "i": 0,
@@ -2439,7 +2439,7 @@
         "i": 1,
         "id": "rc117",
         "key": "diagnosis-before-aesthetic-treatment-selection/rc117",
-        "h": 2191.375
+        "h": 2400.921875
       },
       {
         "i": 2,
@@ -2451,19 +2451,19 @@
         "i": 3,
         "id": "rc3",
         "key": "facial-aging-differential-diagnosis/rc3",
-        "h": 3690.03125
+        "h": 4088.671875
       },
       {
         "i": 4,
         "id": "rc4",
         "key": "botox/rc4",
-        "h": 3707.796875
+        "h": 3736.578125
       },
       {
         "i": 5,
         "id": "rc5",
         "key": "botox/rc5",
-        "h": 3032.53125
+        "h": 3399.3125
       },
       {
         "i": 6,
@@ -2523,19 +2523,19 @@
         "i": 15,
         "id": "rc12",
         "key": "botox/rc12",
-        "h": 4636.59375
+        "h": 4665.375
       },
       {
         "i": 16,
         "id": "rc13",
         "key": "botox/rc13",
-        "h": 4404.421875
+        "h": 5044.125
       },
       {
         "i": 17,
         "id": "rc14",
         "key": "botox/rc14",
-        "h": 2807.171875
+        "h": 3142.78125
       },
       {
         "i": 18,
@@ -2547,7 +2547,7 @@
         "i": 19,
         "id": "rc15",
         "key": "botox/rc15",
-        "h": 2930.078125
+        "h": 3199.921875
       },
       {
         "i": 20,
@@ -2571,13 +2571,13 @@
         "i": 23,
         "id": "rc17",
         "key": "botox/rc17",
-        "h": 5067.15625
+        "h": 5218.234375
       },
       {
         "i": 24,
         "id": "rc18",
         "key": "botox/rc18",
-        "h": 4550.4375
+        "h": 5003.90625
       },
       {
         "i": 25,
@@ -2589,7 +2589,7 @@
         "i": 26,
         "id": "rc20",
         "key": "filler/rc20",
-        "h": 4467.515625
+        "h": 4496.296875
       },
       {
         "i": 27,
@@ -2643,25 +2643,25 @@
         "i": 35,
         "id": "rc27",
         "key": "filler/rc27",
-        "h": 3061.109375
+        "h": 3390
       },
       {
         "i": 36,
         "id": "rc131",
         "key": "filler/rc131",
-        "h": 3109.21875
+        "h": 3839.359375
       },
       {
         "i": 37,
         "id": "rc28",
         "key": "filler/rc28",
-        "h": 4757.46875
+        "h": 5000.359375
       },
       {
         "i": 38,
         "id": "rc29",
         "key": "thread-lift/rc29",
-        "h": 4236.671875
+        "h": 4603.796875
       },
       {
         "i": 39,
@@ -2697,7 +2697,7 @@
         "i": 44,
         "id": "rc34",
         "key": "thread-lift/rc34",
-        "h": 4297.46875
+        "h": 4333.4375
       },
       {
         "i": 45,
@@ -2751,13 +2751,13 @@
         "i": 53,
         "id": "rc41",
         "key": "thread-lift/rc41",
-        "h": 4502.234375
+        "h": 4709.171875
       },
       {
         "i": 54,
         "id": "rc42",
         "key": "thread-lift/rc42",
-        "h": 4325.921875
+        "h": 4752.65625
       },
       {
         "i": 55,
@@ -2823,13 +2823,13 @@
         "i": 65,
         "id": "rc49",
         "key": "acne-pigmentation-and-scars/rc49",
-        "h": 3880.046875
+        "h": 3908.828125
       },
       {
         "i": 66,
         "id": "rc50",
         "key": "acne-pigmentation-and-scars/rc50",
-        "h": 1585.328125
+        "h": 2082.28125
       },
       {
         "i": 67,
@@ -2859,7 +2859,7 @@
         "i": 71,
         "id": "rc54",
         "key": "skin-rejuvenation/rc54",
-        "h": 5329.828125
+        "h": 5717.40625
       },
       {
         "i": 72,
@@ -2871,13 +2871,13 @@
         "i": 73,
         "id": "rc56",
         "key": "skin-rejuvenation/rc56",
-        "h": 3792.59375
+        "h": 3792.578125
       },
       {
         "i": 74,
         "id": "rc57",
         "key": "skin-rejuvenation/rc57",
-        "h": 3906.3125
+        "h": 4645.03125
       },
       {
         "i": 75,
@@ -2895,19 +2895,19 @@
         "i": 77,
         "id": "rc60",
         "key": "hair-loss/rc60",
-        "h": 4186.90625
+        "h": 4554
       },
       {
         "i": 78,
         "id": "rc61",
         "key": "hair-loss/rc61",
-        "h": 3816.625
+        "h": 4188.1875
       },
       {
         "i": 79,
         "id": "rc62",
         "key": "hair-loss/rc62",
-        "h": 1715.78125
+        "h": 1823.6875
       },
       {
         "i": 80,
@@ -2961,7 +2961,7 @@
         "i": 88,
         "id": "rc70",
         "key": "chin-jawline-and-facial-contouring/rc70",
-        "h": 4284.8125
+        "h": 4651.9375
       },
       {
         "i": 89,
@@ -2973,13 +2973,13 @@
         "i": 90,
         "id": "rc71",
         "key": "chin-jawline-and-facial-contouring/rc71",
-        "h": 3877.0625
+        "h": 3992.0625
       },
       {
         "i": 91,
         "id": "rc72",
         "key": "chin-jawline-and-facial-contouring/rc72",
-        "h": 2337.3125
+        "h": 3553.6875
       },
       {
         "i": 92,
@@ -2997,7 +2997,7 @@
         "i": 94,
         "id": "rc74",
         "key": "aesthetic-treatment-selection/rc74",
-        "h": 4134
+        "h": 4469.625
       },
       {
         "i": 95,
@@ -3015,13 +3015,13 @@
         "i": 97,
         "id": "rc77",
         "key": "aesthetic-treatment-selection/rc77",
-        "h": 5295.625
+        "h": 5662.875
       },
       {
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 3011.5625
+        "h": 3398.4375
       },
       {
         "i": 99,
@@ -3039,7 +3039,7 @@
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 1951.375
+        "h": 2021.25
       },
       {
         "i": 102,
@@ -3189,13 +3189,13 @@
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 3052.625
+        "h": 3723.8125
       },
       {
         "i": 127,
         "id": "rc108",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc108",
-        "h": 3563.46875
+        "h": 3563.4375
       },
       {
         "i": 128,
@@ -3207,7 +3207,7 @@
         "i": 129,
         "id": "rc97",
         "key": "aesthetic-treatment-failure-from-diagnostic-error/rc97",
-        "h": 5092.9375
+        "h": 5816.125
       },
       {
         "i": 130,
@@ -3219,24 +3219,24 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 3184.0625
+        "h": 3425.125
       },
       {
         "i": 132,
         "id": "rc129",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc129",
-        "h": 1817.6875
+        "h": 1817.71875
       },
       {
         "i": 133,
         "id": "rc109",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc109",
-        "h": 1388.75
+        "h": 1598.3125
       }
     ]
   },
   "1024": {
-    "total": 477066,
+    "total": 490361,
     "chunks": [
       {
         "i": 0,
@@ -3248,7 +3248,7 @@
         "i": 1,
         "id": "rc117",
         "key": "diagnosis-before-aesthetic-treatment-selection/rc117",
-        "h": 2246.671875
+        "h": 2493.171875
       },
       {
         "i": 2,
@@ -3260,19 +3260,19 @@
         "i": 3,
         "id": "rc3",
         "key": "facial-aging-differential-diagnosis/rc3",
-        "h": 3781
+        "h": 4189.609375
       },
       {
         "i": 4,
         "id": "rc4",
         "key": "botox/rc4",
-        "h": 3899.53125
+        "h": 3928.3125
       },
       {
         "i": 5,
         "id": "rc5",
         "key": "botox/rc5",
-        "h": 3178.046875
+        "h": 3552.984375
       },
       {
         "i": 6,
@@ -3332,19 +3332,19 @@
         "i": 15,
         "id": "rc12",
         "key": "botox/rc12",
-        "h": 4878.875
+        "h": 4907.65625
       },
       {
         "i": 16,
         "id": "rc13",
         "key": "botox/rc13",
-        "h": 4710.34375
+        "h": 5397.875
       },
       {
         "i": 17,
         "id": "rc14",
         "key": "botox/rc14",
-        "h": 2970.71875
+        "h": 3314.484375
       },
       {
         "i": 18,
@@ -3356,7 +3356,7 @@
         "i": 19,
         "id": "rc15",
         "key": "botox/rc15",
-        "h": 3004.296875
+        "h": 3279.578125
       },
       {
         "i": 20,
@@ -3380,13 +3380,13 @@
         "i": 23,
         "id": "rc17",
         "key": "botox/rc17",
-        "h": 5349.921875
+        "h": 5533.421875
       },
       {
         "i": 24,
         "id": "rc18",
         "key": "botox/rc18",
-        "h": 4690.171875
+        "h": 5217.546875
       },
       {
         "i": 25,
@@ -3398,7 +3398,7 @@
         "i": 26,
         "id": "rc20",
         "key": "filler/rc20",
-        "h": 4771.71875
+        "h": 4800.5
       },
       {
         "i": 27,
@@ -3452,25 +3452,25 @@
         "i": 35,
         "id": "rc27",
         "key": "filler/rc27",
-        "h": 3162.0625
+        "h": 3524.28125
       },
       {
         "i": 36,
         "id": "rc131",
         "key": "filler/rc131",
-        "h": 3243.1875
+        "h": 4019.34375
       },
       {
         "i": 37,
         "id": "rc28",
         "key": "filler/rc28",
-        "h": 4931.359375
+        "h": 5111.21875
       },
       {
         "i": 38,
         "id": "rc29",
         "key": "thread-lift/rc29",
-        "h": 4438.390625
+        "h": 4847
       },
       {
         "i": 39,
@@ -3506,7 +3506,7 @@
         "i": 44,
         "id": "rc34",
         "key": "thread-lift/rc34",
-        "h": 4433.0625
+        "h": 4469.03125
       },
       {
         "i": 45,
@@ -3560,13 +3560,13 @@
         "i": 53,
         "id": "rc41",
         "key": "thread-lift/rc41",
-        "h": 4843.328125
+        "h": 4987.234375
       },
       {
         "i": 54,
         "id": "rc42",
         "key": "thread-lift/rc42",
-        "h": 4518.703125
+        "h": 4986.015625
       },
       {
         "i": 55,
@@ -3632,13 +3632,13 @@
         "i": 65,
         "id": "rc49",
         "key": "acne-pigmentation-and-scars/rc49",
-        "h": 4077.8125
+        "h": 4139.015625
       },
       {
         "i": 66,
         "id": "rc50",
         "key": "acne-pigmentation-and-scars/rc50",
-        "h": 1656.53125
+        "h": 2228.296875
       },
       {
         "i": 67,
@@ -3656,7 +3656,7 @@
         "i": 69,
         "id": "rc53",
         "key": "skin-rejuvenation/rc53",
-        "h": 2124.3125
+        "h": 2124.296875
       },
       {
         "i": 70,
@@ -3668,7 +3668,7 @@
         "i": 71,
         "id": "rc54",
         "key": "skin-rejuvenation/rc54",
-        "h": 5797.328125
+        "h": 6225.46875
       },
       {
         "i": 72,
@@ -3686,7 +3686,7 @@
         "i": 74,
         "id": "rc57",
         "key": "skin-rejuvenation/rc57",
-        "h": 4197.5625
+        "h": 4953.5
       },
       {
         "i": 75,
@@ -3704,19 +3704,19 @@
         "i": 77,
         "id": "rc60",
         "key": "hair-loss/rc60",
-        "h": 4356.6875
+        "h": 4765.3125
       },
       {
         "i": 78,
         "id": "rc61",
         "key": "hair-loss/rc61",
-        "h": 3979.28125
+        "h": 4359
       },
       {
         "i": 79,
         "id": "rc62",
         "key": "hair-loss/rc62",
-        "h": 1851.8125
+        "h": 1959.71875
       },
       {
         "i": 80,
@@ -3740,7 +3740,7 @@
         "i": 83,
         "id": "rc65",
         "key": "chin-jawline-and-facial-contouring/rc65",
-        "h": 3979.96875
+        "h": 3979.9375
       },
       {
         "i": 84,
@@ -3764,13 +3764,13 @@
         "i": 87,
         "id": "rc69",
         "key": "chin-jawline-and-facial-contouring/rc69",
-        "h": 4073.0625
+        "h": 4073.09375
       },
       {
         "i": 88,
         "id": "rc70",
         "key": "chin-jawline-and-facial-contouring/rc70",
-        "h": 4512.125
+        "h": 4888.3125
       },
       {
         "i": 89,
@@ -3782,13 +3782,13 @@
         "i": 90,
         "id": "rc71",
         "key": "chin-jawline-and-facial-contouring/rc71",
-        "h": 4008.28125
+        "h": 4125.09375
       },
       {
         "i": 91,
         "id": "rc72",
         "key": "chin-jawline-and-facial-contouring/rc72",
-        "h": 2397.46875
+        "h": 3707.6875
       },
       {
         "i": 92,
@@ -3806,7 +3806,7 @@
         "i": 94,
         "id": "rc74",
         "key": "aesthetic-treatment-selection/rc74",
-        "h": 4300.46875
+        "h": 4644.21875
       },
       {
         "i": 95,
@@ -3818,43 +3818,43 @@
         "i": 96,
         "id": "rc76",
         "key": "aesthetic-treatment-selection/rc76",
-        "h": 4681.875
+        "h": 4681.90625
       },
       {
         "i": 97,
         "id": "rc77",
         "key": "aesthetic-treatment-selection/rc77",
-        "h": 5546
+        "h": 5946.5625
       },
       {
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 3149.65625
+        "h": 3542.90625
       },
       {
         "i": 99,
         "id": "rc133",
         "key": "aesthetic-treatment-selection/rc133",
-        "h": 2415
+        "h": 2415.03125
       },
       {
         "i": 100,
         "id": "rc105",
         "key": "aesthetic-treatment-selection/rc105",
-        "h": 3515.53125
+        "h": 3515.5
       },
       {
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 1839.3125
+        "h": 1910.0625
       },
       {
         "i": 102,
         "id": "rc80",
         "key": "aesthetic-treatment-candidacy/rc80",
-        "h": 2715.3125
+        "h": 2715.28125
       },
       {
         "i": 103,
@@ -3878,13 +3878,13 @@
         "i": 106,
         "id": "rc82",
         "key": "aesthetic-treatment-candidacy/rc82",
-        "h": 4227.78125
+        "h": 4227.75
       },
       {
         "i": 107,
         "id": "rc106",
         "key": "aesthetic-treatment-candidacy/rc106",
-        "h": 2002.4375
+        "h": 2002.46875
       },
       {
         "i": 108,
@@ -3896,7 +3896,7 @@
         "i": 109,
         "id": "rc83",
         "key": "aesthetic-treatment-candidacy/rc83",
-        "h": 5577.09375
+        "h": 5577.125
       },
       {
         "i": 110,
@@ -3908,7 +3908,7 @@
         "i": 111,
         "id": "rc128",
         "key": "aesthetic-treatment-candidacy/rc128",
-        "h": 3247.375
+        "h": 3247.40625
       },
       {
         "i": 112,
@@ -3920,7 +3920,7 @@
         "i": 113,
         "id": "rc119",
         "key": "complications-aftercare-and-follow-up/rc119",
-        "h": 2149.8125
+        "h": 2149.84375
       },
       {
         "i": 114,
@@ -3980,7 +3980,7 @@
         "i": 123,
         "id": "rc92",
         "key": "complications-aftercare-and-follow-up/rc92",
-        "h": 4068.3125
+        "h": 4068.28125
       },
       {
         "i": 124,
@@ -3998,7 +3998,7 @@
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 3080
+        "h": 3832.375
       },
       {
         "i": 127,
@@ -4010,13 +4010,13 @@
         "i": 128,
         "id": "rc96",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc96",
-        "h": 478.5625
+        "h": 478.59375
       },
       {
         "i": 129,
         "id": "rc97",
         "key": "aesthetic-treatment-failure-from-diagnostic-error/rc97",
-        "h": 4883.34375
+        "h": 5655.25
       },
       {
         "i": 130,
@@ -4028,7 +4028,7 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 3200.40625
+        "h": 3446.90625
       },
       {
         "i": 132,
@@ -4040,12 +4040,12 @@
         "i": 133,
         "id": "rc109",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc109",
-        "h": 1431.21875
+        "h": 1645.3125
       }
     ]
   },
   "1440": {
-    "total": 488759,
+    "total": 502038,
     "chunks": [
       {
         "i": 0,
@@ -4057,7 +4057,7 @@
         "i": 1,
         "id": "rc117",
         "key": "diagnosis-before-aesthetic-treatment-selection/rc117",
-        "h": 2302.328125
+        "h": 2553.328125
       },
       {
         "i": 2,
@@ -4069,19 +4069,19 @@
         "i": 3,
         "id": "rc3",
         "key": "facial-aging-differential-diagnosis/rc3",
-        "h": 3743.359375
+        "h": 4160.21875
       },
       {
         "i": 4,
         "id": "rc4",
         "key": "botox/rc4",
-        "h": 3989.875
+        "h": 4018.65625
       },
       {
         "i": 5,
         "id": "rc5",
         "key": "botox/rc5",
-        "h": 3266.15625
+        "h": 3647.84375
       },
       {
         "i": 6,
@@ -4141,19 +4141,19 @@
         "i": 15,
         "id": "rc12",
         "key": "botox/rc12",
-        "h": 4975.0625
+        "h": 5003.84375
       },
       {
         "i": 16,
         "id": "rc13",
         "key": "botox/rc13",
-        "h": 4816.90625
+        "h": 5484.765625
       },
       {
         "i": 17,
         "id": "rc14",
         "key": "botox/rc14",
-        "h": 3027.765625
+        "h": 3378.28125
       },
       {
         "i": 18,
@@ -4165,7 +4165,7 @@
         "i": 19,
         "id": "rc15",
         "key": "botox/rc15",
-        "h": 3075.65625
+        "h": 3355.4375
       },
       {
         "i": 20,
@@ -4189,13 +4189,13 @@
         "i": 23,
         "id": "rc17",
         "key": "botox/rc17",
-        "h": 5440.34375
+        "h": 5624.59375
       },
       {
         "i": 24,
         "id": "rc18",
         "key": "botox/rc18",
-        "h": 4779.5625
+        "h": 5315.9375
       },
       {
         "i": 25,
@@ -4207,7 +4207,7 @@
         "i": 26,
         "id": "rc20",
         "key": "filler/rc20",
-        "h": 4876.921875
+        "h": 4905.703125
       },
       {
         "i": 27,
@@ -4261,25 +4261,25 @@
         "i": 35,
         "id": "rc27",
         "key": "filler/rc27",
-        "h": 3219.390625
+        "h": 3516.765625
       },
       {
         "i": 36,
         "id": "rc131",
         "key": "filler/rc131",
-        "h": 3301.78125
+        "h": 4056.765625
       },
       {
         "i": 37,
         "id": "rc28",
         "key": "filler/rc28",
-        "h": 5032.8125
+        "h": 5212.671875
       },
       {
         "i": 38,
         "id": "rc29",
         "key": "thread-lift/rc29",
-        "h": 4536.9375
+        "h": 4953.796875
       },
       {
         "i": 39,
@@ -4315,7 +4315,7 @@
         "i": 44,
         "id": "rc34",
         "key": "thread-lift/rc34",
-        "h": 4528.984375
+        "h": 4564.953125
       },
       {
         "i": 45,
@@ -4369,13 +4369,13 @@
         "i": 53,
         "id": "rc41",
         "key": "thread-lift/rc41",
-        "h": 4946.84375
+        "h": 5090.75
       },
       {
         "i": 54,
         "id": "rc42",
         "key": "thread-lift/rc42",
-        "h": 4576.625
+        "h": 5051.4375
       },
       {
         "i": 55,
@@ -4441,13 +4441,13 @@
         "i": 65,
         "id": "rc49",
         "key": "acne-pigmentation-and-scars/rc49",
-        "h": 4181.859375
+        "h": 4243.8125
       },
       {
         "i": 66,
         "id": "rc50",
         "key": "acne-pigmentation-and-scars/rc50",
-        "h": 1689.34375
+        "h": 2237.6875
       },
       {
         "i": 67,
@@ -4465,7 +4465,7 @@
         "i": 69,
         "id": "rc53",
         "key": "skin-rejuvenation/rc53",
-        "h": 2166.546875
+        "h": 2166.5625
       },
       {
         "i": 70,
@@ -4477,7 +4477,7 @@
         "i": 71,
         "id": "rc54",
         "key": "skin-rejuvenation/rc54",
-        "h": 6288.09375
+        "h": 6723.75
       },
       {
         "i": 72,
@@ -4495,7 +4495,7 @@
         "i": 74,
         "id": "rc57",
         "key": "skin-rejuvenation/rc57",
-        "h": 4291.9375
+        "h": 5062.125
       },
       {
         "i": 75,
@@ -4513,19 +4513,19 @@
         "i": 77,
         "id": "rc60",
         "key": "hair-loss/rc60",
-        "h": 4488.0625
+        "h": 4904.9375
       },
       {
         "i": 78,
         "id": "rc61",
         "key": "hair-loss/rc61",
-        "h": 4081.5
+        "h": 4467.96875
       },
       {
         "i": 79,
         "id": "rc62",
         "key": "hair-loss/rc62",
-        "h": 1886.125
+        "h": 1994.03125
       },
       {
         "i": 80,
@@ -4537,7 +4537,7 @@
         "i": 81,
         "id": "rc64",
         "key": "chin-jawline-and-facial-contouring/rc64",
-        "h": 4657.84375
+        "h": 4657.875
       },
       {
         "i": 82,
@@ -4549,13 +4549,13 @@
         "i": 83,
         "id": "rc65",
         "key": "chin-jawline-and-facial-contouring/rc65",
-        "h": 4071.0625
+        "h": 4071.03125
       },
       {
         "i": 84,
         "id": "rc66",
         "key": "chin-jawline-and-facial-contouring/rc66",
-        "h": 4189.15625
+        "h": 4189.125
       },
       {
         "i": 85,
@@ -4567,7 +4567,7 @@
         "i": 86,
         "id": "rc68",
         "key": "chin-jawline-and-facial-contouring/rc68",
-        "h": 4984.6875
+        "h": 4984.71875
       },
       {
         "i": 87,
@@ -4579,7 +4579,7 @@
         "i": 88,
         "id": "rc70",
         "key": "chin-jawline-and-facial-contouring/rc70",
-        "h": 4607.375
+        "h": 4991.0625
       },
       {
         "i": 89,
@@ -4591,13 +4591,13 @@
         "i": 90,
         "id": "rc71",
         "key": "chin-jawline-and-facial-contouring/rc71",
-        "h": 4143.75
+        "h": 4262.09375
       },
       {
         "i": 91,
         "id": "rc72",
         "key": "chin-jawline-and-facial-contouring/rc72",
-        "h": 2457.125
+        "h": 3792.8125
       },
       {
         "i": 92,
@@ -4615,7 +4615,7 @@
         "i": 94,
         "id": "rc74",
         "key": "aesthetic-treatment-selection/rc74",
-        "h": 4396.0625
+        "h": 4746.5625
       },
       {
         "i": 95,
@@ -4627,19 +4627,19 @@
         "i": 96,
         "id": "rc76",
         "key": "aesthetic-treatment-selection/rc76",
-        "h": 4768.59375
+        "h": 4768.625
       },
       {
         "i": 97,
         "id": "rc77",
         "key": "aesthetic-treatment-selection/rc77",
-        "h": 5693.46875
+        "h": 6062.375
       },
       {
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 3222.0625
+        "h": 3620.5625
       },
       {
         "i": 99,
@@ -4657,13 +4657,13 @@
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 1786.21875
+        "h": 1824.5625
       },
       {
         "i": 102,
         "id": "rc80",
         "key": "aesthetic-treatment-candidacy/rc80",
-        "h": 2748.71875
+        "h": 2748.6875
       },
       {
         "i": 103,
@@ -4687,7 +4687,7 @@
         "i": 106,
         "id": "rc82",
         "key": "aesthetic-treatment-candidacy/rc82",
-        "h": 4321.09375
+        "h": 4321.125
       },
       {
         "i": 107,
@@ -4747,7 +4747,7 @@
         "i": 116,
         "id": "rc87",
         "key": "complications-aftercare-and-follow-up/rc87",
-        "h": 4229.5
+        "h": 4229.53125
       },
       {
         "i": 117,
@@ -4759,7 +4759,7 @@
         "i": 118,
         "id": "rc111",
         "key": "complications-aftercare-and-follow-up/rc111",
-        "h": 3073.46875
+        "h": 3073.5
       },
       {
         "i": 119,
@@ -4777,7 +4777,7 @@
         "i": 121,
         "id": "rc91",
         "key": "complications-aftercare-and-follow-up/rc91",
-        "h": 3144.125
+        "h": 3144.09375
       },
       {
         "i": 122,
@@ -4801,13 +4801,13 @@
         "i": 125,
         "id": "rc94",
         "key": "complications-aftercare-and-follow-up/rc94",
-        "h": 611.625
+        "h": 611.59375
       },
       {
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 2990.9375
+        "h": 3758.34375
       },
       {
         "i": 127,
@@ -4825,7 +4825,7 @@
         "i": 129,
         "id": "rc97",
         "key": "aesthetic-treatment-failure-from-diagnostic-error/rc97",
-        "h": 5060.53125
+        "h": 5846.6875
       },
       {
         "i": 130,
@@ -4837,27 +4837,27 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 3248.59375
+        "h": 3499.59375
       },
       {
         "i": 132,
         "id": "rc129",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc129",
-        "h": 1724.625
+        "h": 1724.65625
       },
       {
         "i": 133,
         "id": "rc109",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc109",
-        "h": 1485.09375
+        "h": 1702.9375
       }
     ]
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-10T14:56:02.004Z",
-    "sourceSha256": "050b2965195c7e4662a79a2309b07369e7e719b42a24d84c789eac563ca936e8",
-    "domSha256": "409012031ffb9a00e438179b7ef5a8cce8b5cb3706a0821d18b723a15a471ae2",
+    "measuredAt": "2026-09-12T01:16:45.282Z",
+    "sourceSha256": "4a2d5f6f3fa63cb879c755b4f83ac95ddf38d185105c3a75cb76b0973eeeb083",
+    "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
         "astro.config.mjs",
@@ -4889,7 +4889,7 @@
       ],
       [
         "src/components/GuideNavigator.astro",
-        "ffcdafacb8219a33db9d2dc8475ac0919873e55aeb61af98e9f38671024bccc1"
+        "9855cb7d6e2bbc4b371bba7796bc0c0990eb75fb5ce0808afdfee5f48a985b3c"
       ],
       [
         "src/components/SiteFooter.astro",
@@ -4901,7 +4901,7 @@
       ],
       [
         "src/lib/css-delivery.mjs",
-        "1d5843438e350d22af902b4e8c002c00b5c4674a4d265dc7961f27d5d3b07573"
+        "5e721034b7e430db164e8818ef39f33334b8236462b627e8f46af5f3a68b7ea0"
       ],
       [
         "src/lib/hero-image-contract.mjs",
@@ -4913,11 +4913,11 @@
       ],
       [
         "src/styles/global.css",
-        "be1d677480f6bed5b684688d76839e37990d4132451c1a2f66f4be611fa4eee7"
+        "7a1413d5f73cb867e282b50d4b245bc55809cb91a71722f3fe8d2c1db2a16fd5"
       ],
       [
         "assembled-render-chunk-content",
-        "409012031ffb9a00e438179b7ef5a8cce8b5cb3706a0821d18b723a15a471ae2"
+        "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e"
       ]
     ],
     "measurement": {

@@ -188,12 +188,38 @@ if (
   throw new Error(`Workflow topology drift: ${workflows.join(", ")}`);
 
 const validateWorkflowDependencyGates = (content, workflow) => {
-  const installs = [...content.matchAll(/\bnpm ci\b/g)];
+  const historicalMarker = "HISTORICAL_REPRODUCIBILITY_INSTALL";
+  const historicalMatches = [
+    ...content.matchAll(
+      /# HISTORICAL_REPRODUCIBILITY_INSTALL:[^\n]*\n(?:\s*#[^\n]*\n)*\s*npm ci\b/g,
+    ),
+  ];
+  if (historicalMatches.length > 1)
+    throw new Error(`Historical reproducibility install marker is not unique: ${workflow}`);
+  if (
+    historicalMatches.length === 1 &&
+    workflow !== ".github/workflows/stack-monitor.yml" &&
+    workflow !== "historical reproducibility fixture"
+  )
+    throw new Error(`Historical install exemption is forbidden outside stack monitor: ${workflow}`);
+
+  const historicalInstallIndexes = new Set(
+    historicalMatches.map(
+      (match) => match.index + match[0].lastIndexOf("npm ci"),
+    ),
+  );
+  const installs = [...content.matchAll(/\bnpm ci\b/g)].filter(
+    (match) => !historicalInstallIndexes.has(match.index),
+  );
   const gates = [
     ...content.matchAll(
       /^\s*(?:run:\s*)?(?:npm run security:dependencies|node "\$GITHUB_WORKSPACE\/scripts\/dependency-advisory-gate\.mjs")\s*$/gm,
     ),
   ];
+  if (content.includes('node "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"'))
+    throw new Error(
+      `Canonical workflows must invoke the current advisory gate through npm run security:dependencies: ${workflow}`,
+    );
   if (/\bnpm audit\b/.test(content))
     throw new Error(
       `Canonical workflows must use the bounded fail-closed advisory gate: ${workflow}`,
@@ -208,23 +234,40 @@ const validateWorkflowDependencyGates = (content, workflow) => {
     )
   )
     throw new Error(
-      `Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installs.length}/${gates.length})`,
+      `Every current npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installs.length}/${gates.length})`,
     );
-  if (
-    content.includes(
-      'node "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"',
-    ) &&
-    (!content.includes('git worktree add --detach "$SNAPSHOT_SOURCE" "$TAG"') ||
-      !/set -euo pipefail[\s\S]*?\(\s*\n\s*cd "\$SNAPSHOT_SOURCE"\s*\n\s*npm ci\s*\n\s*node "\$GITHUB_WORKSPACE\/scripts\/dependency-advisory-gate\.mjs"\s*\n/.test(
-        content,
-      ))
-  )
-    throw new Error(
-      `Historical dependency audit must run from the isolated snapshot using the current canonical gate: ${workflow}`,
-    );
+
+  if (historicalMatches.length === 1) {
+    if (
+      !content.includes('git worktree add --detach "$SNAPSHOT_SOURCE" "$TAG"') ||
+      !content.includes('cd "$SNAPSHOT_SOURCE"') ||
+      !content.includes("npm run build")
+    )
+      throw new Error(
+        `Historical reproducibility exemption requires an isolated frozen worktree: ${workflow}`,
+      );
+    const historicalTail = content.slice(historicalMatches[0].index);
+    const buildIndex = historicalTail.indexOf("npm run build");
+    const beforeBuild =
+      buildIndex >= 0 ? historicalTail.slice(0, buildIndex) : historicalTail;
+    if (/dependency-advisory-gate|security:dependencies/.test(beforeBuild))
+      throw new Error(
+        `Historical reproducibility lane must not be blocked by current advisories: ${workflow}`,
+      );
+  }
 };
 const dependencyGateFixture = "npm ci\nrun: npm run security:dependencies\n";
 validateWorkflowDependencyGates(dependencyGateFixture, "advisory gate fixture");
+validateWorkflowDependencyGates(
+  `git worktree add --detach "$SNAPSHOT_SOURCE" "$TAG"
+(
+  cd "$SNAPSHOT_SOURCE"
+  # HISTORICAL_REPRODUCIBILITY_INSTALL: fixture
+  npm ci
+  npm run build
+)`,
+  "historical reproducibility fixture",
+);
 for (const mutation of [
   "npm ci\n",
   "run: npm run security:dependencies\nnpm ci\n",

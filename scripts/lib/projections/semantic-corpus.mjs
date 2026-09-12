@@ -2,13 +2,17 @@ import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { compileKnowledgeXml } from "../knowledge-xml.mjs";
 import {
-  nodeTypes,
   refIds,
   sha256,
   valueText,
 } from "../projection-context.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
-import { buildEntityFacts, serializeEntityFacts } from "../entity-facts.mjs";
+import {
+  buildEntityFacts,
+  entityFactsCsvwMetadata,
+  serializeEntityFacts,
+} from "../entity-facts.mjs";
+import { deriveCanonicalAnswerProjection } from "../../../src/lib/answer-projection.mjs";
 
 export async function compileSemanticCorpus(context) {
   const {
@@ -22,50 +26,27 @@ export async function compileSemanticCorpus(context) {
   } = context;
 
   const factRecords = await buildEntityFacts(context);
+  const answerProjection = deriveCanonicalAnswerProjection(graph, release);
   await writeFile(
     path.join(projections, "entity-facts.csv"),
     serializeEntityFacts(factRecords),
   );
+  await writeFile(
+    path.join(projections, "entity-facts.csv-metadata.json"),
+    `${JSON.stringify(entityFactsCsvwMetadata(), null, 2)}\n`,
+  );
 
   const answerRecords = [];
-  for (const question of graph["@graph"].filter((node) =>
-    nodeTypes(node).includes("Question"),
-  )) {
-    const answerId = question.acceptedAnswer?.["@id"];
-    if (typeof answerId !== "string" || !answerId)
-      throw new Error(
-        `Question lacks an accepted Answer ID: ${question["@id"]}`,
-      );
-    const answer = byId.get(answerId);
-    if (
-      !answer ||
-      !nodeTypes(answer).includes("Answer") ||
-      typeof answer.text !== "string" ||
-      !answer.text.trim()
-    )
-      throw new Error(
-        `Question references an invalid Answer: ${question["@id"]} -> ${answerId}`,
-      );
-    const sourceUrl = question.url;
-    if (typeof sourceUrl !== "string" || !sourceUrl)
-      throw new Error(
-        `Question lacks a canonical source URL: ${question["@id"]}`,
-      );
-    if (
-      typeof question.inLanguage !== "string" ||
-      !question.inLanguage ||
-      answer.inLanguage !== question.inLanguage
-    )
-      throw new Error(
-        `Question/Answer language is missing or inconsistent: ${question["@id"]}`,
-      );
-    const sourceNodes = sourceNodesForUrl(sourceUrl);
+  for (const projection of answerProjection.answers) {
+    const question = byId.get(projection.questionId);
+    const answer = byId.get(projection.answerId);
+    const sourceNodes = sourceNodesForUrl(projection.sourceUrl);
     if (
       !sourceNodes?.includes(question) ||
       !sourceNodes.includes(answer)
     )
       throw new Error(
-        `Question/Answer lack their direct source URL binding: ${question["@id"]}`,
+        `Question/Answer lack their direct source URL binding: ${projection.questionId}`,
       );
     const claimEvidenceIds = [
       ...new Set(sourceNodes.flatMap(evidenceRefsForNode)),
@@ -89,7 +70,8 @@ export async function compileSemanticCorpus(context) {
     answerRecords.push({
       q: question,
       a: answer,
-      sourceUrl,
+      sourceUrl: projection.sourceUrl,
+      projection,
       graphNodeIds: sourceNodes.map((node) => node["@id"]),
       evidenceIds,
       claimEvidenceIds,
@@ -151,6 +133,41 @@ VERSION: ${release.release}
 ${answers.join("\n---\n\n")}`,
   );
 
+  const factMap = {
+    schemaVersion: "1.0",
+    type: "CanonicalFactMap",
+    canonicalUrl: release.canonicalUrl,
+    release: release.release,
+    sourceOfTruth: answerProjection.source,
+    authority: {
+      graph: "src/data/semantic/knowledge-graph.jsonld",
+      answerText: "Answer.text",
+      visibleHtml: ".answer-projection[id]",
+      jsonLd: "graph.jsonld#answer-*",
+      retrieval: "answers.txt::ANSWER",
+    },
+    records: answerRecords.map((record) => ({
+      questionId: record.projection.questionId,
+      answerId: record.projection.answerId,
+      question: record.projection.questionText,
+      answer: record.projection.answerText,
+      language: record.projection.language,
+      sourceUrl: record.projection.sourceUrl,
+      htmlId: record.projection.htmlId,
+      htmlUrl: record.projection.htmlUrl,
+      aboutIds: record.projection.aboutIds,
+      graphNodeIds: record.graphNodeIds,
+      evidenceIds: record.evidenceIds,
+      claimEvidenceIds: record.claimEvidenceIds,
+      entityEvidenceIds: record.entityEvidenceIds,
+      sourceHashSha256: record.sourceHash,
+    })),
+  };
+  await writeFile(
+    path.join(projections, "fact-map.json"),
+    `${JSON.stringify(factMap, null, 2)}\n`,
+  );
+
   const intentSource = await readFile(
     path.join(data, "templates/llms.template.txt"),
     "utf8",
@@ -167,5 +184,6 @@ ${answers.join("\n---\n\n")}`,
     rowsCount: factRecords.length,
     answersCount: answers.length,
     answerRecords,
+    answerProjection,
   };
 }

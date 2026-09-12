@@ -1,4 +1,5 @@
 import path from "node:path";
+import { assertMojavezEvidence, readMojavezObservation } from "./lib/mojavez-evidence.mjs";
 import { datasetRevisionDate } from "./lib/release-graph.mjs";
 import { readFile } from "node:fs/promises";
 import {
@@ -17,6 +18,7 @@ const release = await readJson("release.json"),
     await readJson("evidence-registry.json"),
   ),
   snapshot = deriveEvidenceSnapshot(release, registry);
+assertMojavezEvidence({ graph, registry, release, observation: await readMojavezObservation(root) });
 const fail = (m) => {
   throw new Error(m);
 };

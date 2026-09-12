@@ -1,5 +1,10 @@
 {
-  "@context": "https://w3id.org/codemeta/3.0",
+  "@context": [
+    "https://w3id.org/codemeta/3.1",
+    {
+      "schema": "http://schema.org/"
+    }
+  ],
   "@type": "SoftwareSourceCode",
   "@id": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
   "name": "Dr. Saeed Ghezelbash canonical site and knowledge-graph source",
@@ -15,7 +20,7 @@
   ],
   "runtimePlatform": "Node.js 24.19.0",
   "softwareVersion": "1.2.5",
-  "dateModified": "2026-09-07",
+  "dateModified": "2026-09-11",
   "developmentStatus": "active",
   "author": {
     "@type": "Person",
@@ -23,7 +28,7 @@
     "name": "Saeed Ghezelbash",
     "identifier": "https://orcid.org/0009-0001-9346-8475"
   },
-  "subjectOf": {
+  "schema:subjectOf": {
     "@type": "Dataset",
     "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
     "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",

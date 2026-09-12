@@ -34,6 +34,18 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
     append(child) { child.parent = this; this.children.push(child); }
     replaceChildren() { this.children = []; }
     contains(child) { return child === this || this.children.some((x) => x.contains(child)); }
+    querySelectorAll(selector) {
+      if (!selector.includes("button") || !selector.includes("input")) return [];
+      const found = [];
+      const walk = (node) => {
+        for (const child of node.children) {
+          if (["BUTTON", "INPUT", "A"].includes(child.tagName)) found.push(child);
+          walk(child);
+        }
+      };
+      walk(this);
+      return found;
+    }
     matches(selector) {
       if (selector.startsWith(".")) return this.classes.has(selector.slice(1));
       if (selector === 'a[href^="#"]') return this.tagName === "A" && this.href?.startsWith("#");
@@ -57,7 +69,7 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
     input = new Element("input", "guide-search-input"),
     results = new Element("ol", "guide-search-results"),
     status = new Element("p", "guide-search-status"),
-    opener = new Element("a"),
+    opener = new Element("button"),
     close = new Element("button"),
     top = new Element("a"),
     section = new Element("section", "botox", ["content-section"]),
@@ -65,7 +77,6 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
     heading = new Element("h3", "botox-heading"),
     physician = new Element("h2", "saeed-ghezelbash"),
     tocLink = new Element("a");
-  opener.href = "#aesthetic-medicine-table-of-contents";
   opener.setAttribute("data-guide-search-open", "");
   close.setAttribute("data-guide-search-close", "");
   top.hidden = true;
@@ -77,10 +88,10 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
   dialog.open = false;
   if (modal) {
     dialog.showModal = () => { dialog.open = true; };
-    dialog.close = () => { dialog.open = false; };
+    dialog.close = () => { dialog.open = false; emit(dialog, "close"); };
   }
   for (const x of [dialog, opener, top, section, physician, tocLink]) body.append(x);
-  for (const x of [input, results, status, close]) dialog.append(x);
+  for (const x of [close, input, results, status]) dialog.append(x);
   section.append(chunk);
   chunk.append(heading);
   document = new Element("document");
@@ -163,7 +174,7 @@ export async function guideNavigatorContract() {
     runtime = source.match(/<script\b[^>]*\bid="site-runtime"[^>]*>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(runtime, "The actual shipped site runtime is required");
   const page = await readFile(new URL("../src/content-source/page.md", import.meta.url), "utf8");
-  assert.match(page, /<a\b(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*\bhref="#aesthetic-medicine-table-of-contents")[^>]*>/);
+  assert.match(page, /<button\b(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*\btype="button")[^>]*>/);
   const f = fixture(runtime),
     headingQuery = "main h2[id],main h3[id],main h4[id]",
     tocQuery = '#aesthetic-medicine-table-of-contents a[href^="#"]';
@@ -173,6 +184,18 @@ export async function guideNavigatorContract() {
   assert.equal(f.emit(f.opener, "click").defaultPrevented, true);
   f.flushFrames();
   assert.equal(f.document.activeElement, f.input);
+  const tabForward = f.emit(f.input, "keydown", { key: "Tab" });
+  assert.equal(tabForward.defaultPrevented, true, "Tab at the end of the dialog must wrap");
+  assert.equal(f.document.activeElement, f.close);
+  const tabWithin = f.emit(f.close, "keydown", { key: "Tab" });
+  assert.equal(tabWithin.defaultPrevented, false, "native Tab order must remain available inside the dialog");
+  f.input.focus();
+  assert.equal(f.document.activeElement, f.input);
+  f.close.focus();
+  const tabBackward = f.emit(f.close, "keydown", { key: "Tab", shiftKey: true });
+  assert.equal(tabBackward.defaultPrevented, true, "Shift+Tab at the start must wrap");
+  assert.equal(f.document.activeElement, f.input);
+  f.input.focus();
   f.input.value = "ب";
   f.emit(f.input, "input");
   assert.equal(f.aliases(), 0, "A too-short query must not build the index");
@@ -210,6 +233,8 @@ export async function guideNavigatorContract() {
   }
   f.emit(f.close, "click");
   assert.equal(f.dialog.open, false);
+  f.flushFrames();
+  assert.equal(f.document.activeElement, f.opener, "Dialog close restores launcher focus");
   f.body.focus();
   assert.equal(f.emit(f.document, "keydown", { key: "/" }).defaultPrevented, true);
   f.flushFrames();

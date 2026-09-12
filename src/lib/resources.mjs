@@ -5,19 +5,44 @@ export const quoteHttpParameter = (value) => {
     throw new Error("HTTP parameter must be a printable string");
   return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
 };
+const mediaTypeParameterToken = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+const serializeMediaTypeParameter = (value) => {
+  const text = String(value);
+  if (!text || /[\r\n\u0000-\u001f\u007f]/.test(text))
+    throw new Error("Invalid media type parameter value");
+  return mediaTypeParameterToken.test(text) ? text : quoteHttpParameter(text);
+};
 export const resourceContentType = (resource) => {
   if (!/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(resource.mediaType))
     throw new Error(`Machine resource requires a bare media type: ${resource.path}`);
-  if (!resource.profileIri) return resource.mediaType;
-  if (!/^https?:\/\/[^\s"<>]+$/.test(resource.profileIri))
-    throw new Error(`Invalid machine resource profile IRI: ${resource.path}`);
-  return `${resource.mediaType}; profile=${quoteHttpParameter(resource.profileIri)}`;
+  const parameters = resource.mediaTypeParameters ?? {};
+  if (
+    !parameters ||
+    typeof parameters !== "object" ||
+    Array.isArray(parameters)
+  )
+    throw new Error(`Machine resource parameters must be an object: ${resource.path}`);
+  const serialized = [];
+  for (const [name, value] of Object.entries(parameters)) {
+    if (!mediaTypeParameterToken.test(name) || name.toLowerCase() === "profile")
+      throw new Error(`Invalid or reserved media type parameter: ${resource.path} ${name}`);
+    serialized.push(`${name}=${serializeMediaTypeParameter(value)}`);
+  }
+  if (resource.profileIri) {
+    if (!/^https?:\/\/[^\s"<>]+$/.test(resource.profileIri))
+      throw new Error(`Invalid machine resource profile IRI: ${resource.path}`);
+    serialized.push(`profile=${quoteHttpParameter(resource.profileIri)}`);
+  }
+  return [resource.mediaType, ...serialized].join("; ");
 };
 
 const resources = registry.resources.map((resource) =>
   Object.freeze({
     ...resource,
     contentType: resourceContentType(resource),
+    ...(resource.mediaTypeParameters
+      ? { mediaTypeParameters: Object.freeze({ ...resource.mediaTypeParameters }) }
+      : {}),
     targets: Object.freeze([...resource.targets]),
     descriptorRoles: Object.freeze([...(resource.descriptorRoles || [])]),
     ...(resource.head ? { head: Object.freeze({ ...resource.head }) } : {}),

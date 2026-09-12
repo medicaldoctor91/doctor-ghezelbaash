@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-09-05",
+  "verifiedAt": "2026-09-11",
   "tiers": {
     "A": "official/authority-control or first-order scholarly/local identity evidence",
     "B": "major scholarly/professional corroboration",
@@ -32,10 +32,7 @@
       "supports": [
         "person-identity",
         "canonical-name",
-        "aliases",
-        "occupation",
-        "work-location",
-        "clinic-ownership"
+        "aliases"
       ],
       "url": "https://www.wikidata.org/wiki/Q140287622",
       "liveStatus": "verified",
@@ -128,15 +125,21 @@
       "id": "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
       "tier": "A",
       "supports": [
-        "clinic-ownership"
+        "medical-practice-license",
+        "legal-professional-name",
+        "practice-jurisdiction"
       ],
       "url": "https://qr.mojavez.ir/track/19949827",
-      "liveStatus": "declared-in-canonical-graph",
-      "verifiedAt": "2026-08-07",
+      "liveStatus": "verified-live-source",
+      "verifiedAt": "2026-09-11",
       "expectedMarkers": [
-        "19949827"
+        "محمدسعید قزلباش",
+        "پروانه طبابت",
+        "19949827",
+        "کرمانشاه"
       ],
-      "role": "identity-reference"
+      "role": "identity-reference",
+      "verificationRecord": ".release/evidence/mojavez-19949827.json"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-linkedin",
@@ -588,6 +591,22 @@
       "role": "first-party-release-preservation",
       "releaseBinding": "zenodo-version",
       "verifiedRelease": "1.2.5"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-drdr",
+      "tier": "C",
+      "supports": [
+        "person-identity",
+        "directory-profile"
+      ],
+      "url": "https://drdr.ir/dr/92014/%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4/",
+      "liveStatus": "verified-live-web",
+      "verifiedAt": "2026-09-11",
+      "expectedMarkers": [
+        "دکتر سعید قزلباش",
+        "167430"
+      ],
+      "role": "identity-reference"
     }
   ]
 }

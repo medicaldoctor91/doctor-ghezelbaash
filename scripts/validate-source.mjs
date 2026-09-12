@@ -59,6 +59,7 @@ const requiredFiles = [
   "src/lib/css-delivery.mjs",
   "src/lib/google-page-microdata.mjs",
   "src/lib/semantic-projection.mjs",
+  "src/lib/answer-projection.mjs",
   "src/lib/hero-image-contract.mjs",
   "src/lib/release-tokens.mjs",
   "src/data/semantic/head-profile.json",
@@ -92,6 +93,10 @@ const requiredFiles = [
   "scripts/validate-media-references.mjs",
   "scripts/validate-release-contract.mjs",
   "scripts/validate-semantic-html.mjs",
+  "scripts/validate-dist-production.mjs",
+  "scripts/test-performance.mjs",
+  "scripts/test-dist-interactions.mjs",
+  "scripts/test-answer-projection.mjs",
   "scripts/platform-contract.mjs",
   "scripts/huggingface.mjs",
 ];
@@ -266,17 +271,18 @@ const hfMutationWorkflows = [
       ],
     ]),
   ],
-  [
-    "stack-monitor.yml",
-    stackMonitorWorkflow,
-    new Map([
-      [
-        "node scripts/huggingface.mjs push .release/huggingface-monitor HEAD:main",
-        1,
-      ],
-    ]),
-  ],
 ];
+for (const forbidden of [
+  "node scripts/huggingface.mjs push",
+  "HF_TOKEN",
+  "CLOUDFLARE_API_TOKEN",
+  "configure-cloudflare-edge.py",
+  "cloudflare-pages.mjs ensure --configure",
+])
+  if (stackMonitorWorkflow.includes(forbidden))
+    fail(`stack-monitor.yml must remain read-only: ${forbidden}`);
+if (/git\s+(?:-C\s+\S+\s+)?push\b/.test(stackMonitorWorkflow))
+  fail("stack-monitor.yml must not contain a Git push path");
 for (const [name, source, commands] of hfMutationWorkflows) {
   if (
     source.includes(forbiddenHuggingFaceAuthVariable) ||
@@ -770,7 +776,7 @@ const identitySurfaceTokens = [
 if (identitySurfaceTokens.some((token) => !source.includes(token)))
   fail("Verified physician identity surface contract drift");
 if (
-  !/<a\b(?=[^>]*\bhero-search-launch\b)(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*href="#aesthetic-medicine-table-of-contents")(?=[^>]*aria-label="باز کردن جست‌وجوی راهنمای جامع")[^>]*>/i.test(
+  !/<button\b(?=[^>]*\bhero-search-launch\b)(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*type="button")(?=[^>]*aria-label="باز کردن جست‌وجوی راهنمای جامع")[^>]*>/i.test(
     source,
   )
 )

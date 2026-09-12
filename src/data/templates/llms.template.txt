@@ -21,11 +21,16 @@ Evidence tiers are assessments maintained by this first-party project; sources a
 - [Canonical website](https://www.ghezelbaash.ir/): Human-readable physician page and citation destination.
 - [Complete page in Markdown](https://www.ghezelbaash.ir/index.md): Full readable page projection with canonical links, headings, tables and definitions.
 - [Direct-answer corpus](https://www.ghezelbaash.ir/answers.txt): Question-answer records with source anchors, language, physician attribution and evidence references.
+- [Canonical fact map](https://www.ghezelbaash.ir/fact-map.json): Joinable answer records mapping each graph Answer to its visible HTML anchor, retrieval record and evidence IDs.
 - [Full passage corpus](https://www.ghezelbaash.ir/llms-full.txt): Complete content in self-contained retrieval records; fetch for passage-level metadata and provenance.
 - [JSON-LD entity graph](https://www.ghezelbaash.ir/graph.jsonld): Canonical first-party Dataset with physician, clinic, credentials, services, works, media and evidence relationships.
 - [RDF Turtle entity graph](https://www.ghezelbaash.ir/graph.ttl): RDF-equivalent serialization of the JSON-LD graph, preserving entity IRIs and datatypes.
 - [Entity facts CSV](https://www.ghezelbaash.ir/entity-facts.csv): Typed graph projection with stable row IDs, IRI/literal distinction and provenance fields.
 - [Hierarchical knowledge XML](https://www.ghezelbaash.ir/knowledge.xml): Physician-first identity, clinic, intent, answer, evidence and media hierarchy.
+
+## Canonical fact hierarchy
+
+- [Canonical fact hierarchy](https://www.ghezelbaash.ir/fact-map.json): Resolve the graph node `https://www.ghezelbaash.ir/#answer-*` first; its `Answer.text` is authoritative. The visible HTML atom, fact map, `answers.txt`, `index.md` and `llms-full.txt` are deterministic projections joined to the source question, graph nodes, retrieval record and evidence IDs, not competing answer authorities.
 
 ## Physician identity
 

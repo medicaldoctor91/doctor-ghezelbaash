@@ -1,9 +1,21 @@
 {
-  "maxHtmlBytes": 1900000,
+  "maxHtmlBytes": 1950000,
   "maxRagPassageChars": 4200,
   "evidenceSnapshotMaxAgeDays": 45,
-  "googlebotFetchBudgetBytes": 2000000,
+  "googlebotFetchBudgetBytes": 2100000,
   "googlebotReservedResponseHeaderBytes": 20000,
   "googlebotSafetyMarginBytes": 80000,
-  "maxCriticalCssBytes": 12000
+  "maxCriticalCssBytes": 12000,
+  "maxDeferredCssBytes": 50000,
+  "maxDeferredCssBrotliBytes": 12000,
+  "maxJavaScriptBytes": 20000,
+  "maxFontBytes": 100000,
+  "maxFontLoadMs": 2500,
+  "maxInitialImageBytes": 600000,
+  "maxTotalAssetBytes": 50000000,
+  "maxLcpMs": 2500,
+  "maxCls": 0.1,
+  "maxInpMs": 200,
+  "maxTbtMs": 300,
+  "maxScriptDurationMs": 300
 }

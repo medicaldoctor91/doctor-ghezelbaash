@@ -60,6 +60,39 @@ export function entityFactsTableDialect() {
   };
 }
 
+export function entityFactsCsvwMetadata() {
+  const schema = entityFactsTableSchema();
+  const dialect = entityFactsTableDialect();
+  const primaryKey =
+    schema.primaryKey.length === 1 ? schema.primaryKey[0] : [...schema.primaryKey];
+  return {
+    "@context": [
+      "http://www.w3.org/ns/csvw",
+      { dc: "http://purl.org/dc/terms/" },
+    ],
+    url: "entity-facts.csv",
+    dialect: {
+      encoding: "utf-8",
+      header: true,
+      headerRowCount: dialect.headerRows.length,
+      delimiter: dialect.delimiter,
+      quoteChar: dialect.quoteChar,
+      doubleQuote: dialect.doubleQuote,
+      lineTerminators: [dialect.lineTerminator],
+    },
+    tableSchema: {
+      columns: schema.fields.map((field) => ({
+        name: field.name,
+        titles: field.name,
+        "dc:description": field.description,
+        datatype: "string",
+        ...(field.constraints?.required ? { required: true } : {}),
+      })),
+      primaryKey,
+    },
+  };
+}
+
 export function entityFactsRecordSet(canonicalUrl, fileObjectId) {
   const recordId = `${canonicalUrl}entity-facts.csv#records`;
   if (typeof fileObjectId !== "string" || !URL.canParse(fileObjectId))
