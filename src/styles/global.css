@@ -50,18 +50,12 @@ body {
   line-height: 1.92;
 }
 main {
-  container: page-shell / inline-size;
   width: min(100% - 2rem, 78rem);
   margin-inline: auto;
   padding: clamp(1.2rem, 2.6vw, 2.6rem) clamp(1rem, 3vw, 3rem) 6rem;
   background: rgb(255 255 255 / 0.94);
   border-inline: 1px solid rgb(220 229 224 / 0.75);
   box-shadow: none;
-}
-@container page-shell (max-width: 48rem) {
-  .entity-hero .hero-actions {
-    gap: 0.55rem;
-  }
 }
 main
   > :where(
@@ -707,6 +701,14 @@ blockquote {
 }
 /*DIST_CRITICAL_HERO_GEOMETRY_END*/
 /*DIST_CRITICAL_CSS_END*/
+main {
+  container: page-shell / inline-size;
+}
+@container page-shell (max-width: 48rem) {
+  .entity-hero .hero-actions {
+    gap: 0.55rem;
+  }
+}
 img,
 video {
   border-radius: 0.85rem;
