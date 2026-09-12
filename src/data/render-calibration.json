@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-12T00:45:53.081Z",
-    "sourceSha256": "b86615f34f2a1eb68689f2b08afb92f86e3fbeceffe40fd1e70e5e9118d3e32a",
+    "measuredAt": "2026-09-12T01:00:01.758Z",
+    "sourceSha256": "f5857a77b6bbbdfa48895ec423aeba3213eab842dc93b6a59d42ec1186e2a10b",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4889,7 +4889,7 @@
       ],
       [
         "src/components/GuideNavigator.astro",
-        "327142636fba5bfe1340296709317bfb395d29bc6a1594dd2f352485a5c36cc1"
+        "9855cb7d6e2bbc4b371bba7796bc0c0990eb75fb5ce0808afdfee5f48a985b3c"
       ],
       [
         "src/components/SiteFooter.astro",
