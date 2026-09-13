@@ -9,6 +9,7 @@ import {
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { validateStableAliases } from "./lib/media-inventory.mjs";
+import { FORBIDDEN_QIDS } from "./lib/active-identifier-contract.mjs";
 import {
   canonicalHostRedirectRows,
   loadRedirectRegistry,
@@ -66,8 +67,31 @@ const writeExact = async (destinationRelative, content) => {
   await writeFile(destination, content, "utf8");
 };
 
-for (const artifact of STATIC_ARTIFACTS)
-  await copyExact(artifact.source, artifact.path);
+const INTERNAL_RETIRED_IDENTIFIER_SHAPE =
+  "\nex:RetiredIdentifierExclusionShape a sh:NodeShape ;";
+const publishableShapes = async (sourceRelative) => {
+  const sourcePath = resolveInside(root, sourceRelative, "SHACL source");
+  const source = await readFile(sourcePath, "utf8");
+  const marker = source.indexOf(INTERNAL_RETIRED_IDENTIFIER_SHAPE);
+  if (marker < 0 || source.indexOf(INTERNAL_RETIRED_IDENTIFIER_SHAPE, marker + 1) >= 0)
+    throw new Error("Internal retired-identifier SHACL marker missing or ambiguous");
+  const tail = source.slice(marker + INTERNAL_RETIRED_IDENTIFIER_SHAPE.length);
+  if (/\nex:[A-Za-z0-9_-]+\s+a\s+sh:NodeShape\b/.test(tail))
+    throw new Error(
+      "Internal retired-identifier SHACL constraint must remain the final shape before publication projection",
+    );
+  const published = `${source.slice(0, marker).trimEnd()}\n`;
+  for (const qid of FORBIDDEN_QIDS)
+    if (published.includes(qid))
+      throw new Error(`Retired identifier ${qid} remains in public SHACL projection`);
+  return published;
+};
+
+for (const artifact of STATIC_ARTIFACTS) {
+  if (artifact.path === "shapes.ttl")
+    await writeExact(artifact.path, await publishableShapes(artifact.source));
+  else await copyExact(artifact.source, artifact.path);
+}
 const redirectRegistry = await loadRedirectRegistry(root);
 const canonicalRedirects = canonicalHostRedirectRows(redirectRegistry);
 await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry));
@@ -153,6 +177,7 @@ console.log(
       staleGeneratedAssetsRemoved: staleGeneratedAssets.length,
       stableMediaAliases: stableMedia.aliases.length,
       canonicalHostRedirects: canonicalRedirects.length,
+      publicShaclRetiredIdentifiers: "ABSENT",
       destinations: destinations.size,
       deliveryMode: "static-assets",
     },
