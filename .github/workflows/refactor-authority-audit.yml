@@ -18,6 +18,10 @@ jobs:
         run: |
           set -o pipefail
           grep -R -n -E 'release\.(primaryEntity|clinic|reviewedBy|schemaVersion|medicalReviewedAt)|rawRelease\.(primaryEntity|clinic|reviewedBy|schemaVersion|medicalReviewedAt)' src scripts --exclude='release.json' || true
+      - name: Report direct raw release loaders
+        shell: bash
+        run: |
+          grep -R -n -E '(import .*release\.json|readFile\([^\n]*release\.json|readJson\([^\n]*release\.json|src/data/release\.json)' src scripts || true
       - name: Report direct document-head semantic consumers
         shell: bash
         run: |
