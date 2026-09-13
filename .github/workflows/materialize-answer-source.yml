@@ -1,0 +1,41 @@
+name: Materialize answer source refactor
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+
+concurrency:
+  group: materialize-answer-source-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: ${{ !contains(github.event.head_commit.message, 'refactor(answers): materialize canonical answers into page source') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Materialize graph-owned answers into the canonical page source
+        run: node scripts/materialize-answer-source.mjs
+      - name: Commit the deterministic source migration
+        shell: bash
+        run: |
+          if git diff --quiet -- src/content-source/page.md; then
+            echo "Canonical answer source already materialized"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/content-source/page.md
+          git commit -m "refactor(answers): materialize canonical answers into page source"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
