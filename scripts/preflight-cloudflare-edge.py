@@ -149,8 +149,26 @@ def check_live_apex_hsts(zone_name):
     if not ("max-age=63072000" in lowered and "includesubdomains" in lowered and "preload" in lowered): fail(f"Apex HSTS read-back mismatch HTTP {status}: {hsts!r}")
     print("APEX_HSTS_EXACT",status,hsts)
 
+def full_control_plane_readback(api,account,zone,zone_name,host,dist_dir):
+    redirect_contract=edge.load_redirect_registry(Path.cwd().resolve()); blog_host=str(redirect_contract["bulkRedirects"]["host"])
+    return {
+      "pages":verify_pages(api,account,host),
+      "dns":edge.read_dns_contract(api,zone,zone_name,host,blog_host),
+      "zoneSettings":verify_zone_settings(api,zone),
+      "smartTieredCache":verify_smart_tiered(api,zone),
+      "cacheRule":verify_cache_rules(api,zone,host),
+      "botManagement":verify_bot_settings(api,zone),
+      "historicalBlogBulkRedirects":verify_bulk_redirects(api,account,redirect_contract),
+      "singleRedirects":verify_single_redirects(api,zone,redirect_contract),
+      "responseTransforms":verify_response_transforms(api,zone,host,blog_host,dist_dir),
+    }
+
 def main():
-    parser=argparse.ArgumentParser(); parser.add_argument("--if-configured",action="store_true"); parser.add_argument("--dist",default="dist"); args=parser.parse_args()
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--if-configured",action="store_true")
+    parser.add_argument("--full-control-plane",action="store_true")
+    parser.add_argument("--dist",default="dist")
+    args=parser.parse_args()
     values={name:os.environ.get(name,"").strip() for name in REQUIRED_ENV}
     if args.if_configured and not values["CLOUDFLARE_API_TOKEN"]:
         print("CLOUDFLARE_PREFLIGHT_SKIPPED api_token_not_configured"); return 0
@@ -165,20 +183,14 @@ def main():
     try:
         validate_static_contract()
         api=ReadOnlyCloudflareApi(token); zone=edge.zone_id(api,account,zone_name)
-        redirect_contract=edge.load_redirect_registry(Path.cwd().resolve()); blog_host=str(redirect_contract["bulkRedirects"]["host"])
-        readback={
-          "pages":verify_pages(api,account,host),
-          "dns":edge.read_dns_contract(api,zone,zone_name,host,blog_host),
-          "zoneSettings":verify_zone_settings(api,zone),
-          "smartTieredCache":verify_smart_tiered(api,zone),
-          "cacheRule":verify_cache_rules(api,zone,host),
-          "botManagement":verify_bot_settings(api,zone),
-          "historicalBlogBulkRedirects":verify_bulk_redirects(api,account,redirect_contract),
-          "singleRedirects":verify_single_redirects(api,zone,redirect_contract),
-          "responseTransforms":verify_response_transforms(api,zone,host,blog_host,Path(args.dist).resolve()),
-        }
+        if args.full_control_plane:
+            readback=full_control_plane_readback(api,account,zone,zone_name,host,Path(args.dist).resolve())
+            mode="FULL_CONTROL_PLANE"
+        else:
+            readback=verify_zone_settings(api,zone)
+            mode="ZONE_SETTINGS"
         check_live_apex_hsts(zone_name)
-        print("CLOUDFLARE_REQUIRED_PREFLIGHT_EXACT",json.dumps(readback,sort_keys=True))
+        print("CLOUDFLARE_REQUIRED_PREFLIGHT_EXACT",json.dumps({"mode":mode,"readback":readback},sort_keys=True))
         return 0
     except (edge.CloudflareError,OSError,ValueError,KeyError) as exc:
         print(f"CLOUDFLARE_PREFLIGHT_ERROR: {exc}",file=sys.stderr)
