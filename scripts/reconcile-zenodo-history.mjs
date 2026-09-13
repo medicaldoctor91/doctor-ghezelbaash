@@ -97,11 +97,16 @@ dataset.citation = history.map((value) => ({
   "@id": releaseHistoryNodeId(release.canonicalUrl, value.release),
 }));
 
-const output = {
-  [releasePath]: `${JSON.stringify(release, null, 2)}\n`,
-  [graphPath]: `${JSON.stringify(graph, null, 2)}\n`,
-};
-await commitTextFiles(output, { dryRun: false });
+await commitTextFiles([
+  {
+    file: releasePath,
+    content: `${JSON.stringify(release, null, 2)}\n`,
+  },
+  {
+    file: graphPath,
+    content: `${JSON.stringify(graph, null, 2)}\n`,
+  },
+]);
 console.log(
   JSON.stringify(
     {
