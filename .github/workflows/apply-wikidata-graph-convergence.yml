@@ -51,7 +51,9 @@ jobs:
           git add -A
           git commit -m "feat(entity): strengthen source-bound Wikidata convergence"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
-          echo "Local candidate commit: $(git rev-parse HEAD)"
+          candidate_sha=$(git rev-parse HEAD)
+          echo "SOURCE_COMMIT=${candidate_sha}" >> "$GITHUB_ENV"
+          echo "Local candidate commit: ${candidate_sha}"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -92,6 +94,7 @@ jobs:
         run: |
           set -euo pipefail
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           git fetch origin main
           python - <<'PY'
           import subprocess
@@ -116,5 +119,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           git push origin HEAD:${{ github.ref_name }}
           echo "Validated commit: $(git rev-parse HEAD)"
