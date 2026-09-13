@@ -21,17 +21,17 @@ def fail(message: str) -> None:
 
 
 def get_json(token: str, url: str, *, allow_404: bool = False):
-    request = urllib.request.Request(
+    req = urllib.request.Request(
         url,
         method="GET",
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/json",
-            "User-Agent": "doctor-ghezelbaash-zenodo-preflight/1.0",
+            "User-Agent": "doctor-ghezelbaash-zenodo-preflight/2.0",
         },
     )
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with urllib.request.urlopen(req, timeout=60) as response:
             if response.status != 200:
                 fail(f"Zenodo read-only GET returned HTTP {response.status}: {url}")
             return json.loads(response.read().decode("utf-8"))
@@ -62,20 +62,20 @@ def exact_creator(metadata: dict, orcid: str) -> bool:
     )
 
 
-def validate_public_record(record: dict, expected: dict, concept_doi: str, release: dict) -> None:
+def validate_public_record(record: dict, expected: dict, concept_doi: str, release: dict, label: str = "Zenodo published record") -> None:
     metadata = record.get("metadata") or {}
     if str(record.get("id")) != str(expected["recordId"]):
-        fail("Zenodo predecessor record ID drift")
+        fail(f"{label} record ID drift")
     if record.get("doi") != expected["versionDoi"]:
-        fail("Zenodo predecessor Version DOI drift")
+        fail(f"{label} Version DOI drift")
     if record.get("conceptdoi") != concept_doi:
-        fail("Zenodo predecessor Concept DOI drift")
+        fail(f"{label} Concept DOI drift")
     if metadata.get("version") != expected["release"]:
-        fail("Zenodo predecessor version drift")
+        fail(f"{label} version drift")
     if metadata.get("title") != release["dataset"]["name"]:
-        fail("Zenodo predecessor dataset title drift")
+        fail(f"{label} dataset title drift")
     if not exact_creator(metadata, release["primaryEntity"]["orcid"]):
-        fail("Zenodo predecessor creator ORCID drift")
+        fail(f"{label} creator ORCID drift")
 
 
 def validate_candidate_draft(draft: dict, expected: dict, concept_id: str, release: dict) -> None:
@@ -101,12 +101,7 @@ def validate_candidate_draft(draft: dict, expected: dict, concept_id: str, relea
 
 def deposition_rows(token: str, status: str) -> list[dict]:
     query = urllib.parse.urlencode(
-        {
-            "status": status,
-            "all_versions": "true",
-            "sort": "mostrecent",
-            "size": 100,
-        }
+        {"status": status, "all_versions": "true", "sort": "mostrecent", "size": 100}
     )
     rows = get_json(token, f"{BASE}/deposit/depositions?{query}")
     if not isinstance(rows, list):
@@ -141,8 +136,8 @@ def main() -> None:
     if concept_doi != release["dataset"]["zenodo"]["conceptDoi"]:
         fail("Release transaction lock Concept DOI disagrees with canonical release source")
 
-    public = get_json(token, f"{BASE}/records/{predecessor['recordId']}")
-    validate_public_record(public, predecessor, concept_doi, release)
+    predecessor_public = get_json(token, f"{BASE}/records/{predecessor['recordId']}")
+    validate_public_record(predecessor_public, predecessor, concept_doi, release, "Zenodo predecessor")
 
     published = [
         row
@@ -153,27 +148,43 @@ def main() -> None:
     if not published:
         fail("Authenticated Zenodo lineage contains no published versions")
     latest = max(published, key=lambda row: semver((row.get("metadata") or {})["version"]))
-    if (
-        str(latest.get("id")) != str(predecessor["recordId"])
-        or (latest.get("metadata") or {}).get("version") != predecessor["release"]
-        or (latest.get("metadata") or {}).get("doi") not in (None, predecessor["versionDoi"])
-    ):
-        fail("Locked predecessor is not the latest authenticated published Zenodo version")
+    latest_version = (latest.get("metadata") or {}).get("version")
 
-    draft = get_json(token, f"{BASE}/deposit/depositions/{candidate['recordId']}")
-    validate_candidate_draft(draft, candidate, concept_id, release)
-    matching_drafts = [
-        row
-        for row in deposition_rows(token, "draft")
-        if str(row.get("conceptrecid") or "") == concept_id
-        and (row.get("metadata") or {}).get("version") == candidate["release"]
-    ]
-    if len(matching_drafts) != 1 or str(matching_drafts[0].get("id")) != str(candidate["recordId"]):
-        fail("Zenodo target-version draft lineage is missing or ambiguous")
+    candidate_public = get_json(token, f"{BASE}/records/{candidate['recordId']}", allow_404=True)
+    if candidate_public is None:
+        if (
+            str(latest.get("id")) != str(predecessor["recordId"])
+            or latest_version != predecessor["release"]
+        ):
+            fail("Locked predecessor is not the latest authenticated published Zenodo version")
+        draft = get_json(token, f"{BASE}/deposit/depositions/{candidate['recordId']}")
+        validate_candidate_draft(draft, candidate, concept_id, release)
+        matching_drafts = [
+            row
+            for row in deposition_rows(token, "draft")
+            if str(row.get("conceptrecid") or "") == concept_id
+            and (row.get("metadata") or {}).get("version") == candidate["release"]
+        ]
+        if len(matching_drafts) != 1 or str(matching_drafts[0].get("id")) != str(candidate["recordId"]):
+            fail("Zenodo target-version draft lineage is missing or ambiguous")
+        candidate_state = "draft"
+        candidate_submitted = False
+    else:
+        validate_public_record(candidate_public, candidate, concept_doi, release, "Locked Zenodo candidate")
+        if (
+            str(latest.get("id")) != str(candidate["recordId"])
+            or latest_version != candidate["release"]
+        ):
+            fail("Published locked candidate is not the latest authenticated Zenodo version")
+        deposition = get_json(token, f"{BASE}/deposit/depositions/{candidate['recordId']}")
+        if deposition.get("submitted") is not True or str(deposition.get("conceptrecid") or "") != concept_id:
+            fail("Published locked candidate authenticated deposition state drift")
+        candidate_state = "published"
+        candidate_submitted = True
 
-    if get_json(token, f"{BASE}/records/{candidate['recordId']}", allow_404=True) is not None:
-        fail("Locked Zenodo candidate unexpectedly resolves as an already-published public record")
-
+    publication_date = (predecessor_public.get("metadata") or {}).get("publication_date")
+    if not publication_date:
+        fail("Published Zenodo predecessor has no publication date")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     state = {
         "schemaVersion": "1.0",
@@ -184,20 +195,19 @@ def main() -> None:
             "release": predecessor["release"],
             "recordId": str(predecessor["recordId"]),
             "versionDoi": predecessor["versionDoi"],
-            "publicationDate": (public.get("metadata") or {}).get("publication_date"),
+            "publicationDate": publication_date,
         },
         "candidate": {
             "release": candidate["release"],
             "recordId": str(candidate["recordId"]),
             "versionDoi": candidate["versionDoi"],
-            "submitted": False,
+            "state": candidate_state,
+            "submitted": candidate_submitted,
         },
         "authenticated": True,
         "httpMethodsUsed": ["GET"],
         "integrity": "PASS",
     }
-    if not state["predecessor"]["publicationDate"]:
-        fail("Published Zenodo predecessor has no publication date")
     OUT.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(state, separators=(",", ":"), ensure_ascii=False))
 
