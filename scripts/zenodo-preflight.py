@@ -138,7 +138,6 @@ def main() -> None:
 
     predecessor_public = get_json(token, f"{BASE}/records/{predecessor['recordId']}")
     validate_public_record(predecessor_public, predecessor, concept_doi, release, "Zenodo predecessor")
-
     published = [
         row
         for row in deposition_rows(token, "published")
@@ -151,17 +150,14 @@ def main() -> None:
     latest_version = (latest.get("metadata") or {}).get("version")
 
     candidate_public = get_json(token, f"{BASE}/records/{candidate['recordId']}", allow_404=True)
+    candidate_publication_date = None
     if candidate_public is None:
-        if (
-            str(latest.get("id")) != str(predecessor["recordId"])
-            or latest_version != predecessor["release"]
-        ):
+        if str(latest.get("id")) != str(predecessor["recordId"]) or latest_version != predecessor["release"]:
             fail("Locked predecessor is not the latest authenticated published Zenodo version")
         draft = get_json(token, f"{BASE}/deposit/depositions/{candidate['recordId']}")
         validate_candidate_draft(draft, candidate, concept_id, release)
         matching_drafts = [
-            row
-            for row in deposition_rows(token, "draft")
+            row for row in deposition_rows(token, "draft")
             if str(row.get("conceptrecid") or "") == concept_id
             and (row.get("metadata") or {}).get("version") == candidate["release"]
         ]
@@ -171,19 +167,19 @@ def main() -> None:
         candidate_submitted = False
     else:
         validate_public_record(candidate_public, candidate, concept_doi, release, "Locked Zenodo candidate")
-        if (
-            str(latest.get("id")) != str(candidate["recordId"])
-            or latest_version != candidate["release"]
-        ):
+        if str(latest.get("id")) != str(candidate["recordId"]) or latest_version != candidate["release"]:
             fail("Published locked candidate is not the latest authenticated Zenodo version")
         deposition = get_json(token, f"{BASE}/deposit/depositions/{candidate['recordId']}")
         if deposition.get("submitted") is not True or str(deposition.get("conceptrecid") or "") != concept_id:
             fail("Published locked candidate authenticated deposition state drift")
+        candidate_publication_date = (candidate_public.get("metadata") or {}).get("publication_date")
+        if not candidate_publication_date:
+            fail("Published locked candidate has no publication date")
         candidate_state = "published"
         candidate_submitted = True
 
-    publication_date = (predecessor_public.get("metadata") or {}).get("publication_date")
-    if not publication_date:
+    predecessor_date = (predecessor_public.get("metadata") or {}).get("publication_date")
+    if not predecessor_date:
         fail("Published Zenodo predecessor has no publication date")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     state = {
@@ -195,7 +191,7 @@ def main() -> None:
             "release": predecessor["release"],
             "recordId": str(predecessor["recordId"]),
             "versionDoi": predecessor["versionDoi"],
-            "publicationDate": publication_date,
+            "publicationDate": predecessor_date,
         },
         "candidate": {
             "release": candidate["release"],
@@ -203,6 +199,7 @@ def main() -> None:
             "versionDoi": candidate["versionDoi"],
             "state": candidate_state,
             "submitted": candidate_submitted,
+            "publicationDate": candidate_publication_date,
         },
         "authenticated": True,
         "httpMethodsUsed": ["GET"],
