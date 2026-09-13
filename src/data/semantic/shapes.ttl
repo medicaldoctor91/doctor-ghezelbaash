@@ -214,19 +214,3 @@ ex:ProfessionalSocialSubjectShape a sh:NodeShape ;
     sh:in ( ex:saeed-ghezelbash ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] .
-
-ex:RetiredIdentifierExclusionShape a sh:NodeShape ;
-  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;
-  sh:sparql [
-    sh:message "Retired/deleted or superseded identifiers must not re-enter the active canonical RDF graph." ;
-    sh:select """
-      SELECT $this WHERE {
-        ?s ?p ?o .
-        FILTER(
-          CONTAINS(STR(?o), "Q140288589") ||
-          CONTAINS(STR(?o), "Q140304972") ||
-          CONTAINS(STR(?o), "Q700236")
-        )
-      }
-    """
-  ] .
