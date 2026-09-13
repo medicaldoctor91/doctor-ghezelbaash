@@ -122,15 +122,43 @@ test("actual validators reject the old Mojavez assertion and scan new authored f
   }
   for (const dir of ["scripts", "public", ".release/policy", ".github/workflows"])
     await mkdir(path.join(root, dir), { recursive: true });
+  const run = (script) => execFileSync(process.execPath, [path.resolve("scripts", script)], { cwd: root, stdio: "pipe" });
   for (const script of ["validate-evidence.mjs", "validate-final-entity-contract.mjs"]) {
-    const run = () => execFileSync(process.execPath, [path.resolve("scripts", script)], { cwd: root, stdio: "pipe" });
-    assert.doesNotThrow(run);
+    assert.doesNotThrow(() => run(script));
     const mutated = structuredClone(baseline.registry);
     mutated.evidence.find((e) => e.id === MOJAVEZ_ID).supports = ["clinic-ownership"];
     await writeFile(path.join(root, "src/data/evidence-registry.json"), JSON.stringify(mutated));
-    assert.throws(run, (error) => /claimed scope/.test(error.stderr.toString()));
+    assert.throws(() => run(script), (error) => /claimed scope/.test(error.stderr.toString()));
     await writeFile(path.join(root, "src/data/evidence-registry.json"), JSON.stringify(baseline.registry));
   }
+
+  const selfAsserted = structuredClone(baseline.registry);
+  selfAsserted.evidence.find((e) => e.id.endsWith("#evidence-orcid-education-38054873")).tier = "A";
+  await writeFile(path.join(root, "src/data/evidence-registry.json"), JSON.stringify(selfAsserted));
+  assert.throws(() => run("validate-evidence.mjs"), (error) => /Self-asserted evidence/.test(error.stderr.toString()));
+  await writeFile(path.join(root, "src/data/evidence-registry.json"), JSON.stringify(baseline.registry));
+
+  const flattened = structuredClone(baseline.graph);
+  flattened["@graph"].find((n) => n["@id"] === baseline.release.primaryEntity.id).affiliation.push({
+    "@id": baseline.release.canonicalUrl + "#kermanshah-university-of-medical-sciences",
+  });
+  await writeFile(path.join(root, "src/data/semantic/knowledge-graph.jsonld"), JSON.stringify(flattened));
+  assert.throws(() => run("validate-final-entity-contract.mjs"), (error) => /Historical university evidence/.test(error.stderr.toString()));
+  await writeFile(path.join(root, "src/data/semantic/knowledge-graph.jsonld"), JSON.stringify(baseline.graph));
+
+  const exposedExpiry = structuredClone(baseline.head);
+  exposedExpiry.nodes[baseline.release.canonicalUrl + "#irimc-credential-167430"].include.push("expires");
+  await writeFile(path.join(root, "src/data/semantic/head-profile.json"), JSON.stringify(exposedExpiry));
+  assert.throws(() => run("validate-final-entity-contract.mjs"), (error) => /License expiry/.test(error.stderr.toString()));
+  await writeFile(path.join(root, "src/data/semantic/head-profile.json"), JSON.stringify(baseline.head));
+
+  const missingPmcid = structuredClone(baseline.graph);
+  const article2021 = missingPmcid["@graph"].find((n) => n["@id"].endsWith("#article-mdd-attachment-dissociation-trauma-2021"));
+  article2021.identifier = article2021.identifier.filter((value) => value !== "PMCID:PMC8469763");
+  await writeFile(path.join(root, "src/data/semantic/knowledge-graph.jsonld"), JSON.stringify(missingPmcid));
+  assert.throws(() => run("validate-final-entity-contract.mjs"), (error) => /Article PMCID missing/.test(error.stderr.toString()));
+  await writeFile(path.join(root, "src/data/semantic/knowledge-graph.jsonld"), JSON.stringify(baseline.graph));
+
   await writeFile(path.join(root, "src/data/introduced-later.json"), '{"id":"Q140288589"}');
   await assert.rejects(() => assertActiveAuthoredIdentifiers(root), /introduced-later/);
 });
