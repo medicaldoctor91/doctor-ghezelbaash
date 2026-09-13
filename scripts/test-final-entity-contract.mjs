@@ -131,6 +131,6 @@ test("actual validators reject the old Mojavez assertion and scan new authored f
     assert.throws(run, (error) => /claimed scope/.test(error.stderr.toString()));
     await writeFile(path.join(root, "src/data/evidence-registry.json"), JSON.stringify(baseline.registry));
   }
-  await writeFile(path.join(root, "src/data/introduced-later.json"), '{"id":"Q140288589"}');
+  await writeFile(path.join(root, "src/data/introduced-later.json"), JSON.stringify({ id: FORBIDDEN_QIDS[0] }));
   await assert.rejects(() => assertActiveAuthoredIdentifiers(root), /introduced-later/);
 });

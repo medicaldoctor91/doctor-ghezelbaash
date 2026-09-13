@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: doctor-ghezelbaash-external-mutation
+  group: doctor-ghezelbaash-production-verification
   cancel-in-progress: false
   queue: max
 
@@ -50,7 +50,7 @@ jobs:
       - name: Enforce high-severity dependency advisory gate
         if: steps.tip.outputs.current == 'true'
         run: npm run security:dependencies
-      - name: Load canonical platform contract
+      - name: Load and validate canonical platform contract
         if: steps.tip.outputs.current == 'true'
         shell: bash
         run: |
@@ -69,58 +69,39 @@ jobs:
         run: |
           set -euo pipefail
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
-          export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
+          export SOURCE_COMMIT="$GITHUB_SHA" CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
       - name: Install pinned Chromium for candidate and production verification
         if: steps.tip.outputs.current == 'true'
         run: npx playwright install --with-deps --only-shell chromium
-      - name: Require frozen rendered text and stable search focus before reconciliation
+      - name: Require frozen rendered text and stable search focus
         if: steps.tip.outputs.current == 'true'
         run: |
           npm run test:visible-text-browser
           npm run test:dist-interactions
-      - name: Require original CSS and HTML validation before reconciliation
+      - name: Require original CSS and HTML validation
         if: steps.tip.outputs.current == 'true'
         run: npm run validate:html-css
-      - name: Converge Cloudflare Pages to canonical Git deployment
+      - name: Verify Cloudflare zone settings without mutation
         if: steps.tip.outputs.current == 'true'
-        id: pages-config
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          set -euo pipefail
-          node scripts/cloudflare-pages.mjs ensure --configure
-          node scripts/cloudflare-pages.mjs ensure --verify-config
-      - name: Verify native Git deployment identity
+        run: npm run preflight:cloudflare
+      - name: Verify exact native Git deployment without repair
         if: steps.tip.outputs.current == 'true'
         id: cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_EXPECTED_COMMIT: ${{ github.sha }}
-          CF_CONFIGURATION_CHANGED: ${{ steps.pages-config.outputs.configuration_changed }}
-        run: |
-          set -euo pipefail
-          node scripts/cloudflare-pages.mjs ensure
-      - name: Validate edge contract without control-plane mutation
+        run: node scripts/cloudflare-pages-readonly.mjs
+      - name: Validate Cloudflare edge contracts hermetically
         if: steps.tip.outputs.current == 'true'
         run: npm run validate:cloudflare
-      - name: Reconcile canonical Cloudflare edge
+      - name: Verify Pages.dev root canonicalization without mutation
         if: steps.tip.outputs.current == 'true'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          set -euo pipefail
-          python scripts/configure-cloudflare-edge.py \
-            --apply \
-            --outcome edge-reconciliation.json
-      - name: Canonicalize exact Pages.dev root URL
-        if: steps.tip.outputs.current == 'true'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/configure-pages-dev-redirect.py
           for attempt in $(seq 1 30); do
             headers="$(mktemp)"
             status="$(curl --silent --show-error --max-time 15 --max-redirs 0 --output /dev/null --dump-header "$headers" --write-out '%{http_code}' 'https://doctor-ghezelbaash.pages.dev/')"
@@ -131,11 +112,21 @@ jobs:
               break
             fi
             if [ "$attempt" = '30' ]; then
-              echo "Pages.dev redirect did not converge: status=$status location=$location" >&2
+              echo "Pages.dev redirect drift: status=$status location=$location" >&2
               exit 1
             fi
             sleep 2
           done
+      - name: Invalidate only deployment cache after exact SHA proof
+        if: steps.tip.outputs.current == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/configure-cloudflare-edge.py \
+            --purge-cache-only \
+            --outcome edge-cache-purge.json
       - name: Verify exact production serving and sample T+0 discovery
         if: steps.tip.outputs.current == 'true'
         env:
@@ -148,7 +139,7 @@ jobs:
           if npm run verify:public-discovery; then
             echo 'PUBLIC_DISCOVERY_T0_PASS'
           else
-            echo '::warning::T+0 public discovery sampled a stale Cloudflare PoP after exact production bytes were already proven; delayed convergence gates will decide final success.'
+            echo '::warning::T+0 public discovery sampled distributed edge drift after exact production bytes were already proven; delayed convergence gates will decide final success.'
           fi
       - name: Require public discovery convergence by T+5m
         if: steps.tip.outputs.current == 'true'
@@ -169,6 +160,4 @@ jobs:
         run: npm run verify:video-production
       - name: Notify IndexNow after verified production convergence
         if: steps.tip.outputs.current == 'true'
-        run: |
-          set -euo pipefail
-          npm run indexnow:submit
+        run: npm run indexnow:submit

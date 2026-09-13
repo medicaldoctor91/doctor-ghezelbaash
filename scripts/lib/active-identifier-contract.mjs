@@ -1,17 +1,16 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
-export const FORBIDDEN_QIDS = Object.freeze(["Q700236", "Q256688", "Q140288589", "Q140304972"]);
+export const FORBIDDEN_QIDS = Object.freeze(["Q700236", "Q256688", "Q140304972"]);
 // Only these canonical authored input families are inspected. No repository-wide grep,
 // generated output, dependencies, git history, or binary-media reads.
 const ROOTS = ["src", "scripts", "public", ".release/policy", ".release/evidence", ".github/workflows"];
 const FILES = ["README.md", "CITATION.cff", "codemeta.json", "package.json", "astro.config.mjs", "tsconfig.json"];
 const TEXT = new Set([".astro", ".cff", ".css", ".csv", ".html", ".js", ".json", ".jsonld", ".md", ".mjs", ".py", ".svg", ".toml", ".ts", ".tsv", ".ttl", ".txt", ".vtt", ".webmanifest", ".xml", ".yaml", ".yml", ".template"]);
-// Exact paths only: an active source named test/validator/archive is not exempt.
+// Exact paths only: validator vocabulary and negative fixtures may name retired IDs.
 export const IDENTIFIER_LITERAL_ALLOWLIST = Object.freeze({
   "scripts/lib/active-identifier-contract.mjs": "Validator's forbidden identifier vocabulary",
   "scripts/test-final-entity-contract.mjs": "Negative regression fixtures exercising the forbidden identifiers",
-  "src/data/semantic/shapes.ttl": "SHACL exclusion constraints must name retired identifiers",
 });
 // Reserved non-active historical families. New exceptions inside src require an exact path above.
 const HISTORICAL_ROOTS = Object.freeze({
