@@ -62,9 +62,16 @@ const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
   }
   return matches[0];
 };
+const exactText = (value: unknown, label: string) => {
+  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
+    throw new Error(`Head graph must define one normalized ${label}`);
+  }
+  return value;
+};
 
 const person = requireNode(release.primaryEntity.id, 'canonical person');
 const clinic = requireNode(release.clinic.id, 'canonical clinic');
+const website = requireNode(`${release.canonicalUrl}#website`, 'canonical WebSite');
 const profileFirstName = exactLanguageLiteral(
   person.givenName,
   'en',
@@ -75,6 +82,12 @@ const profileLastName = exactLanguageLiteral(
   'en',
   'Canonical physician familyName',
 );
+const authorName = exactLanguageLiteral(
+  person.name,
+  'fa',
+  'Canonical physician Persian name',
+);
+const applicationName = exactText(website.name, 'WebSite name');
 const instagramUrl = exactUrl(
   person.sameAs,
   /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/,
@@ -188,8 +201,8 @@ const discoveryLinks: DiscoveryLink[] = [
     >
   )
 }
-<meta content={documentHead.author} name="author">
-{isMain && <meta content={documentHead.applicationName} name="application-name">}
+<meta content={authorName} name="author">
+{isMain && <meta content={applicationName} name="application-name">}
 {
   isMain && (
     <meta
@@ -230,7 +243,7 @@ const discoveryLinks: DiscoveryLink[] = [
       <meta content={title} property="og:title">
       <meta content={description} property="og:description">
       <meta content={canonicalUrl} property="og:url">
-      <meta content={og.siteName} property="og:site_name">
+      <meta content={applicationName} property="og:site_name">
       <meta content={og.image} property="og:image">
       <meta content={og.image} property="og:image:secure_url">
       <meta content={og.imageType} property="og:image:type">
