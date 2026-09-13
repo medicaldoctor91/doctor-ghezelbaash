@@ -7,11 +7,13 @@ export const FORBIDDEN_QIDS = Object.freeze(["Q700236", "Q256688", "Q140288589",
 const ROOTS = ["src", "scripts", "public", ".release/policy", ".release/evidence", ".github/workflows"];
 const FILES = ["README.md", "CITATION.cff", "codemeta.json", "package.json", "astro.config.mjs", "tsconfig.json"];
 const TEXT = new Set([".astro", ".cff", ".css", ".csv", ".html", ".js", ".json", ".jsonld", ".md", ".mjs", ".py", ".svg", ".toml", ".ts", ".tsv", ".ttl", ".txt", ".vtt", ".webmanifest", ".xml", ".yaml", ".yml", ".template"]);
-// Exact paths only: active publication sources are never exempt. Negative fixtures may
-// name retired identifiers because they are validator inputs and are never distributed.
+// Exact paths only. Negative fixtures and the internal SHACL exclusion vocabulary may
+// name retired identifiers, but materialization strips that internal-only SHACL shape and
+// a byte-level distribution gate rejects the identifiers from every published artifact.
 export const IDENTIFIER_LITERAL_ALLOWLIST = Object.freeze({
   "scripts/lib/active-identifier-contract.mjs": "Validator's forbidden identifier vocabulary",
   "scripts/test-final-entity-contract.mjs": "Negative regression fixtures exercising the forbidden identifiers",
+  "src/data/semantic/shapes.ttl": "Internal-only SHACL retired-identifier exclusion vocabulary; omitted from the public SHACL projection",
 });
 // Reserved non-active historical families. New exceptions inside src require an exact path above.
 const HISTORICAL_ROOTS = Object.freeze({
