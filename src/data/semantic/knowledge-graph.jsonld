@@ -5487,6 +5487,9 @@
       "affiliation": [
         {
           "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
         }
       ],
       "priceRange": "$$$$"
