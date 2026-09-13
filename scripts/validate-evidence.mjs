@@ -51,6 +51,9 @@ for (const e of evidence) {
     fail("Evidence medical role and claim scope disagree " + e.id);
   if (e.role === "medical-reference" && e.subjectIds?.length)
     fail("Medical reference must not inherit identity subjects " + e.id);
+  const selfAssertedScope = e.supports?.some((scope) => /self-asserted/.test(scope));
+  if (selfAssertedScope && e.tier !== "P")
+    fail("Self-asserted evidence must remain Tier P/non-independent " + e.id);
   if (e.role === "identity-reference") {
     const canonical = byId.get(e.id);
     if (canonical && e.subjectIds)

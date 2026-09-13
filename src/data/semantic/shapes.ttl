@@ -99,7 +99,7 @@ ex:ImageLicenseShape a sh:NodeShape ;
 ex:CalendarValueShape a sh:NodeShape ;
   sh:targetObjectsOf schema:birthDate, schema:dateCreated, schema:dateModified,
     schema:datePublished, schema:lastReviewed, schema:startDate, schema:endDate,
-    schema:observationDate, dct:issued, dct:modified ;
+    schema:expires, schema:observationDate, dct:issued, dct:modified ;
   sh:or ( [ sh:datatype xsd:date ] [ sh:datatype xsd:dateTime ] [ sh:datatype xsd:gYearMonth ] ) .
 
 ex:UploadTimestampShape a sh:NodeShape ;
@@ -186,6 +186,57 @@ ex:IranMedicalCouncilIdentityShape a sh:NodeShape ;
   sh:targetNode ex:organization-iran-medical-council ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:Organization ] ;
   sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q5944740> ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:MedicalLicenseCredentialShape a sh:NodeShape ;
+  sh:targetNode ex:irimc-credential-167430 ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:EducationalOccupationalCredential ] ;
+  sh:property [ sh:path schema:identifier ; sh:hasValue "167430" ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:credentialCategory ; sh:hasValue <https://www.wikidata.org/entity/Q1566725> ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:recognizedBy ; sh:hasValue ex:organization-iran-medical-council ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:validIn ; sh:hasValue ex:country-iran ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:expires ; sh:hasValue "2029-02-20"^^xsd:date ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:EducationPeriodClaimShape a sh:NodeShape ;
+  sh:targetNode ex:claim-kums-education-period-2009-2018 ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Claim ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:kermanshah-university-of-medical-sciences ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:credential-doctor-of-medicine ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:temporalCoverage ; sh:hasValue "2009-09/2018-03" ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:evidence-orcid-education-38054873 ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path prov:wasDerivedFrom ; sh:hasValue ex:evidence-orcid-education-38054873 ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:HistoricalAffiliation2016ClaimShape a sh:NodeShape ;
+  sh:targetNode ex:claim-kums-affiliation-2016 ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Claim ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:kermanshah-university-of-medical-sciences ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:temporalCoverage ; sh:hasValue "2016" ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:article-omega-3-bipolar-i-2016 ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path prov:wasDerivedFrom ; sh:hasValue ex:article-omega-3-bipolar-i-2016 ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:HistoricalAffiliation2021ClaimShape a sh:NodeShape ;
+  sh:targetNode ex:claim-kums-affiliation-2021 ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Claim ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:kermanshah-university-of-medical-sciences ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:temporalCoverage ; sh:hasValue "2021" ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:article-mdd-attachment-dissociation-trauma-2021 ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path prov:wasDerivedFrom ; sh:hasValue ex:article-mdd-attachment-dissociation-trauma-2021 ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:HistoricalUniversityAffiliationShape a sh:NodeShape ;
+  sh:targetNode ex:saeed-ghezelbash ;
+  sh:property [ sh:path schema:subjectOf ; sh:hasValue ex:claim-kums-education-period-2009-2018 ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:subjectOf ; sh:hasValue ex:claim-kums-affiliation-2016 ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:subjectOf ; sh:hasValue ex:claim-kums-affiliation-2021 ; sh:minCount 1 ] ;
+  sh:sparql [
+    sh:message "Historical KUMS evidence must not be flattened into an undated current Person affiliation." ;
+    sh:select """
+      PREFIX schema: <https://schema.org/>
+      PREFIX ex: <https://www.ghezelbaash.ir/#>
+      SELECT $this WHERE { $this schema:affiliation ex:kermanshah-university-of-medical-sciences . }
+    """
+  ] .
 
 ex:PersonalFacebookProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-ghezelbaash ;
