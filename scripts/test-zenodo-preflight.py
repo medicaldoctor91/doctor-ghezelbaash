@@ -54,6 +54,25 @@ draft = {
         },
     },
 }
+candidate_public = {
+    "id": int(candidate["recordId"]),
+    "doi": candidate["versionDoi"],
+    "conceptdoi": lock["conceptDoi"],
+    "conceptrecid": concept_id,
+    "metadata": {
+        "version": candidate["release"],
+        "title": release["dataset"]["name"],
+        "creators": [creator],
+        "publication_date": "2026-09-13",
+    },
+}
+candidate_published_deposition = {
+    "id": int(candidate["recordId"]),
+    "conceptrecid": concept_id,
+    "submitted": True,
+    "state": "done",
+    "metadata": {"version": candidate["release"]},
+}
 
 
 def expect_failure(label: str, action, token: str) -> None:
@@ -95,6 +114,8 @@ with tempfile.TemporaryDirectory(prefix="zenodo-preflight-") as temporary:
     assert state["httpMethodsUsed"] == ["GET"]
     assert state["predecessor"]["recordId"] == predecessor["recordId"]
     assert state["candidate"]["recordId"] == candidate["recordId"]
+    assert state["candidate"]["state"] == "draft"
+    assert state["candidate"]["publicationDate"] is None
 
     conflicting = json.loads(json.dumps(draft))
     conflicting["metadata"]["prereserve_doi"]["doi"] = "10.5281/zenodo.99999999"
@@ -119,5 +140,25 @@ with tempfile.TemporaryDirectory(prefix="zenodo-preflight-") as temporary:
         else [draft, json.loads(json.dumps(draft))]
     )
     expect_failure("ambiguous draft", module.main, "missing or ambiguous")
+
+    def published_get(_token: str, url: str, *, allow_404: bool = False):
+        if url.endswith(f"/records/{predecessor['recordId']}"):
+            return public
+        if url.endswith(f"/records/{candidate['recordId']}"):
+            return candidate_public
+        if url.endswith(f"/deposit/depositions/{candidate['recordId']}"):
+            return candidate_published_deposition
+        raise AssertionError(f"Unexpected published-recovery fixture URL: {url}")
+
+    module.get_json = published_get
+    module.deposition_rows = lambda _token, status: (
+        [published_deposition, candidate_published_deposition] if status == "published" else []
+    )
+    module.main()
+    recovered = json.loads(module.OUT.read_text(encoding="utf-8"))
+    assert recovered["candidate"]["state"] == "published"
+    assert recovered["candidate"]["submitted"] is True
+    assert recovered["candidate"]["publicationDate"] == "2026-09-13"
+    assert recovered["predecessor"]["release"] == predecessor["release"]
 
 print("ZENODO_PREFLIGHT_HERMETIC_PASS")
