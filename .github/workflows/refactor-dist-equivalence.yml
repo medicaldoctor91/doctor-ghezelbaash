@@ -39,10 +39,11 @@ jobs:
       - name: Build immutable base
         working-directory: base
         run: npm run build
-      - name: Permit source-only refactor baseline in candidate workspace
+      - name: Prepare candidate-only proof workspace
         working-directory: candidate
         shell: bash
         run: |
+          rm -f .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
           node --input-type=module <<'JS'
           import fs from 'node:fs';
           import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
@@ -68,6 +69,7 @@ jobs:
         working-directory: candidate
         shell: bash
         run: |
+          git checkout -- .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
           rm src/data/visible-text-contract.json
           node scripts/validate-visible-text.mjs --initialize-baseline dist --acknowledge-frozen-text
           git config user.name "github-actions[bot]"
