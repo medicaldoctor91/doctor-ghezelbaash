@@ -7,9 +7,10 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
-  group: doctor-ghezelbaash-external-mutation
+  group: doctor-ghezelbaash-reputation-refresh
   cancel-in-progress: false
 
 jobs:
@@ -26,6 +27,27 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Prepare dedicated automation branch from current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH='automation/reputation-refresh'
+          git fetch --no-tags origin main
+          MAIN_SHA="$(git rev-parse FETCH_HEAD)"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          REMOTE_SHA="$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')"
+          if [ -n "$REMOTE_SHA" ]; then
+            git fetch --no-tags origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+            test "$(git rev-parse refs/remotes/origin/$BRANCH)" = "$REMOTE_SHA"
+            git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
+            git config user.name ghezelbaash-reputation-bot
+            git config user.email actions@users.noreply.github.com
+            git merge --no-edit "$MAIN_SHA"
+          else
+            git checkout -b "$BRANCH" "$MAIN_SHA"
+          fi
+          git merge-base --is-ancestor "$MAIN_SHA" HEAD
+          printf 'REPUTATION_BRANCH=%s\nREPUTATION_BASE_SHA=%s\n' "$BRANCH" "$MAIN_SHA" >> "$GITHUB_ENV"
       - name: Validate current observation and read Google Places exactly once
         id: places
         env:
@@ -46,14 +68,14 @@ jobs:
             > /tmp/google-place.json
           export GOOGLE_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           node scripts/reputation.mjs google /tmp/google-place.json
-      - name: Prove an unchanged check made no source mutation
+      - name: Prove an unchanged observation made no source mutation
         if: steps.places.outputs.changed != 'true'
         shell: bash
         run: |
           set -euo pipefail
           test -z "$(git status --porcelain)"
           echo STATIC_REPUTATION_NOOP_PASS
-      - name: Commit and rebase the changed observation locally
+      - name: Commit only the changed observation locally
         if: steps.places.outputs.changed == 'true'
         shell: bash
         run: |
@@ -70,15 +92,13 @@ jobs:
           git config user.email actions@users.noreply.github.com
           git commit -m "chore: refresh clinic Google Maps reputation"
           test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "src/data/reputation-observation.json"
-          git fetch --no-tags origin main
-          git rebase origin/main
       - name: Install exact dependencies for a changed observation
         if: steps.places.outputs.changed == 'true'
         run: npm ci
       - name: Audit dependencies for a changed observation
         if: steps.places.outputs.changed == 'true'
         run: npm run security:dependencies
-      - name: Build and validate the exact rebased candidate
+      - name: Build and validate the exact automation candidate
         if: steps.places.outputs.changed == 'true'
         shell: bash
         run: |
@@ -86,9 +106,13 @@ jobs:
           npm run build
           node scripts/reputation.mjs validate
           test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Publish only the validated observation commit
+          git fetch --no-tags origin main
+          test "$(git rev-parse FETCH_HEAD)" = "$REPUTATION_BASE_SHA"
+          git merge-base --is-ancestor "$REPUTATION_BASE_SHA" HEAD
+      - name: Publish validated observation branch and open or refresh PR
         if: steps.places.outputs.changed == 'true'
         env:
+          GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
@@ -96,5 +120,18 @@ jobs:
           test -n "${GITHUB_TOKEN:-}"
           echo "::add-mask::$GITHUB_TOKEN"
           GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:"refs/heads/$REPUTATION_BRANCH"
           unset GITHUB_AUTH
+          PRS="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --base main --head "$REPUTATION_BRANCH" --json number,url)"
+          COUNT="$(node -e "const x=JSON.parse(process.argv[1]);process.stdout.write(String(x.length))" "$PRS")"
+          if [ "$COUNT" -gt 1 ]; then
+            echo '::error::Multiple open reputation refresh PRs are ambiguous'
+            exit 1
+          fi
+          BODY='Automated Google Places observation refresh. Only src/data/reputation-observation.json may differ from the reviewed base. Merge only after canonical CI passes; this workflow never pushes directly to main.'
+          if [ "$COUNT" = 0 ]; then
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$REPUTATION_BRANCH" --title 'chore: refresh clinic Google Maps reputation' --body "$BODY"
+          else
+            NUMBER="$(node -e "const x=JSON.parse(process.argv[1]);process.stdout.write(String(x[0].number))" "$PRS")"
+            gh pr edit "$NUMBER" --repo "$GITHUB_REPOSITORY" --title 'chore: refresh clinic Google Maps reputation' --body "$BODY"
+          fi
