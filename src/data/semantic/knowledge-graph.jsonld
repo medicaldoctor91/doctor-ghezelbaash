@@ -1085,16 +1085,7 @@
       "@id": "https://www.ghezelbaash.ir/#website",
       "@type": "WebSite",
       "url": "https://www.ghezelbaash.ir/",
-      "name": [
-        {
-          "@value": "دکتر سعید قزلباش",
-          "@language": "fa"
-        },
-        {
-          "@value": "Dr. Saeed Ghezelbash",
-          "@language": "en"
-        }
-      ],
+      "name": "دکتر سعید قزلباش",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -1108,10 +1099,9 @@
         "ckb"
       ],
       "alternateName": [
-        "وب‌سایت رسمی دکتر سعید قزلباش",
-        "Doctor.Ghezelbaash",
-        "Official website of Dr. Saeed Ghezelbaash",
-        "Official website of Dr. Saeed Ghezelbash"
+        "دکتر قزلباش",
+        "Dr. Saeed Ghezelbash",
+        "Dr. Saeed Ghezelbaash"
       ],
       "dateModified": "2026-09-11",
       "hasPart": [

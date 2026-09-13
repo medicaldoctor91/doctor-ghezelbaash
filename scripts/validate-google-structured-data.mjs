@@ -92,6 +92,39 @@ const canonicalById = byId(canonical),
 if (!canonicalPhysician || !homepagePhysician || !homepageClinic)
   fail("Canonical/homepage physician or clinic node is missing");
 
+// Site names are separate from title links and are not tested by Google's
+// Rich Results Test. Keep one explicit preference across source and HTML.
+// https://developers.google.com/search/docs/appearance/site-names
+const documentHead = JSON.parse(
+  await readFile("src/data/document-head.json", "utf8"),
+);
+const websiteId = `${release.canonicalUrl}#website`;
+const canonicalWebsite = canonicalById.get(websiteId);
+for (const [label, document] of [["Canonical", canonical], ["Head", head]]) {
+  const websites = document["@graph"].filter((node) =>
+    nodeTypes(node).includes("WebSite"),
+  );
+  const website = websites[0];
+  if (websites.length !== 1 || website["@id"] !== websiteId ||
+      website.url !== release.canonicalUrl)
+    fail(`${label} must have one canonical homepage WebSite`);
+  if (typeof website.name !== "string" || !website.name.trim() ||
+      website.name !== website.name.trim() ||
+      website.name !== documentHead.openGraph.siteName ||
+      website.name !== documentHead.applicationName)
+    fail(`${label} WebSite name must be one explicit text matching homepage metadata`);
+  const alternatives = website.alternateName;
+  if (!Array.isArray(alternatives) || !alternatives.length ||
+      alternatives.some((name) => typeof name !== "string" || !name.trim() ||
+        name !== name.trim() || name === website.name) ||
+      new Set(alternatives).size !== alternatives.length ||
+      alternatives[0] !== documentHead.appleMobileWebAppTitle ||
+      JSON.stringify(alternatives) !== JSON.stringify(canonicalWebsite.alternateName))
+    fail(`${label} WebSite alternatives must preserve the ordered, distinct brand names`);
+}
+if ((support["@graph"] || []).some((node) => nodeTypes(node).includes("WebSite")))
+  fail("Support graph must not duplicate the homepage WebSite");
+
 // Preserve the complete canonical medical model while presenting Google's
 // ProfilePage mainEntity as an unambiguous Person. IndividualPhysician inherits
 // Organization/LocalBusiness/Place in Schema.org, so it must not type the same
