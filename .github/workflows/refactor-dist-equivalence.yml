@@ -1,0 +1,81 @@
+name: Refactor dist byte equivalence
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: candidate
+          fetch-depth: 0
+      - name: Checkout immutable base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: c25a681f1f4350b943ebaf7966acc4e6ea1c063e
+          path: base
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: candidate/.nvmrc
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          npm ci --prefix base
+          npm ci --prefix candidate
+      - name: Build immutable base
+        working-directory: base
+        run: npm run build
+      - name: Permit source-only refactor baseline in candidate workspace
+        working-directory: candidate
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
+          const file = 'src/data/visible-text-contract.json';
+          const baseline = JSON.parse(fs.readFileSync(file, 'utf8'));
+          baseline.source = await sourceContract(process.cwd());
+          baseline.sourceRawSha256 = await sourceRawHashes(process.cwd());
+          fs.writeFileSync(file, JSON.stringify(baseline, null, 2) + '\n');
+          JS
+      - name: Build candidate
+        working-directory: candidate
+        run: npm run build
+      - name: Require identical dist inventory and bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd base/dist && find . -type f -print0 | sort -z | xargs -0 sha256sum) > /tmp/base-dist.sha256
+          (cd candidate/dist && find . -type f -print0 | sort -z | xargs -0 sha256sum) > /tmp/candidate-dist.sha256
+          diff -u /tmp/base-dist.sha256 /tmp/candidate-dist.sha256
+          diff -qr base/dist candidate/dist
+          echo "DIST_BYTE_EQUIVALENCE_PASS"
+      - name: Seal the proven source baseline
+        working-directory: candidate
+        shell: bash
+        run: |
+          rm src/data/visible-text-contract.json
+          node scripts/validate-visible-text.mjs --initialize-baseline dist --acknowledge-frozen-text
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- src/data/visible-text-contract.json; then
+            echo "Visible-text baseline already sealed"
+            exit 0
+          fi
+          git add src/data/visible-text-contract.json
+          git commit -m "refactor(contract): reseal unchanged dist after source migration"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
