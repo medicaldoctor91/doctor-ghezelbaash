@@ -9,16 +9,22 @@ const exactValues = (actual, expected) =>
   actual.every((value, index) => value === expected[index]);
 
 /**
- * Enforces ownership of the physician's public Wikidata identifier.
- * release.json owns the identifier, while the graph projects it onto the
- * physician and matching PropertyValue node.
+ * Enforces the physician's public Wikidata identity from the canonical graph.
+ * release.json supplies only stable entity pointers and the canonical URL;
+ * the identifier value itself is graph-owned.
  */
 export function validateCoreEntityIdentity({ release, nodes }) {
   if (!Array.isArray(nodes))
     fail("Core entity identity validation requires graph nodes");
-  const personQ = String(release?.primaryEntity?.wikidata || "");
-  if (!/^Q[1-9]\d*$/.test(personQ))
-    fail("Physician Wikidata identifier is invalid");
+  if (
+    typeof release?.canonicalUrl !== "string" ||
+    !release.canonicalUrl ||
+    typeof release?.primaryEntity?.id !== "string" ||
+    !release.primaryEntity.id ||
+    typeof release?.clinic?.id !== "string" ||
+    !release.clinic.id
+  )
+    fail("Core entity identity validation requires canonical entity pointers");
 
   const byId = new Map(
     nodes
@@ -29,7 +35,21 @@ export function validateCoreEntityIdentity({ release, nodes }) {
   const clinic = byId.get(release.clinic.id);
   if (!person || !clinic) fail("Core Person/Clinic identity nodes are missing");
 
+  const identifierId = `${release.canonicalUrl}#identifier-person-wikidata`;
+  const identifier = byId.get(identifierId);
+  if (!asArray(person.identifier).map(refId).includes(identifierId))
+    fail("Physician does not reference its Wikidata PropertyValue");
+  const personQ = String(identifier?.value || "");
+  if (
+    !identifier ||
+    identifier.propertyID !== "Wikidata item ID" ||
+    !/^Q[1-9]\d*$/.test(personQ)
+  )
+    fail("Physician Wikidata PropertyValue drift");
   const personIri = `https://www.wikidata.org/entity/${personQ}`;
+  if (identifier.url !== personIri)
+    fail("Physician Wikidata PropertyValue URL drift");
+
   const wikidataIris = (node) =>
     asArray(node.sameAs)
       .map(refId)
@@ -39,33 +59,5 @@ export function validateCoreEntityIdentity({ release, nodes }) {
       .sort();
   if (!exactValues(wikidataIris(person), [personIri]))
     fail("Physician Wikidata sameAs ownership drift");
-
-  const verifyIdentifier = (entity, nodeId, value, url, label) => {
-    if (!asArray(entity.identifier).map(refId).includes(nodeId))
-      fail(`${label} does not reference its Wikidata PropertyValue`);
-    const node = byId.get(nodeId);
-    if (
-      !node ||
-      node.propertyID !== "Wikidata item ID" ||
-      node.value !== value ||
-      node.url !== url
-    )
-      fail(`${label} Wikidata PropertyValue drift`);
-  };
-  verifyIdentifier(
-    person,
-    `${release.canonicalUrl}#identifier-person-wikidata`,
-    personQ,
-    personIri,
-    "Physician",
-  );
-
-  const releaseMesh = asArray(release.primaryEntity.verifiedWebIdentityMesh)
-    .filter((value) =>
-      /^https:\/\/www\.wikidata\.org\/entity\/Q[1-9]\d*$/.test(value),
-    )
-    .sort();
-  if (!exactValues(releaseMesh, [personIri]))
-    fail("Release physician identity mesh Wikidata ownership drift");
   return Object.freeze({ personQ, personIri });
 }
