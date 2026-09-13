@@ -82,6 +82,14 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Preserve failed release log for exact diagnosis
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-failure-${{ env.SOURCE_COMMIT }}
+          path: /tmp/release.log
+          if-no-files-found: error
+          retention-days: 1
       - name: Install pinned Chromium for media verification
         run: npx playwright install --with-deps --only-shell chromium
       - name: Require frozen rendered text and accessible names
