@@ -1,4 +1,4 @@
-name: One-shot graph date contract fix
+name: One-shot graph affiliation compatibility fix
 
 on:
   push:
@@ -17,58 +17,53 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - name: Require expected main and restore only graph revision dates
+      - name: Restore direct KUMS affiliation while preserving temporal claims
         shell: bash
         env:
-          EXPECTED_MAIN: 5399555e5a9bfbc342956c60d50c28bb392057f3
-          OLD_MAIN: 34a4a0cc1a8ae4d22564e64f80d369a8db7b3099
+          EXPECTED_MAIN: 32157fb9b8275fd1819954ce1581acffe2aa10bd
           GRAPH: src/data/semantic/knowledge-graph.jsonld
         run: |
           set -euo pipefail
           git fetch --no-tags origin main
           git checkout -B main origin/main
           test "$(git rev-parse HEAD)" = "$EXPECTED_MAIN"
-          git show "$OLD_MAIN:$GRAPH" > /tmp/old-graph.jsonld
           python - <<'PY'
           import json, os
           from pathlib import Path
 
           graph_path = Path(os.environ['GRAPH'])
-          current = json.loads(graph_path.read_text(encoding='utf-8'))
-          old = json.loads(Path('/tmp/old-graph.jsonld').read_text(encoding='utf-8'))
-          old_by_id = {n.get('@id'): n for n in old.get('@graph', []) if isinstance(n, dict) and n.get('@id')}
-          changed = []
-          for node in current.get('@graph', []):
-              if not isinstance(node, dict) or node.get('dateModified') != '2026-09-14':
-                  continue
-              prior = old_by_id.get(node.get('@id'))
-              if prior and 'dateModified' in prior:
-                  changed.append((node.get('@id'), node['dateModified'], prior['dateModified']))
-                  node['dateModified'] = prior['dateModified']
-          if not changed:
-              raise SystemExit('No revision dates were restored')
-          by_id = {n.get('@id'): n for n in current.get('@graph', []) if isinstance(n, dict) and n.get('@id')}
+          data = json.loads(graph_path.read_text(encoding='utf-8'))
+          by_id = {n.get('@id'): n for n in data.get('@graph', []) if isinstance(n, dict) and n.get('@id')}
+
+          person_id = 'https://www.ghezelbaash.ir/#saeed-ghezelbash'
+          clinic_id = 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          kums_id = 'https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences'
+          person = by_id[person_id]
+          affiliations = person.get('affiliation', [])
+          refs = [x.get('@id') for x in affiliations if isinstance(x, dict)]
+          assert clinic_id in refs
+          if kums_id not in refs:
+              affiliations.append({'@id': kums_id})
+          person['affiliation'] = affiliations
+
           credential = by_id['https://www.ghezelbaash.ir/#irimc-credential-167430']
-          categories = credential.get('credentialCategory', [])
-          assert any(isinstance(x, dict) and x.get('@id') == 'https://www.wikidata.org/entity/Q1566725' for x in categories)
+          assert any(isinstance(x, dict) and x.get('@id') == 'https://www.wikidata.org/entity/Q1566725' for x in credential.get('credentialCategory', []))
           a2016 = by_id['https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016']
           a2021 = by_id['https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021']
           assert 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/' in a2016.get('sameAs', [])
           assert 'PMCID:PMC8469763' in a2021.get('identifier', [])
           assert 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8469763/' in a2021.get('sameAs', [])
           assert by_id['https://www.ghezelbaash.ir/#claim-kums-education-period-2009-2018'].get('temporalCoverage') == '2009-09/2018-03'
-          assert 'https://www.ghezelbaash.ir/#claim-kums-affiliation-2016' in by_id
-          assert 'https://www.ghezelbaash.ir/#claim-kums-affiliation-2021' in by_id
+          assert by_id['https://www.ghezelbaash.ir/#claim-kums-affiliation-2016'].get('temporalCoverage') == '2016'
+          assert by_id['https://www.ghezelbaash.ir/#claim-kums-affiliation-2021'].get('temporalCoverage') == '2021'
           assert credential.get('expires') == '2029-02-20'
-          graph_path.write_text(json.dumps(current, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-          print('RESTORED_DATE_NODES', len(changed))
-          for row in changed:
-              print(*row)
+
+          graph_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           test "$(git diff --name-only)" = "$GRAPH"
           git diff --check
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "$GRAPH"
-          git commit -m "fix(entity): restore graph revision contract"
+          git commit -m "fix(entity): preserve university affiliation contract"
           git push origin HEAD:main
