@@ -43,6 +43,7 @@ jobs:
         working-directory: candidate
         shell: bash
         run: |
+          node scripts/refactor-authority-codemod.mjs
           rm -f .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
           node --input-type=module <<'JS'
           import fs from 'node:fs';
@@ -65,7 +66,7 @@ jobs:
           diff -u /tmp/base-dist.sha256 /tmp/candidate-dist.sha256
           diff -qr base/dist candidate/dist
           echo "DIST_BYTE_EQUIVALENCE_PASS"
-      - name: Seal the proven source baseline
+      - name: Seal the proven source migration
         working-directory: candidate
         shell: bash
         run: |
@@ -74,10 +75,10 @@ jobs:
           node scripts/validate-visible-text.mjs --initialize-baseline dist --acknowledge-frozen-text
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- src/data/visible-text-contract.json; then
-            echo "Visible-text baseline already sealed"
+          git add scripts/validate-google-structured-data.mjs scripts/validate-architecture.mjs src/data/visible-text-contract.json
+          if git diff --cached --quiet; then
+            echo "Proven source migration already sealed"
             exit 0
           fi
-          git add src/data/visible-text-contract.json
-          git commit -m "refactor(contract): reseal unchanged dist after source migration"
+          git commit -m "refactor(authority): seal byte-identical authority migration"
           git push origin "HEAD:${GITHUB_REF_NAME}"
