@@ -121,7 +121,7 @@ const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   };
 });
 const identityLinks: DiscoveryLink[] =
-  release.primaryEntity.verifiedWebIdentityMesh.map((href) => ({
+  release.primaryEntity.verifiedWebIdentityMesh.map((href: string) => ({
     href,
     rel: 'me',
   }));
