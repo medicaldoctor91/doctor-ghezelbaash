@@ -23,25 +23,19 @@ export function assertCloudflareHeadersContract(headers) {
 
 export function compileHeadersTemplate(
   template,
-  { mainCsp, csp404, heroEarlyHintHref, httpResourceLinks } = {},
+  { mainCsp, csp404, httpResourceLinks } = {},
 ) {
   const source = String(template);
   if (typeof mainCsp !== "string" || !mainCsp)
     throw new Error("_headers compiler: MAIN_CSP missing");
   if (typeof csp404 !== "string" || !csp404)
     throw new Error("_headers compiler: 404_CSP missing");
-  if (
-    typeof heroEarlyHintHref !== "string" ||
-    !heroEarlyHintHref.startsWith("/")
-  )
-    throw new Error("_headers compiler: Hero Early Hint path missing");
   if (typeof httpResourceLinks !== "string" || !httpResourceLinks)
     throw new Error("_headers compiler: HTTP resource links missing");
 
   const bindings = new Map([
     ["{{MAIN_CSP}}", mainCsp],
     ["{{404_CSP}}", csp404],
-    ["{{HERO_EARLY_HINT_HREF}}", heroEarlyHintHref],
     ["{{HTTP_RESOURCE_LINKS}}", httpResourceLinks],
   ]);
   const discovered = source.match(ANY_TOKEN_PATTERN) || [];

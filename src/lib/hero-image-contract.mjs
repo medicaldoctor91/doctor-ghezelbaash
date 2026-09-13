@@ -4,9 +4,9 @@ export const HERO_FIGURE_TOTAL_BORDER_PX = 2;
 const HERO_IMAGE_SIZES_TOKEN = "{{HERO_IMAGE_SIZES}}";
 export const HERO_PRELOAD_HREF =
   "/media/images/physician/saeed-ghezelbash-portrait-delivery-640.f41e5aa1c0dd.avif";
-export const HERO_EARLY_HINT_HREF =
+export const HERO_IMAGE_960_HREF =
   "/media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif";
-export const HERO_PRELOAD_SRCSET = `${HERO_PRELOAD_HREF} 640w, ${HERO_EARLY_HINT_HREF} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w`;
+export const HERO_PRELOAD_SRCSET = `${HERO_PRELOAD_HREF} 640w, ${HERO_IMAGE_960_HREF} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w`;
 
 const tokenCount = (value) =>
   String(value).split(HERO_IMAGE_SIZES_TOKEN).length - 1;

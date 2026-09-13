@@ -45,7 +45,6 @@ const template = await readText("src/data/templates/headers.template");
 const headers = compileHeadersTemplate(template, {
   mainCsp: "default-src 'self'",
   csp404: "default-src 'none'",
-  heroEarlyHintHref: "/hero.avif",
   httpResourceLinks: '<https://example.test/graph.jsonld>; rel="describedby"',
 });
 for (const resource of MACHINE_RESOURCES.filter((item) =>

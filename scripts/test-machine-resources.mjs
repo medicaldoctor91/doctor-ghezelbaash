@@ -27,7 +27,6 @@ const { byId } = indexCanonicalGraph(graph);
 const bindings = {
   mainCsp: "default-src 'self'",
   csp404: "default-src 'none'",
-  heroEarlyHintHref: "/hero.avif",
   httpResourceLinks: '<https://example.test/graph.jsonld>; rel="describedby"',
 };
 

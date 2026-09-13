@@ -153,6 +153,14 @@ or Lighthouse TBT measurement. A live mobile improvement requires repeated compa
 or PSI runs against the deployed response; passing this gate does not establish
 mobile 100.
 
+The responsive HTML preload and picture share the Hero image candidate contract.
+Deployment headers do not preload a fixed portrait size: that can download an
+unused 960-pixel image when a small mobile viewport selects the 640-pixel image.
+After a build, `node scripts/test-hero-delivery.mjs` serves the generated headers
+and requires one matching portrait request in cold 360/412-pixel mobile and
+1350-pixel desktop contexts. This checks response-header delivery, not a live
+Cloudflare 103 response or a Lighthouse score.
+
 `npm run test:critical-caption` holds the deferred stylesheet until the critical
 components have rendered, then requires identical caption, hero, action, dock
 and consultation-icon geometry at nine phone and desktop widths, including

@@ -92,6 +92,8 @@ jobs:
         run: npm run test:dist-interactions
       - name: Enforce separate local mobile and desktop performance budgets
         run: npm run test:performance-gate && npm run test:performance
+      - name: Prevent duplicate responsive Hero downloads from deployment headers
+        run: node scripts/test-hero-delivery.mjs
       - name: Prevent deferred CSS from changing critical component geometry
         run: npm run test:critical-caption
       - name: Verify CSS focus visibility, overflow and accessibility modes

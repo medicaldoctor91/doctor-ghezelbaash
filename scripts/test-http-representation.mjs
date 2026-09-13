@@ -106,17 +106,17 @@ test("compression cannot make an oversized Googlebot document pass", async (t) =
 });
 
 test("headers bind curated discovery and reject unknown digest placeholders", () => {
-  const template = "/\n  CSP: {{MAIN_CSP}}\n/404\n  CSP: {{404_CSP}}\n  Hero: {{HERO_EARLY_HINT_HREF}}\n  Link: {{HTTP_RESOURCE_LINKS}}\n";
+  const template = "/\n  CSP: {{MAIN_CSP}}\n/404\n  CSP: {{404_CSP}}\n  Link: {{HTTP_RESOURCE_LINKS}}\n";
   const bindings = {
     mainCsp: "default-src 'self'",
     csp404: "default-src 'none'",
-    heroEarlyHintHref: "/hero.avif",
     httpResourceLinks: '<https://example.test/graph.jsonld>; rel="alternate"; type="application/ld+json"',
   };
   const headers = compileHeadersTemplate(template, bindings);
   assert.ok(headers.includes(bindings.httpResourceLinks));
   assert.doesNotMatch(headers, /\{\{|repr-digest/i);
   assert.throws(() => compileHeadersTemplate(`${template}{{DIGEST:index.html}}`, bindings), /unknown token/);
+  assert.throws(() => compileHeadersTemplate(`${template}{{HERO_EARLY_HINT_HREF}}`, bindings), /unknown token/);
   assert.throws(() => compileHeadersTemplate(template, { ...bindings, httpResourceLinks: "" }), /HTTP resource links missing/);
   assert.throws(() => compileHeadersTemplate(template, { ...bindings, httpResourceLinks: "x".repeat(2_000) }), /exceeds 2000 characters/);
 });

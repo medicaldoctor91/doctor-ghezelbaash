@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-12T21:47:17.133Z",
-    "sourceSha256": "f54707ae3fa4866bfb00cf5a9c019fe96cab0a6987269a04598ed29e770fd9f7",
+    "measuredAt": "2026-09-13T01:03:06.099Z",
+    "sourceSha256": "9011064264d46f4d3d7fec9b0d6aed675e3e7bba8ddaa6cf6a2b782243a5792f",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4905,7 +4905,7 @@
       ],
       [
         "src/lib/hero-image-contract.mjs",
-        "ce0ca702f525ad77940bb5d7606005ae61c1a233596c4409b4db916d974e7afa"
+        "89e2bd6ee04f11f1c90d586838bda7a538901cef5ca4e9e89091c1179425bc17"
       ],
       [
         "src/pages/index.astro",

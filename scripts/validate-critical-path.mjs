@@ -1,7 +1,7 @@
 import path from "node:path";
 import { access, readFile } from "node:fs/promises";
 import {
-  HERO_EARLY_HINT_HREF,
+  HERO_IMAGE_960_HREF,
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_HREF,
   HERO_PRELOAD_SRCSET,
@@ -17,7 +17,9 @@ const assert = (condition, message) => {
 const count = (source, pattern) => (String(source).match(pattern) || []).length;
 const heroPreloadPattern =
   /<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bfetchpriority=["']high["'])(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*>/gi;
-const heroEarlyHint = `Link: <${HERO_EARLY_HINT_HREF}>; rel=preload; as=image; type="image/avif"; media="screen and (max-width: 540px) and (min-resolution: 1.25dppx) and (max-resolution: 2.5dppx)"; fetchpriority=high`;
+// A fixed HTTP preload can fetch a different candidate from the responsive HTML.
+const fixedHeroPreloadPattern =
+  /<[^>\r\n]*(?:saeed-ghezelbash-portrait|{{HERO_)[^>\r\n]*>[^<\r\n]*\brel\s*=\s*["']?preload\b/i;
 
 const [
   release,
@@ -42,7 +44,7 @@ assert(
 );
 assert(
   HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF) &&
-    HERO_PRELOAD_SRCSET.includes(`${HERO_EARLY_HINT_HREF} 960w`) &&
+    HERO_PRELOAD_SRCSET.includes(`${HERO_IMAGE_960_HREF} 960w`) &&
     HERO_PRELOAD_SRCSET.includes(" 1600w"),
   "Canonical Hero preload srcset drift",
 );
@@ -74,8 +76,8 @@ assert(
   "Responsive Hero preload must not trigger the fallback candidate in browsers that select from imagesrcset",
 );
 assert(
-  headersTemplate.includes("Link: <{{HERO_EARLY_HINT_HREF}}>;"),
-  "Mobile Hero Early Hint must bind the canonical Hero contract",
+  !fixedHeroPreloadPattern.test(headersTemplate),
+  "Hero candidate selection must remain in the responsive HTML preload, without a fixed HTTP preload",
 );
 assert(
   documentHead.includes("release.canonicalUrl"),
@@ -194,9 +196,8 @@ if (distArg) {
     );
   assert(heroPreloads.length === 1, "DIST duplicate Hero preload detected");
   assert(
-    headers.split(/\r?\n/).filter((line) => line.trim() === heroEarlyHint)
-      .length === 1,
-    "DIST mobile Hero Early Hint header drift",
+    !fixedHeroPreloadPattern.test(headers),
+    "DIST fixed HTTP Hero preload conflicts with responsive candidate selection",
   );
   const order = [
     heroPreload,

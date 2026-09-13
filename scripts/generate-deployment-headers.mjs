@@ -4,7 +4,6 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
-import { HERO_EARLY_HINT_HREF } from "../src/lib/hero-image-contract.mjs";
 import { assertGooglebotResponseBudget } from "./lib/googlebot-budget.mjs";
 
 const root = process.cwd();
@@ -128,7 +127,6 @@ const httpResourceLinks = resourcesForTarget("website")
 const headers = compileHeadersTemplate(headersTemplate, {
   mainCsp,
   csp404,
-  heroEarlyHintHref: HERO_EARLY_HINT_HREF,
   httpResourceLinks,
 });
 const invariants = JSON.parse(await readFile(path.join(data, "release-invariants.json"), "utf8"));
