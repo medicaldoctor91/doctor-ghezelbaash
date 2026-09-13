@@ -378,7 +378,12 @@
         "dateModified",
         "image",
         "schemaVersion"
-      ]
+      ],
+      "valueAllow": {
+        "name": [
+          "دکتر سعید قزلباش"
+        ]
+      }
     },
     "https://www.ghezelbaash.ir/#credential-doctor-of-medicine": {
       "include": [
