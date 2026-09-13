@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed Zenodo preservation lifecycle and local release auxiliaries."""
 from __future__ import annotations
-import argparse, hashlib, json, os, time
+import argparse, hashlib, json, os, re, time
 from pathlib import Path
 from urllib import error, parse, request
 
@@ -10,7 +10,7 @@ RUNTIME=Path('.release/runtime')
 RUNTIME.mkdir(parents=True,exist_ok=True)
 
 def call(token,method,url,body=None,content_type='application/json',ok=(200,201,202,204),binary=False):
-    headers={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'doctor-ghezelbaash-release/3.0'}
+    headers={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'doctor-ghezelbaash-release/3.1'}
     if body is not None: headers['Content-Type']=content_type
     req=request.Request(url,data=body,headers=headers,method=method)
     try:
@@ -26,6 +26,24 @@ def load_release(): return json.loads(Path('src/data/release.json').read_text())
 def load_resource_registry(): return json.loads(Path('src/data/machine-resources.json').read_text())
 def sha256(p:Path): return hashlib.sha256(p.read_bytes()).hexdigest()
 def write_state(name,obj): (RUNTIME/name).write_text(json.dumps(obj,indent=2,ensure_ascii=False)+'\n')
+
+def semver(value):
+    if re.fullmatch(r'\d+\.\d+\.\d+',str(value or '')) is None: raise RuntimeError(f'Invalid semantic version: {value!r}')
+    return tuple(int(part) for part in str(value).split('.'))
+
+def latest_archived_release(release=None):
+    release=release or load_release(); z=release.get('dataset',{}).get('zenodo',{}); history=z.get('releaseHistory')
+    if not isinstance(history,list) or not history: raise RuntimeError('Zenodo releaseHistory is required')
+    seen_versions=set(); seen_records=set(); seen_dois=set(); normalized=[]
+    for entry in history:
+        version=entry.get('release'); record=str(entry.get('recordId') or ''); doi=entry.get('versionDoi'); date=entry.get('publicationDate')
+        semver(version)
+        if not record.isdigit() or not re.fullmatch(r'10\.5281/zenodo\.\d+',str(doi or '')) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',str(date or '')):
+            raise RuntimeError(f'Invalid immutable Zenodo history entry: {version}')
+        if version in seen_versions or record in seen_records or doi in seen_dois: raise RuntimeError('Duplicate immutable Zenodo release identity')
+        seen_versions.add(version); seen_records.add(record); seen_dois.add(doi)
+        normalized.append({'release':version,'recordId':record,'versionDoi':doi,'publicationDate':date})
+    return max(normalized,key=lambda entry: semver(entry['release']))
 
 def zenodo_resources():
     registry=load_resource_registry(); resources=[resource for resource in registry.get('resources',[]) if 'zenodo' in resource.get('targets',[])]
@@ -136,29 +154,91 @@ def canonical_metadata(version,date,doi,concept):
       'prereserve_doi':True
     }
 
-def compatible_draft(args,token,baseline):
-    """Return exactly one matching unpublished target-version draft, or None.
+def deposition_rows(token,status):
+    query=parse.urlencode({'status':status,'all_versions':'true','sort':'mostrecent','size':100})
+    rows=call(token,'GET',f'{BASE}/deposit/depositions?{query}')
+    if isinstance(rows,dict):
+        hits=rows.get('hits',{})
+        rows=hits.get('hits',[]) if isinstance(hits,dict) else rows.get('hits',[])
+    if not isinstance(rows,list): raise RuntimeError(f'Unexpected Zenodo {status} deposition listing response')
+    return rows
 
-    A failed transaction may already have reserved the next DOI. Reusing that exact
-    draft is required for idempotency and avoids creating parallel Zenodo versions.
-    Matching is intentionally strict and fail-closed.
-    """
-    rows=call(token,'GET',f'{BASE}/deposit/depositions?status=draft&sort=mostrecent&size=100')
-    if isinstance(rows,dict): rows=rows.get('hits',{}).get('hits',[]) if isinstance(rows.get('hits'),dict) else rows.get('hits',[])
-    if not isinstance(rows,list): raise RuntimeError('Unexpected Zenodo draft listing response')
-    release=load_release(); expected_title=release['dataset']['name']; expected_orcid=release['primaryEntity']['orcid']
-    baseline_concept=str(baseline.get('conceptrecid') or '')
+def exact_creator(metadata,orcid):
+    return any(isinstance(creator,dict) and creator.get('orcid')==orcid for creator in metadata.get('creators') or [])
+
+def validate_public_identity(record,expected,concept,release,label='Zenodo record'):
+    md=record.get('metadata') or {}
+    if str(record.get('id'))!=str(expected['recordId']): raise RuntimeError(f'{label} record ID drift')
+    if record.get('doi')!=expected['versionDoi']: raise RuntimeError(f'{label} Version DOI drift')
+    if record.get('conceptdoi')!=concept: raise RuntimeError(f'{label} Concept DOI drift')
+    if md.get('version')!=expected['release']: raise RuntimeError(f'{label} version drift')
+    if md.get('title')!=release['dataset']['name']: raise RuntimeError(f'{label} title drift')
+    if not exact_creator(md,release['primaryEntity']['orcid']): raise RuntimeError(f'{label} creator ORCID drift')
+
+def target_drafts(token,version,concept_id,release):
+    rows=deposition_rows(token,'draft'); matches=[]
+    for row in rows:
+        if row.get('submitted') is True: continue
+        md=row.get('metadata') or {}
+        if str(row.get('conceptrecid') or '')!=str(concept_id): continue
+        if md.get('version')!=version or md.get('title')!=release['dataset']['name']: continue
+        if not exact_creator(md,release['primaryEntity']['orcid']): continue
+        matches.append(row)
+    return matches
+
+def preflight(args,token):
+    release=load_release(); z=release['dataset']['zenodo']; concept=z['conceptDoi']; predecessor=latest_archived_release(release)
+    if semver(args.version)<=semver(predecessor['release']): raise RuntimeError('Target release must be newer than the latest immutable archive')
+    if bool(args.expected_record)!=bool(args.expected_doi): raise RuntimeError('--expected-record and --expected-doi must be supplied together')
+    public=call(token,'GET',f"{BASE}/records/{predecessor['recordId']}")
+    validate_public_identity(public,predecessor,concept,release,'Zenodo predecessor')
+    concept_id=str(public.get('conceptrecid') or '')
+    if not concept_id: raise RuntimeError('Zenodo predecessor concept record ID missing')
+    published=[
+        row for row in deposition_rows(token,'published')
+        if str(row.get('conceptrecid') or '')==concept_id
+        and re.fullmatch(r'\d+\.\d+\.\d+',str((row.get('metadata') or {}).get('version') or ''))
+    ]
+    if not published: raise RuntimeError('Authenticated Zenodo lineage contains no published versions')
+    latest=max(published,key=lambda row: semver((row.get('metadata') or {})['version']))
+    if str(latest.get('id'))!=predecessor['recordId'] or (latest.get('metadata') or {}).get('version')!=predecessor['release']:
+        raise RuntimeError('Canonical releaseHistory does not end at the latest authenticated Zenodo archive')
+    expected={'release':args.version,'recordId':str(args.expected_record or ''),'versionDoi':args.expected_doi or ''}
+    if args.expected_record:
+        try: target_public=call(token,'GET',f"{BASE}/records/{args.expected_record}")
+        except RuntimeError as exc:
+            if 'HTTP 404' not in str(exc): raise
+            target_public=None
+        if target_public is not None:
+            validate_public_identity(target_public,expected,concept,release,'Zenodo target')
+            state={'stage':'ZENODO_PREFLIGHT_VERIFIED','targetState':'published','predecessor':predecessor,'candidate':expected,'conceptDoi':concept,'conceptRecordId':concept_id,'httpMethodsUsed':['GET'],'integrity':'PASS'}
+            write_state(Path(args.output).name,state); print(json.dumps(state,separators=(',',':'))); return state
+    drafts=target_drafts(token,args.version,concept_id,release)
+    if args.expected_record:
+        drafts=[row for row in drafts if str(row.get('id') or '')==str(args.expected_record)]
+    if len(drafts)>1: raise RuntimeError(f'Multiple Zenodo drafts found for target release {args.version}; refusing ambiguity')
+    if drafts:
+        draft=drafts[0]; md=draft.get('metadata') or {}; prere=md.get('prereserve_doi') or {}
+        record=str(draft.get('id') or ''); doi=prere.get('doi')
+        if not record or not doi or str(prere.get('recid') or record)!=record: raise RuntimeError('Zenodo target draft reserved identity is incomplete')
+        if args.expected_record and (record!=str(args.expected_record) or doi!=args.expected_doi): raise RuntimeError('Zenodo target draft disagrees with expected reserved identity')
+        candidate={'release':args.version,'recordId':record,'versionDoi':doi}
+        target_state='draft'
+    else:
+        if args.expected_record: raise RuntimeError('Expected Zenodo target draft/public record was not found')
+        candidate={'release':args.version,'recordId':None,'versionDoi':None}
+        target_state='absent'
+    state={'stage':'ZENODO_PREFLIGHT_VERIFIED','targetState':target_state,'predecessor':predecessor,'candidate':candidate,'conceptDoi':concept,'conceptRecordId':concept_id,'httpMethodsUsed':['GET'],'integrity':'PASS'}
+    write_state(Path(args.output).name,state); print(json.dumps(state,separators=(',',':'))); return state
+
+def compatible_draft(args,token,baseline):
+    rows=target_drafts(token,args.version,str(baseline.get('conceptrecid') or ''),load_release())
     concept_marker=f'Concept DOI {args.concept_doi}'
     matches=[]
     for row in rows:
-        if row.get('submitted') is True: continue
         md=row.get('metadata') or {}; prere=md.get('prereserve_doi') or {}
-        if md.get('version')!=args.version or md.get('title')!=expected_title: continue
-        if not any((creator or {}).get('orcid')==expected_orcid for creator in (md.get('creators') or [])): continue
         doi=prere.get('doi'); record=str(row.get('id') or '')
         if not record or not doi or str(prere.get('recid') or record)!=record or not doi.startswith('10.5281/zenodo.'): continue
-        row_concept=str(row.get('conceptrecid') or '')
-        if baseline_concept and row_concept and row_concept!=baseline_concept: continue
         keywords=md.get('keywords') or []; notes=str(md.get('notes') or '')
         if concept_marker not in keywords and args.concept_doi not in notes: continue
         matches.append(row)
@@ -166,14 +246,14 @@ def compatible_draft(args,token,baseline):
     return matches[0] if matches else None
 
 def reserve(args,token):
-    # Read-only proof of the immutable baseline. Never unlock/edit/publish the prior version here.
-    public=call(token,'GET',f'{BASE}/records/{args.current_record}')
-    if public.get('doi')!=args.current_doi: raise RuntimeError('Current public Zenodo DOI mismatch')
-    if public.get('conceptdoi')!=args.concept_doi: raise RuntimeError('Current public Zenodo Concept DOI mismatch')
-    if (public.get('metadata') or {}).get('version')!=args.current_version: raise RuntimeError('Current public Zenodo version mismatch')
+    release=load_release(); predecessor=latest_archived_release(release); concept=release['dataset']['zenodo']['conceptDoi']
+    if args.concept_doi!=concept: raise RuntimeError('Reserve Concept DOI disagrees with canonical release source')
+    if semver(args.version)<=semver(predecessor['release']): raise RuntimeError('Target release must be newer than latest immutable archive')
+    public=call(token,'GET',f"{BASE}/records/{predecessor['recordId']}")
+    validate_public_identity(public,predecessor,concept,release,'Zenodo predecessor')
     draft=compatible_draft(args,token,public)
     if draft is None:
-        result=call(token,'POST',f'{BASE}/deposit/depositions/{args.current_record}/actions/newversion')
+        result=call(token,'POST',f"{BASE}/deposit/depositions/{predecessor['recordId']}/actions/newversion")
         draft_url=(result.get('links') or {}).get('latest_draft')
         if not draft_url: raise RuntimeError('Zenodo newversion did not return latest_draft')
         draft=call(token,'GET',draft_url)
@@ -186,41 +266,34 @@ def reserve(args,token):
     record=str(draft.get('id'))
     prere=(draft.get('metadata') or {}).get('prereserve_doi') or {}
     if not prere.get('doi'):
-        draft=call(token,'PUT',draft_url,json.dumps({'metadata':canonical_metadata(args.version,args.date,None,args.concept_doi)},ensure_ascii=False).encode())
+        draft=call(token,'PUT',draft_url,json.dumps({'metadata':canonical_metadata(args.version,args.date,None,concept)},ensure_ascii=False).encode())
         prere=(draft.get('metadata') or {}).get('prereserve_doi') or {}
     doi=prere.get('doi'); recid=str(prere.get('recid') or record)
-    if not doi or recid!=record or not doi.startswith('10.5281/zenodo.'):
-        raise RuntimeError('Zenodo DOI reservation mismatch')
-    call(token,'PUT',draft_url,json.dumps({'metadata':canonical_metadata(args.version,args.date,doi,args.concept_doi)},ensure_ascii=False).encode())
+    if not doi or recid!=record or not doi.startswith('10.5281/zenodo.'): raise RuntimeError('Zenodo DOI reservation mismatch')
+    call(token,'PUT',draft_url,json.dumps({'metadata':canonical_metadata(args.version,args.date,doi,concept)},ensure_ascii=False).encode())
     verify=call(token,'GET',draft_url); vmd=verify.get('metadata') or {}; vpre=vmd.get('prereserve_doi') or {}
     if verify.get('submitted') is True or str(verify.get('id'))!=record or vpre.get('doi')!=doi or vmd.get('version')!=args.version or vmd.get('publication_date')!=args.date:
         raise RuntimeError('Reserved Zenodo draft readback drift')
     bucket=(verify.get('links') or {}).get('bucket')
     if not bucket: raise RuntimeError('Zenodo draft bucket missing')
-    state={'stage':'DOI_RESERVED','release':args.version,'recordId':record,'versionDoi':doi,'conceptDoi':args.concept_doi,'draftApi':draft_url,'bucket':bucket,'baselineRecordId':str(args.current_record),'baselineVersionDoi':args.current_doi}
+    state={'stage':'DOI_RESERVED','release':args.version,'recordId':record,'versionDoi':doi,'conceptDoi':concept,'draftApi':draft_url,'bucket':bucket,'baselineRecordId':predecessor['recordId'],'baselineVersionDoi':predecessor['versionDoi'],'baselineVersion':predecessor['release']}
     write_state(Path(args.output).name,state); print(json.dumps(state,separators=(',',':')))
 
 def exact_sources(source_commit):
     dist_root=Path('dist')
     full_inventory={str(p.relative_to(dist_root)):sha256(p) for p in sorted(dist_root.rglob('*')) if p.is_file()}
-    if not full_inventory or 'index.html' not in full_inventory:
-        raise RuntimeError('Canonical DIST inventory is incomplete before Zenodo stage')
+    if not full_inventory or 'index.html' not in full_inventory: raise RuntimeError('Canonical DIST inventory is incomplete before Zenodo stage')
     att=RUNTIME/'release-attestation.json'
     if not att.exists(): raise RuntimeError('Release attestation is required for every Zenodo stage')
     resources=zenodo_resources()
-    sources={
-      resource['path']:(dist_root/resource['path'] if 'website' in resource['targets'] else Path(resource['source']))
-      for resource in resources
-    }
+    sources={resource['path']:(dist_root/resource['path'] if 'website' in resource['targets'] else Path(resource['source'])) for resource in resources}
     missing=[name for name,p in sources.items() if not p.exists()]
     if missing: raise RuntimeError(f'Zenodo stage source files missing: {missing}')
     try: attestation=json.loads(att.read_text())
     except (ValueError,json.JSONDecodeError): raise RuntimeError('Release attestation is not valid JSON') from None
     validate_release_attestation(attestation,source_commit,full_inventory)
-    hashes=RUNTIME/'dist-sha256.json'
-    hashes.write_text(json.dumps(full_inventory,sort_keys=True,separators=(',',':'))+'\n')
-    sources['release-attestation.json']=att
-    sources['dist-sha256.json']=hashes
+    hashes=RUNTIME/'dist-sha256.json'; hashes.write_text(json.dumps(full_inventory,sort_keys=True,separators=(',',':'))+'\n')
+    sources['release-attestation.json']=att; sources['dist-sha256.json']=hashes
     return sources
 
 def prepare_auxiliaries():
@@ -231,8 +304,7 @@ def prepare_auxiliaries():
 
 def synchronize_exact_files(token,draft_url,bucket,sources):
     expected_hashes={name:sha256(file) for name,file in sources.items()}
-    remote=call(token,'GET',f'{draft_url}/files')
-    remote_by_name={item.get('filename'):item for item in remote}
+    remote=call(token,'GET',f'{draft_url}/files'); remote_by_name={item.get('filename'):item for item in remote}
     if len(remote_by_name)!=len(remote): raise RuntimeError('Duplicate Zenodo draft filenames')
     for name,item in remote_by_name.items():
         if name not in sources: call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
@@ -241,8 +313,7 @@ def synchronize_exact_files(token,draft_url,bucket,sources):
         if item:
             url=(item.get('links') or {}).get('download')
             if url:
-                blob=call(token,'GET',url,ok=(200,),binary=True)
-                current=hashlib.sha256(blob).hexdigest()==expected_hashes[name]
+                blob=call(token,'GET',url,ok=(200,),binary=True); current=hashlib.sha256(blob).hexdigest()==expected_hashes[name]
             if not current: call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
         if not current: call(token,'PUT',f'{bucket}/{parse.quote(name)}',file.read_bytes(),'application/octet-stream')
     return expected_hashes
@@ -262,8 +333,7 @@ def stage(args,token):
     call(token,'PUT',draft_url,json.dumps({'metadata':canonical_metadata(release['release'],release['dateModified'],doi,z['conceptDoi'])},ensure_ascii=False).encode())
     draft=call(token,'GET',draft_url); bucket=(draft.get('links') or {}).get('bucket')
     if not bucket: raise RuntimeError('Zenodo draft bucket missing at stage')
-    sources=exact_sources(source_commit)
-    hashes=synchronize_exact_files(token,draft_url,bucket,sources)
+    sources=exact_sources(source_commit); hashes=synchronize_exact_files(token,draft_url,bucket,sources)
     remote=call(token,'GET',f'{draft_url}/files')
     if {x.get('filename') for x in remote}!=set(sources): raise RuntimeError('Zenodo staged file inventory mismatch')
     remote_hashes={}
@@ -271,8 +341,7 @@ def stage(args,token):
         name=item['filename']; url=(item.get('links') or {}).get('download'); blob=call(token,'GET',url,ok=(200,),binary=True); got=hashlib.sha256(blob).hexdigest(); remote_hashes[name]=got
         if got!=hashes[name]: raise RuntimeError(f'Zenodo staged SHA-256 mismatch: {name}')
     readback=call(token,'GET',draft_url); rmd=readback.get('metadata') or {}; prere=rmd.get('prereserve_doi') or {}
-    if readback.get('submitted') is True or prere.get('doi')!=doi or rmd.get('version')!=release['release'] or rmd.get('publication_date')!=release['dateModified']:
-        raise RuntimeError('Zenodo staged metadata readback drift')
+    if readback.get('submitted') is True or prere.get('doi')!=doi or rmd.get('version')!=release['release'] or rmd.get('publication_date')!=release['dateModified']: raise RuntimeError('Zenodo staged metadata readback drift')
     state={'stage':'ZENODO_STAGED','release':release['release'],'recordId':record,'versionDoi':doi,'conceptDoi':z['conceptDoi'],'sourceCommit':source_commit,'files':len(sources),'sha256':hashes,'remoteSha256':remote_hashes}
     write_state('zenodo-stage.json',state); print(json.dumps({k:v for k,v in state.items() if k not in ('sha256','remoteSha256')},separators=(',',':')))
 
@@ -280,9 +349,7 @@ def publish(args,token):
     release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']; draft_url=f'{BASE}/deposit/depositions/{record}'; source_commit=os.environ.get('SOURCE_COMMIT','').strip()
     staged=json.loads((RUNTIME/'zenodo-stage.json').read_text())
     if staged.get('recordId')!=record or staged.get('versionDoi')!=doi or staged.get('release')!=release['release'] or staged.get('sourceCommit')!=source_commit: raise RuntimeError('Zenodo stage ledger mismatch or stale Candidate C binding')
-    # Re-download every staged file immediately before the irreversible publish action.
-    remote=call(token,'GET',f'{draft_url}/files')
-    remote_names=[x.get('filename') for x in remote]
+    remote=call(token,'GET',f'{draft_url}/files'); remote_names=[x.get('filename') for x in remote]
     if len(remote_names)!=len(set(remote_names)) or set(remote_names)!=set(staged['sha256']): raise RuntimeError('Zenodo inventory drift after stage')
     for item in remote:
         url=(item.get('links') or {}).get('download')
@@ -294,8 +361,20 @@ def publish(args,token):
         state=verify_public_record(token,record,doi,release['release'],z['conceptDoi'],staged['sha256']); state['idempotentAlreadyPublished']=True; state['sourceCommit']=source_commit
         write_state('zenodo-published.json',state); print(json.dumps(state,separators=(',',':'))); return
     if prere.get('doi')!=doi or md.get('version')!=release['release']: raise RuntimeError('Zenodo identity drift before publish')
-    call(token,'POST',f'{draft_url}/actions/publish')
-    state=verify_public_record(token,record,doi,release['release'],z['conceptDoi'],staged['sha256'])
+    ambiguous=None
+    try:
+        call(token,'POST',f'{draft_url}/actions/publish')
+    except Exception as exc:
+        ambiguous=exc
+    try:
+        state=verify_public_record(token,record,doi,release['release'],z['conceptDoi'],staged['sha256'])
+    except Exception as verify_error:
+        if ambiguous is not None:
+            raise RuntimeError('Zenodo publish response was ambiguous and exact public verification did not prove publication; refusing a blind retry') from verify_error
+        raise
+    state['sourceCommit']=source_commit; state['publishPostAttempts']=1
+    if ambiguous is not None:
+        state['publishResponseAmbiguous']=True; state['publishTransportErrorType']=type(ambiguous).__name__
     write_state('zenodo-published.json',state); print(json.dumps(state,separators=(',',':')))
 
 def verify_public_record(token,record,doi,version,concept,expected_hashes=None):
@@ -311,8 +390,7 @@ def verify_public_record(token,record,doi,version,concept,expected_hashes=None):
     if md.get('title')!=release['dataset']['name']: raise RuntimeError('Zenodo public title drift')
     creator=(md.get('creators') or [{}])[0]
     if creator.get('orcid')!=release['primaryEntity']['orcid']: raise RuntimeError('Zenodo public creator ORCID drift')
-    files=public.get('files') or []
-    names=[item.get('key') or item.get('filename') for item in files]
+    files=public.get('files') or []; names=[item.get('key') or item.get('filename') for item in files]
     wanted_names=set(expected_hashes) if expected_hashes is not None else expected_zenodo_names()
     if len(names)!=len(set(names)) or set(names)!=wanted_names: raise RuntimeError('Zenodo public file inventory drift')
     blobs={}
@@ -325,53 +403,39 @@ def verify_public_record(token,record,doi,version,concept,expected_hashes=None):
     return {'stage':'ZENODO_PUBLIC_VERIFIED','release':version,'recordId':str(record),'versionDoi':doi,'conceptDoi':concept,'publicFiles':len(files),'integrity':'PASS'}
 
 def verify_public(args,token):
-    expected=None
-    stage_path=RUNTIME/'zenodo-stage.json'
+    expected=None; stage_path=RUNTIME/'zenodo-stage.json'
     if stage_path.exists(): expected=json.loads(stage_path.read_text()).get('sha256')
     state=verify_public_record(token,str(args.record),args.doi,args.version,args.concept_doi,expected); print(json.dumps(state,separators=(',',':')))
 
 def main():
-    parser = argparse.ArgumentParser()
-    sub = parser.add_subparsers(dest="action", required=True)
+    parser=argparse.ArgumentParser(); sub=parser.add_subparsers(dest='action',required=True)
+    preflight_parser=sub.add_parser('preflight')
+    preflight_parser.add_argument('--version',required=True)
+    preflight_parser.add_argument('--expected-record')
+    preflight_parser.add_argument('--expected-doi')
+    preflight_parser.add_argument('--output',default='.release/runtime/zenodo-preflight.json')
+    reserve_parser=sub.add_parser('reserve')
+    # Legacy caller fields are accepted during workflow migration but are never authority.
+    reserve_parser.add_argument('--current-record')
+    reserve_parser.add_argument('--current-doi')
+    reserve_parser.add_argument('--current-version')
+    reserve_parser.add_argument('--concept-doi',required=True)
+    reserve_parser.add_argument('--version',required=True)
+    reserve_parser.add_argument('--date',required=True)
+    reserve_parser.add_argument('--output',default='.release/runtime/zenodo-reservation.json')
+    stage_parser=sub.add_parser('stage'); stage_parser.add_argument('--version',required=True)
+    sub.add_parser('prepare-auxiliaries'); sub.add_parser('publish')
+    verify_parser=sub.add_parser('verify-public')
+    verify_parser.add_argument('--record',required=True); verify_parser.add_argument('--doi',required=True); verify_parser.add_argument('--concept-doi',required=True); verify_parser.add_argument('--version',required=True)
+    args=parser.parse_args()
+    if args.action=='prepare-auxiliaries': prepare_auxiliaries(); return
+    token=os.environ.get('ZENODO_TOKEN','')
+    if not token: raise SystemExit('ZENODO_TOKEN is required')
+    if args.action=='preflight': preflight(args,token)
+    elif args.action=='reserve': reserve(args,token)
+    elif args.action=='stage': stage(args,token)
+    elif args.action=='publish': publish(args,token)
+    else: verify_public(args,token)
 
-    reserve_parser = sub.add_parser("reserve")
-    reserve_parser.add_argument("--current-record", required=True)
-    reserve_parser.add_argument("--current-doi", required=True)
-    reserve_parser.add_argument("--current-version", required=True)
-    reserve_parser.add_argument("--concept-doi", required=True)
-    reserve_parser.add_argument("--version", required=True)
-    reserve_parser.add_argument("--date", required=True)
-    reserve_parser.add_argument(
-        "--output", default=".release/runtime/zenodo-reservation.json"
-    )
-
-    stage_parser = sub.add_parser("stage")
-    stage_parser.add_argument("--version", required=True)
-    sub.add_parser("prepare-auxiliaries")
-    sub.add_parser("publish")
-
-    verify_parser = sub.add_parser("verify-public")
-    verify_parser.add_argument("--record", required=True)
-    verify_parser.add_argument("--doi", required=True)
-    verify_parser.add_argument("--concept-doi", required=True)
-    verify_parser.add_argument("--version", required=True)
-
-    args = parser.parse_args()
-    if args.action == "prepare-auxiliaries":
-        prepare_auxiliaries()
-        return
-    token = os.environ.get("ZENODO_TOKEN", "")
-    if not token:
-        raise SystemExit("ZENODO_TOKEN is required")
-    if args.action == "reserve":
-        reserve(args, token)
-    elif args.action == "stage":
-        stage(args, token)
-    elif args.action == "publish":
-        publish(args, token)
-    else:
-        verify_public(args, token)
-
-
-if __name__ == "__main__":
+if __name__=='__main__':
     main()

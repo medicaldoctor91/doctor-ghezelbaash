@@ -134,8 +134,17 @@ assert.equal(
     .length,
   1,
 );
-assert.match(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
-assert.match(cloudflare, /Reconcile canonical Cloudflare edge/);
+assert.match(cloudflare, /(?:^|\s)--purge-cache-only(?=\s|\\|$)/m);
+assert.doesNotMatch(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
+assert.doesNotMatch(cloudflare, /cloudflare-pages\.mjs ensure --configure/);
+assert.match(
+  cloudflare,
+  /Verify Cloudflare control-plane contract without mutation[\s\S]*?cloudflare-pages\.mjs ensure --verify-config[\s\S]*?preflight:cloudflare/,
+);
+assert.match(
+  cloudflare,
+  /Purge deployment cache only after exact Git deployment succeeds[\s\S]*?--purge-cache-only/,
+);
 assert.doesNotMatch(cloudflare, /steps\.release_change/);
 const cloudflareTimeout = Number(
   cloudflare.match(/^\s+timeout-minutes:\s*(\d+)\s*$/m)?.[1],
@@ -253,7 +262,8 @@ console.log(
     githubImmutablePolicyPreflight: "CAPABILITY_AWARE",
     githubReleaseExactPostcondition: true,
     cloudflareFrozenRecovery: true,
-    cloudflareFullApplyCanonical: true,
+    cloudflareRoutineControlPlane: "READ_ONLY",
+    cloudflareDeploymentMutation: "PURGE_ONLY",
     cloudflareTimeoutCoversConvergence: true,
     githubPagesBridgeDependencies: "COMPLETE",
   }),
