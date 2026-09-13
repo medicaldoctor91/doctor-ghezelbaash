@@ -22,7 +22,7 @@
     "rdf:generate": "node scripts/generate-rdf.mjs",
     "indexnow:prepare": "node scripts/indexnow.mjs prepare",
     "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-edge-reconciliation.py",
-    "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
+    "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured --full-control-plane",
     "validate:hygiene": "node scripts/validate-repository-hygiene.mjs",
     "validate:visible-text-source": "node scripts/validate-visible-text.mjs source",
     "validate:visible-text": "node scripts/validate-visible-text.mjs dist",
