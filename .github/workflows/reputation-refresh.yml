@@ -33,18 +33,21 @@ jobs:
           set -euo pipefail
           BRANCH='automation/reputation-refresh'
           git fetch --no-tags origin main
-          test "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)"
-          if REMOTE_SHA="$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')" && [ -n "$REMOTE_SHA" ]; then
+          MAIN_SHA="$(git rev-parse FETCH_HEAD)"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          REMOTE_SHA="$(git ls-remote origin "refs/heads/$BRANCH" | awk '{print $1}')"
+          if [ -n "$REMOTE_SHA" ]; then
             git fetch --no-tags origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+            test "$(git rev-parse refs/remotes/origin/$BRANCH)" = "$REMOTE_SHA"
             git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
             git config user.name ghezelbaash-reputation-bot
             git config user.email actions@users.noreply.github.com
-            git merge --no-edit "$(git rev-parse FETCH_HEAD)"
+            git merge --no-edit "$MAIN_SHA"
           else
-            git checkout -b "$BRANCH" "$(git rev-parse FETCH_HEAD)"
+            git checkout -b "$BRANCH" "$MAIN_SHA"
           fi
-          git merge-base --is-ancestor "$(git rev-parse FETCH_HEAD)" HEAD
-          printf 'REPUTATION_BRANCH=%s\n' "$BRANCH" >> "$GITHUB_ENV"
+          git merge-base --is-ancestor "$MAIN_SHA" HEAD
+          printf 'REPUTATION_BRANCH=%s\nREPUTATION_BASE_SHA=%s\n' "$BRANCH" "$MAIN_SHA" >> "$GITHUB_ENV"
       - name: Validate current observation and read Google Places exactly once
         id: places
         env:
@@ -104,7 +107,8 @@ jobs:
           node scripts/reputation.mjs validate
           test -z "$(git status --porcelain --untracked-files=no)"
           git fetch --no-tags origin main
-          git merge-base --is-ancestor "$(git rev-parse FETCH_HEAD)" HEAD
+          test "$(git rev-parse FETCH_HEAD)" = "$REPUTATION_BASE_SHA"
+          git merge-base --is-ancestor "$REPUTATION_BASE_SHA" HEAD
       - name: Publish validated observation branch and open or refresh PR
         if: steps.places.outputs.changed == 'true'
         env:
