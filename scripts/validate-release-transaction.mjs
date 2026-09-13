@@ -6,144 +6,226 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 
 const run = (cwd, args) =>
   execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
-const workflow = await readFile(
-  ".github/workflows/hugging-face-authority.yml",
-  "utf8",
-);
-const cloudflare = await readFile(
-  ".github/workflows/cloudflare-pages-deploy.yml",
-  "utf8",
-);
-const githubPagesBridge = await readFile(
-  ".github/workflows/github-pages-bridge.yml",
-  "utf8",
-);
-const stackMonitor = await readFile(
-  ".github/workflows/stack-monitor.yml",
-  "utf8",
-);
-const huggingFace = await readFile("scripts/huggingface.mjs", "utf8");
+const [
+  workflow,
+  cloudflare,
+  cloudflareReadOnly,
+  githubPagesBridge,
+  stackMonitor,
+  huggingFace,
+  zenodoPreflight,
+  zenodoPublishSafe,
+  candidatePreflight,
+  lock,
+] = await Promise.all([
+  readFile(".github/workflows/hugging-face-authority.yml", "utf8"),
+  readFile(".github/workflows/cloudflare-pages-deploy.yml", "utf8"),
+  readFile("scripts/cloudflare-pages-readonly.mjs", "utf8"),
+  readFile(".github/workflows/github-pages-bridge.yml", "utf8"),
+  readFile(".github/workflows/stack-monitor.yml", "utf8"),
+  readFile("scripts/huggingface.mjs", "utf8"),
+  readFile("scripts/zenodo-preflight.py", "utf8"),
+  readFile("scripts/zenodo-publish-safe.py", "utf8"),
+  readFile("scripts/release-candidate-preflight.mjs", "utf8"),
+  readFile(".release/policy/release-transaction-lock.json", "utf8").then(JSON.parse),
+]);
 const compactHuggingFace = huggingFace.replace(/\s+/g, "");
+const requireOrdered = (content, labels) => {
+  let previous = -1;
+  for (const label of labels) {
+    const current = content.indexOf(label);
+    assert.ok(current >= 0, `Missing transaction stage: ${label}`);
+    assert.ok(current > previous, `Transaction stage ordering drift: ${label}`);
+    previous = current;
+  }
+};
+
+assert.equal(lock.schemaVersion, "1.0");
+assert.equal(lock.conceptDoi, "10.5281/zenodo.18765168");
+assert.deepEqual(lock.predecessor, {
+  release: "1.2.6",
+  recordId: "22651268",
+  versionDoi: "10.5281/zenodo.22651268",
+});
+assert.deepEqual(lock.candidate, {
+  release: "1.3.0",
+  recordId: "22663811",
+  versionDoi: "10.5281/zenodo.22663811",
+});
+assert.equal(lock.policy?.requireAuthenticatedPreflight, true);
+assert.equal(lock.policy?.requireExistingCandidateDraft, true);
+assert.equal(lock.policy?.allowReplacementCandidateIdentity, false);
+assert.equal(lock.policy?.allowBlindPublishRetry, false);
+
+assert.match(workflow, /^\s+environment:\s*production-release\s*$/m);
+assert.match(workflow, /group:\s*doctor-ghezelbaash-external-mutation/);
+assert.match(workflow, /cancel-in-progress:\s*false/);
+assert.match(workflow, /permissions:\s*\n\s+contents:\s*write/m);
+assert.doesNotMatch(workflow, /\bpull_request_target\b/);
+
+requireOrdered(workflow, [
+  "Detect GitHub immutable releases capability",
+  "Reject stale release candidate before external staging",
+  "Verify locked Zenodo lineage and candidate without mutation",
+  "Create or resume release candidate source",
+  "Prepare Hugging Face candidate",
+  "Stage or verify immutable Zenodo candidate",
+  "Final pre-publication transaction gate",
+  "Publish immutable Zenodo release",
+  "Promote exact candidate to canonical GitHub main and tag",
+  "Create or verify exact GitHub Release",
+  "Promote and verify Hugging Face release",
+  "Reconcile or verify current Cloudflare deployment contract",
+]);
+
+const immutableStart = workflow.indexOf("Detect GitHub immutable releases capability");
+const candidateStart = workflow.indexOf("Reject stale release candidate before external staging");
+const immutableBlock = workflow.slice(immutableStart, candidateStart);
+for (const token of [
+  "secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN",
+  "X-GitHub-Api-Version: 2026-03-10",
+  "repos/$GITHUB_REPOSITORY/immutable-releases",
+  "state.enabled !== true",
+  "GITHUB_IMMUTABLE_POLICY=enabled",
+  "exit 1",
+])
+  assert.ok(immutableBlock.includes(token), `Immutable-release preflight misses ${token}`);
+assert.ok(!immutableBlock.includes("|| github.token"));
+assert.doesNotMatch(immutableBlock, /(?:--method|-X)\s+PUT/);
 
 assert.match(
   workflow,
-  /git merge-base --is-ancestor "\$BASE_SHA" "\$CANDIDATE_SHA"/,
+  /Reject stale release candidate before external staging[\s\S]*?release-candidate-preflight\.mjs[\s\S]*?--base-sha="\$BASE_SHA"/,
+);
+for (const token of [
+  "git merge-base --is-ancestor",
+  "STALE_RELEASE_CANDIDATE",
+  "locked Zenodo identity",
+])
+  assert.ok(candidatePreflight.includes(token), `Candidate preflight misses ${token}`);
+
+assert.match(
+  workflow,
+  /Verify locked Zenodo lineage and candidate without mutation[\s\S]*?python scripts\/zenodo-preflight\.py/,
+);
+assert.ok(zenodoPreflight.includes('method="GET"'));
+assert.doesNotMatch(zenodoPreflight, /method\s*=\s*["'](?:POST|PUT|PATCH|DELETE)["']/);
+assert.ok(zenodoPreflight.includes('"httpMethodsUsed": ["GET"]'));
+assert.ok(zenodoPreflight.includes('candidate_state = "published"'));
+assert.ok(zenodoPreflight.includes('candidate_state = "draft"'));
+
+const candidateMutationStart = workflow.indexOf("Create or resume release candidate source");
+const candidateMutationEnd = workflow.indexOf("Push newly prepared release candidate");
+const candidateMutationBlock = workflow.slice(candidateMutationStart, candidateMutationEnd);
+assert.ok(candidateMutationBlock.includes("scripts/reconcile-zenodo-history.mjs"));
+assert.ok(candidateMutationBlock.includes("scripts/promote-release.mjs"));
+assert.ok(
+  candidateMutationBlock.indexOf("scripts/reconcile-zenodo-history.mjs") <
+    candidateMutationBlock.indexOf("scripts/promote-release.mjs"),
+  "Factual Zenodo predecessor must be reconciled before target promotion",
+);
+assert.match(candidateMutationBlock, /test "\$ACTUAL" = "\$EXPECTED"/);
+
+assert.doesNotMatch(workflow, /zenodo_release\.py\s+reserve/);
+assert.doesNotMatch(workflow, /zenodo_release\.py\s+publish\b/);
+assert.match(workflow, /python scripts\/zenodo-publish-safe\.py/);
+assert.equal(
+  (zenodoPublishSafe.match(/"POST",\s*f"\{draft_url\}\/actions\/publish"/g) || []).length,
+  1,
+  "Safe Zenodo publisher must contain exactly one irreversible publish call",
+);
+assert.ok(zenodoPublishSafe.includes("Never retry this POST in-process"));
+assert.ok(zenodoPublishSafe.includes("refusing a blind retry"));
+assert.ok(zenodoPublishSafe.includes("verify_public_record"));
+
+const finalGateStart = workflow.indexOf("Final pre-publication transaction gate");
+const publishStart = workflow.indexOf("Publish immutable Zenodo release");
+const finalGate = workflow.slice(finalGateStart, publishStart);
+for (const token of [
+  'test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_SHA"',
+  'git merge-base --is-ancestor "$BASE_SHA" "$CANDIDATE_SHA"',
+  'refs/heads/release/v$RELEASE_TARGET',
+  '" = "$CANDIDATE_SHA"',
+  '" = "$HF_CANDIDATE_SHA"',
+  "python scripts/zenodo-preflight.py",
+  "zenodo-stage.json",
+  "s.sourceCommit!==process.env.CANDIDATE_SHA",
+  "npm run validate:distribution-identifiers",
+])
+  assert.ok(finalGate.includes(token), `Final publication gate misses ${token}`);
+
+assert.match(
+  workflow,
+  /Publish immutable Zenodo release[\s\S]*?STATE=.*candidate\.state[\s\S]*?\[ "\$STATE" = draft \][\s\S]*?zenodo-publish-safe\.py[\s\S]*?verify-public/,
 );
 assert.match(
   workflow,
   /push --atomic origin HEAD:main "refs\/tags\/v\$RELEASE_TARGET"/,
 );
-assert.match(
-  workflow,
-  /Create or verify exact GitHub Release[\s\S]*?gh release create "\$TAG" "\$ATTESTATION" "\$MANIFEST"[\s\S]*?--verify-tag/,
-);
-const immutableCapabilityGate = workflow.indexOf(
-  "Detect GitHub immutable releases capability",
-);
-const candidateMutation = workflow.indexOf(
-  "Create or resume release candidate source",
-);
-const zenodoPublish = workflow.indexOf("Publish immutable Zenodo release");
-assert.ok(
-  immutableCapabilityGate >= 0 &&
-    candidateMutation >= 0 &&
-    zenodoPublish >= 0 &&
-    immutableCapabilityGate < candidateMutation &&
-    immutableCapabilityGate < zenodoPublish,
-  "GitHub immutable-release capability detection must precede candidate mutation",
-);
-const immutableCapabilityBlock = workflow.slice(
-  immutableCapabilityGate,
-  zenodoPublish,
-);
-for (const required of [
-  "secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN",
-  "X-GitHub-Api-Version: 2026-03-10",
-  "repos/$GITHUB_REPOSITORY/immutable-releases",
-  "state.enabled !== true",
-  "GITHUB_IMMUTABLE_POLICY=unverified",
-  "GITHUB_IMMUTABLE_POLICY=enabled",
-])
-  assert.ok(
-    immutableCapabilityBlock.includes(required),
-    `Immutable-release capability detection misses ${required}`,
-  );
-assert.ok(
-  !immutableCapabilityBlock.includes("|| github.token"),
-  "Repository GITHUB_TOKEN must not masquerade as an Administration credential",
-);
-assert.doesNotMatch(
-  immutableCapabilityBlock,
-  /(?:--method|-X)\s+PUT/,
-  "Release workflow must never enable immutable releases implicitly",
-);
-assert.match(
-  workflow,
-  /Build exact current release distribution[\s\S]*?FROZEN_SOURCE_AT_HEAD[\s\S]*?zenodo_release\.py prepare-auxiliaries/,
-);
-assert.match(
-  workflow,
-  /Create or verify exact GitHub Release[\s\S]*?steps\.release\.outputs\.mode == 'new' \|\| env\.FROZEN_SOURCE_AT_HEAD == 'true'/,
-);
-assert.match(
-  workflow,
-  /BODY="Exact GitHub release metadata for \$TAG\. Immutable Zenodo Version DOI: \$VERSION_DOI"/,
-);
-assert.match(
-  workflow,
-  /gh release download "\$TAG"[\s\S]*?cmp "\$ASSET" "\$TMP\/final-download\/\$NAME"/,
-);
-for (const required of [
+assert.doesNotMatch(workflow, /push\s+--force(?:\s|$)/);
+assert.doesNotMatch(workflow, /push[^\n]*--delete/);
+assert.doesNotMatch(workflow, /huggingface\.mjs push[^\n]*--delete/);
+
+const githubReleaseStart = workflow.indexOf("Create or verify exact GitHub Release");
+const hfPromotionStart = workflow.indexOf("Promote and verify Hugging Face release");
+const githubReleaseBlock = workflow.slice(githubReleaseStart, hfPromotionStart);
+for (const token of [
+  "gh release create",
+  "--verify-tag",
   "assets,body,isDraft,isImmutable,isPrerelease,name,tagName,targetCommitish",
-  "Existing published GitHub Release is not immutable",
-  "Existing published GitHub Release asset inventory drift",
-  "Draft GitHub Release is not exact before publication",
-  "Published GitHub Release postcondition drift",
-  "release.isDraft !== false",
-  "release.isPrerelease !== false",
-  "process.env.GITHUB_IMMUTABLE_POLICY === \"enabled\"",
-  "release.isImmutable !== true",
-  "release.tagName !== tag",
-  "release.name !== title",
-  "release.body !== body",
-  "JSON.stringify(actual) !== JSON.stringify(expected)",
+  "r.targetCommitish!==candidate",
+  "r.isImmutable!==true",
+  "JSON.stringify(actual)!==JSON.stringify(expected)",
+  "gh release download",
+  'cmp "$ASSET" "$TMP/final-download/$NAME"',
 ])
-  assert.ok(
-    workflow.includes(required),
-    `GitHub Release exact postcondition misses ${required}`,
-  );
-assert.match(
-  workflow,
-  /elif \[ "\$EXISTS" = true \]; then[\s\S]*?test "\$IS_DRAFT" = true[\s\S]*?gh release upload/,
-  "Only a validated draft may receive a recovery asset upload",
+  assert.ok(githubReleaseBlock.includes(token), `GitHub Release exact proof misses ${token}`);
+assert.doesNotMatch(githubReleaseBlock, /gh release upload[^\n]*--clobber/);
+
+const hfBlock = workflow.slice(hfPromotionStart, workflow.indexOf("Reconcile or verify current Cloudflare deployment contract"));
+assert.ok(
+  hfBlock.indexOf('ls-remote --exit-code --tags origin "refs/tags/$HF_TAG"') <
+    hfBlock.indexOf("huggingface.mjs push .release/huggingface HEAD:main"),
+  "Existing HF frozen tag must be verified before main promotion",
 );
-assert.match(
-  workflow,
-  /if \[ "\$IS_DRAFT" = true \]; then[\s\S]*?gh release edit "\$TAG"[^\n]*--draft=false/,
-  "Only an exact validated draft may be published during recovery",
-);
-assert.doesNotMatch(workflow, /gh release upload[^\n]*--clobber/);
-assert.doesNotMatch(workflow, /push origin HEAD:main\s*\n\s*if git ls-remote/);
-assert.match(
-  workflow,
-  /Reconcile or verify current Cloudflare deployment contract[\s\S]*?FROZEN_SOURCE_AT_HEAD[\s\S]*?CF_EXPECTED_COMMIT="\$BASE_SHA"[\s\S]*?cloudflare-pages\.mjs ensure --configure[\s\S]*?cloudflare-pages\.mjs ensure\n/,
-  "Frozen current-release recovery must converge the exact Cloudflare commit",
-);
-assert.equal(
-  (cloudflare.match(/python scripts\/configure-cloudflare-edge\.py/g) || [])
-    .length,
-  1,
-);
-assert.match(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
-assert.match(cloudflare, /Reconcile canonical Cloudflare edge/);
-assert.doesNotMatch(cloudflare, /steps\.release_change/);
+assert.match(hfBlock, /test "\$HF_TAG_SHA" = "\$HF_CANDIDATE_SHA"/);
+assert.match(hfBlock, /huggingface\.mjs push \.release\/huggingface "refs\/tags\/\$HF_TAG"/);
+
+const hfPrepareStart = workflow.indexOf("Prepare Hugging Face candidate");
+const hfPrepareEnd = workflow.indexOf("Push Hugging Face candidate");
+const hfPrepareBlock = workflow.slice(hfPrepareStart, hfPrepareEnd);
+assert.ok(hfPrepareBlock.includes("STALE_HF_RELEASE_CANDIDATE"));
+assert.ok(hfPrepareBlock.includes("git -C .release/huggingface diff --cached --quiet"));
+
+const cfReleaseBlock = workflow.slice(workflow.indexOf("Reconcile or verify current Cloudflare deployment contract"));
+assert.match(cfReleaseBlock, /cloudflare-pages\.mjs ensure --verify-config/);
+assert.match(cfReleaseBlock, /configure-cloudflare-edge\.py --purge-cache-only/);
+assert.match(cfReleaseBlock, /cloudflare-pages\.mjs verify/);
+assert.doesNotMatch(cfReleaseBlock, /ensure --configure/);
+assert.doesNotMatch(cfReleaseBlock, /configure-cloudflare-edge\.py[\s\\]*--apply/);
+
+for (const forbidden of [
+  "cloudflare-pages.mjs ensure --configure",
+  "configure-pages-dev-redirect.py",
+  "--apply",
+])
+  assert.ok(!cloudflare.includes(forbidden), `Routine Cloudflare path still mutates infrastructure: ${forbidden}`);
+assert.match(cloudflare, /cloudflare-pages-readonly\.mjs/);
+assert.match(cloudflare, /npm run preflight:cloudflare/);
+assert.match(cloudflare, /--purge-cache-only/);
+assert.match(cloudflare, /PAGES_DEV_ROOT_REDIRECT_PUBLIC_PASS/);
+assert.match(cloudflare, /verify:production/);
+assert.match(cloudflare, /verify:video-production/);
+assert.match(cloudflare, /verify:public-discovery/);
+assert.match(cloudflareReadOnly, /method:\s*"GET"/);
+assert.doesNotMatch(cloudflareReadOnly, /method:\s*"(?:POST|PUT|PATCH|DELETE)"/);
+assert.ok(cloudflareReadOnly.includes("read-only verification refuses retry"));
+assert.ok(cloudflareReadOnly.includes("read-only verification refuses repair"));
 const cloudflareTimeout = Number(
   cloudflare.match(/^\s+timeout-minutes:\s*(\d+)\s*$/m)?.[1],
 );
-assert.ok(
-  cloudflareTimeout >= 60,
-  "Cloudflare deployment timeout must cover its bounded convergence gates",
-);
+assert.ok(cloudflareTimeout >= 60, "Cloudflare verification timeout must cover bounded convergence gates");
+
 for (const pathFilter of [
   ".nvmrc",
   "package.json",
@@ -167,43 +249,23 @@ assert.ok(
   bridgeInstallPosition >= 0 && bridgeBuildPosition > bridgeInstallPosition,
   "GitHub Pages bridge must install locked compiler dependencies before building",
 );
-assert.match(
-  workflow,
-  /FROZEN_SOURCE_SHA="\$\(git rev-list -n 1 "v\$CURRENT_VERSION"\)"/,
-);
-assert.match(
-  workflow,
-  /node scripts\/huggingface\.mjs push \.release\/huggingface "refs\/tags\/\$HF_TAG"/,
-);
-assert.match(
-  workflow,
-  /Verify the repaired or current frozen release snapshot[\s\S]*?node scripts\/verify-live\.mjs release/,
-);
-assert.match(
-  workflow,
-  /env\.FROZEN_SOURCE_AT_HEAD == 'true' && env\.RELEASE_RECOVERY == 'true'/,
-);
+
 assert.match(stackMonitor, /on:\s*\n\s+push:\s*\n\s+branches: \[main\]/);
 assert.ok(
   stackMonitor.includes("if: github.event_name != 'push'"),
-  "Push reconciliation must not mutate the first-party edge",
+  "Push stack monitor must keep external convergence checks out of ordinary push runs",
 );
 assert.ok(
   compactHuggingFace.indexOf("awaitcleanDistributionRoot(hub)") <
-    compactHuggingFace.indexOf(
-      "constresources=resourcesForTarget(hf.resourceTarget)",
-    ),
+    compactHuggingFace.indexOf("constresources=resourcesForTarget(hf.resourceTarget)"),
   "HF preparation must start from a clean distribution root",
 );
 assert.ok(
-  compactHuggingFace.includes(
-    "JSON.stringify(actual)===JSON.stringify(expected)",
-  ),
+  compactHuggingFace.includes("JSON.stringify(actual)===JSON.stringify(expected)"),
   "HF preparation must enforce its exact declared inventory",
 );
-const dir = await mkdtemp(
-  path.join(os.tmpdir(), "ghezelbaash-release-topology-"),
-);
+
+const dir = await mkdtemp(path.join(os.tmpdir(), "ghezelbaash-release-topology-"));
 try {
   run(dir, ["init", "-q"]);
   run(dir, ["config", "user.name", "release-test"]);
@@ -216,28 +278,21 @@ try {
   await writeFile(path.join(dir, "release.txt"), "snapshot\n");
   run(dir, ["add", "release.txt"]);
   run(dir, ["commit", "-qm", "snapshot"]);
-  const snapshot = run(dir, ["rev-parse", "HEAD"]);
+  const staleSnapshot = run(dir, ["rev-parse", "HEAD"]);
   run(dir, ["switch", "-qc", "main", base]);
   await writeFile(path.join(dir, "workflow.txt"), "fix\n");
   run(dir, ["add", "workflow.txt"]);
   run(dir, ["commit", "-qm", "workflow fix"]);
   const current = run(dir, ["rev-parse", "HEAD"]);
-  assert.throws(() =>
-    run(dir, ["merge-base", "--is-ancestor", current, snapshot]),
-  );
-  run(dir, [
-    "merge",
-    "--no-ff",
-    "-qm",
-    "integrate immutable snapshot",
-    snapshot,
-  ]);
-  const integrated = run(dir, ["rev-parse", "HEAD"]);
-  run(dir, ["merge-base", "--is-ancestor", current, integrated]);
-  run(dir, ["merge-base", "--is-ancestor", snapshot, integrated]);
-  run(dir, ["tag", "-a", "v1.2.4", snapshot, "-m", "frozen snapshot"]);
-  assert.equal(run(dir, ["rev-parse", "v1.2.4^{}"]), snapshot);
-  assert.notEqual(integrated, snapshot);
+  assert.throws(() => run(dir, ["merge-base", "--is-ancestor", current, staleSnapshot]));
+  run(dir, ["switch", "-qc", "fresh", current]);
+  await writeFile(path.join(dir, "release.txt"), "fresh snapshot\n");
+  run(dir, ["add", "release.txt"]);
+  run(dir, ["commit", "-qm", "fresh snapshot"]);
+  const fresh = run(dir, ["rev-parse", "HEAD"]);
+  run(dir, ["merge-base", "--is-ancestor", current, fresh]);
+  run(dir, ["tag", "-a", "v1.3.0", fresh, "-m", "frozen snapshot"]);
+  assert.equal(run(dir, ["rev-parse", "v1.3.0^{}"]), fresh);
 } finally {
   await rm(dir, { recursive: true, force: true });
 }
@@ -245,16 +300,18 @@ try {
 console.log(
   JSON.stringify({
     releaseTransaction: "PASS",
-    divergenceRejectedBeforePublish: true,
-    integrationKeepsBothParents: true,
-    frozenTagExact: true,
-    frozenTagRecovery: true,
-    githubReleaseIdempotent: true,
-    githubImmutablePolicyPreflight: "CAPABILITY_AWARE",
+    zenodoIdentityLocked: true,
+    zenodoAuthenticatedPreflight: "GET_ONLY",
+    zenodoPublishRetryPolicy: "SINGLE_ATTEMPT_PUBLIC_VERIFY",
+    predecessorReconciliation: true,
+    staleCandidateRejectedBeforeStaging: true,
+    githubImmutablePolicyPreflight: "REQUIRED_ENABLED",
     githubReleaseExactPostcondition: true,
-    cloudflareFrozenRecovery: true,
-    cloudflareFullApplyCanonical: true,
-    cloudflareTimeoutCoversConvergence: true,
+    huggingFaceFrozenTagExact: true,
+    routineCloudflareControlPlaneMutation: false,
+    routineCloudflareDeploymentVerification: "READ_ONLY_PLUS_SCOPED_CACHE_PURGE",
+    branchDeletionInReleaseTransaction: false,
+    historicalDivergenceRejected: true,
     githubPagesBridgeDependencies: "COMPLETE",
   }),
 );
