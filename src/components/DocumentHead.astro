@@ -1,10 +1,12 @@
 ---
 import documentHead from '../data/document-head.json';
-import release from '../data/release.json';
+import rawRelease from '../data/release.json';
+import authorityProfile from '../data/semantic/authority-profile.json';
 import {
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
+import { hydrateReleaseAuthority } from '../lib/canonical-authority.mjs';
 import { headGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
 import {
@@ -30,6 +32,7 @@ interface Props {
   isMain: boolean;
 }
 
+const release = hydrateReleaseAuthority(rawRelease, headGraph, authorityProfile);
 const { title, description, robots, canonicalURL, isMain } = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {
