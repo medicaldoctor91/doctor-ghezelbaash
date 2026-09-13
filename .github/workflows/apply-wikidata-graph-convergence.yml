@@ -18,7 +18,7 @@ jobs:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
 
-      - name: Apply reviewed source patch and remove bootstrap files
+      - name: Apply reviewed patch and create local candidate commit
         shell: bash
         run: |
           set -euo pipefail
@@ -27,6 +27,31 @@ jobs:
           git apply /tmp/wikidata-graph-convergence.patch
           git rm .github/wikidata-graph-convergence-20260914.patch.gz.b64 .github/workflows/apply-wikidata-graph-convergence.yml
           git diff --check
+          python - <<'PY'
+          import subprocess
+          expected = {
+              '.github/wikidata-graph-convergence-20260914.patch.gz.b64',
+              '.github/workflows/apply-wikidata-graph-convergence.yml',
+              'codemeta.json',
+              'scripts/test-final-entity-contract.mjs',
+              'scripts/validate-evidence.mjs',
+              'scripts/validate-final-entity-contract.mjs',
+              'scripts/validate-physician-projection.mjs',
+              'src/data/evidence-registry.json',
+              'src/data/release.json',
+              'src/data/semantic/knowledge-graph.jsonld',
+              'src/data/semantic/shapes.ttl',
+          }
+          actual = set(subprocess.check_output(['git','diff','--name-only','HEAD'], text=True).splitlines())
+          if actual != expected:
+              raise SystemExit(f'Unexpected pre-commit paths: expected={sorted(expected)} actual={sorted(actual)}')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat(entity): strengthen source-bound Wikidata convergence"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          echo "Local candidate commit: $(git rev-parse HEAD)"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -62,15 +87,15 @@ jobs:
           npm run validate:physician-projection
           npm run test:final-entity-contract
 
-      - name: Require only the reviewed source delta
+      - name: Require clean candidate and exact final source delta
         shell: bash
         run: |
           set -euo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          git fetch origin main
           python - <<'PY'
           import subprocess
           expected = {
-              '.github/wikidata-graph-convergence-20260914.patch.gz.b64',
-              '.github/workflows/apply-wikidata-graph-convergence.yml',
               'codemeta.json',
               'scripts/test-final-entity-contract.mjs',
               'scripts/validate-evidence.mjs',
@@ -81,19 +106,15 @@ jobs:
               'src/data/semantic/knowledge-graph.jsonld',
               'src/data/semantic/shapes.ttl',
           }
-          actual = set(subprocess.check_output(['git','diff','--name-only','HEAD'], text=True).splitlines())
+          actual = set(subprocess.check_output(['git','diff','--name-only','origin/main...HEAD'], text=True).splitlines())
           if actual != expected:
-              raise SystemExit(f'Unexpected changed paths: expected={sorted(expected)} actual={sorted(actual)}')
+              raise SystemExit(f'Unexpected final paths: expected={sorted(expected)} actual={sorted(actual)}')
           PY
-          git diff --check
+          git diff --check origin/main...HEAD
 
-      - name: Commit validated source-only convergence
+      - name: Push validated candidate commit
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "feat(entity): strengthen source-bound Wikidata convergence"
           git push origin HEAD:${{ github.ref_name }}
           echo "Validated commit: $(git rev-parse HEAD)"
