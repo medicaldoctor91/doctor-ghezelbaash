@@ -4,10 +4,8 @@ import { bindHeroPictureSizes } from "../../src/lib/hero-image-contract.mjs";
 import { bindReleaseTokens } from "../../src/lib/release-tokens.mjs";
 import { bindSiteTokens, deriveSiteData } from "../../src/lib/site-data.mjs";
 import { bindClinicReputation } from "../../src/lib/reputation-observation.mjs";
-import {
-  deriveCanonicalAnswerProjection,
-  projectCanonicalAnswerHtml,
-} from "../../src/lib/answer-projection.mjs";
+import { deriveCanonicalAnswerProjection } from "../../src/lib/answer-projection.mjs";
+import { projectCanonicalAnswerHtmlStrict } from "../../src/lib/strict-answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 import { hydrateReleaseAuthority } from "../../src/lib/canonical-authority.mjs";
 
@@ -94,7 +92,7 @@ export async function assembleCanonicalContent({
     mapsUrl: site.mapsUrl,
   });
   const answerProjection = deriveCanonicalAnswerProjection(graph, release);
-  content = projectCanonicalAnswerHtml(content, answerProjection);
+  content = projectCanonicalAnswerHtmlStrict(content, answerProjection);
   return {
     content: compactAuthoredHtmlLayout(content),
     names,
