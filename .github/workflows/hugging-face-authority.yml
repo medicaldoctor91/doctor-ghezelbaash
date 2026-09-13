@@ -33,7 +33,7 @@ jobs:
         run: npm run security:dependencies
       - name: Verify physician-first Hugging Face authority topology and viewer contracts
         run: node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer
-      - name: Verify current first-party and preservation surfaces
+      - name: Verify current first-party website surface
         run: node scripts/verify-live.mjs current --website-only
 
   release:
@@ -109,9 +109,7 @@ jobs:
             FROZEN_SOURCE_SHA="$(git rev-list -n 1 "v$CURRENT_VERSION")"
             if [ "$BASE_SHA" = "$FROZEN_SOURCE_SHA" ]; then FROZEN_SOURCE_AT_HEAD=true; fi
           fi
-          if [ "$MODE" = recovery ]; then
-            test "$FROZEN_SOURCE_AT_HEAD" = true
-          fi
+          if [ "$MODE" = recovery ]; then test "$FROZEN_SOURCE_AT_HEAD" = true; fi
           printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\nFROZEN_SOURCE_SHA=%s\n' \
             "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$MODE" "$FROZEN_SOURCE_AT_HEAD" "$FROZEN_SOURCE_SHA" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
@@ -371,12 +369,15 @@ jobs:
           fi
           STATE="$TMP/release.json"
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets,body,isDraft,isImmutable,isPrerelease,name,tagName,targetCommitish > "$STATE"
-          node - "$STATE" "$TAG" "$TITLE" "$BODY" <<'NODE'
-          const fs=require('node:fs'); const [file,tag,title,body]=process.argv.slice(2); const r=JSON.parse(fs.readFileSync(file,'utf8'));
-          if(r.tagName!==tag||r.name!==title||r.body!==body||r.isDraft!==false||r.isPrerelease!==false)throw new Error('GitHub Release metadata drift');
-          if(process.env.GITHUB_IMMUTABLE_POLICY==='enabled'&&r.isImmutable!==true)throw new Error('Published GitHub Release is not immutable');
-          const actual=(r.assets||[]).map(x=>x.name).sort(); const expected=[`dist-sha256-${tag}.json`.replace('v','v'),`release-attestation-${tag}.json`.replace('v','v')];
-          if(actual.length!==2)throw new Error('GitHub Release asset inventory drift');
+          node - "$STATE" "$TAG" "$TITLE" "$BODY" "$CANDIDATE_SHA" "$(basename "$ATTESTATION")" "$(basename "$MANIFEST")" <<'NODE'
+          const fs=require('node:fs');
+          const [file,tag,title,body,candidate,attestation,manifest]=process.argv.slice(2);
+          const r=JSON.parse(fs.readFileSync(file,'utf8'));
+          if(r.tagName!==tag||r.name!==title||r.body!==body||r.targetCommitish!==candidate||r.isDraft!==false||r.isPrerelease!==false)throw new Error('GitHub Release metadata drift');
+          if(process.env.GITHUB_IMMUTABLE_POLICY!=='enabled'||r.isImmutable!==true)throw new Error('Published GitHub Release is not immutable');
+          const actual=(r.assets||[]).map(x=>x.name).sort();
+          const expected=[attestation,manifest].sort();
+          if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('GitHub Release asset inventory drift');
           NODE
           mkdir -p "$TMP/final-download"
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$TMP/final-download"
@@ -389,12 +390,22 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          node scripts/huggingface.mjs push .release/huggingface HEAD:main
           HF_TAG="v$RELEASE_TARGET"
-          if ! git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/$HF_TAG" >/dev/null 2>&1; then
+          HF_TAG_EXISTS=false
+          if git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/$HF_TAG" >/dev/null 2>&1; then
+            HF_TAG_EXISTS=true
+            HF_TAG_SHA="$(git -C .release/huggingface ls-remote origin "refs/tags/$HF_TAG^{}" | awk '{print $1}')"
+            if [ -z "$HF_TAG_SHA" ]; then HF_TAG_SHA="$(git -C .release/huggingface ls-remote origin "refs/tags/$HF_TAG" | awk '{print $1}')"; fi
+            test "$HF_TAG_SHA" = "$HF_CANDIDATE_SHA"
+          fi
+          node scripts/huggingface.mjs push .release/huggingface HEAD:main
+          if [ "$HF_TAG_EXISTS" = false ]; then
             git -C .release/huggingface tag -a "$HF_TAG" -m "Dr. Saeed Ghezelbash Public Knowledge Graph $HF_TAG"
             node scripts/huggingface.mjs push .release/huggingface "refs/tags/$HF_TAG"
           fi
+          HF_TAG_SHA="$(git -C .release/huggingface ls-remote origin "refs/tags/$HF_TAG^{}" | awk '{print $1}')"
+          if [ -z "$HF_TAG_SHA" ]; then HF_TAG_SHA="$(git -C .release/huggingface ls-remote origin "refs/tags/$HF_TAG" | awk '{print $1}')"; fi
+          test "$HF_TAG_SHA" = "$HF_CANDIDATE_SHA"
           for attempt in $(seq 1 18); do
             if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
             test "$attempt" -lt 18; sleep 10
@@ -414,17 +425,3 @@ jobs:
           node scripts/cloudflare-pages.mjs verify
           npm run verify:production
           node scripts/verify-live.mjs current --website-only
-
-      - name: Clean temporary staging branches after full convergence
-        if: steps.release.outputs.mode == 'new'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "::add-mask::$GITHUB_TOKEN"; echo "::add-mask::$HF_TOKEN"
-          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin --delete "refs/heads/release/v$RELEASE_TARGET"
-          unset GITHUB_AUTH
-          node scripts/huggingface.mjs push .release/huggingface --delete "release/v$RELEASE_TARGET"
