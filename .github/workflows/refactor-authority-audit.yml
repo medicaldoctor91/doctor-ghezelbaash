@@ -6,29 +6,13 @@ on:
       - refactor/single-source-truth-no-dist-drift
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   audit:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-      - name: Apply deterministic authority codemod
-        run: node scripts/refactor-authority-codemod.mjs
-      - name: Commit codemod result if needed
-        shell: bash
-        run: |
-          if git diff --quiet; then
-            echo "Authority codemod already applied"
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add scripts/validate-google-structured-data.mjs
-            git commit -m "refactor(authority): align validators with graph ownership"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
-          fi
       - name: Report direct semantic release consumers
         shell: bash
         run: |
