@@ -9,9 +9,14 @@ const update = async (file, mutate) => {
 };
 
 const exactReplace = (source, before, after, label) => {
+  if (source.includes(after)) {
+    if (source.includes(before))
+      throw new Error(`${label}: stale and migrated contracts coexist`);
+    return source;
+  }
   const count = source.split(before).length - 1;
   if (count !== 1)
-    throw new Error(`${label}: expected exactly one match, found ${count}`);
+    throw new Error(`${label}: expected exactly one stale match, found ${count}`);
   return source.replace(before, after);
 };
 
@@ -27,5 +32,17 @@ if (
   )
 )
   changed.push("scripts/validate-google-structured-data.mjs");
+
+if (
+  await update("scripts/validate-architecture.mjs", (source) =>
+    exactReplace(
+      source,
+      `assert(\n  /import\\s+documentHead\\s+from\\s+['"]\\.\\.\\/data\\/document-head\\.json['"]/.test(\n    documentHead,\n  ) &&\n    /import\\s+release\\s+from\\s+['"]\\.\\.\\/data\\/release\\.json['"]/.test(\n      documentHead,\n    ) &&\n    /import\\s*\\{\\s*headGraph\\s*\\}\\s*from\\s*['"]\\.\\.\\/lib\\/knowledge-graph['"]/.test(\n      documentHead,\n    ) &&\n    /HEAD_RESOURCES\\s*\\.map\\s*\\(/.test(documentHead),\n  "Document Head must use its direct metadata and resource sources",\n);`,
+      `assert(\n  /import\\s+documentHead\\s+from\\s+['"]\\.\\.\\/data\\/document-head\\.json['"]/.test(\n    documentHead,\n  ) &&\n    /import\\s+rawRelease\\s+from\\s+['"]\\.\\.\\/data\\/release\\.json['"]/.test(\n      documentHead,\n    ) &&\n    /import\\s+authorityProfile\\s+from\\s+['"]\\.\\.\\/data\\/semantic\\/authority-profile\\.json['"]/.test(\n      documentHead,\n    ) &&\n    /hydrateReleaseAuthority/.test(documentHead) &&\n    /import\\s*\\{\\s*headGraph\\s*\\}\\s*from\\s*['"]\\.\\.\\/lib\\/knowledge-graph['"]/.test(\n      documentHead,\n    ) &&\n    /HEAD_RESOURCES\\s*\\.map\\s*\\(/.test(documentHead) &&\n    /exactLanguageLiteral\\(\\s*person\\.name/.test(documentHead) &&\n    /exactText\\(website\\.name/.test(documentHead) &&\n    !/documentHead\\.(?:author|applicationName)/.test(documentHead) &&\n    !/documentHead\\.openGraph\\.siteName/.test(documentHead),\n  "Document Head must derive semantic identity from graph-owned authority while consuming presentation, release and resource policy explicitly",\n);`,
+      "Document Head architecture authority",
+    ),
+  )
+)
+  changed.push("scripts/validate-architecture.mjs");
 
 console.log(JSON.stringify({ changed }));
