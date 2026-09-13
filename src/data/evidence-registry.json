@@ -4,7 +4,7 @@
     "A": "official/authority-control or first-order scholarly/local identity evidence",
     "B": "major scholarly/professional corroboration",
     "C": "secondary directory/media/local corroboration",
-    "P": "first-party publication or preservation; not independent corroboration"
+    "P": "first-party/self-asserted publication, registry data, or preservation; not independent corroboration"
   },
   "evidence": [
     {
@@ -55,6 +55,21 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "0009-0001-9346-8475"
+      ],
+      "role": "identity-reference"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-orcid-education-38054873",
+      "tier": "P",
+      "supports": [
+        "education-history-self-asserted"
+      ],
+      "url": "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873",
+      "liveStatus": "verified-in-2026-09-10-audit",
+      "verifiedAt": "2026-09-10",
+      "expectedMarkers": [
+        "0009-0001-9346-8475",
+        "38054873"
       ],
       "role": "identity-reference"
     },

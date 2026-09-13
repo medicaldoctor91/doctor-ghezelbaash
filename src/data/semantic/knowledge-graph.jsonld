@@ -121,6 +121,10 @@
     "uploadDate": {
       "@id": "https://schema.org/uploadDate",
       "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+    },
+    "expires": {
+      "@id": "https://schema.org/expires",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
     }
   },
   "@graph": [
@@ -1103,7 +1107,7 @@
         "Dr. Saeed Ghezelbash",
         "Dr. Saeed Ghezelbaash"
       ],
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf#document"
@@ -1794,7 +1798,7 @@
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
@@ -1900,6 +1904,9 @@
         {
           "@value": "Medical practice registration",
           "@language": "en"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q1566725"
         }
       ],
       "name": [
@@ -5270,6 +5277,15 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#claim-kums-education-period-2009-2018"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#claim-kums-affiliation-2016"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#claim-kums-affiliation-2021"
         }
       ],
       "description": [
@@ -5471,9 +5487,6 @@
       "affiliation": [
         {
           "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
         }
       ],
       "priceRange": "$$$$"
@@ -7361,7 +7374,8 @@
       "sameAs": [
         "https://pubmed.ncbi.nlm.nih.gov/27280013/",
         "https://doi.org/10.4103/2008-7802.182734",
-        "https://www.wikidata.org/entity/Q36942316"
+        "https://www.wikidata.org/entity/Q36942316",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/"
       ],
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#periodical-int-j-prev-med"
@@ -7404,13 +7418,15 @@
       },
       "identifier": [
         "PMID:34574943",
-        "DOI:10.3390/healthcare9091169"
+        "DOI:10.3390/healthcare9091169",
+        "PMCID:PMC8469763"
       ],
       "sameAs": [
         "https://pubmed.ncbi.nlm.nih.gov/34574943/",
         "https://doi.org/10.3390/healthcare9091169",
         "https://www.mdpi.com/2227-9032/9/9/1169",
-        "https://www.wikidata.org/entity/Q140298431"
+        "https://www.wikidata.org/entity/Q140298431",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC8469763/"
       ],
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#periodical-healthcare"
@@ -8141,7 +8157,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-14",
       "description": "Version-controlled source project for Version 1.2.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8177,7 +8193,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-14",
       "version": "1.2.5",
       "hasPart": [
         {
@@ -8236,7 +8252,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "description": "Version-controlled GitHub source for Version 1.2.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-09-11"
+      "dateModified": "2026-09-14"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset",
@@ -8420,7 +8436,7 @@
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
         {
@@ -8551,7 +8567,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — JSON-LD distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8589,6 +8605,89 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "identifier": "ORCID:0009-0001-9346-8475"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#evidence-orcid-education-38054873",
+      "@type": "WebPage",
+      "name": "ORCID self-asserted education record for Saeed Ghezelbash at Kermanshah University of Medical Sciences",
+      "description": "Public ORCID education record asserted through the account-holder profile; it is used as first-party/self-asserted evidence and not as independent university corroboration.",
+      "url": "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "mentions": {
+        "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
+      },
+      "identifier": "ORCID education put-code:38054873"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#claim-kums-education-period-2009-2018",
+      "@type": "Claim",
+      "name": "Documented medical education period at Kermanshah University of Medical Sciences",
+      "text": "The public ORCID education record reports medical education at Kermanshah University of Medical Sciences from September 2009 through March 2018.",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#credential-doctor-of-medicine"
+        }
+      ],
+      "temporalCoverage": "2009-09/2018-03",
+      "isBasedOn": {
+        "@id": "https://www.ghezelbaash.ir/#evidence-orcid-education-38054873"
+      },
+      "prov:wasDerivedFrom": {
+        "@id": "https://www.ghezelbaash.ir/#evidence-orcid-education-38054873"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#claim-kums-affiliation-2016",
+      "@type": "Claim",
+      "name": "Documented 2016 Kermanshah University of Medical Sciences affiliation",
+      "text": "The 2016 scholarly article lists Mohammad Saeed Ghezelbash with Kermanshah University of Medical Sciences affiliation at that publication point; it does not assert a continuous or current affiliation.",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
+        }
+      ],
+      "temporalCoverage": "2016",
+      "isBasedOn": {
+        "@id": "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016"
+      },
+      "prov:wasDerivedFrom": {
+        "@id": "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#claim-kums-affiliation-2021",
+      "@type": "Claim",
+      "name": "Documented 2021 Kermanshah University of Medical Sciences affiliation",
+      "text": "The 2021 scholarly article lists Mohammad Saeed Ghezelbash with Kermanshah University of Medical Sciences affiliation at that publication point; it does not assert a continuous or current affiliation.",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
+        }
+      ],
+      "temporalCoverage": "2021",
+      "isBasedOn": {
+        "@id": "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
+      },
+      "prov:wasDerivedFrom": {
+        "@id": "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
+      }
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor",
@@ -20283,7 +20382,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Turtle distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21209,7 +21308,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21234,7 +21333,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21259,7 +21358,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21284,7 +21383,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21309,7 +21408,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "version": "1.2.5"
     },
     {
@@ -21332,7 +21431,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "version": "1.2.5"
     },
     {
@@ -21383,7 +21482,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21408,7 +21507,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21433,7 +21532,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21458,7 +21557,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21483,7 +21582,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-11",
+      "dateModified": "2026-09-14",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }

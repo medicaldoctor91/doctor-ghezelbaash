@@ -23,6 +23,24 @@ const CREDENTIAL_ISSUER =
   "https://www.ghezelbaash.ir/#organization-iran-medical-council";
 const MEDICAL_CREDENTIAL =
   "https://www.ghezelbaash.ir/#irimc-credential-167430";
+const MEDICAL_LICENSE_CONCEPT = "https://www.wikidata.org/entity/Q1566725";
+const EDUCATION_EVIDENCE =
+  "https://www.ghezelbaash.ir/#evidence-orcid-education-38054873";
+const EDUCATION_CLAIM =
+  "https://www.ghezelbaash.ir/#claim-kums-education-period-2009-2018";
+const MD_CREDENTIAL = "https://www.ghezelbaash.ir/#credential-doctor-of-medicine";
+const HISTORICAL_AFFILIATION_CLAIMS = [
+  {
+    id: "https://www.ghezelbaash.ir/#claim-kums-affiliation-2016",
+    year: "2016",
+    source: "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
+  },
+  {
+    id: "https://www.ghezelbaash.ir/#claim-kums-affiliation-2021",
+    year: "2021",
+    source: "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021",
+  },
+];
 const CORE_HEAD_SERVICES = [
   "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
   "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
@@ -281,10 +299,71 @@ assert.deepEqual(
   ],
   "Physician job titles must match the supported professional roles",
 );
-assert.ok(
-  refs(physician.affiliation).includes(UNIVERSITY),
-  "Wikidata university affiliation missing from Person",
+assertExact(
+  refs(physician.affiliation),
+  [CLINIC],
+  "Historical university affiliations must not be flattened into an undated current Person affiliation",
 );
+const medicalCredential = requireNode(byId, MEDICAL_CREDENTIAL, "Canonical medical credential");
+assert.ok(
+  refs(medicalCredential.credentialCategory).includes(MEDICAL_LICENSE_CONCEPT),
+  "Medical credential category lost the Wikidata medical-license concept",
+);
+assert.equal(
+  medicalCredential.expires,
+  "2029-02-20",
+  "Canonical medical-license expiry drift",
+);
+const projectedMedicalCredential = requireNode(
+  inlineById,
+  MEDICAL_CREDENTIAL,
+  "Projected medical credential",
+);
+assert.ok(
+  refs(projectedMedicalCredential.credentialCategory).includes(MEDICAL_LICENSE_CONCEPT),
+  "Projected medical credential lost its public medical-license concept",
+);
+assert.equal(
+  projectedMedicalCredential.expires,
+  undefined,
+  "License expiry must remain out of homepage JSON-LD until the date is visible in page content",
+);
+
+const educationEvidence = requireNode(byId, EDUCATION_EVIDENCE, "ORCID education evidence");
+assert.equal(
+  educationEvidence.url,
+  "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873",
+  "ORCID education evidence URL drift",
+);
+assertExact(refs(educationEvidence.about), [PHYSICIAN], "ORCID education evidence subject drift");
+assertExact(refs(educationEvidence.mentions), [UNIVERSITY], "ORCID education evidence university drift");
+const educationClaim = requireNode(byId, EDUCATION_CLAIM, "Education-period claim");
+assertExact(types(educationClaim), ["Claim"], "Education history must be represented as a Claim");
+assertExact(
+  refs(educationClaim.about),
+  [PHYSICIAN, UNIVERSITY, MD_CREDENTIAL],
+  "Education-period claim subject set drift",
+);
+assert.equal(educationClaim.temporalCoverage, "2009-09/2018-03", "Education-period precision drift");
+assertExact(refs(educationClaim.isBasedOn), [EDUCATION_EVIDENCE], "Education claim evidence drift");
+assertExact(
+  refs(educationClaim["prov:wasDerivedFrom"]),
+  [EDUCATION_EVIDENCE],
+  "Education claim provenance drift",
+);
+assert.ok(refs(physician.subjectOf).includes(EDUCATION_CLAIM), "Physician lost education-period subjectOf claim");
+assert.equal(inlineById.has(EDUCATION_CLAIM), false, "Historical education Claim must stay out of homepage JSON-LD");
+assert.equal(inlineById.has(EDUCATION_EVIDENCE), false, "Self-asserted ORCID education evidence must stay out of homepage JSON-LD");
+for (const { id, year, source } of HISTORICAL_AFFILIATION_CLAIMS) {
+  const claim = requireNode(byId, id, `Historical university affiliation ${year}`);
+  assertExact(types(claim), ["Claim"], `Historical affiliation ${year} must be a Claim`);
+  assertExact(refs(claim.about), [PHYSICIAN, UNIVERSITY], `Historical affiliation ${year} subject drift`);
+  assert.equal(claim.temporalCoverage, year, `Historical affiliation ${year} temporal precision drift`);
+  assertExact(refs(claim.isBasedOn), [source], `Historical affiliation ${year} source drift`);
+  assertExact(refs(claim["prov:wasDerivedFrom"]), [source], `Historical affiliation ${year} provenance drift`);
+  assert.ok(refs(physician.subjectOf).includes(id), `Physician lost historical affiliation ${year} Claim`);
+  assert.equal(inlineById.has(id), false, `Historical affiliation ${year} Claim must stay out of homepage JSON-LD`);
+}
 assert.ok(
   refs(physician.performerIn).includes(WPA_EVENT),
   "Wikidata WPA congress participation missing from Person",
@@ -451,10 +530,12 @@ const citedScholarlyWorks = [
   [
     "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
     "10.4103/2008-7802.182734",
+    "PMC4882968",
   ],
   [
     "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021",
     "10.3390/healthcare9091169",
+    "PMC8469763",
   ],
 ];
 const projectedResearchSection = requireNode(
@@ -462,7 +543,7 @@ const projectedResearchSection = requireNode(
   RESEARCH_SECTION,
   "Final research section",
 );
-for (const [id, doi] of citedScholarlyWorks) {
+for (const [id, doi, pmcid] of citedScholarlyWorks) {
   const work = requireNode(byId, id, "Physician-coauthored scholarly work");
   const projectedWork = requireNode(inlineById, id, "Final scholarly citation");
   assertExact(
@@ -495,6 +576,19 @@ for (const [id, doi] of citedScholarlyWorks) {
   assert.ok(
     projectedWork.identifier.includes(`DOI:${doi}`),
     `Scholarly citation DOI identifier drift: ${id}`,
+  );
+  assert.ok(
+    projectedWork.identifier.includes(`PMCID:${pmcid}`),
+    `Scholarly citation PMCID identifier drift: ${id}`,
+  );
+  assert.ok(
+    asArray(work.sameAs).includes(`https://pmc.ncbi.nlm.nih.gov/articles/${pmcid}/`),
+    `Canonical scholarly work lost its PMC full-text identity: ${id}`,
+  );
+  assert.equal(
+    projectedWork.sameAs,
+    undefined,
+    `PMC/PubMed identity mesh must remain in the full graph rather than expanding homepage support JSON-LD: ${id}`,
   );
   assert.equal(
     projectedWork.image,
