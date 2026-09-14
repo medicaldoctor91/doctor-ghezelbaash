@@ -1,0 +1,65 @@
+name: One-time measured render calibration refresh
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: measured-render-calibration-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Install exact measured calibration artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api /repos/${{ github.repository }}/actions/artifacts/10370212355/zip > /tmp/calibration.zip
+          rm -rf /tmp/calibration && mkdir -p /tmp/calibration
+          unzip -q /tmp/calibration.zip -d /tmp/calibration
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          committed_path = Path('src/data/render-calibration.json')
+          measured_path = Path('/tmp/calibration/measured-render-calibration.json')
+          committed = json.loads(committed_path.read_text())
+          measured = json.loads(measured_path.read_text())
+          assert set(committed) == set(measured)
+          for key in committed:
+              if key != '_meta':
+                  assert committed[key] == measured[key], f'geometry drift at {key}'
+          assert committed['_meta']['domSha256'] == measured['_meta']['domSha256']
+          assert measured['_meta']['sourceSha256'] == 'c2fd7090398f8135fe9fcc44f768865b7e4fc579df2ce4475f831d42ff4b5eb3'
+          committed_path.write_text(measured_path.read_text())
+          PY
+          rm .github/workflows/one-time-render-calibration-refresh.yml
+          git diff --check
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Validate canonical measured calibration
+        run: |
+          npm run test:render-calibration
+          npm run validate:architecture
+      - name: Commit refresh atomically
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'chore: refresh render calibration provenance'
+          git push origin HEAD:refactor/single-source-truth-no-dist-drift
