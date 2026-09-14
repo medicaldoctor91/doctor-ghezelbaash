@@ -91,6 +91,13 @@ jobs:
           set -euo pipefail
           SOURCE_COMMIT="${CANDIDATE_SHA}" npm run release
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
+      - name: Upload diagnostic candidate distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pr401-cleanup-candidate-dist-${{ env.CANDIDATE_SHA }}
+          path: release/doctor-ghezelbaash-dist-v*.zip
+          if-no-files-found: error
+          retention-days: 1
       - name: Compare candidate DIST to verified prior-head artifact
         env:
           GH_TOKEN: ${{ github.token }}
@@ -109,6 +116,22 @@ jobs:
           baseline_zip="$(find /tmp/pr401-prior-artifact -type f -name 'doctor-ghezelbaash-dist-v*.zip' -print -quit)"
           test -n "$baseline_zip"
           unzip -q "$baseline_zip" -d /tmp/pr401-prior-dist
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          old=Path('/tmp/pr401-prior-dist'); new=Path('dist')
+          files=sorted(set(p.relative_to(old) for p in old.rglob('*') if p.is_file()) | set(p.relative_to(new) for p in new.rglob('*') if p.is_file()))
+          rows=[]
+          for rel in files:
+              a,b=old/rel,new/rel
+              if not a.exists() or not b.exists() or a.read_bytes()!=b.read_bytes():
+                  rows.append({
+                    'path':str(rel),
+                    'old': None if not a.exists() else {'size':a.stat().st_size,'sha256':hashlib.sha256(a.read_bytes()).hexdigest()},
+                    'new': None if not b.exists() else {'size':b.stat().st_size,'sha256':hashlib.sha256(b.read_bytes()).hexdigest()},
+                  })
+          print(json.dumps({'different':len(rows),'files':rows},ensure_ascii=False,indent=2))
+          PY
           diff -qr /tmp/pr401-prior-dist dist
           test "$(find /tmp/pr401-prior-dist -type f | wc -l)" = "$(find dist -type f | wc -l)"
           echo 'DIST_BYTE_EQUIVALENCE_PASS'
