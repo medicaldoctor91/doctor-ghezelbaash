@@ -76,4 +76,16 @@ if (
 )
   changed.push("scripts/validate-release-contract.mjs");
 
+if (
+  await update("scripts/validate-critical-path.mjs", (source) =>
+    exactReplace(
+      source,
+      `assert(\n  documentHead.includes("document-head.json") &&\n    documentHead.includes("release.json") &&\n    documentHead.includes("HERO_PRELOAD_SRCSET") &&\n    documentHead.includes("headGraph") &&\n    documentHead.includes("<slot />") &&\n    !/\\bHeadStage\\b|\\bstage\\s*=/.test(documentHead),\n  "Structured DocumentHead contract missing",\n);`,
+      `assert(\n  documentHead.includes("document-head.json") &&\n    documentHead.includes("release.json") &&\n    documentHead.includes("HERO_PRELOAD_SRCSET") &&\n    documentHead.includes("canonicalGraph") &&\n    documentHead.includes("deriveCanonicalAuthority") &&\n    !documentHead.includes("hydrateReleaseAuthority") &&\n    documentHead.includes("<slot />") &&\n    !/\\bHeadStage\\b|\\bstage\\s*=/.test(documentHead),\n  "Structured DocumentHead canonical authority contract missing",\n);`,
+      "Critical-path DocumentHead authority",
+    ),
+  )
+)
+  changed.push("scripts/validate-critical-path.mjs");
+
 console.log(JSON.stringify({ changed }));
