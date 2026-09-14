@@ -89,7 +89,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm run release
+          SOURCE_COMMIT="${CANDIDATE_SHA}" npm run release
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
       - name: Compare candidate DIST to verified prior-head artifact
         env:
