@@ -24,7 +24,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02 > /tmp/pr401.patch.gz.b64
+          test "$(wc -c < .github/pr401-html-ownership.patch.gz.b64)" -eq 5000
+          test "$(wc -c < .github/pr401-html-ownership.patch.part01)" -eq 5000
+          test "$(wc -c < .github/pr401-html-ownership.patch.part02a)" -eq 5000
+          test "$(wc -c < .github/pr401-html-ownership.patch.part03)" -eq 5000
+          test "$(wc -c < .github/pr401-html-ownership.patch.part04)" -eq 196
+          echo 'c5143b122604f5fb8b906d2defadc24bcdbb149d0e21e94d138dd6391da46e68  .github/pr401-html-ownership.patch.gz.b64' | sha256sum -c -
+          echo 'cadec5a79c8731a416da41112c8f17b29704b9c21b3b4d0b10dc5e4ad40faf86  .github/pr401-html-ownership.patch.part01' | sha256sum -c -
+          echo '4de41c7a0392089db9c739e5ac2c9c469543147a01a6723a18217f3d153a1e74  .github/pr401-html-ownership.patch.part02a' | sha256sum -c -
+          echo '9503ebdb29b76961f146a1e3ae0593668d80a24bb17a9bc51c38598d0b6b885f  .github/pr401-html-ownership.patch.part03' | sha256sum -c -
+          echo '2001883ab39092c336940d618291a3720d75b2cf653c59cda4a61f7bdd3d4556  .github/pr401-html-ownership.patch.part04' | sha256sum -c -
+          cat .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02a .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04 > /tmp/pr401.patch.gz.b64
           test "$(wc -c < /tmp/pr401.patch.gz.b64)" -eq 20196
           base64 -d /tmp/pr401.patch.gz.b64 > /tmp/pr401.patch.gz
           echo '20503dbbff01321b00f876e625bf705bb4e16b7084d4871404bebd60858fefa0  /tmp/pr401.patch.gz' | sha256sum -c -
@@ -56,6 +66,9 @@ jobs:
           rm .github/pr401-html-ownership.patch.gz.b64
           rm .github/pr401-html-ownership.patch.part01
           rm .github/pr401-html-ownership.patch.part02
+          rm .github/pr401-html-ownership.patch.part02a
+          rm .github/pr401-html-ownership.patch.part03
+          rm .github/pr401-html-ownership.patch.part04
           git add -A
           git diff --cached --check
           test -n "$(git diff --cached --name-only)"
