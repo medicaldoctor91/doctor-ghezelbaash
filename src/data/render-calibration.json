@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-14T21:34:50.667Z",
-    "sourceSha256": "c2fd7090398f8135fe9fcc44f768865b7e4fc579df2ce4475f831d42ff4b5eb3",
+    "measuredAt": "2026-09-14T23:36:15.593Z",
+    "sourceSha256": "2bce54493e806a53323138b105e1fed352ee938502eb9f7c18fd6326dbf15a8d",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4893,11 +4893,11 @@
       ],
       [
         "src/components/SiteFooter.astro",
-        "b2ddfb1bb4a93f26e7fce2c2bcf15b47b0ff33d35d66be59af0cc49bc7db36b5"
+        "50896b59cce9a86b6b65e0d8151fc6ee6cd67a3a8643cac0039d930c6ed57d22"
       ],
       [
         "src/layouts/BaseLayout.astro",
-        "2c1dff3969745ea0ab21c2fe4b034ecd35b2fc50a76dfd05f8e21e7fbf847970"
+        "0748a2c498291893d98fb78f6cf73a4ec53cd8f2b8868f24a3b9653b06cfc2b4"
       ],
       [
         "src/lib/css-delivery.mjs",
@@ -4909,7 +4909,7 @@
       ],
       [
         "src/pages/index.astro",
-        "c750c9704ebc083e17f0c4abdcfb03f11001607f04836c052de70e33c08a5190"
+        "a51fdd48ef67cc7b4fb2ee6e3e94f10f7e9a8630095921f171f698900c169146"
       ],
       [
         "src/styles/global.css",
