@@ -8,6 +8,7 @@ import { deriveCanonicalAnswerProjection } from "../../src/lib/answer-projection
 import { projectCanonicalAnswerHtmlStrict } from "../../src/lib/strict-answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 import { hydrateReleaseAuthority } from "../../src/lib/canonical-authority.mjs";
+import { stripPageOwnedFooterGovernance } from "../../src/lib/page-owned-fragments.mjs";
 
 const compactAuthoredHtmlLayout = (source) =>
   String(source).replace(/>\s*\r?\n\s*</g, "><");
@@ -82,6 +83,7 @@ export async function assembleCanonicalContent({
     path.join(root, "src/content-source/page.md"),
     "utf8",
   );
+  content = stripPageOwnedFooterGovernance(content);
   content = bindHeroPictureSizes(content);
   content = bindReleaseTokens(content, release);
   content = bindSiteTokens(content, site);
