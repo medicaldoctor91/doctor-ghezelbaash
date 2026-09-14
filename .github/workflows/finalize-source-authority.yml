@@ -31,14 +31,25 @@ jobs:
           ffprobe -version
       - name: Install exact dependencies
         run: npm ci
+      - name: Assemble and verify migration payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat scripts/finalize-source-authority.part-* > /tmp/finalize-source-authority.mjs.gz.b64
+          test "$(sha256sum /tmp/finalize-source-authority.mjs.gz.b64 | awk '{print $1}')" = "300df20dffbf91b1bafd902dcb2476643e4b154fcce2630fa39f1150c9b1952c"
+          base64 -d /tmp/finalize-source-authority.mjs.gz.b64 > /tmp/finalize-source-authority.mjs.gz
+          gzip -t /tmp/finalize-source-authority.mjs.gz
+          gzip -dc /tmp/finalize-source-authority.mjs.gz > /tmp/finalize-source-authority.mjs
+          test "$(sha256sum /tmp/finalize-source-authority.mjs | awk '{print $1}')" = "2b4a4cc57514c73768a6cc9dbf434811f217993949c0d1ff9da00aea02977dd9"
+          node --check /tmp/finalize-source-authority.mjs
       - name: Apply canonical authority source migration
-        run: node scripts/finalize-source-authority.mjs
+        run: node /tmp/finalize-source-authority.mjs
       - name: Re-embed Graph-derived image metadata and fingerprints
         run: npm run media:enrich
       - name: Reseal deterministic projections and visible-source contract
-        run: node scripts/finalize-source-authority.mjs --post-media
+        run: node /tmp/finalize-source-authority.mjs --post-media
       - name: Remove one-shot migration surfaces before validation
-        run: rm -f .github/workflows/finalize-source-authority.yml scripts/finalize-source-authority.mjs
+        run: rm -f .github/workflows/finalize-source-authority.yml scripts/finalize-source-authority.part-* scripts/finalize-source-authority.mjs
       - name: Install pinned Chromium for render calibration
         run: npx playwright install --with-deps chromium
       - name: Reseal measured render calibration
