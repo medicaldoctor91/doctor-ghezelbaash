@@ -1,12 +1,9 @@
 ---
-import rawRelease from '../data/release.json';
-import authorityProfile from '../data/semantic/authority-profile.json';
-import { hydrateReleaseAuthority } from '../lib/canonical-authority.mjs';
+import release from '../data/release.json';
 import { headGraph } from '../lib/knowledge-graph';
 import { deriveSiteData } from '../lib/site-data.mjs';
 import { FOOTER_RESOURCES } from '../lib/resources.mjs';
 
-const release = hydrateReleaseAuthority(rawRelease, headGraph, authorityProfile);
 const site = deriveSiteData(release, headGraph);
 const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
   path: resource.path,
