@@ -114,7 +114,8 @@ test("actual validators reject the old Mojavez assertion and scan new authored f
   t.after(() => rm(root, { recursive: true, force: true }));
   const files = ["README.md", "CITATION.cff", "codemeta.json", "package.json", "astro.config.mjs", "tsconfig.json",
     "src/data/semantic/knowledge-graph.jsonld", "src/data/semantic/head-profile.json",
-    "src/data/semantic/support-profile.json", "src/data/evidence-registry.json", "src/data/release.json",
+    "src/data/semantic/support-profile.json", "src/data/semantic/authority-profile.json",
+    "src/data/evidence-registry.json", "src/data/release.json",
     "src/data/release-invariants.json", "src/data/media-metadata.json", MOJAVEZ_RECORD];
   for (const file of files) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
