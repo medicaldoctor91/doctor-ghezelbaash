@@ -104,6 +104,8 @@ export const canonicalSemanticSource = (policy) => {
       "schemaVersion",
       "identitySource",
       "semanticSource",
+      "releaseLifecycleSource",
+      "authorityProfile",
       "evidenceRegistry",
       "languages",
       "scopes",
@@ -130,7 +132,10 @@ export const canonicalSemanticSource = (policy) => {
   );
   if (
     policy.schemaVersion !== "2.5" ||
-    policy.semanticSource !== "src/data/semantic/knowledge-graph.jsonld" ||
+    policy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
+    policy.semanticSource !== policy.identitySource ||
+    policy.releaseLifecycleSource !== "src/data/release.json" ||
+    policy.authorityProfile !== "src/data/semantic/authority-profile.json" ||
     policy.serviceAliasCoverage.coverage !== "all-offered-services"
   )
     throw new Error("Retrieval policy semantic source drift");
