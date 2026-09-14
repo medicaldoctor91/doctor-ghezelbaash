@@ -52,6 +52,21 @@ jobs:
           JS
           node --input-type=module <<'JS'
           import fs from 'node:fs';
+          const file = 'scripts/validate-dist.mjs';
+          let source = fs.readFileSync(file, 'utf8');
+          const importLine = 'import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";';
+          if (!source.includes(importLine)) source = `${importLine}\n${source}`;
+          const before = 'const release = await readJson(path.join(data, "release.json")),';
+          const after = 'const release = await loadAuthoritativeRelease(root),';
+          if (!source.includes(after)) {
+            const count = source.split(before).length - 1;
+            if (count !== 1) throw new Error(`validate-dist release loader drift: ${count}`);
+            source = source.replace(before, after);
+          }
+          fs.writeFileSync(file, source);
+          JS
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
           import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
           const file = 'src/data/visible-text-contract.json';
           const baseline = JSON.parse(fs.readFileSync(file, 'utf8'));
