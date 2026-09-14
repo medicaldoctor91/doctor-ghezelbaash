@@ -24,6 +24,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          wc -c .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02a .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04
+          sha256sum .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02a .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04
           test "$(wc -c < .github/pr401-html-ownership.patch.gz.b64)" -eq 5000
           test "$(wc -c < .github/pr401-html-ownership.patch.part01)" -eq 5000
           test "$(wc -c < .github/pr401-html-ownership.patch.part02a)" -eq 5000
