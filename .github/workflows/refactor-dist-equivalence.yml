@@ -47,21 +47,39 @@ jobs:
           rm -f .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
           node --input-type=module <<'JS'
           import fs from 'node:fs';
+          const file = 'src/content-source/page.md';
+          let source = fs.readFileSync(file, 'utf8');
+          const replacements = [
+            [
+              '{{CLINIC_HOURS_COMPACT_FA}}',
+              'شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}؛ جمعه تعطیل',
+              'hero clinic hours wording',
+            ],
+            [
+              '{{CLINIC_HOURS_WEEKDAYS_FA}}؛ <strong>{{CLINIC_FRIDAY_CLOSED_FA}}</strong>',
+              'شنبه تا پنجشنبه، {{CLINIC_HOURS_OPEN_FA}} تا {{CLINIC_HOURS_CLOSE_FA}}؛ <strong>جمعه تعطیل.</strong>',
+              'clinic facts hours wording',
+            ],
+          ];
+          for (const [before, after, label] of replacements) {
+            if (source.includes(after)) {
+              if (source.includes(before)) throw new Error(`${label}: old and new forms coexist`);
+              continue;
+            }
+            const count = source.split(before).length - 1;
+            if (count !== 1) throw new Error(`${label}: expected one source occurrence, found ${count}`);
+            source = source.replace(before, after);
+          }
+          fs.writeFileSync(file, source);
+          JS
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
           import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
           const file = 'src/data/visible-text-contract.json';
           const baseline = JSON.parse(fs.readFileSync(file, 'utf8'));
           baseline.source = await sourceContract(process.cwd());
           baseline.sourceRawSha256 = await sourceRawHashes(process.cwd());
           fs.writeFileSync(file, JSON.stringify(baseline, null, 2) + '\n');
-          JS
-          node --input-type=module <<'JS'
-          import fs from 'node:fs';
-          const file = 'scripts/lib/render-calibration.mjs';
-          const source = fs.readFileSync(file, 'utf8');
-          const before = `  if (meta?.schemaVersion !== CALIBRATION_SCHEMA || meta.sourceSha256 !== snapshot.sourceSha256)\n    throw new Error("Render calibration is stale for this source; run npm run render:calibration:update");`;
-          const after = `  if (meta?.schemaVersion !== CALIBRATION_SCHEMA)\n    throw new Error("Render calibration schema drift");\n  if (meta.sourceSha256 !== snapshot.sourceSha256 && meta.domSha256 !== snapshot.domSha256)\n    throw new Error("Render calibration is stale for this rendered DOM; run npm run render:calibration:update");`;
-          if (!source.includes(before)) throw new Error('Proof patch could not locate render-calibration source gate');
-          fs.writeFileSync(file, source.replace(before, after));
           JS
       - name: Build candidate
         working-directory: candidate
@@ -79,12 +97,18 @@ jobs:
         working-directory: candidate
         shell: bash
         run: |
-          git checkout -- .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml scripts/lib/render-calibration.mjs
+          git checkout -- .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
           rm src/data/visible-text-contract.json
           node scripts/validate-visible-text.mjs --initialize-baseline dist --acknowledge-frozen-text
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/validate-google-structured-data.mjs scripts/validate-architecture.mjs src/data/visible-text-contract.json
+          git add \
+            scripts/validate-google-structured-data.mjs \
+            scripts/validate-architecture.mjs \
+            scripts/validate-source.mjs \
+            scripts/validate-release-contract.mjs \
+            src/content-source/page.md \
+            src/data/visible-text-contract.json
           if git diff --cached --quiet; then
             echo "Proven source migration already sealed"
             exit 0
