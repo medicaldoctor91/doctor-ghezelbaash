@@ -2,9 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import release from '../data/release.json';
 import { headGraph } from '../lib/knowledge-graph';
-import { deriveSiteData } from '../lib/site-data.mjs';
+import { deriveSiteContactData } from '../lib/site-data.mjs';
 
-const site = deriveSiteData(release, headGraph);
+const site = deriveSiteContactData(release, headGraph);
 const frontmatter = {
   title: 'صفحه پیدا نشد | دکتر سعید قزلباش',
   description:
