@@ -89,27 +89,24 @@ const entityAliases = [
   let index, lastOpener;
   const build = () => {
     if (index) return index;
-    const aliasKey = (dialog?.dataset.entityAliases || "")
-      .split("|")
-      .map(norm)
-      .filter(Boolean)
-      .join(" ");
+    const entityAliasList = (dialog?.dataset.entityAliases || "")
+        .split("|")
+        .map(norm)
+        .filter(Boolean),
+      aliasKey = entityAliasList.join(" ");
     return (index = [...d.querySelectorAll("main h2[id],main h3[id],main h4[id]")]
         .filter((x) => !x.closest(".guide-search"))
         .map((x) => {
           const text = x.textContent.trim(),
             headingAlias = x.dataset.retrievalAlias || "",
             level = Number(x.tagName.slice(1)),
-            entity = /سعید\s*قزلباش|Saeed\s+Ghezelbash/i.test(
-              text + " " + headingAlias,
-            );
+            headingKey = norm(text + " " + headingAlias),
+            entity = entityAliasList.some((alias) => headingKey.includes(alias));
           return {
             id: x.id,
             text,
             level,
-            key:
-              norm(text + " " + headingAlias) +
-              (entity ? " " + aliasKey : ""),
+            key: headingKey + (entity ? " " + aliasKey : ""),
           };
         }));
   };
