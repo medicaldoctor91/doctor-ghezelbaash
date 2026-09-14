@@ -1,0 +1,61 @@
+name: Refactor release authority pruning
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Apply release authority migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/prune-release-authority.mjs
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
+          const file = 'src/data/visible-text-contract.json';
+          const baseline = JSON.parse(fs.readFileSync(file, 'utf8'));
+          baseline.source = await sourceContract(process.cwd());
+          baseline.sourceRawSha256 = await sourceRawHashes(process.cwd());
+          fs.writeFileSync(file, JSON.stringify(baseline, null, 2) + '\n');
+          JS
+          rm -f .github/workflows/refactor-release-prune.yml scripts/prune-release-authority.mjs
+      - name: Validate pruned release contract
+        run: npm run validate:release-contract
+      - name: Validate Astro source
+        run: npm run check:astro
+      - name: Build final candidate
+        run: npm run build
+      - name: Commit pruned authority source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No release authority migration changes to commit"
+            exit 0
+          fi
+          git commit -m "refactor(authority): prune release semantic shadow"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
