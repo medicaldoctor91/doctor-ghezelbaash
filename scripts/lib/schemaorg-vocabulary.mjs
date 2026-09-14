@@ -15,6 +15,8 @@ const EXTERNAL_TERMS = new Map([
   ["dcterms:isPartOf", "http://purl.org/dc/terms/"],
   ["dcterms:issued", "http://purl.org/dc/terms/"],
   ["prov:wasDerivedFrom", "http://www.w3.org/ns/prov#"],
+  ["skos:altLabel", "http://www.w3.org/2004/02/skos/core#"],
+  ["skos:hiddenLabel", "http://www.w3.org/2004/02/skos/core#"],
 ]);
 function validateExternalTerm(property, value, context, path, errors) {
   const namespace = EXTERNAL_TERMS.get(property);
@@ -27,6 +29,20 @@ function validateExternalTerm(property, value, context, path, errors) {
       errors.push(`${path}: PROV derivation requires an entity reference`);
     if (property === "dcterms:issued" && !(typeof item === "string" || (item && typeof item === "object" && Object.hasOwn(item, "@value"))))
       errors.push(`${path}: DCMI issued requires a literal`);
+    if (
+      property.startsWith("skos:") &&
+      !(
+        typeof item === "string" ||
+        (
+          item &&
+          typeof item === "object" &&
+          typeof item["@value"] === "string" &&
+          !Object.hasOwn(item, "@id") &&
+          !Object.hasOwn(item, "@type")
+        )
+      )
+    )
+      errors.push(`${path}: SKOS lexical labels require plain literals`);
   }
 }
 

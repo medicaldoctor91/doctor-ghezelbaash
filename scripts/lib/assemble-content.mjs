@@ -64,27 +64,14 @@ export async function assembleCanonicalContent({
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
   const names = await canonicalSourceNames(root);
-  const [rawRelease, reputationObservation, authorityProfile, clinicAssertionProvenance] = await Promise.all([
+  const [rawRelease, reputationObservation] = await Promise.all([
     readFile(path.join(root, "src/data/release.json"), "utf8").then(JSON.parse),
     readFile(
       path.join(root, "src/data/reputation-observation.json"),
       "utf8",
     ).then(JSON.parse),
-    readFile(
-      path.join(root, "src/data/semantic/authority-profile.json"),
-      "utf8",
-    ).then(JSON.parse),
-    readFile(
-      path.join(root, "src/data/semantic/clinic-assertion-provenance.json"),
-      "utf8",
-    ).then(JSON.parse),
   ]);
-  const release = derivePublicationData(
-    rawRelease,
-    graph,
-    authorityProfile,
-    clinicAssertionProvenance,
-  );
+  const release = derivePublicationData(rawRelease, graph);
   const site = deriveSiteData(release, graph);
   let content = await readFile(
     path.join(root, "src/content-source/page.md"),

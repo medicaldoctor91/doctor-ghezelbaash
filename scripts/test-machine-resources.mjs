@@ -310,8 +310,7 @@ test("descriptor generator emits joinable RDF, correct typed hashes and usable C
   t.after(() => rm(workspace, { recursive: true, force: true }));
   const inputs = new Set([
     "src/data/release.json", "src/data/retrieval/query-matrix-policy.json",
-    "src/data/semantic/knowledge-graph.jsonld", "src/data/semantic/authority-profile.json",
-    "src/data/semantic/clinic-assertion-provenance.json",
+    "src/data/semantic/knowledge-graph.jsonld",
     "src/data/machine-resources.json",
     ".generated/semantic/rdf-lock.json",
     ...MACHINE_RESOURCES.filter((resource) => (resource.descriptorRoles || []).length).map((resource) => resource.source),

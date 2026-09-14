@@ -1,9 +1,7 @@
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "2.1",
   "identitySource": "src/data/semantic/knowledge-graph.jsonld",
   "releaseLifecycleSource": "src/data/release.json",
-  "authorityProfile": "src/data/semantic/authority-profile.json",
-  "clinicAssertionProvenance": "src/data/semantic/clinic-assertion-provenance.json",
   "resourceRegistry": "src/data/machine-resources.json",
   "retrievalPolicySource": "src/data/retrieval/query-matrix-policy.json",
   "surfaces": {

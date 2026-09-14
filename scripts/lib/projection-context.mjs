@@ -105,7 +105,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const data = path.join(root, "src/data");
   const semantic = path.join(data, "semantic");
   const generated = generatedWorkspace(root);
-  const [rawRelease, invariants, rawEvidenceRegistry, graph, authorityProfile, clinicAssertionProvenance] =
+  const [rawRelease, invariants, rawEvidenceRegistry, graph] =
     await Promise.all([
       readFile(path.join(data, "release.json"), "utf8").then(JSON.parse),
       readFile(path.join(data, "release-invariants.json"), "utf8").then(
@@ -117,16 +117,10 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
       readFile(path.join(semantic, "knowledge-graph.jsonld"), "utf8").then(
         JSON.parse,
       ),
-      readFile(path.join(semantic, "authority-profile.json"), "utf8").then(
-        JSON.parse,
-      ),
-      readFile(path.join(semantic, "clinic-assertion-provenance.json"), "utf8").then(
-        JSON.parse,
-      ),
     ]);
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
-  const release = derivePublicationData(rawRelease, graph, authorityProfile, clinicAssertionProvenance);
+  const release = derivePublicationData(rawRelease, graph);
   const evidenceRegistry = deriveEvidenceRegistry(release, rawEvidenceRegistry);
   const evidenceEntries = evidenceRegistry.evidence;
   if (
@@ -189,8 +183,6 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     generatedAssets: generated.assets,
     release,
     rawRelease,
-    authorityProfile,
-    clinicAssertionProvenance,
     invariants,
     evidenceRegistry,
     evidenceSnapshot,

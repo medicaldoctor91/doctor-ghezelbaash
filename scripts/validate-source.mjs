@@ -462,17 +462,16 @@ for (const name of [
 // and current-context validators, rather than by matching generator source text.
 
 if (
+  authority.schemaVersion !== "2.1" ||
   authority.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
   authority.releaseLifecycleSource !== "src/data/release.json" ||
-  authority.authorityProfile !== "src/data/semantic/authority-profile.json" ||
-  authority.clinicAssertionProvenance !== "src/data/semantic/clinic-assertion-provenance.json" ||
   authority.resourceRegistry !== "src/data/machine-resources.json" ||
   authority.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||
   retrievalPolicy.identitySource !== authority.identitySource ||
   retrievalPolicy.semanticSource !== authority.identitySource ||
+  retrievalPolicy.schemaVersion !== "2.6" ||
   retrievalPolicy.releaseLifecycleSource !== authority.releaseLifecycleSource ||
-  retrievalPolicy.authorityProfile !== authority.authorityProfile ||
   hf.retrievalPolicyRef !== authority.retrievalPolicySource ||
   platform.canonicalUrl !== release.canonicalUrl ||
   platform.repository !==

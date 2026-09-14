@@ -47,7 +47,6 @@ export const canonicalSemanticSource = (policy) => {
       "identitySource",
       "semanticSource",
       "releaseLifecycleSource",
-      "authorityProfile",
       "evidenceRegistry",
       "languages",
       "scopes",
@@ -73,11 +72,10 @@ export const canonicalSemanticSource = (policy) => {
     "Service alias policy",
   );
   if (
-    policy.schemaVersion !== "2.5" ||
+    policy.schemaVersion !== "2.6" ||
     policy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
     policy.semanticSource !== policy.identitySource ||
     policy.releaseLifecycleSource !== "src/data/release.json" ||
-    policy.authorityProfile !== "src/data/semantic/authority-profile.json" ||
     policy.serviceAliasCoverage.coverage !== "all-offered-services"
   )
     throw new Error("Retrieval policy semantic source drift");

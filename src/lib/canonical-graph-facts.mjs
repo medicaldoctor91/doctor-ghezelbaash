@@ -87,14 +87,50 @@ export function deriveCanonicalGraphFacts(release, graph) {
   const hoursMatch = openingHours.match(/^Sa-Th (\d{2}:\d{2})-(\d{2}:\d{2})$/);
   if (!hoursMatch)
     throw new Error(`Unsupported canonical clinic openingHours: ${openingHours}`);
+  const weekdayHours = requireNode(
+    `${base}#clinic-opening-hours-sat-thu`,
+    "Saturday–Thursday opening hours",
+  );
   const friday = requireNode(`${base}#clinic-friday-closed`, "Friday closure");
+  const openingHourRefs = asArray(clinic.openingHoursSpecification).map(refId);
   const fridayClosed =
-    asArray(clinic.openingHoursSpecification).map(refId).includes(friday["@id"]) &&
+    openingHourRefs.includes(weekdayHours["@id"]) &&
+    openingHourRefs.includes(friday["@id"]) &&
     asArray(friday["@type"]).includes("OpeningHoursSpecification") &&
     friday.dayOfWeek === "https://schema.org/Friday" &&
     friday.opens === "00:00" &&
     friday.closes === "00:00";
   if (!fridayClosed) throw new Error("Canonical Friday closure drift");
+
+  const ownerConfirmation = requireNode(
+    `${base}#claim-clinic-owner-confirmed-operating-facts`,
+    "owner-confirmed clinic claim",
+  );
+  const confirmationAbout = asArray(ownerConfirmation.about).map(refId);
+  const expectedConfirmationAbout = [
+    clinic["@id"],
+    weekdayHours["@id"],
+    friday["@id"],
+  ];
+  const ownerConfirmationDate = nonempty(
+    ownerConfirmation.dateCreated,
+    "owner-confirmed clinic claim dateCreated",
+  );
+  if (
+    !asArray(ownerConfirmation["@type"]).includes("Claim") ||
+    exactRef(ownerConfirmation.author, "owner-confirmed clinic claim author") !==
+      person["@id"] ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(ownerConfirmationDate) ||
+    confirmationAbout.length !== expectedConfirmationAbout.length ||
+    expectedConfirmationAbout.some(
+      (id) => confirmationAbout.filter((candidate) => candidate === id).length !== 1,
+    ) ||
+    asArray(clinic.subjectOf)
+      .map(refId)
+      .filter((id) => id === ownerConfirmation["@id"]).length !== 1 ||
+    !asArray(person.owns).map(refId).includes(clinic["@id"])
+  )
+    throw new Error("Canonical owner-confirmed clinic provenance drift");
 
   const reviewedBy = exactRef(page.reviewedBy, "WebPage reviewedBy");
   if (reviewedBy !== release.primaryEntity.id)
@@ -133,6 +169,12 @@ export function deriveCanonicalGraphFacts(release, graph) {
       open: hoursMatch[1],
       close: hoursMatch[2],
       fridayClosed,
+    }),
+    clinicOwnerConfirmation: Object.freeze({
+      id: ownerConfirmation["@id"],
+      ownerConfirmed: true,
+      truthVerifiedAt: ownerConfirmationDate,
+      truthAuthority: "owner-confirmed",
     }),
     identifiers: Object.freeze({
       clinic: Object.freeze({

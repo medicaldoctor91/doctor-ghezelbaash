@@ -66,43 +66,6 @@ export function assertReleaseLifecycleSource(release) {
   );
 }
 
-export function assertAuthorityProfile(profile) {
-  exactKeys(
-    profile,
-    [
-      "reconciliationAliases",
-      "retrievalVariants",
-      "verifiedIdentityExpansion",
-      "verifiedWebIdentityMesh",
-    ],
-    "Authority profile",
-  );
-}
-
-export function assertClinicAssertionProvenance(provenance, clinicId) {
-  exactKeys(
-    provenance,
-    [
-      "schemaVersion",
-      "entity",
-      "ownerConfirmed",
-      "truthVerifiedAt",
-      "truthAuthority",
-    ],
-    "Clinic assertion provenance",
-  );
-  if (
-    provenance.schemaVersion !== "1.0" ||
-    provenance.entity !== clinicId ||
-    provenance.ownerConfirmed !== true ||
-    typeof provenance.truthVerifiedAt !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(provenance.truthVerifiedAt) ||
-    provenance.truthAuthority !== "owner-confirmed"
-  )
-    throw new Error("Clinic assertion provenance drift");
-  return provenance;
-}
-
 const identifierValueFromFacts = (facts, owner, suffix, label) => {
   const id = `${facts.base}#${suffix}`;
   const node = facts.byId.get(id);
@@ -118,9 +81,8 @@ const identifierValueFromFacts = (facts, owner, suffix, label) => {
   return nonempty(node.value, label);
 };
 
-export function deriveCanonicalAuthority(release, graph, profile) {
+export function deriveCanonicalAuthority(release, graph) {
   assertReleaseLifecycleSource(release);
-  assertAuthorityProfile(profile);
   if (typeof release?.dataset?.id !== "string" || !release.dataset.id)
     throw new Error("Canonical authority requires a Dataset pointer");
 
@@ -129,22 +91,34 @@ export function deriveCanonicalAuthority(release, graph, profile) {
   if (!dataset)
     throw new Error(`Canonical authority missing Dataset: ${release.dataset.id}`);
 
-  const reconciliationAliases = uniqueStrings(
-    profile.reconciliationAliases,
-    "reconciliation alias",
-  );
-  const retrievalVariants = uniqueStrings(
-    profile.retrievalVariants,
-    "retrieval variant",
-  );
   const graphAliases = uniqueStrings(
     facts.person.alternateName,
     "physician alternateName",
   );
+  const reconciliationAliases = uniqueStrings(
+    facts.person["skos:altLabel"],
+    "physician skos:altLabel",
+  );
+  const retrievalVariants = uniqueStrings(
+    facts.person["skos:hiddenLabel"],
+    "physician skos:hiddenLabel",
+  );
+  if (
+    !graphAliases.length ||
+    !reconciliationAliases.length ||
+    !retrievalVariants.length
+  )
+    throw new Error("Canonical authority requires graph-owned lexical label sets");
   const graphAliasSet = new Set(graphAliases);
   for (const alias of reconciliationAliases)
     if (!graphAliasSet.has(alias))
-      throw new Error(`Reconciliation alias is not graph-owned: ${alias}`);
+      throw new Error(`Reconciliation alias is not a graph alternateName: ${alias}`);
+  const hiddenSet = new Set(retrievalVariants);
+  const overlap = reconciliationAliases.filter((label) => hiddenSet.has(label));
+  if (overlap.length)
+    throw new Error(
+      `Canonical SKOS lexical labels overlap altLabel/hiddenLabel: ${overlap.join(", ")}`,
+    );
   const nonOfficial = new Set([...reconciliationAliases, ...retrievalVariants]);
   const officialAliases = graphAliases.filter((alias) => !nonOfficial.has(alias));
   if (!officialAliases.length)
@@ -152,21 +126,7 @@ export function deriveCanonicalAuthority(release, graph, profile) {
 
   const graphSameAs = uniqueStrings(facts.person.sameAs, "physician sameAs");
   const graphSameAsSet = new Set(graphSameAs);
-  const verifiedWebIdentityMesh = uniqueStrings(
-    profile.verifiedWebIdentityMesh,
-    "identity-mesh URL",
-  );
-  for (const url of verifiedWebIdentityMesh)
-    if (!graphSameAsSet.has(url))
-      throw new Error(`Identity projection is not graph-owned: ${url}`);
-  const verifiedIdentityExpansion = uniqueStrings(
-    profile.verifiedIdentityExpansion,
-    "identity-expansion URL",
-  );
-  const meshSet = new Set(verifiedWebIdentityMesh);
-  for (const url of verifiedIdentityExpansion)
-    if (!meshSet.has(url))
-      throw new Error(`Identity expansion is outside the verified mesh: ${url}`);
+  const verifiedWebIdentityMesh = graphSameAs;
 
   const personWikidata = identifierValueFromFacts(
     facts,
@@ -222,7 +182,6 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       officialAliases: Object.freeze(officialAliases),
       retrievalVariants: Object.freeze(retrievalVariants),
       reconciliationAliases: Object.freeze(reconciliationAliases),
-      verifiedIdentityExpansion: Object.freeze(verifiedIdentityExpansion),
       irimc: identifierValueFromFacts(
         facts,
         facts.person,
@@ -264,6 +223,9 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       hours: `Saturday–Thursday ${facts.clinicHours.open}–${facts.clinicHours.close}; Friday closed`,
       priceRange: nonempty(facts.clinic.priceRange, "clinic priceRange"),
       fridayClosed: facts.clinicHours.fridayClosed,
+      ownerConfirmed: facts.clinicOwnerConfirmation.ownerConfirmed,
+      truthVerifiedAt: facts.clinicOwnerConfirmation.truthVerifiedAt,
+      truthAuthority: facts.clinicOwnerConfirmation.truthAuthority,
     }),
     datasetAuthority: Object.freeze({
       id: release.dataset.id,
@@ -280,22 +242,13 @@ export function deriveCanonicalAuthority(release, graph, profile) {
   });
 }
 
-export function composePublicationData(release, authority, clinicProvenance) {
-  const provenance = assertClinicAssertionProvenance(
-    clinicProvenance,
-    release.clinic.id,
-  );
+export function composePublicationData(release, authority) {
   return Object.freeze({
     release: release.release,
     dateModified: release.dateModified,
     canonicalUrl: release.canonicalUrl,
     primaryEntity: authority.primaryEntity,
-    clinic: Object.freeze({
-      ...authority.clinicAuthority,
-      ownerConfirmed: provenance.ownerConfirmed,
-      truthVerifiedAt: provenance.truthVerifiedAt,
-      truthAuthority: provenance.truthAuthority,
-    }),
+    clinic: authority.clinicAuthority,
     dataset: Object.freeze({
       id: authority.datasetAuthority.id,
       license: release.dataset.license,
@@ -322,12 +275,7 @@ export function composePublicationData(release, authority, clinicProvenance) {
  * lifecycle and semantic authority in one object. It is derived, immutable and
  * never persisted back to the lifecycle source.
  */
-export function derivePublicationData(
-  release,
-  graph,
-  profile,
-  clinicProvenance,
-) {
-  const authority = deriveCanonicalAuthority(release, graph, profile);
-  return composePublicationData(release, authority, clinicProvenance);
+export function derivePublicationData(release, graph) {
+  const authority = deriveCanonicalAuthority(release, graph);
+  return composePublicationData(release, authority);
 }

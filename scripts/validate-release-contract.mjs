@@ -444,17 +444,16 @@ const machineResourceRegistry = await readJson(
 );
 const hfPolicy = authorityPolicy.surfaces?.huggingFace;
 if (
+  authorityPolicy.schemaVersion !== "2.1" ||
   authorityPolicy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
   authorityPolicy.releaseLifecycleSource !== "src/data/release.json" ||
-  authorityPolicy.authorityProfile !== "src/data/semantic/authority-profile.json" ||
-  authorityPolicy.clinicAssertionProvenance !== "src/data/semantic/clinic-assertion-provenance.json" ||
   authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||
   authorityPolicy.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||
   retrievalPolicy.identitySource !== authorityPolicy.identitySource ||
   retrievalPolicy.semanticSource !== authorityPolicy.identitySource ||
+  retrievalPolicy.schemaVersion !== "2.6" ||
   retrievalPolicy.releaseLifecycleSource !== authorityPolicy.releaseLifecycleSource ||
-  retrievalPolicy.authorityProfile !== authorityPolicy.authorityProfile ||
   hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource
 )
   fail("Authority source reference drift");

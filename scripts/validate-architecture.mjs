@@ -283,9 +283,6 @@ assert(
     /import\s+release\s+from\s+['"]\.\.\/data\/release\.json['"]/.test(
       documentHead,
     ) &&
-    /import\s+authorityProfile\s+from\s+['"]\.\.\/data\/semantic\/authority-profile\.json['"]/.test(
-      documentHead,
-    ) &&
     /deriveCanonicalAuthority/.test(documentHead) &&
     /selectCanonicalSocialImage/.test(documentHead) &&
     /import\s*\{\s*canonicalGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(

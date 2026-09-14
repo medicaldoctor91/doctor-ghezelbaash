@@ -1,7 +1,6 @@
 ---
 import documentHead from '../data/document-head.json';
 import release from '../data/release.json';
-import authorityProfile from '../data/semantic/authority-profile.json';
 import {
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
@@ -29,7 +28,7 @@ interface Props {
   isMain: boolean;
 }
 
-const authority = deriveCanonicalAuthority(release, canonicalGraph, authorityProfile);
+const authority = deriveCanonicalAuthority(release, canonicalGraph);
 const { title, description, robots, canonicalURL, isMain } = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {

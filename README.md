@@ -6,11 +6,9 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 - `src/content-source/page.md`: authored visible body content, final answer markup and page metadata.
 - `src/styles/global.css`: the only authored stylesheet.
-- `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, offered services and machine-readable answer semantics.
+- `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, lexical identity labels, first-party provenance, offered services and machine-readable answer semantics.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
-- `src/data/semantic/authority-profile.json`: identity-link and alias selection policies; selected identity facts must resolve to the graph.
-- `src/data/semantic/clinic-assertion-provenance.json`: explicit first-party provenance for owner-confirmed clinic assertions.
 - `src/components/SiteFooter.astro`: authored footer governance wording and machine-resource navigation.
 - `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
 - `src/data/release.json`: release and distribution lifecycle, canonical URL and minimal entity pointers; entity names, identifiers and clinic facts come from the graph.
@@ -28,7 +26,7 @@ The physician uses one canonical ID with `Person` and `IndividualPhysician` type
 
 Both inline graph profiles use `ids`, `maxBytes`, `nodes` and `typeProfiles`. An explicit `nodes[id]` policy defines that node's projection; otherwise its type policies supply the field selection. Authority roles use the same `nodes` map in both lanes. The compiler validates selections and relationships before emitting either graph.
 
-`deriveCanonicalGraphFacts` centralizes canonical graph traversal used by UI and validation consumers. `deriveCanonicalAuthority` resolves identity authority and verifies ownership relationships. `derivePublicationData` composes those facts with explicitly selected lifecycle and clinic-provenance fields for publication consumers. The lifecycle schema is checked before composition, so duplicate authored semantic fields cannot be silently overwritten. Publication data is a derived read model and is never written back to `release.json`.
+`deriveCanonicalGraphFacts` centralizes canonical graph traversal used by UI and validation consumers. `deriveCanonicalAuthority` resolves identity authority directly from graph-owned `alternateName`, `skos:altLabel`, `skos:hiddenLabel`, `sameAs`, identifiers and ownership/provenance relationships. `derivePublicationData` composes those graph facts with release lifecycle fields for publication consumers. The lifecycle schema is checked before composition, so duplicate authored semantic fields cannot be silently overwritten. Publication data is a derived read model and is never written back to `release.json`.
 
 Visible answers have their final IDs and classes in `page.md`. The answer contract checks cardinality, text and placement within the corresponding question region; it does not insert text, add attributes or rewrite the page. Footer governance remains explicit Astro markup rather than an encoded/comment extraction protocol. Source and distribution text fingerprints remain independent acceptance checks.
 
