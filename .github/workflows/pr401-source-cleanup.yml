@@ -1,0 +1,120 @@
+name: PR401 source cleanup transaction
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: pr401-source-cleanup
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact staged branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Setup pinned Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Setup pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Provision validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg unzip
+          ffprobe -version
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Reconstruct and verify cleanup patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .release/tmp/pr401-cleanup-*.b64 > /tmp/pr401-cleanup.patch.gz.b64
+          base64 -d /tmp/pr401-cleanup.patch.gz.b64 > /tmp/pr401-cleanup.patch.gz
+          test "$(sha256sum /tmp/pr401-cleanup.patch.gz | awk '{print $1}')" = "e0ffcd629f56ffc5ea208b48bfac7e6280199c906e92debaf3ca180fd6e6b0c3"
+          gzip -t /tmp/pr401-cleanup.patch.gz
+          gzip -dc /tmp/pr401-cleanup.patch.gz > /tmp/pr401-cleanup.patch
+          test "$(sha256sum /tmp/pr401-cleanup.patch | awk '{print $1}')" = "9ca8905e740800f5441354c432f34aea9ce03ba0b586e93e6c268eec124bd3c1"
+          git apply --check /tmp/pr401-cleanup.patch
+      - name: Remove transaction-only repository surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/pr401-source-cleanup.yml
+          rm -rf .release/tmp
+      - name: Apply five source cleanups
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply /tmp/pr401-cleanup.patch
+          git diff --check
+          test ! -e src/lib/page-owned-fragments.mjs
+          test ! -e scripts/lib/authoritative-release.mjs
+          test -e scripts/lib/publication-context.mjs
+          test -e src/data/semantic/clinic-assertion-provenance.json
+          ! grep -R --line-number --fixed-strings 'Record<string, any>' src/components/DocumentHead.astro
+          ! grep -R --line-number --fixed-strings 'SITE_FOOTER_GOVERNANCE_START' src scripts
+          ! grep -R --line-number --fixed-strings 'authoritative-release.mjs' src scripts README.md
+      - name: Install pinned reference Chromium and measure calibration
+        run: |
+          npx playwright install --with-deps chromium
+          npm run render:calibration:update
+      - name: Create clean candidate commit locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'refactor: simplify source authority plumbing'
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          echo "CANDIDATE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Full release validation on clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run release
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+      - name: Compare candidate DIST to verified prior-head artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            'https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/artifacts/10345006458/zip' \
+            -o /tmp/pr401-prior-dist-artifact.zip
+          rm -rf /tmp/pr401-prior-artifact /tmp/pr401-prior-dist
+          mkdir -p /tmp/pr401-prior-artifact /tmp/pr401-prior-dist
+          unzip -q /tmp/pr401-prior-dist-artifact.zip -d /tmp/pr401-prior-artifact
+          baseline_zip="$(find /tmp/pr401-prior-artifact -type f -name 'doctor-ghezelbaash-dist-v*.zip' -print -quit)"
+          test -n "$baseline_zip"
+          unzip -q "$baseline_zip" -d /tmp/pr401-prior-dist
+          diff -qr /tmp/pr401-prior-dist dist
+          test "$(find /tmp/pr401-prior-dist -type f | wc -l)" = "$(find dist -type f | wc -l)"
+          echo 'DIST_BYTE_EQUIVALENCE_PASS'
+      - name: Push validated cleanup commit to PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${CANDIDATE_SHA}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
