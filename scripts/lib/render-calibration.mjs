@@ -17,18 +17,6 @@ const tree = (node) => node.nodeName === "#text"
     (node.attrs || []).map(({ name, value }) => [name, value]).sort(([a], [b]) => a.localeCompare(b)),
     (node.childNodes || []).filter((child) => child.nodeName !== "#comment").map(tree)];
 
-// These sources cannot alter the measured render-chunk flow. They are kept
-// outside the geometry fingerprint; DOM identity is independently hashed from
-// the fully assembled canonical content. The legacy entry for this validator
-// itself is accepted only while migrating an older calibration metadata set.
-const NON_GEOMETRY_INPUTS = new Set([
-  "scripts/lib/render-calibration.mjs",
-  "src/components/DocumentHead.astro",
-  "src/components/FloatingActionDock.astro",
-  "src/components/GuideNavigator.astro",
-  "src/components/SiteFooter.astro",
-]);
-
 export function inspectRenderChunks(html, { source = false } = {}) {
   const { elements } = inspectHtml(html, { wrapMain: source });
   const nodes = elements.filter((node) => hasClass(node, "render-chunk"));
@@ -63,25 +51,20 @@ export function assertCalibrationIdentities(data, expected) {
   }
 }
 
-// Only inputs capable of altering render-chunk geometry enter this fingerprint.
-// Generated calibration CSS/JSON and shell-only components are deliberately
-// absent to avoid false staleness and a metadata/hash cycle.
+// Only source inputs enter this fingerprint. Generated calibration CSS, JSON,
+// timestamps and its embedded SHA are deliberately absent to avoid a hash cycle.
 export async function renderSourceSnapshot(root = process.cwd()) {
   const json = async (file) => JSON.parse(await readFile(path.join(root, file), "utf8"));
   const policy = await json("src/data/retrieval/query-matrix-policy.json");
   const graph = await json(canonicalSemanticSource(policy));
   const { content } = await assembleCanonicalContent({ root, graph });
   const inventory = inspectRenderChunks(content, { source: true });
-  const componentFiles = (await readdir(path.join(root, "src/components")))
-    .filter((file) => file.endsWith(".astro"))
-    .map((file) => `src/components/${file}`)
-    .filter((file) => !NON_GEOMETRY_INPUTS.has(file));
   const files = [
     "src/styles/global.css", "src/lib/css-delivery.mjs", "astro.config.mjs",
     "src/pages/index.astro", "src/layouts/BaseLayout.astro",
     "src/lib/hero-image-contract.mjs", "package-lock.json",
-    "scripts/lib/render-measurement.mjs",
-    ...componentFiles,
+    "scripts/lib/render-measurement.mjs", "scripts/lib/render-calibration.mjs",
+    ...(await readdir(path.join(root, "src/components"))).filter((file) => file.endsWith(".astro")).map((file) => `src/components/${file}`),
     ...(await readdir(path.join(root, "public/fonts"))).map((file) => `public/fonts/${file}`),
   ].sort();
   const inputs = await Promise.all(files.map(async (file) => [file, sha(await readFile(path.join(root, file)))]));
@@ -110,56 +93,10 @@ export function assertCalibrationMetadata(data, snapshot, dom) {
   }
 }
 
-function calibrationCompatibleSnapshot(data, snapshot) {
-  const meta = data?._meta;
-  if (meta?.sourceSha256 === snapshot.sourceSha256)
-    return { snapshot, mode: "EXACT", excludedLegacyInputs: [] };
-  if (!meta || !Array.isArray(meta.inputs) || meta.domSha256 !== snapshot.domSha256)
-    return { snapshot, mode: "STALE", excludedLegacyInputs: [] };
-
-  const recorded = new Map(meta.inputs);
-  const current = new Map(snapshot.inputs);
-  if (recorded.size !== meta.inputs.length || current.size !== snapshot.inputs.length)
-    return { snapshot, mode: "STALE", excludedLegacyInputs: [] };
-
-  const excludedLegacyInputs = [];
-  for (const [file, digest] of recorded) {
-    if (NON_GEOMETRY_INPUTS.has(file)) {
-      if (!current.has(file)) excludedLegacyInputs.push(file);
-      continue;
-    }
-    if (current.get(file) !== digest)
-      return { snapshot, mode: "STALE", excludedLegacyInputs: [] };
-  }
-  for (const [file] of current)
-    if (!recorded.has(file))
-      return { snapshot, mode: "STALE", excludedLegacyInputs: [] };
-  if (!excludedLegacyInputs.length)
-    return { snapshot, mode: "STALE", excludedLegacyInputs: [] };
-
-  return {
-    snapshot: { ...snapshot, sourceSha256: meta.sourceSha256 },
-    mode: "LEGACY_NON_GEOMETRY_INPUTS_EXCLUDED",
-    excludedLegacyInputs: excludedLegacyInputs.sort(),
-  };
-}
-
 export async function validateRenderCalibration({ root = process.cwd(), html } = {}) {
   const raw = await readFile(path.join(root, "src/data/render-calibration.json"), "utf8");
   const { data, sha256 } = renderCalibrationCss(raw);
-  const currentSnapshot = await renderSourceSnapshot(root);
-  const compatibility = calibrationCompatibleSnapshot(data, currentSnapshot);
-  assertCalibrationMetadata(
-    data,
-    compatibility.snapshot,
-    html === undefined ? undefined : inspectRenderChunks(html),
-  );
-  return {
-    valid: true,
-    chunks: currentSnapshot.chunks.length,
-    sourceSha256: currentSnapshot.sourceSha256,
-    calibrationSha256: sha256,
-    sourceCompatibility: compatibility.mode,
-    excludedLegacyInputs: compatibility.excludedLegacyInputs,
-  };
+  const snapshot = await renderSourceSnapshot(root);
+  assertCalibrationMetadata(data, snapshot, html === undefined ? undefined : inspectRenderChunks(html));
+  return { valid: true, chunks: snapshot.chunks.length, sourceSha256: snapshot.sourceSha256, calibrationSha256: sha256 };
 }
