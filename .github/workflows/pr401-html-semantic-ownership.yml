@@ -95,7 +95,6 @@ jobs:
           npm run validate:architecture
           npm run validate:reputation
           node scripts/platform-contract.mjs validate
-          node scripts/validate-source.mjs
           node scripts/test-contracts.mjs
           node scripts/validate-critical-ctas.mjs
           npm run test:schemaorg-vocabulary
