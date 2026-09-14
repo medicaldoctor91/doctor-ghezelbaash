@@ -48,6 +48,51 @@ jobs:
           git apply /tmp/pr401.patch
       - name: Install exact dependencies
         run: npm ci
+      - name: Bind new owners to the frozen visible-text contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile, writeFile } from 'node:fs/promises';
+          import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
+
+          const file = 'src/data/visible-text-contract.json';
+          const baseline = JSON.parse(await readFile(file, 'utf8'));
+          const actual = await sourceContract(process.cwd());
+          const existingKeys = Object.keys(baseline.source);
+          for (const key of existingKeys) {
+            assert.deepEqual(actual[key], baseline.source[key], `Protected visible source changed: ${key}`);
+          }
+          const extraKeys = Object.keys(actual).filter((key) => !existingKeys.includes(key));
+          assert.deepEqual(extraKeys, ['footerGovernance'], 'Only footerGovernance may become a new visible source owner');
+
+          const raw = await sourceRawHashes(process.cwd());
+          const allowedChanged = new Set([
+            'src/content-source/page.md',
+            'src/data/semantic/knowledge-graph.jsonld',
+            'src/components/SiteFooter.astro',
+            'src/layouts/BaseLayout.astro',
+          ]);
+          for (const [path, oldHash] of Object.entries(baseline.sourceRawSha256)) {
+            if (!(path in raw)) {
+              assert.equal(path, 'src/data/reputation-observation.json', `Unexpected raw source removal: ${path}`);
+              continue;
+            }
+            if (raw[path] !== oldHash) assert.ok(allowedChanged.has(path), `Unexpected raw source change: ${path}`);
+          }
+          for (const path of Object.keys(raw)) {
+            assert.ok(path in baseline.sourceRawSha256 || allowedChanged.has(path), `Unexpected raw source addition: ${path}`);
+          }
+
+          baseline.sourceRawSha256 = raw;
+          baseline.source = {
+            page: baseline.source.page,
+            footerGovernance: actual.footerGovernance,
+            ...Object.fromEntries(Object.entries(baseline.source).filter(([key]) => key !== 'page')),
+          };
+          await writeFile(file, `${JSON.stringify(baseline, null, 2)}\n`);
+          NODE
       - name: Validate ownership migration
         shell: bash
         run: |
