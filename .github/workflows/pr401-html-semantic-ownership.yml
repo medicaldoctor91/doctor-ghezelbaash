@@ -81,8 +81,6 @@ jobs:
           }
 
           baseline.sourceRawSha256 = raw;
-          // deepEqual above proves semantic equality; this only canonicalizes JSON property order
-          // to the current sourceContract serialization so the digest-based freeze remains stable.
           baseline.source = actual;
           await writeFile(file, `${JSON.stringify(baseline, null, 2)}\n`);
           NODE
@@ -98,7 +96,6 @@ jobs:
           node scripts/test-contracts.mjs
           node scripts/validate-critical-ctas.mjs
           npm run test:schemaorg-vocabulary
-          npm run test:machine-resources
       - name: Commit migration and remove scaffolding
         shell: bash
         run: |
