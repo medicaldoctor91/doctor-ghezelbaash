@@ -4,6 +4,8 @@ description: "بوتاکس، فیلر، ژل لب، لیفت نخ، کانتور
 lang: "fa-IR"
 dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+socialImageAlt: "دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه"
+socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
 ---
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">

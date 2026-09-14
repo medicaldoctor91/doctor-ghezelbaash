@@ -99,7 +99,15 @@ const frontmatterKeys = frontmatter[1]
   .filter(Boolean);
 assert(
   JSON.stringify(frontmatterKeys) ===
-    JSON.stringify(["title", "description", "lang", "dir", "robots"]),
+    JSON.stringify([
+      "title",
+      "description",
+      "lang",
+      "dir",
+      "robots",
+      "socialImageAlt",
+      "socialAlternateLocales",
+    ]),
   `Page frontmatter schema drift: ${frontmatterKeys.join(", ")}`,
 );
 
@@ -207,6 +215,7 @@ assert(
   "Graph compiler must consume the two projection profiles directly",
 );
 const canonicalGraph = await readJson("src/data/semantic/knowledge-graph.jsonld");
+const documentHeadPolicy = await readJson("src/data/document-head.json");
 const finalProjection = deriveGraphProjections({
   graph: canonicalGraph,
   release,
@@ -291,11 +300,27 @@ assert(
     /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead) &&
     /exactLanguageLiteral\(\s*person\.name/.test(documentHead) &&
     /typeof website\.name/.test(documentHead) &&
+    /values\(website\.alternateName\)/.test(documentHead) &&
+    /documentHead\.appleMobileWebAppTitle/.test(documentHead) &&
     /authority\.primaryEntity\.verifiedWebIdentityMesh/.test(documentHead) &&
+    /const\s+physicianId\s*=\s*refId\(page\.author\)/.test(documentHead) &&
+    /values\(page\.about\)/.test(documentHead) &&
+    /values\(page\.mentions\)/.test(documentHead) &&
+    /values\(facts\.clinic\.sameAs\)/.test(documentHead) &&
     /authority\.clinicAuthority\.cid/.test(documentHead) &&
-    !/documentHead\.(?:author|applicationName)/.test(documentHead) &&
-    !/documentHead\.openGraph\.siteName/.test(documentHead),
-  "Document Head must derive semantic identity directly from canonical graph authority while consuming presentation and release lifecycle policy explicitly",
+    /const\s+openGraphType\s*=\s*pageTypes\.includes\(['"]ProfilePage['"]\)\s*\?\s*['"]profile['"]/.test(documentHead) &&
+    /page\.inLanguage/.test(documentHead) &&
+    /socialImageAlt/.test(documentHead) &&
+    /socialAlternateLocales/.test(documentHead) &&
+    !/documentHead\.(?:author|applicationName|openGraph)/.test(documentHead),
+  "Document Head must derive semantic identity/type/language directly from canonical graph and Markdown while consuming presentation and release lifecycle policy explicitly",
+);
+assert(
+  JSON.stringify(Object.keys(documentHeadPolicy)) ===
+    JSON.stringify(["appleMobileWebAppTitle", "themeColor", "twitter"]) &&
+    JSON.stringify(Object.keys(documentHeadPolicy.twitter || {})) ===
+      JSON.stringify(["card"]),
+  "document-head.json must remain presentation-only and may not own page/Open Graph semantics",
 );
 assert(
   /discoveryLinks\s*\.map\s*\(\s*\(?\s*link\s*\)?\s*=>\s*<link\s+\{\.\.\.link\}/.test(

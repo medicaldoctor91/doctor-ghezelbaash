@@ -30,6 +30,7 @@ const [
   documentHead,
   baseLayout,
   indexSource,
+  pageSource,
   headersTemplate,
 ] = await Promise.all([
   readFile(path.join(root, "src/data/release.json"), "utf8").then(JSON.parse),
@@ -43,6 +44,7 @@ const [
   readFile(path.join(root, "src/components/DocumentHead.astro"), "utf8"),
   readFile(path.join(root, "src/layouts/BaseLayout.astro"), "utf8"),
   readFile(path.join(root, "src/pages/index.astro"), "utf8"),
+  readFile(path.join(root, "src/content-source/page.md"), "utf8"),
   readFile(path.join(root, "src/data/templates/headers.template"), "utf8"),
 ]);
 assert(
@@ -138,8 +140,33 @@ assert(
   /^https:\/\/www\.ghezelbaash\.ir\/$/.test(release.canonicalUrl),
   "Canonical release URL identity drift",
 );
+assert(
+  !Object.hasOwn(documentHeadProfile, "openGraph"),
+  "Presentation-only document-head.json may not own Open Graph semantic metadata",
+);
+const sourceFrontmatter = pageSource.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/u);
+assert(sourceFrontmatter, "Canonical page frontmatter missing for social metadata");
+const sourceFrontmatterValue = (key) => {
+  const field = sourceFrontmatter[1].match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
+  assert(field, `Canonical page frontmatter missing ${key}`);
+  return JSON.parse(field[1]);
+};
+const pageLang = sourceFrontmatterValue("lang");
+const socialImageAlt = sourceFrontmatterValue("socialImageAlt");
+const socialAlternateLocales = sourceFrontmatterValue("socialAlternateLocales");
 
 const graphNodes = canonicalGraph["@graph"] || [];
+const websiteNode = graphNodes.find(
+  (node) => node?.["@id"] === `${release.canonicalUrl}#website`,
+);
+const websiteDisplayNames = new Set([
+  websiteNode?.name,
+  ...([websiteNode?.alternateName].flat().filter((value) => typeof value === "string")),
+].filter((value) => typeof value === "string" && value.length > 0));
+assert(
+  websiteDisplayNames.has(documentHeadProfile.appleMobileWebAppTitle),
+  "Apple web-app title must select a canonical WebSite graph label",
+);
 const types = (node) =>
   Array.isArray(node?.["@type"]) ? node["@type"] : [node?.["@type"]];
 const socialImages = graphNodes.filter(
@@ -155,15 +182,42 @@ assert(
   `Canonical social ImageObject must be unique; found ${socialImages.length}`,
 );
 const [socialImage] = socialImages;
+const canonicalPage = graphNodes.find(
+  (node) => node?.["@id"] === `${release.canonicalUrl}#webpage`,
+);
+const canonicalPageTypes = types(canonicalPage);
+assert(
+  canonicalPageTypes.includes("ProfilePage"),
+  "Canonical graph page must own ProfilePage Open Graph type semantics",
+);
+assert(
+  Array.isArray(canonicalPage?.inLanguage) && canonicalPage.inLanguage.includes(pageLang),
+  "Canonical page language must be declared by graph",
+);
+const primaryLocaleMatch = /^([a-z]{2,3})-([A-Z]{2})$/.exec(pageLang);
+assert(primaryLocaleMatch, "Canonical page language cannot project Open Graph locale");
+const graphLanguageBases = new Set(
+  canonicalPage.inLanguage.map((value) => String(value).split("-")[0]),
+);
+assert(
+  Array.isArray(socialAlternateLocales) &&
+    socialAlternateLocales.length > 0 &&
+    new Set(socialAlternateLocales).size === socialAlternateLocales.length &&
+    socialAlternateLocales.every((locale) => {
+      const match = /^([a-z]{2,3})_([A-Z]{2})$/.exec(locale);
+      return Boolean(match && graphLanguageBases.has(match[1]));
+    }),
+  "Canonical Markdown social alternate locale contract is invalid",
+);
 const socialProfile = Object.freeze({
-  type: documentHeadProfile.openGraph?.type,
-  locale: documentHeadProfile.openGraph?.locale,
-  alternateLocales: documentHeadProfile.openGraph?.alternateLocales,
+  type: "profile",
+  locale: `${primaryLocaleMatch[1]}_${primaryLocaleMatch[2]}`,
+  alternateLocales: socialAlternateLocales,
   image: socialImage.contentUrl,
   imageType: socialImage.encodingFormat,
   imageWidth: Number(socialImage.width.value),
   imageHeight: Number(socialImage.height.value),
-  imageAlt: documentHeadProfile.openGraph?.imageAlt,
+  imageAlt: socialImageAlt,
   twitterCard: documentHeadProfile.twitter?.card,
 });
 assert(
@@ -316,7 +370,8 @@ console.log(
       headAuthority: "astro-native-single-pass",
       contentMetadataAuthority: "markdown-frontmatter",
       canonicalUrlAuthority: "release.json",
-      presentationAuthority: "document-head.json+canonical-graph",
+      presentationAuthority: "document-head.json",
+      semanticHeadAuthority: "markdown-frontmatter+canonical-graph",
       generatedContentAuthority: ".generated/content/home.md",
       discoveryRendering: "astro-native",
       distValidated: Boolean(distArg),

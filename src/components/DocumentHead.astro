@@ -8,7 +8,7 @@ import {
 import { deriveCanonicalAuthority, selectCanonicalSocialImage } from '../lib/canonical-authority.mjs';
 import { canonicalGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
-import { exactLanguageLiteral } from '../lib/semantic-projection.mjs';
+import { exactLanguageLiteral, refId, values } from '../lib/graph-core.mjs';
 
 type DiscoveryLink = {
   href: string;
@@ -23,13 +23,25 @@ type GraphNode = Record<string, unknown> & { '@id': string };
 interface Props {
   title: string;
   description: string;
+  lang: string;
   robots: string;
+  socialImageAlt?: string;
+  socialAlternateLocales?: string[];
   canonicalURL: URL | undefined;
   isMain: boolean;
 }
 
 const authority = deriveCanonicalAuthority(release, canonicalGraph);
-const { title, description, robots, canonicalURL, isMain } = Astro.props;
+const {
+  title,
+  description,
+  lang,
+  robots,
+  socialImageAlt,
+  socialAlternateLocales,
+  canonicalURL,
+  isMain,
+} = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {
   throw new Error('Canonical page URL drift');
@@ -44,6 +56,42 @@ if (
 const facts = authority.facts;
 const person = facts.person as GraphNode;
 const website = facts.website as GraphNode;
+const page = facts.page as GraphNode;
+const pageTypes = Array.isArray(page['@type']) ? page['@type'] : [page['@type']];
+const openGraphType = pageTypes.includes('ProfilePage') ? 'profile' : '';
+if (isMain && !openGraphType) {
+  throw new Error('Canonical page must project Open Graph profile from graph ProfilePage type');
+}
+const pageLanguages = (Array.isArray(page.inLanguage) ? page.inLanguage : [page.inLanguage])
+  .filter((value): value is string => typeof value === 'string' && value.length > 0);
+if (isMain && !pageLanguages.includes(lang)) {
+  throw new Error(`Canonical page language is not declared by graph: ${lang}`);
+}
+const openGraphLocaleMatch = /^([a-z]{2,3})-([A-Z]{2})$/.exec(lang);
+if (isMain && !openGraphLocaleMatch) {
+  throw new Error(`Canonical page language cannot project an Open Graph locale: ${lang}`);
+}
+const openGraphLocale = openGraphLocaleMatch
+  ? `${openGraphLocaleMatch[1]}_${openGraphLocaleMatch[2]}`
+  : '';
+const alternateLocales = Array.isArray(socialAlternateLocales)
+  ? [...socialAlternateLocales]
+  : [];
+if (isMain) {
+  if (typeof socialImageAlt !== 'string' || !socialImageAlt.trim() || socialImageAlt !== socialImageAlt.trim()) {
+    throw new Error('Canonical page frontmatter requires normalized socialImageAlt');
+  }
+  if (!alternateLocales.length || new Set(alternateLocales).size !== alternateLocales.length) {
+    throw new Error('Canonical page frontmatter requires unique socialAlternateLocales');
+  }
+  const graphLanguageBases = new Set(pageLanguages.map((value) => value.split('-')[0]));
+  for (const locale of alternateLocales) {
+    const match = /^([a-z]{2,3})_([A-Z]{2})$/.exec(locale);
+    if (!match || locale === openGraphLocale || !graphLanguageBases.has(match[1])) {
+      throw new Error(`Invalid canonical social alternate locale: ${locale}`);
+    }
+  }
+}
 const profileFirstName = exactLanguageLiteral(
   person.givenName,
   'en',
@@ -63,24 +111,56 @@ if (typeof website.name !== 'string' || !website.name.trim() || website.name !==
   throw new Error('Canonical graph must define one normalized WebSite name');
 }
 const applicationName = website.name;
+const websiteDisplayNames = new Set([
+  applicationName,
+  ...values(website.alternateName).filter(
+    (value): value is string => typeof value === 'string' && value.length > 0,
+  ),
+]);
+if (isMain && !websiteDisplayNames.has(documentHead.appleMobileWebAppTitle)) {
+  throw new Error('Apple web-app title must select a canonical WebSite name from the graph');
+}
 const profileUsername = new URL(facts.instagramUrl).pathname
   .split('/')
   .filter(Boolean)[0];
 const openStreetMapUrl = facts.openStreetMapUrl;
 const socialImage = selectCanonicalSocialImage(release, canonicalGraph);
 const og = Object.freeze({
-  ...documentHead.openGraph,
+  type: openGraphType,
+  locale: openGraphLocale,
+  alternateLocales: Object.freeze(alternateLocales),
   image: socialImage.contentUrl,
   imageType: socialImage.encodingFormat,
   imageWidth: socialImage.width,
   imageHeight: socialImage.height,
+  imageAlt: socialImageAlt ?? '',
 });
 
 const faviconPng = '/favicon.png';
 const canonical = release.canonicalUrl;
 const versionDoi = release.dataset.zenodo.versionDoi;
-const physicianId = authority.primaryEntity.id;
+const physicianId = refId(page.author);
+if (isMain && physicianId !== authority.primaryEntity.id) {
+  throw new Error('Canonical graph page author must be the primary physician');
+}
+const pageAboutIds = values(page.about).map((reference) => refId(reference));
+if (isMain && !pageAboutIds.includes(physicianId)) {
+  throw new Error('Canonical graph page about relations must include its physician author');
+}
 const clinicId = authority.clinicAuthority.id;
+const pageMentionIds = values(page.mentions).map((reference) => refId(reference));
+if (isMain && !pageMentionIds.includes(clinicId)) {
+  throw new Error('Canonical graph page mentions must include the canonical clinic');
+}
+const googleMapsUrl = `https://www.google.com/maps?cid=${authority.clinicAuthority.cid}`;
+const clinicSameAs = new Set(
+  values(facts.clinic.sameAs).filter(
+    (value): value is string => typeof value === 'string' && value.length > 0,
+  ),
+);
+if (isMain && (!clinicSameAs.has(googleMapsUrl) || !clinicSameAs.has(openStreetMapUrl))) {
+  throw new Error('Canonical clinic identity mesh must contain Google Maps and OpenStreetMap');
+}
 
 const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   if (typeof resource.headRel !== 'string' || !resource.headRel) {
@@ -103,12 +183,12 @@ const identityLinks: DiscoveryLink[] =
   }));
 const discoveryLinks: DiscoveryLink[] = [
   ...machineLinks,
-  { href: physicianId, rel: 'author' },
-  { href: physicianId, rel: 'about' },
+  { href: physicianId as string, rel: 'author' },
+  { href: physicianId as string, rel: 'about' },
   { href: clinicId, rel: 'about' },
   ...identityLinks,
   {
-    href: `https://www.google.com/maps?cid=${authority.clinicAuthority.cid}`,
+    href: googleMapsUrl,
     rel: 'about',
     title: 'Google Maps — clinic',
   },

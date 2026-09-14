@@ -187,6 +187,8 @@ for (const [label, pattern] of [
     "identity mesh",
     /authority\.primaryEntity\.verifiedWebIdentityMesh\.map\s*\(/,
   ],
+  ["graph page author", /physicianId\s*=\s*refId\(page\.author\)/],
+  ["graph page about", /pageAboutIds\s*=\s*values\(page\.about\)/],
   ["clinic CID", /authority\.clinicAuthority\.cid/],
   [
     "discovery links",

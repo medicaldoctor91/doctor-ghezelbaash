@@ -106,11 +106,17 @@ export async function sourceContract(root) {
   const page = await readFile(path.join(root, 'src/content-source/page.md'), 'utf8');
   const match = page.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/u);
   if (!match) throw new Error('Visible source frontmatter missing');
-  const frontmatter = Object.fromEntries(['title', 'description'].map((key) => {
+  const frontmatterValue = (key) => {
     const field = match[1].match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));
     if (!field) throw new Error(`Visible source ${key} missing`);
-    return [key, normalizeText(JSON.parse(field[1]))];
-  }));
+    return JSON.parse(field[1]);
+  };
+  const frontmatter = Object.fromEntries(['title', 'description'].map((key) =>
+    [key, normalizeText(frontmatterValue(key))],
+  ));
+  const lang = frontmatterValue('lang');
+  const socialImageAlt = frontmatterValue('socialImageAlt');
+  const socialAlternateLocales = frontmatterValue('socialAlternateLocales');
   const graph = JSON.parse(await readFile(path.join(root, 'src/data/semantic/knowledge-graph.jsonld'), 'utf8'));
   const release = JSON.parse(await readFile(path.join(root, 'src/data/release.json'), 'utf8'));
   const documentHeadPolicy = JSON.parse(await readFile(path.join(root, 'src/data/document-head.json'), 'utf8'));
@@ -128,18 +134,42 @@ export async function sourceContract(root) {
   if (typeof socialImage.encodingFormat !== 'string' || !socialImage.encodingFormat) {
     throw new Error('Canonical social ImageObject encodingFormat missing');
   }
+  const pageId = `${release.canonicalUrl}#webpage`;
+  const pageNode = graph['@graph'].find((node) => node?.['@id'] === pageId);
+  const pageTypes = [pageNode?.['@type']].flat().filter(Boolean);
+  if (!pageTypes.includes('ProfilePage')) {
+    throw new Error('Visible source requires canonical graph ProfilePage type');
+  }
+  if (!Array.isArray(pageNode?.inLanguage) || !pageNode.inLanguage.includes(lang)) {
+    throw new Error(`Visible source language is not canonical graph language: ${lang}`);
+  }
+  const localeMatch = /^([a-z]{2,3})-([A-Z]{2})$/.exec(lang);
+  if (!localeMatch) throw new Error(`Visible source invalid Open Graph language: ${lang}`);
+  if (!Array.isArray(socialAlternateLocales) || !socialAlternateLocales.length) {
+    throw new Error('Visible source socialAlternateLocales missing');
+  }
+  const graphLanguageBases = new Set(pageNode.inLanguage.map((value) => String(value).split('-')[0]));
+  for (const locale of socialAlternateLocales) {
+    const alternateMatch = /^([a-z]{2,3})_([A-Z]{2})$/.exec(locale);
+    if (!alternateMatch || !graphLanguageBases.has(alternateMatch[1])) {
+      throw new Error(`Visible source invalid social alternate locale: ${locale}`);
+    }
+  }
+  if (typeof socialImageAlt !== 'string' || !socialImageAlt.trim()) {
+    throw new Error('Visible source socialImageAlt missing');
+  }
   const documentHead = {
     appleMobileWebAppTitle: documentHeadPolicy.appleMobileWebAppTitle,
     themeColor: documentHeadPolicy.themeColor,
     openGraph: {
-      type: documentHeadPolicy.openGraph?.type,
-      locale: documentHeadPolicy.openGraph?.locale,
-      alternateLocales: documentHeadPolicy.openGraph?.alternateLocales,
+      type: 'profile',
+      locale: `${localeMatch[1]}_${localeMatch[2]}`,
+      alternateLocales: socialAlternateLocales,
       image: socialImage.contentUrl,
       imageType: socialImage.encodingFormat,
       imageWidth: Number(socialImage.width.value),
       imageHeight: Number(socialImage.height.value),
-      imageAlt: documentHeadPolicy.openGraph?.imageAlt,
+      imageAlt: socialImageAlt,
     },
     twitter: documentHeadPolicy.twitter,
   };

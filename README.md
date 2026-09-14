@@ -4,13 +4,13 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 ## Direct source ownership
 
-- `src/content-source/page.md`: authored visible body content, final answer markup and page metadata.
+- `src/content-source/page.md`: authored visible body content, final answer markup and page-scoped metadata, including authored social-image alt text and social locale choices.
 - `src/styles/global.css`: the only authored stylesheet.
 - `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, lexical identity labels, first-party provenance, offered services and machine-readable answer semantics.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
 - `src/components/SiteFooter.astro`: authored footer governance wording and machine-resource navigation.
-- `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
+- `src/data/document-head.json`: presentation-only head policy (theme color, Apple web-app label and Twitter card mode); Open Graph semantics are derived from canonical graph authority plus `page.md` frontmatter.
 - `src/data/release.json`: release and distribution lifecycle, canonical URL and minimal entity pointers; entity names, identifiers and clinic facts come from the graph.
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
 - `src/data/reputation-observation.json`: the clinic-scoped, last-known-good Google Places observation rendered into initial HTML.

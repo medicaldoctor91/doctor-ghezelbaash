@@ -16,6 +16,8 @@ interface Frontmatter {
   lang: string;
   dir: string;
   robots: string;
+  socialImageAlt?: string;
+  socialAlternateLocales?: string[];
 }
 
 interface Props {
@@ -61,7 +63,10 @@ const googlePageMicrodata = isMain
     <DocumentHead
       title={frontmatter.title}
       description={frontmatter.description}
+      lang={lang}
       robots={robots}
+      socialImageAlt={frontmatter.socialImageAlt}
+      socialAlternateLocales={frontmatter.socialAlternateLocales}
       canonicalURL={canonicalURL}
       isMain={isMain}
     >
