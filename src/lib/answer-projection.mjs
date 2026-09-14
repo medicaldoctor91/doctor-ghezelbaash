@@ -90,10 +90,11 @@ export const canonicalAnswerHtmlId = (answerId, canonicalUrl) => {
 };
 
 /**
- * The graph owns machine-readable answer semantics. The page owns its visible
- * answer markup; validation proves agreement without editing either source.
+ * The page owns authored answer wording and visible markup. The graph owns the
+ * Question/Answer topology; Answer.text is a synchronized machine mirror that
+ * normal builds validate but never rewrite.
  */
-export const deriveCanonicalAnswerProjection = (graph, release) => {
+export const deriveCanonicalAnswerTopology = (graph, release) => {
   const { nodes, byId } = graphIndex(graph);
   let canonicalDocument;
   try {
@@ -119,12 +120,7 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
       release.canonicalUrl,
     );
     const answer = byId.get(answerId);
-    if (
-      !answer ||
-      !nodeTypes(answer).includes("Answer") ||
-      typeof answer.text !== "string" ||
-      !answer.text.trim()
-    )
+    if (!answer || !nodeTypes(answer).includes("Answer"))
       throw new Error(
         `Question lacks a canonical Answer: ${questionId || "(missing ID)"}`,
       );
@@ -167,7 +163,6 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
       htmlId: answerFragment,
       htmlUrl: `${release.canonicalUrl}#${answerFragment}`,
       questionText: question.name,
-      answerText: answer.text,
       language: question.inLanguage,
       aboutIds: questionSubjects,
     };
@@ -193,6 +188,21 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
   return Object.freeze({
     schemaVersion: "1.0",
     source: "src/data/semantic/knowledge-graph.jsonld",
+    answers: Object.freeze(records.map((record) => Object.freeze(record))),
+  });
+};
+
+export const deriveCanonicalAnswerProjection = (graph, release) => {
+  const topology = deriveCanonicalAnswerTopology(graph, release);
+  const { byId } = graphIndex(graph);
+  const records = topology.answers.map((record) => {
+    const answer = byId.get(record.answerId);
+    if (typeof answer?.text !== "string" || !answer.text.trim())
+      throw new Error(`Canonical Answer lacks synchronized text: ${record.answerId}`);
+    return Object.freeze({ ...record, answerText: answer.text });
+  });
+  return Object.freeze({
+    ...topology,
     answers: Object.freeze(records),
   });
 };
@@ -229,7 +239,7 @@ const nextHeadingBoundary = (headings, heading) => {
   );
 };
 
-export const validateProjectedAnswerHtml = (content, projection) => {
+export const extractVisibleAnswerTexts = (content, projection) => {
   const parsed = parsedContent(content);
   const elements = walkElements(parsed.document);
   const headings = elements.filter((node) => headingTags.has(node.tagName));
@@ -244,17 +254,16 @@ export const validateProjectedAnswerHtml = (content, projection) => {
     throw new Error(
       `Visible answer projection cardinality drift: ${surfaces.length}/${projection.answers.length}`,
     );
-  for (const record of projection.answers) {
+
+  const answers = projection.answers.map((record) => {
     const nodes = elements.filter((node) => attr(node, "id") === record.htmlId);
     if (nodes.length !== 1)
       throw new Error(`Visible answer ID must occur exactly once: ${record.htmlId}`);
     if (!answerBlockTags.has(nodes[0].tagName))
       throw new Error(`Visible answer requires an answer block: ${record.htmlId}`);
-    if (
-      normalizeProjectedText(textContent(nodes[0])) !==
-      normalizeProjectedText(record.answerText)
-    )
-      throw new Error(`Visible answer text drift: ${record.answerId}`);
+    const text = normalizeProjectedText(textContent(nodes[0]));
+    if (!text)
+      throw new Error(`Visible answer text is empty: ${record.answerId}`);
     const matchingHeadings = headings.filter(
       (candidate) => attr(candidate, "id") === record.sourceFragment,
     );
@@ -269,10 +278,30 @@ export const validateProjectedAnswerHtml = (content, projection) => {
     const boundary = nextHeadingBoundary(headings, heading);
     if (!(answerStart >= headingEnd && answerStart < boundary))
       throw new Error(`Visible answer is outside its question region: ${record.answerId}`);
-  }
+    return Object.freeze({
+      answerId: record.answerId,
+      htmlId: record.htmlId,
+      text,
+    });
+  });
+
+  return Object.freeze({ answers: Object.freeze(answers) });
+};
+
+export const validateProjectedAnswerHtml = (content, projection) => {
+  const visible = extractVisibleAnswerTexts(content, projection);
+  const byAnswerId = new Map(
+    visible.answers.map((record) => [record.answerId, record.text]),
+  );
+  for (const record of projection.answers)
+    if (
+      byAnswerId.get(record.answerId) !==
+      normalizeProjectedText(record.answerText)
+    )
+      throw new Error(`Visible answer text drift: ${record.answerId}`);
   return {
-    answers: surfaces.length,
-    authoredAnswers: surfaces.length,
+    answers: visible.answers.length,
+    authoredAnswers: visible.answers.length,
     integrity: "PASS",
   };
 };

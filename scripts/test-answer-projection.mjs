@@ -4,6 +4,9 @@ import { readFile } from "node:fs/promises";
 import {
   canonicalAnswerHtmlId,
   deriveCanonicalAnswerProjection,
+  deriveCanonicalAnswerTopology,
+  extractVisibleAnswerTexts,
+  normalizeProjectedText,
   validateProjectedAnswerHtml,
 } from "../src/lib/answer-projection.mjs";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
@@ -29,6 +32,23 @@ test("the complete authored page passes before and after assembly", async () => 
   assert.equal(validateProjectedAnswerHtml(source, fullProjection).authoredAnswers, fullProjection.answers.length);
   const assembled = await assembleCanonicalContent({ graph });
   assert.equal(validateProjectedAnswerHtml(assembled.content, fullProjection).authoredAnswers, fullProjection.answers.length);
+});
+
+test("page wording is the authored source for the graph Answer.text mirror", async () => {
+  const source = await readFile("src/content-source/page.md", "utf8");
+  const withoutText = structuredClone(graph);
+  for (const node of withoutText["@graph"])
+    if ([node?.["@type"]].flat().includes("Answer")) delete node.text;
+  const topology = deriveCanonicalAnswerTopology(withoutText, release);
+  const visible = extractVisibleAnswerTexts(source, topology);
+  assert.equal(visible.answers.length, fullProjection.answers.length);
+  const visibleById = new Map(visible.answers.map((item) => [item.answerId, item.text]));
+  for (const item of fullProjection.answers)
+    assert.equal(visibleById.get(item.answerId), normalizeProjectedText(item.answerText));
+  assert.throws(
+    () => deriveCanonicalAnswerProjection(withoutText, release),
+    /lacks synchronized text/,
+  );
 });
 
 test("missing text and untagged answers fail instead of being synthesized or patched", () => {
