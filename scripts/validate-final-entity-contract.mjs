@@ -41,6 +41,6 @@ if (!evidence.evidence.some((e) => e.id === `${BASE}#evidence-drdr` && e.tier ==
 const team = media.imageProfiles.find((p) => arr(p.includes).includes("clinical-team"));
 const semanticText = JSON.stringify([team, ...nodes.filter((n) => /clinical-team|clinic-team/.test(n?.["@id"] || ""))]);
 for (const claim of ["clinical team", "medical team", "تیم بالینی", "اعضای تیم درمان"]) if (semanticText.toLowerCase().includes(claim.toLowerCase())) throw new Error(`Unsupported group-photo role claim remains: ${claim}`);
-const irimcProfile = support.idProfiles?.[`${BASE}#organization-iran-medical-council`];
+const irimcProfile = support.nodes?.[`${BASE}#organization-iran-medical-council`];
 if (!irimcProfile?.include?.includes("sameAs")) throw new Error("IRIMC sameAs not projected");
 console.log(JSON.stringify({ valid: true, canonicalNodes: nodes.length, authoredInputsChecked, mojavez: "reviewed-person-license-scope", checked: "final-entity-contract-2026" }, null, 2));

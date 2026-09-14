@@ -23,12 +23,26 @@ const uniqueStrings = (value, label) => {
   return items;
 };
 const exactRef = (value, label) => {
-  const refs = asArray(value).map(refId).filter(Boolean);
-  if (refs.length !== 1) throw new Error(`Canonical authority requires one ${label}`);
+  const refs = asArray(value).map(refId);
+  if (refs.length !== 1 || !refs[0]) throw new Error(`Canonical authority requires one ${label}`);
   return refs[0];
 };
 
+export function assertReleaseLifecycleSource(release) {
+  const exactKeys = (value, expected, label) => {
+    if (!value || typeof value !== "object" || Array.isArray(value) ||
+        Object.keys(value).length !== expected.length ||
+        expected.some((key) => !Object.hasOwn(value, key)))
+      throw new Error(`${label} must contain only: ${expected.join(", ")}`);
+  };
+  exactKeys(release, ["release", "dateModified", "canonicalUrl", "primaryEntity", "clinic", "dataset", "datasetRevisionDate", "currentSource"], "Release lifecycle source");
+  exactKeys(release.primaryEntity, ["id"], "Release physician pointer");
+  exactKeys(release.clinic, ["id"], "Release clinic pointer");
+  exactKeys(release.dataset, ["id", "license", "github", "zenodo", "huggingFace"], "Release dataset lifecycle");
+}
+
 export function deriveCanonicalAuthority(release, graph, profile) {
+  assertReleaseLifecycleSource(release);
   if (
     typeof release?.canonicalUrl !== "string" ||
     !release.canonicalUrl ||
@@ -51,15 +65,21 @@ export function deriveCanonicalAuthority(release, graph, profile) {
     if (!node) throw new Error(`Canonical authority missing ${label}: ${id}`);
     return node;
   };
-  const identifierValue = (suffix, label) =>
-    nonempty(requireNode(`${base}#${suffix}`, label).value, label);
-
   const person = requireNode(release.primaryEntity.id, "physician");
   const clinic = requireNode(release.clinic.id, "clinic");
   const dataset = requireNode(release.dataset.id, "Dataset");
   const page = requireNode(`${base}#webpage`, "WebPage");
   const website = requireNode(`${base}#website`, "WebSite");
   const address = requireNode(exactRef(clinic.address, "clinic address"), "clinic address");
+  const identifierValue = (owner, suffix, label) => {
+    const id = `${base}#${suffix}`;
+    const node = requireNode(id, label);
+    const references = asArray(owner.identifier).map(refId);
+    if (references.filter((reference) => reference === id).length !== 1 ||
+        !asArray(node["@type"]).includes("PropertyValue"))
+      throw new Error(`Canonical ${label} must be linked once from its owner as a PropertyValue`);
+    return nonempty(node.value, label);
+  };
 
   const reconciliationAliases = uniqueStrings(
     profile.reconciliationAliases,
@@ -98,10 +118,11 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       throw new Error(`Identity expansion is outside the verified mesh: ${url}`);
 
   const personWikidata = identifierValue(
+    person,
     "identifier-person-wikidata",
     "physician Wikidata identifier",
   );
-  const personOrcid = identifierValue("identifier-person-orcid", "physician ORCID");
+  const personOrcid = identifierValue(person, "identifier-person-orcid", "physician ORCID");
   const wikidataIri = `https://www.wikidata.org/entity/${personWikidata}`;
   if (!/^Q[1-9]\d*$/.test(personWikidata) || !graphSameAsSet.has(wikidataIri))
     throw new Error("Canonical physician Wikidata identity drift");
@@ -126,6 +147,8 @@ export function deriveCanonicalAuthority(release, graph, profile) {
     throw new Error(`Unsupported canonical clinic openingHours: ${openingHours}`);
   const friday = requireNode(`${base}#clinic-friday-closed`, "Friday closure");
   const fridayClosed =
+    asArray(clinic.openingHoursSpecification).map(refId).includes(friday["@id"]) &&
+    asArray(friday["@type"]).includes("OpeningHoursSpecification") &&
     friday.dayOfWeek === "https://schema.org/Friday" &&
     friday.opens === "00:00" &&
     friday.closes === "00:00";
@@ -154,6 +177,7 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       id: release.primaryEntity.id,
       name: exactLanguageLiteral(person.name, "en", "Canonical physician name"),
       googleKnowledgeGraphId: identifierValue(
+        person,
         "identifier-person-google-kgid",
         "physician Google Knowledge Graph ID",
       ),
@@ -162,14 +186,16 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       retrievalVariants: Object.freeze(retrievalVariants),
       reconciliationAliases: Object.freeze(reconciliationAliases),
       verifiedIdentityExpansion: Object.freeze(verifiedIdentityExpansion),
-      irimc: identifierValue("identifier-person-irimc", "physician IRIMC"),
+      irimc: identifierValue(person, "identifier-person-irimc", "physician IRIMC"),
       orcid: personOrcid,
-      openAlex: identifierValue("identifier-person-openalex", "physician OpenAlex"),
+      openAlex: identifierValue(person, "identifier-person-openalex", "physician OpenAlex"),
       semanticScholar: identifierValue(
+        person,
         "identifier-person-semantic-scholar",
         "physician Semantic Scholar",
       ),
       googleScholar: identifierValue(
+        person,
         "identifier-person-google-scholar",
         "physician Google Scholar",
       ),
@@ -178,11 +204,12 @@ export function deriveCanonicalAuthority(release, graph, profile) {
     clinicAuthority: Object.freeze({
       id: release.clinic.id,
       googleLocalKgmid: identifierValue(
+        clinic,
         "identifier-clinic-google-kgid",
         "clinic Google Knowledge Graph ID",
       ),
-      placeId: identifierValue("identifier-clinic-google-place-id", "clinic Google Place ID"),
-      cid: identifierValue("identifier-clinic-google-maps-cid", "clinic Google Maps CID"),
+      placeId: identifierValue(clinic, "identifier-clinic-google-place-id", "clinic Google Place ID"),
+      cid: identifierValue(clinic, "identifier-clinic-google-maps-cid", "clinic Google Maps CID"),
       postalCode: nonempty(address.postalCode, "clinic postalCode"),
       hours: `Saturday–Thursday ${hoursMatch[1]}–${hoursMatch[2]}; Friday closed`,
       ownerConfirmed: clinicAssertionProvenance.ownerConfirmed,
@@ -207,26 +234,33 @@ export function deriveCanonicalAuthority(release, graph, profile) {
 }
 
 /**
- * Builds the legacy release-shaped runtime view from one graph-owned semantic
- * authority plus release/provenance metadata. This is a projection, never an
- * authored semantic source.
+ * Publication consumers need both entity facts and release metadata. Compose
+ * that read model explicitly from disjoint owners, without overriding authored
+ * facts or mutating the lifecycle source. This result is never saved as source.
  */
-export function hydrateReleaseAuthority(release, graph, profile) {
+export function derivePublicationData(release, graph, profile) {
   const authority = deriveCanonicalAuthority(release, graph, profile);
   return Object.freeze({
-    ...release,
-    primaryEntity: Object.freeze({
-      ...release.primaryEntity,
-      ...authority.primaryEntity,
-    }),
-    clinic: Object.freeze({
-      ...release.clinic,
-      ...authority.clinicAuthority,
-    }),
+    release: release.release,
+    dateModified: release.dateModified,
+    canonicalUrl: release.canonicalUrl,
+    primaryEntity: authority.primaryEntity,
+    clinic: authority.clinicAuthority,
     dataset: Object.freeze({
-      ...release.dataset,
-      ...authority.datasetAuthority,
+      id: authority.datasetAuthority.id,
+      license: release.dataset.license,
+      github: release.dataset.github,
+      zenodo: release.dataset.zenodo,
+      huggingFace: release.dataset.huggingFace,
+      name: authority.datasetAuthority.name,
+      creator: authority.datasetAuthority.creator,
+      creatorWikidata: authority.datasetAuthority.creatorWikidata,
+      creatorOrcid: authority.datasetAuthority.creatorOrcid,
+      publisher: authority.datasetAuthority.publisher,
+      supportingClinic: authority.datasetAuthority.supportingClinic,
     }),
+    datasetRevisionDate: release.datasetRevisionDate,
+    currentSource: release.currentSource,
     reviewedBy: authority.reviewedBy,
     schemaVersion: authority.schemaVersion,
     medicalReviewedAt: authority.medicalReviewedAt,

@@ -49,6 +49,28 @@ async function isolatedContext(t) {
   };
 }
 
+test("both graph lanes use the same explicit profile schema", async (t) => {
+  const context = await isolatedContext(t);
+  for (const lane of ["head", "support"]) {
+    const file = path.join(context.semantic, `${lane}-profile.json`);
+    const original = await readFile(file, "utf8");
+    const profile = JSON.parse(original);
+    profile.unrecognizedPolicies = {};
+    await writeFile(file, JSON.stringify(profile));
+    await assert.rejects(() => compileGraphProjections(context), /projection profile requires/);
+    await writeFile(file, original);
+  }
+});
+
+test("node policies cannot target an entity outside their graph lane", async (t) => {
+  const context = await isolatedContext(t);
+  const file = path.join(context.semantic, "support-profile.json");
+  const profile = JSON.parse(await readFile(file, "utf8"));
+  profile.nodes[context.release.primaryEntity.id] = { include: ["@id", "@type"] };
+  await writeFile(file, JSON.stringify(profile));
+  await assert.rejects(() => compileGraphProjections(context), /policy for an unselected node/);
+});
+
 const attr = (node, name) =>
   node?.attrs?.find((attribute) => attribute.name === name)?.value;
 const ownerScope = (node) => {
@@ -96,7 +118,7 @@ test("physician portraits and scholarly citations survive the canonical HTML pro
       `visible high-resolution picture was lost: ${fragment}`);
 
   const profile = JSON.parse(await readFile(path.join(context.semantic, "support-profile.json"), "utf8"));
-  const authoredIds = Object.entries(profile.idProfiles)
+  const authoredIds = Object.entries(profile.nodes)
     .filter(([, policy]) => policy.authorityRole === "physicianAuthoredWork")
     .map(([id]) => id);
   assert.equal(authoredIds.length, 5);
@@ -117,7 +139,7 @@ test("physician portraits and scholarly citations survive the canonical HTML pro
 test("a cited work cannot transfer physician coauthorship to the clinic", async (t) => {
   const context = await isolatedContext(t);
   const profile = JSON.parse(await readFile(path.join(context.semantic, "support-profile.json"), "utf8"));
-  const [id] = Object.entries(profile.idProfiles)
+  const [id] = Object.entries(profile.nodes)
     .find(([, policy]) => policy.authorityRole === "physicianAuthoredWork");
   context.byId.get(id).author = { "@id": context.release.clinic.id };
   await assert.rejects(
@@ -130,10 +152,10 @@ test("a cited-work profile cannot reintroduce physician portraits as article ima
   const context = await isolatedContext(t);
   const profilePath = path.join(context.semantic, "support-profile.json");
   const profile = JSON.parse(await readFile(profilePath, "utf8"));
-  const [id] = Object.entries(profile.idProfiles)
+  const [id] = Object.entries(profile.nodes)
     .find(([, policy]) => policy.authorityRole === "physicianAuthoredWork");
   context.byId.get(id).image = structuredClone(context.byId.get(context.release.primaryEntity.id).image);
-  profile.idProfiles[id].include.push("image");
+  profile.nodes[id].include.push("image");
   await writeFile(profilePath, JSON.stringify(profile));
   await assert.rejects(
     () => compileGraphProjections(context),
@@ -227,7 +249,7 @@ test("a preprint projection cannot omit its status while retaining the article",
   const profilePath = path.join(context.semantic, "support-profile.json");
   const profile = JSON.parse(await readFile(profilePath, "utf8"));
   const id = `${context.release.canonicalUrl}#wikiversity-individualized-botulinum-toxin-focused-review`;
-  profile.idProfiles[id].include = profile.idProfiles[id].include.filter((field) => field !== "creativeWorkStatus");
+  profile.nodes[id].include = profile.nodes[id].include.filter((field) => field !== "creativeWorkStatus");
   await writeFile(profilePath, JSON.stringify(profile));
   await assert.rejects(() => compileGraphProjections(context), /lost its publication status/);
 });
@@ -245,7 +267,7 @@ for (const field of ["datePublished", "author", "image"]) {
     const profilePath = path.join(context.semantic, "support-profile.json");
     const profile = JSON.parse(await readFile(profilePath, "utf8"));
     const id = `${context.release.canonicalUrl}#evidence-iranmedlabs-interview`;
-    profile.idProfiles[id].include = profile.idProfiles[id].include.filter((property) => property !== field);
+    profile.nodes[id].include = profile.nodes[id].include.filter((property) => property !== field);
     await writeFile(profilePath, JSON.stringify(profile));
     await assert.rejects(() => compileGraphProjections(context), /lost its verified publication metadata/);
   });
@@ -282,7 +304,7 @@ test("an omitted canonical destination cannot be silently replaced by its extern
   const profile = JSON.parse(await readFile(profilePath, "utf8"));
   const id = `${context.release.canonicalUrl}#organization-iran-medical-council`;
   profile.ids = profile.ids.filter((selected) => selected !== id);
-  delete profile.idProfiles[id];
+  delete profile.nodes[id];
   await writeFile(profilePath, JSON.stringify(profile));
   await assert.rejects(() => compileGraphProjections(context), /unresolved required inline reference/);
 });

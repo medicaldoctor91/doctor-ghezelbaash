@@ -4,10 +4,9 @@ import { bindHeroPictureSizes } from "../../src/lib/hero-image-contract.mjs";
 import { bindReleaseTokens } from "../../src/lib/release-tokens.mjs";
 import { bindSiteTokens, deriveSiteData } from "../../src/lib/site-data.mjs";
 import { bindClinicReputation } from "../../src/lib/reputation-observation.mjs";
-import { deriveCanonicalAnswerProjection } from "../../src/lib/answer-projection.mjs";
-import { projectCanonicalAnswerHtmlStrict } from "../../src/lib/strict-answer-projection.mjs";
+import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../../src/lib/answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
-import { hydrateReleaseAuthority } from "../../src/lib/canonical-authority.mjs";
+import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
 import { stripPageOwnedFooterGovernance } from "../../src/lib/page-owned-fragments.mjs";
 
 const compactAuthoredHtmlLayout = (source) =>
@@ -77,7 +76,7 @@ export async function assembleCanonicalContent({
       "utf8",
     ).then(JSON.parse),
   ]);
-  const release = hydrateReleaseAuthority(rawRelease, graph, authorityProfile);
+  const release = derivePublicationData(rawRelease, graph, authorityProfile);
   const site = deriveSiteData(release, graph);
   let content = await readFile(
     path.join(root, "src/content-source/page.md"),
@@ -94,7 +93,7 @@ export async function assembleCanonicalContent({
     mapsUrl: site.mapsUrl,
   });
   const answerProjection = deriveCanonicalAnswerProjection(graph, release);
-  content = projectCanonicalAnswerHtmlStrict(content, answerProjection);
+  validateProjectedAnswerHtml(content, answerProjection);
   return {
     content: compactAuthoredHtmlLayout(content),
     names,

@@ -67,7 +67,7 @@
     "reputation:update": "node scripts/reputation.mjs google",
     "validate:shacl-dist": "npm run rdf:deps && PYTHONPATH=.python-deps python scripts/validate-shacl.py --dist-dir dist --require-projections --report-dir .generated/validation/shacl-dist",
     "test:redirect-registry": "node --test scripts/test-redirect-registry.mjs",
-    "test:entity-facts": "node --test scripts/test-entity-facts.mjs",
+    "test:entity-facts": "node --test scripts/test-entity-facts.mjs scripts/test-canonical-authority.mjs",
     "test:answer-projection": "node --test scripts/test-answer-projection.mjs",
     "test:physician-evidence": "node --test scripts/test-physician-evidence.mjs",
     "test:http-representation": "node --test scripts/test-http-representation.mjs scripts/test-video-transport.mjs && node scripts/verify-live.mjs test-transport && node scripts/verify-live.mjs test-release-context",

@@ -20,6 +20,7 @@ import {
 } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
 import { assertGooglebotBudgetContract } from "./lib/googlebot-budget.mjs";
+import { assertReleaseLifecycleSource } from "../src/lib/canonical-authority.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -49,27 +50,7 @@ const lock = await readJson("package-lock.json");
 const codemeta = await readJson("codemeta.json");
 const R = release.release;
 const Z = release.dataset?.zenodo;
-exactKeys(
-  rawRelease,
-  [
-    "release",
-    "dateModified",
-    "canonicalUrl",
-    "primaryEntity",
-    "clinic",
-    "dataset",
-    "datasetRevisionDate",
-    "currentSource",
-  ],
-  "release lifecycle",
-);
-exactKeys(rawRelease.primaryEntity, ["id"], "release primaryEntity pointer");
-exactKeys(rawRelease.clinic, ["id"], "release clinic pointer");
-exactKeys(
-  rawRelease.dataset,
-  ["id", "license", "github", "zenodo", "huggingFace"],
-  "release dataset lifecycle",
-);
+assertReleaseLifecycleSource(rawRelease);
 assertIdentityFingerprintSource(release);
 
 if (!validSemver(R)) fail(`Invalid release label: ${R}`);

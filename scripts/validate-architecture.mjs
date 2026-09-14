@@ -3,6 +3,7 @@ import path from "node:path";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
+import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -260,14 +261,9 @@ assert(
   ),
   "Semantic corpus must target the generated projections path",
 );
-assert(
-  semanticCompiler.includes("deriveCanonicalAnswerProjection") &&
-    semanticCompiler.includes("fact-map.json") &&
-    contentAssembler.includes("deriveCanonicalAnswerProjection") &&
-    contentAssembler.includes("projectCanonicalAnswerHtml") &&
-    retrievalCompiler.includes("answerId") &&
-    retrievalCompiler.includes("ANSWER_IDS:"),
-  "Canonical answer projection must own visible HTML, fact-map and retrieval bindings",
+validateProjectedAnswerHtml(
+  pageSource,
+  deriveCanonicalAnswerProjection(canonicalGraph, release),
 );
 assert(
   retrievalCompiler.includes("generatedContent") &&
@@ -291,7 +287,6 @@ assert(
       documentHead,
     ) &&
     /deriveCanonicalAuthority/.test(documentHead) &&
-    !/hydrateReleaseAuthority/.test(documentHead) &&
     /import\s*\{\s*canonicalGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
       documentHead,
     ) &&

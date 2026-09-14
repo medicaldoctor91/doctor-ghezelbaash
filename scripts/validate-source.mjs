@@ -699,7 +699,7 @@ const googleProjectionProfiles = [
     `support:type:${key}`,
     profile,
   ]),
-  ...Object.entries(supportProfile.idProfiles || {}).map(([key, profile]) => [
+  ...Object.entries(supportProfile.nodes || {}).map(([key, profile]) => [
     `support:id:${key}`,
     profile,
   ]),

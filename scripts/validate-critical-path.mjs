@@ -75,7 +75,6 @@ assert(
     documentHead.includes("HERO_PRELOAD_SRCSET") &&
     documentHead.includes("canonicalGraph") &&
     documentHead.includes("deriveCanonicalAuthority") &&
-    !documentHead.includes("hydrateReleaseAuthority") &&
     documentHead.includes("<slot />") &&
     !/\bHeadStage\b|\bstage\s*=/.test(documentHead),
   "Structured DocumentHead canonical authority contract missing",

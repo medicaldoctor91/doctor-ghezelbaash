@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { hashIdentityFingerprint } from "./release-identity.mjs";
 import { generatedWorkspace } from "../generated-workspace.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
-import { hydrateReleaseAuthority } from "../../src/lib/canonical-authority.mjs";
+import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
 
 export const nodeTypes = (node) =>
   Array.isArray(node?.["@type"])
@@ -123,7 +123,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     ]);
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
-  const release = hydrateReleaseAuthority(rawRelease, graph, authorityProfile);
+  const release = derivePublicationData(rawRelease, graph, authorityProfile);
   const evidenceRegistry = deriveEvidenceRegistry(release, rawEvidenceRegistry);
   const evidenceEntries = evidenceRegistry.evidence;
   if (

@@ -4,13 +4,14 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 ## Direct source ownership
 
-- `src/content-source/page.md`: canonical visible content and page metadata.
+- `src/content-source/page.md`: authored visible content, final answer markup, footer wording and page metadata.
 - `src/styles/global.css`: the only authored stylesheet.
-- `src/data/semantic/knowledge-graph.jsonld`: canonical knowledge graph and the direct source of offered services and answers.
+- `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, offered services and machine-readable answer semantics.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
+- `src/data/semantic/authority-profile.json`: identity-link and alias selection policies plus clinic assertion provenance; selected identity facts must resolve to the graph.
 - `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
-- `src/data/release.json`: canonical URL, physician and clinic identifiers, current release and DOI lineage.
+- `src/data/release.json`: release and distribution lifecycle, canonical URL and minimal entity pointers; entity names, identifiers and clinic facts come from the graph.
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
 - `src/data/reputation-observation.json`: the clinic-scoped, last-known-good Google Places observation rendered into initial HTML.
 - `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
@@ -22,6 +23,12 @@ Static-only Astro source for the canonical physician entity home at `https://www
 - `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.
 
 The physician uses one canonical ID with `Person` and `IndividualPhysician` types. The clinic, `ProfilePage`, 18 `WebPageElement` sections, medical procedures, answers, images, videos, credentials and external identifiers all reference that graph. DOM Microdata and both inline JSON-LD projections are derived from the same graph and projection profiles.
+
+Both inline graph profiles use `ids`, `maxBytes`, `nodes` and `typeProfiles`. An explicit `nodes[id]` policy defines that node's projection; otherwise its type policies supply the field selection. Authority roles use the same `nodes` map in both lanes. The compiler validates selections and relationships before emitting either graph.
+
+`deriveCanonicalAuthority` resolves entity facts and verifies their ownership relationships. `derivePublicationData` composes those facts with explicitly selected lifecycle fields for publication consumers. The lifecycle schema is checked before composition, so duplicate authored semantic fields cannot be silently overwritten. Publication data is a derived read model and is never written back to `release.json`.
+
+Visible answers have their final IDs and classes in `page.md`. The answer contract checks cardinality, text and placement within the corresponding question region; it does not insert text, add attributes or rewrite the page. Source and distribution text fingerprints remain independent acceptance checks.
 
 Mojavez record `19949827` is scoped to the physician's medical practice license, holder name and practice jurisdiction. The source observation and field-to-claim bindings are recorded in `.release/evidence/mojavez-19949827.json`; the historical evidence ID remains stable. This record does not explicitly establish ownership of the canonical Clinic. `npm run verify:mojavez` re-fetches the official record with no-cache headers and checks its visible labelled fields. It only reports; source or scope changes require a fresh review. A captured response can be checked with `npm run verify:mojavez -- --html /path/to/response.html`. Hermetic validators enforce the reviewed scope, subject, neutral title, URLs and projection selector; `npm run test:final-entity-contract` exercises their failure paths. These checks bind the observation to authored claims; CI does not independently certify the live source on every build.
 
