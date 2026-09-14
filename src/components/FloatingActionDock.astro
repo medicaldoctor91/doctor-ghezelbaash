@@ -1,9 +1,9 @@
 ---
 import release from '../data/release.json';
-import { headGraph } from '../lib/knowledge-graph';
+import { canonicalGraph } from '../lib/knowledge-graph';
 import { deriveSiteData } from '../lib/site-data.mjs';
 
-const site = deriveSiteData(release, headGraph);
+const site = deriveSiteData(release, canonicalGraph);
 ---
 
 <nav
