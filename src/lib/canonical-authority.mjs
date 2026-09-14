@@ -36,6 +36,8 @@ export function deriveCanonicalAuthority(release, graph, profile) {
     !release.primaryEntity.id ||
     typeof release?.clinic?.id !== "string" ||
     !release.clinic.id ||
+    typeof release?.dataset?.id !== "string" ||
+    !release.dataset.id ||
     !Array.isArray(graph?.["@graph"])
   )
     throw new Error("Canonical authority requires release pointers + graph");
@@ -54,6 +56,7 @@ export function deriveCanonicalAuthority(release, graph, profile) {
 
   const person = requireNode(release.primaryEntity.id, "physician");
   const clinic = requireNode(release.clinic.id, "clinic");
+  const dataset = requireNode(release.dataset.id, "Dataset");
   const page = requireNode(`${base}#webpage`, "WebPage");
   const website = requireNode(`${base}#website`, "WebSite");
   const address = requireNode(exactRef(clinic.address, "clinic address"), "clinic address");
@@ -98,9 +101,24 @@ export function deriveCanonicalAuthority(release, graph, profile) {
     "identifier-person-wikidata",
     "physician Wikidata identifier",
   );
+  const personOrcid = identifierValue("identifier-person-orcid", "physician ORCID");
   const wikidataIri = `https://www.wikidata.org/entity/${personWikidata}`;
   if (!/^Q[1-9]\d*$/.test(personWikidata) || !graphSameAsSet.has(wikidataIri))
     throw new Error("Canonical physician Wikidata identity drift");
+
+  const datasetCreator = exactRef(dataset.creator, "Dataset creator");
+  const datasetPublisher = exactRef(dataset.publisher, "Dataset publisher");
+  if (
+    datasetCreator !== release.primaryEntity.id ||
+    datasetPublisher !== release.primaryEntity.id
+  )
+    throw new Error("Canonical Dataset creator/publisher is not the physician");
+  const datasetAbout = new Set(asArray(dataset.about).map(refId).filter(Boolean));
+  if (
+    !datasetAbout.has(release.primaryEntity.id) ||
+    !datasetAbout.has(release.clinic.id)
+  )
+    throw new Error("Canonical Dataset about topology lacks physician or clinic");
 
   const openingHours = nonempty(clinic.openingHours, "clinic openingHours");
   const hoursMatch = openingHours.match(/^Sa-Th (\d{2}:\d{2})-(\d{2}:\d{2})$/);
@@ -129,6 +147,7 @@ export function deriveCanonicalAuthority(release, graph, profile) {
   return Object.freeze({
     person,
     clinic,
+    dataset,
     page,
     website,
     primaryEntity: Object.freeze({
@@ -144,7 +163,7 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       reconciliationAliases: Object.freeze(reconciliationAliases),
       verifiedIdentityExpansion: Object.freeze(verifiedIdentityExpansion),
       irimc: identifierValue("identifier-person-irimc", "physician IRIMC"),
-      orcid: identifierValue("identifier-person-orcid", "physician ORCID"),
+      orcid: personOrcid,
       openAlex: identifierValue("identifier-person-openalex", "physician OpenAlex"),
       semanticScholar: identifierValue(
         "identifier-person-semantic-scholar",
@@ -172,6 +191,15 @@ export function deriveCanonicalAuthority(release, graph, profile) {
       fridayClosed,
       truthAuthority: clinicAssertionProvenance.truthAuthority,
     }),
+    datasetAuthority: Object.freeze({
+      id: release.dataset.id,
+      name: nonempty(dataset.name, "Dataset name"),
+      creator: datasetCreator,
+      creatorWikidata: personWikidata,
+      creatorOrcid: personOrcid,
+      publisher: datasetPublisher,
+      supportingClinic: release.clinic.id,
+    }),
     reviewedBy,
     schemaVersion: nonempty(page.schemaVersion, "WebPage schemaVersion"),
     medicalReviewedAt: nonempty(page.lastReviewed, "WebPage lastReviewed"),
@@ -194,6 +222,10 @@ export function hydrateReleaseAuthority(release, graph, profile) {
     clinic: Object.freeze({
       ...release.clinic,
       ...authority.clinicAuthority,
+    }),
+    dataset: Object.freeze({
+      ...release.dataset,
+      ...authority.datasetAuthority,
     }),
     reviewedBy: authority.reviewedBy,
     schemaVersion: authority.schemaVersion,
