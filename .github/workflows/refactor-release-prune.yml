@@ -44,6 +44,10 @@ jobs:
         run: npm run validate:release-contract
       - name: Validate Astro source
         run: npm run check:astro
+      - name: Install pinned Chromium for render calibration
+        run: npx playwright install --with-deps chromium
+      - name: Reseal render calibration for pruned source
+        run: npm run render:calibration:update
       - name: Build final candidate
         run: npm run build
       - name: Commit pruned authority source
