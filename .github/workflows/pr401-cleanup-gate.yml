@@ -100,3 +100,5 @@ jobs:
           test "$(git rev-parse HEAD^)" = "69e5ddfbf7b81f502bfa4019c9bef37b81ea2ad7"
           git push origin HEAD:refs/heads/automation/pr401-cleanup-candidate --force-with-lease=refs/heads/automation/pr401-cleanup-candidate:69e5ddfbf7b81f502bfa4019c9bef37b81ea2ad7
           echo "CANDIDATE_SHA=$(git rev-parse HEAD)"
+
+# payload-complete: 7/7 chunks; patch sha256 9a0b1938e8d8cebdb163f980188860c87643700f3d121ad0e06573d9e7ee25ac
