@@ -121,8 +121,8 @@ const openStreetMapUrl = exactUrl(
 const socialImageCandidates = graphNodes.filter(
   (node) =>
     nodeHasType(node, 'ImageObject') &&
-    quantityValue(node.width, `${node['@id']} width`) === 1200 &&
-    quantityValue(node.height, `${node['@id']} height`) === 630 &&
+    Number(node.width?.value) === 1200 &&
+    Number(node.height?.value) === 630 &&
     typeof node.contentUrl === 'string' &&
     new URL(node.contentUrl).origin === new URL(release.canonicalUrl).origin,
 );
