@@ -49,14 +49,14 @@ assert.doesNotMatch(
   "Reputation refresh must not read clinic.placeId from raw release lifecycle JSON",
 );
 
-const zenodoWrapper = await text("scripts/zenodo_release.py");
+const zenodoScript = await text("scripts/zenodo_release.py");
 assert.match(
-  zenodoWrapper,
+  zenodoScript,
   /scripts\/publication-context\.mjs/,
-  "Zenodo wrapper must consume the canonical publication-context bridge",
+  "Zenodo script must consume the canonical publication-context bridge",
 );
 assert.doesNotMatch(
-  zenodoWrapper,
+  zenodoScript,
   /src\/data\/release\.json/,
   "Zenodo public entry point must not read raw release lifecycle JSON",
 );
@@ -70,11 +70,6 @@ const workflowDir = path.join(root, ".github/workflows");
 for (const name of await readdir(workflowDir)) {
   if (!name.endsWith(".yml") && !name.endsWith(".yaml")) continue;
   const source = await readFile(path.join(workflowDir, name), "utf8");
-  assert.doesNotMatch(
-    source,
-    /zenodo_release_impl\.py/,
-    `Workflow ${name} must not bypass the Zenodo publication-context adapter`,
-  );
   for (const pattern of forbiddenChainedRawAccess) {
     pattern.lastIndex = 0;
     const match = pattern.exec(source);
