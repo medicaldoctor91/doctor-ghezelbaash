@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import path from "node:path";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -160,7 +161,7 @@ const [
   read("scripts/generate-descriptors.mjs"),
   read("scripts/generate-retrieval-projections.mjs"),
   read("astro.config.mjs"),
-  readJson("src/data/release.json"),
+  loadAuthoritativeRelease(root),
   readJson("src/data/machine-resources.json"),
   readJson("src/data/semantic/head-profile.json"),
   readJson("src/data/semantic/support-profile.json"),

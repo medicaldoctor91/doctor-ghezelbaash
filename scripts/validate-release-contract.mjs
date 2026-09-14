@@ -1,3 +1,4 @@
+import { loadAuthoritativeReleaseContext } from "./lib/authoritative-release.mjs";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -40,13 +41,35 @@ const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 const validDoi = (value) => /^10\.5281\/zenodo\.\d+$/.test(String(value || ""));
 const validRecord = (value) => /^\d+$/.test(String(value || ""));
 
-const release = await readJson("src/data/release.json");
+const { rawRelease, graph: canonicalGraph, release } =
+  await loadAuthoritativeReleaseContext(root);
 const invariants = await readJson("src/data/release-invariants.json");
 const pkg = await readJson("package.json");
 const lock = await readJson("package-lock.json");
 const codemeta = await readJson("codemeta.json");
 const R = release.release;
 const Z = release.dataset?.zenodo;
+exactKeys(
+  rawRelease,
+  [
+    "release",
+    "dateModified",
+    "canonicalUrl",
+    "primaryEntity",
+    "clinic",
+    "dataset",
+    "datasetRevisionDate",
+    "currentSource",
+  ],
+  "release lifecycle",
+);
+exactKeys(rawRelease.primaryEntity, ["id"], "release primaryEntity pointer");
+exactKeys(rawRelease.clinic, ["id"], "release clinic pointer");
+exactKeys(
+  rawRelease.dataset,
+  ["id", "license", "github", "zenodo", "huggingFace"],
+  "release dataset lifecycle",
+);
 assertIdentityFingerprintSource(release);
 
 if (!validSemver(R)) fail(`Invalid release label: ${R}`);
@@ -220,7 +243,7 @@ for (const removedId of [
 if (pageSource.includes("Public Knowledge Graph"))
   fail("Machine Dataset title leaked into visible page content");
 
-const graph = await readJson("src/data/semantic/knowledge-graph.jsonld");
+const graph = canonicalGraph;
 const nodes = graph["@graph"] || [];
 if (!Array.isArray(nodes)) fail("Canonical graph must contain @graph");
 const byId = new Map(

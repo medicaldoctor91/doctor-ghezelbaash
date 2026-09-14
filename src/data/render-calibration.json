@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-14T00:36:27.897Z",
-    "sourceSha256": "a5a3a49c678f4a58af49eb5dbf2c135d13dedf83f722b4e227758ca09c001f19",
+    "measuredAt": "2026-09-14T01:19:21.607Z",
+    "sourceSha256": "8ce16de3e7b1d006625e1d93431e8bc6bb63915b97cfaeacf18ee9942abac542",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4881,7 +4881,7 @@
       ],
       [
         "src/components/DocumentHead.astro",
-        "d0e25ffc88501d3c047937886a2147f0baa6ba3dcefc19856c54abee36a1f5cc"
+        "d5336119e87e3bcabc958d2d49aa4b5b95509993f012ebd3059a7b95bceb7750"
       ],
       [
         "src/components/FloatingActionDock.astro",
@@ -4889,7 +4889,7 @@
       ],
       [
         "src/components/GuideNavigator.astro",
-        "13b78af14133866c41a7ba10d440c888272dbf1eb17bfc550929df9aa14bf751"
+        "1c48729d4887aa3ac6576b707a3bb925369952a244e7b1646788923eab5fea41"
       ],
       [
         "src/components/SiteFooter.astro",
@@ -4897,7 +4897,7 @@
       ],
       [
         "src/layouts/BaseLayout.astro",
-        "c6aa9314aaa4240208e1a351e2b4338c72d8045b4ccbc856f137b4c1274203aa"
+        "3c7d3f547b3fe0d06e3a8256390dccf5ef9eb298a8207b673657b9c6374780c1"
       ],
       [
         "src/lib/css-delivery.mjs",

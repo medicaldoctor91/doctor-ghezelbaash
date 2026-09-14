@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import { fetchRepresentation } from "./lib/http-representation.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -295,7 +296,7 @@ async function command_test_release_context() {
 
 async function command_current() {
   const [release, authority] = await Promise.all([
-    readFile("src/data/release.json", "utf8").then(JSON.parse),
+    loadAuthoritativeRelease(),
     readFile(".release/policy/authority-surface-contract.json", "utf8").then(
       JSON.parse,
     ),
@@ -421,9 +422,7 @@ async function command_discovery() {
       process.argv.slice(2).find((value) => !value.startsWith("--")) || "dist",
     ),
     base = process.env.VERIFY_BASE_URL || "https://www.ghezelbaash.ir/";
-  const release = JSON.parse(
-      await readFile(path.join(root, "src/data/release.json"), "utf8"),
-    ),
+  const release = await loadAuthoritativeRelease(root),
     matrix = JSON.parse(
       await readFile(
         path.join(root, ".generated/projections/current-release-matrix.json"),

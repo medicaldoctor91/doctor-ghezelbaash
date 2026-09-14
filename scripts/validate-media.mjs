@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { readFile, readdir } from "node:fs/promises";
@@ -17,9 +18,7 @@ const project = process.cwd();
 const publicRoot = path.join(project, "public");
 const mediaRoot = path.join(publicRoot, "media");
 const exiftool = path.join(project, "node_modules/.bin/exiftool");
-const release = JSON.parse(
-  await readFile(path.join(project, "src/data/release.json"), "utf8"),
-);
+const release = await loadAuthoritativeRelease(project);
 const canonicalGraph = JSON.parse(
   await readFile(
     path.join(project, "src/data/semantic/knowledge-graph.jsonld"),

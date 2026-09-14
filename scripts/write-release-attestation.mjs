@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -23,7 +24,7 @@ if (git(["status", "--porcelain=v1", "--untracked-files=all"]))
     "Release attestation requires a clean tracked and untracked source worktree",
   );
 
-const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
+const release = await loadAuthoritativeRelease(root);
 const sha = async (file) =>
   createHash("sha256")
     .update(await readFile(file))

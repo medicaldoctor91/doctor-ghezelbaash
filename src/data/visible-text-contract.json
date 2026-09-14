@@ -4,16 +4,16 @@
   "sourceCommit": "bbff2475dec9dce02d8edcf0482b64937f8f728e",
   "sourceRawSha256": {
     "src/content-source/page.md": "ec839ac0e9cc219c97e9c746c83d489e882648d0c098a9493e7859a56634208b",
-    "src/data/document-head.json": "b302bd7d6e1bd8ed80365ed421436b2c10de0d3b6a271f5ebc5f896d03b4d72b",
+    "src/data/document-head.json": "72e153c6ab3f694e55e1f87ef1db4dfd281902907d08256a06e53725d1d2171a",
     "src/data/media-metadata.json": "bb9ff57beed0a33dcfc7d35e2e45503d6cdef00d694b5b0a876d028d7981bf66",
-    "src/data/release.json": "d6e4e7a76acbb3e2edfbb2a2a4829c376301c27c9ebf90967e9e4b9d612b9d16",
+    "src/data/release.json": "8f841ddb5c9aa82a9f118a8c27359c91835afa6deb3bed73e113c889d5edf528",
     "src/data/reputation-observation.json": "241c6caefc2af1e000260cb5154ed0b81fbfd2cc0367adb62a3e82b7915d0385",
     "src/data/semantic/knowledge-graph.jsonld": "0037b21b3cc3118c7ee39ac6a57a0803e56af367b4a15ac99953b1751f01317b",
-    "src/components/GuideNavigator.astro": "13b78af14133866c41a7ba10d440c888272dbf1eb17bfc550929df9aa14bf751",
+    "src/components/GuideNavigator.astro": "1c48729d4887aa3ac6576b707a3bb925369952a244e7b1646788923eab5fea41",
     "src/components/SiteFooter.astro": "a6d6d6f7131d8c52f6a5f7558cbf722fdd9fb1171716fca8ced85e89baab04e9",
     "src/components/FloatingActionDock.astro": "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e",
-    "src/components/DocumentHead.astro": "d0e25ffc88501d3c047937886a2147f0baa6ba3dcefc19856c54abee36a1f5cc",
-    "src/layouts/BaseLayout.astro": "c6aa9314aaa4240208e1a351e2b4338c72d8045b4ccbc856f137b4c1274203aa",
+    "src/components/DocumentHead.astro": "d5336119e87e3bcabc958d2d49aa4b5b95509993f012ebd3059a7b95bceb7750",
+    "src/layouts/BaseLayout.astro": "3c7d3f547b3fe0d06e3a8256390dccf5ef9eb298a8207b673657b9c6374780c1",
     "src/pages/404.astro": "9d41f9d5091b0203998e4fc75533d1205c8d9eac79311df4534589fa20a980f6"
   },
   "source": {

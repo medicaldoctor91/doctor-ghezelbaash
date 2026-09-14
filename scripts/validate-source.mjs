@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import path from "node:path";
 import { readFile, readdir, access } from "node:fs/promises";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
@@ -31,7 +32,7 @@ const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 const escapeRegExp = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const release = await readJson("src/data/release.json"),
+const release = await loadAuthoritativeRelease(root),
   retrievalPolicy = await readJson(
     "src/data/retrieval/query-matrix-policy.json",
   ),

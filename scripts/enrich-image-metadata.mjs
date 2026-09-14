@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
@@ -46,9 +47,7 @@ const scalar = (row, key) =>
 const values = (value) =>
   Array.isArray(value) ? value : value === undefined ? [] : [value];
 
-const release = JSON.parse(
-  await readFile(path.join(root, "src/data/release.json"), "utf8"),
-);
+const release = await loadAuthoritativeRelease(root);
 
 if (
   !/^ChIJ[\w-]+$/.test(release.clinic.placeId) ||

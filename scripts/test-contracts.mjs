@@ -1,3 +1,4 @@
+import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
 import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
@@ -311,7 +312,7 @@ function semantic_article_contract() {
 }
 async function canonical_semantic_derivation_contract() {
   const [release, policy] = await Promise.all([
-      readFile("src/data/release.json", "utf8").then(JSON.parse),
+      loadAuthoritativeRelease(),
       readFile("src/data/retrieval/query-matrix-policy.json", "utf8").then(
         JSON.parse,
       ),
@@ -688,7 +689,7 @@ async function canonical_semantic_derivation_contract() {
   );
 }
 async function static_google_maps_reputation_contract() {
-  const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
+  const release = await loadAuthoritativeRelease();
   const current = JSON.parse(
     await readFile("src/data/reputation-observation.json", "utf8"),
   );
@@ -821,7 +822,7 @@ async function static_google_maps_reputation_contract() {
 }
 
 async function current_release_evidence_contract() {
-  const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
+  const release = await loadAuthoritativeRelease();
   const registry = JSON.parse(await readFile("src/data/evidence-registry.json", "utf8"));
   const id = `${release.canonicalUrl}#evidence-zenodo-current-release`;
   const derived = deriveEvidenceRegistry(release, registry);

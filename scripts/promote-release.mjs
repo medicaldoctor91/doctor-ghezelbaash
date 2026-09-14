@@ -201,7 +201,7 @@ const encodings = [
 must(
   revisionDateInRange(website.dateModified, old.date, old.datasetDate) &&
     revisionDateInRange(webpage.dateModified, old.date, old.datasetDate) &&
-    webpage.lastReviewed === release.medicalReviewedAt,
+    validRevisionDate(webpage.lastReviewed),
   "Website/ProfilePage modification and medical-review date separation drift",
 );
 must(

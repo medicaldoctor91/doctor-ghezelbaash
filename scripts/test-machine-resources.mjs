@@ -310,7 +310,8 @@ test("descriptor generator emits joinable RDF, correct typed hashes and usable C
   t.after(() => rm(workspace, { recursive: true, force: true }));
   const inputs = new Set([
     "src/data/release.json", "src/data/retrieval/query-matrix-policy.json",
-    "src/data/semantic/knowledge-graph.jsonld", "src/data/machine-resources.json",
+    "src/data/semantic/knowledge-graph.jsonld", "src/data/semantic/authority-profile.json",
+    "src/data/machine-resources.json",
     ".generated/semantic/rdf-lock.json",
     ...MACHINE_RESOURCES.filter((resource) => (resource.descriptorRoles || []).length).map((resource) => resource.source),
   ]);
@@ -396,7 +397,6 @@ print('DCAT_RDF_CONSUMER_PASS')
   delete dataset.copyrightHolder;
   await writeFile(path.join(workspace, "src/data/semantic/knowledge-graph.jsonld"), JSON.stringify(otherPublisherGraph));
   const changed = spawnSync(process.execPath, [path.join(root, "scripts/generate-descriptors.mjs")], { cwd: workspace, encoding: "utf8" });
-  assert.equal(changed.status, 0, changed.stderr || changed.stdout);
-  const changedPackage = JSON.parse(await readFile(path.join(output, "datapackage.json"), "utf8"));
-  assert.deepEqual(changedPackage.contributors.find((item) => item.path === release.primaryEntity.id).roles, ["author", "creator"]);
+  assert.notEqual(changed.status, 0, "Descriptor generation must reject Dataset publisher drift");
+  assert.match(changed.stderr || changed.stdout, /Canonical Dataset creator\/publisher is not the physician/);
 });
