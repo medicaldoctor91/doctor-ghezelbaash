@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import {
   deriveCanonicalAuthority,
+  deriveCanonicalGraphFacts,
   derivePublicationData,
 } from "../src/lib/canonical-authority.mjs";
 
@@ -122,6 +123,20 @@ test("the clinic owns its closure and exactly one valid address reference", () =
   assert.throws(
     () => deriveCanonicalAuthority(release, malformed),
     /one clinic address/,
+  );
+});
+
+test("compact graph facts do not require full publication provenance", () => {
+  const compact = structuredClone(graph);
+  compact["@graph"] = compact["@graph"].filter(
+    (candidate) => candidate["@id"] !== claimId,
+  );
+  const facts = deriveCanonicalGraphFacts(release, compact);
+  assert.equal(facts.clinic["@id"], release.clinic.id);
+  assert.equal(facts.clinicHours.fridayClosed, true);
+  assert.throws(
+    () => deriveCanonicalAuthority(release, compact),
+    /missing owner-confirmed clinic claim/,
   );
 });
 

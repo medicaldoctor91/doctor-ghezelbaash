@@ -102,35 +102,7 @@ export function deriveCanonicalGraphFacts(release, graph) {
     friday.closes === "00:00";
   if (!fridayClosed) throw new Error("Canonical Friday closure drift");
 
-  const ownerConfirmation = requireNode(
-    `${base}#claim-clinic-owner-confirmed-operating-facts`,
-    "owner-confirmed clinic claim",
-  );
-  const confirmationAbout = asArray(ownerConfirmation.about).map(refId);
-  const expectedConfirmationAbout = [
-    clinic["@id"],
-    weekdayHours["@id"],
-    friday["@id"],
-  ];
-  const ownerConfirmationDate = nonempty(
-    ownerConfirmation.dateCreated,
-    "owner-confirmed clinic claim dateCreated",
-  );
-  if (
-    !asArray(ownerConfirmation["@type"]).includes("Claim") ||
-    exactRef(ownerConfirmation.author, "owner-confirmed clinic claim author") !==
-      person["@id"] ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(ownerConfirmationDate) ||
-    confirmationAbout.length !== expectedConfirmationAbout.length ||
-    expectedConfirmationAbout.some(
-      (id) => confirmationAbout.filter((candidate) => candidate === id).length !== 1,
-    ) ||
-    asArray(clinic.subjectOf)
-      .map(refId)
-      .filter((id) => id === ownerConfirmation["@id"]).length !== 1 ||
-    !asArray(person.owns).map(refId).includes(clinic["@id"])
-  )
-    throw new Error("Canonical owner-confirmed clinic provenance drift");
+
 
   const reviewedBy = exactRef(page.reviewedBy, "WebPage reviewedBy");
   if (reviewedBy !== release.primaryEntity.id)
@@ -170,12 +142,8 @@ export function deriveCanonicalGraphFacts(release, graph) {
       close: hoursMatch[2],
       fridayClosed,
     }),
-    clinicOwnerConfirmation: Object.freeze({
-      id: ownerConfirmation["@id"],
-      ownerConfirmed: true,
-      truthVerifiedAt: ownerConfirmationDate,
-      truthAuthority: "owner-confirmed",
-    }),
+    weekdayHours,
+    fridayClosure: friday,
     identifiers: Object.freeze({
       clinic: Object.freeze({
         placeId: identifierValue(
@@ -190,6 +158,64 @@ export function deriveCanonicalGraphFacts(release, graph) {
         ),
       }),
     }),
+  });
+}
+
+
+/**
+ * Resolve provenance that is intentionally absent from compact head projections.
+ * Call this only with facts derived from the full canonical graph.
+ */
+export function deriveClinicOwnerConfirmation(facts) {
+  const { base, byId, person, clinic, weekdayHours, fridayClosure } = facts || {};
+  if (
+    typeof base !== "string" ||
+    !(byId instanceof Map) ||
+    !person?.["@id"] ||
+    !clinic?.["@id"] ||
+    !weekdayHours?.["@id"] ||
+    !fridayClosure?.["@id"]
+  )
+    throw new Error("Clinic owner confirmation requires canonical graph facts");
+
+  const ownerConfirmationId = `${base}#claim-clinic-owner-confirmed-operating-facts`;
+  const ownerConfirmation = byId.get(ownerConfirmationId);
+  if (!ownerConfirmation)
+    throw new Error(
+      `Canonical authority missing owner-confirmed clinic claim: ${ownerConfirmationId}`,
+    );
+
+  const confirmationAbout = asArray(ownerConfirmation.about).map(refId);
+  const expectedConfirmationAbout = [
+    clinic["@id"],
+    weekdayHours["@id"],
+    fridayClosure["@id"],
+  ];
+  const ownerConfirmationDate = nonempty(
+    ownerConfirmation.dateCreated,
+    "owner-confirmed clinic claim dateCreated",
+  );
+  if (
+    !asArray(ownerConfirmation["@type"]).includes("Claim") ||
+    exactRef(ownerConfirmation.author, "owner-confirmed clinic claim author") !==
+      person["@id"] ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(ownerConfirmationDate) ||
+    confirmationAbout.length !== expectedConfirmationAbout.length ||
+    expectedConfirmationAbout.some(
+      (id) => confirmationAbout.filter((candidate) => candidate === id).length !== 1,
+    ) ||
+    asArray(clinic.subjectOf)
+      .map(refId)
+      .filter((id) => id === ownerConfirmation["@id"]).length !== 1 ||
+    !asArray(person.owns).map(refId).includes(clinic["@id"])
+  )
+    throw new Error("Canonical owner-confirmed clinic provenance drift");
+
+  return Object.freeze({
+    id: ownerConfirmation["@id"],
+    ownerConfirmed: true,
+    truthVerifiedAt: ownerConfirmationDate,
+    truthAuthority: "owner-confirmed",
   });
 }
 

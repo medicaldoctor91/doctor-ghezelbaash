@@ -1,10 +1,15 @@
 import { exactLanguageLiteral } from "./graph-core.mjs";
 import {
   deriveCanonicalGraphFacts,
+  deriveClinicOwnerConfirmation,
   selectCanonicalSocialImage,
 } from "./canonical-graph-facts.mjs";
 
-export { deriveCanonicalGraphFacts, selectCanonicalSocialImage };
+export {
+  deriveCanonicalGraphFacts,
+  deriveClinicOwnerConfirmation,
+  selectCanonicalSocialImage,
+};
 
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
@@ -87,6 +92,7 @@ export function deriveCanonicalAuthority(release, graph) {
     throw new Error("Canonical authority requires a Dataset pointer");
 
   const facts = deriveCanonicalGraphFacts(release, graph);
+  const clinicOwnerConfirmation = deriveClinicOwnerConfirmation(facts);
   const dataset = facts.byId.get(release.dataset.id);
   if (!dataset)
     throw new Error(`Canonical authority missing Dataset: ${release.dataset.id}`);
@@ -223,9 +229,9 @@ export function deriveCanonicalAuthority(release, graph) {
       hours: `Saturday–Thursday ${facts.clinicHours.open}–${facts.clinicHours.close}; Friday closed`,
       priceRange: nonempty(facts.clinic.priceRange, "clinic priceRange"),
       fridayClosed: facts.clinicHours.fridayClosed,
-      ownerConfirmed: facts.clinicOwnerConfirmation.ownerConfirmed,
-      truthVerifiedAt: facts.clinicOwnerConfirmation.truthVerifiedAt,
-      truthAuthority: facts.clinicOwnerConfirmation.truthAuthority,
+      ownerConfirmed: clinicOwnerConfirmation.ownerConfirmed,
+      truthVerifiedAt: clinicOwnerConfirmation.truthVerifiedAt,
+      truthAuthority: clinicOwnerConfirmation.truthAuthority,
     }),
     datasetAuthority: Object.freeze({
       id: release.dataset.id,
