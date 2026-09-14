@@ -1,0 +1,69 @@
+name: PR401 provenance boundary fix
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr401-provenance-boundary-fix
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/single-source-truth-no-dist-drift
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Apply exact provenance-boundary fix
+        run: python .release/migrations/pr401-provenance-boundary-fix.py
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify authority and compact head build
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test scripts/test-canonical-authority.mjs
+          node scripts/publication-context.mjs get clinic.truthAuthority
+          node --check src/lib/canonical-graph-facts.mjs
+          node --check src/lib/canonical-authority.mjs
+          node --check scripts/test-canonical-authority.mjs
+          npm run prepare:site
+          ASTRO_TELEMETRY_DISABLED=1 npx astro build
+      - name: Commit only the validated fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .release/migrations/pr401-provenance-boundary-fix.py
+          rm .github/workflows/pr401-provenance-boundary-fix.yml
+          git add -A
+          mapfile -t paths < <(git diff --cached --name-only)
+          expected=(scripts/test-canonical-authority.mjs src/lib/canonical-authority.mjs src/lib/canonical-graph-facts.mjs .github/workflows/pr401-provenance-boundary-fix.yml .release/migrations/pr401-provenance-boundary-fix.py)
+          printf '%s\n' "${paths[@]}" | sort > /tmp/actual-paths
+          printf '%s\n' "${expected[@]}" | sort > /tmp/expected-paths
+          diff -u /tmp/expected-paths /tmp/actual-paths
+          git config user.name "ghezelbaash-source-refactor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "fix: separate compact graph facts from full provenance"
+      - name: Publish fix to the same PR branch only
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refactor/single-source-truth-no-dist-drift
+          test "$(git rev-parse origin/refactor/single-source-truth-no-dist-drift)" = "$GITHUB_SHA"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" \
+            push origin HEAD:refactor/single-source-truth-no-dist-drift
