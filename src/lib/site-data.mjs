@@ -90,6 +90,8 @@ export function deriveSiteData(release, graph) {
   );
   const locality = exactText(address.addressLocality, "clinic locality");
   const street = exactText(address.streetAddress, "clinic street address");
+  const hoursOpenFa = faDigits(hours[1]);
+  const hoursCloseFa = faDigits(hours[2]);
 
   const directions = new URL("https://www.google.com/maps/dir/");
   directions.searchParams.set("api", "1");
@@ -111,7 +113,10 @@ export function deriveSiteData(release, graph) {
     street,
     locality,
     postalCode: exactText(String(address.postalCode), "clinic postalCode"),
-    hoursDisplay: `شنبه تا پنجشنبه ${faDigits(hours[1])} تا ${faDigits(hours[2])} و جمعه تعطیل`,
+    hoursOpenFa,
+    hoursCloseFa,
+    hoursOpenCompactFa: hoursOpenFa.replace(":۰۰", ""),
+    hoursCloseCompactFa: hoursCloseFa.replace(":۰۰", ""),
     medicalReviewedAt,
     medicalReviewedPersian: formatDate(medicalReviewedAt, "persian"),
     medicalReviewedGregorian: formatDate(medicalReviewedAt, "gregory"),
@@ -121,15 +126,15 @@ export function deriveSiteData(release, graph) {
 const siteTokenPattern = /{{(?:CLINIC_[A-Z0-9_]+|OFFICIAL_[A-Z0-9_]+)}}/g;
 
 function siteTokenValues(site) {
-  if (!site?.telHref || !site?.instagramUrl || !site?.chatUrl || !site?.mapsUrl)
+  if (
+    !site?.telHref ||
+    !site?.instagramUrl ||
+    !site?.chatUrl ||
+    !site?.mapsUrl ||
+    !site?.hoursOpenFa ||
+    !site?.hoursCloseFa
+  )
     throw new Error("Invalid canonical site token source");
-  const hours = String(site.hoursDisplay).match(
-    /^شنبه تا پنجشنبه (\S+) تا (\S+) و جمعه تعطیل$/,
-  );
-  if (!hours)
-    throw new Error(
-      `Unsupported canonical site hours display: ${site.hoursDisplay}`,
-    );
   return Object.freeze({
     "{{CLINIC_TEL_HREF}}": site.telHref,
     "{{CLINIC_PHONE_FA}}": site.phoneDisplayGrouped,
@@ -138,9 +143,10 @@ function siteTokenValues(site) {
     "{{OFFICIAL_CHAT_URL}}": site.chatUrl,
     "{{CLINIC_MAPS_URL}}": site.mapsUrl,
     "{{CLINIC_POSTAL_CODE_FA}}": faDigits(site.postalCode),
-    "{{CLINIC_HOURS_COMPACT_FA}}": `شنبه تا پنجشنبه ${hours[1].replace(":۰۰", "")}–${hours[2].replace(":۰۰", "")}؛ جمعه تعطیل`,
-    "{{CLINIC_HOURS_WEEKDAYS_FA}}": `شنبه تا پنجشنبه، ${hours[1]} تا ${hours[2]}`,
-    "{{CLINIC_FRIDAY_CLOSED_FA}}": "جمعه تعطیل.",
+    "{{CLINIC_HOURS_OPEN_FA}}": site.hoursOpenFa,
+    "{{CLINIC_HOURS_CLOSE_FA}}": site.hoursCloseFa,
+    "{{CLINIC_HOURS_OPEN_COMPACT_FA}}": site.hoursOpenCompactFa,
+    "{{CLINIC_HOURS_CLOSE_COMPACT_FA}}": site.hoursCloseCompactFa,
   });
 }
 
