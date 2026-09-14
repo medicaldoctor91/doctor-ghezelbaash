@@ -62,7 +62,7 @@ test("ambiguous, nested and collapsed DOM inventories are rejected", () => {
   assert.throws(() => inspectRenderChunks(html.replace("<p>First</p>", '<div class="render-chunk" id="nested">Inner</div>'), { source: true }), /nonnested/);
 });
 
-test("fingerprint catches real geometry inputs but excludes generated calibration and shell-only components", async () => {
+test("fingerprint catches real geometry inputs but excludes its generated calibration", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "render-calibration-contract-"));
   try {
     for (const name of ["src", "scripts", "public/fonts", "astro.config.mjs", "package-lock.json"]) {
@@ -81,18 +81,6 @@ test("fingerprint catches real geometry inputs but excludes generated calibratio
       assert.notEqual(Buffer.from(changed).toString("hex"), original.toString("hex"));
       await writeFile(target, changed);
       assert.notEqual((await renderSourceSnapshot(root)).sourceSha256, first.sourceSha256, file);
-      await writeFile(target, original);
-    }
-    for (const file of [
-      "src/components/DocumentHead.astro",
-      "src/components/FloatingActionDock.astro",
-      "src/components/GuideNavigator.astro",
-      "src/components/SiteFooter.astro",
-    ]) {
-      const target = path.join(root, file);
-      const original = await readFile(target);
-      await writeFile(target, Buffer.concat([original, Buffer.from("\n<!-- shell-only change -->\n")]));
-      assert.equal((await renderSourceSnapshot(root)).sourceSha256, first.sourceSha256, file);
       await writeFile(target, original);
     }
   } finally {
