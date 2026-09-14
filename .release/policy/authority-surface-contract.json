@@ -1,6 +1,8 @@
 {
   "schemaVersion": "2.0",
-  "identitySource": "src/data/release.json",
+  "identitySource": "src/data/semantic/knowledge-graph.jsonld",
+  "releaseLifecycleSource": "src/data/release.json",
+  "authorityProfile": "src/data/semantic/authority-profile.json",
   "resourceRegistry": "src/data/machine-resources.json",
   "retrievalPolicySource": "src/data/retrieval/query-matrix-policy.json",
   "surfaces": {
@@ -8,7 +10,7 @@
       "role": "canonical-first-party-dataset",
       "resourceTarget": "website",
       "canonicalRef": "release.canonicalUrl",
-      "datasetRef": "release.dataset.id"
+      "datasetRef": "graph.dataset"
     },
     "github": {
       "role": "version-controlled-source",
