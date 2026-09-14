@@ -2,8 +2,8 @@
 import rawRelease from '../data/release.json';
 import authorityProfile from '../data/semantic/authority-profile.json';
 import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
-import { headGraph } from '../lib/knowledge-graph';
-const authority = deriveCanonicalAuthority(rawRelease, headGraph, authorityProfile);
+import { canonicalGraph } from '../lib/knowledge-graph';
+const authority = deriveCanonicalAuthority(rawRelease, canonicalGraph, authorityProfile);
 const entityAliases = [
   ...authority.primaryEntity.officialAliases,
   ...authority.primaryEntity.reconciliationAliases,
