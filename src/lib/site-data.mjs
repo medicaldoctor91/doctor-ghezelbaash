@@ -28,8 +28,7 @@ const faNumber = (value, digits = 0) =>
     useGrouping: true,
   }).format(Number(value));
 
-export function deriveSiteData(release, graph) {
-  const facts = deriveCanonicalGraphFacts(release, graph);
+function deriveSiteContactDataFromFacts(facts) {
   const { clinic, address } = facts;
   const phone = normalizePhone(clinic.telephone);
   if (!/^\+98\d{10}$/.test(phone))
@@ -48,13 +47,6 @@ export function deriveSiteData(release, graph) {
   const street = exactText(address.streetAddress, "clinic street address");
   const hoursOpenFa = faDigits(facts.clinicHours.open);
   const hoursCloseFa = faDigits(facts.clinicHours.close);
-  const reputation = validateReputationObservation(graph, {
-    canonicalUrl: release.canonicalUrl,
-    clinic: {
-      id: release.clinic.id,
-      placeId: facts.identifiers.clinic.placeId,
-    },
-  });
 
   const directions = new URL("https://www.google.com/maps/dir/");
   directions.searchParams.set("api", "1");
@@ -86,6 +78,26 @@ export function deriveSiteData(release, graph) {
     medicalReviewedAt: facts.medicalReviewedAt,
     medicalReviewedPersian: formatDate(facts.medicalReviewedAt, "persian"),
     medicalReviewedGregorian: formatDate(facts.medicalReviewedAt, "gregory"),
+  });
+}
+
+export function deriveSiteContactData(release, graph) {
+  return deriveSiteContactDataFromFacts(deriveCanonicalGraphFacts(release, graph));
+}
+
+export function deriveSiteData(release, graph) {
+  const facts = deriveCanonicalGraphFacts(release, graph);
+  const contact = deriveSiteContactDataFromFacts(facts);
+  const reputation = validateReputationObservation(graph, {
+    canonicalUrl: release.canonicalUrl,
+    clinic: {
+      id: release.clinic.id,
+      placeId: facts.identifiers.clinic.placeId,
+    },
+  });
+
+  return Object.freeze({
+    ...contact,
     googleRating: reputation.rating,
     googleRatingFa: faNumber(reputation.rating, 1),
     googleReviewCount: reputation.reviewCount,
