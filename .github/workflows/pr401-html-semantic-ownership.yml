@@ -60,12 +60,7 @@ jobs:
           const file = 'src/data/visible-text-contract.json';
           const baseline = JSON.parse(await readFile(file, 'utf8'));
           const actual = await sourceContract(process.cwd());
-          const existingKeys = Object.keys(baseline.source);
-          for (const key of existingKeys) {
-            assert.deepEqual(actual[key], baseline.source[key], `Protected visible source changed: ${key}`);
-          }
-          const extraKeys = Object.keys(actual).filter((key) => !existingKeys.includes(key));
-          assert.deepEqual(extraKeys, ['footerGovernance'], 'Only footerGovernance may become a new visible source owner');
+          assert.deepEqual(actual, baseline.source, 'Protected semantic/visible source changed during ownership migration');
 
           const raw = await sourceRawHashes(process.cwd());
           const allowedChanged = new Set([
@@ -86,11 +81,6 @@ jobs:
           }
 
           baseline.sourceRawSha256 = raw;
-          baseline.source = {
-            page: baseline.source.page,
-            footerGovernance: actual.footerGovernance,
-            ...Object.fromEntries(Object.entries(baseline.source).filter(([key]) => key !== 'page')),
-          };
           await writeFile(file, `${JSON.stringify(baseline, null, 2)}\n`);
           NODE
       - name: Validate ownership migration
