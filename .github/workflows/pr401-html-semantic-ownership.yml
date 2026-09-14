@@ -81,6 +81,9 @@ jobs:
           }
 
           baseline.sourceRawSha256 = raw;
+          // deepEqual above proves semantic equality; this only canonicalizes JSON property order
+          // to the current sourceContract serialization so the digest-based freeze remains stable.
+          baseline.source = actual;
           await writeFile(file, `${JSON.stringify(baseline, null, 2)}\n`);
           NODE
       - name: Validate ownership migration
