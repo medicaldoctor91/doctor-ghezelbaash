@@ -112,6 +112,37 @@ export async function sourceContract(root) {
     return [key, normalizeText(JSON.parse(field[1]))];
   }));
   const graph = JSON.parse(await readFile(path.join(root, 'src/data/semantic/knowledge-graph.jsonld'), 'utf8'));
+  const release = JSON.parse(await readFile(path.join(root, 'src/data/release.json'), 'utf8'));
+  const documentHeadPolicy = JSON.parse(await readFile(path.join(root, 'src/data/document-head.json'), 'utf8'));
+  const socialImages = graph['@graph'].filter((node) =>
+    [node['@type']].flat().includes('ImageObject') &&
+    Number(node.width?.value) === 1200 &&
+    Number(node.height?.value) === 630 &&
+    typeof node.contentUrl === 'string' &&
+    new URL(node.contentUrl).origin === new URL(release.canonicalUrl).origin,
+  );
+  if (socialImages.length !== 1) {
+    throw new Error(`Visible source requires exactly one canonical 1200x630 social ImageObject; found ${socialImages.length}`);
+  }
+  const [socialImage] = socialImages;
+  if (typeof socialImage.encodingFormat !== 'string' || !socialImage.encodingFormat) {
+    throw new Error('Canonical social ImageObject encodingFormat missing');
+  }
+  const documentHead = {
+    appleMobileWebAppTitle: documentHeadPolicy.appleMobileWebAppTitle,
+    themeColor: documentHeadPolicy.themeColor,
+    openGraph: {
+      type: documentHeadPolicy.openGraph?.type,
+      locale: documentHeadPolicy.openGraph?.locale,
+      alternateLocales: documentHeadPolicy.openGraph?.alternateLocales,
+      image: socialImage.contentUrl,
+      imageType: socialImage.encodingFormat,
+      imageWidth: Number(socialImage.width.value),
+      imageHeight: Number(socialImage.height.value),
+      imageAlt: documentHeadPolicy.openGraph?.imageAlt,
+    },
+    twitter: documentHeadPolicy.twitter,
+  };
   const answers = graph['@graph'].filter((node) => [node['@type']].flat().includes('Answer')).map((node) => [node['@id'], node.text]).sort(([a], [b]) => a.localeCompare(b, 'en'));
   const runtime = runtimeTextLiterals(await readFile(path.join(root, 'src/components/GuideNavigator.astro'), 'utf8'));
   const captions = {};
@@ -120,7 +151,7 @@ export async function sourceContract(root) {
     const vtt = await readFile(file, 'utf8');
     captions[path.relative(root, file)] = vtt.split(/\r?\n\s*\r?\n/u).filter((block) => block.includes('-->')).map((block) => normalizeText(block.split(/\r?\n/u).slice(block.split(/\r?\n/u).findIndex((line) => line.includes('-->')) + 1).join(' ')));
   }
-  return { page: { ...frontmatter, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead: JSON.parse(await readFile(path.join(root, 'src/data/document-head.json'), 'utf8')), answers, runtime, captions };
+  return { page: { ...frontmatter, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead, answers, runtime, captions };
 }
 
 export async function sourceRawHashes(root) {
