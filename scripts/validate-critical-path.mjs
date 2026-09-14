@@ -15,6 +15,8 @@ const assert = (condition, message) => {
   if (!condition) fail(message);
 };
 const count = (source, pattern) => (String(source).match(pattern) || []).length;
+const escapeRegExp = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const heroPreloadPattern =
   /<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bfetchpriority=["']high["'])(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*>/gi;
 // A fixed HTTP preload can fetch a different candidate from the responsive HTML.
@@ -24,6 +26,7 @@ const fixedHeroPreloadPattern =
 const [
   release,
   documentHeadProfile,
+  canonicalGraph,
   documentHead,
   baseLayout,
   indexSource,
@@ -33,6 +36,10 @@ const [
   readFile(path.join(root, "src/data/document-head.json"), "utf8").then(
     JSON.parse,
   ),
+  readFile(
+    path.join(root, "src/data/semantic/knowledge-graph.jsonld"),
+    "utf8",
+  ).then(JSON.parse),
   readFile(path.join(root, "src/components/DocumentHead.astro"), "utf8"),
   readFile(path.join(root, "src/layouts/BaseLayout.astro"), "utf8"),
   readFile(path.join(root, "src/pages/index.astro"), "utf8"),
@@ -132,6 +139,52 @@ assert(
   /^https:\/\/www\.ghezelbaash\.ir\/$/.test(release.canonicalUrl),
   "Canonical release URL identity drift",
 );
+
+const graphNodes = canonicalGraph["@graph"] || [];
+const types = (node) =>
+  Array.isArray(node?.["@type"]) ? node["@type"] : [node?.["@type"]];
+const socialImages = graphNodes.filter(
+  (node) =>
+    types(node).includes("ImageObject") &&
+    Number(node?.width?.value) === 1200 &&
+    Number(node?.height?.value) === 630 &&
+    typeof node?.contentUrl === "string" &&
+    new URL(node.contentUrl).origin === new URL(release.canonicalUrl).origin,
+);
+assert(
+  socialImages.length === 1,
+  `Canonical social ImageObject must be unique; found ${socialImages.length}`,
+);
+const [socialImage] = socialImages;
+const socialProfile = Object.freeze({
+  type: documentHeadProfile.openGraph?.type,
+  locale: documentHeadProfile.openGraph?.locale,
+  alternateLocales: documentHeadProfile.openGraph?.alternateLocales,
+  image: socialImage.contentUrl,
+  imageType: socialImage.encodingFormat,
+  imageWidth: Number(socialImage.width.value),
+  imageHeight: Number(socialImage.height.value),
+  imageAlt: documentHeadProfile.openGraph?.imageAlt,
+  twitterCard: documentHeadProfile.twitter?.card,
+});
+assert(
+  typeof socialProfile.type === "string" &&
+    typeof socialProfile.locale === "string" &&
+    Array.isArray(socialProfile.alternateLocales) &&
+    socialProfile.alternateLocales.length > 0 &&
+    typeof socialProfile.image === "string" &&
+    typeof socialProfile.imageType === "string" &&
+    Number.isInteger(socialProfile.imageWidth) &&
+    socialProfile.imageWidth === 1200 &&
+    Number.isInteger(socialProfile.imageHeight) &&
+    socialProfile.imageHeight === 630 &&
+    typeof socialProfile.imageAlt === "string" &&
+    socialProfile.imageAlt.length > 0 &&
+    typeof socialProfile.twitterCard === "string" &&
+    socialProfile.twitterCard.length > 0,
+  "Canonical Graph + presentation social profile is incomplete",
+);
+
 const sourceOrder = [
   "<DocumentHead",
   "<style is:inline",
@@ -160,6 +213,11 @@ if (distArg) {
     readFile(path.join(dist, "index.html"), "utf8"),
     readFile(path.join(dist, "_headers"), "utf8"),
   ]);
+  const metaHas = (attribute, name, content) =>
+    new RegExp(
+      `<meta\\b(?=[^>]*\\b${escapeRegExp(attribute)}=["']${escapeRegExp(name)}["'])(?=[^>]*\\bcontent=["']${escapeRegExp(content)}["'])[^>]*>`,
+      "i",
+    ).test(html);
   const heroPreloads = html.match(heroPreloadPattern) || [];
   const heroPreload = heroPreloads[0];
   const criticalStyle = html.match(
@@ -230,8 +288,20 @@ if (distArg) {
     "DIST canonical URL diverges from release identity",
   );
   assert(
-    html.includes(documentHeadProfile.openGraph.image) &&
-      html.includes(documentHeadProfile.openGraph.imageAlt),
+    metaHas("property", "og:type", socialProfile.type) &&
+      metaHas("property", "og:locale", socialProfile.locale) &&
+      socialProfile.alternateLocales.every((locale) =>
+        metaHas("property", "og:locale:alternate", locale),
+      ) &&
+      metaHas("property", "og:image", socialProfile.image) &&
+      metaHas("property", "og:image:secure_url", socialProfile.image) &&
+      metaHas("property", "og:image:type", socialProfile.imageType) &&
+      metaHas("property", "og:image:width", String(socialProfile.imageWidth)) &&
+      metaHas("property", "og:image:height", String(socialProfile.imageHeight)) &&
+      metaHas("property", "og:image:alt", socialProfile.imageAlt) &&
+      metaHas("name", "twitter:card", socialProfile.twitterCard) &&
+      metaHas("name", "twitter:image", socialProfile.image) &&
+      metaHas("name", "twitter:image:alt", socialProfile.imageAlt),
     "DIST social presentation profile drift",
   );
   assert(
@@ -247,7 +317,7 @@ console.log(
       headAuthority: "astro-native-single-pass",
       contentMetadataAuthority: "markdown-frontmatter",
       canonicalUrlAuthority: "release.json",
-      presentationAuthority: "document-head.json",
+      presentationAuthority: "document-head.json+canonical-graph",
       generatedContentAuthority: ".generated/content/home.md",
       discoveryRendering: "astro-native",
       distValidated: Boolean(distArg),
