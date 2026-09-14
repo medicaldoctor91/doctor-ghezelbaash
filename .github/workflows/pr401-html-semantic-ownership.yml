@@ -24,19 +24,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          wc -c .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02a .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04
-          sha256sum .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02a .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04
-          test "$(wc -c < .github/pr401-html-ownership.patch.gz.b64)" -eq 5000
+          test "$(wc -c < .github/pr401-html-ownership.patch.part00a)" -eq 2500
+          test "$(wc -c < .github/pr401-html-ownership.patch.part00b)" -eq 2500
           test "$(wc -c < .github/pr401-html-ownership.patch.part01)" -eq 5000
-          test "$(wc -c < .github/pr401-html-ownership.patch.part02a)" -eq 5000
+          test "$(wc -c < .github/pr401-html-ownership.patch.part02x)" -eq 2500
+          test "$(wc -c < .github/pr401-html-ownership.patch.part02y)" -eq 2500
           test "$(wc -c < .github/pr401-html-ownership.patch.part03)" -eq 5000
           test "$(wc -c < .github/pr401-html-ownership.patch.part04)" -eq 196
-          echo 'c5143b122604f5fb8b906d2defadc24bcdbb149d0e21e94d138dd6391da46e68  .github/pr401-html-ownership.patch.gz.b64' | sha256sum -c -
+          echo 'a39bd62976daff3095cef9ba02178230c1c498ab93c6fed4c9d056fc83cac8fc  .github/pr401-html-ownership.patch.part00a' | sha256sum -c -
+          echo 'ffee0c4fc4bb04a62d33ed0635cc1fbf13aaaac3a5b751b731d13204fe038348  .github/pr401-html-ownership.patch.part00b' | sha256sum -c -
           echo 'cadec5a79c8731a416da41112c8f17b29704b9c21b3b4d0b10dc5e4ad40faf86  .github/pr401-html-ownership.patch.part01' | sha256sum -c -
-          echo '4de41c7a0392089db9c739e5ac2c9c469543147a01a6723a18217f3d153a1e74  .github/pr401-html-ownership.patch.part02a' | sha256sum -c -
+          echo '0ba95754ed2d29fc901371815b07d5cdafad78f00f87108c745a088909722221  .github/pr401-html-ownership.patch.part02x' | sha256sum -c -
+          echo '6b01b03b9109aa7da5f50ca06468095237eb88528f1c7323705dbec873fa1bb8  .github/pr401-html-ownership.patch.part02y' | sha256sum -c -
           echo '9503ebdb29b76961f146a1e3ae0593668d80a24bb17a9bc51c38598d0b6b885f  .github/pr401-html-ownership.patch.part03' | sha256sum -c -
           echo '2001883ab39092c336940d618291a3720d75b2cf653c59cda4a61f7bdd3d4556  .github/pr401-html-ownership.patch.part04' | sha256sum -c -
-          cat .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02a .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04 > /tmp/pr401.patch.gz.b64
+          cat .github/pr401-html-ownership.patch.part00a .github/pr401-html-ownership.patch.part00b .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02x .github/pr401-html-ownership.patch.part02y .github/pr401-html-ownership.patch.part03 .github/pr401-html-ownership.patch.part04 > /tmp/pr401.patch.gz.b64
           test "$(wc -c < /tmp/pr401.patch.gz.b64)" -eq 20196
           base64 -d /tmp/pr401.patch.gz.b64 > /tmp/pr401.patch.gz
           echo '20503dbbff01321b00f876e625bf705bb4e16b7084d4871404bebd60858fefa0  /tmp/pr401.patch.gz' | sha256sum -c -
@@ -66,9 +68,13 @@ jobs:
           set -euo pipefail
           rm .github/workflows/pr401-html-semantic-ownership.yml
           rm .github/pr401-html-ownership.patch.gz.b64
+          rm .github/pr401-html-ownership.patch.part00a
+          rm .github/pr401-html-ownership.patch.part00b
           rm .github/pr401-html-ownership.patch.part01
           rm .github/pr401-html-ownership.patch.part02
           rm .github/pr401-html-ownership.patch.part02a
+          rm .github/pr401-html-ownership.patch.part02x
+          rm .github/pr401-html-ownership.patch.part02y
           rm .github/pr401-html-ownership.patch.part03
           rm .github/pr401-html-ownership.patch.part04
           git add -A
