@@ -1,4 +1,4 @@
-import { loadAuthoritativeReleaseContext } from "./lib/authoritative-release.mjs";
+import { loadPublicationContext } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -42,8 +42,8 @@ const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 const validDoi = (value) => /^10\.5281\/zenodo\.\d+$/.test(String(value || ""));
 const validRecord = (value) => /^\d+$/.test(String(value || ""));
 
-const { rawRelease, graph: canonicalGraph, release } =
-  await loadAuthoritativeReleaseContext(root);
+const { lifecycle: rawRelease, graph: canonicalGraph, publicationData: release } =
+  await loadPublicationContext(root);
 const invariants = await readJson("src/data/release-invariants.json");
 const pkg = await readJson("package.json");
 const lock = await readJson("package-lock.json");
@@ -447,6 +447,7 @@ if (
   authorityPolicy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
   authorityPolicy.releaseLifecycleSource !== "src/data/release.json" ||
   authorityPolicy.authorityProfile !== "src/data/semantic/authority-profile.json" ||
+  authorityPolicy.clinicAssertionProvenance !== "src/data/semantic/clinic-assertion-provenance.json" ||
   authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||
   authorityPolicy.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||

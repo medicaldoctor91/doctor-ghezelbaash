@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { appendFile, readFile, rename, writeFile } from "node:fs/promises";
 import {
   composeReputationObservation,
@@ -31,7 +31,7 @@ const writeOutput = async (values) => {
 
 async function validate() {
   const [release, observation] = await Promise.all([
-    loadAuthoritativeRelease(),
+    loadPublicationData(),
     readJson(sourceFile),
   ]);
   const canonical = validateReputationObservation(observation, release);
@@ -53,7 +53,7 @@ async function validate() {
 
 async function google(placeFile = "/tmp/google-place.json") {
   const [release, current, place] = await Promise.all([
-    loadAuthoritativeRelease(),
+    loadPublicationData(),
     readJson(sourceFile),
     readJson(placeFile),
   ]);

@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { readFile } from "node:fs/promises";
 import { deriveSiteData } from "../src/lib/site-data.mjs";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
@@ -13,7 +13,7 @@ const [quick, runtime, observationSource] = await Promise.all([
   readFile("src/components/GuideNavigator.astro", "utf8"),
   readFile("src/data/reputation-observation.json", "utf8"),
 ]);
-const release = await loadAuthoritativeRelease();
+const release = await loadPublicationData();
 const graph = JSON.parse(
   await readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"),
 );

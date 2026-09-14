@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-14T01:19:21.607Z",
-    "sourceSha256": "8ce16de3e7b1d006625e1d93431e8bc6bb63915b97cfaeacf18ee9942abac542",
+    "measuredAt": "2026-09-14T13:01:22.071Z",
+    "sourceSha256": "4badfdb20ddaedebb0b31ea7479e2b9c4d79ef911a44af58db8661641abf6db1",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4881,7 +4881,7 @@
       ],
       [
         "src/components/DocumentHead.astro",
-        "d5336119e87e3bcabc958d2d49aa4b5b95509993f012ebd3059a7b95bceb7750"
+        "3e5e32d7b5127929a2cec98aba8e5b743b69d0790b4cc51857d88317eb1ccda4"
       ],
       [
         "src/components/FloatingActionDock.astro",
@@ -4893,7 +4893,7 @@
       ],
       [
         "src/components/SiteFooter.astro",
-        "a6d6d6f7131d8c52f6a5f7558cbf722fdd9fb1171716fca8ced85e89baab04e9"
+        "b2ddfb1bb4a93f26e7fce2c2bcf15b47b0ff33d35d66be59af0cc49bc7db36b5"
       ],
       [
         "src/layouts/BaseLayout.astro",

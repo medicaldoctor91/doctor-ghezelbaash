@@ -7,7 +7,6 @@ import { bindClinicReputation } from "../../src/lib/reputation-observation.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../../src/lib/answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
-import { stripPageOwnedFooterGovernance } from "../../src/lib/page-owned-fragments.mjs";
 
 const compactAuthoredHtmlLayout = (source) =>
   String(source).replace(/>\s*\r?\n\s*</g, "><");
@@ -65,7 +64,7 @@ export async function assembleCanonicalContent({
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
   const names = await canonicalSourceNames(root);
-  const [rawRelease, reputationObservation, authorityProfile] = await Promise.all([
+  const [rawRelease, reputationObservation, authorityProfile, clinicAssertionProvenance] = await Promise.all([
     readFile(path.join(root, "src/data/release.json"), "utf8").then(JSON.parse),
     readFile(
       path.join(root, "src/data/reputation-observation.json"),
@@ -75,14 +74,22 @@ export async function assembleCanonicalContent({
       path.join(root, "src/data/semantic/authority-profile.json"),
       "utf8",
     ).then(JSON.parse),
+    readFile(
+      path.join(root, "src/data/semantic/clinic-assertion-provenance.json"),
+      "utf8",
+    ).then(JSON.parse),
   ]);
-  const release = derivePublicationData(rawRelease, graph, authorityProfile);
+  const release = derivePublicationData(
+    rawRelease,
+    graph,
+    authorityProfile,
+    clinicAssertionProvenance,
+  );
   const site = deriveSiteData(release, graph);
   let content = await readFile(
     path.join(root, "src/content-source/page.md"),
     "utf8",
   );
-  content = stripPageOwnedFooterGovernance(content);
   content = bindHeroPictureSizes(content);
   content = bindReleaseTokens(content, release);
   content = bindSiteTokens(content, site);

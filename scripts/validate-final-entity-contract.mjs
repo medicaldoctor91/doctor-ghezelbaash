@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { assertActiveAuthoredIdentifiers } from "./lib/active-identifier-contract.mjs";
 import { assertMojavezEvidence, readMojavezObservation } from "./lib/mojavez-evidence.mjs";
 import { assertSocialIdentity } from "./lib/social-identity-contract.mjs";
@@ -10,7 +10,7 @@ const head = JSON.parse(fs.readFileSync("src/data/semantic/head-profile.json", "
 const support = JSON.parse(fs.readFileSync("src/data/semantic/support-profile.json", "utf8"));
 const evidence = JSON.parse(fs.readFileSync("src/data/evidence-registry.json", "utf8"));
 const media = JSON.parse(fs.readFileSync("src/data/media-metadata.json", "utf8"));
-const release = await loadAuthoritativeRelease();
+const release = await loadPublicationData();
 const authoredInputsChecked = await assertActiveAuthoredIdentifiers();
 assertMojavezEvidence({ graph, registry: evidence, release, head, observation: await readMojavezObservation() });
 const nodes = graph["@graph"] || [];

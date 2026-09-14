@@ -6,13 +6,10 @@ import {
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
-import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
+import { deriveCanonicalAuthority, selectCanonicalSocialImage } from '../lib/canonical-authority.mjs';
 import { canonicalGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
-import {
-  exactLanguageLiteral,
-  indexCanonicalGraph,
-} from '../lib/semantic-projection.mjs';
+import { exactLanguageLiteral } from '../lib/semantic-projection.mjs';
 
 type DiscoveryLink = {
   href: string;
@@ -22,7 +19,7 @@ type DiscoveryLink = {
   color?: string;
 };
 
-type GraphNode = Record<string, any> & { '@id': string };
+type GraphNode = Record<string, unknown> & { '@id': string };
 
 interface Props {
   title: string;
@@ -45,38 +42,9 @@ if (
   throw new Error('Canonical robots policy must declare max-image-preview:large');
 }
 
-const graphNodes = canonicalGraph['@graph'] as GraphNode[];
-const { byId: nodeById } = indexCanonicalGraph(canonicalGraph) as {
-  byId: Map<string, GraphNode>;
-};
-const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
-  const matches = (Array.isArray(value) ? value : [value]).filter(
-    (item): item is string => typeof item === 'string' && pattern.test(item),
-  );
-  if (matches.length !== 1) {
-    throw new Error(`Canonical graph must define one ${label}`);
-  }
-  return matches[0];
-};
-const exactText = (value: unknown, label: string) => {
-  if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-    throw new Error(`Canonical graph must define one normalized ${label}`);
-  }
-  return value;
-};
-const quantityValue = (value: unknown, label: string) => {
-  const numeric = Number((value as { value?: unknown } | undefined)?.value);
-  if (!Number.isInteger(numeric) || numeric < 1) {
-    throw new Error(`Canonical graph must define one positive ${label}`);
-  }
-  return numeric;
-};
-const nodeHasType = (node: GraphNode, type: string) =>
-  (Array.isArray(node['@type']) ? node['@type'] : [node['@type']]).includes(type);
-
-const person = authority.person as GraphNode;
-const clinic = authority.clinic as GraphNode;
-const website = authority.website as GraphNode;
+const facts = authority.facts;
+const person = facts.person as GraphNode;
+const website = facts.website as GraphNode;
 const profileFirstName = exactLanguageLiteral(
   person.givenName,
   'en',
@@ -92,52 +60,21 @@ const authorName = exactLanguageLiteral(
   'fa',
   'Canonical physician Persian name',
 );
-const applicationName = exactText(website.name, 'WebSite name');
-const instagramUrl = exactUrl(
-  person.sameAs,
-  /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/,
-  'official Instagram profile',
-);
-const profileUsername = new URL(instagramUrl).pathname
+if (typeof website.name !== 'string' || !website.name.trim() || website.name !== website.name.trim()) {
+  throw new Error('Canonical graph must define one normalized WebSite name');
+}
+const applicationName = website.name;
+const profileUsername = new URL(facts.instagramUrl).pathname
   .split('/')
   .filter(Boolean)[0];
-const clinicIdentifierNodes = (Array.isArray(clinic.identifier)
-  ? clinic.identifier
-  : [clinic.identifier]
-)
-  .map((reference) =>
-    typeof reference === 'object' &&
-    reference !== null &&
-    typeof reference['@id'] === 'string'
-      ? nodeById.get(reference['@id'])
-      : undefined,
-  )
-  .filter((node): node is GraphNode => Boolean(node));
-const openStreetMapUrl = exactUrl(
-  clinicIdentifierNodes.map((node) => node.url),
-  /^https:\/\/www\.openstreetmap\.org\/node\/\d+$/,
-  'clinic OpenStreetMap identifier',
-);
-const socialImageCandidates = graphNodes.filter(
-  (node) =>
-    nodeHasType(node, 'ImageObject') &&
-    Number(node.width?.value) === 1200 &&
-    Number(node.height?.value) === 630 &&
-    typeof node.contentUrl === 'string' &&
-    new URL(node.contentUrl).origin === new URL(release.canonicalUrl).origin,
-);
-if (socialImageCandidates.length !== 1) {
-  throw new Error(
-    `Canonical graph must define exactly one 1200x630 social ImageObject; found ${socialImageCandidates.length}`,
-  );
-}
-const [socialImage] = socialImageCandidates;
+const openStreetMapUrl = facts.openStreetMapUrl;
+const socialImage = selectCanonicalSocialImage(release, canonicalGraph);
 const og = Object.freeze({
   ...documentHead.openGraph,
-  image: exactText(socialImage.contentUrl, 'social ImageObject contentUrl'),
-  imageType: exactText(socialImage.encodingFormat, 'social ImageObject encodingFormat'),
-  imageWidth: quantityValue(socialImage.width, 'social ImageObject width'),
-  imageHeight: quantityValue(socialImage.height, 'social ImageObject height'),
+  image: socialImage.contentUrl,
+  imageType: socialImage.encodingFormat,
+  imageWidth: socialImage.width,
+  imageHeight: socialImage.height,
 });
 
 const faviconPng = '/favicon.png';

@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { readFile } from "node:fs/promises";
 
 const readJson = (file) => readFile(file, "utf8").then(JSON.parse);
@@ -25,7 +25,7 @@ async function validateContract() {
   const [contract, release, pkg, lock, codemeta, observation, refreshWorkflow] =
     await Promise.all([
       readJson(".release/policy/platform-contract.json"),
-      loadAuthoritativeRelease(),
+      loadPublicationData(),
       readJson("package.json"),
       readJson("package-lock.json"),
       readJson("codemeta.json"),

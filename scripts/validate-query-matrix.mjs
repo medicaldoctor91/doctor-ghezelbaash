@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import {
@@ -23,7 +23,7 @@ const fail = (message) => {
 const arr = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
 
-const release = await loadAuthoritativeRelease(root);
+const release = await loadPublicationData(root);
 const policy = await readJson("src/data/retrieval/query-matrix-policy.json");
 const graph = await readJson(canonicalSemanticSource(policy));
 const { answers, services } = deriveCanonicalSemanticSets(graph, release);

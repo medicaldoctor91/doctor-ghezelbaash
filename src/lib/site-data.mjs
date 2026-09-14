@@ -1,12 +1,8 @@
-import {
-  exactLanguageLiteral,
-  indexCanonicalGraph,
-} from "./semantic-projection.mjs";
+import { exactLanguageLiteral } from "./semantic-projection.mjs";
+import { deriveCanonicalGraphFacts } from "./canonical-authority.mjs";
 
 const faDigits = (value) =>
   String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-const asArray = (value) =>
-  Array.isArray(value) ? value : value == null ? [] : [value];
 const exactText = (value, label) => {
   if (typeof value !== "string" || !value.length)
     throw new Error(`Canonical graph requires ${label}`);
@@ -26,63 +22,16 @@ const formatDate = (value, calendar) =>
   }).format(new Date(`${value}T00:00:00Z`));
 
 export function deriveSiteData(release, graph) {
-  if (
-    !release?.canonicalUrl ||
-    !release?.primaryEntity?.id ||
-    !release?.clinic?.id ||
-    !Array.isArray(graph?.["@graph"])
-  )
-    throw new Error("Site data requires canonical release pointers + graph");
-  const { byId } = indexCanonicalGraph(graph);
-  const clinic = byId.get(release.clinic.id);
-  const person = byId.get(release.primaryEntity.id);
-  const page = byId.get(`${release.canonicalUrl}#webpage`);
-  if (!clinic || !person || !page)
-    throw new Error("Head graph lacks canonical person, clinic or WebPage node");
-  const address = byId.get(clinic.address?.["@id"]);
-  if (!address)
-    throw new Error("Head graph lacks canonical clinic address node");
-
+  const facts = deriveCanonicalGraphFacts(release, graph);
+  const { clinic, address } = facts;
   const phone = normalizePhone(clinic.telephone);
   if (!/^\+98\d{10}$/.test(phone))
     throw new Error(`Invalid canonical clinic telephone: ${clinic.telephone}`);
   const localPhone = `0${phone.slice(3)}`;
-  const instagramUrls = asArray(person.sameAs).filter((url) =>
-    /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/.test(String(url)),
-  );
-  if (instagramUrls.length !== 1)
-    throw new Error(
-      `Canonical Person requires one official Instagram URL; found ${instagramUrls.length}`,
-    );
-  const [instagramUrl] = instagramUrls;
+  const instagramUrl = facts.instagramUrl;
   const instagramHandle = new URL(instagramUrl).pathname
     .split("/")
     .filter(Boolean)[0];
-
-  const hours = String(clinic.openingHours).match(
-    /^Sa-Th (\d{2}:\d{2})-(\d{2}:\d{2})$/,
-  );
-  const friday = byId.get(`${release.canonicalUrl}#clinic-friday-closed`);
-  const fridayClosed =
-    friday?.dayOfWeek === "https://schema.org/Friday" &&
-    friday?.opens === "00:00" &&
-    friday?.closes === "00:00";
-  if (!hours || !fridayClosed)
-    throw new Error(
-      `Unsupported canonical clinic hours contract: ${clinic.openingHours}`,
-    );
-  const placeId = exactText(
-    byId.get(`${release.canonicalUrl}#identifier-clinic-google-place-id`)?.value,
-    "clinic Google Place ID",
-  );
-  const cid = exactText(
-    byId.get(`${release.canonicalUrl}#identifier-clinic-google-maps-cid`)?.value,
-    "clinic Google Maps CID",
-  );
-  const medicalReviewedAt = exactText(
-    page.lastReviewed,
-    "WebPage lastReviewed",
-  );
   const clinicName = exactLanguageLiteral(
     clinic.name,
     "fa",
@@ -90,13 +39,16 @@ export function deriveSiteData(release, graph) {
   );
   const locality = exactText(address.addressLocality, "clinic locality");
   const street = exactText(address.streetAddress, "clinic street address");
-  const hoursOpenFa = faDigits(hours[1]);
-  const hoursCloseFa = faDigits(hours[2]);
+  const hoursOpenFa = faDigits(facts.clinicHours.open);
+  const hoursCloseFa = faDigits(facts.clinicHours.close);
 
   const directions = new URL("https://www.google.com/maps/dir/");
   directions.searchParams.set("api", "1");
   directions.searchParams.set("destination", `${clinicName}، ${locality}`);
-  directions.searchParams.set("destination_place_id", placeId);
+  directions.searchParams.set(
+    "destination_place_id",
+    facts.identifiers.clinic.placeId,
+  );
 
   return Object.freeze({
     phone,
@@ -107,7 +59,7 @@ export function deriveSiteData(release, graph) {
     instagramUrl,
     instagramHandle,
     chatUrl: `https://ig.me/m/${instagramHandle}`,
-    mapsUrl: `https://www.google.com/maps?cid=${cid}`,
+    mapsUrl: `https://www.google.com/maps?cid=${facts.identifiers.clinic.cid}`,
     directionsUrl: directions.toString(),
     clinicName,
     street,
@@ -117,9 +69,9 @@ export function deriveSiteData(release, graph) {
     hoursCloseFa,
     hoursOpenCompactFa: hoursOpenFa.replace(":۰۰", ""),
     hoursCloseCompactFa: hoursCloseFa.replace(":۰۰", ""),
-    medicalReviewedAt,
-    medicalReviewedPersian: formatDate(medicalReviewedAt, "persian"),
-    medicalReviewedGregorian: formatDate(medicalReviewedAt, "gregory"),
+    medicalReviewedAt: facts.medicalReviewedAt,
+    medicalReviewedPersian: formatDate(facts.medicalReviewedAt, "persian"),
+    medicalReviewedGregorian: formatDate(facts.medicalReviewedAt, "gregory"),
   });
 }
 

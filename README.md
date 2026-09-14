@@ -4,12 +4,14 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 ## Direct source ownership
 
-- `src/content-source/page.md`: authored visible content, final answer markup, footer wording and page metadata.
+- `src/content-source/page.md`: authored visible body content, final answer markup and page metadata.
 - `src/styles/global.css`: the only authored stylesheet.
 - `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, offered services and machine-readable answer semantics.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
-- `src/data/semantic/authority-profile.json`: identity-link and alias selection policies plus clinic assertion provenance; selected identity facts must resolve to the graph.
+- `src/data/semantic/authority-profile.json`: identity-link and alias selection policies; selected identity facts must resolve to the graph.
+- `src/data/semantic/clinic-assertion-provenance.json`: explicit first-party provenance for owner-confirmed clinic assertions.
+- `src/components/SiteFooter.astro`: authored footer governance wording and machine-resource navigation.
 - `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
 - `src/data/release.json`: release and distribution lifecycle, canonical URL and minimal entity pointers; entity names, identifiers and clinic facts come from the graph.
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
@@ -26,9 +28,9 @@ The physician uses one canonical ID with `Person` and `IndividualPhysician` type
 
 Both inline graph profiles use `ids`, `maxBytes`, `nodes` and `typeProfiles`. An explicit `nodes[id]` policy defines that node's projection; otherwise its type policies supply the field selection. Authority roles use the same `nodes` map in both lanes. The compiler validates selections and relationships before emitting either graph.
 
-`deriveCanonicalAuthority` resolves entity facts and verifies their ownership relationships. `derivePublicationData` composes those facts with explicitly selected lifecycle fields for publication consumers. The lifecycle schema is checked before composition, so duplicate authored semantic fields cannot be silently overwritten. Publication data is a derived read model and is never written back to `release.json`.
+`deriveCanonicalGraphFacts` centralizes canonical graph traversal used by UI and validation consumers. `deriveCanonicalAuthority` resolves identity authority and verifies ownership relationships. `derivePublicationData` composes those facts with explicitly selected lifecycle and clinic-provenance fields for publication consumers. The lifecycle schema is checked before composition, so duplicate authored semantic fields cannot be silently overwritten. Publication data is a derived read model and is never written back to `release.json`.
 
-Visible answers have their final IDs and classes in `page.md`. The answer contract checks cardinality, text and placement within the corresponding question region; it does not insert text, add attributes or rewrite the page. Source and distribution text fingerprints remain independent acceptance checks.
+Visible answers have their final IDs and classes in `page.md`. The answer contract checks cardinality, text and placement within the corresponding question region; it does not insert text, add attributes or rewrite the page. Footer governance remains explicit Astro markup rather than an encoded/comment extraction protocol. Source and distribution text fingerprints remain independent acceptance checks.
 
 Mojavez record `19949827` is scoped to the physician's medical practice license, holder name and practice jurisdiction. The source observation and field-to-claim bindings are recorded in `.release/evidence/mojavez-19949827.json`; the historical evidence ID remains stable. This record does not explicitly establish ownership of the canonical Clinic. `npm run verify:mojavez` re-fetches the official record with no-cache headers and checks its visible labelled fields. It only reports; source or scope changes require a fresh review. A captured response can be checked with `npm run verify:mojavez -- --html /path/to/response.html`. Hermetic validators enforce the reviewed scope, subject, neutral title, URLs and projection selector; `npm run test:final-entity-contract` exercises their failure paths. These checks bind the observation to authored claims; CI does not independently certify the live source on every build.
 

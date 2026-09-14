@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -162,7 +162,7 @@ const [
   read("scripts/generate-descriptors.mjs"),
   read("scripts/generate-retrieval-projections.mjs"),
   read("astro.config.mjs"),
-  loadAuthoritativeRelease(root),
+  loadPublicationData(root),
   readJson("src/data/machine-resources.json"),
   readJson("src/data/semantic/head-profile.json"),
   readJson("src/data/semantic/support-profile.json"),
@@ -287,12 +287,13 @@ assert(
       documentHead,
     ) &&
     /deriveCanonicalAuthority/.test(documentHead) &&
+    /selectCanonicalSocialImage/.test(documentHead) &&
     /import\s*\{\s*canonicalGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
       documentHead,
     ) &&
     /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead) &&
     /exactLanguageLiteral\(\s*person\.name/.test(documentHead) &&
-    /exactText\(website\.name/.test(documentHead) &&
+    /typeof website\.name/.test(documentHead) &&
     /authority\.primaryEntity\.verifiedWebIdentityMesh/.test(documentHead) &&
     /authority\.clinicAuthority\.cid/.test(documentHead) &&
     !/documentHead\.(?:author|applicationName)/.test(documentHead) &&

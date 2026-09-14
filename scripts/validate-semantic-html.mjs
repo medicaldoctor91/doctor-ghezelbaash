@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { readFile } from "node:fs/promises";
 import { assembleCanonicalContent, physicianImageUrls } from "./lib/assemble-content.mjs";
 import {
@@ -28,7 +28,7 @@ const [
   readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"),
   readFile("src/data/semantic/head-profile.json", "utf8").then(JSON.parse),
   readFile("src/data/semantic/support-profile.json", "utf8").then(JSON.parse),
-  loadAuthoritativeRelease(),
+  loadPublicationData(),
 ]);
 const supportIds = supportProfile.ids;
 const knowledgeGraphDocument = JSON.parse(knowledgeGraphSource);

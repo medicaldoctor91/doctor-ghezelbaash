@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile, readdir, access } from "node:fs/promises";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
@@ -32,7 +32,7 @@ const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 const escapeRegExp = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const release = await loadAuthoritativeRelease(root),
+const release = await loadPublicationData(root),
   retrievalPolicy = await readJson(
     "src/data/retrieval/query-matrix-policy.json",
   ),
@@ -465,6 +465,7 @@ if (
   authority.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
   authority.releaseLifecycleSource !== "src/data/release.json" ||
   authority.authorityProfile !== "src/data/semantic/authority-profile.json" ||
+  authority.clinicAssertionProvenance !== "src/data/semantic/clinic-assertion-provenance.json" ||
   authority.resourceRegistry !== "src/data/machine-resources.json" ||
   authority.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||

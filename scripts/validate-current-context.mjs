@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
@@ -6,7 +6,7 @@ import { deriveEvidenceRegistry, evidenceAssessmentId } from "./lib/projection-c
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
-const release = await loadAuthoritativeRelease(root);
+const release = await loadPublicationData(root);
 const graph = JSON.parse(
   await readFile(
     path.join(root, "src/data/semantic/knowledge-graph.jsonld"),

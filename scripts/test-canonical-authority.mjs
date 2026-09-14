@@ -4,10 +4,11 @@ import { readFile } from "node:fs/promises";
 import { deriveCanonicalAuthority, derivePublicationData } from "../src/lib/canonical-authority.mjs";
 
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
-const [release, graph, profile] = await Promise.all([
+const [release, graph, profile, clinicProvenance] = await Promise.all([
   readJson("src/data/release.json"),
   readJson("src/data/semantic/knowledge-graph.jsonld"),
   readJson("src/data/semantic/authority-profile.json"),
+  readJson("src/data/semantic/clinic-assertion-provenance.json"),
 ]);
 const node = (source, id) => source["@graph"].find((candidate) => candidate["@id"] === id);
 
@@ -16,7 +17,7 @@ test("publication data follows graph facts while keeping lifecycle source unchan
   node(changed, release.primaryEntity.id).name.find((name) => name["@language"] === "en")["@value"] = "Test physician";
   node(changed, release.canonicalUrl + "#identifier-person-irimc").value = "123456";
   const before = JSON.stringify(release);
-  const data = derivePublicationData(release, changed, profile);
+  const data = derivePublicationData(release, changed, profile, clinicProvenance);
   assert.equal(data.primaryEntity.name, "Test physician");
   assert.equal(data.primaryEntity.irimc, "123456");
   assert.equal(data.release, release.release);
@@ -34,8 +35,15 @@ test("authored lifecycle data cannot supply semantic fields that a projection wo
   ]) {
     const source = structuredClone(release);
     change(source);
-    assert.throws(() => derivePublicationData(source, graph, profile), /must contain only/);
+    assert.throws(() => derivePublicationData(source, graph, profile, clinicProvenance), /must contain only/);
   }
+});
+
+
+test("authority selection policy rejects unrelated provenance fields", () => {
+  const mixed = structuredClone(profile);
+  mixed.clinicAssertionProvenance = clinicProvenance;
+  assert.throws(() => deriveCanonicalAuthority(release, graph, mixed), /Authority profile must contain only/);
 });
 
 test("identifier values require an actual typed relationship to the owning entity", () => {

@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { parse } from "parse5";
@@ -103,7 +103,7 @@ function extractJsonLd(html) {
 const attrMap = (node) =>
   new Map((node?.attrs || []).map((attr) => [attr.name, attr.value]));
 
-const release = await loadAuthoritativeRelease();
+const release = await loadPublicationData();
 if (release.schemaVersion !== `${SCHEMA_ORIGIN}version/${SCHEMA_RELEASE}/`)
   fail(
     `release.schemaVersion must match the pinned validator release ${SCHEMA_RELEASE}`,

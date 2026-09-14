@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 import { assertGooglebotResponseBudget } from "./lib/googlebot-budget.mjs";
 import path from "node:path";
@@ -66,7 +66,7 @@ const walkRelative = async (directory, prefix = "") => {
   }
   return files;
 };
-const release = await loadAuthoritativeRelease(root),
+const release = await loadPublicationData(root),
   inv = await readJson(path.join(data, "release-invariants.json")),
   headProfile = await readJson(path.join(data, "semantic/head-profile.json")),
   supportProfile = await readJson(

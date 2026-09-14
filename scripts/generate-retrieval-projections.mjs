@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -22,7 +22,7 @@ const write = async (f, s) => {
 const arr = (v) => (Array.isArray(v) ? v : v == null ? [] : [v]);
 const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 
-const release = await loadAuthoritativeRelease(root);
+const release = await loadPublicationData(root);
 const policy = await readJson("src/data/retrieval/query-matrix-policy.json");
 const graph = await readJson(canonicalSemanticSource(policy));
 const evidenceRegistry = deriveEvidenceRegistry(

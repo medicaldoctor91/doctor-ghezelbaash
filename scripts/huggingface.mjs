@@ -1,4 +1,4 @@
-import { loadAuthoritativeRelease } from "./lib/authoritative-release.mjs";
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import os from "node:os";
 import { createHash } from "node:crypto";
@@ -160,7 +160,7 @@ esac
 async function commandPrepare() {
   const [dist = "dist", hub = ".release/huggingface"] = process.argv.slice(2);
   const [release, authority, retrievalPolicy] = await Promise.all([
-    loadAuthoritativeRelease(),
+    loadPublicationData(),
     readJson(".release/policy/authority-surface-contract.json"),
     readJson("src/data/retrieval/query-matrix-policy.json"),
   ]);
@@ -323,7 +323,7 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
 
 async function commandVerify() {
   const [release, authority, retrievalPolicy] = await Promise.all([
-    loadAuthoritativeRelease(),
+    loadPublicationData(),
     readJson(".release/policy/authority-surface-contract.json"),
     readJson("src/data/retrieval/query-matrix-policy.json"),
   ]);

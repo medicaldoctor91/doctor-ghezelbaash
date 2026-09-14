@@ -5,27 +5,6 @@ lang: "fa-IR"
 dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 ---
-<!--SITE_FOOTER_GOVERNANCE_START
-  <details class="editorial-governance" id="privacy-and-terms">
-    <summary>بازبینی پزشکی، حریم خصوصی و شرایط استفاده</summary>
-    <p>
-      محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین
-      معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی
-      شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام
-      پزشکی، ارزیابی حضوری فوری اولویت دارد.
-    </p>
-    <p>
-      امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش
-      ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره
-      نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع
-      <a href="https://www.google.com/help/terms_maps/" rel="external noopener"
-        >شرایط Google Maps</a
-      > و <a href="https://policies.google.com/privacy" rel="external noopener"
-        >خط‌مشی حریم خصوصی Google</a
-      > است.
-    </p>
-  </details>
-SITE_FOOTER_GOVERNANCE_END-->
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">
 <h1 class="hero-title" id="saeed-ghezelbash"><span class="hero-title__name" itemprop="name">دکتر سعید قزلباش</span><span class="hero-title__semantic-separator">؛ </span><span class="hero-title__descriptor" id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span>
