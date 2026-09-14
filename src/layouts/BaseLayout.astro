@@ -42,6 +42,10 @@ if (!['ltr', 'rtl', 'auto'].includes(dir)) {
   throw new Error(`Invalid document direction: ${dir}`);
 }
 const noindex = /(?:^|,)\s*noindex\b/i.test(robots);
+const footerGovernance = frontmatter.footerGovernance;
+if (!noindex && !footerGovernance) {
+  throw new Error('Indexable document frontmatter requires footer governance');
+}
 if (!Astro.site) {
   throw new Error('Astro site URL is required for canonical resolution');
 }
@@ -150,7 +154,7 @@ const googlePageMicrodata = isMain
         set:html={supportGraphRaw}
       ></script>
     )}
-    {!noindex && <SiteFooter governance={frontmatter.footerGovernance} />}
+    {!noindex && footerGovernance && <SiteFooter governance={footerGovernance} />}
     {!noindex && <FloatingActionDock />}
     {isMain && <GuideNavigator />}
   </body>
