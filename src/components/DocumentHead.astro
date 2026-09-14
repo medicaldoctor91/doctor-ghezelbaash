@@ -22,7 +22,7 @@ type DiscoveryLink = {
   color?: string;
 };
 
-type GraphNode = Record<string, unknown> & { '@id': string };
+type GraphNode = Record<string, any> & { '@id': string };
 
 interface Props {
   title: string;
@@ -55,6 +55,7 @@ if (
   throw new Error('Canonical robots policy must declare max-image-preview:large');
 }
 
+const graphNodes = canonicalGraph['@graph'] as GraphNode[];
 const { byId: nodeById } = indexCanonicalGraph(canonicalGraph) as {
   byId: Map<string, GraphNode>;
 };
@@ -73,6 +74,15 @@ const exactText = (value: unknown, label: string) => {
   }
   return value;
 };
+const quantityValue = (value: unknown, label: string) => {
+  const numeric = Number((value as { value?: unknown } | undefined)?.value);
+  if (!Number.isInteger(numeric) || numeric < 1) {
+    throw new Error(`Canonical graph must define one positive ${label}`);
+  }
+  return numeric;
+};
+const nodeHasType = (node: GraphNode, type: string) =>
+  (Array.isArray(node['@type']) ? node['@type'] : [node['@type']]).includes(type);
 
 const person = authority.person as GraphNode;
 const clinic = authority.clinic as GraphNode;
@@ -118,9 +128,29 @@ const openStreetMapUrl = exactUrl(
   /^https:\/\/www\.openstreetmap\.org\/node\/\d+$/,
   'clinic OpenStreetMap identifier',
 );
+const socialImageCandidates = graphNodes.filter(
+  (node) =>
+    nodeHasType(node, 'ImageObject') &&
+    quantityValue(node.width, `${node['@id']} width`) === 1200 &&
+    quantityValue(node.height, `${node['@id']} height`) === 630 &&
+    typeof node.contentUrl === 'string' &&
+    new URL(node.contentUrl).origin === new URL(release.canonicalUrl).origin,
+);
+if (socialImageCandidates.length !== 1) {
+  throw new Error(
+    `Canonical graph must define exactly one 1200x630 social ImageObject; found ${socialImageCandidates.length}`,
+  );
+}
+const [socialImage] = socialImageCandidates;
+const og = Object.freeze({
+  ...documentHead.openGraph,
+  image: exactText(socialImage.contentUrl, 'social ImageObject contentUrl'),
+  imageType: exactText(socialImage.encodingFormat, 'social ImageObject encodingFormat'),
+  imageWidth: quantityValue(socialImage.width, 'social ImageObject width'),
+  imageHeight: quantityValue(socialImage.height, 'social ImageObject height'),
+});
 
 const faviconPng = '/favicon.png';
-const og = documentHead.openGraph;
 const canonical = release.canonicalUrl;
 const versionDoi = release.dataset.zenodo.versionDoi;
 const physicianId = authority.primaryEntity.id;
