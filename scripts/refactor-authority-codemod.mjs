@@ -45,4 +45,28 @@ if (
 )
   changed.push("scripts/validate-architecture.mjs");
 
+if (
+  await update("scripts/validate-source.mjs", (source) =>
+    exactReplace(
+      source,
+      `if (\n  authority.identitySource !== "src/data/release.json" ||\n  authority.resourceRegistry !== "src/data/machine-resources.json" ||\n  authority.retrievalPolicySource !==\n    "src/data/retrieval/query-matrix-policy.json" ||\n  hf.retrievalPolicyRef !== authority.retrievalPolicySource ||\n  platform.canonicalUrl !== release.canonicalUrl ||\n  platform.repository !==\n    release.dataset.github.repository.replace(/^https:\\/\\/github\\.com\\//, "")\n)\n  fail("Platform/authority policy source drift");`,
+      `if (\n  authority.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||\n  authority.releaseLifecycleSource !== "src/data/release.json" ||\n  authority.authorityProfile !== "src/data/semantic/authority-profile.json" ||\n  authority.resourceRegistry !== "src/data/machine-resources.json" ||\n  authority.retrievalPolicySource !==\n    "src/data/retrieval/query-matrix-policy.json" ||\n  retrievalPolicy.identitySource !== authority.identitySource ||\n  retrievalPolicy.semanticSource !== authority.identitySource ||\n  retrievalPolicy.releaseLifecycleSource !== authority.releaseLifecycleSource ||\n  retrievalPolicy.authorityProfile !== authority.authorityProfile ||\n  hf.retrievalPolicyRef !== authority.retrievalPolicySource ||\n  platform.canonicalUrl !== release.canonicalUrl ||\n  platform.repository !==\n    release.dataset.github.repository.replace(/^https:\\/\\/github\\.com\\//, "")\n)\n  fail("Platform/authority policy source drift");`,
+      "Source authority policy",
+    ),
+  )
+)
+  changed.push("scripts/validate-source.mjs");
+
+if (
+  await update("scripts/validate-release-contract.mjs", (source) =>
+    exactReplace(
+      source,
+      `if (\n  authorityPolicy.identitySource !== "src/data/release.json" ||\n  authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||\n  authorityPolicy.retrievalPolicySource !==\n    "src/data/retrieval/query-matrix-policy.json" ||\n  hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource\n)\n  fail("Authority source reference drift");`,
+      `if (\n  authorityPolicy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||\n  authorityPolicy.releaseLifecycleSource !== "src/data/release.json" ||\n  authorityPolicy.authorityProfile !== "src/data/semantic/authority-profile.json" ||\n  authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||\n  authorityPolicy.retrievalPolicySource !==\n    "src/data/retrieval/query-matrix-policy.json" ||\n  retrievalPolicy.identitySource !== authorityPolicy.identitySource ||\n  retrievalPolicy.semanticSource !== authorityPolicy.identitySource ||\n  retrievalPolicy.releaseLifecycleSource !== authorityPolicy.releaseLifecycleSource ||\n  retrievalPolicy.authorityProfile !== authorityPolicy.authorityProfile ||\n  hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource\n)\n  fail("Authority source reference drift");`,
+      "Release authority policy",
+    ),
+  )
+)
+  changed.push("scripts/validate-release-contract.mjs");
+
 console.log(JSON.stringify({ changed }));
