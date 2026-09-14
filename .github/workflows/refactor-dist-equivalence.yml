@@ -49,6 +49,36 @@ jobs:
           import fs from 'node:fs';
           const file = 'src/content-source/page.md';
           let source = fs.readFileSync(file, 'utf8');
+          const governanceStart = '<!--SITE_FOOTER_GOVERNANCE_START\n';
+          const governanceEnd = '\nSITE_FOOTER_GOVERNANCE_END-->';
+          const governanceHtml = `  <details class="editorial-governance" id="privacy-and-terms">
+    <summary>بازبینی پزشکی، حریم خصوصی و شرایط استفاده</summary>
+    <p>
+      محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین
+      معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی
+      شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام
+      پزشکی، ارزیابی حضوری فوری اولویت دارد.
+    </p>
+    <p>
+      امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش
+      ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره
+      نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع
+      <a href="https://www.google.com/help/terms_maps/" rel="external noopener"
+        >شرایط Google Maps</a
+      > و <a href="https://policies.google.com/privacy" rel="external noopener"
+        >خط‌مشی حریم خصوصی Google</a
+      > است.
+    </p>
+  </details>`;
+          if (!source.includes(governanceStart)) {
+            const boundary = '\n---\n';
+            const count = source.split(boundary).length - 1;
+            if (count !== 1) throw new Error(`footer governance frontmatter boundary drift: ${count}`);
+            source = source.replace(boundary, `${boundary}${governanceStart}${governanceHtml}${governanceEnd}\n`);
+          } else {
+            if (source.split(governanceStart).length - 1 !== 1 || source.split(governanceEnd).length - 1 !== 1)
+              throw new Error('footer governance source block duplication');
+          }
           const replacements = [
             [
               '{{CLINIC_HOURS_COMPACT_FA}}',
