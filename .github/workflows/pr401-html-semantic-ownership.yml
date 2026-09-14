@@ -24,7 +24,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 -d .github/pr401-html-ownership.patch.gz.b64 > /tmp/pr401.patch.gz
+          cat .github/pr401-html-ownership.patch.gz.b64 .github/pr401-html-ownership.patch.part01 .github/pr401-html-ownership.patch.part02 > /tmp/pr401.patch.gz.b64
+          test "$(wc -c < /tmp/pr401.patch.gz.b64)" -eq 20196
+          base64 -d /tmp/pr401.patch.gz.b64 > /tmp/pr401.patch.gz
           echo '20503dbbff01321b00f876e625bf705bb4e16b7084d4871404bebd60858fefa0  /tmp/pr401.patch.gz' | sha256sum -c -
           gzip -dc /tmp/pr401.patch.gz > /tmp/pr401.patch
           echo 'e95a94500d152754a7f12e55015ce520c822388f172ceeae6651e6a827f96da5  /tmp/pr401.patch' | sha256sum -c -
@@ -52,6 +54,8 @@ jobs:
           set -euo pipefail
           rm .github/workflows/pr401-html-semantic-ownership.yml
           rm .github/pr401-html-ownership.patch.gz.b64
+          rm .github/pr401-html-ownership.patch.part01
+          rm .github/pr401-html-ownership.patch.part02
           git add -A
           git diff --cached --check
           test -n "$(git diff --cached --name-only)"
