@@ -1,0 +1,40 @@
+name: PR401 reference calibration refresh
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/single-source-truth-no-dist-drift
+          fetch-depth: 1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Install reference Chromium and fonts
+        run: npx playwright install --with-deps chromium
+      - name: Measure and commit calibration only
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run render:calibration:update
+          git add src/data/render-calibration.json
+          git diff --cached --check
+          test -n "$(git diff --cached --name-only)"
+          test "$(git diff --cached --name-only)" = "src/data/render-calibration.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -m 'chore(calibration): bind measured render provenance'
+          git push origin HEAD:refactor/single-source-truth-no-dist-drift
