@@ -1,0 +1,102 @@
+name: PR401 source cleanup gate v2
+
+on:
+  push:
+    branches: [automation/pr401-source-cleanup-v2-20260914]
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-stage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout isolated automation payload
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: automation
+          persist-credentials: false
+
+      - name: Checkout exact PR head candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 69e5ddfbf7b81f502bfa4019c9bef37b81ea2ad7
+          path: target
+          fetch-depth: 0
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: target/.nvmrc
+          cache: npm
+          cache-dependency-path: target/package-lock.json
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Provision media validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
+
+      - name: Reconstruct and verify reviewed cleanup patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat automation/.automation/pr401-cleanup/part-*.b64 | base64 -d | gunzip > /tmp/pr401-cleanup.patch
+          echo "9a0b1938e8d8cebdb163f980188860c87643700f3d121ad0e06573d9e7ee25ac  /tmp/pr401-cleanup.patch" | sha256sum -c -
+          test "$(git -C target rev-parse HEAD)" = "69e5ddfbf7b81f502bfa4019c9bef37b81ea2ad7"
+          git -C target apply --check --whitespace=error /tmp/pr401-cleanup.patch
+
+      - name: Install exact dependencies
+        working-directory: target
+        run: npm ci
+
+      - name: Build baseline and freeze DIST digests
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build
+          (cd dist && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) > /tmp/baseline-dist.sha256
+          find dist -type f | LC_ALL=C sort > /tmp/baseline-dist.files
+          rm -rf dist release .generated .release/runtime .release/huggingface
+
+      - name: Apply five source cleanups
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --index --whitespace=error /tmp/pr401-cleanup.patch
+          git diff --cached --check
+          test -z "$(git diff --name-only)"
+          git diff --cached --stat
+
+      - name: Build candidate and require byte-identical DIST
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build
+          (cd dist && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) > /tmp/candidate-dist.sha256
+          find dist -type f | LC_ALL=C sort > /tmp/candidate-dist.files
+          diff -u /tmp/baseline-dist.files /tmp/candidate-dist.files
+          diff -u /tmp/baseline-dist.sha256 /tmp/candidate-dist.sha256
+          test -z "$(git diff --name-only)"
+          echo "DIST_BYTE_IDENTITY_PASS $(wc -l < /tmp/candidate-dist.sha256) files"
+
+      - name: Commit validated cleanup to candidate ref
+        working-directory: target
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Dr. Saeed Ghezelbaash source automation"
+          git config user.email "medicaldoctor91@users.noreply.github.com"
+          git commit -m "refactor: simplify canonical source ownership"
+          test "$(git rev-parse HEAD^)" = "69e5ddfbf7b81f502bfa4019c9bef37b81ea2ad7"
+          git push origin HEAD:refs/heads/automation/pr401-cleanup-candidate --force-with-lease=refs/heads/automation/pr401-cleanup-candidate:69e5ddfbf7b81f502bfa4019c9bef37b81ea2ad7
+          echo "CANDIDATE_SHA=$(git rev-parse HEAD)"
