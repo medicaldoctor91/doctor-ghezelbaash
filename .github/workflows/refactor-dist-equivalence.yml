@@ -43,65 +43,14 @@ jobs:
         working-directory: candidate
         shell: bash
         run: |
+          set -euo pipefail
           node scripts/refactor-authority-codemod.mjs
-          rm -f .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
-          node --input-type=module <<'JS'
-          import fs from 'node:fs';
-          const file = 'src/content-source/page.md';
-          let source = fs.readFileSync(file, 'utf8');
-          const governanceStart = '<!--SITE_FOOTER_GOVERNANCE_START\n';
-          const governanceEnd = '\nSITE_FOOTER_GOVERNANCE_END-->';
-          const governanceHtml = `  <details class="editorial-governance" id="privacy-and-terms">
-    <summary>بازبینی پزشکی، حریم خصوصی و شرایط استفاده</summary>
-    <p>
-      محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین
-      معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی
-      شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام
-      پزشکی، ارزیابی حضوری فوری اولویت دارد.
-    </p>
-    <p>
-      امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش
-      ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره
-      نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع
-      <a href="https://www.google.com/help/terms_maps/" rel="external noopener"
-        >شرایط Google Maps</a
-      > و <a href="https://policies.google.com/privacy" rel="external noopener"
-        >خط‌مشی حریم خصوصی Google</a
-      > است.
-    </p>
-  </details>`;
-          if (!source.includes(governanceStart)) {
-            const boundary = '\n---\n';
-            const count = source.split(boundary).length - 1;
-            if (count !== 1) throw new Error(`footer governance frontmatter boundary drift: ${count}`);
-            source = source.replace(boundary, `${boundary}${governanceStart}${governanceHtml}${governanceEnd}\n`);
-          } else {
-            if (source.split(governanceStart).length - 1 !== 1 || source.split(governanceEnd).length - 1 !== 1)
-              throw new Error('footer governance source block duplication');
-          }
-          const replacements = [
-            [
-              '{{CLINIC_HOURS_COMPACT_FA}}',
-              'شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}؛ جمعه تعطیل',
-              'hero clinic hours wording',
-            ],
-            [
-              '{{CLINIC_HOURS_WEEKDAYS_FA}}؛ <strong>{{CLINIC_FRIDAY_CLOSED_FA}}</strong>',
-              'شنبه تا پنجشنبه، {{CLINIC_HOURS_OPEN_FA}} تا {{CLINIC_HOURS_CLOSE_FA}}؛ <strong>جمعه تعطیل.</strong>',
-              'clinic facts hours wording',
-            ],
-          ];
-          for (const [before, after, label] of replacements) {
-            if (source.includes(after)) {
-              if (source.includes(before)) throw new Error(`${label}: old and new forms coexist`);
-              continue;
-            }
-            const count = source.split(before).length - 1;
-            if (count !== 1) throw new Error(`${label}: expected one source occurrence, found ${count}`);
-            source = source.replace(before, after);
-          }
-          fs.writeFileSync(file, source);
-          JS
+          node scripts/materialize-page-owned-content.mjs
+          rm -f \
+            .github/workflows/refactor-authority-audit.yml \
+            .github/workflows/refactor-dist-equivalence.yml \
+            scripts/refactor-authority-codemod.mjs \
+            scripts/materialize-page-owned-content.mjs
           node --input-type=module <<'JS'
           import fs from 'node:fs';
           import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
@@ -127,12 +76,16 @@ jobs:
         working-directory: candidate
         shell: bash
         run: |
-          git checkout -- .github/workflows/refactor-authority-audit.yml .github/workflows/refactor-dist-equivalence.yml
+          set -euo pipefail
           rm src/data/visible-text-contract.json
           node scripts/validate-visible-text.mjs --initialize-baseline dist --acknowledge-frozen-text
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
+          git add -A \
+            .github/workflows/refactor-authority-audit.yml \
+            .github/workflows/refactor-dist-equivalence.yml \
+            scripts/refactor-authority-codemod.mjs \
+            scripts/materialize-page-owned-content.mjs \
             scripts/validate-google-structured-data.mjs \
             scripts/validate-architecture.mjs \
             scripts/validate-source.mjs \
