@@ -1,0 +1,78 @@
+name: PR401 one-shot semantic consolidation
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr401-one-shot-semantic-consolidation
+  cancel-in-progress: false
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/single-source-truth-no-dist-drift
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+      - name: Apply exact graph-authority consolidation
+        run: python .release/migrations/pr401-consolidate.py
+      - name: Run dependency-free authority gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test scripts/test-canonical-authority.mjs
+          node --test scripts/test-schemaorg-vocabulary.mjs
+          node scripts/publication-context.mjs get clinic.placeId
+          python scripts/zenodo_release.py self-test-publication-context
+          node scripts/validate-publication-consumers.mjs
+          for file in \
+            src/lib/canonical-graph-facts.mjs \
+            src/lib/canonical-authority.mjs \
+            scripts/lib/publication-context.mjs \
+            scripts/lib/projection-context.mjs \
+            scripts/lib/assemble-content.mjs \
+            src/lib/semantic-projection.mjs \
+            scripts/lib/schemaorg-vocabulary.mjs \
+            scripts/test-canonical-authority.mjs \
+            scripts/test-schemaorg-vocabulary.mjs \
+            scripts/validate-architecture.mjs \
+            scripts/validate-source.mjs \
+            scripts/validate-release-contract.mjs; do
+            node --check "$file"
+          done
+          if rg -n "authority-profile|clinic-assertion-provenance|authorityProfile|clinicAssertionProvenance|verifiedIdentityExpansion" . \
+            --glob '!.release/migrations/**' --glob '!.github/workflows/pr401-consolidate.yml'; then
+            echo "::error::stale auxiliary authority reference remains"
+            exit 1
+          fi
+      - name: Commit only the validated source migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --quiet && { echo "::error::no migration diff"; exit 1; }
+          git config user.name "ghezelbaash-source-refactor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "refactor: consolidate semantic authority into canonical graph"
+      - name: Publish migration to the same PR branch only
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refactor/single-source-truth-no-dist-drift
+          test "$(git rev-parse origin/refactor/single-source-truth-no-dist-drift)" = "$GITHUB_SHA"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" \
+            push origin HEAD:refactor/single-source-truth-no-dist-drift
