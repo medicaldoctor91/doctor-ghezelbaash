@@ -7,7 +7,7 @@ import {
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
 import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
-import { headGraph } from '../lib/knowledge-graph';
+import { canonicalGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
 import {
   exactLanguageLiteral,
@@ -32,7 +32,7 @@ interface Props {
   isMain: boolean;
 }
 
-const authority = deriveCanonicalAuthority(release, headGraph, authorityProfile);
+const authority = deriveCanonicalAuthority(release, canonicalGraph, authorityProfile);
 const { title, description, robots, canonicalURL, isMain } = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {
@@ -45,7 +45,7 @@ if (
   throw new Error('Canonical robots policy must declare max-image-preview:large');
 }
 
-const { byId: nodeById } = indexCanonicalGraph(headGraph) as {
+const { byId: nodeById } = indexCanonicalGraph(canonicalGraph) as {
   byId: Map<string, GraphNode>;
 };
 const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
@@ -53,13 +53,13 @@ const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
     (item): item is string => typeof item === 'string' && pattern.test(item),
   );
   if (matches.length !== 1) {
-    throw new Error(`Head graph must define one ${label}`);
+    throw new Error(`Canonical graph must define one ${label}`);
   }
   return matches[0];
 };
 const exactText = (value: unknown, label: string) => {
   if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-    throw new Error(`Head graph must define one normalized ${label}`);
+    throw new Error(`Canonical graph must define one normalized ${label}`);
   }
   return value;
 };
