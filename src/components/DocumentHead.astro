@@ -1,12 +1,12 @@
 ---
 import documentHead from '../data/document-head.json';
-import rawRelease from '../data/release.json';
+import release from '../data/release.json';
 import authorityProfile from '../data/semantic/authority-profile.json';
 import {
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
-import { hydrateReleaseAuthority } from '../lib/canonical-authority.mjs';
+import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
 import { headGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
 import {
@@ -32,7 +32,7 @@ interface Props {
   isMain: boolean;
 }
 
-const release = hydrateReleaseAuthority(rawRelease, headGraph, authorityProfile);
+const authority = deriveCanonicalAuthority(release, headGraph, authorityProfile);
 const { title, description, robots, canonicalURL, isMain } = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {
@@ -47,11 +47,6 @@ if (
 
 const { byId: nodeById } = indexCanonicalGraph(headGraph) as {
   byId: Map<string, GraphNode>;
-};
-const requireNode = (id: string, label: string) => {
-  const node = nodeById.get(id);
-  if (!node) throw new Error(`Head graph missing ${label}: ${id}`);
-  return node;
 };
 const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
   const matches = (Array.isArray(value) ? value : [value]).filter(
@@ -69,9 +64,9 @@ const exactText = (value: unknown, label: string) => {
   return value;
 };
 
-const person = requireNode(release.primaryEntity.id, 'canonical person');
-const clinic = requireNode(release.clinic.id, 'canonical clinic');
-const website = requireNode(`${release.canonicalUrl}#website`, 'canonical WebSite');
+const person = authority.person as GraphNode;
+const clinic = authority.clinic as GraphNode;
+const website = authority.website as GraphNode;
 const profileFirstName = exactLanguageLiteral(
   person.givenName,
   'en',
@@ -118,6 +113,8 @@ const faviconPng = '/favicon.png';
 const og = documentHead.openGraph;
 const canonical = release.canonicalUrl;
 const versionDoi = release.dataset.zenodo.versionDoi;
+const physicianId = authority.primaryEntity.id;
+const clinicId = authority.clinicAuthority.id;
 
 const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   if (typeof resource.headRel !== 'string' || !resource.headRel) {
@@ -134,18 +131,18 @@ const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   };
 });
 const identityLinks: DiscoveryLink[] =
-  release.primaryEntity.verifiedWebIdentityMesh.map((href: string) => ({
+  authority.primaryEntity.verifiedWebIdentityMesh.map((href: string) => ({
     href,
     rel: 'me',
   }));
 const discoveryLinks: DiscoveryLink[] = [
   ...machineLinks,
-  { href: release.primaryEntity.id, rel: 'author' },
-  { href: release.primaryEntity.id, rel: 'about' },
-  { href: release.clinic.id, rel: 'about' },
+  { href: physicianId, rel: 'author' },
+  { href: physicianId, rel: 'about' },
+  { href: clinicId, rel: 'about' },
   ...identityLinks,
   {
-    href: `https://www.google.com/maps?cid=${release.clinic.cid}`,
+    href: `https://www.google.com/maps?cid=${authority.clinicAuthority.cid}`,
     rel: 'about',
     title: 'Google Maps — clinic',
   },
