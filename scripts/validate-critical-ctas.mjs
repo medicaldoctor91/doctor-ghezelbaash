@@ -8,24 +8,20 @@ import {
   validateReputationObservation,
 } from "../src/lib/reputation-observation.mjs";
 
-const [quick, runtime, observationSource] = await Promise.all([
+const [quick, runtime] = await Promise.all([
   readFile("src/components/FloatingActionDock.astro", "utf8"),
   readFile("src/components/GuideNavigator.astro", "utf8"),
-  readFile("src/data/reputation-observation.json", "utf8"),
 ]);
 const release = await loadPublicationData();
 const graph = JSON.parse(
   await readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"),
 );
-const observation = validateReputationObservation(
-  JSON.parse(observationSource),
-  release,
-);
+const observation = validateReputationObservation(graph, release);
 const redirectRegistry = await loadRedirectRegistry();
 const site = deriveSiteData(release, graph);
 const { content: source } = await assembleCanonicalContent({ graph });
 assertRenderedClinicReputation(source, {
-  observation,
+  graph,
   release,
   mapsUrl: site.mapsUrl,
 });

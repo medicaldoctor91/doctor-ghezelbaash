@@ -18,6 +18,14 @@ interface Frontmatter {
   robots: string;
   socialImageAlt?: string;
   socialAlternateLocales?: string[];
+  footerGovernance?: {
+    summary: string;
+    medicalNotice: string;
+    reputationLead: string;
+    mapsTerms: { href: string; label: string };
+    privacyPolicy: { href: string; label: string };
+    tail: string;
+  };
 }
 
 interface Props {
@@ -142,7 +150,7 @@ const googlePageMicrodata = isMain
         set:html={supportGraphRaw}
       ></script>
     )}
-    {!noindex && <SiteFooter />}
+    {!noindex && <SiteFooter governance={frontmatter.footerGovernance} />}
     {!noindex && <FloatingActionDock />}
     {isMain && <GuideNavigator />}
   </body>

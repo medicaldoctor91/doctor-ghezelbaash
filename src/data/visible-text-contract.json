@@ -3,27 +3,40 @@
   "policy": "closed-visible-text; NFC + whitespace-collapse per node; text-node sequence and reading order frozen; ID changes and heading levels permitted; raw source hashes record provenance",
   "sourceCommit": "bbff2475dec9dce02d8edcf0482b64937f8f728e",
   "sourceRawSha256": {
-    "src/content-source/page.md": "661c0fda293ec307a0b1965363a70baa6f29053a220f4b41949b7dc1e5ea6fa0",
-    "src/data/document-head.json": "72e153c6ab3f694e55e1f87ef1db4dfd281902907d08256a06e53725d1d2171a",
+    "src/content-source/page.md": "f382c8f8372ce82de26b563fffa27e198fbbd64bd045cd4e2fe136b0e0e5198f",
+    "src/data/document-head.json": "ddf6cad393242892dc01c0daeed904dbdc51f1004ddb126e3417fe5443602f3e",
     "src/data/media-metadata.json": "bb9ff57beed0a33dcfc7d35e2e45503d6cdef00d694b5b0a876d028d7981bf66",
     "src/data/release.json": "8f841ddb5c9aa82a9f118a8c27359c91835afa6deb3bed73e113c889d5edf528",
-    "src/data/reputation-observation.json": "241c6caefc2af1e000260cb5154ed0b81fbfd2cc0367adb62a3e82b7915d0385",
-    "src/data/semantic/knowledge-graph.jsonld": "0037b21b3cc3118c7ee39ac6a57a0803e56af367b4a15ac99953b1751f01317b",
-    "src/components/GuideNavigator.astro": "1c48729d4887aa3ac6576b707a3bb925369952a244e7b1646788923eab5fea41",
-    "src/components/SiteFooter.astro": "b2ddfb1bb4a93f26e7fce2c2bcf15b47b0ff33d35d66be59af0cc49bc7db36b5",
+    "src/data/semantic/knowledge-graph.jsonld": "7032b4e9c9d2cf46b0db06c2aa653ab6e8bc586fc6992c4ee7c68281c2d109ed",
+    "src/components/GuideNavigator.astro": "f0005a00f1ebaac91361a0f16104451586f14d31d9b36e3bc06738d6a96baf72",
+    "src/components/SiteFooter.astro": "817f1763152a86cbe71847e7b3508a5cd1bf9d6139327ec39c1b5d585a511b5b",
     "src/components/FloatingActionDock.astro": "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e",
-    "src/components/DocumentHead.astro": "3e5e32d7b5127929a2cec98aba8e5b743b69d0790b4cc51857d88317eb1ccda4",
-    "src/layouts/BaseLayout.astro": "3c7d3f547b3fe0d06e3a8256390dccf5ef9eb298a8207b673657b9c6374780c1",
+    "src/components/DocumentHead.astro": "83d105b711328373ddd64f2506d3cef48cdc59c45899866dc6aa83e8462571e9",
+    "src/layouts/BaseLayout.astro": "2b0d8404bdf268fd4bf4bc3e11b693a0fee8b3644f265fd19e2192f3bdc657bd",
     "src/pages/404.astro": "9d41f9d5091b0203998e4fc75533d1205c8d9eac79311df4534589fa20a980f6"
   },
   "source": {
     "page": {
       "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
       "description": "بوتاکس، فیلر، ژل لب، لیفت نخ، کانتورینگ، مزوتراپی یا پی‌آر‌پی؟ انتخاب بهترین روش بر اساس علت، مدیریت عوارض درمان‌های قبلی و اصلاح نتایج نامطلوب درمان‌های زیبایی",
-      "textSha256": "be7b24f4c158255a28736e927b4a1c4406d6345911a363f3f2a86448d3e69eed",
+      "footerGovernance": {
+        "summary": "بازبینی پزشکی، حریم خصوصی و شرایط استفاده",
+        "medicalNotice": "محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام پزشکی، ارزیابی حضوری فوری اولویت دارد.",
+        "reputationLead": "امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع",
+        "mapsTerms": {
+          "href": "https://www.google.com/help/terms_maps/",
+          "label": "شرایط Google Maps"
+        },
+        "privacyPolicy": {
+          "href": "https://policies.google.com/privacy",
+          "label": "خط‌مشی حریم خصوصی Google"
+        },
+        "tail": "است."
+      },
+      "textSha256": "eec45821ced1ee718688f722137c6f9026d98bacd3755903d39e194159597977",
       "attributesSha256": "9dd5886ba7b13f754b9d3ad8a82c93142f396d5205a20bfaee509e79c02f1165",
-      "textNodeCount": 6100,
-      "textNodeSequenceSha256": "6fb7af3af541959b688d3e202aeb82480b084d7ad9d05097f970dfc648975bc0"
+      "textNodeCount": 6106,
+      "textNodeSequenceSha256": "1a60e884e01158398e7ee73335d480f195a2465c1ac50375870b81c8cef50da7"
     },
     "documentHead": {
       "appleMobileWebAppTitle": "دکتر قزلباش",

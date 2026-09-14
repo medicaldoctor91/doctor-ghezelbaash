@@ -117,6 +117,7 @@ export async function sourceContract(root) {
   const lang = frontmatterValue('lang');
   const socialImageAlt = frontmatterValue('socialImageAlt');
   const socialAlternateLocales = frontmatterValue('socialAlternateLocales');
+  const footerGovernance = frontmatterValue('footerGovernance');
   const graph = JSON.parse(await readFile(path.join(root, 'src/data/semantic/knowledge-graph.jsonld'), 'utf8'));
   const release = JSON.parse(await readFile(path.join(root, 'src/data/release.json'), 'utf8'));
   const documentHeadPolicy = JSON.parse(await readFile(path.join(root, 'src/data/document-head.json'), 'utf8'));
@@ -158,6 +159,23 @@ export async function sourceContract(root) {
   if (typeof socialImageAlt !== 'string' || !socialImageAlt.trim()) {
     throw new Error('Visible source socialImageAlt missing');
   }
+  const governanceStrings = [
+    footerGovernance?.summary,
+    footerGovernance?.medicalNotice,
+    footerGovernance?.reputationLead,
+    footerGovernance?.mapsTerms?.href,
+    footerGovernance?.mapsTerms?.label,
+    footerGovernance?.privacyPolicy?.href,
+    footerGovernance?.privacyPolicy?.label,
+    footerGovernance?.tail,
+  ];
+  if (
+    governanceStrings.some(
+      (value) => typeof value !== 'string' || !value.trim() || value !== value.trim(),
+    )
+  ) {
+    throw new Error('Visible source footerGovernance is incomplete or unnormalized');
+  }
   const documentHead = {
     appleMobileWebAppTitle: documentHeadPolicy.appleMobileWebAppTitle,
     themeColor: documentHeadPolicy.themeColor,
@@ -181,11 +199,11 @@ export async function sourceContract(root) {
     const vtt = await readFile(file, 'utf8');
     captions[path.relative(root, file)] = vtt.split(/\r?\n\s*\r?\n/u).filter((block) => block.includes('-->')).map((block) => normalizeText(block.split(/\r?\n/u).slice(block.split(/\r?\n/u).findIndex((line) => line.includes('-->')) + 1).join(' ')));
   }
-  return { page: { ...frontmatter, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead, answers, runtime, captions };
+  return { page: { ...frontmatter, footerGovernance, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead, answers, runtime, captions };
 }
 
 export async function sourceRawHashes(root) {
-  const files = ['src/content-source/page.md', 'src/data/document-head.json', 'src/data/media-metadata.json', 'src/data/release.json', 'src/data/reputation-observation.json', 'src/data/semantic/knowledge-graph.jsonld', 'src/components/GuideNavigator.astro', 'src/components/SiteFooter.astro', 'src/components/FloatingActionDock.astro', 'src/components/DocumentHead.astro', 'src/layouts/BaseLayout.astro', 'src/pages/404.astro'];
+  const files = ['src/content-source/page.md', 'src/data/document-head.json', 'src/data/media-metadata.json', 'src/data/release.json', 'src/data/semantic/knowledge-graph.jsonld', 'src/components/GuideNavigator.astro', 'src/components/SiteFooter.astro', 'src/components/FloatingActionDock.astro', 'src/components/DocumentHead.astro', 'src/layouts/BaseLayout.astro', 'src/pages/404.astro'];
   return Object.fromEntries(await Promise.all(files.map(async (file) => [file, digest(await readFile(path.join(root, file), 'utf8'))])));
 }
 

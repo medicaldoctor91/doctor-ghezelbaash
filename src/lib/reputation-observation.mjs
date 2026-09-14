@@ -1,50 +1,100 @@
-const SCHEMA_VERSION = "1.0";
-const SOURCE = "Google Places API (New)";
-const SLOT = '<span data-clinic-reputation-slot></span>';
+import { indexCanonicalGraph } from "./graph-core.mjs";
 
+const SCHEMA_VERSION = "2.0";
+const SOURCE = "Google Places API (New)";
+const RATING_SUFFIX = "observation-clinic-google-maps-rating-current";
+const REVIEW_COUNT_SUFFIX = "observation-clinic-google-maps-review-count-current";
+const EVIDENCE_SUFFIX = "evidence-google-maps-clinic";
+
+const values = (value) =>
+  Array.isArray(value) ? value : value == null ? [] : [value];
+const refId = (value) =>
+  value && typeof value === "object" && typeof value["@id"] === "string"
+    ? value["@id"]
+    : typeof value === "string"
+      ? value
+      : null;
+const types = (node) => values(node?.["@type"]);
 const isIsoSecond = (value) =>
   typeof value === "string" &&
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value) &&
   !Number.isNaN(Date.parse(value));
+const exactRef = (value, label) => {
+  const refs = values(value).map(refId).filter(Boolean);
+  if (refs.length !== 1) throw new Error(`${label} requires one reference`);
+  return refs[0];
+};
 
-const escapeHtml = (value) =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-
-export function validateReputationObservation(observation, release) {
-  if (!observation || typeof observation !== "object" || Array.isArray(observation))
-    throw new Error("Clinic reputation observation must be an object");
-  const rating = Number(observation.rating);
-  const reviewCount = Number(observation.reviewCount);
+const requireObservation = (byId, id, { entityId, property, evidenceId }) => {
+  const node = byId.get(id);
   if (
-    observation.schemaVersion !== SCHEMA_VERSION ||
-    observation.source !== SOURCE ||
-    observation.entity !== release?.clinic?.id ||
-    observation.placeId !== release?.clinic?.placeId ||
+    !node ||
+    !types(node).includes("Observation") ||
+    exactRef(node.observationAbout, `${id} observationAbout`) !== entityId ||
+    node.measuredProperty !== property ||
+    node.measurementMethod !== SOURCE ||
+    exactRef(node["prov:wasDerivedFrom"], `${id} prov:wasDerivedFrom`) !== evidenceId ||
+    !isIsoSecond(node.observationDate)
+  )
+    throw new Error(`Canonical Google Maps reputation observation drift: ${id}`);
+  return node;
+};
+
+export function validateReputationObservation(graph, release) {
+  if (!Array.isArray(graph?.["@graph"]))
+    throw new Error("Clinic reputation requires the canonical graph");
+  const canonicalUrl = String(release?.canonicalUrl || "");
+  const entity = release?.clinic?.id;
+  const placeId = release?.clinic?.placeId;
+  if (!/^https:\/\/www\.ghezelbaash\.ir\/$/.test(canonicalUrl) || !entity)
+    throw new Error("Clinic reputation requires canonical publication identity");
+  const { byId } = indexCanonicalGraph(graph);
+  const ratingNode = requireObservation(
+    byId,
+    `${canonicalUrl}#${RATING_SUFFIX}`,
+    {
+      entityId: entity,
+      property: "https://schema.org/ratingValue",
+      evidenceId: `${canonicalUrl}#${EVIDENCE_SUFFIX}`,
+    },
+  );
+  const reviewNode = requireObservation(
+    byId,
+    `${canonicalUrl}#${REVIEW_COUNT_SUFFIX}`,
+    {
+      entityId: entity,
+      property: "https://schema.org/reviewCount",
+      evidenceId: `${canonicalUrl}#${EVIDENCE_SUFFIX}`,
+    },
+  );
+  const rating = Number(ratingNode.value);
+  const reviewCount = Number(reviewNode.value);
+  if (
+    ratingNode.observationDate !== reviewNode.observationDate ||
+    Number(ratingNode.maxValue) !== 5 ||
     !Number.isFinite(rating) ||
     rating < 1 ||
     rating > 5 ||
     !Number.isSafeInteger(reviewCount) ||
-    reviewCount < 1 ||
-    !isIsoSecond(observation.valueObservedAt)
+    reviewCount < 1
   )
-    throw new Error("Clinic reputation observation drift");
+    throw new Error("Canonical Google Maps reputation values drift");
   return Object.freeze({
     schemaVersion: SCHEMA_VERSION,
     source: SOURCE,
-    entity: release.clinic.id,
-    placeId: release.clinic.placeId,
+    entity,
+    placeId,
     rating,
     reviewCount,
-    valueObservedAt: observation.valueObservedAt,
+    valueObservedAt: ratingNode.observationDate,
+    ratingNodeId: ratingNode["@id"],
+    reviewCountNodeId: reviewNode["@id"],
   });
 }
 
 export function evaluateGoogleReputation({ place, current, release }) {
-  const canonical = validateReputationObservation(current, release);
+  if (!current || typeof current !== "object")
+    throw new Error("Current canonical Google Maps reputation is required");
   const rating = Number(place?.rating);
   const reviewCount = Number(place?.userRatingCount);
   if (
@@ -63,52 +113,48 @@ export function evaluateGoogleReputation({ place, current, release }) {
     rating,
     reviewCount,
     changed:
-      rating !== canonical.rating || reviewCount !== canonical.reviewCount,
+      rating !== Number(current.rating) ||
+      reviewCount !== Number(current.reviewCount),
   });
 }
 
-export function composeReputationObservation({ evaluation, release, observedAt }) {
+export function applyReputationObservation(graph, { evaluation, release, observedAt }) {
   if (!evaluation?.changed)
-    throw new Error("Refusing to compose an unchanged reputation observation");
-  const next = {
-    schemaVersion: SCHEMA_VERSION,
-    entity: release.clinic.id,
-    placeId: release.clinic.placeId,
-    rating: evaluation.rating,
-    reviewCount: evaluation.reviewCount,
-    valueObservedAt: observedAt,
-    source: SOURCE,
-  };
-  return validateReputationObservation(next, release);
+    throw new Error("Refusing to apply an unchanged reputation observation");
+  if (!isIsoSecond(observedAt))
+    throw new Error("Google Maps reputation observation time is invalid");
+  const next = structuredClone(graph);
+  const { byId } = indexCanonicalGraph(next);
+  const ratingNode = byId.get(
+    `${release.canonicalUrl}#${RATING_SUFFIX}`,
+  );
+  const reviewNode = byId.get(
+    `${release.canonicalUrl}#${REVIEW_COUNT_SUFFIX}`,
+  );
+  if (!ratingNode || !reviewNode)
+    throw new Error("Canonical Google Maps reputation nodes are missing");
+  ratingNode.value = evaluation.rating;
+  ratingNode.observationDate = observedAt;
+  reviewNode.value = evaluation.reviewCount;
+  reviewNode.observationDate = observedAt;
+  validateReputationObservation(next, release);
+  return next;
 }
 
-const faNumber = (value, digits = 0) =>
-  new Intl.NumberFormat("fa-IR", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-    useGrouping: true,
-  }).format(Number(value));
-
-export function renderClinicReputationHtml({ observation, release, mapsUrl }) {
-  const canonical = validateReputationObservation(observation, release);
+export function assertRenderedClinicReputation(html, { graph, release, mapsUrl }) {
+  const canonical = validateReputationObservation(graph, release);
   const url = new URL(mapsUrl);
   if (url.protocol !== "https:")
     throw new Error("Clinic Maps URL must use HTTPS");
-  return `<span class="hero-caption-reputation" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="${canonical.rating}" data-review-count="${canonical.reviewCount}"><strong><data data-clinic-rating value="${canonical.rating}">${faNumber(canonical.rating, 1)}</data> از ۵</strong> · بر پایهٔ <strong><data data-clinic-review-count value="${canonical.reviewCount}">${faNumber(canonical.reviewCount)}</data></strong> نظر در <a href="${escapeHtml(url.href)}" rel="external noopener"><span class="google-maps-attribution" translate="no">Google Maps</span></a></span>`;
-}
-
-export function bindClinicReputation(content, args) {
-  const source = String(content);
-  const count = source.split(SLOT).length - 1;
-  if (count !== 1)
-    throw new Error(`Expected one clinic reputation slot; found ${count}`);
-  return source.replace(SLOT, renderClinicReputationHtml(args));
-}
-
-export function assertRenderedClinicReputation(html, args) {
-  const expected = renderClinicReputationHtml(args);
   const source = String(html);
-  if (source.split(expected).length - 1 !== 1 || source.includes(SLOT))
+  const escapedUrl = url.href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const checks = [
+    new RegExp(`data-clinic-reputation[^>]*data-rating=["']${canonical.rating}["'][^>]*data-review-count=["']${canonical.reviewCount}["']`, "i"),
+    new RegExp(`data-clinic-rating[^>]*value=["']${canonical.rating}["']`, "i"),
+    new RegExp(`data-clinic-review-count[^>]*value=["']${canonical.reviewCount}["']`, "i"),
+    new RegExp(`href=["']${escapedUrl}["']`, "i"),
+  ];
+  if (checks.some((pattern) => !pattern.test(source)))
     throw new Error("Rendered clinic reputation block drift");
   return true;
 }
@@ -116,7 +162,9 @@ export function assertRenderedClinicReputation(html, args) {
 export const reputationObservationContract = Object.freeze({
   schemaVersion: SCHEMA_VERSION,
   source: SOURCE,
-  slot: SLOT,
+  sourceFile: "src/data/semantic/knowledge-graph.jsonld",
+  ratingNodeSuffix: RATING_SUFFIX,
+  reviewCountNodeSuffix: REVIEW_COUNT_SUFFIX,
   refreshCron: "23 */6 * * *",
   upstreamCallsPerRun: 1,
 });

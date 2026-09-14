@@ -60,8 +60,8 @@ jobs:
           set -euo pipefail
           node scripts/reputation.mjs validate
           changed="$(git status --porcelain=v1 --untracked-files=all | cut -c4- | LC_ALL=C sort)"
-          test "$changed" = "src/data/reputation-observation.json"
-          git add src/data/reputation-observation.json
+          test "$changed" = "src/data/semantic/knowledge-graph.jsonld"
+          git add src/data/semantic/knowledge-graph.jsonld
           git diff --cached --quiet && {
             echo "::error::changed=true but no observation diff was staged"
             exit 1
@@ -69,7 +69,7 @@ jobs:
           git config user.name ghezelbaash-reputation-bot
           git config user.email actions@users.noreply.github.com
           git commit -m "chore: refresh clinic Google Maps reputation"
-          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "src/data/reputation-observation.json"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "src/data/semantic/knowledge-graph.jsonld"
           git fetch --no-tags origin main
           git rebase origin/main
       - name: Install exact dependencies for a changed observation

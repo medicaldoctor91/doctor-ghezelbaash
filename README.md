@@ -4,16 +4,15 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 ## Direct source ownership
 
-- `src/content-source/page.md`: authored visible body content, final answer markup and page-scoped metadata, including authored social-image alt text and social locale choices.
+- `src/content-source/page.md`: authored visible body content, final answer markup and page-scoped authored semantics, including social-image alt/locale choices and footer governance copy.
 - `src/styles/global.css`: the only authored stylesheet.
 - `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, lexical identity labels, first-party provenance, offered services and machine-readable answer semantics.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
-- `src/components/SiteFooter.astro`: authored footer governance wording and machine-resource navigation.
+- `src/components/SiteFooter.astro`: presentation-only footer renderer; authored governance wording comes from `page.md`, factual clinic/contact values come from the graph, and machine-resource navigation comes from the operational registry.
 - `src/data/document-head.json`: presentation-only head policy (theme color, Apple web-app label and Twitter card mode); Open Graph semantics are derived from canonical graph authority plus `page.md` frontmatter.
 - `src/data/release.json`: release and distribution lifecycle, canonical URL and minimal entity pointers; entity names, identifiers and clinic facts come from the graph.
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
-- `src/data/reputation-observation.json`: the clinic-scoped, last-known-good Google Places observation rendered into initial HTML.
 - `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
 - `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges. The compiler emits both slash forms of each registered canonical directory alias with the same direct destination, rejects conflicting pairs and leaves unknown paths as 404.
 - `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
@@ -70,7 +69,7 @@ Googlebot's Search HTML envelope uses a conservative 2,000,000 uncompressed byte
 
 `npm run prepare:site` creates only the content, graph, and CSS assets Astro needs for local development and type checking. `npm run prepare:distribution` recreates the complete machine-readable distribution for builds and releases. Astro renders native static HTML directly, the registered static resources are materialized into `dist/`, and the deployment-header step derives CSP and response headers while validating the finished descriptor hashes. Generated files are not committed.
 
-CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, image, semantic and clinic-reputation tokens. `.github/workflows/reputation-refresh.yml` performs exactly one minimal-field Google Places request every six hours, preserves the last-known-good observation on failure and publishes only a validated value change.
+CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, image and semantic tokens. The visible Google Maps reputation sentence is authored in `page.md`; its rating/review-count values are graph-owned Observation nodes. `.github/workflows/reputation-refresh.yml` performs exactly one minimal-field Google Places request every six hours, preserves the last-known-good graph observation on failure and publishes only a validated value change.
 
 ```bash
 npm ci

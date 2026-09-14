@@ -6,6 +6,7 @@ dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 socialImageAlt: "دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه"
 socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
+footerGovernance: {"summary":"بازبینی پزشکی، حریم خصوصی و شرایط استفاده","medicalNotice":"محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام پزشکی، ارزیابی حضوری فوری اولویت دارد.","reputationLead":"امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
 ---
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">
@@ -25,7 +26,7 @@ socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
 <figcaption class="hero-figure-caption">
 <details class="caption-disclosure">
 <summary class="hero-caption-title" id="caption-saeed-ghezelbash-portrait-master">دکتر سعید قزلباش، پزشک زیبایی</summary>
-<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}؛ جمعه تعطیل</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span data-clinic-reputation-slot></span>
+<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}؛ جمعه تعطیل</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span class="hero-caption-reputation" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" data-review-count="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}"><strong><data data-clinic-rating value="{{CLINIC_GOOGLE_RATING_RAW}}">{{CLINIC_GOOGLE_RATING_FA}}</data> از ۵</strong> · بر پایهٔ <strong><data data-clinic-review-count value="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}">{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}</data></strong> نظر در <a href="{{CLINIC_MAPS_URL}}" rel="external noopener"><span class="google-maps-attribution" translate="no">Google Maps</span></a></span>
 </div>
 </details>
 </figcaption>

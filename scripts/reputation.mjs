@@ -1,12 +1,12 @@
 import { loadPublicationData } from "./lib/publication-context.mjs";
 import { appendFile, readFile, rename, writeFile } from "node:fs/promises";
 import {
-  composeReputationObservation,
+  applyReputationObservation,
   evaluateGoogleReputation,
   validateReputationObservation,
 } from "../src/lib/reputation-observation.mjs";
 
-const sourceFile = "src/data/reputation-observation.json";
+const sourceFile = "src/data/semantic/knowledge-graph.jsonld";
 const readJson = (file) => readFile(file, "utf8").then(JSON.parse);
 
 const writeAtomic = async (file, value) => {
@@ -30,11 +30,11 @@ const writeOutput = async (values) => {
 };
 
 async function validate() {
-  const [release, observation] = await Promise.all([
+  const [release, graph] = await Promise.all([
     loadPublicationData(),
     readJson(sourceFile),
   ]);
-  const canonical = validateReputationObservation(observation, release);
+  const canonical = validateReputationObservation(graph, release);
   console.log(
     JSON.stringify(
       {
@@ -44,6 +44,7 @@ async function validate() {
         rating: canonical.rating,
         reviewCount: canonical.reviewCount,
         valueObservedAt: canonical.valueObservedAt,
+        authority: "canonical-graph",
       },
       null,
       2,
@@ -52,17 +53,18 @@ async function validate() {
 }
 
 async function google(placeFile = "/tmp/google-place.json") {
-  const [release, current, place] = await Promise.all([
+  const [release, graph, place] = await Promise.all([
     loadPublicationData(),
     readJson(sourceFile),
     readJson(placeFile),
   ]);
+  const current = validateReputationObservation(graph, release);
   const evaluation = evaluateGoogleReputation({ place, current, release });
   const observedAt =
     process.env.GOOGLE_CHECKED_AT ||
     new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   if (evaluation.changed) {
-    const next = composeReputationObservation({
+    const next = applyReputationObservation(graph, {
       evaluation,
       release,
       observedAt,

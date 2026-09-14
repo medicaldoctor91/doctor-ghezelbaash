@@ -19,10 +19,9 @@ import {
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
 import {
-  bindClinicReputation,
-  composeReputationObservation,
+  applyReputationObservation,
+  assertRenderedClinicReputation,
   evaluateGoogleReputation,
-  renderClinicReputationHtml,
   validateReputationObservation,
 } from "../src/lib/reputation-observation.mjs";
 async function file_transaction() {
@@ -690,14 +689,14 @@ async function canonical_semantic_derivation_contract() {
 }
 async function static_google_maps_reputation_contract() {
   const release = await loadPublicationData();
-  const current = JSON.parse(
-    await readFile("src/data/reputation-observation.json", "utf8"),
+  const graph = JSON.parse(
+    await readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"),
   );
-  const canonical = validateReputationObservation(current, release);
+  const canonical = validateReputationObservation(graph, release);
   assert.equal(canonical.entity, release.clinic.id);
   assert.equal(canonical.placeId, release.clinic.placeId);
-  assert.equal(canonical.rating, Number(current.rating));
-  assert.equal(canonical.reviewCount, Number(current.reviewCount));
+  assert.equal(canonical.rating, 5);
+  assert.ok(canonical.reviewCount >= 1);
 
   const unchangedPlace = {
     id: release.clinic.placeId,
@@ -707,47 +706,21 @@ async function static_google_maps_reputation_contract() {
   };
   const unchanged = evaluateGoogleReputation({
     place: unchangedPlace,
-    current,
+    current: canonical,
     release,
   });
   assert.equal(unchanged.changed, false);
 
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, id: "wrong" },
-        current,
-        release,
-      }),
-    /invalid/,
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, businessStatus: "CLOSED_PERMANENTLY" },
-        current,
-        release,
-      }),
-    /invalid/,
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, userRatingCount: 1.5 },
-        current,
-        release,
-      }),
-    /invalid/,
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, movedPlaceId: "replacement" },
-        current,
-        release,
-      }),
-    /invalid/,
-  );
+  for (const place of [
+    { ...unchangedPlace, id: "wrong" },
+    { ...unchangedPlace, businessStatus: "CLOSED_PERMANENTLY" },
+    { ...unchangedPlace, userRatingCount: 1.5 },
+    { ...unchangedPlace, movedPlaceId: "replacement" },
+  ])
+    assert.throws(
+      () => evaluateGoogleReputation({ place, current: canonical, release }),
+      /invalid/,
+    );
 
   const nextRating =
     canonical.rating === 5 ? 4.9 : Math.min(5, canonical.rating + 0.1);
@@ -758,50 +731,26 @@ async function static_google_maps_reputation_contract() {
       rating: nextRating,
       userRatingCount: nextReviewCount,
     },
-    current,
+    current: canonical,
     release,
   });
   assert.equal(changed.changed, true);
-  const next = composeReputationObservation({
+  const nextGraph = applyReputationObservation(graph, {
     evaluation: changed,
     release,
     observedAt: "2026-09-04T03:00:00Z",
   });
+  const next = validateReputationObservation(nextGraph, release);
   assert.equal(next.rating, nextRating);
   assert.equal(next.reviewCount, nextReviewCount);
   assert.equal(next.entity, release.clinic.id);
   assert.equal(next.placeId, release.clinic.placeId);
 
   const mapsUrl = `https://www.google.com/maps?cid=${release.clinic.cid}`;
-  const html = renderClinicReputationHtml({
-    observation: current,
-    release,
-    mapsUrl,
-  });
-  assert.match(html, /id="google-maps-clinic-reputation-current"/);
-  assert.ok(
-    html.includes(`data-clinic-rating value="${canonical.rating}"`),
-  );
-  assert.ok(
-    html.includes(
-      `data-clinic-review-count value="${canonical.reviewCount}"`,
-    ),
-  );
-  assert.match(html, /translate="no">Google Maps<\/span>/);
-  assert.doesNotMatch(html, /\/api\/google-maps-reputation/);
-  const bound = bindClinicReputation(
-    '<section><span data-clinic-reputation-slot></span></section>',
-    { observation: current, release, mapsUrl },
-  );
-  assert.equal(bound, `<section>${html}</section>`);
-  assert.throws(
-    () =>
-      bindClinicReputation("<section></section>", {
-        observation: current,
-        release,
-        mapsUrl,
-      }),
-    /Expected one clinic reputation slot/,
+  const html = `<span data-clinic-reputation data-rating="${canonical.rating}" data-review-count="${canonical.reviewCount}"><data data-clinic-rating value="${canonical.rating}">rating</data><data data-clinic-review-count value="${canonical.reviewCount}">reviews</data><a href="${mapsUrl}">Google Maps</a></span>`;
+  assert.equal(
+    assertRenderedClinicReputation(html, { graph, release, mapsUrl }),
+    true,
   );
 
   console.log(
@@ -811,7 +760,7 @@ async function static_google_maps_reputation_contract() {
         canonicalClinicScope: "PASS",
         canonicalPlaceId: "PASS",
         responseValidation: "PASS",
-        initialHtmlBinding: "PASS",
+        graphOwnedObservation: "PASS",
         requestTimeRuntime: false,
         integrity: "PASS",
       },

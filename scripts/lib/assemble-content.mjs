@@ -3,7 +3,6 @@ import { readFile, readdir } from "node:fs/promises";
 import { bindHeroPictureSizes } from "../../src/lib/hero-image-contract.mjs";
 import { bindReleaseTokens } from "../../src/lib/release-tokens.mjs";
 import { bindSiteTokens, deriveSiteData } from "../../src/lib/site-data.mjs";
-import { bindClinicReputation } from "../../src/lib/reputation-observation.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../../src/lib/answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
@@ -64,13 +63,10 @@ export async function assembleCanonicalContent({
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
   const names = await canonicalSourceNames(root);
-  const [rawRelease, reputationObservation] = await Promise.all([
-    readFile(path.join(root, "src/data/release.json"), "utf8").then(JSON.parse),
-    readFile(
-      path.join(root, "src/data/reputation-observation.json"),
-      "utf8",
-    ).then(JSON.parse),
-  ]);
+  const rawRelease = await readFile(
+    path.join(root, "src/data/release.json"),
+    "utf8",
+  ).then(JSON.parse);
   const release = derivePublicationData(rawRelease, graph);
   const site = deriveSiteData(release, graph);
   let content = await readFile(
@@ -81,11 +77,6 @@ export async function assembleCanonicalContent({
   content = bindReleaseTokens(content, release);
   content = bindSiteTokens(content, site);
   content = bindPhysicianImages(content, graph, release);
-  content = bindClinicReputation(content, {
-    observation: reputationObservation,
-    release,
-    mapsUrl: site.mapsUrl,
-  });
   const answerProjection = deriveCanonicalAnswerProjection(graph, release);
   validateProjectedAnswerHtml(content, answerProjection);
   return {
