@@ -1,10 +1,13 @@
 ---
+import pageSource from '../content-source/page.md?raw';
 import release from '../data/release.json';
 import { headGraph } from '../lib/knowledge-graph';
+import { extractPageOwnedFooterGovernance } from '../lib/page-owned-fragments.mjs';
 import { deriveSiteData } from '../lib/site-data.mjs';
 import { FOOTER_RESOURCES } from '../lib/resources.mjs';
 
 const site = deriveSiteData(release, headGraph);
+const governanceHtml = extractPageOwnedFooterGovernance(pageSource);
 const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
   path: resource.path,
   label: resource.footerLabel,
@@ -18,25 +21,7 @@ const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
       >{site.phoneDisplay}</a
     > — <a href={site.mapsUrl} rel="external">Google Maps</a>
   </address>
-  <details class="editorial-governance" id="privacy-and-terms">
-    <summary>بازبینی پزشکی، حریم خصوصی و شرایط استفاده</summary>
-    <p>
-      محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین
-      معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی
-      شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام
-      پزشکی، ارزیابی حضوری فوری اولویت دارد.
-    </p>
-    <p>
-      امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش
-      ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره
-      نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع
-      <a href="https://www.google.com/help/terms_maps/" rel="external noopener"
-        >شرایط Google Maps</a
-      > و <a href="https://policies.google.com/privacy" rel="external noopener"
-        >خط‌مشی حریم خصوصی Google</a
-      > است.
-    </p>
-  </details>
+<Fragment set:html={governanceHtml} />
   <details class="footer-machine-resources">
     <summary>داده‌های ساختاریافته و منابع ماشینی</summary>
     <nav aria-label="نسخه‌های ماشینی رسمی">
