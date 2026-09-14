@@ -58,14 +58,21 @@ if (
   changed.push("scripts/validate-source.mjs");
 
 if (
-  await update("scripts/validate-release-contract.mjs", (source) =>
-    exactReplace(
+  await update("scripts/validate-release-contract.mjs", (source) => {
+    let migrated = exactReplace(
       source,
       `if (\n  authorityPolicy.identitySource !== "src/data/release.json" ||\n  authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||\n  authorityPolicy.retrievalPolicySource !==\n    "src/data/retrieval/query-matrix-policy.json" ||\n  hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource\n)\n  fail("Authority source reference drift");`,
       `if (\n  authorityPolicy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||\n  authorityPolicy.releaseLifecycleSource !== "src/data/release.json" ||\n  authorityPolicy.authorityProfile !== "src/data/semantic/authority-profile.json" ||\n  authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||\n  authorityPolicy.retrievalPolicySource !==\n    "src/data/retrieval/query-matrix-policy.json" ||\n  retrievalPolicy.identitySource !== authorityPolicy.identitySource ||\n  retrievalPolicy.semanticSource !== authorityPolicy.identitySource ||\n  retrievalPolicy.releaseLifecycleSource !== authorityPolicy.releaseLifecycleSource ||\n  retrievalPolicy.authorityProfile !== authorityPolicy.authorityProfile ||\n  hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource\n)\n  fail("Authority source reference drift");`,
       "Release authority policy",
-    ),
-  )
+    );
+    migrated = exactReplace(
+      migrated,
+      `for (const [label, pattern] of [\n  ["Version DOI", /release\\.dataset\\.zenodo\\.versionDoi/],\n  ["release", /release\\.release/],\n  [\n    "identity mesh",\n    /release\\.primaryEntity\\.verifiedWebIdentityMesh\\.map\\s*\\(/,\n  ],\n  ["clinic CID", /release\\.clinic\\.cid/],\n  [\n    "discovery links",\n    /discoveryLinks\\.map\\s*\\(\\s*\\(?\\s*link\\s*\\)?\\s*=>\\s*<link\\s+\\{\\.\\.\\.link\\}/,\n  ],\n])\n  if (!pattern.test(documentHead))\n    fail(\`Astro Head release binding drift: ${"${label}"}\`);`,
+      `for (const [label, pattern] of [\n  ["Version DOI", /release\\.dataset\\.zenodo\\.versionDoi/],\n  ["release", /release\\.release/],\n  ["graph authority", /deriveCanonicalAuthority/],\n  [\n    "identity mesh",\n    /authority\\.primaryEntity\\.verifiedWebIdentityMesh\\.map\\s*\\(/,\n  ],\n  ["clinic CID", /authority\\.clinicAuthority\\.cid/],\n  [\n    "discovery links",\n    /discoveryLinks\\.map\\s*\\(\\s*\\(?\\s*link\\s*\\)?\\s*=>\\s*<link\\s+\\{\\.\\.\\.link\\}/,\n  ],\n])\n  if (!pattern.test(documentHead))\n    fail(\`Astro Head authority binding drift: ${"${label}"}\`);\nif (\n  /release\\.primaryEntity\\.verifiedWebIdentityMesh/.test(documentHead) ||\n  /release\\.clinic\\.cid/.test(documentHead)\n)\n  fail("Astro Head must not consume semantic identity from release metadata");`,
+      "Release Head graph authority binding",
+    );
+    return migrated;
+  })
 )
   changed.push("scripts/validate-release-contract.mjs");
 
