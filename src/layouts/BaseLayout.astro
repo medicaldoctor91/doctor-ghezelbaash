@@ -40,6 +40,12 @@ const canonicalURL = isMain
   : noindex
     ? undefined
     : new URL(Astro.url.pathname, Astro.site);
+const entityHeadingId = isMain
+  ? new URL(release.primaryEntity.id, release.canonicalUrl).hash.slice(1)
+  : undefined;
+if (isMain && !entityHeadingId) {
+  throw new Error('Primary entity pointer must expose a same-page fragment identifier');
+}
 
 const { cssSource } = assembleCssSource(globalCss, renderCalibrationRaw);
 const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(cssSource);
@@ -118,7 +124,7 @@ const googlePageMicrodata = isMain
       )}
       <article
         class:list={['medical-guide', { 'medical-guide--entity-home': isMain }]}
-        aria-labelledby={isMain ? 'saeed-ghezelbash' : undefined}
+        aria-labelledby={entityHeadingId}
       >
         <slot />
       </article>
