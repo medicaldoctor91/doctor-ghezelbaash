@@ -33,16 +33,6 @@ interface Props {
 }
 
 const authority = deriveCanonicalAuthority(release, canonicalGraph, authorityProfile);
-const legacyIdentityMesh = release.primaryEntity.verifiedWebIdentityMesh.map(String);
-if (
-  JSON.stringify(legacyIdentityMesh) !==
-  JSON.stringify(authority.primaryEntity.verifiedWebIdentityMesh)
-) {
-  throw new Error('Release identity-mesh shadow differs from canonical graph authority');
-}
-if (String(release.clinic.cid) !== String(authority.clinicAuthority.cid)) {
-  throw new Error('Release clinic-CID shadow differs from canonical graph authority');
-}
 const { title, description, robots, canonicalURL, isMain } = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {
