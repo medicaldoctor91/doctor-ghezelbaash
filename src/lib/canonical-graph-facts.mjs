@@ -1,4 +1,4 @@
-import { indexCanonicalGraph } from "./semantic-projection.mjs";
+import { indexCanonicalGraph } from "./graph-core.mjs";
 
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];

@@ -1,4 +1,4 @@
-import { exactLanguageLiteral } from "./semantic-projection.mjs";
+import { exactLanguageLiteral } from "./graph-core.mjs";
 import {
   deriveCanonicalGraphFacts,
   selectCanonicalSocialImage,

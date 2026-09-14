@@ -37,7 +37,7 @@ jobs:
           echo "::add-mask::$GOOGLE_PLACES_API_KEY"
           node scripts/platform-contract.mjs validate
           node scripts/reputation.mjs validate
-          PLACE_ID="$(node -p "require('./src/data/release.json').clinic.placeId")"
+          PLACE_ID="$(node scripts/publication-context.mjs get clinic.placeId)"
           FIELD_MASK="$(node -p "require('./.release/policy/platform-contract.json').automation.reputationRefresh.fieldMask.join(',')")"
           curl --fail --silent --show-error --connect-timeout 10 --max-time 25 \
             -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" \
