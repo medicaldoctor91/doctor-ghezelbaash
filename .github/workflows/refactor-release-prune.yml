@@ -34,14 +34,21 @@ jobs:
           import fs from 'node:fs';
           const file = 'scripts/test-machine-resources.mjs';
           let source = fs.readFileSync(file, 'utf8');
-          const before = '"src/data/semantic/knowledge-graph.jsonld", "src/data/machine-resources.json",';
-          const after = '"src/data/semantic/knowledge-graph.jsonld", "src/data/semantic/authority-profile.json",\n    "src/data/machine-resources.json",';
-          if (!source.includes(after)) {
-            const count = source.split(before).length - 1;
+          const dependencyBefore = '"src/data/semantic/knowledge-graph.jsonld", "src/data/machine-resources.json",';
+          const dependencyAfter = '"src/data/semantic/knowledge-graph.jsonld", "src/data/semantic/authority-profile.json",\n    "src/data/machine-resources.json",';
+          if (!source.includes(dependencyAfter)) {
+            const count = source.split(dependencyBefore).length - 1;
             if (count !== 1) throw new Error(`descriptor fixture authority dependency drift: ${count}`);
-            source = source.replace(before, after);
-            fs.writeFileSync(file, source);
+            source = source.replace(dependencyBefore, dependencyAfter);
           }
+          const driftBefore = `  const changed = spawnSync(process.execPath, [path.join(root, "scripts/generate-descriptors.mjs")], { cwd: workspace, encoding: "utf8" });\n  assert.equal(changed.status, 0, changed.stderr || changed.stdout);\n  const changedPackage = JSON.parse(await readFile(path.join(output, "datapackage.json"), "utf8"));\n  assert.deepEqual(changedPackage.contributors.find((item) => item.path === release.primaryEntity.id).roles, ["author", "creator"]);`;
+          const driftAfter = `  const changed = spawnSync(process.execPath, [path.join(root, "scripts/generate-descriptors.mjs")], { cwd: workspace, encoding: "utf8" });\n  assert.notEqual(changed.status, 0, "Descriptor generation must reject Dataset publisher drift");\n  assert.match(changed.stderr || changed.stdout, /Canonical Dataset creator\\/publisher is not the physician/);`;
+          if (!source.includes(driftAfter)) {
+            const count = source.split(driftBefore).length - 1;
+            if (count !== 1) throw new Error(`descriptor publisher-drift expectation mismatch: ${count}`);
+            source = source.replace(driftBefore, driftAfter);
+          }
+          fs.writeFileSync(file, source);
           JS
           node --input-type=module <<'JS'
           import fs from 'node:fs';
