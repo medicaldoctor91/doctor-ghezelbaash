@@ -461,10 +461,16 @@ for (const name of [
 // and current-context validators, rather than by matching generator source text.
 
 if (
-  authority.identitySource !== "src/data/release.json" ||
+  authority.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
+  authority.releaseLifecycleSource !== "src/data/release.json" ||
+  authority.authorityProfile !== "src/data/semantic/authority-profile.json" ||
   authority.resourceRegistry !== "src/data/machine-resources.json" ||
   authority.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||
+  retrievalPolicy.identitySource !== authority.identitySource ||
+  retrievalPolicy.semanticSource !== authority.identitySource ||
+  retrievalPolicy.releaseLifecycleSource !== authority.releaseLifecycleSource ||
+  retrievalPolicy.authorityProfile !== authority.authorityProfile ||
   hf.retrievalPolicyRef !== authority.retrievalPolicySource ||
   platform.canonicalUrl !== release.canonicalUrl ||
   platform.repository !==

@@ -5,6 +5,27 @@ lang: "fa-IR"
 dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 ---
+<!--SITE_FOOTER_GOVERNANCE_START
+  <details class="editorial-governance" id="privacy-and-terms">
+    <summary>بازبینی پزشکی، حریم خصوصی و شرایط استفاده</summary>
+    <p>
+      محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین
+      معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی
+      شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام
+      پزشکی، ارزیابی حضوری فوری اولویت دارد.
+    </p>
+    <p>
+      امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش
+      ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره
+      نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع
+      <a href="https://www.google.com/help/terms_maps/" rel="external noopener"
+        >شرایط Google Maps</a
+      > و <a href="https://policies.google.com/privacy" rel="external noopener"
+        >خط‌مشی حریم خصوصی Google</a
+      > است.
+    </p>
+  </details>
+SITE_FOOTER_GOVERNANCE_END-->
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">
 <h1 class="hero-title" id="saeed-ghezelbash"><span class="hero-title__name" itemprop="name">دکتر سعید قزلباش</span><span class="hero-title__semantic-separator">؛ </span><span class="hero-title__descriptor" id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span>
@@ -23,7 +44,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <figcaption class="hero-figure-caption">
 <details class="caption-disclosure">
 <summary class="hero-caption-title" id="caption-saeed-ghezelbash-portrait-master">دکتر سعید قزلباش، پزشک زیبایی</summary>
-<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> {{CLINIC_HOURS_COMPACT_FA}}</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span data-clinic-reputation-slot></span>
+<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}؛ جمعه تعطیل</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span data-clinic-reputation-slot></span>
 </div>
 </details>
 </figcaption>
@@ -4875,7 +4896,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 <div class="render-chunk" id="rc129">
 <h3 id="saeed-ghezelbash-clinic-contact-and-location">رزرو نوبت و مشاوره آنلاین اولیه رایگان؛ آدرس و تماس رسمی کلینیک دکتر سعید قزلباش در کرمانشاه</h3>
-<p class="clinic-facts"><strong>ساعات فعالیت:</strong> {{CLINIC_HOURS_WEEKDAYS_FA}}؛ <strong>{{CLINIC_FRIDAY_CLOSED_FA}}</strong> <strong>کدپستی رسمی:</strong> <bdi>{{CLINIC_POSTAL_CODE_FA}}</bdi>.</p>
+<p class="clinic-facts"><strong>ساعات فعالیت:</strong> شنبه تا پنجشنبه، {{CLINIC_HOURS_OPEN_FA}} تا {{CLINIC_HOURS_CLOSE_FA}}؛ <strong>جمعه تعطیل.</strong> <strong>کدپستی رسمی:</strong> <bdi>{{CLINIC_POSTAL_CODE_FA}}</bdi>.</p>
 <address>نشانی مراجعه حضوری: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا، کلینیک زیبایی دکتر سعید قزلباش. برای رزرو نوبت با شماره <a href="{{CLINIC_TEL_HREF}}">{{CLINIC_PHONE_FA}}</a> تماس بگیرید؛ برای مشاوره آنلاین اولیه رایگان نیز از طریق <a href="{{OFFICIAL_INSTAGRAM_URL}}" rel="me">صفحه رسمی اینستاگرام دکتر سعید قزلباش</a> پیام بفرستید. <a href="{{CLINIC_MAPS_URL}}" rel="external noopener">موقعیت کلینیک در Google Maps</a> نیز برای مسیریابی در دسترس است.</address>
 <span aria-hidden="true" class="semantic-alias-anchor" id="historical-patient-origin-summary"></span>
 <h3 id="out-of-town-aesthetic-patients-iran">مراجعه از شهرهای دیگر ایران؛ قبل از خرید بلیت، بدانید پرونده یک‌جلسه‌ای است یا نه</h3>

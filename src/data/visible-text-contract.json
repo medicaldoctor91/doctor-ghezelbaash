@@ -3,16 +3,16 @@
   "policy": "closed-visible-text; NFC + whitespace-collapse per node; text-node sequence and reading order frozen; ID changes and heading levels permitted; raw source hashes record provenance",
   "sourceCommit": "bbff2475dec9dce02d8edcf0482b64937f8f728e",
   "sourceRawSha256": {
-    "src/content-source/page.md": "d45f008e642efd70badcbee729ee786e05c6fb2dcd8ac6a363d9c34ba0b8ed9c",
-    "src/data/document-head.json": "2aa2cecd6abe65a00f46db4493707e2bfbd3cb64061a711ca1c63156182bfddd",
+    "src/content-source/page.md": "ec839ac0e9cc219c97e9c746c83d489e882648d0c098a9493e7859a56634208b",
+    "src/data/document-head.json": "b302bd7d6e1bd8ed80365ed421436b2c10de0d3b6a271f5ebc5f896d03b4d72b",
     "src/data/media-metadata.json": "bb9ff57beed0a33dcfc7d35e2e45503d6cdef00d694b5b0a876d028d7981bf66",
     "src/data/release.json": "d6e4e7a76acbb3e2edfbb2a2a4829c376301c27c9ebf90967e9e4b9d612b9d16",
     "src/data/reputation-observation.json": "241c6caefc2af1e000260cb5154ed0b81fbfd2cc0367adb62a3e82b7915d0385",
-    "src/data/semantic/knowledge-graph.jsonld": "61f31793f976cebdb02ab05f64f79aeb325f97aafb924a19503c5f6113b5e844",
-    "src/components/GuideNavigator.astro": "9855cb7d6e2bbc4b371bba7796bc0c0990eb75fb5ce0808afdfee5f48a985b3c",
-    "src/components/SiteFooter.astro": "74d0380e1ad7ed279720d9022b08581f716cf707d3a11d28078c8e57e983b038",
-    "src/components/FloatingActionDock.astro": "2b09fe737aad327f3019fd404ea81b1fcc9adf9ebed1637a6723c019fc6395a0",
-    "src/components/DocumentHead.astro": "cdf5d6300389059e340c5b06def0b95e2e5f4e025e4eb45f0a4826fcd7989552",
+    "src/data/semantic/knowledge-graph.jsonld": "0037b21b3cc3118c7ee39ac6a57a0803e56af367b4a15ac99953b1751f01317b",
+    "src/components/GuideNavigator.astro": "13b78af14133866c41a7ba10d440c888272dbf1eb17bfc550929df9aa14bf751",
+    "src/components/SiteFooter.astro": "a6d6d6f7131d8c52f6a5f7558cbf722fdd9fb1171716fca8ced85e89baab04e9",
+    "src/components/FloatingActionDock.astro": "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e",
+    "src/components/DocumentHead.astro": "d0e25ffc88501d3c047937886a2147f0baa6ba3dcefc19856c54abee36a1f5cc",
     "src/layouts/BaseLayout.astro": "c6aa9314aaa4240208e1a351e2b4338c72d8045b4ccbc856f137b4c1274203aa",
     "src/pages/404.astro": "9d41f9d5091b0203998e4fc75533d1205c8d9eac79311df4534589fa20a980f6"
   },
@@ -20,14 +20,12 @@
     "page": {
       "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
       "description": "بوتاکس، فیلر، ژل لب، لیفت نخ، کانتورینگ، مزوتراپی یا پی‌آر‌پی؟ انتخاب بهترین روش بر اساس علت، مدیریت عوارض درمان‌های قبلی و اصلاح نتایج نامطلوب درمان‌های زیبایی",
-      "textSha256": "9fb4705ffb79daba5fa7eb99764ee936b5c8d3c9cbbb7d66a8be5f9f6e3867f3",
+      "textSha256": "be7b24f4c158255a28736e927b4a1c4406d6345911a363f3f2a86448d3e69eed",
       "attributesSha256": "9dd5886ba7b13f754b9d3ad8a82c93142f396d5205a20bfaee509e79c02f1165",
-      "textNodeCount": 6062,
-      "textNodeSequenceSha256": "a79cdfbe0ecb6fe482df5dd8446e0874b02a78ec04dffa3acc9ee09880b08188"
+      "textNodeCount": 6100,
+      "textNodeSequenceSha256": "6fb7af3af541959b688d3e202aeb82480b084d7ad9d05097f970dfc648975bc0"
     },
     "documentHead": {
-      "author": "دکتر سعید قزلباش",
-      "applicationName": "دکتر سعید قزلباش",
       "appleMobileWebAppTitle": "دکتر قزلباش",
       "themeColor": "#075244",
       "openGraph": {
@@ -38,7 +36,6 @@
           "ar_IQ",
           "ckb_IQ"
         ],
-        "siteName": "دکتر سعید قزلباش",
         "image": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg",
         "imageType": "image/jpeg",
         "imageWidth": 1200,

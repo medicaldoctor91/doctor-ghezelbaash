@@ -177,18 +177,25 @@ const documentHead = await readFile(
 for (const [label, pattern] of [
   ["Version DOI", /release\.dataset\.zenodo\.versionDoi/],
   ["release", /release\.release/],
+  ["graph authority", /deriveCanonicalAuthority/],
+  ["canonical graph", /canonicalGraph/],
   [
     "identity mesh",
-    /release\.primaryEntity\.verifiedWebIdentityMesh\.map\s*\(/,
+    /authority\.primaryEntity\.verifiedWebIdentityMesh\.map\s*\(/,
   ],
-  ["clinic CID", /release\.clinic\.cid/],
+  ["clinic CID", /authority\.clinicAuthority\.cid/],
   [
     "discovery links",
     /discoveryLinks\.map\s*\(\s*\(?\s*link\s*\)?\s*=>\s*<link\s+\{\.\.\.link\}/,
   ],
 ])
   if (!pattern.test(documentHead))
-    fail(`Astro Head release binding drift: ${label}`);
+    fail(`Astro Head authority binding drift: ${label}`);
+if (
+  /release\.primaryEntity\.verifiedWebIdentityMesh/.test(documentHead) ||
+  /release\.clinic\.cid/.test(documentHead)
+)
+  fail("Astro Head must not consume semantic identity from release metadata");
 if (
   !/href\s*:\s*`https:\/\/doi\.org\/\$\{versionDoi\}`[\s\S]*?rel\s*:\s*["']related["'][\s\S]*?title\s*:\s*`Zenodo preservation Version DOI \$\{release\.release\}`/.test(
     documentHead,
@@ -433,10 +440,16 @@ const machineResourceRegistry = await readJson(
 );
 const hfPolicy = authorityPolicy.surfaces?.huggingFace;
 if (
-  authorityPolicy.identitySource !== "src/data/release.json" ||
+  authorityPolicy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
+  authorityPolicy.releaseLifecycleSource !== "src/data/release.json" ||
+  authorityPolicy.authorityProfile !== "src/data/semantic/authority-profile.json" ||
   authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||
   authorityPolicy.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||
+  retrievalPolicy.identitySource !== authorityPolicy.identitySource ||
+  retrievalPolicy.semanticSource !== authorityPolicy.identitySource ||
+  retrievalPolicy.releaseLifecycleSource !== authorityPolicy.releaseLifecycleSource ||
+  retrievalPolicy.authorityProfile !== authorityPolicy.authorityProfile ||
   hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource
 )
   fail("Authority source reference drift");

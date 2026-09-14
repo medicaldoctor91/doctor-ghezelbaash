@@ -286,11 +286,22 @@ assert(
     /import\s+release\s+from\s+['"]\.\.\/data\/release\.json['"]/.test(
       documentHead,
     ) &&
-    /import\s*\{\s*headGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
+    /import\s+authorityProfile\s+from\s+['"]\.\.\/data\/semantic\/authority-profile\.json['"]/.test(
       documentHead,
     ) &&
-    /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead),
-  "Document Head must use its direct metadata and resource sources",
+    /deriveCanonicalAuthority/.test(documentHead) &&
+    !/hydrateReleaseAuthority/.test(documentHead) &&
+    /import\s*\{\s*canonicalGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
+      documentHead,
+    ) &&
+    /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead) &&
+    /exactLanguageLiteral\(\s*person\.name/.test(documentHead) &&
+    /exactText\(website\.name/.test(documentHead) &&
+    /authority\.primaryEntity\.verifiedWebIdentityMesh/.test(documentHead) &&
+    /authority\.clinicAuthority\.cid/.test(documentHead) &&
+    !/documentHead\.(?:author|applicationName)/.test(documentHead) &&
+    !/documentHead\.openGraph\.siteName/.test(documentHead),
+  "Document Head must derive semantic identity directly from canonical graph authority while consuming presentation and release lifecycle policy explicitly",
 );
 assert(
   /discoveryLinks\s*\.map\s*\(\s*\(?\s*link\s*\)?\s*=>\s*<link\s+\{\.\.\.link\}/.test(

@@ -66,10 +66,12 @@ assert(
   documentHead.includes("document-head.json") &&
     documentHead.includes("release.json") &&
     documentHead.includes("HERO_PRELOAD_SRCSET") &&
-    documentHead.includes("headGraph") &&
+    documentHead.includes("canonicalGraph") &&
+    documentHead.includes("deriveCanonicalAuthority") &&
+    !documentHead.includes("hydrateReleaseAuthority") &&
     documentHead.includes("<slot />") &&
     !/\bHeadStage\b|\bstage\s*=/.test(documentHead),
-  "Structured DocumentHead contract missing",
+  "Structured DocumentHead canonical authority contract missing",
 );
 assert(
   !documentHead.includes("href={HERO_PRELOAD_HREF}"),

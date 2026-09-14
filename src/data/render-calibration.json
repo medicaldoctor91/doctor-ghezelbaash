@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-13T01:03:06.099Z",
-    "sourceSha256": "9011064264d46f4d3d7fec9b0d6aed675e3e7bba8ddaa6cf6a2b782243a5792f",
+    "measuredAt": "2026-09-14T00:36:27.897Z",
+    "sourceSha256": "a5a3a49c678f4a58af49eb5dbf2c135d13dedf83f722b4e227758ca09c001f19",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4881,19 +4881,19 @@
       ],
       [
         "src/components/DocumentHead.astro",
-        "cdf5d6300389059e340c5b06def0b95e2e5f4e025e4eb45f0a4826fcd7989552"
+        "d0e25ffc88501d3c047937886a2147f0baa6ba3dcefc19856c54abee36a1f5cc"
       ],
       [
         "src/components/FloatingActionDock.astro",
-        "2b09fe737aad327f3019fd404ea81b1fcc9adf9ebed1637a6723c019fc6395a0"
+        "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e"
       ],
       [
         "src/components/GuideNavigator.astro",
-        "f721b6b877e974754a55a6dd7ef369f691ecda122894384ed2d2bcb291b8ca78"
+        "13b78af14133866c41a7ba10d440c888272dbf1eb17bfc550929df9aa14bf751"
       ],
       [
         "src/components/SiteFooter.astro",
-        "74d0380e1ad7ed279720d9022b08581f716cf707d3a11d28078c8e57e983b038"
+        "a6d6d6f7131d8c52f6a5f7558cbf722fdd9fb1171716fca8ced85e89baab04e9"
       ],
       [
         "src/layouts/BaseLayout.astro",
@@ -4924,7 +4924,7 @@
       "engine": "chromium",
       "browserVersion": "153.0.8010.12",
       "playwrightVersion": "1.63.0",
-      "platform": "linux 6.18.35 x64",
+      "platform": "linux 6.17.0-1022-azure x64",
       "viewportHeight": 936,
       "deviceScaleFactor": 1,
       "locale": "fa-IR",
