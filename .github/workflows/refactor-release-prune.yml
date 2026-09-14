@@ -32,6 +32,19 @@ jobs:
           node scripts/prune-release-authority.mjs
           node --input-type=module <<'JS'
           import fs from 'node:fs';
+          const file = 'scripts/test-machine-resources.mjs';
+          let source = fs.readFileSync(file, 'utf8');
+          const before = '"src/data/semantic/knowledge-graph.jsonld", "src/data/machine-resources.json",';
+          const after = '"src/data/semantic/knowledge-graph.jsonld", "src/data/semantic/authority-profile.json",\n    "src/data/machine-resources.json",';
+          if (!source.includes(after)) {
+            const count = source.split(before).length - 1;
+            if (count !== 1) throw new Error(`descriptor fixture authority dependency drift: ${count}`);
+            source = source.replace(before, after);
+            fs.writeFileSync(file, source);
+          }
+          JS
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
           import { sourceContract, sourceRawHashes } from './scripts/lib/visible-text-contract.mjs';
           const file = 'src/data/visible-text-contract.json';
           const baseline = JSON.parse(fs.readFileSync(file, 'utf8'));
