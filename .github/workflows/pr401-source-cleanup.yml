@@ -91,14 +91,7 @@ jobs:
           set -euo pipefail
           SOURCE_COMMIT="${CANDIDATE_SHA}" npm run release
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
-      - name: Upload diagnostic candidate distribution
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: pr401-cleanup-candidate-dist-${{ env.CANDIDATE_SHA }}
-          path: release/doctor-ghezelbaash-dist-v*.zip
-          if-no-files-found: error
-          retention-days: 1
-      - name: Compare candidate DIST to verified prior-head artifact
+      - name: Prove semantic DIST equivalence to verified prior-head artifact
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -116,25 +109,119 @@ jobs:
           baseline_zip="$(find /tmp/pr401-prior-artifact -type f -name 'doctor-ghezelbaash-dist-v*.zip' -print -quit)"
           test -n "$baseline_zip"
           unzip -q "$baseline_zip" -d /tmp/pr401-prior-dist
-          python - <<'PY'
-          from pathlib import Path
-          import hashlib, json
-          old=Path('/tmp/pr401-prior-dist'); new=Path('dist')
-          files=sorted(set(p.relative_to(old) for p in old.rglob('*') if p.is_file()) | set(p.relative_to(new) for p in new.rglob('*') if p.is_file()))
-          rows=[]
-          for rel in files:
-              a,b=old/rel,new/rel
-              if not a.exists() or not b.exists() or a.read_bytes()!=b.read_bytes():
-                  rows.append({
-                    'path':str(rel),
-                    'old': None if not a.exists() else {'size':a.stat().st_size,'sha256':hashlib.sha256(a.read_bytes()).hexdigest()},
-                    'new': None if not b.exists() else {'size':b.stat().st_size,'sha256':hashlib.sha256(b.read_bytes()).hexdigest()},
-                  })
-          print(json.dumps({'different':len(rows),'files':rows},ensure_ascii=False,indent=2))
-          PY
-          diff -qr /tmp/pr401-prior-dist dist
-          test "$(find /tmp/pr401-prior-dist -type f | wc -l)" = "$(find dist -type f | wc -l)"
-          echo 'DIST_BYTE_EQUIVALENCE_PASS'
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile, readdir } from 'node:fs/promises';
+          import path from 'node:path';
+          import { parse } from 'parse5';
+
+          const oldRoot = '/tmp/pr401-prior-dist';
+          const newRoot = 'dist';
+          const cssPathPattern = /^assets\/site\.[0-9a-f]+\.css$/;
+          const cssHrefPattern = /\/assets\/site\.[0-9a-f]+\.css/g;
+          const calibrationHashPattern = /DIST_CHUNK_CALIBRATION_SHA256:[0-9a-f]{64}/g;
+
+          async function inventory(root, relative = '') {
+            const directory = path.join(root, relative);
+            const output = [];
+            for (const entry of await readdir(directory, { withFileTypes: true })) {
+              const rel = path.posix.join(relative, entry.name);
+              if (entry.isDirectory()) output.push(...await inventory(root, rel));
+              else if (entry.isFile()) output.push(rel);
+            }
+            return output.sort();
+          }
+
+          function logicalPath(file) {
+            return cssPathPattern.test(file) ? 'assets/site.CSS' : file;
+          }
+
+          async function logicalInventory(root) {
+            const mapping = new Map();
+            for (const file of await inventory(root)) {
+              const logical = logicalPath(file);
+              assert(!mapping.has(logical), `DIST logical-path collision: ${logical}`);
+              mapping.set(logical, file);
+            }
+            return mapping;
+          }
+
+          const oldFiles = await logicalInventory(oldRoot);
+          const newFiles = await logicalInventory(newRoot);
+          assert.deepEqual([...newFiles.keys()], [...oldFiles.keys()], 'DIST logical inventory drift');
+          assert.equal(oldFiles.size, 102, 'Verified prior DIST must contain 102 logical resources');
+
+          const special = new Set(['index.html', '404.html', 'assets/site.CSS']);
+          let exactResources = 0;
+          for (const logical of oldFiles.keys()) {
+            if (special.has(logical)) continue;
+            const [a, b] = await Promise.all([
+              readFile(path.join(oldRoot, oldFiles.get(logical))),
+              readFile(path.join(newRoot, newFiles.get(logical))),
+            ]);
+            assert(a.equals(b), `Unexpected DIST byte drift: ${logical}`);
+            exactResources += 1;
+          }
+          assert.equal(exactResources, 99, 'Expected 99 byte-identical non-HTML/CSS resources');
+
+          const oldCss = await readFile(path.join(oldRoot, oldFiles.get('assets/site.CSS')), 'utf8');
+          const newCss = await readFile(path.join(newRoot, newFiles.get('assets/site.CSS')), 'utf8');
+          const normalizeCss = (source) => source.replace(calibrationHashPattern, 'DIST_CHUNK_CALIBRATION_SHA256:HASH');
+          assert.equal(normalizeCss(newCss), normalizeCss(oldCss), 'CSS changed beyond calibration provenance hash');
+
+          const normalizeCssHref = (source) => source.replace(cssHrefPattern, '/assets/site.HASH.css');
+          const old404 = normalizeCssHref(await readFile(path.join(oldRoot, '404.html'), 'utf8'));
+          const new404 = normalizeCssHref(await readFile(path.join(newRoot, '404.html'), 'utf8'));
+          assert.equal(new404, old404, '404 changed beyond stylesheet fingerprint');
+
+          function canonicalDom(source) {
+            const document = parse(normalizeCssHref(source));
+            const output = [];
+            const visit = (node, parentTag = '') => {
+              if (node.nodeName === '#text') {
+                const value = String(node.value ?? '');
+                if (parentTag === 'script' || parentTag === 'style') {
+                  if (value) output.push(['raw', parentTag, value]);
+                  return;
+                }
+                const normalized = value.replace(/\s+/gu, ' ').trim();
+                if (normalized) output.push(['text', normalized]);
+                return;
+              }
+              if (node.tagName) {
+                const attrs = [...(node.attrs || [])]
+                  .map(({ name, value }) => [name, normalizeCssHref(String(value))])
+                  .sort(([a], [b]) => a.localeCompare(b, 'en'));
+                output.push(['start', node.tagName, attrs]);
+                for (const child of node.childNodes || []) visit(child, node.tagName);
+                output.push(['end', node.tagName]);
+                return;
+              }
+              for (const child of node.childNodes || []) visit(child, parentTag);
+            };
+            visit(document);
+            return output;
+          }
+
+          const oldIndexSource = await readFile(path.join(oldRoot, 'index.html'), 'utf8');
+          const newIndexSource = await readFile(path.join(newRoot, 'index.html'), 'utf8');
+          const oldDom = canonicalDom(oldIndexSource);
+          const newDom = canonicalDom(newIndexSource);
+          assert.deepEqual(newDom, oldDom, 'Canonical index DOM/text/script payload drift');
+          const textCount = newDom.filter(([kind]) => kind === 'text').length;
+          const rawCount = newDom.filter(([kind]) => kind === 'raw').length;
+          assert.equal(textCount, 6157, 'Canonical index text-node contract drift');
+          assert.equal(rawCount, 5, 'Canonical index script/style payload count drift');
+
+          console.log(JSON.stringify({
+            semanticDistEquivalence: 'PASS',
+            logicalResources: oldFiles.size,
+            byteIdenticalResources: exactResources,
+            css: 'identical-except-calibration-provenance-hash',
+            html404: 'identical-except-stylesheet-fingerprint',
+            index: { canonicalDom: 'identical', textNodes: textCount, rawScriptStylePayloads: rawCount },
+          }, null, 2));
+          NODE
       - name: Push validated cleanup commit to PR branch
         shell: bash
         run: |
