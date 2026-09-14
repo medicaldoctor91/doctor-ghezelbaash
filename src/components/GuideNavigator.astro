@@ -1,13 +1,13 @@
 ---
 import rawRelease from '../data/release.json';
 import authorityProfile from '../data/semantic/authority-profile.json';
-import { hydrateReleaseAuthority } from '../lib/canonical-authority.mjs';
+import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
 import { headGraph } from '../lib/knowledge-graph';
-const release = hydrateReleaseAuthority(rawRelease, headGraph, authorityProfile);
+const authority = deriveCanonicalAuthority(rawRelease, headGraph, authorityProfile);
 const entityAliases = [
-  ...release.primaryEntity.officialAliases,
-  ...(release.primaryEntity.reconciliationAliases || []),
-  ...release.primaryEntity.retrievalVariants,
+  ...authority.primaryEntity.officialAliases,
+  ...authority.primaryEntity.reconciliationAliases,
+  ...authority.primaryEntity.retrievalVariants,
 ].join('|');
 ---
 
