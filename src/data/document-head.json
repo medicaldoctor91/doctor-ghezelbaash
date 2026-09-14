@@ -5,10 +5,6 @@
     "type": "profile",
     "locale": "fa_IR",
     "alternateLocales": ["en_US", "ar_IQ", "ckb_IQ"],
-    "image": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg",
-    "imageType": "image/jpeg",
-    "imageWidth": 1200,
-    "imageHeight": 630,
     "imageAlt": "دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه"
   },
   "twitter": {
