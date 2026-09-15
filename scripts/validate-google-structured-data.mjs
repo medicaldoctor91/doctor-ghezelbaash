@@ -7,6 +7,12 @@ const fail = (message) => {
 };
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
+const literalValue = (value) =>
+  value && typeof value === "object" && value["@value"] != null
+    ? String(value["@value"])
+    : typeof value === "string"
+      ? value
+      : null;
 const refId = (value) =>
   value && typeof value === "object" && typeof value["@id"] === "string"
     ? value["@id"]
@@ -59,8 +65,17 @@ const assertSchemaContext = (document, label) => {
 const byId = (document) =>
   new Map((document?.["@graph"] || []).map((node) => [node?.["@id"], node]));
 
-const [release, canonical, head, support, headProfile, supportProfile] = await Promise.all([
+const [
+  release,
+  documentHead,
+  canonical,
+  head,
+  support,
+  headProfile,
+  supportProfile,
+] = await Promise.all([
   readFile("src/data/release.json", "utf8").then(JSON.parse),
+  readFile("src/data/document-head.json", "utf8").then(JSON.parse),
   readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(JSON.parse),
   readFile(".generated/semantic/head-graph.json", "utf8").then(JSON.parse),
   readFile(".generated/semantic/support-graph.json", "utf8").then(JSON.parse),
@@ -86,11 +101,33 @@ const canonicalById = byId(canonical),
   supportById = byId(support),
   physicianId = release.primaryEntity.id,
   clinicId = release.clinic.id,
+  websiteId = `${release.canonicalUrl}#website`,
   canonicalPhysician = canonicalById.get(physicianId),
   homepagePhysician = headById.get(physicianId),
-  homepageClinic = headById.get(clinicId);
+  homepageClinic = headById.get(clinicId),
+  homepageWebsite = headById.get(websiteId);
 if (!canonicalPhysician || !homepagePhysician || !homepageClinic)
   fail("Canonical/homepage physician or clinic node is missing");
+if (!homepageWebsite || !nodeTypes(homepageWebsite).includes("WebSite"))
+  fail("Google-facing WebSite node is missing");
+const homepageSiteNames = asArray(homepageWebsite.name)
+  .map(literalValue)
+  .filter(Boolean);
+if (
+  homepageSiteNames.length !== 1 ||
+  homepageSiteNames[0] !== documentHead.applicationName ||
+  documentHead.openGraph?.siteName !== homepageSiteNames[0] ||
+  homepageWebsite.url !== release.canonicalUrl
+)
+  fail(
+    `Google-facing site name contract drift: ${JSON.stringify({
+      names: homepageSiteNames,
+      applicationName: documentHead.applicationName,
+      openGraphSiteName: documentHead.openGraph?.siteName,
+      websiteUrl: homepageWebsite.url,
+      canonicalUrl: release.canonicalUrl,
+    })}`,
+  );
 
 // Site names are separate from title links and are not tested by Google's
 // Rich Results Test. Keep one explicit preference across source and HTML.
@@ -225,6 +262,7 @@ console.log(
       internalGoogleProjectionContract: "PASS",
       validator: "INTERNAL_GOOGLE_PROJECTION_CONTRACT_PASS",
       googleParserExecuted: false,
+      homepageSiteName: homepageSiteNames[0],
       canonicalPhysicianTypes: nodeTypes(canonicalPhysician),
       homepagePhysicianTypes: nodeTypes(homepagePhysician),
       homepageClinicTypes: nodeTypes(homepageClinic),
