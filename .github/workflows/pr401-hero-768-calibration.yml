@@ -24,6 +24,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Install Chromium for temporary proof
+        run: npx playwright install chromium
       - name: Install calibration encoder
         run: |
           sudo apt-get update -qq
