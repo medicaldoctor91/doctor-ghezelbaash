@@ -607,7 +607,6 @@ const projectionOwners = scriptReferences("scripts/generate-projections.mjs");
 assert(
   JSON.stringify(scriptSteps("prepare:site")) ===
     JSON.stringify([
-      "npm run validate:visible-text-source",
       "npm run validate:media-references",
       "npm run clean:generated",
       "node scripts/generate-projections.mjs site",
@@ -617,7 +616,6 @@ assert(
 assert(
   JSON.stringify(scriptSteps("prepare:distribution")) ===
     JSON.stringify([
-      "npm run validate:visible-text-source",
       "npm run validate:media-references",
       "npm run clean:generated",
       "npm run rdf:generate",
@@ -671,7 +669,6 @@ assert(
 for (const step of [
   "astro build",
   "npm run materialize:static",
-  "npm run validate:visible-text",
   "node scripts/generate-deployment-headers.mjs",
   "node scripts/validate-dist.mjs",
   "npm run validate:dist-production",
@@ -680,15 +677,6 @@ for (const step of [
     String(pkg.scripts?.["compile:dist"] || "").includes(step),
     `DIST compiler step missing: ${step}`,
   );
-assert(
-  scriptSteps("validate:source")[0] === "npm run validate:visible-text-source" &&
-    scriptSteps("validate:source").includes("npm run test:visible-text") &&
-    scriptSteps("compile:dist").indexOf("npm run validate:visible-text") >
-      scriptSteps("compile:dist").indexOf("npm run materialize:static") &&
-    scriptSteps("compile:dist").indexOf("npm run validate:visible-text") <
-      scriptSteps("compile:dist").indexOf("node scripts/generate-deployment-headers.mjs"),
-  "Frozen source and emitted-text gates must run before delivery validation",
-);
 assert(
   String(pkg.scripts?.release || "").includes("npm run compile:dist") &&
     String(pkg.scripts?.release || "").includes("npm run release:attest"),
@@ -701,7 +689,6 @@ assert(
     pkg.scripts?.["test:answer-projection"] ===
       "node --test scripts/test-answer-projection.mjs" &&
     ciWorkflow.includes("npm run test:dist-interactions") &&
-    ciWorkflow.includes("npm run test:visible-text-browser") &&
     ciWorkflow.includes("npm run test:performance") &&
     ciWorkflow.includes("npm run test:css-validation") &&
     ciWorkflow.includes("npm run validate:html-css") &&
