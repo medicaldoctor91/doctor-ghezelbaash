@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      BASELINE_SHA: de111fbe5ad930e31ca17cf620a7c40df9f26eff
-      CANDIDATE_SHA: 805011e0511c112f6ad1f2c326c6dc9000bc5c9d
+      BASELINE_SHA: 805011e0511c112f6ad1f2c326c6dc9000bc5c9d
+      CANDIDATE_SHA: 9c9554726459c38bed7b9200542a74547f1f72a8
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 805011e0511c112f6ad1f2c326c6dc9000bc5c9d
+          ref: 9c9554726459c38bed7b9200542a74547f1f72a8
           fetch-depth: 0
           persist-credentials: false
 
@@ -52,93 +52,18 @@ jobs:
           export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
           npm run build
 
-      - name: Prove compatibility repair is source-only
+      - name: Assert focused source delta
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           git diff --check "$BASELINE_SHA" "$CANDIDATE_SHA"
           changed="$(git diff --name-only "$BASELINE_SHA" "$CANDIDATE_SHA")"
-          test "$changed" = "package.json"
-          node -e "const p=require('./package.json');if(p.scripts['validate:source']!=='npm run check:astro')throw new Error('validate:source entrypoint drift')"
-          grep -Fq 'npm run validate:source' .github/workflows/hugging-face-authority.yml
-          echo RELEASE_SOURCE_ENTRYPOINT_RESTORED=PASS
-
-      - name: Audit remaining source reachability
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import json, os, re, subprocess
-          from pathlib import Path
-
-          root = Path.cwd()
-          tracked = [Path(p) for p in subprocess.check_output(['git','ls-files'], text=True).splitlines()]
-          print('TRACKED_FILES=' + str(len(tracked)))
-          print('TRACKED_BYTES=' + str(sum((root/p).stat().st_size for p in tracked)))
-
-          text = {}
-          for p in tracked:
-            try:
-              b=(root/p).read_bytes()
-              if b'\0' in b: continue
-              text[p.as_posix()] = b.decode('utf-8')
-            except (UnicodeDecodeError,OSError):
-              pass
-          print('TEXT_FILES=' + str(len(text)))
-
-          import_re = re.compile(r'''(?:from\s*|import\s*\(|import\s+|require\s*\()\s*["']([^"']+)["']''')
-          incoming = {p:set() for p in text}
-          extensions = ['', '.mjs','.js','.ts','.astro','.json','.jsonld','.ttl']
-          for src, body in text.items():
-            if not src.endswith(('.mjs','.js','.ts','.astro')): continue
-            base=(root/src).parent
-            for spec in import_re.findall(body):
-              if not spec.startswith('.'): continue
-              raw=(base/spec).resolve()
-              candidates=[Path(str(raw)+ext) for ext in extensions]
-              candidates += [raw/('index'+ext) for ext in ('.mjs','.js','.ts')]
-              for c in candidates:
-                try: rel=c.relative_to(root).as_posix()
-                except ValueError: continue
-                if rel in incoming:
-                  incoming[rel].add(src); break
-
-          module_scope=sorted(p for p in text if p.startswith(('src/lib/','scripts/lib/')) and p.endswith(('.mjs','.js','.ts')))
-          zero_modules=[p for p in module_scope if not incoming[p]]
-          single_modules=[{'path':p,'bytes':(root/p).stat().st_size,'callers':sorted(incoming[p])} for p in module_scope if len(incoming[p])==1]
-          print('ZERO_INCOMING_LIBRARY_MODULES='+json.dumps(zero_modules,ensure_ascii=False))
-          print('SINGLE_INCOMING_LIBRARY_MODULES='+json.dumps(single_modules,ensure_ascii=False))
-
-          # Exact path mentions in all other text catches package/workflow/shell consumers.
-          def refs_for(path):
-            refs=[]
-            for src,body in text.items():
-              if src==path: continue
-              if path in body: refs.append(src)
-            return sorted(refs)
-
-          top_scripts=sorted(p for p in text if p.startswith('scripts/') and p.count('/')==1 and p.endswith(('.mjs','.py')))
-          script_refs=[{'path':p,'bytes':(root/p).stat().st_size,'pathRefs':refs_for(p)} for p in top_scripts]
-          print('TOP_LEVEL_SCRIPT_REFS='+json.dumps(script_refs,ensure_ascii=False))
-
-          data_scope=sorted(p for p in text if p.startswith(('src/data/','.release/')))
-          low_data=[]
-          for p in data_scope:
-            exact=refs_for(p)
-            base=Path(p).name
-            name_refs=sorted(src for src,body in text.items() if src!=p and base in body)
-            if len(set(exact+name_refs)) <= 1:
-              low_data.append({'path':p,'bytes':(root/p).stat().st_size,'refs':sorted(set(exact+name_refs))})
-          print('LOW_REFERENCE_DATA_FILES='+json.dumps(low_data,ensure_ascii=False))
-
-          package=json.loads((root/'package.json').read_text())
-          scripts=package.get('scripts',{})
-          workflow_blob='\n'.join(v for k,v in text.items() if k.startswith('.github/workflows/'))
-          npm=[]
-          for name,cmd in scripts.items():
-            needle=f'npm run {name}'
-            callers=sorted(n for n,c in scripts.items() if n!=name and needle in c)
-            wf=needle in workflow_blob
-            npm.append({'name':name,'callers':callers,'workflow':wf,'command':cmd})
-          print('NPM_ENTRYPOINT_REFS='+json.dumps(npm,ensure_ascii=False))
-          PY
+          expected=$'scripts/lib/mojavez-evidence.mjs\nscripts/verify-mojavez-evidence.mjs'
+          test "$changed" = "$expected"
+          test ! -e scripts/lib/mojavez-evidence.mjs
+          node --check scripts/verify-mojavez-evidence.mjs
+          test "$(git ls-files | wc -l)" = "175"
+          grep -Fq '"verify:mojavez": "node scripts/verify-mojavez-evidence.mjs"' package.json
+          grep -Fq '"verificationRecord": ".release/evidence/mojavez-19949827.json"' src/data/evidence-registry.json
+          echo MOJAVEZ_SINGLE_FILE_VERIFIER=PASS
