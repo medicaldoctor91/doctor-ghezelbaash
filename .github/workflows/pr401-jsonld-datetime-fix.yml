@@ -19,8 +19,110 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .nvmrc
-      - name: Apply audited JSON-LD 1.1 datatype patch
+      - name: Apply audited JSON-LD 1.1 datatype fix
         shell: bash
         run: |
           set -euo pipefail
-          echo 'LS0tIGJhc2Uvc3JjL2RhdGEvc2VtYW50aWMva25vd2xlZGdlLWdyYXBoLmpzb25sZAkyMDI2LTA5LTE0IDIzOjM2OjQ1LjAwMDAwMDAwMCArMDAwMAorKysgcmVwby9zcmMvZGF0YS9zZW1hbnRpYy9rbm93bGVkZ2UtZ3JhcGguanNvbmxkCTIwMjYtMDktMTUgMDA6MTc6NTAuMzAzOTE1NTUwICswMDAwCkBAIC04OTE5LDcgKzg5MTksMTAgQEAKICAgICAgICJvYnNlcnZhdGlvbkFib3V0IjogewogICAgICAgICAiQGlkIjogImh0dHBzOi8vd3d3LmdoZXplbGJhYXNoLmlyLyNkci1zYWVlZC1naGV6ZWxiYXNoLWFlc3RoZXRpYy1jbGluaWMta2VybWFuc2hhaCIKICAgICAgIH0sCi0gICAgICAib2JzZXJ2YXRpb25EYXRlIjogIjIwMjYtMDktMDRUMDM6MzA6NDJaIiwKKyAgICAgICJvYnNlcnZhdGlvbkRhdGUiOiB7CisgICAgICAgICJAdmFsdWUiOiAiMjAyNi0wOS0wNFQwMzozMDo0MloiLAorICAgICAgICAiQHR5cGUiOiAiaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEjZGF0ZVRpbWUiCisgICAgICB9LAogICAgICAgIm1lYXN1cmVtZW50TWV0aG9kIjogIkdvb2dsZSBQbGFjZXMgQVBJIChOZXcpIiwKICAgICAgICJwcm92Ondhc0Rlcml2ZWRGcm9tIjogewogICAgICAgICAiQGlkIjogImh0dHBzOi8vd3d3LmdoZXplbGJhYXNoLmlyLyNldmlkZW5jZS1nb29nbGUtbWFwcy1jbGluaWMiCkBAIC04OTM0LDcgKzg5MzcsMTAgQEAKICAgICAgICJvYnNlcnZhdGlvbkFib3V0IjogewogICAgICAgICAiQGlkIjogImh0dHBzOi8vd3d3LmdoZXplbGJhYXNoLmlyLyNkci1zYWVlZC1naGV6ZWxiYXNoLWFlc3RoZXRpYy1jbGluaWMta2VybWFuc2hhaCIKICAgICAgIH0sCi0gICAgICAib2JzZXJ2YXRpb25EYXRlIjogIjIwMjYtMDktMDRUMDM6MzA6NDJaIiwKKyAgICAgICJvYnNlcnZhdGlvbkRhdGUiOiB7CisgICAgICAgICJAdmFsdWUiOiAiMjAyNi0wOS0wNFQwMzozMDo0MloiLAorICAgICAgICAiQHR5cGUiOiAiaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEjZGF0ZVRpbWUiCisgICAgICB9LAogICAgICAgIm1lYXN1cmVtZW50TWV0aG9kIjogIkdvb2dsZSBQbGFjZXMgQVBJIChOZXcpIiwKICAgICAgICJwcm92Ondhc0Rlcml2ZWRGcm9tIjogewogICAgICAgICAiQGlkIjogImh0dHBzOi8vd3d3LmdoZXplbGJhYXNoLmlyLyNldmlkZW5jZS1nb29nbGUtbWFwcy1jbGluaWMiCi0tLSBiYXNlL3NyYy9saWIvcmVwdXRhdGlvbi1vYnNlcnZhdGlvbi5tanMJMjAyNi0wOS0xNCAyMzozNjo0NS4wMDAwMDAwMDAgKzAwMDAKKysrIHJlcG8vc3JjL2xpYi9yZXB1dGF0aW9uLW9ic2VydmF0aW9uLm1qcwkyMDI2LTA5LTE1IDAwOjE3OjUwLjMwNDI3NjQ4MyArMDAwMApAQCAtMiw2ICsyLDcgQEAKIAogY29uc3QgU0NIRU1BX1ZFUlNJT04gPSAiMi4wIjsKIGNvbnN0IFNPVVJDRSA9ICJHb29nbGUgUGxhY2VzIEFQSSAoTmV3KSI7Citjb25zdCBYU0RfREFURVRJTUUgPSAiaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEjZGF0ZVRpbWUiOwogY29uc3QgUkFUSU5HX1NVRkZJWCA9ICJvYnNlcnZhdGlvbi1jbGluaWMtZ29vZ2xlLW1hcHMtcmF0aW5nLWN1cnJlbnQiOwogY29uc3QgUkVWSUVXX0NPVU5UX1NVRkZJWCA9ICJvYnNlcnZhdGlvbi1jbGluaWMtZ29vZ2xlLW1hcHMtcmV2aWV3LWNvdW50LWN1cnJlbnQiOwogY29uc3QgRVZJREVOQ0VfU1VGRklYID0gImV2aWRlbmNlLWdvb2dsZS1tYXBzLWNsaW5pYyI7CkBAIC0xOSw2ICsyMCwyMCBAQAogICB0eXBlb2YgdmFsdWUgPT09ICJzdHJpbmciICYmCiAgIC9eXGR7NH0tXGR7Mn0tXGR7Mn1UXGR7Mn06XGR7Mn06XGR7Mn1aJC8udGVzdCh2YWx1ZSkgJiYKICAgIU51bWJlci5pc05hTihEYXRlLnBhcnNlKHZhbHVlKSk7Citjb25zdCBleHBsaWNpdERhdGVUaW1lID0gKHZhbHVlKSA9PiB7CisgIGlmICgKKyAgICAhdmFsdWUgfHwKKyAgICB0eXBlb2YgdmFsdWUgIT09ICJvYmplY3QiIHx8CisgICAgQXJyYXkuaXNBcnJheSh2YWx1ZSkgfHwKKyAgICBPYmplY3Qua2V5cyh2YWx1ZSkubGVuZ3RoICE9PSAyIHx8CisgICAgdmFsdWVbIkB0eXBlIl0gIT09IFhTRF9EQVRFVElNRSB8fAorICAgICFpc0lzb1NlY29uZCh2YWx1ZVsiQHZhbHVlIl0pCisgICkKKyAgICByZXR1cm4gbnVsbDsKKyAgcmV0dXJuIHZhbHVlWyJAdmFsdWUiXTsKK307Citjb25zdCBkYXRlVGltZVZhbHVlID0gKHZhbHVlKSA9PgorICBPYmplY3QuZnJlZXplKHsgIkB2YWx1ZSI6IHZhbHVlLCAiQHR5cGUiOiBYU0RfREFURVRJTUUgfSk7CiBjb25zdCBleGFjdFJlZiA9ICh2YWx1ZSwgbGFiZWwpID0+IHsKICAgY29uc3QgcmVmcyA9IHZhbHVlcyh2YWx1ZSkubWFwKHJlZklkKS5maWx0ZXIoQm9vbGVhbik7CiAgIGlmIChyZWZzLmxlbmd0aCAhPT0gMSkgdGhyb3cgbmV3IEVycm9yKGAke2xhYmVsfSByZXF1aXJlcyBvbmUgcmVmZXJlbmNlYCk7CkBAIC0zNCw3ICs0OSw3IEBACiAgICAgbm9kZS5tZWFzdXJlZFByb3BlcnR5ICE9PSBwcm9wZXJ0eSB8fAogICAgIG5vZGUubWVhc3VyZW1lbnRNZXRob2QgIT09IFNPVVJDRSB8fAogICAgIGV4YWN0UmVmKG5vZGVbInByb3Y6d2FzRGVyaXZlZEZyb20iXSwgYCR7aWR9IHByb3Y6d2FzRGVyaXZlZEZyb21gKSAhPT0gZXZpZGVuY2VJZCB8fAotICAgICFpc0lzb1NlY29uZChub2RlLm9ic2VydmF0aW9uRGF0ZSkKKyAgICAhZXhwbGljaXREYXRlVGltZShub2RlLm9ic2VydmF0aW9uRGF0ZSkKICAgKQogICAgIHRocm93IG5ldyBFcnJvcihgQ2Fub25pY2FsIEdvb2dsZSBNYXBzIHJlcHV0YXRpb24gb2JzZXJ2YXRpb24gZHJpZnQ6ICR7aWR9YCk7CiAgIHJldHVybiBub2RlOwpAQCAtNjksOCArODQsMTAgQEAKICAgKTsKICAgY29uc3QgcmF0aW5nID0gTnVtYmVyKHJhdGluZ05vZGUudmFsdWUpOwogICBjb25zdCByZXZpZXdDb3VudCA9IE51bWJlcihyZXZpZXdOb2RlLnZhbHVlKTsKKyAgY29uc3QgcmF0aW5nT2JzZXJ2ZWRBdCA9IGV4cGxpY2l0RGF0ZVRpbWUocmF0aW5nTm9kZS5vYnNlcnZhdGlvbkRhdGUpOworICBjb25zdCByZXZpZXdPYnNlcnZlZEF0ID0gZXhwbGljaXREYXRlVGltZShyZXZpZXdOb2RlLm9ic2VydmF0aW9uRGF0ZSk7CiAgIGlmICgKLSAgICByYXRpbmdOb2RlLm9ic2VydmF0aW9uRGF0ZSAhPT0gcmV2aWV3Tm9kZS5vYnNlcnZhdGlvbkRhdGUgfHwKKyAgICByYXRpbmdPYnNlcnZlZEF0ICE9PSByZXZpZXdPYnNlcnZlZEF0IHx8CiAgICAgTnVtYmVyKHJhdGluZ05vZGUubWF4VmFsdWUpICE9PSA1IHx8CiAgICAgIU51bWJlci5pc0Zpbml0ZShyYXRpbmcpIHx8CiAgICAgcmF0aW5nIDwgMSB8fApAQCAtODYsNyArMTAzLDcgQEAKICAgICBwbGFjZUlkLAogICAgIHJhdGluZywKICAgICByZXZpZXdDb3VudCwKLSAgICB2YWx1ZU9ic2VydmVkQXQ6IHJhdGluZ05vZGUub2JzZXJ2YXRpb25EYXRlLAorICAgIHZhbHVlT2JzZXJ2ZWRBdDogcmF0aW5nT2JzZXJ2ZWRBdCwKICAgICByYXRpbmdOb2RlSWQ6IHJhdGluZ05vZGVbIkBpZCJdLAogICAgIHJldmlld0NvdW50Tm9kZUlkOiByZXZpZXdOb2RlWyJAaWQiXSwKICAgfSk7CkBAIC0xMzQsOSArMTUxLDkgQEAKICAgaWYgKCFyYXRpbmdOb2RlIHx8ICFyZXZpZXdOb2RlKQogICAgIHRocm93IG5ldyBFcnJvcigiQ2Fub25pY2FsIEdvb2dsZSBNYXBzIHJlcHV0YXRpb24gbm9kZXMgYXJlIG1pc3NpbmciKTsKICAgcmF0aW5nTm9kZS52YWx1ZSA9IGV2YWx1YXRpb24ucmF0aW5nOwotICByYXRpbmdOb2RlLm9ic2VydmF0aW9uRGF0ZSA9IG9ic2VydmVkQXQ7CisgIHJhdGluZ05vZGUub2JzZXJ2YXRpb25EYXRlID0gZGF0ZVRpbWVWYWx1ZShvYnNlcnZlZEF0KTsKICAgcmV2aWV3Tm9kZS52YWx1ZSA9IGV2YWx1YXRpb24ucmV2aWV3Q291bnQ7Ci0gIHJldmlld05vZGUub2JzZXJ2YXRpb25EYXRlID0gb2JzZXJ2ZWRBdDsKKyAgcmV2aWV3Tm9kZS5vYnNlcnZhdGlvbkRhdGUgPSBkYXRlVGltZVZhbHVlKG9ic2VydmVkQXQpOwogICB2YWxpZGF0ZVJlcHV0YXRpb25PYnNlcnZhdGlvbihuZXh0LCByZWxlYXNlKTsKICAgcmV0dXJuIG5leHQ7CiB9Ci0tLSBiYXNlL3NjcmlwdHMvdmFsaWRhdGUtYXJjaGl0ZWN0dXJlLm1qcwkyMDI2LTA5LTE0IDIzOjM2OjQ1LjAwMDAwMDAwMCArMDAwMAorKysgcmVwby9zY3JpcHRzL3ZhbGlkYXRlLWFyY2hpdGVjdHVyZS5tanMJMjAyNi0wOS0xNSAwMDoxNzo1MC4zMDQzOTE2MjMgKzAwMDAKQEAgLTM3MSw3ICszNzEsMTIgQEAKICAgICAhY29
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          xsd_datetime = "http://www.w3.org/2001/XMLSchema#dateTime"
+          graph_path = Path("src/data/semantic/knowledge-graph.jsonld")
+          graph = json.loads(graph_path.read_text())
+          ids = {
+              "https://www.ghezelbaash.ir/#observation-clinic-google-maps-rating-current",
+              "https://www.ghezelbaash.ir/#observation-clinic-google-maps-review-count-current",
+          }
+          changed = []
+          for node in graph["@graph"]:
+              if node.get("@id") in ids:
+                  old = node.get("observationDate")
+                  if not isinstance(old, str) or not old.endswith("Z"):
+                      raise SystemExit(f"Unexpected pre-fix observationDate for {node.get('@id')}: {old!r}")
+                  node["observationDate"] = {"@value": old, "@type": xsd_datetime}
+                  changed.append(node["@id"])
+          if set(changed) != ids:
+              raise SystemExit(f"Google Maps observation set drift: {changed}")
+          graph_path.write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n")
+
+          p = Path("src/lib/reputation-observation.mjs")
+          s = p.read_text()
+          s = s.replace(
+              'const SOURCE = "Google Places API (New)";\n',
+              'const SOURCE = "Google Places API (New)";\nconst XSD_DATETIME = "http://www.w3.org/2001/XMLSchema#dateTime";\n',
+              1,
+          )
+          s = s.replace(
+              'const exactRef = (value, label) => {',
+              '''const explicitDateTime = (value) => {\n  if (\n    !value ||\n    typeof value !== "object" ||\n    Array.isArray(value) ||\n    Object.keys(value).length !== 2 ||\n    value["@type"] !== XSD_DATETIME ||\n    !isIsoSecond(value["@value"])\n  )\n    return null;\n  return value["@value"];\n};\nconst dateTimeValue = (value) =>\n  Object.freeze({ "@value": value, "@type": XSD_DATETIME });\nconst exactRef = (value, label) => {''',
+              1,
+          )
+          s = s.replace('!isIsoSecond(node.observationDate)', '!explicitDateTime(node.observationDate)', 1)
+          s = s.replace(
+              '''  const rating = Number(ratingNode.value);\n  const reviewCount = Number(reviewNode.value);\n  if (\n    ratingNode.observationDate !== reviewNode.observationDate ||''',
+              '''  const rating = Number(ratingNode.value);\n  const reviewCount = Number(reviewNode.value);\n  const ratingObservedAt = explicitDateTime(ratingNode.observationDate);\n  const reviewObservedAt = explicitDateTime(reviewNode.observationDate);\n  if (\n    ratingObservedAt !== reviewObservedAt ||''',
+              1,
+          )
+          s = s.replace('valueObservedAt: ratingNode.observationDate,', 'valueObservedAt: ratingObservedAt,', 1)
+          s = s.replace('ratingNode.observationDate = observedAt;', 'ratingNode.observationDate = dateTimeValue(observedAt);', 1)
+          s = s.replace('reviewNode.observationDate = observedAt;', 'reviewNode.observationDate = dateTimeValue(observedAt);', 1)
+          p.write_text(s)
+
+          p = Path("scripts/validate-architecture.mjs")
+          s = p.read_text()
+          old = '''    ratingObservation?.measuredProperty === "https://schema.org/ratingValue" &&\n    reviewCountObservation?.measuredProperty === "https://schema.org/reviewCount" &&\n    ratingObservation?.observationDate === reviewCountObservation?.observationDate &&\n    ratingObservation?.measurementMethod === "Google Places API (New)" &&'''
+          new = '''    ratingObservation?.measuredProperty === "https://schema.org/ratingValue" &&\n    reviewCountObservation?.measuredProperty === "https://schema.org/reviewCount" &&\n    ratingObservation?.observationDate?.["@type"] ===\n      "http://www.w3.org/2001/XMLSchema#dateTime" &&\n    reviewCountObservation?.observationDate?.["@type"] ===\n      "http://www.w3.org/2001/XMLSchema#dateTime" &&\n    ratingObservation?.observationDate?.["@value"] ===\n      reviewCountObservation?.observationDate?.["@value"] &&\n    ratingObservation?.measurementMethod === "Google Places API (New)" &&'''
+          if old not in s:
+              raise SystemExit("Architecture observationDate contract target drift")
+          p.write_text(s.replace(old, new, 1))
+
+          p = Path("scripts/test-contracts.mjs")
+          s = p.read_text()
+          needle = '''  assert.equal(canonical.rating, 5);\n  assert.ok(canonical.reviewCount >= 1);\n\n  const unchangedPlace = {'''
+          insert = '''  assert.equal(canonical.rating, 5);\n  assert.ok(canonical.reviewCount >= 1);\n  assert.match(canonical.valueObservedAt, /T\\d{2}:\\d{2}:\\d{2}Z$/);\n  const legacyStringDate = structuredClone(graph);\n  for (const id of [\n    `${release.canonicalUrl}#observation-clinic-google-maps-rating-current`,\n    `${release.canonicalUrl}#observation-clinic-google-maps-review-count-current`,\n  ]) {\n    const node = legacyStringDate["@graph"].find((candidate) => candidate["@id"] === id);\n    node.observationDate = canonical.valueObservedAt;\n  }\n  assert.throws(\n    () => validateReputationObservation(legacyStringDate, release),\n    /observation drift/,\n  );\n\n  const unchangedPlace = {'''
+          if needle not in s:
+              raise SystemExit("Reputation contract insertion target drift")
+          s = s.replace(needle, insert, 1)
+          needle = '''  assert.equal(next.entity, release.clinic.id);\n  assert.equal(next.placeId, release.clinic.placeId);\n\n  const mapsUrl ='''
+          insert = '''  assert.equal(next.entity, release.clinic.id);\n  assert.equal(next.placeId, release.clinic.placeId);\n  assert.equal(next.valueObservedAt, "2026-09-04T03:00:00Z");\n  for (const id of [\n    `${release.canonicalUrl}#observation-clinic-google-maps-rating-current`,\n    `${release.canonicalUrl}#observation-clinic-google-maps-review-count-current`,\n  ]) {\n    const node = nextGraph["@graph"].find((candidate) => candidate["@id"] === id);\n    assert.deepEqual(node.observationDate, {\n      "@value": "2026-09-04T03:00:00Z",\n      "@type": "http://www.w3.org/2001/XMLSchema#dateTime",\n    });\n  }\n\n  const mapsUrl ='''
+          if needle not in s:
+              raise SystemExit("Reputation refresh contract insertion target drift")
+          p.write_text(s.replace(needle, insert, 1))
+          PY
+          node --check src/lib/reputation-observation.mjs
+          node --check scripts/validate-architecture.mjs
+          node --check scripts/test-contracts.mjs
+          node --input-type=module <<'NODE'
+          import { readFile } from "node:fs/promises";
+          import { loadPublicationData } from "./scripts/lib/publication-context.mjs";
+          import { validateReputationObservation, applyReputationObservation } from "./src/lib/reputation-observation.mjs";
+          const graph = JSON.parse(await readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"));
+          const release = await loadPublicationData();
+          const current = validateReputationObservation(graph, release);
+          if (current.valueObservedAt !== "2026-09-04T03:30:42Z") throw new Error("Canonical dateTime lexical drift");
+          const next = applyReputationObservation(graph, {
+            evaluation: { changed: true, rating: 4.9, reviewCount: current.reviewCount + 1 },
+            release,
+            observedAt: "2026-09-15T00:00:00Z",
+          });
+          const refreshed = validateReputationObservation(next, release);
+          if (refreshed.valueObservedAt !== "2026-09-15T00:00:00Z") throw new Error("Refresh dateTime drift");
+          const legacy = structuredClone(graph);
+          for (const node of legacy["@graph"]) if (node["@id"]?.includes("observation-clinic-google-maps-")) node.observationDate = current.valueObservedAt;
+          let rejected = false;
+          try { validateReputationObservation(legacy, release); } catch { rejected = true; }
+          if (!rejected) throw new Error("Legacy untyped observationDate was accepted");
+          console.log("JSON-LD dateTime contract PASS");
+          NODE
+          git diff --check
+          git status --short
+      - name: Commit datatype fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/semantic/knowledge-graph.jsonld src/lib/reputation-observation.mjs scripts/validate-architecture.mjs scripts/test-contracts.mjs
+          git commit -m "fix(pr401): type reputation timestamps as xsd:dateTime"
+          git push origin HEAD:refactor/single-source-truth-no-dist-drift
