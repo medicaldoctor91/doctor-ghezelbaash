@@ -26,6 +26,10 @@ jobs:
         run: npm ci
       - name: Install pinned Chromium
         run: npx playwright install chromium
+      - name: Install ffprobe media validator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
       - name: Temporarily allow test hash rewrite
         run: |
           python - <<'PY'
