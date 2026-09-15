@@ -33,7 +33,7 @@ Validation experiments, historical development gates and browser calibration too
 - `src/data/retrieval/query-matrix-policy.json` — retrieval projection policy.
 - `src/data/evidence-registry.json` — evidence source used by generated projections.
 - `src/data/render-calibration.json` — production input used to generate responsive calibration CSS. It is not merely a test snapshot and must remain synchronized with the shipped layout.
-- `src/data/media-metadata.json`, `src/data/media-dimensions.tsv`, `src/data/stable-media-aliases.json`, and `public/media/` — media source and delivery metadata.
+- `src/data/stable-media-aliases.json` and `public/media/` — stable media delivery aliases and the media files they expose.
 - `src/data/templates/` — templates used to generate public machine/discovery resources and deployment headers.
 
 Generated work belongs under `.generated/` or `dist/` and is not committed as authored source.
