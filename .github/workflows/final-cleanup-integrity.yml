@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      BASELINE_SHA: 805011e0511c112f6ad1f2c326c6dc9000bc5c9d
-      CANDIDATE_SHA: 9c9554726459c38bed7b9200542a74547f1f72a8
+      BASELINE_SHA: 9c9554726459c38bed7b9200542a74547f1f72a8
+      CANDIDATE_SHA: 3f5c21614a91781ece6be5b85fc446e9f5486f4a
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 9c9554726459c38bed7b9200542a74547f1f72a8
+          ref: 3f5c21614a91781ece6be5b85fc446e9f5486f4a
           fetch-depth: 0
           persist-credentials: false
 
@@ -59,11 +59,12 @@ jobs:
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           git diff --check "$BASELINE_SHA" "$CANDIDATE_SHA"
           changed="$(git diff --name-only "$BASELINE_SHA" "$CANDIDATE_SHA")"
-          expected=$'scripts/lib/mojavez-evidence.mjs\nscripts/verify-mojavez-evidence.mjs'
+          expected=$'src/components/DocumentHead.astro\nsrc/data/document-head.json'
           test "$changed" = "$expected"
-          test ! -e scripts/lib/mojavez-evidence.mjs
-          node --check scripts/verify-mojavez-evidence.mjs
-          test "$(git ls-files | wc -l)" = "175"
-          grep -Fq '"verify:mojavez": "node scripts/verify-mojavez-evidence.mjs"' package.json
-          grep -Fq '"verificationRecord": ".release/evidence/mojavez-19949827.json"' src/data/evidence-registry.json
-          echo MOJAVEZ_SINGLE_FILE_VERIFIER=PASS
+          test ! -e src/data/document-head.json
+          test "$(git ls-files | wc -l)" = "174"
+          grep -Fq "const appleMobileWebAppTitle = 'دکتر قزلباش';" src/components/DocumentHead.astro
+          grep -Fq "const themeColor = '#075244';" src/components/DocumentHead.astro
+          grep -Fq "const twitterCard = 'summary_large_image';" src/components/DocumentHead.astro
+          ! grep -Fq "document-head.json" src/components/DocumentHead.astro
+          echo DOCUMENT_HEAD_SINGLE_SOURCE=PASS
