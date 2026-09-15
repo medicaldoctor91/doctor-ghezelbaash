@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      BASELINE_SHA: bb700fccd32f30f930865afb3131dc145829b9ed
-      CANDIDATE_SHA: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
+      BASELINE_SHA: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
+      CANDIDATE_SHA: de111fbe5ad930e31ca17cf620a7c40df9f26eff
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
+          ref: de111fbe5ad930e31ca17cf620a7c40df9f26eff
           fetch-depth: 0
           persist-credentials: false
 
@@ -59,7 +59,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           git diff --check "$BASELINE_SHA" "$CANDIDATE_SHA"
           changed="$(git diff --name-only "$BASELINE_SHA" "$CANDIDATE_SHA")"
-          expected=$'scripts/lib/googlebot-budget.mjs\nscripts/validate-release-contract.mjs\nsrc/data/release-invariants.json'
+          expected=$'package.json\nscripts/lib/release-artifacts.mjs\nscripts/package-dist.mjs'
           test "$changed" = "$expected"
           git diff --stat "$BASELINE_SHA" "$CANDIDATE_SHA"
           python - <<'PY'
