@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      BASELINE_SHA: 31f26733a69a0ed3cb2008dc08c79b562eca6131
-      CANDIDATE_SHA: bb700fccd32f30f930865afb3131dc145829b9ed
+      BASELINE_SHA: bb700fccd32f30f930865afb3131dc145829b9ed
+      CANDIDATE_SHA: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
       ASTRO_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout audit source
@@ -37,7 +37,7 @@ jobs:
           git worktree add --detach "$RUNNER_TEMP/baseline" "$BASELINE_SHA"
           git worktree add --detach "$RUNNER_TEMP/candidate" "$CANDIDATE_SHA"
 
-      - name: Build baseline from output-producing pipeline only
+      - name: Build baseline through normal build command
         shell: bash
         working-directory: ${{ runner.temp }}/baseline
         run: |
@@ -46,18 +46,9 @@ jobs:
           export SOURCE_COMMIT="$(git rev-parse HEAD)"
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT"
-          node scripts/generated-workspace.mjs reset
-          node scripts/generate-rdf.mjs
-          node scripts/generate-projections.mjs distribution
-          node scripts/generate-retrieval-projections.mjs
-          node scripts/generate-descriptors.mjs
-          ./node_modules/.bin/astro build
-          node scripts/materialize-static-artifacts.mjs
-          node scripts/indexnow.mjs prepare
-          cp "$RUNNER_TEMP/candidate/scripts/generate-deployment-headers.mjs" scripts/generate-deployment-headers.mjs
-          node scripts/generate-deployment-headers.mjs
+          npm run build
 
-      - name: Build cleanup candidate through its normal build command
+      - name: Build candidate through normal build command
         shell: bash
         working-directory: ${{ runner.temp }}/candidate
         run: |
@@ -67,34 +58,6 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT"
           npm run build
-
-      - name: Audit residual source references
-        shell: bash
-        working-directory: ${{ runner.temp }}/candidate
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json, pathlib, subprocess
-          tracked = [pathlib.Path(p) for p in subprocess.check_output(['git','ls-files'], text=True).splitlines()]
-          text_ext = {'.mjs','.js','.ts','.astro','.json','.yml','.yaml','.py','.md','.txt','.cff'}
-          texts = {}
-          for p in tracked:
-              if p.suffix.lower() not in text_ext or p.name == 'package-lock.json':
-                  continue
-              try: texts[p] = p.read_text(encoding='utf-8')
-              except (UnicodeDecodeError, OSError): pass
-          candidates = [p for p in tracked if str(p).startswith('scripts/') and p.suffix in {'.mjs','.py'}]
-          print('REFERENCE_AUDIT_BEGIN')
-          for target in candidates:
-              needles = {str(target), target.name}
-              refs = [str(p) for p,text in texts.items() if p != target and any(n in text for n in needles)]
-              if not refs: print(f'ZERO_REFERENCE_SCRIPT {target}')
-          pkg = json.loads(pathlib.Path('package.json').read_text())
-          for dep in sorted(pkg.get('devDependencies', {})):
-              refs = [str(p) for p,text in texts.items() if p not in {pathlib.Path('package.json'), pathlib.Path('README.md')} and dep in text]
-              print(f'DEP_REFERENCE {dep} {len(refs)} {" ".join(refs[:8])}')
-          print('REFERENCE_AUDIT_END')
-          PY
 
       - name: Prove every DIST path and byte is identical
         shell: bash
@@ -113,6 +76,8 @@ jobs:
           candidate_manifest_sha="$(sha256sum "$RUNNER_TEMP/candidate.sha256" | awk '{print $1}')"
           test "$baseline_count" = "$candidate_count"
           test "$baseline_manifest_sha" = "$candidate_manifest_sha"
+          test "$baseline_count" = "104"
+          test "$baseline_manifest_sha" = "4beebebc6b128525f743572d167a5bb467e2a8b1b37ee9ac10b2e10ab29724fe"
           {
             echo "DIST_BYTE_PARITY=PASS"
             echo "BASELINE_SHA=$BASELINE_SHA"
