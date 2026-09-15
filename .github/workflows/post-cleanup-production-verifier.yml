@@ -1,0 +1,72 @@
+name: Post-cleanup production verifier
+
+on:
+  push:
+    branches: [audit/dist-invariant-proof]
+    paths: [.github/workflows/post-cleanup-production-verifier.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CANDIDATE_SHA: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use project Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install and build exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
+          npm run build
+
+      - name: Measure live Googlebot byte budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          import { fetchRepresentation } from './scripts/lib/http-representation.mjs';
+          import { assertGooglebotResponseBudget } from './scripts/lib/googlebot-budget.mjs';
+          const inv=JSON.parse(await readFile('src/data/release-invariants.json','utf8'));
+          const live=await fetchRepresentation('https://www.ghezelbaash.ir/', {
+            headers: {
+              'user-agent':'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+              'cache-control':'no-cache',
+              pragma:'no-cache',
+            },
+          });
+          if (live.r.status !== 200) throw new Error(`root status ${live.r.status}`);
+          const budget=assertGooglebotResponseBudget({
+            bodyBytes:live.b.length,
+            responseHeaderBytes:live.responseHeaderBytes,
+          }, inv);
+          console.log(JSON.stringify({GOOGLEBOT_RESPONSE_BUDGET:'PASS', ...budget}, null, 2));
+          NODE
+
+      - name: Full production verifier
+        run: npm run verify:production
+
+      - name: Current live website verifier
+        run: node scripts/verify-live.mjs current --website-only
+
+      - name: Public discovery verifier
+        run: npm run verify:public-discovery
