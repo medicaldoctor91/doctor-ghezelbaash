@@ -1,0 +1,50 @@
+name: Apply post-cleanup contract pruning
+
+on:
+  push:
+    branches: [audit/dist-invariant-proof]
+    paths: [.github/workflows/apply-post-cleanup-contract-pruning.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout isolated fix branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: fix/post-cleanup-contract-pruning-20260915
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply exact fail-closed patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "bb700fccd32f30f930865afb3131dc145829b9ed"
+          python - <<'PY'
+          from pathlib import Path
+
+          budget = Path('scripts/lib/googlebot-budget.mjs')
+          budget.write_text('''// Google documents a 2 MB fetch limit for non-PDF URLs. The verifier\n// requests identity encoding and accounts for the uncompressed body, observed\n// response headers, and an explicit safety margin against that ceiling.\nexport const GOOGLEBOT_NON_PDF_FETCH_CEILING_BYTES = 2_000_000;\n\nconst positiveBytes = (value, label) => {\n  if (!Number.isSafeInteger(value) || value <= 0)\n    throw new Error(`Googlebot budget requires positive integer bytes: ${label}`);\n};\n\nexport function assertGooglebotBudgetContract(invariants) {\n  for (const key of [\n    "googlebotFetchBudgetBytes",\n    "googlebotReservedResponseHeaderBytes",\n    "googlebotSafetyMarginBytes",\n  ]) positiveBytes(invariants[key], key);\n  if (invariants.googlebotFetchBudgetBytes > GOOGLEBOT_NON_PDF_FETCH_CEILING_BYTES)\n    throw new Error("Googlebot fetch budget exceeds the documented 2 MB ceiling");\n  if (\n    invariants.googlebotReservedResponseHeaderBytes +\n      invariants.googlebotSafetyMarginBytes >=\n    invariants.googlebotFetchBudgetBytes\n  )\n    throw new Error("Googlebot header reserve and safety margin consume the fetch budget");\n}\n\nexport function assertGooglebotResponseBudget(\n  { bodyBytes, responseHeaderBytes },\n  invariants,\n) {\n  assertGooglebotBudgetContract(invariants);\n  positiveBytes(bodyBytes, "uncompressed body");\n  positiveBytes(responseHeaderBytes, "response headers");\n  if (responseHeaderBytes > invariants.googlebotReservedResponseHeaderBytes)\n    throw new Error(\n      `Observed response headers exceed reserved bytes: ${responseHeaderBytes}/${invariants.googlebotReservedResponseHeaderBytes}`,\n    );\n  const accountedBytes =\n    bodyBytes + responseHeaderBytes + invariants.googlebotSafetyMarginBytes;\n  if (accountedBytes >= invariants.googlebotFetchBudgetBytes)\n    throw new Error(\n      `Googlebot response reaches the fetch cutoff: ${accountedBytes}/${invariants.googlebotFetchBudgetBytes}`,\n    );\n  return {\n    bodyBytes,\n    responseHeaderBytes,\n    safetyMarginBytes: invariants.googlebotSafetyMarginBytes,\n    accountedBytes,\n    remainingBytes: invariants.googlebotFetchBudgetBytes - accountedBytes,\n  };\n}\n''', encoding='utf-8')
+
+          Path('src/data/release-invariants.json').write_text('''{\n  "maxRagPassageChars": 4200,\n  "googlebotFetchBudgetBytes": 2000000,\n  "googlebotReservedResponseHeaderBytes": 20000,\n  "googlebotSafetyMarginBytes": 30000\n}\n''', encoding='utf-8')
+
+          validator = Path('scripts/validate-release-contract.mjs')
+          text = validator.read_text(encoding='utf-8')
+          old = '''const invariantKeys = [\n  "evidenceSnapshotMaxAgeDays",\n  "googlebotFetchBudgetBytes",\n  "googlebotReservedResponseHeaderBytes",\n  "googlebotSafetyMarginBytes",\n  "maxCriticalCssBytes",\n  "maxDeferredCssBrotliBytes",\n  "maxDeferredCssBytes",\n  "maxFcpMs",\n  "maxFontBytes",\n  "maxFontLoadMs",\n  "maxHtmlBytes",\n  "maxInitialImageBytes",\n  "maxInpMs",\n  "maxJavaScriptBytes",\n  "maxLcpMs",\n  "maxRagPassageChars",\n  "maxScriptDurationMs",\n  "maxTbtMs",\n  "maxTotalAssetBytes",\n  "maxCls",\n];'''
+          new = '''const invariantKeys = [\n  "googlebotFetchBudgetBytes",\n  "googlebotReservedResponseHeaderBytes",\n  "googlebotSafetyMarginBytes",\n  "maxRagPassageChars",\n];'''
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one invariantKeys block, found {text.count(old)}')
+          validator.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
+          git diff --check
+          git diff -- scripts/lib/googlebot-budget.mjs src/data/release-invariants.json scripts/validate-release-contract.mjs
+          git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
+          git config user.email "medicaldoctor91@gmail.com"
+          git add scripts/lib/googlebot-budget.mjs src/data/release-invariants.json scripts/validate-release-contract.mjs
+          git commit -m "fix: prune obsolete source-only budget contracts"
+          git push origin HEAD:fix/post-cleanup-contract-pruning-20260915
