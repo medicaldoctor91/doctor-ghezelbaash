@@ -1,0 +1,48 @@
+name: PR401 enrich Hero metadata
+
+on:
+  push:
+    branches:
+      - refactor/single-source-truth-no-dist-drift
+    paths:
+      - .github/workflows/pr401-enrich-hero-metadata.yml
+
+permissions:
+  contents: write
+
+jobs:
+  enrich-and-validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/single-source-truth-no-dist-drift
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install pinned Chromium
+        run: npx playwright install chromium
+      - name: Enrich raster XMP and rewrite content hashes
+        run: node scripts/enrich-image-metadata.mjs
+      - name: Remove temporary workflow before topology validation
+        run: rm .github/workflows/pr401-enrich-hero-metadata.yml
+      - name: Recalibrate source fingerprint
+        run: npm run render:calibration:update
+      - name: Run complete release validation
+        run: npm run release
+      - name: Re-prove calibrated Hero delivery
+        run: node scripts/test-hero-delivery.mjs dist
+      - name: Commit verified enriched assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "perf(hero): enrich calibrated 768w candidate metadata"
+          git push origin HEAD:refactor/single-source-truth-no-dist-drift
