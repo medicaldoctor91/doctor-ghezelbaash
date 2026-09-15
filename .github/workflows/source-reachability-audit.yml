@@ -12,19 +12,19 @@ jobs:
   audit:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout cleanup candidate
+      - name: Checkout current main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: cleanup/dist-invariant-source
+          ref: main
           fetch-depth: 0
           persist-credentials: false
-      - name: Audit tracked-source reachability
+      - name: Audit tracked-source and release-invariant reachability
         shell: bash
         run: |
           set -euo pipefail
-          echo "CLEANUP_SHA=$(git rev-parse HEAD)"
+          echo "AUDITED_SHA=$(git rev-parse HEAD)"
           python - <<'PY'
-          import json, pathlib, re, subprocess
+          import json, pathlib, subprocess
           tracked = [pathlib.Path(p) for p in subprocess.check_output(['git','ls-files'], text=True).splitlines()]
           text_ext = {'.mjs','.js','.ts','.astro','.json','.jsonld','.yml','.yaml','.py','.md','.txt','.cff','.ttl','.tsv'}
           texts = {}
@@ -35,11 +35,9 @@ jobs:
               except (UnicodeDecodeError, OSError): pass
 
           def refs(target):
-              rel = target.as_posix()
-              name = target.name
+              rel = target.as_posix(); name = target.name
               stems = {rel, name}
-              if target.suffix in {'.mjs','.js','.ts','.py'}:
-                  stems.add(target.stem)
+              if target.suffix in {'.mjs','.js','.ts','.py'}: stems.add(target.stem)
               out=[]
               for p,text in texts.items():
                   if p == target: continue
@@ -57,6 +55,17 @@ jobs:
               for p in files:
                   r=refs(p)
                   print(f'REFS {len(r):02d} {p.as_posix()} :: {" | ".join(r[:12])}')
+
+          inv_path=pathlib.Path('src/data/release-invariants.json')
+          inv=json.loads(inv_path.read_text())
+          print('=== RELEASE_INVARIANT_FIELDS ===')
+          for key in inv:
+              refs_for_key=[]
+              for p,text in texts.items():
+                  if p == inv_path: continue
+                  count=text.count(key)
+                  if count: refs_for_key.append((p.as_posix(), count))
+              print(f'FIELD_REFS {sum(c for _,c in refs_for_key):02d} {key} :: {" | ".join(f"{p}({c})" for p,c in refs_for_key)}')
 
           pkg=json.loads(pathlib.Path('package.json').read_text())
           print('=== DIRECT_DEPENDENCIES ===')
