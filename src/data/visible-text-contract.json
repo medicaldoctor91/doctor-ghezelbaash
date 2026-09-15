@@ -3,31 +3,42 @@
   "policy": "closed-visible-text; NFC + whitespace-collapse per node; text-node sequence and reading order frozen; ID changes and heading levels permitted; raw source hashes record provenance",
   "sourceCommit": "bbff2475dec9dce02d8edcf0482b64937f8f728e",
   "sourceRawSha256": {
-    "src/content-source/page.md": "d45f008e642efd70badcbee729ee786e05c6fb2dcd8ac6a363d9c34ba0b8ed9c",
-    "src/data/document-head.json": "2aa2cecd6abe65a00f46db4493707e2bfbd3cb64061a711ca1c63156182bfddd",
+    "src/content-source/page.md": "f382c8f8372ce82de26b563fffa27e198fbbd64bd045cd4e2fe136b0e0e5198f",
+    "src/data/document-head.json": "ddf6cad393242892dc01c0daeed904dbdc51f1004ddb126e3417fe5443602f3e",
     "src/data/media-metadata.json": "bb9ff57beed0a33dcfc7d35e2e45503d6cdef00d694b5b0a876d028d7981bf66",
-    "src/data/release.json": "d6e4e7a76acbb3e2edfbb2a2a4829c376301c27c9ebf90967e9e4b9d612b9d16",
-    "src/data/reputation-observation.json": "241c6caefc2af1e000260cb5154ed0b81fbfd2cc0367adb62a3e82b7915d0385",
-    "src/data/semantic/knowledge-graph.jsonld": "61f31793f976cebdb02ab05f64f79aeb325f97aafb924a19503c5f6113b5e844",
-    "src/components/GuideNavigator.astro": "9855cb7d6e2bbc4b371bba7796bc0c0990eb75fb5ce0808afdfee5f48a985b3c",
-    "src/components/SiteFooter.astro": "74d0380e1ad7ed279720d9022b08581f716cf707d3a11d28078c8e57e983b038",
-    "src/components/FloatingActionDock.astro": "2b09fe737aad327f3019fd404ea81b1fcc9adf9ebed1637a6723c019fc6395a0",
-    "src/components/DocumentHead.astro": "cdf5d6300389059e340c5b06def0b95e2e5f4e025e4eb45f0a4826fcd7989552",
-    "src/layouts/BaseLayout.astro": "c6aa9314aaa4240208e1a351e2b4338c72d8045b4ccbc856f137b4c1274203aa",
+    "src/data/release.json": "8f841ddb5c9aa82a9f118a8c27359c91835afa6deb3bed73e113c889d5edf528",
+    "src/data/semantic/knowledge-graph.jsonld": "7032b4e9c9d2cf46b0db06c2aa653ab6e8bc586fc6992c4ee7c68281c2d109ed",
+    "src/components/GuideNavigator.astro": "f0005a00f1ebaac91361a0f16104451586f14d31d9b36e3bc06738d6a96baf72",
+    "src/components/SiteFooter.astro": "817f1763152a86cbe71847e7b3508a5cd1bf9d6139327ec39c1b5d585a511b5b",
+    "src/components/FloatingActionDock.astro": "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e",
+    "src/components/DocumentHead.astro": "83d105b711328373ddd64f2506d3cef48cdc59c45899866dc6aa83e8462571e9",
+    "src/layouts/BaseLayout.astro": "2b0d8404bdf268fd4bf4bc3e11b693a0fee8b3644f265fd19e2192f3bdc657bd",
     "src/pages/404.astro": "9d41f9d5091b0203998e4fc75533d1205c8d9eac79311df4534589fa20a980f6"
   },
   "source": {
     "page": {
       "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
       "description": "بوتاکس، فیلر، ژل لب، لیفت نخ، کانتورینگ، مزوتراپی یا پی‌آر‌پی؟ انتخاب بهترین روش بر اساس علت، مدیریت عوارض درمان‌های قبلی و اصلاح نتایج نامطلوب درمان‌های زیبایی",
-      "textSha256": "9fb4705ffb79daba5fa7eb99764ee936b5c8d3c9cbbb7d66a8be5f9f6e3867f3",
+      "footerGovernance": {
+        "summary": "بازبینی پزشکی، حریم خصوصی و شرایط استفاده",
+        "medicalNotice": "محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام پزشکی، ارزیابی حضوری فوری اولویت دارد.",
+        "reputationLead": "امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع",
+        "mapsTerms": {
+          "href": "https://www.google.com/help/terms_maps/",
+          "label": "شرایط Google Maps"
+        },
+        "privacyPolicy": {
+          "href": "https://policies.google.com/privacy",
+          "label": "خط‌مشی حریم خصوصی Google"
+        },
+        "tail": "است."
+      },
+      "textSha256": "eec45821ced1ee718688f722137c6f9026d98bacd3755903d39e194159597977",
       "attributesSha256": "9dd5886ba7b13f754b9d3ad8a82c93142f396d5205a20bfaee509e79c02f1165",
-      "textNodeCount": 6062,
-      "textNodeSequenceSha256": "a79cdfbe0ecb6fe482df5dd8446e0874b02a78ec04dffa3acc9ee09880b08188"
+      "textNodeCount": 6106,
+      "textNodeSequenceSha256": "1a60e884e01158398e7ee73335d480f195a2465c1ac50375870b81c8cef50da7"
     },
     "documentHead": {
-      "author": "دکتر سعید قزلباش",
-      "applicationName": "دکتر سعید قزلباش",
       "appleMobileWebAppTitle": "دکتر قزلباش",
       "themeColor": "#075244",
       "openGraph": {
@@ -38,7 +49,6 @@
           "ar_IQ",
           "ckb_IQ"
         ],
-        "siteName": "دکتر سعید قزلباش",
         "image": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg",
         "imageType": "image/jpeg",
         "imageWidth": 1200,

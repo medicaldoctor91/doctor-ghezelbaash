@@ -4,15 +4,15 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 ## Direct source ownership
 
-- `src/content-source/page.md`: canonical visible content and page metadata.
+- `src/content-source/page.md`: authored visible body content, final answer markup and page-scoped authored semantics, including social-image alt/locale choices and footer governance copy.
 - `src/styles/global.css`: the only authored stylesheet.
-- `src/data/semantic/knowledge-graph.jsonld`: canonical knowledge graph and the direct source of offered services and answers.
+- `src/data/semantic/knowledge-graph.jsonld`: canonical entity facts, relationships, lexical identity labels, first-party provenance, offered services and machine-readable answer semantics.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
-- `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
-- `src/data/release.json`: canonical URL, physician and clinic identifiers, current release and DOI lineage.
+- `src/components/SiteFooter.astro`: presentation-only footer renderer; authored governance wording comes from `page.md`, factual clinic/contact values come from the graph, and machine-resource navigation comes from the operational registry.
+- `src/data/document-head.json`: presentation-only head policy (theme color, Apple web-app label and Twitter card mode); Open Graph semantics are derived from canonical graph authority plus `page.md` frontmatter.
+- `src/data/release.json`: release and distribution lifecycle, canonical URL and minimal entity pointers; entity names, identifiers and clinic facts come from the graph.
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
-- `src/data/reputation-observation.json`: the clinic-scoped, last-known-good Google Places observation rendered into initial HTML.
 - `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
 - `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges. The compiler emits both slash forms of each registered canonical directory alias with the same direct destination, rejects conflicting pairs and leaves unknown paths as 404.
 - `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
@@ -22,6 +22,12 @@ Static-only Astro source for the canonical physician entity home at `https://www
 - `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.
 
 The physician uses one canonical ID with `Person` and `IndividualPhysician` types. The clinic, `ProfilePage`, 18 `WebPageElement` sections, medical procedures, answers, images, videos, credentials and external identifiers all reference that graph. DOM Microdata and both inline JSON-LD projections are derived from the same graph and projection profiles.
+
+Both inline graph profiles use `ids`, `maxBytes`, `nodes` and `typeProfiles`. An explicit `nodes[id]` policy defines that node's projection; otherwise its type policies supply the field selection. Authority roles use the same `nodes` map in both lanes. The compiler validates selections and relationships before emitting either graph.
+
+`deriveCanonicalGraphFacts` centralizes canonical graph traversal used by UI and validation consumers. `deriveCanonicalAuthority` resolves identity authority directly from graph-owned `alternateName`, `skos:altLabel`, `skos:hiddenLabel`, `sameAs`, identifiers and ownership/provenance relationships. `derivePublicationData` composes those graph facts with release lifecycle fields for publication consumers. The lifecycle schema is checked before composition, so duplicate authored semantic fields cannot be silently overwritten. Publication data is a derived read model and is never written back to `release.json`.
+
+Visible answers have their final IDs and classes in `page.md`. The answer contract checks cardinality, text and placement within the corresponding question region; it does not insert text, add attributes or rewrite the page. Footer governance remains explicit Astro markup rather than an encoded/comment extraction protocol. Source and distribution text fingerprints remain independent acceptance checks.
 
 Mojavez record `19949827` is scoped to the physician's medical practice license, holder name and practice jurisdiction. The source observation and field-to-claim bindings are recorded in `.release/evidence/mojavez-19949827.json`; the historical evidence ID remains stable. This record does not explicitly establish ownership of the canonical Clinic. `npm run verify:mojavez` re-fetches the official record with no-cache headers and checks its visible labelled fields. It only reports; source or scope changes require a fresh review. A captured response can be checked with `npm run verify:mojavez -- --html /path/to/response.html`. Hermetic validators enforce the reviewed scope, subject, neutral title, URLs and projection selector; `npm run test:final-entity-contract` exercises their failure paths. These checks bind the observation to authored claims; CI does not independently certify the live source on every build.
 
@@ -63,7 +69,7 @@ Googlebot's Search HTML envelope uses a conservative 2,000,000 uncompressed byte
 
 `npm run prepare:site` creates only the content, graph, and CSS assets Astro needs for local development and type checking. `npm run prepare:distribution` recreates the complete machine-readable distribution for builds and releases. Astro renders native static HTML directly, the registered static resources are materialized into `dist/`, and the deployment-header step derives CSP and response headers while validating the finished descriptor hashes. Generated files are not committed.
 
-CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, image, semantic and clinic-reputation tokens. `.github/workflows/reputation-refresh.yml` performs exactly one minimal-field Google Places request every six hours, preserves the last-known-good observation on failure and publishes only a validated value change.
+CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, image and semantic tokens. The visible Google Maps reputation sentence is authored in `page.md`; its rating/review-count values are graph-owned Observation nodes. `.github/workflows/reputation-refresh.yml` performs exactly one minimal-field Google Places request every six hours, preserves the last-known-good graph observation on failure and publishes only a validated value change.
 
 ```bash
 npm ci

@@ -1,3 +1,4 @@
+import { loadPublicationContext } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -19,6 +20,7 @@ import {
 } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
 import { assertGooglebotBudgetContract } from "./lib/googlebot-budget.mjs";
+import { assertReleaseLifecycleSource } from "../src/lib/canonical-authority.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -40,13 +42,15 @@ const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 const validDoi = (value) => /^10\.5281\/zenodo\.\d+$/.test(String(value || ""));
 const validRecord = (value) => /^\d+$/.test(String(value || ""));
 
-const release = await readJson("src/data/release.json");
+const { lifecycle: rawRelease, graph: canonicalGraph, publicationData: release } =
+  await loadPublicationContext(root);
 const invariants = await readJson("src/data/release-invariants.json");
 const pkg = await readJson("package.json");
 const lock = await readJson("package-lock.json");
 const codemeta = await readJson("codemeta.json");
 const R = release.release;
 const Z = release.dataset?.zenodo;
+assertReleaseLifecycleSource(rawRelease);
 assertIdentityFingerprintSource(release);
 
 if (!validSemver(R)) fail(`Invalid release label: ${R}`);
@@ -177,18 +181,27 @@ const documentHead = await readFile(
 for (const [label, pattern] of [
   ["Version DOI", /release\.dataset\.zenodo\.versionDoi/],
   ["release", /release\.release/],
+  ["graph authority", /deriveCanonicalAuthority/],
+  ["canonical graph", /canonicalGraph/],
   [
     "identity mesh",
-    /release\.primaryEntity\.verifiedWebIdentityMesh\.map\s*\(/,
+    /authority\.primaryEntity\.verifiedWebIdentityMesh\.map\s*\(/,
   ],
-  ["clinic CID", /release\.clinic\.cid/],
+  ["graph page author", /physicianId\s*=\s*refId\(page\.author\)/],
+  ["graph page about", /pageAboutIds\s*=\s*values\(page\.about\)/],
+  ["clinic CID", /authority\.clinicAuthority\.cid/],
   [
     "discovery links",
     /discoveryLinks\.map\s*\(\s*\(?\s*link\s*\)?\s*=>\s*<link\s+\{\.\.\.link\}/,
   ],
 ])
   if (!pattern.test(documentHead))
-    fail(`Astro Head release binding drift: ${label}`);
+    fail(`Astro Head authority binding drift: ${label}`);
+if (
+  /release\.primaryEntity\.verifiedWebIdentityMesh/.test(documentHead) ||
+  /release\.clinic\.cid/.test(documentHead)
+)
+  fail("Astro Head must not consume semantic identity from release metadata");
 if (
   !/href\s*:\s*`https:\/\/doi\.org\/\$\{versionDoi\}`[\s\S]*?rel\s*:\s*["']related["'][\s\S]*?title\s*:\s*`Zenodo preservation Version DOI \$\{release\.release\}`/.test(
     documentHead,
@@ -213,7 +226,7 @@ for (const removedId of [
 if (pageSource.includes("Public Knowledge Graph"))
   fail("Machine Dataset title leaked into visible page content");
 
-const graph = await readJson("src/data/semantic/knowledge-graph.jsonld");
+const graph = canonicalGraph;
 const nodes = graph["@graph"] || [];
 if (!Array.isArray(nodes)) fail("Canonical graph must contain @graph");
 const byId = new Map(
@@ -433,10 +446,16 @@ const machineResourceRegistry = await readJson(
 );
 const hfPolicy = authorityPolicy.surfaces?.huggingFace;
 if (
-  authorityPolicy.identitySource !== "src/data/release.json" ||
+  authorityPolicy.schemaVersion !== "2.1" ||
+  authorityPolicy.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
+  authorityPolicy.releaseLifecycleSource !== "src/data/release.json" ||
   authorityPolicy.resourceRegistry !== "src/data/machine-resources.json" ||
   authorityPolicy.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||
+  retrievalPolicy.identitySource !== authorityPolicy.identitySource ||
+  retrievalPolicy.semanticSource !== authorityPolicy.identitySource ||
+  retrievalPolicy.schemaVersion !== "2.6" ||
+  retrievalPolicy.releaseLifecycleSource !== authorityPolicy.releaseLifecycleSource ||
   hfPolicy.retrievalPolicyRef !== authorityPolicy.retrievalPolicySource
 )
   fail("Authority source reference drift");

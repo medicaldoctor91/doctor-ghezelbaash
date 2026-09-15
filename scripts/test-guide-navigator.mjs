@@ -84,7 +84,10 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
   heading.textContent = "بوتاکس؛ عضله، دوز و نقطه تزریق";
   physician.textContent = "دکتر سعید قزلباش";
   tocLink.href = "#botox";
-  dialog.dataset.entityAliases = Array.from({ length: 25 }, (_, i) => `alias-${i}`).join("|");
+  dialog.dataset.entityAliases = [
+    ...Array.from({ length: 25 }, (_, i) => `alias-${i}`),
+    physician.textContent,
+  ].join("|");
   dialog.open = false;
   if (modal) {
     dialog.showModal = () => { dialog.open = true; };

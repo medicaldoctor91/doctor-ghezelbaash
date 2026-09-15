@@ -5,12 +5,10 @@ import {
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
-import { headGraph } from '../lib/knowledge-graph';
+import { deriveCanonicalAuthority, selectCanonicalSocialImage } from '../lib/canonical-authority.mjs';
+import { canonicalGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
-import {
-  exactLanguageLiteral,
-  indexCanonicalGraph,
-} from '../lib/semantic-projection.mjs';
+import { exactLanguageLiteral, refId, values } from '../lib/graph-core.mjs';
 
 type DiscoveryLink = {
   href: string;
@@ -25,12 +23,25 @@ type GraphNode = Record<string, unknown> & { '@id': string };
 interface Props {
   title: string;
   description: string;
+  lang: string;
   robots: string;
+  socialImageAlt?: string;
+  socialAlternateLocales?: string[];
   canonicalURL: URL | undefined;
   isMain: boolean;
 }
 
-const { title, description, robots, canonicalURL, isMain } = Astro.props;
+const authority = deriveCanonicalAuthority(release, canonicalGraph);
+const {
+  title,
+  description,
+  lang,
+  robots,
+  socialImageAlt,
+  socialAlternateLocales,
+  canonicalURL,
+  isMain,
+} = Astro.props;
 const canonicalUrl = canonicalURL?.toString();
 if (isMain && canonicalUrl !== release.canonicalUrl) {
   throw new Error('Canonical page URL drift');
@@ -42,26 +53,45 @@ if (
   throw new Error('Canonical robots policy must declare max-image-preview:large');
 }
 
-const { byId: nodeById } = indexCanonicalGraph(headGraph) as {
-  byId: Map<string, GraphNode>;
-};
-const requireNode = (id: string, label: string) => {
-  const node = nodeById.get(id);
-  if (!node) throw new Error(`Head graph missing ${label}: ${id}`);
-  return node;
-};
-const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
-  const matches = (Array.isArray(value) ? value : [value]).filter(
-    (item): item is string => typeof item === 'string' && pattern.test(item),
-  );
-  if (matches.length !== 1) {
-    throw new Error(`Head graph must define one ${label}`);
+const facts = authority.facts;
+const person = facts.person as GraphNode;
+const website = facts.website as GraphNode;
+const page = facts.page as GraphNode;
+const pageTypes = Array.isArray(page['@type']) ? page['@type'] : [page['@type']];
+const openGraphType = pageTypes.includes('ProfilePage') ? 'profile' : '';
+if (isMain && !openGraphType) {
+  throw new Error('Canonical page must project Open Graph profile from graph ProfilePage type');
+}
+const pageLanguages = (Array.isArray(page.inLanguage) ? page.inLanguage : [page.inLanguage])
+  .filter((value): value is string => typeof value === 'string' && value.length > 0);
+if (isMain && !pageLanguages.includes(lang)) {
+  throw new Error(`Canonical page language is not declared by graph: ${lang}`);
+}
+const openGraphLocaleMatch = /^([a-z]{2,3})-([A-Z]{2})$/.exec(lang);
+if (isMain && !openGraphLocaleMatch) {
+  throw new Error(`Canonical page language cannot project an Open Graph locale: ${lang}`);
+}
+const openGraphLocale = openGraphLocaleMatch
+  ? `${openGraphLocaleMatch[1]}_${openGraphLocaleMatch[2]}`
+  : '';
+const alternateLocales = Array.isArray(socialAlternateLocales)
+  ? [...socialAlternateLocales]
+  : [];
+if (isMain) {
+  if (typeof socialImageAlt !== 'string' || !socialImageAlt.trim() || socialImageAlt !== socialImageAlt.trim()) {
+    throw new Error('Canonical page frontmatter requires normalized socialImageAlt');
   }
-  return matches[0];
-};
-
-const person = requireNode(release.primaryEntity.id, 'canonical person');
-const clinic = requireNode(release.clinic.id, 'canonical clinic');
+  if (!alternateLocales.length || new Set(alternateLocales).size !== alternateLocales.length) {
+    throw new Error('Canonical page frontmatter requires unique socialAlternateLocales');
+  }
+  const graphLanguageBases = new Set(pageLanguages.map((value) => value.split('-')[0]));
+  for (const locale of alternateLocales) {
+    const match = /^([a-z]{2,3})_([A-Z]{2})$/.exec(locale);
+    if (!match || locale === openGraphLocale || !graphLanguageBases.has(match[1])) {
+      throw new Error(`Invalid canonical social alternate locale: ${locale}`);
+    }
+  }
+}
 const profileFirstName = exactLanguageLiteral(
   person.givenName,
   'en',
@@ -72,36 +102,65 @@ const profileLastName = exactLanguageLiteral(
   'en',
   'Canonical physician familyName',
 );
-const instagramUrl = exactUrl(
-  person.sameAs,
-  /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/,
-  'official Instagram profile',
+const authorName = exactLanguageLiteral(
+  person.name,
+  'fa',
+  'Canonical physician Persian name',
 );
-const profileUsername = new URL(instagramUrl).pathname
+if (typeof website.name !== 'string' || !website.name.trim() || website.name !== website.name.trim()) {
+  throw new Error('Canonical graph must define one normalized WebSite name');
+}
+const applicationName = website.name;
+const websiteDisplayNames = new Set([
+  applicationName,
+  ...values(website.alternateName).filter(
+    (value): value is string => typeof value === 'string' && value.length > 0,
+  ),
+]);
+if (isMain && !websiteDisplayNames.has(documentHead.appleMobileWebAppTitle)) {
+  throw new Error('Apple web-app title must select a canonical WebSite name from the graph');
+}
+const profileUsername = new URL(facts.instagramUrl).pathname
   .split('/')
   .filter(Boolean)[0];
-const clinicIdentifierNodes = (Array.isArray(clinic.identifier)
-  ? clinic.identifier
-  : [clinic.identifier]
-)
-  .map((reference) =>
-    typeof reference === 'object' &&
-    reference !== null &&
-    typeof reference['@id'] === 'string'
-      ? nodeById.get(reference['@id'])
-      : undefined,
-  )
-  .filter((node): node is GraphNode => Boolean(node));
-const openStreetMapUrl = exactUrl(
-  clinicIdentifierNodes.map((node) => node.url),
-  /^https:\/\/www\.openstreetmap\.org\/node\/\d+$/,
-  'clinic OpenStreetMap identifier',
-);
+const openStreetMapUrl = facts.openStreetMapUrl;
+const socialImage = selectCanonicalSocialImage(release, canonicalGraph);
+const og = Object.freeze({
+  type: openGraphType,
+  locale: openGraphLocale,
+  alternateLocales: Object.freeze(alternateLocales),
+  image: socialImage.contentUrl,
+  imageType: socialImage.encodingFormat,
+  imageWidth: socialImage.width,
+  imageHeight: socialImage.height,
+  imageAlt: socialImageAlt ?? '',
+});
 
 const faviconPng = '/favicon.png';
-const og = documentHead.openGraph;
 const canonical = release.canonicalUrl;
 const versionDoi = release.dataset.zenodo.versionDoi;
+const physicianId = refId(page.author);
+if (isMain && physicianId !== authority.primaryEntity.id) {
+  throw new Error('Canonical graph page author must be the primary physician');
+}
+const pageAboutIds = values(page.about).map((reference) => refId(reference));
+if (isMain && !pageAboutIds.includes(physicianId)) {
+  throw new Error('Canonical graph page about relations must include its physician author');
+}
+const clinicId = authority.clinicAuthority.id;
+const pageMentionIds = values(page.mentions).map((reference) => refId(reference));
+if (isMain && !pageMentionIds.includes(clinicId)) {
+  throw new Error('Canonical graph page mentions must include the canonical clinic');
+}
+const googleMapsUrl = `https://www.google.com/maps?cid=${authority.clinicAuthority.cid}`;
+const clinicSameAs = new Set(
+  values(facts.clinic.sameAs).filter(
+    (value): value is string => typeof value === 'string' && value.length > 0,
+  ),
+);
+if (isMain && (!clinicSameAs.has(googleMapsUrl) || !clinicSameAs.has(openStreetMapUrl))) {
+  throw new Error('Canonical clinic identity mesh must contain Google Maps and OpenStreetMap');
+}
 
 const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   if (typeof resource.headRel !== 'string' || !resource.headRel) {
@@ -118,18 +177,18 @@ const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   };
 });
 const identityLinks: DiscoveryLink[] =
-  release.primaryEntity.verifiedWebIdentityMesh.map((href) => ({
+  authority.primaryEntity.verifiedWebIdentityMesh.map((href: string) => ({
     href,
     rel: 'me',
   }));
 const discoveryLinks: DiscoveryLink[] = [
   ...machineLinks,
-  { href: release.primaryEntity.id, rel: 'author' },
-  { href: release.primaryEntity.id, rel: 'about' },
-  { href: release.clinic.id, rel: 'about' },
+  { href: physicianId as string, rel: 'author' },
+  { href: physicianId as string, rel: 'about' },
+  { href: clinicId, rel: 'about' },
   ...identityLinks,
   {
-    href: `https://www.google.com/maps?cid=${release.clinic.cid}`,
+    href: googleMapsUrl,
     rel: 'about',
     title: 'Google Maps — clinic',
   },
@@ -185,8 +244,8 @@ const discoveryLinks: DiscoveryLink[] = [
     >
   )
 }
-<meta content={documentHead.author} name="author">
-{isMain && <meta content={documentHead.applicationName} name="application-name">}
+<meta content={authorName} name="author">
+{isMain && <meta content={applicationName} name="application-name">}
 {
   isMain && (
     <meta
@@ -227,7 +286,7 @@ const discoveryLinks: DiscoveryLink[] = [
       <meta content={title} property="og:title">
       <meta content={description} property="og:description">
       <meta content={canonicalUrl} property="og:url">
-      <meta content={og.siteName} property="og:site_name">
+      <meta content={applicationName} property="og:site_name">
       <meta content={og.image} property="og:image">
       <meta content={og.image} property="og:image:secure_url">
       <meta content={og.imageType} property="og:image:type">

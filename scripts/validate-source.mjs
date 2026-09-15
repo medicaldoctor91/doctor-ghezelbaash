@@ -1,3 +1,4 @@
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { readFile, readdir, access } from "node:fs/promises";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
@@ -31,7 +32,7 @@ const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 const escapeRegExp = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const release = await readJson("src/data/release.json"),
+const release = await loadPublicationData(root),
   retrievalPolicy = await readJson(
     "src/data/retrieval/query-matrix-policy.json",
   ),
@@ -461,10 +462,16 @@ for (const name of [
 // and current-context validators, rather than by matching generator source text.
 
 if (
-  authority.identitySource !== "src/data/release.json" ||
+  authority.schemaVersion !== "2.1" ||
+  authority.identitySource !== "src/data/semantic/knowledge-graph.jsonld" ||
+  authority.releaseLifecycleSource !== "src/data/release.json" ||
   authority.resourceRegistry !== "src/data/machine-resources.json" ||
   authority.retrievalPolicySource !==
     "src/data/retrieval/query-matrix-policy.json" ||
+  retrievalPolicy.identitySource !== authority.identitySource ||
+  retrievalPolicy.semanticSource !== authority.identitySource ||
+  retrievalPolicy.schemaVersion !== "2.6" ||
+  retrievalPolicy.releaseLifecycleSource !== authority.releaseLifecycleSource ||
   hf.retrievalPolicyRef !== authority.retrievalPolicySource ||
   platform.canonicalUrl !== release.canonicalUrl ||
   platform.repository !==
@@ -692,7 +699,7 @@ const googleProjectionProfiles = [
     `support:type:${key}`,
     profile,
   ]),
-  ...Object.entries(supportProfile.idProfiles || {}).map(([key, profile]) => [
+  ...Object.entries(supportProfile.nodes || {}).map(([key, profile]) => [
     `support:id:${key}`,
     profile,
   ]),

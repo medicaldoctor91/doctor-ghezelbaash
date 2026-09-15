@@ -1,3 +1,4 @@
+import canonicalGraphRawSource from "../data/semantic/knowledge-graph.jsonld?raw";
 import headGraphRawSource from "../../.generated/semantic/head-graph.json?raw";
 import supportGraphRawSource from "../../.generated/semantic/support-graph.json?raw";
 
@@ -7,7 +8,15 @@ type Graph = {
   "@graph": unknown[];
   [key: string]: unknown;
 };
-function parse(source: string, label: string) {
+
+function parseCanonical(source: string) {
+  const parsed = JSON.parse(source) as Graph;
+  if (!Array.isArray(parsed["@graph"]))
+    throw new Error("canonical graph lacks @graph");
+  return parsed;
+}
+
+function parseProjection(source: string, label: string) {
   const parsed = JSON.parse(source) as Graph;
   if (!Array.isArray(parsed["@graph"]))
     throw new Error(`${label} lacks @graph`);
@@ -32,8 +41,10 @@ function parse(source: string, label: string) {
   }
   return parsed;
 }
-const head = parse(headGraphRawSource, "head graph");
-parse(supportGraphRawSource, "support graph");
+
+export const canonicalGraph = parseCanonical(canonicalGraphRawSource);
+const head = parseProjection(headGraphRawSource, "head graph");
+parseProjection(supportGraphRawSource, "support graph");
 export const headGraph = head;
 export const headGraphRaw = headGraphRawSource;
 export const supportGraphRaw = supportGraphRawSource;

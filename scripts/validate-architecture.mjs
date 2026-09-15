@@ -1,7 +1,9 @@
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
+import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -16,7 +18,6 @@ const readJson = (relative) => read(relative).then(JSON.parse);
 const required = [
   "astro.config.mjs",
   ".github/workflows/reputation-refresh.yml",
-  "src/data/reputation-observation.json",
   "src/lib/reputation-observation.mjs",
   "scripts/reputation.mjs",
   "src/content-source/page.md",
@@ -97,7 +98,16 @@ const frontmatterKeys = frontmatter[1]
   .filter(Boolean);
 assert(
   JSON.stringify(frontmatterKeys) ===
-    JSON.stringify(["title", "description", "lang", "dir", "robots"]),
+    JSON.stringify([
+      "title",
+      "description",
+      "lang",
+      "dir",
+      "robots",
+      "socialImageAlt",
+      "socialAlternateLocales",
+      "footerGovernance",
+    ]),
   `Page frontmatter schema drift: ${frontmatterKeys.join(", ")}`,
 );
 
@@ -117,7 +127,6 @@ const [
   reputationModule,
   reputationScript,
   reputationWorkflow,
-  reputationObservation,
   platformContract,
   indexPage,
   knowledgeGraph,
@@ -149,7 +158,6 @@ const [
   read("src/lib/reputation-observation.mjs"),
   read("scripts/reputation.mjs"),
   read(".github/workflows/reputation-refresh.yml"),
-  readJson("src/data/reputation-observation.json"),
   readJson(".release/policy/platform-contract.json"),
   read("src/pages/index.astro"),
   read("src/lib/knowledge-graph.ts"),
@@ -160,11 +168,15 @@ const [
   read("scripts/generate-descriptors.mjs"),
   read("scripts/generate-retrieval-projections.mjs"),
   read("astro.config.mjs"),
-  readJson("src/data/release.json"),
+  loadPublicationData(root),
   readJson("src/data/machine-resources.json"),
   readJson("src/data/semantic/head-profile.json"),
   readJson("src/data/semantic/support-profile.json"),
   read(".github/workflows/ci.yml"),
+]);
+const [siteFooter, canonicalGraphSource] = await Promise.all([
+  read("src/components/SiteFooter.astro"),
+  readJson("src/data/semantic/knowledge-graph.jsonld"),
 ]);
 const { default: astroConfig } = await import(
   pathToFileURL(path.join(root, "astro.config.mjs")).href
@@ -205,6 +217,7 @@ assert(
   "Graph compiler must consume the two projection profiles directly",
 );
 const canonicalGraph = await readJson("src/data/semantic/knowledge-graph.jsonld");
+const documentHeadPolicy = await readJson("src/data/document-head.json");
 const finalProjection = deriveGraphProjections({
   graph: canonicalGraph,
   release,
@@ -259,14 +272,9 @@ assert(
   ),
   "Semantic corpus must target the generated projections path",
 );
-assert(
-  semanticCompiler.includes("deriveCanonicalAnswerProjection") &&
-    semanticCompiler.includes("fact-map.json") &&
-    contentAssembler.includes("deriveCanonicalAnswerProjection") &&
-    contentAssembler.includes("projectCanonicalAnswerHtml") &&
-    retrievalCompiler.includes("answerId") &&
-    retrievalCompiler.includes("ANSWER_IDS:"),
-  "Canonical answer projection must own visible HTML, fact-map and retrieval bindings",
+validateProjectedAnswerHtml(
+  pageSource,
+  deriveCanonicalAnswerProjection(canonicalGraph, release),
 );
 assert(
   retrievalCompiler.includes("generatedContent") &&
@@ -286,11 +294,35 @@ assert(
     /import\s+release\s+from\s+['"]\.\.\/data\/release\.json['"]/.test(
       documentHead,
     ) &&
-    /import\s*\{\s*headGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
+    /deriveCanonicalAuthority/.test(documentHead) &&
+    /selectCanonicalSocialImage/.test(documentHead) &&
+    /import\s*\{\s*canonicalGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
       documentHead,
     ) &&
-    /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead),
-  "Document Head must use its direct metadata and resource sources",
+    /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead) &&
+    /exactLanguageLiteral\(\s*person\.name/.test(documentHead) &&
+    /typeof website\.name/.test(documentHead) &&
+    /values\(website\.alternateName\)/.test(documentHead) &&
+    /documentHead\.appleMobileWebAppTitle/.test(documentHead) &&
+    /authority\.primaryEntity\.verifiedWebIdentityMesh/.test(documentHead) &&
+    /const\s+physicianId\s*=\s*refId\(page\.author\)/.test(documentHead) &&
+    /values\(page\.about\)/.test(documentHead) &&
+    /values\(page\.mentions\)/.test(documentHead) &&
+    /values\(facts\.clinic\.sameAs\)/.test(documentHead) &&
+    /authority\.clinicAuthority\.cid/.test(documentHead) &&
+    /const\s+openGraphType\s*=\s*pageTypes\.includes\(['"]ProfilePage['"]\)\s*\?\s*['"]profile['"]/.test(documentHead) &&
+    /page\.inLanguage/.test(documentHead) &&
+    /socialImageAlt/.test(documentHead) &&
+    /socialAlternateLocales/.test(documentHead) &&
+    !/documentHead\.(?:author|applicationName|openGraph)/.test(documentHead),
+  "Document Head must derive semantic identity/type/language directly from canonical graph and Markdown while consuming presentation and release lifecycle policy explicitly",
+);
+assert(
+  JSON.stringify(Object.keys(documentHeadPolicy)) ===
+    JSON.stringify(["appleMobileWebAppTitle", "themeColor", "twitter"]) &&
+    JSON.stringify(Object.keys(documentHeadPolicy.twitter || {})) ===
+      JSON.stringify(["card"]),
+  "document-head.json must remain presentation-only and may not own page/Open Graph semantics",
 );
 assert(
   /discoveryLinks\s*\.map\s*\(\s*\(?\s*link\s*\)?\s*=>\s*<link\s+\{\.\.\.link\}/.test(
@@ -303,34 +335,66 @@ assert(
     baseLayout.includes("../lib/css-delivery.mjs"),
   "Layout must assemble the single stylesheet directly",
 );
+const governanceField = frontmatter[1].match(/^footerGovernance:\s*(.+)$/m);
+assert(governanceField, "Canonical page frontmatter missing footerGovernance");
+const footerGovernance = JSON.parse(governanceField[1]);
 assert(
-  pageSource.split("<span data-clinic-reputation-slot></span>").length - 1 ===
-    1 &&
-    contentAssembler.includes("bindClinicReputation") &&
-    contentAssembler.includes("src/data/reputation-observation.json") &&
-    contentAssembler.includes("content = bindClinicReputation(content"),
-  "Static clinic reputation must be bound exactly once by the canonical content assembler",
+  typeof footerGovernance.summary === "string" &&
+    typeof footerGovernance.medicalNotice === "string" &&
+    typeof footerGovernance.reputationLead === "string" &&
+    typeof footerGovernance.mapsTerms?.href === "string" &&
+    typeof footerGovernance.mapsTerms?.label === "string" &&
+    typeof footerGovernance.privacyPolicy?.href === "string" &&
+    typeof footerGovernance.privacyPolicy?.label === "string" &&
+    typeof footerGovernance.tail === "string" &&
+    siteFooter.includes("governance.medicalNotice") &&
+    siteFooter.includes("governance.reputationLead") &&
+    !siteFooter.includes("محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود") &&
+    !siteFooter.includes("امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار"),
+  "Authored footer governance must be page-owned, not component-owned",
+);
+const reputationNodes = new Map(
+  canonicalGraphSource["@graph"].map((node) => [node?.["@id"], node]),
+);
+const ratingObservation = reputationNodes.get(
+  `${release.canonicalUrl}#observation-clinic-google-maps-rating-current`,
+);
+const reviewCountObservation = reputationNodes.get(
+  `${release.canonicalUrl}#observation-clinic-google-maps-review-count-current`,
 );
 assert(
-  reputationObservation.entity === release.clinic.id &&
-    reputationObservation.placeId === release.clinic.placeId &&
-    reputationObservation.source === "Google Places API (New)" &&
+  !pageSource.includes("data-clinic-reputation-slot") &&
+    pageSource.includes("{{CLINIC_GOOGLE_RATING_RAW}}") &&
+    pageSource.includes("{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}") &&
+    contentAssembler.includes("bindSiteTokens") &&
+    !contentAssembler.includes("bindClinicReputation") &&
+    !contentAssembler.includes("reputation-observation.json") &&
+    ratingObservation?.measuredProperty === "https://schema.org/ratingValue" &&
+    reviewCountObservation?.measuredProperty === "https://schema.org/reviewCount" &&
+    ratingObservation?.observationDate?.["@type"] ===
+      "http://www.w3.org/2001/XMLSchema#dateTime" &&
+    reviewCountObservation?.observationDate?.["@type"] ===
+      "http://www.w3.org/2001/XMLSchema#dateTime" &&
+    ratingObservation?.observationDate?.["@value"] ===
+      reviewCountObservation?.observationDate?.["@value"] &&
+    ratingObservation?.measurementMethod === "Google Places API (New)" &&
+    reviewCountObservation?.measurementMethod === "Google Places API (New)" &&
     reputationModule.includes("validateReputationObservation") &&
-    reputationModule.includes("evaluateGoogleReputation") &&
-    reputationModule.includes("renderClinicReputationHtml") &&
-    reputationScript.includes("composeReputationObservation") &&
+    reputationModule.includes("applyReputationObservation") &&
+    reputationScript.includes('src/data/semantic/knowledge-graph.jsonld') &&
+    reputationScript.includes("applyReputationObservation") &&
     reputationScript.includes("writeAtomic") &&
     reputationWorkflow.includes('cron: "23 */6 * * *"') &&
     reputationWorkflow.includes("GOOGLE_PLACES_API_KEY") &&
     reputationWorkflow.includes("node scripts/reputation.mjs google") &&
-    reputationWorkflow.includes("src/data/reputation-observation.json") &&
+    reputationWorkflow.includes("src/data/semantic/knowledge-graph.jsonld") &&
     reputationWorkflow.split("places.googleapis.com/v1/places/").length - 1 ===
       1 &&
     !reputationWorkflow.includes("--retry") &&
     !reputationWorkflow.includes("huggingface") &&
     !reputationWorkflow.includes("zenodo") &&
     !reputationWorkflow.includes("cloudflare-pages.mjs"),
-  "Six-hour bounded static clinic reputation pipeline drift",
+  "Graph-owned six-hour static clinic reputation pipeline drift",
 );
 assert(
   platformContract.cloudflare?.delivery?.mode === "static-assets" &&

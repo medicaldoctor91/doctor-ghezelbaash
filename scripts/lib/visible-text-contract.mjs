@@ -106,12 +106,91 @@ export async function sourceContract(root) {
   const page = await readFile(path.join(root, 'src/content-source/page.md'), 'utf8');
   const match = page.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/u);
   if (!match) throw new Error('Visible source frontmatter missing');
-  const frontmatter = Object.fromEntries(['title', 'description'].map((key) => {
+  const frontmatterValue = (key) => {
     const field = match[1].match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));
     if (!field) throw new Error(`Visible source ${key} missing`);
-    return [key, normalizeText(JSON.parse(field[1]))];
-  }));
+    return JSON.parse(field[1]);
+  };
+  const frontmatter = Object.fromEntries(['title', 'description'].map((key) =>
+    [key, normalizeText(frontmatterValue(key))],
+  ));
+  const lang = frontmatterValue('lang');
+  const socialImageAlt = frontmatterValue('socialImageAlt');
+  const socialAlternateLocales = frontmatterValue('socialAlternateLocales');
+  const footerGovernance = frontmatterValue('footerGovernance');
   const graph = JSON.parse(await readFile(path.join(root, 'src/data/semantic/knowledge-graph.jsonld'), 'utf8'));
+  const release = JSON.parse(await readFile(path.join(root, 'src/data/release.json'), 'utf8'));
+  const documentHeadPolicy = JSON.parse(await readFile(path.join(root, 'src/data/document-head.json'), 'utf8'));
+  const socialImages = graph['@graph'].filter((node) =>
+    [node['@type']].flat().includes('ImageObject') &&
+    Number(node.width?.value) === 1200 &&
+    Number(node.height?.value) === 630 &&
+    typeof node.contentUrl === 'string' &&
+    new URL(node.contentUrl).origin === new URL(release.canonicalUrl).origin,
+  );
+  if (socialImages.length !== 1) {
+    throw new Error(`Visible source requires exactly one canonical 1200x630 social ImageObject; found ${socialImages.length}`);
+  }
+  const [socialImage] = socialImages;
+  if (typeof socialImage.encodingFormat !== 'string' || !socialImage.encodingFormat) {
+    throw new Error('Canonical social ImageObject encodingFormat missing');
+  }
+  const pageId = `${release.canonicalUrl}#webpage`;
+  const pageNode = graph['@graph'].find((node) => node?.['@id'] === pageId);
+  const pageTypes = [pageNode?.['@type']].flat().filter(Boolean);
+  if (!pageTypes.includes('ProfilePage')) {
+    throw new Error('Visible source requires canonical graph ProfilePage type');
+  }
+  if (!Array.isArray(pageNode?.inLanguage) || !pageNode.inLanguage.includes(lang)) {
+    throw new Error(`Visible source language is not canonical graph language: ${lang}`);
+  }
+  const localeMatch = /^([a-z]{2,3})-([A-Z]{2})$/.exec(lang);
+  if (!localeMatch) throw new Error(`Visible source invalid Open Graph language: ${lang}`);
+  if (!Array.isArray(socialAlternateLocales) || !socialAlternateLocales.length) {
+    throw new Error('Visible source socialAlternateLocales missing');
+  }
+  const graphLanguageBases = new Set(pageNode.inLanguage.map((value) => String(value).split('-')[0]));
+  for (const locale of socialAlternateLocales) {
+    const alternateMatch = /^([a-z]{2,3})_([A-Z]{2})$/.exec(locale);
+    if (!alternateMatch || !graphLanguageBases.has(alternateMatch[1])) {
+      throw new Error(`Visible source invalid social alternate locale: ${locale}`);
+    }
+  }
+  if (typeof socialImageAlt !== 'string' || !socialImageAlt.trim()) {
+    throw new Error('Visible source socialImageAlt missing');
+  }
+  const governanceStrings = [
+    footerGovernance?.summary,
+    footerGovernance?.medicalNotice,
+    footerGovernance?.reputationLead,
+    footerGovernance?.mapsTerms?.href,
+    footerGovernance?.mapsTerms?.label,
+    footerGovernance?.privacyPolicy?.href,
+    footerGovernance?.privacyPolicy?.label,
+    footerGovernance?.tail,
+  ];
+  if (
+    governanceStrings.some(
+      (value) => typeof value !== 'string' || !value.trim() || value !== value.trim(),
+    )
+  ) {
+    throw new Error('Visible source footerGovernance is incomplete or unnormalized');
+  }
+  const documentHead = {
+    appleMobileWebAppTitle: documentHeadPolicy.appleMobileWebAppTitle,
+    themeColor: documentHeadPolicy.themeColor,
+    openGraph: {
+      type: 'profile',
+      locale: `${localeMatch[1]}_${localeMatch[2]}`,
+      alternateLocales: socialAlternateLocales,
+      image: socialImage.contentUrl,
+      imageType: socialImage.encodingFormat,
+      imageWidth: Number(socialImage.width.value),
+      imageHeight: Number(socialImage.height.value),
+      imageAlt: socialImageAlt,
+    },
+    twitter: documentHeadPolicy.twitter,
+  };
   const answers = graph['@graph'].filter((node) => [node['@type']].flat().includes('Answer')).map((node) => [node['@id'], node.text]).sort(([a], [b]) => a.localeCompare(b, 'en'));
   const runtime = runtimeTextLiterals(await readFile(path.join(root, 'src/components/GuideNavigator.astro'), 'utf8'));
   const captions = {};
@@ -120,11 +199,11 @@ export async function sourceContract(root) {
     const vtt = await readFile(file, 'utf8');
     captions[path.relative(root, file)] = vtt.split(/\r?\n\s*\r?\n/u).filter((block) => block.includes('-->')).map((block) => normalizeText(block.split(/\r?\n/u).slice(block.split(/\r?\n/u).findIndex((line) => line.includes('-->')) + 1).join(' ')));
   }
-  return { page: { ...frontmatter, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead: JSON.parse(await readFile(path.join(root, 'src/data/document-head.json'), 'utf8')), answers, runtime, captions };
+  return { page: { ...frontmatter, footerGovernance, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead, answers, runtime, captions };
 }
 
 export async function sourceRawHashes(root) {
-  const files = ['src/content-source/page.md', 'src/data/document-head.json', 'src/data/media-metadata.json', 'src/data/release.json', 'src/data/reputation-observation.json', 'src/data/semantic/knowledge-graph.jsonld', 'src/components/GuideNavigator.astro', 'src/components/SiteFooter.astro', 'src/components/FloatingActionDock.astro', 'src/components/DocumentHead.astro', 'src/layouts/BaseLayout.astro', 'src/pages/404.astro'];
+  const files = ['src/content-source/page.md', 'src/data/document-head.json', 'src/data/media-metadata.json', 'src/data/release.json', 'src/data/semantic/knowledge-graph.jsonld', 'src/components/GuideNavigator.astro', 'src/components/SiteFooter.astro', 'src/components/FloatingActionDock.astro', 'src/components/DocumentHead.astro', 'src/layouts/BaseLayout.astro', 'src/pages/404.astro'];
   return Object.fromEntries(await Promise.all(files.map(async (file) => [file, digest(await readFile(path.join(root, file), 'utf8'))])));
 }
 

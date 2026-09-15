@@ -110,9 +110,8 @@ for (const [label, document] of [["Canonical", canonical], ["Head", head]]) {
     fail(`${label} must have one canonical homepage WebSite`);
   if (typeof website.name !== "string" || !website.name.trim() ||
       website.name !== website.name.trim() ||
-      website.name !== documentHead.openGraph.siteName ||
-      website.name !== documentHead.applicationName)
-    fail(`${label} WebSite name must be one explicit text matching homepage metadata`);
+      website.name !== canonicalWebsite.name)
+    fail(`${label} WebSite name must preserve the canonical graph preference`);
   const alternatives = website.alternateName;
   if (!Array.isArray(alternatives) || !alternatives.length ||
       alternatives.some((name) => typeof name !== "string" || !name.trim() ||

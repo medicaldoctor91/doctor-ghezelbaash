@@ -26,6 +26,10 @@ const FIELD_LABELS = {
 const arr = (v) => Array.isArray(v) ? v : v == null ? [] : [v];
 const refs = (v) => arr(v).map((n) => typeof n === "string" ? n : n?.["@id"]);
 const normalized = (v) => String(v).replace(/\s+/g, " ").trim();
+const graphTextValues = (v) => arr(v)
+  .map((value) => typeof value === "string" ? value : value?.["@value"])
+  .filter((value) => typeof value === "string" && value.trim())
+  .map(normalized);
 
 // Read the visible server-rendered record, never hydration scripts or a URL marker.
 export function extractMojavezRecord(html) {
@@ -80,7 +84,12 @@ export function assertMojavezEvidence({ graph, registry, release, observation, h
   const record = observation.record;
   for (const field of ["holderName", ...Object.keys(FIELD_LABELS)])
     assert.ok(typeof record[field] === "string" && record[field].trim(), `Mojavez observed field missing: ${field}`);
-  assert.ok(release.primaryEntity.officialAliases.includes(record.holderName), "Mojavez holder is not the canonical physician");
+  const canonicalPersonNames = new Set([
+    ...graphTextValues(person.name),
+    ...graphTextValues(person.additionalName),
+    ...graphTextValues(person.alternateName),
+  ]);
+  assert.ok(canonicalPersonNames.has(normalized(record.holderName)), "Mojavez holder is not the canonical physician");
   assert.equal(record.licenseTitle, "پروانه طبابت", "Mojavez record is not a medical practice license");
   assert.equal(record.trackingCode, "19949827", "Mojavez tracking record drift");
   assert.equal(record.issuingAuthority, "سازمان نظام پزشکی ج.ا.ا - معاونت فنی و نظارت نظام پزشکی");

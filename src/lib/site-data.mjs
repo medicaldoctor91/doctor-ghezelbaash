@@ -1,12 +1,9 @@
-import {
-  exactLanguageLiteral,
-  indexCanonicalGraph,
-} from "./semantic-projection.mjs";
+import { exactLanguageLiteral } from "./semantic-projection.mjs";
+import { deriveCanonicalGraphFacts } from "./canonical-authority.mjs";
+import { validateReputationObservation } from "./reputation-observation.mjs";
 
 const faDigits = (value) =>
   String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-const asArray = (value) =>
-  Array.isArray(value) ? value : value == null ? [] : [value];
 const exactText = (value, label) => {
   if (typeof value !== "string" || !value.length)
     throw new Error(`Canonical graph requires ${label}`);
@@ -24,45 +21,23 @@ const formatDate = (value, calendar) =>
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${value}T00:00:00Z`));
+const faNumber = (value, digits = 0) =>
+  new Intl.NumberFormat("fa-IR", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+    useGrouping: true,
+  }).format(Number(value));
 
-export function deriveSiteData(release, graph) {
-  if (!release?.clinic?.id || !Array.isArray(graph?.["@graph"]))
-    throw new Error("Site data requires release + graph");
-  const { byId } = indexCanonicalGraph(graph);
-  const clinic = byId.get(release.clinic.id);
-  if (!clinic)
-    throw new Error(`Head graph lacks clinic node: ${release.clinic.id}`);
-  const address = byId.get(clinic.address?.["@id"]);
-  if (!address)
-    throw new Error("Head graph lacks canonical clinic address node");
-
+function deriveSiteContactDataFromFacts(facts) {
+  const { clinic, address } = facts;
   const phone = normalizePhone(clinic.telephone);
   if (!/^\+98\d{10}$/.test(phone))
     throw new Error(`Invalid canonical clinic telephone: ${clinic.telephone}`);
   const localPhone = `0${phone.slice(3)}`;
-  const instagramUrls = asArray(
-    release.primaryEntity?.verifiedWebIdentityMesh,
-  ).filter((url) =>
-    /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/.test(String(url)),
-  );
-  if (instagramUrls.length !== 1)
-    throw new Error(
-      `Identity mesh requires one official Instagram URL; found ${instagramUrls.length}`,
-    );
-  const [instagramUrl] = instagramUrls;
+  const instagramUrl = facts.instagramUrl;
   const instagramHandle = new URL(instagramUrl).pathname
     .split("/")
     .filter(Boolean)[0];
-
-  if (String(address.postalCode) !== String(release.clinic.postalCode))
-    throw new Error("Clinic postal-code authority drift");
-  const hours = String(release.clinic.hours).match(
-    /^Saturday–Thursday (\d{2}:\d{2})–(\d{2}:\d{2}); Friday closed$/,
-  );
-  if (!hours || release.clinic.fridayClosed !== true)
-    throw new Error(
-      `Unsupported clinic hours contract: ${release.clinic.hours}`,
-    );
   const clinicName = exactLanguageLiteral(
     clinic.name,
     "fa",
@@ -70,11 +45,16 @@ export function deriveSiteData(release, graph) {
   );
   const locality = exactText(address.addressLocality, "clinic locality");
   const street = exactText(address.streetAddress, "clinic street address");
+  const hoursOpenFa = faDigits(facts.clinicHours.open);
+  const hoursCloseFa = faDigits(facts.clinicHours.close);
 
   const directions = new URL("https://www.google.com/maps/dir/");
   directions.searchParams.set("api", "1");
   directions.searchParams.set("destination", `${clinicName}، ${locality}`);
-  directions.searchParams.set("destination_place_id", release.clinic.placeId);
+  directions.searchParams.set(
+    "destination_place_id",
+    facts.identifiers.clinic.placeId,
+  );
 
   return Object.freeze({
     phone,
@@ -85,31 +65,59 @@ export function deriveSiteData(release, graph) {
     instagramUrl,
     instagramHandle,
     chatUrl: `https://ig.me/m/${instagramHandle}`,
-    mapsUrl: `https://www.google.com/maps?cid=${release.clinic.cid}`,
+    mapsUrl: `https://www.google.com/maps?cid=${facts.identifiers.clinic.cid}`,
     directionsUrl: directions.toString(),
     clinicName,
     street,
     locality,
-    postalCode: String(address.postalCode),
-    hoursDisplay: `شنبه تا پنجشنبه ${faDigits(hours[1])} تا ${faDigits(hours[2])} و جمعه تعطیل`,
-    medicalReviewedAt: release.medicalReviewedAt,
-    medicalReviewedPersian: formatDate(release.medicalReviewedAt, "persian"),
-    medicalReviewedGregorian: formatDate(release.medicalReviewedAt, "gregory"),
+    postalCode: exactText(String(address.postalCode), "clinic postalCode"),
+    hoursOpenFa,
+    hoursCloseFa,
+    hoursOpenCompactFa: hoursOpenFa.replace(":۰۰", ""),
+    hoursCloseCompactFa: hoursCloseFa.replace(":۰۰", ""),
+    medicalReviewedAt: facts.medicalReviewedAt,
+    medicalReviewedPersian: formatDate(facts.medicalReviewedAt, "persian"),
+    medicalReviewedGregorian: formatDate(facts.medicalReviewedAt, "gregory"),
+  });
+}
+
+export function deriveSiteContactData(release, graph) {
+  return deriveSiteContactDataFromFacts(deriveCanonicalGraphFacts(release, graph));
+}
+
+export function deriveSiteData(release, graph) {
+  const facts = deriveCanonicalGraphFacts(release, graph);
+  const contact = deriveSiteContactDataFromFacts(facts);
+  const reputation = validateReputationObservation(graph, {
+    canonicalUrl: release.canonicalUrl,
+    clinic: {
+      id: release.clinic.id,
+      placeId: facts.identifiers.clinic.placeId,
+    },
+  });
+
+  return Object.freeze({
+    ...contact,
+    googleRating: reputation.rating,
+    googleRatingFa: faNumber(reputation.rating, 1),
+    googleReviewCount: reputation.reviewCount,
+    googleReviewCountFa: faNumber(reputation.reviewCount),
+    googleReputationObservedAt: reputation.valueObservedAt,
   });
 }
 
 const siteTokenPattern = /{{(?:CLINIC_[A-Z0-9_]+|OFFICIAL_[A-Z0-9_]+)}}/g;
 
 function siteTokenValues(site) {
-  if (!site?.telHref || !site?.instagramUrl || !site?.chatUrl || !site?.mapsUrl)
+  if (
+    !site?.telHref ||
+    !site?.instagramUrl ||
+    !site?.chatUrl ||
+    !site?.mapsUrl ||
+    !site?.hoursOpenFa ||
+    !site?.hoursCloseFa
+  )
     throw new Error("Invalid canonical site token source");
-  const hours = String(site.hoursDisplay).match(
-    /^شنبه تا پنجشنبه (\S+) تا (\S+) و جمعه تعطیل$/,
-  );
-  if (!hours)
-    throw new Error(
-      `Unsupported canonical site hours display: ${site.hoursDisplay}`,
-    );
   return Object.freeze({
     "{{CLINIC_TEL_HREF}}": site.telHref,
     "{{CLINIC_PHONE_FA}}": site.phoneDisplayGrouped,
@@ -118,9 +126,14 @@ function siteTokenValues(site) {
     "{{OFFICIAL_CHAT_URL}}": site.chatUrl,
     "{{CLINIC_MAPS_URL}}": site.mapsUrl,
     "{{CLINIC_POSTAL_CODE_FA}}": faDigits(site.postalCode),
-    "{{CLINIC_HOURS_COMPACT_FA}}": `شنبه تا پنجشنبه ${hours[1].replace(":۰۰", "")}–${hours[2].replace(":۰۰", "")}؛ جمعه تعطیل`,
-    "{{CLINIC_HOURS_WEEKDAYS_FA}}": `شنبه تا پنجشنبه، ${hours[1]} تا ${hours[2]}`,
-    "{{CLINIC_FRIDAY_CLOSED_FA}}": "جمعه تعطیل.",
+    "{{CLINIC_HOURS_OPEN_FA}}": site.hoursOpenFa,
+    "{{CLINIC_HOURS_CLOSE_FA}}": site.hoursCloseFa,
+    "{{CLINIC_HOURS_OPEN_COMPACT_FA}}": site.hoursOpenCompactFa,
+    "{{CLINIC_HOURS_CLOSE_COMPACT_FA}}": site.hoursCloseCompactFa,
+    "{{CLINIC_GOOGLE_RATING_RAW}}": String(site.googleRating),
+    "{{CLINIC_GOOGLE_RATING_FA}}": site.googleRatingFa,
+    "{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}": String(site.googleReviewCount),
+    "{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}": site.googleReviewCountFa,
   });
 }
 

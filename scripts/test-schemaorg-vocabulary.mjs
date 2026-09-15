@@ -19,9 +19,11 @@ const propertyRows = [
 const vocabulary = createSchemaVocabulary(propertyRows, typeRows);
 const baseline = {
   "@context": { "@version": 1.1, "@vocab": S, schema: S,
-    prov: "http://www.w3.org/ns/prov#", dcterms: "http://purl.org/dc/terms/" },
+    prov: "http://www.w3.org/ns/prov#", dcterms: "http://purl.org/dc/terms/",
+    skos: "http://www.w3.org/2004/02/skos/core#" },
   "@graph": [
     { "@id": "https://example.test/#person", "@type": "Person", name: "A",
+      "skos:altLabel": "A. Person", "skos:hiddenLabel": "A Persn",
       worksFor: { "@id": "https://example.test/#clinic" },
       birthDate: { "@value": "2000-01-01", "@type": "http://www.w3.org/2001/XMLSchema#date" } },
     { "@id": "https://example.test/#clinic", "@type": "Organization", name: "B" },
@@ -35,7 +37,7 @@ const validate = (document) => validateJsonLdScope([document], vocabulary, "fixt
 test("checks graph types, cross-node ranges, typed/language literals and explicit external terms", () => {
   const result = validate(baseline);
   assert.equal(result.graphNodes, 3);
-  assert.equal(result.externalPropertyUses, 2);
+  assert.equal(result.externalPropertyUses, 4);
   assert.equal(result.standardDatatypeLiterals, 1);
   assert.equal(result.languageTaggedLiterals, 1);
   assert.ok(result.checkedRanges >= 7);
@@ -53,6 +55,7 @@ for (const [name, mutate, error] of [
   ["context property redefinition", (c) => c["@context"].name = S + "url", /context term remapped/],
   ["scoped context bypass", (c) => c["@graph"][0]["@context"] = { name: S + "url" }, /scoped contexts/],
   ["literal PROV entity", (c) => c["@graph"][2]["prov:wasDerivedFrom"] = "https://source.test/", /entity reference/],
+  ["IRI SKOS label", (c) => c["@graph"][0]["skos:hiddenLabel"] = { "@id": "https://example.test/#bad-label" }, /plain literals/],
   ["duplicate graph identity", (c) => c["@graph"].push(structuredClone(c["@graph"][0])), /unique/],
 ]) test(`rejects ${name}`, () => {
   const document = structuredClone(baseline); mutate(document);

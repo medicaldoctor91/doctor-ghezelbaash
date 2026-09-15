@@ -199,7 +199,7 @@ export function assertHomepageAuthorityRoles({
     "physicianAuthoredWork",
   ]);
   for (const profile of profiles)
-    for (const [id, policy] of Object.entries(profile.idProfiles || {})) {
+    for (const [id, policy] of Object.entries(profile.nodes || {})) {
       if (!policy.authorityRole) continue;
       if (
         !roleNames.has(policy.authorityRole) ||
@@ -323,6 +323,17 @@ export function deriveGraphProjections({
   supportProfile,
 }) {
   const { byId } = indexCanonicalGraph(graph);
+  for (const [label, profile] of [["Head", headProfile], ["Support", supportProfile]]) {
+    const fields = ["ids", "maxBytes", "nodes", "typeProfiles"];
+    if (!profile || Object.keys(profile).length !== fields.length ||
+        fields.some((field) => !Object.hasOwn(profile, field)))
+      throw new Error(`${label} projection profile requires: ${fields.join(", ")}`);
+    for (const field of ["nodes", "typeProfiles"])
+      if (!profile[field] || typeof profile[field] !== "object" || Array.isArray(profile[field]))
+        throw new Error(`${label} projection ${field} must be a policy map`);
+    if (!Number.isInteger(profile.maxBytes) || profile.maxBytes <= 0)
+      throw new Error(`${label} projection requires a positive byte budget`);
+  }
   const headIds = headProfile.ids;
   const supportIds = supportProfile.ids;
   if (!Array.isArray(headIds) || !Array.isArray(supportIds))
@@ -341,7 +352,7 @@ export function deriveGraphProjections({
   const canonicalOrigin = new URL(release.canonicalUrl).origin;
   const homepageSelected = new Set([...headIds, ...supportIds]);
   const projectLane = (profile, label) => {
-    const specificProfiles = profile.nodes ?? profile.idProfiles ?? {};
+    const specificProfiles = profile.nodes;
     for (const id of Object.keys(specificProfiles))
       if (!profile.ids.includes(id))
         throw new Error(
@@ -371,8 +382,7 @@ export function deriveGraphProjections({
       const node = byId.get(id);
       if (!node) throw new Error(`${label} selection missing ${id}`);
       const spec =
-        profile.nodes?.[id] ??
-        profile.idProfiles?.[id] ??
+        profile.nodes[id] ??
         mergeProjectionProfiles(
           nodeTypes(node).map((type) => profile.typeProfiles?.[type]),
         );

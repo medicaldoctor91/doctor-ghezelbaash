@@ -1,7 +1,8 @@
 {
-  "schemaVersion": "2.5",
-  "identitySource": "src/data/release.json",
+  "schemaVersion": "2.6",
+  "identitySource": "src/data/semantic/knowledge-graph.jsonld",
   "semanticSource": "src/data/semantic/knowledge-graph.jsonld",
+  "releaseLifecycleSource": "src/data/release.json",
   "evidenceRegistry": "src/data/evidence-registry.json",
   "languages": [
     "fa",

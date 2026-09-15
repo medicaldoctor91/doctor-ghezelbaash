@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { hashIdentityFingerprint } from "./release-identity.mjs";
 import { generatedWorkspace } from "../generated-workspace.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
+import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
 
 export const nodeTypes = (node) =>
   Array.isArray(node?.["@type"])
@@ -104,21 +105,23 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const data = path.join(root, "src/data");
   const semantic = path.join(data, "semantic");
   const generated = generatedWorkspace(root);
-  const [release, invariants, rawEvidenceRegistry, graph] = await Promise.all([
-    readFile(path.join(data, "release.json"), "utf8").then(JSON.parse),
-    readFile(path.join(data, "release-invariants.json"), "utf8").then(
-      JSON.parse,
-    ),
-    readFile(path.join(data, "evidence-registry.json"), "utf8").then(
-      JSON.parse,
-    ),
-    readFile(path.join(semantic, "knowledge-graph.jsonld"), "utf8").then(
-      JSON.parse,
-    ),
-  ]);
-  const evidenceRegistry = deriveEvidenceRegistry(release, rawEvidenceRegistry);
+  const [rawRelease, invariants, rawEvidenceRegistry, graph] =
+    await Promise.all([
+      readFile(path.join(data, "release.json"), "utf8").then(JSON.parse),
+      readFile(path.join(data, "release-invariants.json"), "utf8").then(
+        JSON.parse,
+      ),
+      readFile(path.join(data, "evidence-registry.json"), "utf8").then(
+        JSON.parse,
+      ),
+      readFile(path.join(semantic, "knowledge-graph.jsonld"), "utf8").then(
+        JSON.parse,
+      ),
+    ]);
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
+  const release = derivePublicationData(rawRelease, graph);
+  const evidenceRegistry = deriveEvidenceRegistry(release, rawEvidenceRegistry);
   const evidenceEntries = evidenceRegistry.evidence;
   if (
     !Array.isArray(evidenceEntries) ||
@@ -179,6 +182,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     generatedContent: generated.content,
     generatedAssets: generated.assets,
     release,
+    rawRelease,
     invariants,
     evidenceRegistry,
     evidenceSnapshot,

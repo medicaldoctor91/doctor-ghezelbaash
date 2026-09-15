@@ -1,3 +1,4 @@
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
@@ -15,7 +16,7 @@ const root = process.cwd(),
 const outputDir = projections;
 const readJson = async (p) =>
   JSON.parse(await readFile(path.join(root, p), "utf8"));
-const release = await readJson("src/data/release.json");
+const release = await loadPublicationData(root);
 const retrievalPolicy = await readJson(
   "src/data/retrieval/query-matrix-policy.json",
 );

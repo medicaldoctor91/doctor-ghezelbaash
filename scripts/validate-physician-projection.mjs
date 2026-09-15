@@ -415,7 +415,7 @@ for (const [
     `Aesthetic work lost botulinum-toxin topic: ${id}`,
   );
   assert.equal(
-    supportProfile.idProfiles[id]?.authorityRole,
+    supportProfile.nodes[id]?.authorityRole,
     "physicianAuthoredWork",
     `Aesthetic authored work lacks its documented authority role: ${id}`,
   );
@@ -475,7 +475,7 @@ for (const [id, doi] of citedScholarlyWorks) {
     `Cited scholarly work is not selected: ${id}`,
   );
   assert.equal(
-    supportProfile.idProfiles[id]?.authorityRole,
+    supportProfile.nodes[id]?.authorityRole,
     "physicianAuthoredWork",
     `Cited scholarly work lacks its documented authorship role: ${id}`,
   );
@@ -556,7 +556,7 @@ assert.ok(
 
 const interviewId = "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview";
 assert.equal(
-  supportProfile.idProfiles[interviewId]?.authorityRole,
+  supportProfile.nodes[interviewId]?.authorityRole,
   "physicianCoverage",
   "The interview must document physician coverage rather than authorship",
 );
@@ -584,7 +584,7 @@ assert.ok(
   "Projected research section lost the interview's canonical citation",
 );
 assert.equal(
-  supportProfile.idProfiles[CREDENTIAL_ISSUER]?.authorityRole,
+  supportProfile.nodes[CREDENTIAL_ISSUER]?.authorityRole,
   "credentialIssuer",
   "Medical Council must preserve its credential-issuer role",
 );

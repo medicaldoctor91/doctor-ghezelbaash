@@ -4351,6 +4351,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/clinic.vcf#document"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#claim-clinic-owner-confirmed-operating-facts"
         }
       ],
       "alternateName": [
@@ -5492,7 +5495,24 @@
           "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
         }
       ],
-      "priceRange": "$$$$"
+      "priceRange": "$$$$",
+      "skos:altLabel": [
+        "Saeed Ghezelbaash",
+        "Dr. Saeed Ghezelbaash",
+        "Dr Saeed Ghezelbash",
+        "MohammadSaeed Ghezelbash",
+        "Mohamadsaeed Ghezelbash"
+      ],
+      "skos:hiddenLabel": [
+        "Mohammad Saeed Ghezelbaash",
+        "Dr. Mohammad Saeed Ghezelbaash",
+        "Mohammadssaeed Ghezelbash",
+        "Mohammadssaeed Ghezelbaash",
+        "Mohammad Saeed Ghazlbash",
+        "Dr. Mohammad Saeed Ghazlbash",
+        "Doctor Ghezelbaash",
+        "Ghezelbash MS"
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation",
@@ -8892,6 +8912,41 @@
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
       },
       "identifier": "Google Maps CID:12350483144643112463"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#observation-clinic-google-maps-rating-current",
+      "@type": "Observation",
+      "observationAbout": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      },
+      "observationDate": {
+        "@value": "2026-09-04T03:30:42Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
+      "measurementMethod": "Google Places API (New)",
+      "prov:wasDerivedFrom": {
+        "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"
+      },
+      "measuredProperty": "https://schema.org/ratingValue",
+      "value": 5,
+      "maxValue": 5
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#observation-clinic-google-maps-review-count-current",
+      "@type": "Observation",
+      "observationAbout": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      },
+      "observationDate": {
+        "@value": "2026-09-04T03:30:42Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
+      "measurementMethod": "Google Places API (New)",
+      "prov:wasDerivedFrom": {
+        "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"
+      },
+      "measuredProperty": "https://schema.org/reviewCount",
+      "value": 166
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic",
@@ -21606,6 +21661,27 @@
           "@language": "en"
         }
       ]
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#claim-clinic-owner-confirmed-operating-facts",
+      "@type": "Claim",
+      "name": "Owner-confirmed clinic operating facts",
+      "text": "The clinic operating facts used by the canonical publication context were confirmed by the physician-owner.",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic-opening-hours-sat-thu"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic-friday-closed"
+        }
+      ],
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "dateCreated": "2026-08-07"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#video-thread-lift-workshop-clip-01",

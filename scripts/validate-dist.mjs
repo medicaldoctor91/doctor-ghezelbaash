@@ -1,3 +1,4 @@
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 import { assertGooglebotResponseBudget } from "./lib/googlebot-budget.mjs";
 import path from "node:path";
@@ -65,17 +66,13 @@ const walkRelative = async (directory, prefix = "") => {
   }
   return files;
 };
-const release = await readJson(path.join(data, "release.json")),
+const release = await loadPublicationData(root),
   inv = await readJson(path.join(data, "release-invariants.json")),
   headProfile = await readJson(path.join(data, "semantic/head-profile.json")),
   supportProfile = await readJson(
     path.join(data, "semantic/support-profile.json"),
   ),
   stableMedia = await readJson(path.join(data, "stable-media-aliases.json")),
-  reputationObservation = validateReputationObservation(
-    await readJson(path.join(data, "reputation-observation.json")),
-    release,
-  ),
   rdfLock = await readJson(
     path.join(root, ".generated/semantic/rdf-lock.json"),
   );
@@ -136,6 +133,7 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
   provenance = await readJson(path.join(dist, "provenance.jsonld"));
 const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
+const reputationObservation = validateReputationObservation(graph, release);
 await validateRenderCalibration({ root, html });
 const person = byId.get(release.primaryEntity.id),
   clinic = byId.get(release.clinic.id),
@@ -150,7 +148,7 @@ const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
 });
 const siteData = deriveSiteData(release, graph);
 assertRenderedClinicReputation(html, {
-  observation: reputationObservation,
+  graph,
   release,
   mapsUrl: siteData.mapsUrl,
 });

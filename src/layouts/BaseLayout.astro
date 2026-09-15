@@ -16,6 +16,16 @@ interface Frontmatter {
   lang: string;
   dir: string;
   robots: string;
+  socialImageAlt?: string;
+  socialAlternateLocales?: string[];
+  footerGovernance?: {
+    summary: string;
+    medicalNotice: string;
+    reputationLead: string;
+    mapsTerms: { href: string; label: string };
+    privacyPolicy: { href: string; label: string };
+    tail: string;
+  };
 }
 
 interface Props {
@@ -32,6 +42,10 @@ if (!['ltr', 'rtl', 'auto'].includes(dir)) {
   throw new Error(`Invalid document direction: ${dir}`);
 }
 const noindex = /(?:^|,)\s*noindex\b/i.test(robots);
+const footerGovernance = frontmatter.footerGovernance;
+if (!noindex && !footerGovernance) {
+  throw new Error('Indexable document frontmatter requires footer governance');
+}
 if (!Astro.site) {
   throw new Error('Astro site URL is required for canonical resolution');
 }
@@ -40,6 +54,12 @@ const canonicalURL = isMain
   : noindex
     ? undefined
     : new URL(Astro.url.pathname, Astro.site);
+const entityHeadingId = isMain
+  ? new URL(release.primaryEntity.id, release.canonicalUrl).hash.slice(1)
+  : undefined;
+if (isMain && !entityHeadingId) {
+  throw new Error('Primary entity pointer must expose a same-page fragment identifier');
+}
 
 const { cssSource } = assembleCssSource(globalCss, renderCalibrationRaw);
 const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(cssSource);
@@ -55,7 +75,10 @@ const googlePageMicrodata = isMain
     <DocumentHead
       title={frontmatter.title}
       description={frontmatter.description}
+      lang={lang}
       robots={robots}
+      socialImageAlt={frontmatter.socialImageAlt}
+      socialAlternateLocales={frontmatter.socialAlternateLocales}
       canonicalURL={canonicalURL}
       isMain={isMain}
     >
@@ -118,7 +141,7 @@ const googlePageMicrodata = isMain
       )}
       <article
         class:list={['medical-guide', { 'medical-guide--entity-home': isMain }]}
-        aria-labelledby={isMain ? 'saeed-ghezelbash' : undefined}
+        aria-labelledby={entityHeadingId}
       >
         <slot />
       </article>
@@ -131,7 +154,7 @@ const googlePageMicrodata = isMain
         set:html={supportGraphRaw}
       ></script>
     )}
-    {!noindex && <SiteFooter />}
+    {!noindex && footerGovernance && <SiteFooter governance={footerGovernance} />}
     {!noindex && <FloatingActionDock />}
     {isMain && <GuideNavigator />}
   </body>

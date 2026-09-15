@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-13T01:03:06.099Z",
-    "sourceSha256": "9011064264d46f4d3d7fec9b0d6aed675e3e7bba8ddaa6cf6a2b782243a5792f",
+    "measuredAt": "2026-09-15T00:58:14.262Z",
+    "sourceSha256": "b5e05b774bd701d4251f747d6b7116dd95c81b7e960fb9eb4d18fa0a1819b4f2",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4881,23 +4881,23 @@
       ],
       [
         "src/components/DocumentHead.astro",
-        "cdf5d6300389059e340c5b06def0b95e2e5f4e025e4eb45f0a4826fcd7989552"
+        "83d105b711328373ddd64f2506d3cef48cdc59c45899866dc6aa83e8462571e9"
       ],
       [
         "src/components/FloatingActionDock.astro",
-        "2b09fe737aad327f3019fd404ea81b1fcc9adf9ebed1637a6723c019fc6395a0"
+        "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e"
       ],
       [
         "src/components/GuideNavigator.astro",
-        "f721b6b877e974754a55a6dd7ef369f691ecda122894384ed2d2bcb291b8ca78"
+        "f0005a00f1ebaac91361a0f16104451586f14d31d9b36e3bc06738d6a96baf72"
       ],
       [
         "src/components/SiteFooter.astro",
-        "74d0380e1ad7ed279720d9022b08581f716cf707d3a11d28078c8e57e983b038"
+        "50896b59cce9a86b6b65e0d8151fc6ee6cd67a3a8643cac0039d930c6ed57d22"
       ],
       [
         "src/layouts/BaseLayout.astro",
-        "c6aa9314aaa4240208e1a351e2b4338c72d8045b4ccbc856f137b4c1274203aa"
+        "0748a2c498291893d98fb78f6cf73a4ec53cd8f2b8868f24a3b9653b06cfc2b4"
       ],
       [
         "src/lib/css-delivery.mjs",
@@ -4905,11 +4905,11 @@
       ],
       [
         "src/lib/hero-image-contract.mjs",
-        "89e2bd6ee04f11f1c90d586838bda7a538901cef5ca4e9e89091c1179425bc17"
+        "2e1f87ffe7b1ba4c6b5a4bfad4b99dcb58ad5ef7bc1e11f6b364bd11d656c4dc"
       ],
       [
         "src/pages/index.astro",
-        "c7d5c64ccbb5c24b47a7d7f30a0e4cc7aa623a808cd0c57d297d87d085fe90d9"
+        "a51fdd48ef67cc7b4fb2ee6e3e94f10f7e9a8630095921f171f698900c169146"
       ],
       [
         "src/styles/global.css",
@@ -4924,7 +4924,7 @@
       "engine": "chromium",
       "browserVersion": "153.0.8010.12",
       "playwrightVersion": "1.63.0",
-      "platform": "linux 6.18.35 x64",
+      "platform": "linux 6.17.0-1022-azure x64",
       "viewportHeight": 936,
       "deviceScaleFactor": 1,
       "locale": "fa-IR",

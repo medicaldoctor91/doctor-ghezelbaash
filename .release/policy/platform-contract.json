@@ -41,7 +41,7 @@
     "reputationRefresh": {
       "workflow": ".github/workflows/reputation-refresh.yml",
       "schedule": "23 */6 * * *",
-      "sourceFile": "src/data/reputation-observation.json",
+      "sourceFile": "src/data/semantic/knowledge-graph.jsonld",
       "source": "Google Places API (New)",
       "fieldMask": [
         "id",

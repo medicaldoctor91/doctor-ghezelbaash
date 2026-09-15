@@ -90,10 +90,11 @@ export const canonicalAnswerHtmlId = (answerId, canonicalUrl) => {
 };
 
 /**
- * The graph is the only authored answer source. Every other answer surface
- * consumes the records returned here, including visible HTML and machine maps.
+ * The page owns authored answer wording and visible markup. The graph owns the
+ * Question/Answer topology; Answer.text is a synchronized machine mirror that
+ * normal builds validate but never rewrite.
  */
-export const deriveCanonicalAnswerProjection = (graph, release) => {
+export const deriveCanonicalAnswerTopology = (graph, release) => {
   const { nodes, byId } = graphIndex(graph);
   let canonicalDocument;
   try {
@@ -119,12 +120,7 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
       release.canonicalUrl,
     );
     const answer = byId.get(answerId);
-    if (
-      !answer ||
-      !nodeTypes(answer).includes("Answer") ||
-      typeof answer.text !== "string" ||
-      !answer.text.trim()
-    )
+    if (!answer || !nodeTypes(answer).includes("Answer"))
       throw new Error(
         `Question lacks a canonical Answer: ${questionId || "(missing ID)"}`,
       );
@@ -167,7 +163,6 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
       htmlId: answerFragment,
       htmlUrl: `${release.canonicalUrl}#${answerFragment}`,
       questionText: question.name,
-      answerText: answer.text,
       language: question.inLanguage,
       aboutIds: questionSubjects,
     };
@@ -193,6 +188,21 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
   return Object.freeze({
     schemaVersion: "1.0",
     source: "src/data/semantic/knowledge-graph.jsonld",
+    answers: Object.freeze(records.map((record) => Object.freeze(record))),
+  });
+};
+
+export const deriveCanonicalAnswerProjection = (graph, release) => {
+  const topology = deriveCanonicalAnswerTopology(graph, release);
+  const { byId } = graphIndex(graph);
+  const records = topology.answers.map((record) => {
+    const answer = byId.get(record.answerId);
+    if (typeof answer?.text !== "string" || !answer.text.trim())
+      throw new Error(`Canonical Answer lacks synchronized text: ${record.answerId}`);
+    return Object.freeze({ ...record, answerText: answer.text });
+  });
+  return Object.freeze({
+    ...topology,
     answers: Object.freeze(records),
   });
 };
@@ -229,122 +239,7 @@ const nextHeadingBoundary = (headings, heading) => {
   );
 };
 
-const locateAnswerSurface = (elements, headings, record) => {
-  const matchingHeadings = headings.filter(
-    (heading) => attr(heading, "id") === record.sourceFragment,
-  );
-  if (matchingHeadings.length !== 1)
-    throw new Error(
-      `Answer projection requires exactly one question heading: ${record.sourceUrl}`,
-    );
-  const heading = matchingHeadings[0];
-  const end = nextHeadingBoundary(headings, heading);
-  const headingEnd =
-    heading.sourceCodeLocation?.endTag?.endOffset ??
-    heading.sourceCodeLocation?.endOffset ??
-    -1;
-  const existing = elements.filter(
-    (node) => attr(node, "id") === record.htmlId,
-  );
-  if (existing.length > 1)
-    throw new Error(`Duplicate projected answer ID: ${record.htmlId}`);
-  if (existing.length === 1) {
-    if (!hasClass(existing[0], "answer-projection"))
-      throw new Error(
-        `Answer ID is reserved for the canonical projection: ${record.htmlId}`,
-      );
-    return { heading, node: existing[0], insertion: null };
-  }
-  const matchingBlocks = elements.filter((node) => {
-    const start = node.sourceCodeLocation?.startOffset ?? -1;
-    return (
-      answerBlockTags.has(node.tagName) &&
-      start >= headingEnd &&
-      start < end &&
-      normalizeProjectedText(textContent(node)) ===
-        normalizeProjectedText(record.answerText) &&
-      !attr(node, "id")
-    );
-  });
-  if (matchingBlocks.length > 1)
-    throw new Error(`Duplicate visible answer text for ${record.answerId}`);
-  if (matchingBlocks.length === 1)
-    return { heading, node: matchingBlocks[0], insertion: null };
-  const insertion =
-    heading.sourceCodeLocation?.endTag?.endOffset ??
-    heading.sourceCodeLocation?.endOffset;
-  if (!Number.isInteger(insertion))
-    throw new Error(`Question heading lacks a source location: ${record.sourceUrl}`);
-  return { heading, node: null, insertion };
-};
-
-const escapeHtmlText = (value) =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
-const addProjectionAttributes = (openingTag, node, htmlId) => {
-  let source = openingTag;
-  const close = source.endsWith("/>") ? "/>" : ">";
-  let attributes = source.slice(0, -close.length);
-  const classMatch = attributes.match(/\sclass\s*=\s*(["'])([\s\S]*?)\1/iu);
-  if (classMatch) {
-    const classes = classMatch[2]
-      .split(/\s+/u)
-      .filter(Boolean);
-    if (!classes.includes("answer-projection")) classes.push("answer-projection");
-    attributes =
-      attributes.slice(0, classMatch.index) +
-      classMatch[0].replace(classMatch[2], classes.join(" ")) +
-      attributes.slice(classMatch.index + classMatch[0].length);
-  } else attributes += ' class="answer-projection"';
-  const currentId = attr(node, "id");
-  if (currentId && currentId !== htmlId)
-    throw new Error(`Visible answer already owns a different ID: ${htmlId}`);
-  if (!currentId) attributes += ` id="${escapeHtmlText(htmlId)}"`;
-  return attributes + close;
-};
-
-/** Adds stable answer IDs to existing visible answers and inserts only the
- * missing canonical answer atoms. The authored prose is otherwise preserved. */
-export const projectCanonicalAnswerHtml = (content, projection) => {
-  const source = String(content);
-  const parsed = parsedContent(source);
-  const elements = walkElements(parsed.document);
-  const headings = elements.filter((node) => headingTags.has(node.tagName));
-  const edits = [];
-  for (const record of projection.answers) {
-    const located = locateAnswerSurface(elements, headings, record);
-    if (located.node) {
-      const location = located.node.sourceCodeLocation?.startTag;
-      if (!location)
-        throw new Error(`Projected answer lacks an opening tag: ${record.htmlId}`);
-      const openingTag = parsed.body.slice(location.startOffset, location.endOffset);
-      edits.push({
-        start: parsed.offset + location.startOffset,
-        end: parsed.offset + location.endOffset,
-        value: addProjectionAttributes(openingTag, located.node, record.htmlId),
-      });
-    } else {
-      edits.push({
-        start: parsed.offset + located.insertion,
-        end: parsed.offset + located.insertion,
-        value: `<p id="${escapeHtmlText(record.htmlId)}" class="answer-projection">${escapeHtmlText(record.answerText)}</p>`,
-      });
-    }
-  }
-  edits.sort((left, right) => right.start - left.start);
-  let output = source;
-  for (const edit of edits)
-    output = output.slice(0, edit.start) + edit.value + output.slice(edit.end);
-  validateProjectedAnswerHtml(output, projection);
-  return output;
-};
-
-export const validateProjectedAnswerHtml = (content, projection) => {
+export const extractVisibleAnswerTexts = (content, projection) => {
   const parsed = parsedContent(content);
   const elements = walkElements(parsed.document);
   const headings = elements.filter((node) => headingTags.has(node.tagName));
@@ -359,20 +254,22 @@ export const validateProjectedAnswerHtml = (content, projection) => {
     throw new Error(
       `Visible answer projection cardinality drift: ${surfaces.length}/${projection.answers.length}`,
     );
-  for (const record of projection.answers) {
-    const nodes = surfaces.filter((node) => attr(node, "id") === record.htmlId);
+
+  const answers = projection.answers.map((record) => {
+    const nodes = elements.filter((node) => attr(node, "id") === record.htmlId);
     if (nodes.length !== 1)
-      throw new Error(`Visible answer projection is missing: ${record.htmlId}`);
-    if (
-      normalizeProjectedText(textContent(nodes[0])) !==
-      normalizeProjectedText(record.answerText)
-    )
-      throw new Error(`Visible answer text drift: ${record.answerId}`);
-    const heading = headings.find(
+      throw new Error(`Visible answer ID must occur exactly once: ${record.htmlId}`);
+    if (!answerBlockTags.has(nodes[0].tagName))
+      throw new Error(`Visible answer requires an answer block: ${record.htmlId}`);
+    const text = normalizeProjectedText(textContent(nodes[0]));
+    if (!text)
+      throw new Error(`Visible answer text is empty: ${record.answerId}`);
+    const matchingHeadings = headings.filter(
       (candidate) => attr(candidate, "id") === record.sourceFragment,
     );
-    if (!heading)
-      throw new Error(`Visible answer question heading is missing: ${record.sourceUrl}`);
+    if (matchingHeadings.length !== 1)
+      throw new Error(`Visible answer requires exactly one question heading: ${record.sourceUrl}`);
+    const [heading] = matchingHeadings;
     const answerStart = nodes[0].sourceCodeLocation?.startOffset ?? -1;
     const headingEnd =
       heading.sourceCodeLocation?.endTag?.endOffset ??
@@ -381,10 +278,30 @@ export const validateProjectedAnswerHtml = (content, projection) => {
     const boundary = nextHeadingBoundary(headings, heading);
     if (!(answerStart >= headingEnd && answerStart < boundary))
       throw new Error(`Visible answer is outside its question region: ${record.answerId}`);
-  }
+    return Object.freeze({
+      answerId: record.answerId,
+      htmlId: record.htmlId,
+      text,
+    });
+  });
+
+  return Object.freeze({ answers: Object.freeze(answers) });
+};
+
+export const validateProjectedAnswerHtml = (content, projection) => {
+  const visible = extractVisibleAnswerTexts(content, projection);
+  const byAnswerId = new Map(
+    visible.answers.map((record) => [record.answerId, record.text]),
+  );
+  for (const record of projection.answers)
+    if (
+      byAnswerId.get(record.answerId) !==
+      normalizeProjectedText(record.answerText)
+    )
+      throw new Error(`Visible answer text drift: ${record.answerId}`);
   return {
-    answers: surfaces.length,
-    insertedOrTagged: surfaces.length,
+    answers: visible.answers.length,
+    authoredAnswers: visible.answers.length,
     integrity: "PASS",
   };
 };

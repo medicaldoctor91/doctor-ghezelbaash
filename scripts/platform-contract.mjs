@@ -1,4 +1,6 @@
+import { loadPublicationData } from "./lib/publication-context.mjs";
 import { readFile } from "node:fs/promises";
+import { validateReputationObservation } from "../src/lib/reputation-observation.mjs";
 
 const readJson = (file) => readFile(file, "utf8").then(JSON.parse);
 
@@ -21,16 +23,17 @@ async function exportContract() {
 }
 
 async function validateContract() {
-  const [contract, release, pkg, lock, codemeta, observation, refreshWorkflow] =
+  const [contract, release, pkg, lock, codemeta, graph, refreshWorkflow] =
     await Promise.all([
       readJson(".release/policy/platform-contract.json"),
-      readJson("src/data/release.json"),
+      loadPublicationData(),
       readJson("package.json"),
       readJson("package-lock.json"),
       readJson("codemeta.json"),
-      readJson("src/data/reputation-observation.json"),
+      readJson("src/data/semantic/knowledge-graph.jsonld"),
       readFile(".github/workflows/reputation-refresh.yml", "utf8"),
     ]);
+  const observation = validateReputationObservation(graph, release);
   const cf = contract.cloudflare;
   const runtime = contract.runtime;
   const refresh = contract.automation?.reputationRefresh;
@@ -81,7 +84,7 @@ async function validateContract() {
   if (
     refresh?.workflow !== ".github/workflows/reputation-refresh.yml" ||
     refresh?.schedule !== "23 */6 * * *" ||
-    refresh?.sourceFile !== "src/data/reputation-observation.json" ||
+    refresh?.sourceFile !== "src/data/semantic/knowledge-graph.jsonld" ||
     refresh?.source !== "Google Places API (New)" ||
     JSON.stringify(refresh?.fieldMask) !==
       JSON.stringify([
