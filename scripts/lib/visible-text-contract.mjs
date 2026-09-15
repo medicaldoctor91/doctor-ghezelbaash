@@ -3,51 +3,90 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { parse, parseFragment } from 'parse5';
 import ts from 'typescript';
-
 export const CONTRACT_PATH = 'src/data/visible-text-contract.json';
+export const CONTRACT_SCHEMA = 2;
+export const CONTRACT_POLICY = 'closed-visible-text-v2; NFC + whitespace-collapse reading text and protected visible/accessibility attributes frozen; text-node boundaries are not contract state; authored IDs, their owning element/context, ID references and same-document fragments frozen; inline external links are permitted only when protected text and structure remain unchanged; raw source hashes record provenance';
 export const normalizeText = (value) => String(value).normalize('NFC').replace(/\s+/gu, ' ').trim();
 export const digest = (value) => createHash('sha256').update(typeof value === 'string' ? value : JSON.stringify(value)).digest('hex');
 const BLOCKS = new Set('address article aside blockquote br caption dd details dialog div dl dt figcaption figure footer form h1 h2 h3 h4 h5 h6 header hr li main nav ol p pre search section summary table tbody td tfoot th thead tr ul'.split(' '));
 const OMIT = new Set(['script', 'style', 'template']);
 const PROTECTED = new Set(['alt', 'aria-label', 'aria-description', 'aria-valuetext', 'title', 'placeholder', 'label']);
 const RELATIONS = new Set(['aria-labelledby', 'aria-describedby']);
+const IDREF_SINGLE = new Set(['for', 'form', 'list', 'popovertarget', 'commandfor']);
+const IDREF_MULTI = new Set(['aria-activedescendant', 'aria-controls', 'aria-describedby', 'aria-details', 'aria-errormessage', 'aria-flowto', 'aria-labelledby', 'aria-owns', 'headers']);
+const IDREFS = new Set([...IDREF_SINGLE, ...IDREF_MULTI]);
+const FRAGMENT_ATTRIBUTES = new Set(['href', 'xlink:href']);
 const attrs = (node) => Object.fromEntries((node.attrs || []).map(({ name, value }) => [name, value]));
 const children = (node) => node.childNodes || [];
-
 // Raw text is concatenated through inline wrappers; block boundaries are spaces.
-// The separate strict per-node hash additionally preserves text-node boundaries;
-// wrapping an entire node and changing heading levels remain possible.
+// Inline wrapper/text-node boundaries are deliberately not contract state.
 export function readingText(node) {
   if (OMIT.has(node.tagName)) return '';
   if (node.nodeName === '#text') return node.value.normalize('NFC');
   const content = children(node).map(readingText).join('');
   return BLOCKS.has(node.tagName) ? ` ${content} ` : content;
 }
-
+const nearestAncestorId = (node) => {
+  for (let parent = node.parentNode; parent; parent = parent.parentNode) {
+    const id = attrs(parent).id;
+    if (id) return id;
+  }
+  return '';
+};
+const decodeFragment = (value) => {
+  try {
+    return decodeURIComponent(value.slice(1));
+  } catch {
+    throw new Error(`Invalid percent-encoded same-document fragment: ${value}`);
+  }
+};
 export function htmlContract(html, { fragment = false } = {}) {
   // scriptingEnabled=false parses body <noscript> as its actual fallback DOM.
   const tree = (fragment ? parseFragment : parse)(html, { scriptingEnabled: false });
-  const ids = new Map();
+  const ids = new Map(), identifiers = [];
   const walk = (node, visit) => { visit(node); for (const child of children(node)) walk(child, visit); };
-  walk(tree, (node) => { const id = attrs(node).id; if (id) ids.set(id, node); });
-  const textNodes = [], attributes = [];
+  walk(tree, (node) => {
+    const id = attrs(node).id;
+    if (!id) return;
+    if (ids.has(id)) throw new Error(`Duplicate DOM id: ${id}`);
+    ids.set(id, node);
+    identifiers.push([
+      id,
+      node.tagName || node.nodeName,
+      nearestAncestorId(node),
+      normalizeText(readingText(node)),
+    ]);
+  });
+  const attributes = [], fragmentReferences = [], idReferences = [];
   const inspect = (node) => {
     if (OMIT.has(node.tagName)) return;
-    if (node.nodeName === '#text') {
-      const text = normalizeText(node.value);
-      if (text) textNodes.push(text);
-    }
     const attributesByName = attrs(node);
     for (const [name, value] of Object.entries(attributesByName)) {
       if (PROTECTED.has(name) || (name === 'value' && ['button', 'input', 'option'].includes(node.tagName) && attributesByName.type !== 'hidden')) {
         attributes.push([name, normalizeText(value)]);
       } else if (RELATIONS.has(name)) {
-        // IDs may change; the text the relation names/describes may not.
         const text = value.trim().split(/\s+/u).map((id) => {
           if (!ids.has(id)) throw new Error(`Unresolved ${name}: ${id}`);
           return readingText(ids.get(id));
         }).join(' ');
         attributes.push([name, normalizeText(text)]);
+      }
+
+      if (IDREFS.has(name) && value.trim()) {
+        const tokens = IDREF_MULTI.has(name) ? value.trim().split(/\s+/u) : [value.trim()];
+        idReferences.push([node.tagName || node.nodeName, name, value]);
+        // IDREF spellings are frozen structurally. The two text relations above
+        // retain their existing resolution check; same-document href fragments
+        // are resolved independently below.
+        if (RELATIONS.has(name)) {
+          for (const id of tokens) if (!ids.has(id)) throw new Error(`Unresolved ${name}: ${id}`);
+        }
+      }
+
+      if (FRAGMENT_ATTRIBUTES.has(name) && value.startsWith('#')) {
+        const target = decodeFragment(value);
+        if (!target || !ids.has(target)) throw new Error(`Unresolved same-document fragment ${name}="${value}"`);
+        fragmentReferences.push([node.tagName || node.nodeName, name, value, target]);
       }
     }
     if (node.tagName === 'meta') {
@@ -62,19 +101,38 @@ export function htmlContract(html, { fragment = false } = {}) {
   return {
     text: normalizeText(readingText(tree)),
     attributes,
-    // Enforced independently: splitting or merging nodes is not permitted.
-    textNodeCount: textNodes.length,
-    textNodeSequenceSha256: digest(textNodes),
+    idCount: identifiers.length,
+    idSequenceSha256: digest(identifiers),
+    fragmentReferenceCount: fragmentReferences.length,
+    fragmentReferenceSequenceSha256: digest(fragmentReferences),
+    idReferenceCount: idReferences.length,
+    idReferenceSequenceSha256: digest(idReferences),
   };
 }
-
-export const protectedProjection = ({ text, attributes, textNodeCount, textNodeSequenceSha256 }) => ({ textSha256: digest(text), attributesSha256: digest(attributes), textNodeCount, textNodeSequenceSha256 });
+export const protectedProjection = ({
+  text,
+  attributes,
+  idCount,
+  idSequenceSha256,
+  fragmentReferenceCount,
+  fragmentReferenceSequenceSha256,
+  idReferenceCount,
+  idReferenceSequenceSha256,
+}) => ({
+  textSha256: digest(text),
+  attributesSha256: digest(attributes),
+  idCount,
+  idSequenceSha256,
+  fragmentReferenceCount,
+  fragmentReferenceSequenceSha256,
+  idReferenceCount,
+  idReferenceSequenceSha256,
+});
 export function assertUnchanged(expected, actual, label) {
   if (digest(expected) !== digest(actual)) {
     throw new Error(`CLOSED_VISIBLE_TEXT: ${label} changed; preserve the approved baseline (do not regenerate it to pass).`);
   }
 }
-
 async function filesBelow(directory) {
   const output = [];
   for (const entry of (await readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
@@ -84,7 +142,6 @@ async function filesBelow(directory) {
   }
   return output;
 }
-
 export function runtimeTextLiterals(source) {
   const output = [];
   for (const script of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gu)) {
@@ -101,7 +158,6 @@ export function runtimeTextLiterals(source) {
   }
   return output;
 }
-
 export async function sourceContract(root) {
   const page = await readFile(path.join(root, 'src/content-source/page.md'), 'utf8');
   const match = page.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/u);
@@ -201,12 +257,10 @@ export async function sourceContract(root) {
   }
   return { page: { ...frontmatter, footerGovernance, ...protectedProjection(htmlContract(match[2], { fragment: true })) }, documentHead, answers, runtime, captions };
 }
-
 export async function sourceRawHashes(root) {
   const files = ['src/content-source/page.md', 'src/data/document-head.json', 'src/data/media-metadata.json', 'src/data/release.json', 'src/data/semantic/knowledge-graph.jsonld', 'src/components/GuideNavigator.astro', 'src/components/SiteFooter.astro', 'src/components/FloatingActionDock.astro', 'src/components/DocumentHead.astro', 'src/layouts/BaseLayout.astro', 'src/pages/404.astro'];
   return Object.fromEntries(await Promise.all(files.map(async (file) => [file, digest(await readFile(path.join(root, file), 'utf8'))])));
 }
-
 export async function distContract(directory) {
   const output = {};
   for (const name of ['index.html', '404.html']) {

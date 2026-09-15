@@ -1,19 +1,19 @@
 {
-  "schemaVersion": 1,
-  "policy": "closed-visible-text; NFC + whitespace-collapse per node; text-node sequence and reading order frozen; ID changes and heading levels permitted; raw source hashes record provenance",
-  "sourceCommit": "bbff2475dec9dce02d8edcf0482b64937f8f728e",
+  "schemaVersion": 2,
+  "policy": "closed-visible-text-v2; NFC + whitespace-collapse reading text and protected visible/accessibility attributes frozen; text-node boundaries are not contract state; authored IDs, their owning element/context, ID references and same-document fragments frozen; inline external links are permitted only when protected text and structure remain unchanged; raw source hashes record provenance",
+  "sourceCommit": "31f26733a69a0ed3cb2008dc08c79b562eca6131",
   "sourceRawSha256": {
-    "src/content-source/page.md": "f382c8f8372ce82de26b563fffa27e198fbbd64bd045cd4e2fe136b0e0e5198f",
+    "src/content-source/page.md": "96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea",
     "src/data/document-head.json": "ddf6cad393242892dc01c0daeed904dbdc51f1004ddb126e3417fe5443602f3e",
     "src/data/media-metadata.json": "bb9ff57beed0a33dcfc7d35e2e45503d6cdef00d694b5b0a876d028d7981bf66",
     "src/data/release.json": "8f841ddb5c9aa82a9f118a8c27359c91835afa6deb3bed73e113c889d5edf528",
-    "src/data/semantic/knowledge-graph.jsonld": "7032b4e9c9d2cf46b0db06c2aa653ab6e8bc586fc6992c4ee7c68281c2d109ed",
+    "src/data/semantic/knowledge-graph.jsonld": "2cabe58efe7a9624feb7867dd8c712340ce98f8cc54d65b2fb9231f0e2940ad5",
     "src/components/GuideNavigator.astro": "f0005a00f1ebaac91361a0f16104451586f14d31d9b36e3bc06738d6a96baf72",
-    "src/components/SiteFooter.astro": "817f1763152a86cbe71847e7b3508a5cd1bf9d6139327ec39c1b5d585a511b5b",
+    "src/components/SiteFooter.astro": "50896b59cce9a86b6b65e0d8151fc6ee6cd67a3a8643cac0039d930c6ed57d22",
     "src/components/FloatingActionDock.astro": "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e",
     "src/components/DocumentHead.astro": "83d105b711328373ddd64f2506d3cef48cdc59c45899866dc6aa83e8462571e9",
-    "src/layouts/BaseLayout.astro": "2b0d8404bdf268fd4bf4bc3e11b693a0fee8b3644f265fd19e2192f3bdc657bd",
-    "src/pages/404.astro": "9d41f9d5091b0203998e4fc75533d1205c8d9eac79311df4534589fa20a980f6"
+    "src/layouts/BaseLayout.astro": "0748a2c498291893d98fb78f6cf73a4ec53cd8f2b8868f24a3b9653b06cfc2b4",
+    "src/pages/404.astro": "6981a82faab98c04e7388ed3f6882b375e0ca378f7e8ad2fed3a1778cf14214e"
   },
   "source": {
     "page": {
@@ -35,8 +35,12 @@
       },
       "textSha256": "eec45821ced1ee718688f722137c6f9026d98bacd3755903d39e194159597977",
       "attributesSha256": "9dd5886ba7b13f754b9d3ad8a82c93142f396d5205a20bfaee509e79c02f1165",
-      "textNodeCount": 6106,
-      "textNodeSequenceSha256": "1a60e884e01158398e7ee73335d480f195a2465c1ac50375870b81c8cef50da7"
+      "idCount": 1453,
+      "idSequenceSha256": "9be9a16108b40aa876c2599bcbd51b31c5c80a0775083fff4ba6fdf370e04d1a",
+      "fragmentReferenceCount": 291,
+      "fragmentReferenceSequenceSha256": "2899d35b6948dabb7fdd0135e6f5a0ac457d40d8147b235e8d6056b7014fecb2",
+      "idReferenceCount": 34,
+      "idReferenceSequenceSha256": "04e7073c99c904fdd66b26f7d3b4d48cc3846987de76885adb2bce3e30728dac"
     },
     "documentHead": {
       "appleMobileWebAppTitle": "دکتر قزلباش",
@@ -633,20 +637,28 @@
   },
   "documents": {
     "index.html": {
-      "rawSha256": "8fe655272c3f06baed134bcbefd2adec17e04a81dbe1f1bafa7ce0f5139d4c2e",
-      "bytes": 1940082,
+      "rawSha256": "ebe94732e24b24809cee0feba99b67700c06443dc58d33c9f1ca6d2cecdb28e3",
+      "bytes": 1950980,
       "textSha256": "625ff730fc56960d69185a8a42318a70d6cc09426da44b8e3fd3f6c40133fe9e",
       "attributesSha256": "fcf2cc9828b9b41e285522dbf3b323f58a8844fb5930e535f720a390046bb55c",
-      "textNodeCount": 6156,
-      "textNodeSequenceSha256": "b46209f20a6c6855fb727faee03c12f91ee7da7770438223626f6c772283eaa4"
+      "idCount": 1464,
+      "idSequenceSha256": "f3a89fff5b090293b2a847d3996876e209a723ef6e843c10f25505fcc12001c5",
+      "fragmentReferenceCount": 293,
+      "fragmentReferenceSequenceSha256": "9949cb2029f7982ba2e494cafa9f2d0207ea5cce1d2d2dff2ae039fbda3ca2b7",
+      "idReferenceCount": 38,
+      "idReferenceSequenceSha256": "de2f4ddbeb5c9477e85ad7e191188cd7a9677bd4ac1f2bdbf4aab9c867eb2a76"
     },
     "404.html": {
-      "rawSha256": "4e93b6d4af4979645e32e34fa9883498d34fa8846148bee373dabf0c17cb19be",
-      "bytes": 16198,
+      "rawSha256": "b61454f4e18fab85f985c9c826556cd65e0835d13d03853cff883353ee1d888b",
+      "bytes": 16404,
       "textSha256": "3743d9b7ea4adfd329c5c5cc89781271e1e944c2eeffed38067153f668b8c4f3",
       "attributesSha256": "9f3513af982a98fd5d15ddaea842408fd7293ffb164271fc2b691ce961dbebfc",
-      "textNodeCount": 14,
-      "textNodeSequenceSha256": "ea8c07feda563354b56f1ad5faddc6483dbc116c1f3d3747b2e033e924261155"
+      "idCount": 2,
+      "idSequenceSha256": "af9b59783a37ed1f3a427c14c3bbabc974cf442a981ea23f0775e796fd87a2c9",
+      "fragmentReferenceCount": 1,
+      "fragmentReferenceSequenceSha256": "a281626a776521280cda7c7a6fc3fcf86fed0f4ac5bbd5aaef5c9ddb35e444d0",
+      "idReferenceCount": 0,
+      "idReferenceSequenceSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     }
   },
   "browser": {
@@ -657,160 +669,160 @@
         "renderedTextSha256": "adf31ca57a6859d1f5d8a828bfcc0fdf187a8535ef59f8d9d3e30f978082e2f8",
         "renderedCharacters": 15911,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "38240a128a345dfecd2746b08affea7326498827d1ecdc62a578df41c259d480",
-        "accessibilityNameCount": 393
+        "protectedAccessibilityNamesSha256": "b65fe678c26bc70d4abf8f0438350fec54cc682125052ffb70f016437d7f82c8",
+        "protectedAccessibilityNameCount": 62
       },
       "390/no-javascript/disclosures-open": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "0e0d31ff18e520b4dbfc6e01d5a7b0b9e32d01828de34c04c1a808bd2959f307",
         "renderedCharacters": 901617,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "19207fadf4bf4a39d3029c670e5a16a007c5c61cf92d88ffb0561fb1d3c7f2e2",
-        "accessibilityNameCount": 8535
+        "protectedAccessibilityNamesSha256": "1ff3ad528051d3bc59234dfc53b52251741faa0be4501b458cdbddfd54c94bed",
+        "protectedAccessibilityNameCount": 1870
       },
       "390/no-javascript/404": {
         "title": "صفحه پیدا نشد | دکتر سعید قزلباش",
         "renderedTextSha256": "d1f869dca52d73045c9eb7b69108552794a95579e37adcb9ec9047cd56e8f2e3",
         "renderedCharacters": 272,
         "generatedTextSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-        "accessibilityNamesSha256": "190fe97159b3ac2760566a91b2ee11d46dd0da1655b53794790bcfb3fa629236",
-        "accessibilityNameCount": 25
+        "protectedAccessibilityNamesSha256": "3415eadaa68ba774f8b588fbadf8e16357e8b93e0a753ace193b3756ca56dfaf",
+        "protectedAccessibilityNameCount": 3
       },
       "390/javascript/initial": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "adf31ca57a6859d1f5d8a828bfcc0fdf187a8535ef59f8d9d3e30f978082e2f8",
         "renderedCharacters": 15911,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "38240a128a345dfecd2746b08affea7326498827d1ecdc62a578df41c259d480",
-        "accessibilityNameCount": 393
+        "protectedAccessibilityNamesSha256": "b65fe678c26bc70d4abf8f0438350fec54cc682125052ffb70f016437d7f82c8",
+        "protectedAccessibilityNameCount": 62
       },
       "390/javascript/disclosures-open": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "0e0d31ff18e520b4dbfc6e01d5a7b0b9e32d01828de34c04c1a808bd2959f307",
         "renderedCharacters": 901617,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "19207fadf4bf4a39d3029c670e5a16a007c5c61cf92d88ffb0561fb1d3c7f2e2",
-        "accessibilityNameCount": 8535
+        "protectedAccessibilityNamesSha256": "1ff3ad528051d3bc59234dfc53b52251741faa0be4501b458cdbddfd54c94bed",
+        "protectedAccessibilityNameCount": 1870
       },
       "390/javascript/search-open": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "848c4517ae46c01caac9c07af4f12408e9fd62e07ad360829069cbba202b0de9",
         "renderedCharacters": 901791,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "d3c20ba535f6c85610fcc5b68a244698a3b66837f7cabc04637cb5b9b3ffaca2",
-        "accessibilityNameCount": 12
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "390/javascript/search-short": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "79fd1b4ff2b1ad085437b52305ad9e740f487854bb287c51852e4ad3e70fab77",
         "renderedCharacters": 901758,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "625407d70e0b27bd5a8d1e6cedaafd649848f4315b6ed8185c520ac746d05eb7",
-        "accessibilityNameCount": 13
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "390/javascript/search-no-results": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "7fff316704b1f48ce3d8662761c903da16e2ad78c87800ff10a8f43c2becaedb",
         "renderedCharacters": 901770,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "1171de27b5191a6db38923ab1315533bd4db9c3c6abf1417e8225ee4906b6090",
-        "accessibilityNameCount": 13
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "390/javascript/search-results": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "cc07e7f20ed21dad13d78fccf5a30350c7cdb4aeba57b26dd1ea121cc74261f4",
         "renderedCharacters": 902814,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "39e116ebafedce22755de400149aa2f1db9bb8a7bf4658cac9645b495934af94",
-        "accessibilityNameCount": 61
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "390/javascript/404": {
         "title": "صفحه پیدا نشد | دکتر سعید قزلباش",
         "renderedTextSha256": "d1f869dca52d73045c9eb7b69108552794a95579e37adcb9ec9047cd56e8f2e3",
         "renderedCharacters": 272,
         "generatedTextSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-        "accessibilityNamesSha256": "190fe97159b3ac2760566a91b2ee11d46dd0da1655b53794790bcfb3fa629236",
-        "accessibilityNameCount": 25
+        "protectedAccessibilityNamesSha256": "3415eadaa68ba774f8b588fbadf8e16357e8b93e0a753ace193b3756ca56dfaf",
+        "protectedAccessibilityNameCount": 3
       },
       "1440/no-javascript/initial": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "480531d86e84d87aee3f01eb2893b4910fd8b3f0acabea8d26d6582648a611cc",
         "renderedCharacters": 15913,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "38240a128a345dfecd2746b08affea7326498827d1ecdc62a578df41c259d480",
-        "accessibilityNameCount": 393
+        "protectedAccessibilityNamesSha256": "b65fe678c26bc70d4abf8f0438350fec54cc682125052ffb70f016437d7f82c8",
+        "protectedAccessibilityNameCount": 62
       },
       "1440/no-javascript/disclosures-open": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "dd6adb3fc48f25598a41fb49799dea68dc5ea303c1aec47c1cc117532aff8c1f",
         "renderedCharacters": 901619,
         "generatedTextSha256": "e5c7f0a7b07e593d757ef0e705f777bb90a693493dbd189ccfbd7f10270ccf77",
-        "accessibilityNamesSha256": "fbaf00271118f55d40b712358ba7587d85a0ad152c7ff5e9eb541786bcadab6d",
-        "accessibilityNameCount": 8538
+        "protectedAccessibilityNamesSha256": "1ff3ad528051d3bc59234dfc53b52251741faa0be4501b458cdbddfd54c94bed",
+        "protectedAccessibilityNameCount": 1870
       },
       "1440/no-javascript/404": {
         "title": "صفحه پیدا نشد | دکتر سعید قزلباش",
         "renderedTextSha256": "d1f869dca52d73045c9eb7b69108552794a95579e37adcb9ec9047cd56e8f2e3",
         "renderedCharacters": 272,
         "generatedTextSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-        "accessibilityNamesSha256": "190fe97159b3ac2760566a91b2ee11d46dd0da1655b53794790bcfb3fa629236",
-        "accessibilityNameCount": 25
+        "protectedAccessibilityNamesSha256": "3415eadaa68ba774f8b588fbadf8e16357e8b93e0a753ace193b3756ca56dfaf",
+        "protectedAccessibilityNameCount": 3
       },
       "1440/javascript/initial": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "480531d86e84d87aee3f01eb2893b4910fd8b3f0acabea8d26d6582648a611cc",
         "renderedCharacters": 15913,
         "generatedTextSha256": "741105afa0f3cdc0a014df2f0bd556762c5b209c72670bb504bc1ad02bb6954f",
-        "accessibilityNamesSha256": "38240a128a345dfecd2746b08affea7326498827d1ecdc62a578df41c259d480",
-        "accessibilityNameCount": 393
+        "protectedAccessibilityNamesSha256": "b65fe678c26bc70d4abf8f0438350fec54cc682125052ffb70f016437d7f82c8",
+        "protectedAccessibilityNameCount": 62
       },
       "1440/javascript/disclosures-open": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "dd6adb3fc48f25598a41fb49799dea68dc5ea303c1aec47c1cc117532aff8c1f",
         "renderedCharacters": 901619,
         "generatedTextSha256": "e5c7f0a7b07e593d757ef0e705f777bb90a693493dbd189ccfbd7f10270ccf77",
-        "accessibilityNamesSha256": "fbaf00271118f55d40b712358ba7587d85a0ad152c7ff5e9eb541786bcadab6d",
-        "accessibilityNameCount": 8538
+        "protectedAccessibilityNamesSha256": "1ff3ad528051d3bc59234dfc53b52251741faa0be4501b458cdbddfd54c94bed",
+        "protectedAccessibilityNameCount": 1870
       },
       "1440/javascript/search-open": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "d2d20fbc76bf651b7b1e72ac433c4cccb4d6ba66a0b1f4c0d7c5a029309b24ea",
         "renderedCharacters": 901793,
         "generatedTextSha256": "e5c7f0a7b07e593d757ef0e705f777bb90a693493dbd189ccfbd7f10270ccf77",
-        "accessibilityNamesSha256": "d3c20ba535f6c85610fcc5b68a244698a3b66837f7cabc04637cb5b9b3ffaca2",
-        "accessibilityNameCount": 12
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "1440/javascript/search-short": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "621296a9530dcb1384a1730c0a5174b9712ccd50e4af7510b65cfd077875fca4",
         "renderedCharacters": 901760,
         "generatedTextSha256": "e5c7f0a7b07e593d757ef0e705f777bb90a693493dbd189ccfbd7f10270ccf77",
-        "accessibilityNamesSha256": "625407d70e0b27bd5a8d1e6cedaafd649848f4315b6ed8185c520ac746d05eb7",
-        "accessibilityNameCount": 13
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "1440/javascript/search-no-results": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "5702bbd8f599cb8895498994544b8e73dbc973ba00f232c6d3831ba08201cef5",
         "renderedCharacters": 901772,
         "generatedTextSha256": "e5c7f0a7b07e593d757ef0e705f777bb90a693493dbd189ccfbd7f10270ccf77",
-        "accessibilityNamesSha256": "1171de27b5191a6db38923ab1315533bd4db9c3c6abf1417e8225ee4906b6090",
-        "accessibilityNameCount": 13
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "1440/javascript/search-results": {
         "title": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش",
         "renderedTextSha256": "065f95fd39b7c74249bc7148e4e64ff501758c7ed74b90196b09ee6e6151b52f",
         "renderedCharacters": 902816,
         "generatedTextSha256": "e5c7f0a7b07e593d757ef0e705f777bb90a693493dbd189ccfbd7f10270ccf77",
-        "accessibilityNamesSha256": "39e116ebafedce22755de400149aa2f1db9bb8a7bf4658cac9645b495934af94",
-        "accessibilityNameCount": 61
+        "protectedAccessibilityNamesSha256": "6d415d59bbeba8d0f40448dfe02f0c6dfc3d7abe5a7d9331e0703f0fcb2232bd",
+        "protectedAccessibilityNameCount": 7
       },
       "1440/javascript/404": {
         "title": "صفحه پیدا نشد | دکتر سعید قزلباش",
         "renderedTextSha256": "d1f869dca52d73045c9eb7b69108552794a95579e37adcb9ec9047cd56e8f2e3",
         "renderedCharacters": 272,
         "generatedTextSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-        "accessibilityNamesSha256": "190fe97159b3ac2760566a91b2ee11d46dd0da1655b53794790bcfb3fa629236",
-        "accessibilityNameCount": 25
+        "protectedAccessibilityNamesSha256": "3415eadaa68ba774f8b588fbadf8e16357e8b93e0a753ace193b3756ca56dfaf",
+        "protectedAccessibilityNameCount": 3
       }
     },
     "browserVersion": "153.0.8010.12"
