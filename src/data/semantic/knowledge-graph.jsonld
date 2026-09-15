@@ -8919,7 +8919,10 @@
       "observationAbout": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
       },
-      "observationDate": "2026-09-04T03:30:42Z",
+      "observationDate": {
+        "@value": "2026-09-04T03:30:42Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "measurementMethod": "Google Places API (New)",
       "prov:wasDerivedFrom": {
         "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"
@@ -8934,7 +8937,10 @@
       "observationAbout": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
       },
-      "observationDate": "2026-09-04T03:30:42Z",
+      "observationDate": {
+        "@value": "2026-09-04T03:30:42Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "measurementMethod": "Google Places API (New)",
       "prov:wasDerivedFrom": {
         "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"

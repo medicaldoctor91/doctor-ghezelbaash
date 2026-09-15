@@ -371,7 +371,12 @@ assert(
     !contentAssembler.includes("reputation-observation.json") &&
     ratingObservation?.measuredProperty === "https://schema.org/ratingValue" &&
     reviewCountObservation?.measuredProperty === "https://schema.org/reviewCount" &&
-    ratingObservation?.observationDate === reviewCountObservation?.observationDate &&
+    ratingObservation?.observationDate?.["@type"] ===
+      "http://www.w3.org/2001/XMLSchema#dateTime" &&
+    reviewCountObservation?.observationDate?.["@type"] ===
+      "http://www.w3.org/2001/XMLSchema#dateTime" &&
+    ratingObservation?.observationDate?.["@value"] ===
+      reviewCountObservation?.observationDate?.["@value"] &&
     ratingObservation?.measurementMethod === "Google Places API (New)" &&
     reviewCountObservation?.measurementMethod === "Google Places API (New)" &&
     reputationModule.includes("validateReputationObservation") &&

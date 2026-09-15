@@ -697,6 +697,19 @@ async function static_google_maps_reputation_contract() {
   assert.equal(canonical.placeId, release.clinic.placeId);
   assert.equal(canonical.rating, 5);
   assert.ok(canonical.reviewCount >= 1);
+  assert.match(canonical.valueObservedAt, /T\d{2}:\d{2}:\d{2}Z$/);
+  const legacyStringDate = structuredClone(graph);
+  for (const id of [
+    `${release.canonicalUrl}#observation-clinic-google-maps-rating-current`,
+    `${release.canonicalUrl}#observation-clinic-google-maps-review-count-current`,
+  ]) {
+    const node = legacyStringDate["@graph"].find((candidate) => candidate["@id"] === id);
+    node.observationDate = canonical.valueObservedAt;
+  }
+  assert.throws(
+    () => validateReputationObservation(legacyStringDate, release),
+    /observation drift/,
+  );
 
   const unchangedPlace = {
     id: release.clinic.placeId,
@@ -745,6 +758,17 @@ async function static_google_maps_reputation_contract() {
   assert.equal(next.reviewCount, nextReviewCount);
   assert.equal(next.entity, release.clinic.id);
   assert.equal(next.placeId, release.clinic.placeId);
+  assert.equal(next.valueObservedAt, "2026-09-04T03:00:00Z");
+  for (const id of [
+    `${release.canonicalUrl}#observation-clinic-google-maps-rating-current`,
+    `${release.canonicalUrl}#observation-clinic-google-maps-review-count-current`,
+  ]) {
+    const node = nextGraph["@graph"].find((candidate) => candidate["@id"] === id);
+    assert.deepEqual(node.observationDate, {
+      "@value": "2026-09-04T03:00:00Z",
+      "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+    });
+  }
 
   const mapsUrl = `https://www.google.com/maps?cid=${release.clinic.cid}`;
   const html = `<span data-clinic-reputation data-rating="${canonical.rating}" data-review-count="${canonical.reviewCount}"><data data-clinic-rating value="${canonical.rating}">rating</data><data data-clinic-review-count value="${canonical.reviewCount}">reviews</data><a href="${mapsUrl}">Google Maps</a></span>`;

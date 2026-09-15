@@ -2,6 +2,7 @@ import { indexCanonicalGraph } from "./graph-core.mjs";
 
 const SCHEMA_VERSION = "2.0";
 const SOURCE = "Google Places API (New)";
+const XSD_DATETIME = "http://www.w3.org/2001/XMLSchema#dateTime";
 const RATING_SUFFIX = "observation-clinic-google-maps-rating-current";
 const REVIEW_COUNT_SUFFIX = "observation-clinic-google-maps-review-count-current";
 const EVIDENCE_SUFFIX = "evidence-google-maps-clinic";
@@ -19,6 +20,20 @@ const isIsoSecond = (value) =>
   typeof value === "string" &&
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value) &&
   !Number.isNaN(Date.parse(value));
+const explicitDateTime = (value) => {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    Object.keys(value).length !== 2 ||
+    value["@type"] !== XSD_DATETIME ||
+    !isIsoSecond(value["@value"])
+  )
+    return null;
+  return value["@value"];
+};
+const dateTimeValue = (value) =>
+  Object.freeze({ "@value": value, "@type": XSD_DATETIME });
 const exactRef = (value, label) => {
   const refs = values(value).map(refId).filter(Boolean);
   if (refs.length !== 1) throw new Error(`${label} requires one reference`);
@@ -34,7 +49,7 @@ const requireObservation = (byId, id, { entityId, property, evidenceId }) => {
     node.measuredProperty !== property ||
     node.measurementMethod !== SOURCE ||
     exactRef(node["prov:wasDerivedFrom"], `${id} prov:wasDerivedFrom`) !== evidenceId ||
-    !isIsoSecond(node.observationDate)
+    !explicitDateTime(node.observationDate)
   )
     throw new Error(`Canonical Google Maps reputation observation drift: ${id}`);
   return node;
@@ -69,8 +84,10 @@ export function validateReputationObservation(graph, release) {
   );
   const rating = Number(ratingNode.value);
   const reviewCount = Number(reviewNode.value);
+  const ratingObservedAt = explicitDateTime(ratingNode.observationDate);
+  const reviewObservedAt = explicitDateTime(reviewNode.observationDate);
   if (
-    ratingNode.observationDate !== reviewNode.observationDate ||
+    ratingObservedAt !== reviewObservedAt ||
     Number(ratingNode.maxValue) !== 5 ||
     !Number.isFinite(rating) ||
     rating < 1 ||
@@ -86,7 +103,7 @@ export function validateReputationObservation(graph, release) {
     placeId,
     rating,
     reviewCount,
-    valueObservedAt: ratingNode.observationDate,
+    valueObservedAt: ratingObservedAt,
     ratingNodeId: ratingNode["@id"],
     reviewCountNodeId: reviewNode["@id"],
   });
@@ -134,9 +151,9 @@ export function applyReputationObservation(graph, { evaluation, release, observe
   if (!ratingNode || !reviewNode)
     throw new Error("Canonical Google Maps reputation nodes are missing");
   ratingNode.value = evaluation.rating;
-  ratingNode.observationDate = observedAt;
+  ratingNode.observationDate = dateTimeValue(observedAt);
   reviewNode.value = evaluation.reviewCount;
-  reviewNode.observationDate = observedAt;
+  reviewNode.observationDate = dateTimeValue(observedAt);
   validateReputationObservation(next, release);
   return next;
 }
