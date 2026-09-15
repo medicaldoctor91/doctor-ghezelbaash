@@ -66,26 +66,10 @@ if (release.reviewedBy !== release.primaryEntity?.id)
   fail("Medical reviewer must resolve to the primary physician entity");
 
 const invariantKeys = [
-  "evidenceSnapshotMaxAgeDays",
   "googlebotFetchBudgetBytes",
   "googlebotReservedResponseHeaderBytes",
   "googlebotSafetyMarginBytes",
-  "maxCriticalCssBytes",
-  "maxDeferredCssBrotliBytes",
-  "maxDeferredCssBytes",
-  "maxFcpMs",
-  "maxFontBytes",
-  "maxFontLoadMs",
-  "maxHtmlBytes",
-  "maxInitialImageBytes",
-  "maxInpMs",
-  "maxJavaScriptBytes",
-  "maxLcpMs",
   "maxRagPassageChars",
-  "maxScriptDurationMs",
-  "maxTbtMs",
-  "maxTotalAssetBytes",
-  "maxCls",
 ];
 exactKeys(invariants, invariantKeys, "release-invariants");
 assertGooglebotBudgetContract(invariants);
