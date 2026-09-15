@@ -1,0 +1,138 @@
+name: PR401 Hero 768 calibration
+
+on:
+  push:
+    branches: [refactor/single-source-truth-no-dist-drift]
+    paths: [.github/workflows/pr401-hero-768-calibration.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  calibrate-and-apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/single-source-truth-no-dist-drift
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate temporary 768w Hero candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v ffmpeg
+          base=public/media/images/physician
+          avif_src="$base/saeed-ghezelbash-portrait-960.abde9c5ed375.avif"
+          webp_src="$base/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp"
+          ffmpeg -loglevel error -y -i "$avif_src" -vf scale=768:512 -frames:v 1 -c:v libaom-av1 -crf 16 -still-picture 1 /tmp/hero-768.avif
+          ffmpeg -loglevel error -y -i "$webp_src" -vf scale=768:512 -frames:v 1 -c:v libwebp -quality 88 /tmp/hero-768.webp
+          AVIF_HASH=$(sha256sum /tmp/hero-768.avif | cut -c1-12)
+          WEBP_HASH=$(sha256sum /tmp/hero-768.webp | cut -c1-12)
+          AVIF_NAME="saeed-ghezelbash-portrait-768.${AVIF_HASH}.avif"
+          WEBP_NAME="saeed-ghezelbash-portrait-768.${WEBP_HASH}.webp"
+          cp /tmp/hero-768.avif "$base/$AVIF_NAME"
+          cp /tmp/hero-768.webp "$base/$WEBP_NAME"
+          AVIF_BYTES=$(stat -c %s "$base/$AVIF_NAME")
+          BASE_BYTES=$(stat -c %s "$avif_src")
+          python - "$AVIF_BYTES" "$BASE_BYTES" <<'PY'
+          import sys
+          candidate, baseline = map(int, sys.argv[1:])
+          assert candidate < baseline, (candidate, baseline)
+          assert candidate / baseline <= 0.65, (candidate, baseline, candidate / baseline)
+          print(f"Temporary transfer proof: 768w={candidate} bytes, 960w={baseline} bytes, reduction={(1-candidate/baseline)*100:.1f}%")
+          PY
+          printf 'AVIF_NAME=%s\nWEBP_NAME=%s\nAVIF_BYTES=%s\nBASE_BYTES=%s\n' "$AVIF_NAME" "$WEBP_NAME" "$AVIF_BYTES" "$BASE_BYTES" >> "$GITHUB_ENV"
+      - name: Patch source only for temporary Chromium calibration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          avif = os.environ["AVIF_NAME"]
+          webp = os.environ["WEBP_NAME"]
+          root = Path('.')
+
+          p = root / 'src/content-source/page.md'
+          s = p.read_text()
+          old = '/media/images/physician/saeed-ghezelbash-portrait-delivery-640.f41e5aa1c0dd.avif 640w, /media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif 960w'
+          new = f'/media/images/physician/saeed-ghezelbash-portrait-delivery-640.f41e5aa1c0dd.avif 640w, /media/images/physician/{avif} 768w, /media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif 960w'
+          assert s.count(old) == 1
+          s = s.replace(old, new, 1)
+          old = '/media/images/physician/saeed-ghezelbash-portrait-delivery-640.5c350c081420.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp 960w'
+          new = f'/media/images/physician/saeed-ghezelbash-portrait-delivery-640.5c350c081420.webp 640w, /media/images/physician/{webp} 768w, /media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp 960w'
+          assert s.count(old) == 1
+          p.write_text(s.replace(old, new, 1))
+
+          p = root / 'src/lib/hero-image-contract.mjs'
+          s = p.read_text()
+          old = 'export const HERO_IMAGE_960_HREF =\n  "/media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif";\nexport const HERO_PRELOAD_SRCSET = `${HERO_PRELOAD_HREF} 640w, ${HERO_IMAGE_960_HREF} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w`;'
+          new = f'export const HERO_IMAGE_768_HREF =\n  "/media/images/physician/{avif}";\nexport const HERO_IMAGE_960_HREF =\n  "/media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif";\nexport const HERO_PRELOAD_SRCSET = `${{HERO_PRELOAD_HREF}} 640w, ${{HERO_IMAGE_768_HREF}} 768w, ${{HERO_IMAGE_960_HREF}} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w`;'
+          assert old in s
+          p.write_text(s.replace(old, new, 1))
+
+          p = root / 'scripts/validate-critical-path.mjs'
+          s = p.read_text()
+          assert '  HERO_IMAGE_960_HREF,' in s
+          s = s.replace('  HERO_IMAGE_960_HREF,', '  HERO_IMAGE_768_HREF,\n  HERO_IMAGE_960_HREF,', 1)
+          old = 'HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF) &&\n    HERO_PRELOAD_SRCSET.includes(`${HERO_IMAGE_960_HREF} 960w`)'
+          new = 'HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF) &&\n    HERO_PRELOAD_SRCSET.includes(`${HERO_IMAGE_768_HREF} 768w`) &&\n    HERO_PRELOAD_SRCSET.includes(`${HERO_IMAGE_960_HREF} 960w`)'
+          assert old in s
+          p.write_text(s.replace(old, new, 1))
+
+          p = root / 'scripts/test-hero-delivery.mjs'
+          s = p.read_text()
+          old = '{ name: "mobile412", viewport: { width: 412, height: 823 }, deviceScaleFactor: 1.75, isMobile: true, hasTouch: true, candidate: "960" },'
+          new = '{ name: "mobile412", viewport: { width: 412, height: 823 }, deviceScaleFactor: 1.75, isMobile: true, hasTouch: true, candidate: "768" },\n  { name: "mobile412x2", viewport: { width: 412, height: 823 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, candidate: "768" },'
+          assert old in s
+          s = s.replace(old, new, 1)
+          needle = 'let browser;\nconst runs = [];'
+          insert = f'''const hero768Bytes = (await readFile(path.join(directory, "media/images/physician/{avif}"))).length;\nconst hero960Bytes = (await readFile(path.join(directory, "media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif"))).length;\nassert.ok(hero768Bytes < hero960Bytes, "768w Hero candidate must be lighter than 960w");\nassert.ok(hero768Bytes / hero960Bytes <= 0.65, "768w Hero candidate must materially reduce AVIF transfer bytes");\n\nlet browser;\nconst runs = [];'''
+          assert needle in s
+          p.write_text(s.replace(needle, insert, 1))
+
+          p = root / 'src/data/media-dimensions.tsv'
+          s = p.read_text()
+          needle = 'public/media/images/physician/saeed-ghezelbash-portrait-960.avif|960|640\n'
+          insert = 'public/media/images/physician/saeed-ghezelbash-portrait-768.avif|768|512\npublic/media/images/physician/saeed-ghezelbash-portrait-768.webp|768|512\n' + needle
+          assert needle in s
+          p.write_text(s.replace(needle, insert, 1))
+          PY
+          git diff --check
+      - name: Recalibrate source fingerprint and run full temporary build
+        run: |
+          npm run render:calibration:update
+          npm run build
+      - name: Prove browser candidate selection and transfer improvement
+        run: |
+          node scripts/test-hero-delivery.mjs dist
+          python - <<'PY'
+          import os
+          candidate = int(os.environ['AVIF_BYTES'])
+          baseline = int(os.environ['BASE_BYTES'])
+          print({
+            'verified': True,
+            'mobile412_dpr_1_75': '768w',
+            'mobile412_dpr_2_0': '768w',
+            'candidate_bytes': candidate,
+            'baseline_960_bytes': baseline,
+            'transfer_reduction_percent': round((1-candidate/baseline)*100, 1),
+          })
+          PY
+      - name: Commit only after temporary proof passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/pr401-hero-768-calibration.yml
+          git add src/content-source/page.md src/lib/hero-image-contract.mjs scripts/validate-critical-path.mjs scripts/test-hero-delivery.mjs src/data/media-dimensions.tsv src/data/render-calibration.json public/media/images/physician/saeed-ghezelbash-portrait-768.* .github/workflows/pr401-hero-768-calibration.yml
+          git diff --cached --check
+          git commit -m "perf(hero): add calibrated 768w responsive candidate"
+          git push origin HEAD:refactor/single-source-truth-no-dist-drift
