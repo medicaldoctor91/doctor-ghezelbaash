@@ -1,50 +1,48 @@
-// Google documents 2 MB per non-PDF URL, including HTTP headers, before
-// rendering. Use decimal MB conservatively; compression never extends it.
+// Google documents a 2 MB fetch cutoff per non-PDF URL. Keep the project
+// contract equal to that documented ceiling; do not subtract private reserves.
 // https://developers.google.com/search/blog/2026/03/crawler-blog-post
 export const GOOGLEBOT_NON_PDF_FETCH_CEILING_BYTES = 2_000_000;
 
-const positiveBytes = (value, label) => {
-  if (!Number.isSafeInteger(value) || value <= 0)
-    throw new Error(`Googlebot budget requires positive integer bytes: ${label}`);
+const bytes = (value, label, { allowZero = false } = {}) => {
+  if (
+    !Number.isSafeInteger(value) ||
+    value < 0 ||
+    (!allowZero && value === 0)
+  )
+    throw new Error(`Googlebot budget requires integer bytes: ${label}`);
+  return value;
 };
 
 export function assertGooglebotBudgetContract(invariants) {
-  for (const key of [
-    "maxHtmlBytes",
+  const fetchBudgetBytes = bytes(
+    invariants.googlebotFetchBudgetBytes,
     "googlebotFetchBudgetBytes",
-    "googlebotReservedResponseHeaderBytes",
-    "googlebotSafetyMarginBytes",
-  ]) positiveBytes(invariants[key], key);
-  if (invariants.googlebotFetchBudgetBytes > GOOGLEBOT_NON_PDF_FETCH_CEILING_BYTES)
-    throw new Error("Googlebot fetch budget exceeds the conservative 2 MB ceiling");
-  // The response-header reserve covers the whole response header section.
-  // The additional safety margin reserves request overhead and future growth;
-  // neither is permission to inflate the documented fetch ceiling.
-  if (invariants.maxHtmlBytes +
-      invariants.googlebotReservedResponseHeaderBytes +
-      invariants.googlebotSafetyMarginBytes > invariants.googlebotFetchBudgetBytes)
-    throw new Error("Response budget contract exceeds Googlebot budget");
+  );
+  if (fetchBudgetBytes !== GOOGLEBOT_NON_PDF_FETCH_CEILING_BYTES)
+    throw new Error(
+      `Googlebot fetch budget must equal the documented ${GOOGLEBOT_NON_PDF_FETCH_CEILING_BYTES}-byte ceiling`,
+    );
+  return { fetchBudgetBytes };
 }
 
 export function assertGooglebotResponseBudget(
-  { bodyBytes, responseHeaderBytes },
+  { bodyBytes, responseHeaderBytes = 0 },
   invariants,
 ) {
-  assertGooglebotBudgetContract(invariants);
-  positiveBytes(bodyBytes, "uncompressed body");
-  positiveBytes(responseHeaderBytes, "response headers");
-  if (bodyBytes >= invariants.maxHtmlBytes)
-    throw new Error(`HTML safety ceiling exceeded ${bodyBytes}/${invariants.maxHtmlBytes}`);
-  if (responseHeaderBytes > invariants.googlebotReservedResponseHeaderBytes)
-    throw new Error(`Observed response headers exceed reserved bytes: ${responseHeaderBytes}/${invariants.googlebotReservedResponseHeaderBytes}`);
-  const accountedBytes = bodyBytes + responseHeaderBytes + invariants.googlebotSafetyMarginBytes;
-  if (accountedBytes >= invariants.googlebotFetchBudgetBytes)
-    throw new Error(`Googlebot response reaches the fetch cutoff: ${accountedBytes}/${invariants.googlebotFetchBudgetBytes}`);
+  const { fetchBudgetBytes } = assertGooglebotBudgetContract(invariants);
+  const body = bytes(bodyBytes, "uncompressed body");
+  const headers = bytes(responseHeaderBytes, "response headers", {
+    allowZero: true,
+  });
+  const accountedBytes = body + headers;
+  if (accountedBytes > fetchBudgetBytes)
+    throw new Error(
+      `Googlebot fetch ceiling exceeded: ${accountedBytes}/${fetchBudgetBytes}`,
+    );
   return {
-    bodyBytes,
-    responseHeaderBytes,
-    safetyMarginBytes: invariants.googlebotSafetyMarginBytes,
+    bodyBytes: body,
+    responseHeaderBytes: headers,
     accountedBytes,
-    remainingBytes: invariants.googlebotFetchBudgetBytes - accountedBytes,
+    remainingBytes: fetchBudgetBytes - accountedBytes,
   };
 }
