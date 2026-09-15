@@ -1,0 +1,110 @@
+name: Scratch PR404 media policy proof
+
+on:
+  push:
+    branches:
+      - scratch/pr404-media-policy-2026-09-15
+
+permissions:
+  contents: write
+
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - run: npm ci
+      - run: npm run security:dependencies
+      - name: Prove approved page is byte-exact before patch
+        shell: bash
+        run: |
+          test "$(git hash-object src/content-source/page.md)" = "6ea47007e992fbd2213c2c37e3033316f400b361"
+          printf '%s  %s\n' '96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea' 'src/content-source/page.md' | sha256sum -c -
+      - name: Refine raster XMP carrier policy and v2 documentation
+        shell: python
+        run: |
+          from pathlib import Path
+
+          media = Path('scripts/validate-media.mjs')
+          text = media.read_text()
+          old = 'const profileCoverage = new Map();\nfor (const row of rasterRows) {'
+          new = 'const profileCoverage = new Map();\nlet exactXmpRasters = 0;\nlet metadataFreeDeliveryRasters = 0;\nfor (const row of rasterRows) {'
+          if text.count(old) != 1:
+              raise SystemExit('profileCoverage anchor drift')
+          text = text.replace(old, new)
+
+          old = '  assertExactXmp(row, imageMetadataFor(release, profile), file);\n}'
+          new = '''  const publicPath = `/${path.relative(publicRoot, file).replaceAll(path.sep, "/")}`;
+  const uses = mediaUsage.uses.get(publicPath) ?? new Set();
+  const semanticMetadataCarrier = [...uses].some(
+    (source) => source.startsWith("graph:") || source.startsWith("alias:"),
+  );
+  const embeddedXmpKeys = Object.keys(row).filter((key) => key.startsWith("XMP-"));
+  if (semanticMetadataCarrier || embeddedXmpKeys.length) {
+    assertExactXmp(row, imageMetadataFor(release, profile), file);
+    exactXmpRasters += 1;
+  } else {
+    metadataFreeDeliveryRasters += 1;
+  }
+}'''
+          if text.count(old) != 1:
+              raise SystemExit('assertExactXmp anchor drift')
+          text = text.replace(old, new)
+
+          old = '      standardXmpCoverage: `${rasterRows.length}/${rasters.length}`,\n      imageProfileCoverage:'
+          new = '      standardXmpCoverage: `${exactXmpRasters}/${rasters.length}`,\n      metadataFreeDeliveryRasters,\n      imageProfileCoverage:'
+          if text.count(old) != 1:
+              raise SystemExit('XMP report anchor drift')
+          text = text.replace(old, new)
+          media.write_text(text)
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          start = text.index('## Closed visible-text contract\n')
+          end = text.index('\n## Distribution standards and consumer boundaries\n', start)
+          replacement = '''## Closed visible-text contract v2
+
+Preparation validates the reviewed current source before generating files. `src/data/visible-text-contract.json` schema v2 treats the approved `src/content-source/page.md` as source truth and freezes NFC/whitespace-normalized reading text, protected visible/accessibility attributes, authored IDs with owner/context, IDREF spellings, same-document fragment targets, authored Answer/runtime/caption text, emitted-document projections and actual Chromium rendered/generated text plus named non-link accessibility semantics. Raw source hashes record provenance; normal validation never rewrites the source or self-refreshes the baseline.
+
+Inline text-node boundaries are deliberately not contract state. A reviewed external inline anchor may wrap or split already-approved text without changing that reading text; browser validation still requires every authored link to have a non-empty safe `href` and an accessible name, and same-document fragments must resolve. The current reviewed source truth is commit `31f26733a69a0ed3cb2008dc08c79b562eca6131`, page Git blob `6ea47007e992fbd2213c2c37e3033316f400b361`, raw SHA-256 `96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea`.
+
+`npm run test:visible-text-browser` checks actual Chromium rendered text, generated CSS text and protected accessibility names at mobile and desktop widths, with JavaScript enabled and disabled, with disclosures open, in search states, and on the 404. CI requires this check after the pinned browser is installed. The browser evidence is specific to its recorded version and states; it is not universal assistive-technology or WCAG certification.
+
+A future intentional change to protected text, IDs, IDREFs, fragments or browser semantics requires explicit review and a deliberate new baseline. Builds and scheduled jobs never regenerate the baseline merely to pass a gate.
+'''
+          text = text[:start] + replacement + text[end:]
+
+          needle = '- `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.\n\nThe physician uses one canonical ID'
+          repl = '- `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.\n\nReachable graph images and stable media-alias targets must carry the complete exact XMP profile. A transport-only responsive raster that is neither a graph media resource nor a stable-alias target may be metadata-free; if it carries any XMP at all, the full profile must match exactly. Content-addressed filename fingerprints, dimensions, decode validity and source reachability remain mandatory for every raster.\n\nThe physician uses one canonical ID'
+          if text.count(needle) != 1:
+              raise SystemExit('README media policy anchor drift')
+          text = text.replace(needle, repl)
+          readme.write_text(text)
+      - name: Validate media policy
+        run: npm run validate:media
+      - name: Verify source contract and page immutability
+        shell: bash
+        run: |
+          node scripts/validate-visible-text.mjs source
+          test "$(git hash-object src/content-source/page.md)" = "6ea47007e992fbd2213c2c37e3033316f400b361"
+          printf '%s  %s\n' '96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea' 'src/content-source/page.md' | sha256sum -c -
+          git diff --check
+      - name: Commit only permanent files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/validate-media.mjs README.md
+          git diff --cached --check
+          git commit -m "Model XMP metadata carriers without touching approved page"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
