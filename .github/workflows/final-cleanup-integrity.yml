@@ -13,12 +13,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      BASELINE_SHA: 31f26733a69a0ed3cb2008dc08c79b562eca6131
+      BASELINE_SHA: bb700fccd32f30f930865afb3131dc145829b9ed
+      CANDIDATE_SHA: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
     steps:
-      - name: Checkout cleanup candidate
+      - name: Checkout exact candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: cleanup/dist-invariant-source
+          ref: 141d0962a7b3c0566206457e6f2e2db5fea70d3d
           fetch-depth: 0
           persist-credentials: false
 
@@ -43,38 +44,33 @@ jobs:
       - name: Release-only integrity contract
         run: npm run validate:release-contract
 
-      - name: Measure cleanup delta
+      - name: Build exact candidate
         shell: bash
         run: |
           set -euo pipefail
-          git cat-file -e "$BASELINE_SHA^{commit}"
-          candidate="$(git rev-parse HEAD)"
-          git diff --check "$BASELINE_SHA" "$candidate"
-          python - "$BASELINE_SHA" "$candidate" <<'PY'
-          import subprocess, sys
-          def snapshot(ref):
-              rows=subprocess.check_output(['git','ls-tree','-r','-l',ref],text=True).splitlines()
-              files=0; size=0
-              for row in rows:
-                  meta, _, path=row.partition('\t')
-                  parts=meta.split()
-                  if len(parts)>=4 and parts[1]=='blob':
-                      files += 1
-                      try: size += int(parts[3])
-                      except ValueError: pass
-              return files,size
-          b=snapshot(sys.argv[1]); c=snapshot(sys.argv[2])
-          changed=subprocess.check_output(['git','diff','--name-status',sys.argv[1],sys.argv[2]],text=True).splitlines()
-          deleted=sum(line.startswith('D\t') for line in changed)
-          modified=sum(line.startswith('M\t') for line in changed)
-          added=sum(line.startswith('A\t') for line in changed)
-          print(f'BASELINE_TRACKED_FILES={b[0]}')
-          print(f'CANDIDATE_TRACKED_FILES={c[0]}')
-          print(f'TRACKED_FILES_REDUCED_BY={b[0]-c[0]}')
-          print(f'BASELINE_TRACKED_BYTES={b[1]}')
-          print(f'CANDIDATE_TRACKED_BYTES={c[1]}')
-          print(f'TRACKED_BYTES_REDUCED_BY={b[1]-c[1]}')
-          print(f'DIFF_DELETED={deleted}')
-          print(f'DIFF_MODIFIED={modified}')
-          print(f'DIFF_ADDED={added}')
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
+          npm run build
+
+      - name: Assert focused source delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git diff --check "$BASELINE_SHA" "$CANDIDATE_SHA"
+          changed="$(git diff --name-only "$BASELINE_SHA" "$CANDIDATE_SHA")"
+          expected=$'scripts/lib/googlebot-budget.mjs\nscripts/validate-release-contract.mjs\nsrc/data/release-invariants.json'
+          test "$changed" = "$expected"
+          git diff --stat "$BASELINE_SHA" "$CANDIDATE_SHA"
+          python - <<'PY'
+          import json, pathlib
+          inv=json.loads(pathlib.Path('src/data/release-invariants.json').read_text())
+          expected={
+            'maxRagPassageChars':4200,
+            'googlebotFetchBudgetBytes':2000000,
+            'googlebotReservedResponseHeaderBytes':20000,
+            'googlebotSafetyMarginBytes':30000,
+          }
+          assert inv == expected, (inv, expected)
+          print('RELEASE_INVARIANTS_MINIMAL=PASS')
           PY
