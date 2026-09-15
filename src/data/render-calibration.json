@@ -4855,9 +4855,9 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-15T00:58:14.262Z",
-    "sourceSha256": "b5e05b774bd701d4251f747d6b7116dd95c81b7e960fb9eb4d18fa0a1819b4f2",
-    "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
+    "measuredAt": "2026-09-15T05:58:24.811Z",
+    "sourceSha256": "0201859a7bf549d2e09c082a0ef0357c21363a789400db6163a14a0c211faf95",
+    "domSha256": "7d37fedbf472b9894d9fdc0e3eb3edfb91f17be74e5a82881fcebb8d5d54a6e2",
     "inputs": [
       [
         "astro.config.mjs",
@@ -4905,7 +4905,7 @@
       ],
       [
         "src/lib/hero-image-contract.mjs",
-        "2e1f87ffe7b1ba4c6b5a4bfad4b99dcb58ad5ef7bc1e11f6b364bd11d656c4dc"
+        "ac7ed90f3f8641937d2b7d4bbb8a1cee1be14565ec9f9e6f2f0211f95e7ba03b"
       ],
       [
         "src/pages/index.astro",
@@ -4917,7 +4917,7 @@
       ],
       [
         "assembled-render-chunk-content",
-        "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e"
+        "7d37fedbf472b9894d9fdc0e3eb3edfb91f17be74e5a82881fcebb8d5d54a6e2"
       ]
     ],
     "measurement": {

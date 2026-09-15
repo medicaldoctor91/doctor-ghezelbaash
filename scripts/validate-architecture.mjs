@@ -21,6 +21,7 @@ const required = [
   "src/lib/reputation-observation.mjs",
   "scripts/reputation.mjs",
   "src/content-source/page.md",
+  "src/data/content-source-contract.json",
   "src/data/document-head.json",
   "src/data/machine-resources.json",
   "src/data/release.json",
@@ -37,6 +38,8 @@ const required = [
   "scripts/generate-descriptors.mjs",
   "scripts/materialize-static-artifacts.mjs",
   "scripts/generate-deployment-headers.mjs",
+  "scripts/validate-content-source.mjs",
+  "scripts/test-content-source-contract.mjs",
   "scripts/lib/projection-context.mjs",
   "scripts/lib/projections/page-assets.mjs",
   "scripts/lib/projections/graph-projections.mjs",
@@ -582,6 +585,13 @@ assert(
   "Render calibration command drift",
 );
 assert(
+  pkg.scripts?.["validate:content-source"] ===
+      "node scripts/validate-content-source.mjs" &&
+    pkg.scripts?.["test:content-source"] ===
+      "node --test scripts/test-content-source-contract.mjs",
+  "Canonical page source gate command drift",
+);
+assert(
   pkg.scripts?.["validate:reputation"] ===
     "node scripts/reputation.mjs validate" &&
     pkg.scripts?.["reputation:update"] ===
@@ -607,7 +617,7 @@ const projectionOwners = scriptReferences("scripts/generate-projections.mjs");
 assert(
   JSON.stringify(scriptSteps("prepare:site")) ===
     JSON.stringify([
-      "npm run validate:visible-text-source",
+      "npm run validate:content-source",
       "npm run validate:media-references",
       "npm run clean:generated",
       "node scripts/generate-projections.mjs site",
@@ -617,7 +627,7 @@ assert(
 assert(
   JSON.stringify(scriptSteps("prepare:distribution")) ===
     JSON.stringify([
-      "npm run validate:visible-text-source",
+      "npm run validate:content-source",
       "npm run validate:media-references",
       "npm run clean:generated",
       "npm run rdf:generate",
@@ -671,7 +681,6 @@ assert(
 for (const step of [
   "astro build",
   "npm run materialize:static",
-  "npm run validate:visible-text",
   "node scripts/generate-deployment-headers.mjs",
   "node scripts/validate-dist.mjs",
   "npm run validate:dist-production",
@@ -681,13 +690,11 @@ for (const step of [
     `DIST compiler step missing: ${step}`,
   );
 assert(
-  scriptSteps("validate:source")[0] === "npm run validate:visible-text-source" &&
-    scriptSteps("validate:source").includes("npm run test:visible-text") &&
-    scriptSteps("compile:dist").indexOf("npm run validate:visible-text") >
-      scriptSteps("compile:dist").indexOf("npm run materialize:static") &&
-    scriptSteps("compile:dist").indexOf("npm run validate:visible-text") <
-      scriptSteps("compile:dist").indexOf("node scripts/generate-deployment-headers.mjs"),
-  "Frozen source and emitted-text gates must run before delivery validation",
+  scriptSteps("validate:source")[0] === "npm run validate:content-source" &&
+    scriptSteps("validate:source").includes("npm run test:content-source") &&
+    !String(pkg.scripts?.["compile:dist"] || "").includes("content-source") &&
+    !Object.keys(pkg.scripts || {}).some((name) => name.includes("visible-text")),
+  "Canonical source freeze must gate authored inputs without legacy visible-text aliases",
 );
 assert(
   String(pkg.scripts?.release || "").includes("npm run compile:dist") &&
@@ -701,13 +708,12 @@ assert(
     pkg.scripts?.["test:answer-projection"] ===
       "node --test scripts/test-answer-projection.mjs" &&
     ciWorkflow.includes("npm run test:dist-interactions") &&
-    ciWorkflow.includes("npm run test:visible-text-browser") &&
     ciWorkflow.includes("npm run test:performance") &&
     ciWorkflow.includes("npm run test:css-validation") &&
     ciWorkflow.includes("npm run validate:html-css") &&
     String(pkg.scripts?.["compile:dist"] || "").includes("npm run validate:css") &&
     ciWorkflow.includes("npx playwright install --with-deps --only-shell chromium"),
-  "Production browser regression gates must be explicit CI commands",
+  "Current-state production browser regression gates must be explicit CI commands",
 );
 
 console.log(
