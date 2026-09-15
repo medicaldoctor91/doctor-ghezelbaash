@@ -22,7 +22,7 @@
     "compile:dist": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run materialize:static && npm run indexnow:prepare && node scripts/generate-deployment-headers.mjs",
     "build": "npm run prepare:distribution && npm run compile:dist",
     "release:attest": "node scripts/write-release-attestation.mjs",
-    "release": "npm run build && npm run release:attest && npm run package:dist",
+    "release": "npm run validate:release-contract && npm run build && npm run release:attest && npm run package:dist",
     "package:dist": "node scripts/package-dist.mjs",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "verify:subdomains": "node scripts/verify-production.mjs subdomains",
