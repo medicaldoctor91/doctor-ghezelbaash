@@ -14,3 +14,5 @@ __pycache__/
 
 .release/runtime/
 .release/huggingface/
+
+# Temporary CI retrigger marker for the calibrated Hero commit.
