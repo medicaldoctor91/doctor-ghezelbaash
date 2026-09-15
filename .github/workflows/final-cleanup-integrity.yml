@@ -1,0 +1,80 @@
+name: Final cleanup integrity
+
+on:
+  push:
+    branches: [audit/dist-invariant-proof]
+    paths: [.github/workflows/final-cleanup-integrity.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BASELINE_SHA: 31f26733a69a0ed3cb2008dc08c79b562eca6131
+    steps:
+      - name: Checkout cleanup candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: cleanup/dist-invariant-source
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use project Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Dependency security gate
+        run: npm run security:dependencies
+
+      - name: Astro source check
+        run: npm run check
+
+      - name: Platform contract
+        run: node scripts/platform-contract.mjs validate
+
+      - name: Release-only integrity contract
+        run: npm run validate:release-contract
+
+      - name: Measure cleanup delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$BASELINE_SHA^{commit}"
+          candidate="$(git rev-parse HEAD)"
+          git diff --check "$BASELINE_SHA" "$candidate"
+          python - "$BASELINE_SHA" "$candidate" <<'PY'
+          import subprocess, sys
+          def snapshot(ref):
+              rows=subprocess.check_output(['git','ls-tree','-r','-l',ref],text=True).splitlines()
+              files=0; size=0
+              for row in rows:
+                  meta, _, path=row.partition('\t')
+                  parts=meta.split()
+                  if len(parts)>=4 and parts[1]=='blob':
+                      files += 1
+                      try: size += int(parts[3])
+                      except ValueError: pass
+              return files,size
+          b=snapshot(sys.argv[1]); c=snapshot(sys.argv[2])
+          changed=subprocess.check_output(['git','diff','--name-status',sys.argv[1],sys.argv[2]],text=True).splitlines()
+          deleted=sum(line.startswith('D\t') for line in changed)
+          modified=sum(line.startswith('M\t') for line in changed)
+          added=sum(line.startswith('A\t') for line in changed)
+          print(f'BASELINE_TRACKED_FILES={b[0]}')
+          print(f'CANDIDATE_TRACKED_FILES={c[0]}')
+          print(f'TRACKED_FILES_REDUCED_BY={b[0]-c[0]}')
+          print(f'BASELINE_TRACKED_BYTES={b[1]}')
+          print(f'CANDIDATE_TRACKED_BYTES={c[1]}')
+          print(f'TRACKED_BYTES_REDUCED_BY={b[1]-c[1]}')
+          print(f'DIFF_DELETED={deleted}')
+          print(f'DIFF_MODIFIED={modified}')
+          print(f'DIFF_ADDED={added}')
+          PY
