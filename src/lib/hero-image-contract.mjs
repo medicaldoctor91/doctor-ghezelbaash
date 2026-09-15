@@ -5,7 +5,7 @@ const HERO_IMAGE_SIZES_TOKEN = "{{HERO_IMAGE_SIZES}}";
 export const HERO_PRELOAD_HREF =
   "/media/images/physician/saeed-ghezelbash-portrait-delivery-640.f41e5aa1c0dd.avif";
 export const HERO_IMAGE_768_HREF =
-  "/media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif";
+  "/media/images/physician/saeed-ghezelbash-portrait-768.e6e338f0950b.avif";
 export const HERO_IMAGE_960_HREF =
   "/media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif";
 export const HERO_PRELOAD_SRCSET = `${HERO_PRELOAD_HREF} 640w, ${HERO_IMAGE_768_HREF} 768w, ${HERO_IMAGE_960_HREF} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w`;

@@ -75,7 +75,7 @@ const profiles = [
   { name: "mobile412x2", viewport: { width: 412, height: 823 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, candidate: "768" },
   { name: "desktop1350", viewport: { width: 1350, height: 900 }, deviceScaleFactor: 1, isMobile: false, hasTouch: false, candidate: "delivery-640" },
 ];
-const hero768Bytes = (await readFile(path.join(directory, "media", "images", "physician", "saeed-ghezelbash-portrait-768.e9ff8624723d.avif"))).length;
+const hero768Bytes = (await readFile(path.join(directory, "media", "images", "physician", "saeed-ghezelbash-portrait-768.e6e338f0950b.avif"))).length;
 const hero960Bytes = (await readFile(path.join(directory, "media", "images", "physician", "saeed-ghezelbash-portrait-960.abde9c5ed375.avif"))).length;
 assert.ok(hero768Bytes < hero960Bytes, "768w Hero candidate must be lighter than 960w");
 assert.ok(hero768Bytes / hero960Bytes <= 0.65, "768w Hero candidate must materially reduce AVIF transfer bytes");
