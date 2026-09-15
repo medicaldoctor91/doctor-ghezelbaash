@@ -1,5 +1,4 @@
 ---
-import documentHead from '../data/document-head.json';
 import release from '../data/release.json';
 import {
   HERO_IMAGE_SIZES,
@@ -31,6 +30,9 @@ interface Props {
   isMain: boolean;
 }
 
+const appleMobileWebAppTitle = 'دکتر قزلباش';
+const themeColor = '#075244';
+const twitterCard = 'summary_large_image';
 const authority = deriveCanonicalAuthority(release, canonicalGraph);
 const {
   title,
@@ -117,7 +119,7 @@ const websiteDisplayNames = new Set([
     (value): value is string => typeof value === 'string' && value.length > 0,
   ),
 ]);
-if (isMain && !websiteDisplayNames.has(documentHead.appleMobileWebAppTitle)) {
+if (isMain && !websiteDisplayNames.has(appleMobileWebAppTitle)) {
   throw new Error('Apple web-app title must select a canonical WebSite name from the graph');
 }
 const profileUsername = new URL(facts.instagramUrl).pathname
@@ -211,7 +213,7 @@ const discoveryLinks: DiscoveryLink[] = [
   {
     href: '/favicon.svg',
     rel: 'mask-icon',
-    color: documentHead.themeColor,
+    color: themeColor,
   },
   { href: '/site.webmanifest', rel: 'manifest' },
   { href: release.dataset.huggingFace.dataset, rel: 'related' },
@@ -249,14 +251,14 @@ const discoveryLinks: DiscoveryLink[] = [
 {
   isMain && (
     <meta
-      content={documentHead.appleMobileWebAppTitle}
+      content={appleMobileWebAppTitle}
       name="apple-mobile-web-app-title"
     >
   )
 }
 {isMain && <meta content="telephone=no" name="format-detection">}
 {isMain && <meta content="light" name="color-scheme">}
-<meta content={documentHead.themeColor} name="theme-color">
+<meta content={themeColor} name="theme-color">
 {
   isMain && (
     <link
@@ -293,7 +295,7 @@ const discoveryLinks: DiscoveryLink[] = [
       <meta content={String(og.imageWidth)} property="og:image:width">
       <meta content={String(og.imageHeight)} property="og:image:height">
       <meta content={og.imageAlt} property="og:image:alt">
-      <meta content={documentHead.twitter.card} name="twitter:card">
+      <meta content={twitterCard} name="twitter:card">
       <meta content={title} name="twitter:title">
       <meta content={description} name="twitter:description">
       <meta content={canonicalUrl} name="twitter:url">
