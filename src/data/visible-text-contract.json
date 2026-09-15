@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "policy": "closed-visible-text; NFC + whitespace-collapse per node; text-node sequence and reading order frozen; ID changes and heading levels permitted; raw source hashes record provenance",
-  "sourceCommit": "bbff2475dec9dce02d8edcf0482b64937f8f728e",
+  "policy": "closed-visible-text; intentional visible-content changes require an explicit reviewed rebaseline; CI/build remain read-only and fail closed on unapproved drift",
+  "sourceCommit": "31f26733a69a0ed3cb2008dc08c79b562eca6131",
   "sourceRawSha256": {
-    "src/content-source/page.md": "f382c8f8372ce82de26b563fffa27e198fbbd64bd045cd4e2fe136b0e0e5198f",
+    "src/content-source/page.md": "96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea",
     "src/data/document-head.json": "ddf6cad393242892dc01c0daeed904dbdc51f1004ddb126e3417fe5443602f3e",
     "src/data/media-metadata.json": "bb9ff57beed0a33dcfc7d35e2e45503d6cdef00d694b5b0a876d028d7981bf66",
     "src/data/release.json": "8f841ddb5c9aa82a9f118a8c27359c91835afa6deb3bed73e113c889d5edf528",
-    "src/data/semantic/knowledge-graph.jsonld": "7032b4e9c9d2cf46b0db06c2aa653ab6e8bc586fc6992c4ee7c68281c2d109ed",
+    "src/data/semantic/knowledge-graph.jsonld": "2cabe58efe7a9624feb7867dd8c712340ce98f8cc54d65b2fb9231f0e2940ad5",
     "src/components/GuideNavigator.astro": "f0005a00f1ebaac91361a0f16104451586f14d31d9b36e3bc06738d6a96baf72",
-    "src/components/SiteFooter.astro": "817f1763152a86cbe71847e7b3508a5cd1bf9d6139327ec39c1b5d585a511b5b",
+    "src/components/SiteFooter.astro": "50896b59cce9a86b6b65e0d8151fc6ee6cd67a3a8643cac0039d930c6ed57d22",
     "src/components/FloatingActionDock.astro": "d94297cdc4649e7a325c6803048db228597d1ff6afd57bfb14a36330fcb77c4e",
     "src/components/DocumentHead.astro": "83d105b711328373ddd64f2506d3cef48cdc59c45899866dc6aa83e8462571e9",
-    "src/layouts/BaseLayout.astro": "2b0d8404bdf268fd4bf4bc3e11b693a0fee8b3644f265fd19e2192f3bdc657bd",
-    "src/pages/404.astro": "9d41f9d5091b0203998e4fc75533d1205c8d9eac79311df4534589fa20a980f6"
+    "src/layouts/BaseLayout.astro": "0748a2c498291893d98fb78f6cf73a4ec53cd8f2b8868f24a3b9653b06cfc2b4",
+    "src/pages/404.astro": "6981a82faab98c04e7388ed3f6882b375e0ca378f7e8ad2fed3a1778cf14214e"
   },
   "source": {
     "page": {
@@ -35,8 +35,8 @@
       },
       "textSha256": "eec45821ced1ee718688f722137c6f9026d98bacd3755903d39e194159597977",
       "attributesSha256": "9dd5886ba7b13f754b9d3ad8a82c93142f396d5205a20bfaee509e79c02f1165",
-      "textNodeCount": 6106,
-      "textNodeSequenceSha256": "1a60e884e01158398e7ee73335d480f195a2465c1ac50375870b81c8cef50da7"
+      "textNodeCount": 6429,
+      "textNodeSequenceSha256": "a7694bcfb0c031820ecdcaf07981eebdfae04cf9f5242563d812514b53a725d2"
     },
     "documentHead": {
       "appleMobileWebAppTitle": "دکتر قزلباش",
@@ -633,16 +633,16 @@
   },
   "documents": {
     "index.html": {
-      "rawSha256": "8fe655272c3f06baed134bcbefd2adec17e04a81dbe1f1bafa7ce0f5139d4c2e",
-      "bytes": 1940082,
+      "rawSha256": "3dcf14d67e1061224ba51b46e686aa8d538e880926db1b48ad9dd9fdd0abab6e",
+      "bytes": 1950980,
       "textSha256": "625ff730fc56960d69185a8a42318a70d6cc09426da44b8e3fd3f6c40133fe9e",
       "attributesSha256": "fcf2cc9828b9b41e285522dbf3b323f58a8844fb5930e535f720a390046bb55c",
-      "textNodeCount": 6156,
-      "textNodeSequenceSha256": "b46209f20a6c6855fb727faee03c12f91ee7da7770438223626f6c772283eaa4"
+      "textNodeCount": 6479,
+      "textNodeSequenceSha256": "40a319a4e20640666d012b12054111eca07572a3ac8a5e6913772f0d8f4ba8c5"
     },
     "404.html": {
-      "rawSha256": "4e93b6d4af4979645e32e34fa9883498d34fa8846148bee373dabf0c17cb19be",
-      "bytes": 16198,
+      "rawSha256": "15332038c6d3950d99c6bb842aff26f249e222a5fd2bf5c700aebb445ac36193",
+      "bytes": 16404,
       "textSha256": "3743d9b7ea4adfd329c5c5cc89781271e1e944c2eeffed38067153f668b8c4f3",
       "attributesSha256": "9f3513af982a98fd5d15ddaea842408fd7293ffb164271fc2b691ce961dbebfc",
       "textNodeCount": 14,
