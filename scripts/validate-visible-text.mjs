@@ -1,8 +1,7 @@
 import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { CONTRACT_PATH, assertUnchanged, distContract, sourceContract, sourceRawHashes, protectedProjection } from './lib/visible-text-contract.mjs';
-
+import { CONTRACT_PATH, CONTRACT_POLICY, CONTRACT_SCHEMA, assertUnchanged, distContract, sourceContract, sourceRawHashes, protectedProjection } from './lib/visible-text-contract.mjs';
 const root = process.cwd();
 const args = process.argv.slice(2);
 const mode = args[0] || 'dist';
@@ -10,13 +9,13 @@ if (!['source', 'dist', '--initialize-baseline'].includes(mode)) throw new Error
 const file = path.join(root, CONTRACT_PATH);
 if (mode === '--initialize-baseline') {
   if (!args.includes('--acknowledge-frozen-text')) throw new Error('Explicit --acknowledge-frozen-text required; never initialize during build.');
-  const baseline = { schemaVersion: 1, policy: 'closed-visible-text; NFC + whitespace-collapse per node; text-node sequence and reading order frozen; ID changes and heading levels permitted; raw source hashes record provenance', sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), sourceRawSha256: await sourceRawHashes(root), source: await sourceContract(root), documents: Object.fromEntries(Object.entries(await distContract(path.resolve(args[1] || 'dist'))).map(([name, doc]) => [name, { rawSha256: doc.rawSha256, bytes: doc.bytes, ...protectedProjection(doc) }])) };
+  const baseline = { schemaVersion: CONTRACT_SCHEMA, policy: CONTRACT_POLICY, sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), sourceRawSha256: await sourceRawHashes(root), source: await sourceContract(root), documents: Object.fromEntries(Object.entries(await distContract(path.resolve(args[1] || 'dist'))).map(([name, doc]) => [name, { rawSha256: doc.rawSha256, bytes: doc.bytes, ...protectedProjection(doc) }])) };
   // Exclusive create makes an accidental rebaseline fail, even with the flag.
   await writeFile(file, `${JSON.stringify(baseline, null, 2)}\n`, { flag: 'wx' });
   console.log(`VISIBLE_TEXT_BASELINE_CREATED ${CONTRACT_PATH}`);
 } else {
   const baseline = JSON.parse(await readFile(file, 'utf8'));
-  if (baseline.schemaVersion !== 1) throw new Error('Unsupported visible text baseline');
+  if (baseline.schemaVersion !== CONTRACT_SCHEMA || baseline.policy !== CONTRACT_POLICY) throw new Error(`Unsupported visible text baseline; expected reviewed schema ${CONTRACT_SCHEMA}.`);
   const source = await sourceContract(root);
   assertUnchanged(Object.keys(source), Object.keys(baseline.source), 'source baseline coverage');
   assertUnchanged(['index.html', '404.html'], Object.keys(baseline.documents), 'document baseline coverage');

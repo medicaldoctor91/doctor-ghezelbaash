@@ -1,21 +1,20 @@
 import path from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
-import { CONTRACT_PATH, assertUnchanged, digest } from './lib/visible-text-contract.mjs';
+import { CONTRACT_PATH, CONTRACT_SCHEMA, assertUnchanged, digest } from './lib/visible-text-contract.mjs';
 import { withStaticSite, waitForPageLayout } from './lib/render-measurement.mjs';
-
 const args = process.argv.slice(2);
 const initialize = args[0] === '--initialize-baseline';
 const directory = path.resolve(args[initialize ? 1 : 0] || 'dist');
 const baselinePath = path.resolve(CONTRACT_PATH);
 const baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
+if (baseline.schemaVersion !== CONTRACT_SCHEMA) throw new Error(`Visible-text browser baseline must use schema ${CONTRACT_SCHEMA}.`);
 if (initialize && (!args.includes('--acknowledge-frozen-text') || baseline.browser)) throw new Error('Browser baseline requires explicit initialization and must not already exist.');
 if (!initialize && !baseline.browser) throw new Error('CLOSED_VISIBLE_TEXT: actual-browser baseline missing; parser validation is not browser proof.');
 if (initialize) {
-  // The browser baseline must be captured from the same original bytes.
-  for (const [name, original] of Object.entries(baseline.documents)) assertUnchanged(original.rawSha256, digest(await readFile(path.join(directory, name), 'utf8')), `original browser input ${name}`);
+  // The browser baseline must be captured from the same reviewed distribution bytes.
+  for (const [name, original] of Object.entries(baseline.documents)) assertUnchanged(original.rawSha256, digest(await readFile(path.join(directory, name), 'utf8')), `reviewed browser input ${name}`);
 }
-
 const actual = { engine: 'chromium', states: {} };
 await withStaticSite(directory, async (url) => {
   const browser = await chromium.launch({ headless: true });
@@ -69,7 +68,6 @@ await withStaticSite(directory, async (url) => {
     await browser.close();
   }
 });
-
 if (initialize) {
   baseline.browser = actual;
   await writeFile(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`);
@@ -81,12 +79,10 @@ if (initialize) {
   for (const [state, original] of Object.entries(baseline.browser.states)) assertUnchanged(original, actual.states[state], `browser ${state}`);
   console.log(`CLOSED_VISIBLE_TEXT_BROWSER PASS ${Object.keys(actual.states).length} states, Chromium ${actual.browserVersion}`);
 }
-
 async function settle(page, javascript = true) {
   if (javascript) await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   else await page.evaluate(() => document.documentElement.getBoundingClientRect().height);
 }
-
 async function snapshot(page, context, javascript) {
   await settle(page, javascript);
   const rendered = await page.evaluate(() => {
@@ -99,23 +95,45 @@ async function snapshot(page, context, javascript) {
         if (content && !['none', 'normal', '""', '" "'].includes(content)) pseudo.push([kind, norm(content)]);
       }
     }
+    for (const anchor of document.querySelectorAll('a[href]')) {
+      const href = String(anchor.getAttribute('href') || '').trim();
+      if (!href || /^javascript:/iu.test(href)) throw new Error(`Invalid authored link href: ${href || '(empty)'}`);
+      if (href.startsWith('#')) {
+        let target;
+        try { target = decodeURIComponent(href.slice(1)); } catch { throw new Error(`Invalid same-document fragment: ${href}`); }
+        if (!target || !document.getElementById(target)) throw new Error(`Broken same-document fragment: ${href}`);
+      }
+    }
     return { title: norm(document.title), text: norm(document.body.innerText), pseudo };
   });
   const session = await context.newCDPSession(page);
-  let names;
+  let protectedNames;
   try {
     const { nodes } = await session.send('Accessibility.getFullAXTree');
     const byId = new Map(nodes.map((node) => [node.nodeId, node]));
-    names = [];
+    protectedNames = [];
     const visit = (node) => {
       if (!node) return;
+      const role = String(node.role?.value || '');
+      const roleKey = role.toLowerCase();
       const name = String(node.name?.value || '').normalize('NFC').replace(/\s+/gu, ' ').trim();
-      if (!node.ignored && name && node.role?.value !== 'InlineTextBox') names.push(name);
+      if (!node.ignored && roleKey === 'link' && !name) throw new Error('Visible link without an accessible name');
+      // Link and raw text boxes are deliberately excluded from the frozen AX
+      // sequence. Inline-link wrappers may change those nodes without changing
+      // the protected text or named controls/landmarks.
+      if (!node.ignored && name && !['inlinetextbox', 'statictext', 'link'].includes(roleKey)) protectedNames.push([role, name]);
       for (const id of node.childIds || []) visit(byId.get(id));
     };
     visit(nodes.find((node) => node.role?.value === 'RootWebArea'));
   } finally {
     await session.detach();
   }
-  return { title: rendered.title, renderedTextSha256: digest(rendered.text), renderedCharacters: rendered.text.length, generatedTextSha256: digest(rendered.pseudo), accessibilityNamesSha256: digest(names), accessibilityNameCount: names.length };
+  return {
+    title: rendered.title,
+    renderedTextSha256: digest(rendered.text),
+    renderedCharacters: rendered.text.length,
+    generatedTextSha256: digest(rendered.pseudo),
+    protectedAccessibilityNamesSha256: digest(protectedNames),
+    protectedAccessibilityNameCount: protectedNames.length,
+  };
 }
