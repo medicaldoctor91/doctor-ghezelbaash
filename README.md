@@ -35,7 +35,7 @@ Current approved source identity:
 - SHA-256: `96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea`
 - bytes: `1802868`
 
-`npm run validate:visible-text-source` and `npm run validate:visible-text` both execute the same read-only exact-source gate in `scripts/validate-content-source.mjs`. A build cannot rewrite or refresh this contract. An intentional future `page.md` change requires explicit review and an explicit update of `src/data/content-source-contract.json` in the same reviewed change.
+`npm run validate:content-source` executes the read-only exact-source gate in `scripts/validate-content-source.mjs`; `npm run test:content-source` proves that source mutations and contract drift fail closed. A build cannot rewrite or refresh this contract. An intentional future `page.md` change requires explicit review and an explicit update of `src/data/content-source-contract.json` in the same reviewed change.
 
 The source freeze does **not** replace semantic or browser validation. It only answers one question: are the authored canonical page bytes exactly the reviewed bytes? DIST quality is independently enforced by current-state validators rather than by comparison with an obsolete historical HTML/browser baseline.
 
@@ -112,8 +112,8 @@ npm run release
 Useful focused gates:
 
 ```bash
-npm run validate:visible-text-source
-npm run test:visible-text
+npm run validate:content-source
+npm run test:content-source
 npm run validate:source
 npm run validate:media
 npm run validate:html-css
