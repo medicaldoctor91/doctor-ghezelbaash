@@ -1,6 +1,7 @@
 import path from "node:path";
 import { access, readFile } from "node:fs/promises";
 import {
+  HERO_IMAGE_768_HREF,
   HERO_IMAGE_960_HREF,
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_HREF,
@@ -53,6 +54,7 @@ assert(
 );
 assert(
   HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF) &&
+    HERO_PRELOAD_SRCSET.includes(`${HERO_IMAGE_768_HREF} 768w`) &&
     HERO_PRELOAD_SRCSET.includes(`${HERO_IMAGE_960_HREF} 960w`) &&
     HERO_PRELOAD_SRCSET.includes(" 1600w"),
   "Canonical Hero preload srcset drift",
