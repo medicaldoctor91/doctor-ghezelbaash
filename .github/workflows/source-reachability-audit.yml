@@ -1,0 +1,74 @@
+name: Source reachability audit
+
+on:
+  push:
+    branches: [audit/dist-invariant-proof]
+    paths: [.github/workflows/source-reachability-audit.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout cleanup candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: cleanup/dist-invariant-source
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Audit tracked-source reachability
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, re, subprocess
+          tracked = [pathlib.Path(p) for p in subprocess.check_output(['git','ls-files'], text=True).splitlines()]
+          text_ext = {'.mjs','.js','.ts','.astro','.json','.jsonld','.yml','.yaml','.py','.md','.txt','.cff','.ttl','.tsv'}
+          texts = {}
+          for p in tracked:
+              if p.name == 'package-lock.json' or p.suffix.lower() not in text_ext:
+                  continue
+              try: texts[p] = p.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, OSError): pass
+
+          def refs(target):
+              rel = target.as_posix()
+              name = target.name
+              stems = {rel, name}
+              if target.suffix in {'.mjs','.js','.ts','.py'}:
+                  stems.add(target.stem)
+              out=[]
+              for p,text in texts.items():
+                  if p == target: continue
+                  if any(s in text for s in stems): out.append(p.as_posix())
+              return sorted(out)
+
+          groups = {
+              'SRC_LIB': [p for p in tracked if p.as_posix().startswith('src/lib/') and p.suffix in {'.mjs','.ts','.js'}],
+              'SCRIPT_LIB': [p for p in tracked if p.as_posix().startswith('scripts/lib/') and p.suffix in {'.mjs','.py'}],
+              'SRC_DATA': [p for p in tracked if p.as_posix().startswith('src/data/') and p.is_file()],
+              'RELEASE': [p for p in tracked if p.as_posix().startswith('.release/') and p.is_file()],
+          }
+          for label, files in groups.items():
+              print(f'=== {label} ===')
+              for p in files:
+                  r=refs(p)
+                  print(f'REFS {len(r):02d} {p.as_posix()} :: {" | ".join(r[:12])}')
+
+          target=pathlib.Path('scripts/lib/media-inventory.mjs')
+          if target in texts:
+              exports=re.findall(r'export\s+(?:async\s+)?function\s+([A-Za-z_$][\w$]*)|export\s+const\s+([A-Za-z_$][\w$]*)',texts[target])
+              names=sorted({a or b for a,b in exports})
+              print('=== MEDIA_INVENTORY_EXPORTS ===')
+              for name in names:
+                  r=[p.as_posix() for p,text in texts.items() if p != target and re.search(rf'\b{re.escape(name)}\b',text)]
+                  print(f'SYMBOL_REFS {len(r):02d} {name} :: {" | ".join(sorted(r)[:12])}')
+
+          pkg=json.loads(pathlib.Path('package.json').read_text())
+          print('=== DIRECT_DEPENDENCIES ===')
+          for dep in sorted(pkg.get('devDependencies',{})):
+              r=[p.as_posix() for p,text in texts.items() if p not in {pathlib.Path('package.json'),pathlib.Path('README.md')} and dep in text]
+              print(f'DEP_REFS {len(r):02d} {dep} :: {" | ".join(sorted(r)[:12])}')
+          PY
