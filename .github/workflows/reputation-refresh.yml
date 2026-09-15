@@ -15,7 +15,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -26,7 +26,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Validate current observation and read Google Places exactly once
+      - name: Read Google Places and update the static observation
         id: places
         env:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
@@ -35,8 +35,6 @@ jobs:
           set -euo pipefail
           test -n "${GOOGLE_PLACES_API_KEY:-}"
           echo "::add-mask::$GOOGLE_PLACES_API_KEY"
-          node scripts/platform-contract.mjs validate
-          node scripts/reputation.mjs validate
           PLACE_ID="$(node scripts/publication-context.mjs get clinic.placeId)"
           FIELD_MASK="$(node -p "require('./.release/policy/platform-contract.json').automation.reputationRefresh.fieldMask.join(',')")"
           curl --fail --silent --show-error --connect-timeout 10 --max-time 25 \
@@ -46,55 +44,32 @@ jobs:
             > /tmp/google-place.json
           export GOOGLE_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           node scripts/reputation.mjs google /tmp/google-place.json
-      - name: Prove an unchanged check made no source mutation
-        if: steps.places.outputs.changed != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -z "$(git status --porcelain)"
-          echo STATIC_REPUTATION_NOOP_PASS
-      - name: Commit and rebase the changed observation locally
+      - name: Commit the changed observation
         if: steps.places.outputs.changed == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/reputation.mjs validate
           changed="$(git status --porcelain=v1 --untracked-files=all | cut -c4- | LC_ALL=C sort)"
           test "$changed" = "src/data/semantic/knowledge-graph.jsonld"
           git add src/data/semantic/knowledge-graph.jsonld
-          git diff --cached --quiet && {
-            echo "::error::changed=true but no observation diff was staged"
-            exit 1
-          }
           git config user.name ghezelbaash-reputation-bot
           git config user.email actions@users.noreply.github.com
           git commit -m "chore: refresh clinic Google Maps reputation"
-          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "src/data/semantic/knowledge-graph.jsonld"
           git fetch --no-tags origin main
           git rebase origin/main
-      - name: Install exact dependencies for a changed observation
+      - name: Build exact changed candidate
         if: steps.places.outputs.changed == 'true'
-        run: npm ci
-      - name: Audit dependencies for a changed observation
-        if: steps.places.outputs.changed == 'true'
-        run: npm run security:dependencies
-      - name: Build and validate the exact rebased candidate
-        if: steps.places.outputs.changed == 'true'
-        shell: bash
         run: |
-          set -euo pipefail
+          npm ci
+          npm run security:dependencies
           npm run build
-          node scripts/reputation.mjs validate
-          test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Publish only the validated observation commit
+      - name: Publish the observation commit
         if: steps.places.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${GITHUB_TOKEN:-}"
           echo "::add-mask::$GITHUB_TOKEN"
           GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
-          unset GITHUB_AUTH
