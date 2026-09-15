@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "policy": "exact-canonical-page-source",
+  "source": {
+    "path": "src/content-source/page.md",
+    "approvedCommit": "31f26733a69a0ed3cb2008dc08c79b562eca6131",
+    "bytes": 1802868,
+    "sha256": "96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea",
+    "gitBlobSha1": "6ea47007e992fbd2213c2c37e3033316f400b361"
+  }
+}

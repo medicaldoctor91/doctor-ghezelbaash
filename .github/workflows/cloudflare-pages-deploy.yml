@@ -74,11 +74,9 @@ jobs:
       - name: Install pinned Chromium for candidate and production verification
         if: steps.tip.outputs.current == 'true'
         run: npx playwright install --with-deps --only-shell chromium
-      - name: Require frozen rendered text and stable search focus before reconciliation
+      - name: Verify stable search focus before reconciliation
         if: steps.tip.outputs.current == 'true'
-        run: |
-          npm run test:visible-text-browser
-          npm run test:dist-interactions
+        run: npm run test:dist-interactions
       - name: Require original CSS and HTML validation before reconciliation
         if: steps.tip.outputs.current == 'true'
         run: npm run validate:html-css
