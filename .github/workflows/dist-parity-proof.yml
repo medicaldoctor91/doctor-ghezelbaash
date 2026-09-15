@@ -54,13 +54,7 @@ jobs:
           ./node_modules/.bin/astro build
           node scripts/materialize-static-artifacts.mjs
           node scripts/indexnow.mjs prepare
-          node --input-type=module <<'JS'
-          import fs from 'node:fs';
-          const file = 'src/data/release-invariants.json';
-          const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-          data.maxHtmlBytes = 999999999;
-          fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
-          JS
+          cp "$RUNNER_TEMP/candidate/scripts/generate-deployment-headers.mjs" scripts/generate-deployment-headers.mjs
           node scripts/generate-deployment-headers.mjs
 
       - name: Build cleanup candidate through its normal build command
