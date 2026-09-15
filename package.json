@@ -32,8 +32,7 @@
     "validate:reputation": "node scripts/reputation.mjs validate",
     "reputation:update": "node scripts/reputation.mjs google",
     "verify:mojavez": "node scripts/verify-mojavez-evidence.mjs",
-    "validate:release-contract": "node scripts/validate-release-contract.mjs",
-    "validate:source": "npm run check:astro"
+    "validate:release-contract": "node scripts/validate-release-contract.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
