@@ -8,7 +8,6 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
-import { validateStableAliases } from "./lib/media-inventory.mjs";
 import {
   canonicalHostRedirectRows,
   loadRedirectRegistry,
@@ -64,6 +63,44 @@ const writeExact = async (destinationRelative, content) => {
   );
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, content, "utf8");
+};
+const validateStableAliases = (aliases) => {
+  if (!Array.isArray(aliases) || !aliases.length)
+    throw new Error("Stable media alias inventory is empty or invalid");
+  const fingerprint = /\.([0-9a-f]{12})(\.[^.]+)$/i;
+  const raster = /\.(?:avif|webp|jpe?g|png)$/i;
+  const paths = new Set();
+  const targets = new Set();
+  for (const alias of aliases) {
+    if (
+      !alias ||
+      ![alias.path, alias.target, alias.imageId].every(
+        (value) => typeof value === "string" && value.length,
+      )
+    )
+      throw new Error("Invalid stable media alias entry");
+    if (
+      ![alias.path, alias.target].every(
+        (value) =>
+          value.startsWith("media/") &&
+          !value.includes("..") &&
+          !value.includes("\\") &&
+          path.posix.normalize(value) === value,
+      )
+    )
+      throw new Error(`Unsafe stable media alias: ${alias.path}`);
+    if (
+      !raster.test(alias.path) ||
+      !fingerprint.test(alias.target) ||
+      alias.target.replace(fingerprint, "$2") !== alias.path
+    )
+      throw new Error(`Stable media alias logical target mismatch: ${alias.path}`);
+    if (paths.has(alias.path) || targets.has(alias.target))
+      throw new Error(`Duplicate stable media alias: ${alias.path}`);
+    paths.add(alias.path);
+    targets.add(alias.target);
+  }
+  return aliases;
 };
 
 for (const artifact of STATIC_ARTIFACTS)
