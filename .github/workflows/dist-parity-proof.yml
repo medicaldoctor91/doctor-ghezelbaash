@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      BASELINE_SHA: 805011e0511c112f6ad1f2c326c6dc9000bc5c9d
-      CANDIDATE_SHA: 9c9554726459c38bed7b9200542a74547f1f72a8
+      BASELINE_SHA: 9c9554726459c38bed7b9200542a74547f1f72a8
+      CANDIDATE_SHA: 3f5c21614a91781ece6be5b85fc446e9f5486f4a
       ASTRO_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout audit source
