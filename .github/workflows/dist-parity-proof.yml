@@ -1,0 +1,109 @@
+name: Dist byte parity proof
+
+on:
+  push:
+    branches: [audit/dist-invariant-proof]
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASELINE_SHA: 31f26733a69a0ed3cb2008dc08c79b562eca6131
+      CANDIDATE_SHA: 849e1fcdbdb12a31e7ee818f183b46d24fedc213
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout audit source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use project Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Create exact baseline and candidate worktrees
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$BASELINE_SHA^{commit}"
+          git cat-file -e "$CANDIDATE_SHA^{commit}"
+          git worktree add --detach "$RUNNER_TEMP/baseline" "$BASELINE_SHA"
+          git worktree add --detach "$RUNNER_TEMP/candidate" "$CANDIDATE_SHA"
+
+      - name: Build baseline from output-producing pipeline only
+        shell: bash
+        working-directory: ${{ runner.temp }}/baseline
+        run: |
+          set -euo pipefail
+          npm ci
+          export SOURCE_COMMIT="$(git rev-parse HEAD)"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT"
+          node scripts/generated-workspace.mjs reset
+          node scripts/generate-rdf.mjs
+          node scripts/generate-projections.mjs distribution
+          node scripts/generate-retrieval-projections.mjs
+          node scripts/generate-descriptors.mjs
+          ./node_modules/.bin/astro build
+          node scripts/materialize-static-artifacts.mjs
+          node scripts/indexnow.mjs prepare
+          node scripts/generate-deployment-headers.mjs
+
+      - name: Build cleanup candidate through its normal build command
+        shell: bash
+        working-directory: ${{ runner.temp }}/candidate
+        run: |
+          set -euo pipefail
+          npm ci
+          export SOURCE_COMMIT="$(git rev-parse HEAD)"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT"
+          npm run build
+
+      - name: Prove every DIST path and byte is identical
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest() {
+            local dir="$1" out="$2"
+            (
+              cd "$dir"
+              find . -type f -print0 | LC_ALL=C sort -z | while IFS= read -r -d '' file; do
+                printf '%s  %s\n' "$(sha256sum "$file" | awk '{print $1}')" "${file#./}"
+              done
+            ) > "$out"
+          }
+          manifest "$RUNNER_TEMP/baseline/dist" "$RUNNER_TEMP/baseline.sha256"
+          manifest "$RUNNER_TEMP/candidate/dist" "$RUNNER_TEMP/candidate.sha256"
+          diff -u "$RUNNER_TEMP/baseline.sha256" "$RUNNER_TEMP/candidate.sha256"
+          baseline_count="$(wc -l < "$RUNNER_TEMP/baseline.sha256")"
+          candidate_count="$(wc -l < "$RUNNER_TEMP/candidate.sha256")"
+          baseline_manifest_sha="$(sha256sum "$RUNNER_TEMP/baseline.sha256" | awk '{print $1}')"
+          candidate_manifest_sha="$(sha256sum "$RUNNER_TEMP/candidate.sha256" | awk '{print $1}')"
+          test "$baseline_count" = "$candidate_count"
+          test "$baseline_manifest_sha" = "$candidate_manifest_sha"
+          {
+            echo "DIST_BYTE_PARITY=PASS"
+            echo "BASELINE_SHA=$BASELINE_SHA"
+            echo "CANDIDATE_SHA=$CANDIDATE_SHA"
+            echo "DIST_FILE_COUNT=$baseline_count"
+            echo "DIST_MANIFEST_SHA256=$baseline_manifest_sha"
+          } | tee "$RUNNER_TEMP/dist-parity-report.txt"
+
+      - name: Upload parity evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: dist-byte-parity-${{ env.CANDIDATE_SHA }}
+          path: |
+            ${{ runner.temp }}/dist-parity-report.txt
+            ${{ runner.temp }}/baseline.sha256
+            ${{ runner.temp }}/candidate.sha256
+          if-no-files-found: error
+          retention-days: 7
