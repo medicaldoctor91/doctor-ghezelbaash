@@ -30,10 +30,12 @@ The reviewed `page.md` is frozen as exact source bytes, not as a historical brow
 
 Current approved source identity:
 
-- approved source commit: `31f26733a69a0ed3cb2008dc08c79b562eca6131`
-- Git blob SHA-1: `6ea47007e992fbd2213c2c37e3033316f400b361`
-- SHA-256: `96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea`
+- approved source commit: `ff91dacd6b6e9d360f7d42e9fa4d7c45ad5f20d1`
+- Git blob SHA-1: `d54f3a997e160a4e93290a5ea391816d1d452c09`
+- SHA-256: `807e07184a1f325f7e8723614ea1851b7b94661485f7d664e891e26853c58499`
 - bytes: `1802868`
+
+The approved source preserves the reviewed visible content from `31f26733a69a0ed3cb2008dc08c79b562eca6131`; its only later page-source change is the fingerprint rename of two portrait candidates after restoring their required XMP metadata without changing decoded pixels.
 
 `npm run validate:content-source` executes the read-only exact-source gate in `scripts/validate-content-source.mjs`; `npm run test:content-source` proves that source mutations and contract drift fail closed. A build cannot rewrite or refresh this contract. An intentional future `page.md` change requires explicit review and an explicit update of `src/data/content-source-contract.json` in the same reviewed change.
 

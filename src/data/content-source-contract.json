@@ -3,9 +3,9 @@
   "policy": "exact-canonical-page-source",
   "source": {
     "path": "src/content-source/page.md",
-    "approvedCommit": "31f26733a69a0ed3cb2008dc08c79b562eca6131",
+    "approvedCommit": "ff91dacd6b6e9d360f7d42e9fa4d7c45ad5f20d1",
     "bytes": 1802868,
-    "sha256": "96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea",
-    "gitBlobSha1": "6ea47007e992fbd2213c2c37e3033316f400b361"
+    "sha256": "807e07184a1f325f7e8723614ea1851b7b94661485f7d664e891e26853c58499",
+    "gitBlobSha1": "d54f3a997e160a4e93290a5ea391816d1d452c09"
   }
 }
