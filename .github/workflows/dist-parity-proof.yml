@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 30
     env:
       BASELINE_SHA: 31f26733a69a0ed3cb2008dc08c79b562eca6131
-      CANDIDATE_SHA: a86efe5a3b6e0588d4fa76ac3efe994074a6e9d3
+      CANDIDATE_SHA: de4ec323ba1134ed2a88131fb81c8ad71d58222c
       ASTRO_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout audit source
@@ -75,32 +75,23 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import json, pathlib, subprocess
-          root = pathlib.Path('.')
           tracked = [pathlib.Path(p) for p in subprocess.check_output(['git','ls-files'], text=True).splitlines()]
           text_ext = {'.mjs','.js','.ts','.astro','.json','.yml','.yaml','.py','.md','.txt','.cff'}
           texts = {}
           for p in tracked:
-              if p.suffix.lower() not in text_ext or str(p).startswith('package-lock.json'):
+              if p.suffix.lower() not in text_ext or p.name == 'package-lock.json':
                   continue
-              try:
-                  texts[p] = p.read_text(encoding='utf-8')
-              except (UnicodeDecodeError, OSError):
-                  pass
+              try: texts[p] = p.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, OSError): pass
           candidates = [p for p in tracked if str(p).startswith('scripts/') and p.suffix in {'.mjs','.py'}]
           print('REFERENCE_AUDIT_BEGIN')
           for target in candidates:
               needles = {str(target), target.name}
-              refs = []
-              for p, text in texts.items():
-                  if p == target:
-                      continue
-                  if any(n in text for n in needles):
-                      refs.append(str(p))
-              if not refs:
-                  print(f'ZERO_REFERENCE_SCRIPT {target}')
+              refs = [str(p) for p,text in texts.items() if p != target and any(n in text for n in needles)]
+              if not refs: print(f'ZERO_REFERENCE_SCRIPT {target}')
           pkg = json.loads(pathlib.Path('package.json').read_text())
           for dep in sorted(pkg.get('devDependencies', {})):
-              refs = [str(p) for p, text in texts.items() if p not in {pathlib.Path('package.json'), pathlib.Path('README.md')} and dep in text]
+              refs = [str(p) for p,text in texts.items() if p not in {pathlib.Path('package.json'), pathlib.Path('README.md')} and dep in text]
               print(f'DEP_REFERENCE {dep} {len(refs)} {" ".join(refs[:8])}')
           print('REFERENCE_AUDIT_END')
           PY
@@ -111,12 +102,7 @@ jobs:
           set -euo pipefail
           manifest() {
             local dir="$1" out="$2"
-            (
-              cd "$dir"
-              find . -type f -print0 | LC_ALL=C sort -z | while IFS= read -r -d '' file; do
-                printf '%s  %s\n' "$(sha256sum "$file" | awk '{print $1}')" "${file#./}"
-              done
-            ) > "$out"
+            (cd "$dir" && find . -type f -print0 | LC_ALL=C sort -z | while IFS= read -r -d '' file; do printf '%s  %s\n' "$(sha256sum "$file" | awk '{print $1}')" "${file#./}"; done) > "$out"
           }
           manifest "$RUNNER_TEMP/baseline/dist" "$RUNNER_TEMP/baseline.sha256"
           manifest "$RUNNER_TEMP/candidate/dist" "$RUNNER_TEMP/candidate.sha256"
