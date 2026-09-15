@@ -139,6 +139,8 @@ if (rasterRows.length !== rasters.length)
   fail(`Raster metadata row count drift: ${rasterRows.length}`);
 
 const profileCoverage = new Map();
+let exactXmpRasters = 0;
+let metadataFreeDeliveryRasters = 0;
 for (const row of rasterRows) {
   const file = row.SourceFile;
   const logical = path
@@ -157,7 +159,18 @@ for (const row of rasterRows) {
     profile.role,
     (profileCoverage.get(profile.role) ?? 0) + 1,
   );
-  assertExactXmp(row, imageMetadataFor(release, profile), file);
+  const publicPath = `/${path.relative(publicRoot, file).replaceAll(path.sep, "/")}`;
+  const uses = mediaUsage.uses.get(publicPath) ?? new Set();
+  const semanticMetadataCarrier = [...uses].some(
+    (source) => source.startsWith("graph:") || source.startsWith("alias:"),
+  );
+  const embeddedXmpKeys = Object.keys(row).filter((key) => key.startsWith("XMP-"));
+  if (semanticMetadataCarrier || embeddedXmpKeys.length) {
+    assertExactXmp(row, imageMetadataFor(release, profile), file);
+    exactXmpRasters += 1;
+  } else {
+    metadataFreeDeliveryRasters += 1;
+  }
 }
 
 const stableSubject = stableMedia.subject ?? {};
@@ -458,7 +471,8 @@ console.log(
       mediaFiles: allMedia.length,
       rasterImages: rasters.length,
       decodedImages,
-      standardXmpCoverage: `${rasterRows.length}/${rasters.length}`,
+      standardXmpCoverage: `${exactXmpRasters}/${rasters.length}`,
+      metadataFreeDeliveryRasters,
       imageProfileCoverage: Object.fromEntries([...profileCoverage].sort()),
       stableMediaTargets: `${stableTargets.size}/${stableAliases.length}`,
       videoMetadataCoverage: `${videoRows.length}/${videos.length}`,

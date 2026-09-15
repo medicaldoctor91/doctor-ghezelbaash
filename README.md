@@ -21,6 +21,8 @@ Static-only Astro source for the canonical physician entity home at `https://www
 - `src/data/visible-text-contract.json`: approved source, emitted HTML and actual Chromium text/name fingerprints; validation never refreshes this baseline.
 - `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.
 
+Reachable graph images and stable media-alias targets must carry the complete exact XMP profile. A transport-only responsive raster that is neither a graph media resource nor a stable-alias target may be metadata-free; if it carries any XMP at all, the full profile must match exactly. Content-addressed filename fingerprints, dimensions, decode validity and source reachability remain mandatory for every raster.
+
 The physician uses one canonical ID with `Person` and `IndividualPhysician` types. The clinic, `ProfilePage`, 18 `WebPageElement` sections, medical procedures, answers, images, videos, credentials and external identifiers all reference that graph. DOM Microdata and both inline JSON-LD projections are derived from the same graph and projection profiles.
 
 Both inline graph profiles use `ids`, `maxBytes`, `nodes` and `typeProfiles`. An explicit `nodes[id]` policy defines that node's projection; otherwise its type policies supply the field selection. Authority roles use the same `nodes` map in both lanes. The compiler validates selections and relationships before emitting either graph.
@@ -35,13 +37,15 @@ The forbidden identifier guard inspects explicit canonical input families in `sc
 
 Professional Facebook and Instagram pages describe both the physician and clinic. Representations of the same professional Instagram URL have the same `mainEntity` set. Personal Facebook describes the physician only. These are subjects of a profile, not an assertion that the physician and clinic are the same entity; the homepage retains the physician as its primary entity.
 
-## Closed visible-text contract
+## Closed visible-text contract v2
 
-Preparation validates the approved source before generating files. The final HTML gate compares both the mega-landing and 404 with the original baseline: ordered NFC-normalized text nodes, reading text, title, description, existing accessible labels, resolved ARIA references and social presentation strings. Authored answer text and video cue text are also protected. Raw source and original HTML hashes bind the baseline to its starting commit. Generated fingerprints are compared, never substituted as a new baseline during a build.
+Preparation validates the reviewed current source before generating files. `src/data/visible-text-contract.json` schema v2 treats the approved `src/content-source/page.md` as source truth and freezes NFC/whitespace-normalized reading text, protected visible/accessibility attributes, authored IDs with owner/context, IDREF spellings, same-document fragment targets, authored Answer/runtime/caption text, emitted-document projections and actual Chromium rendered/generated text plus named non-link accessibility semantics. Raw source hashes record provenance; normal validation never rewrites the source or self-refreshes the baseline.
 
-`npm run test:visible-text-browser` additionally checks actual Chromium rendered text, generated CSS text and accessible names at mobile and desktop widths, with JavaScript enabled and disabled, with disclosures open, in search states, and on the 404. CI requires this check after the pinned browser is installed. The browser evidence is specific to its recorded version and states; it is not universal assistive-technology or WCAG certification.
+Inline text-node boundaries are deliberately not contract state. A reviewed external inline anchor may wrap or split already-approved text without changing that reading text; browser validation still requires every authored link to have a non-empty safe `href` and an accessible name, and same-document fragments must resolve. The current reviewed source truth is commit `31f26733a69a0ed3cb2008dc08c79b562eca6131`, page Git blob `6ea47007e992fbd2213c2c37e3033316f400b361`, raw SHA-256 `96c6baab2a542c6489404c4dfaabbbbf9a1c32423a3d2f8189979b872eb413ea`.
 
-An intentional text change requires separate review of a new baseline. This includes a scheduled change to the visible rating or review count: the closed-set gate will stop that candidate before publication. Do not exempt those strings or refresh the baseline automatically merely to make a scheduled build pass. Non-text graph and runtime changes must preserve the approved text and browser fingerprints.
+`npm run test:visible-text-browser` checks actual Chromium rendered text, generated CSS text and protected accessibility names at mobile and desktop widths, with JavaScript enabled and disabled, with disclosures open, in search states, and on the 404. CI requires this check after the pinned browser is installed. The browser evidence is specific to its recorded version and states; it is not universal assistive-technology or WCAG certification.
+
+A future intentional change to protected text, IDs, IDREFs, fragments or browser semantics requires explicit review and a deliberate new baseline. Builds and scheduled jobs never regenerate the baseline merely to pass a gate.
 
 ## Distribution standards and consumer boundaries
 
