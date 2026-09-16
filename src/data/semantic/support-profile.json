@@ -140,7 +140,11 @@
     "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
     "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
     "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
-    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
+    "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+    "https://www.ghezelbaash.ir/graph.jsonld#download",
+    "https://www.ghezelbaash.ir/graph.ttl#download",
+    "https://www.ghezelbaash.ir/entity-facts.csv#download"
   ],
   "maxBytes": 85000,
   "nodes": {
@@ -394,6 +398,35 @@
         "description",
         "about"
       ]
+    },
+    "https://www.ghezelbaash.ir/graph.jsonld#dataset": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "creator",
+        "publisher",
+        "identifier",
+        "license",
+        "isAccessibleForFree",
+        "keywords",
+        "alternateName",
+        "variableMeasured",
+        "measurementTechnique",
+        "version",
+        "datePublished",
+        "dateModified",
+        "distribution"
+      ],
+      "refAllow": {
+        "distribution": [
+          "https://www.ghezelbaash.ir/graph.jsonld#download",
+          "https://www.ghezelbaash.ir/graph.ttl#download",
+          "https://www.ghezelbaash.ir/entity-facts.csv#download"
+        ]
+      }
     }
   },
   "typeProfiles": {
@@ -601,6 +634,24 @@
         "@type",
         "name",
         "sameAs"
+      ]
+    },
+    "DataDownload": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "contentUrl",
+        "url",
+        "encodingFormat",
+        "license",
+        "isAccessibleForFree",
+        "version",
+        "dateModified",
+        "creator",
+        "publisher",
+        "isPartOf"
       ]
     }
   }
