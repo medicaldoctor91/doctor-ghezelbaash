@@ -412,10 +412,10 @@ const { content } = await assembleCanonicalContent({ root, graph });
 if (!content.includes('id="saeed-ghezelbash"')) fail("Physician H1 is missing");
 const physicianAuthorityTokens = [
   'id="verified-physician-identity-core"',
-  "Wikidata Q140287622",
-  "نظام پزشکی ۱۶۷۴۳۰",
-  "ORCID 0009-0001-9346-8475",
-  "Google KG <code>/g/11nqdfk76c</code>",
+  "Wikidata: Q140287622",
+  "Iranian Medical Council (IRIMC): 167430",
+  "ORCID: 0009-0001-9346-8475",
+  "Google Knowledge Graph ID: <code>/g/11nqdfk76c</code>",
 ];
 if (physicianAuthorityTokens.some((token) => !content.includes(token)))
   fail("Visible physician authority surface is incomplete");
