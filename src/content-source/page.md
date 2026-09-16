@@ -16,8 +16,8 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 <p class="hero-lead" id="hero-clinical-principle">سوزن همیشه مقصر نیست. خیلی وقت‌ها فاجعه از چند دقیقه قبل‌تر شروع شده؛ همان لحظه‌ای که یک پف را گودی دیده‌اند، افتادگی را کمبود ژل حساب کرده‌اند یا برای پوستی که اضافه آمده، نسخه بوتاکس نوشته‌اند. اجرای تمیز، تشخیص غلط را نجات نمی‌دهد. فقط اشتباه را تمیزتر اجرا می‌کند.</p>
 <p class="hero-identity" id="hero-entity-summary">من، <a href="https://www.wikidata.org/entity/Q140287622" itemprop="sameAs" rel="me">دکتر سعید قزلباش</a> هستم و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" itemprop="sameAs">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه منوی بوتاکس و فیلر نیست. قرار است ببینید وقتی یک صورت روبه‌روی من می‌نشیند، دقیقاً دنبال چه می‌گردم؛ کجا تزریق را قبول می‌کنم، کجا چند لایه باید هم‌زمان دیده شوند، کجا جراحی از بازی با سرنگ صادقانه‌تر است و کجا بهترین تصمیم پزشکی این است که اصلاً کاری نکنیم.</p>
 <div aria-label="اقدام‌های اصلی برای مراجعه و استفاده از راهنما" class="hero-actions" role="group"><a class="hero-action hero-action--primary" href="{{CLINIC_TEL_HREF}}">رزرو وقت مشاوره رایگان</a>
-<a class="hero-action" href="{{OFFICIAL_INSTAGRAM_URL}}" aria-label="مشاهده نمونه‌کارهای دکتر قزلباش در اینستاگرام رسمی" itemprop="sameAs" rel="external">مشاهده نمونه‌کارهای دکتر قزلباش</a>
-<a class="hero-action" href="https://doctor.ghezelbaash.ir/" aria-label="مشاهده آدرس دقیق کلینیک دکتر سعید قزلباش" rel="external">آدرس دقیق کلینیک</a>
+<a class="hero-action hero-action--portfolio" href="{{OFFICIAL_INSTAGRAM_URL}}" aria-label="مشاهده نمونه‌کارهای دکتر قزلباش در اینستاگرام رسمی" itemprop="sameAs" rel="external">مشاهده نمونه‌کارهای دکتر قزلباش</a>
+<a class="hero-action hero-action--location" href="https://doctor.ghezelbaash.ir/" aria-label="مشاهده آدرس دقیق کلینیک دکتر سعید قزلباش" rel="external">آدرس دقیق کلینیک</a>
 </div>
 <figure aria-labelledby="caption-saeed-ghezelbash-portrait-master" class="hero-figure" id="image-saeed-ghezelbash-portrait-master">
 <div class="hero-portrait-media">
@@ -31,12 +31,7 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 <span class="hero-rating-seal__reviews"><data data-clinic-review-count value="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}">{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}</data> نظر</span>
 </a>
 </div>
-<figcaption class="hero-figure-caption">
-<details class="caption-disclosure">
-<summary class="hero-caption-title" id="caption-saeed-ghezelbash-portrait-master">دکتر سعید قزلباش، پزشک زیبایی</summary>
-<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}؛ جمعه تعطیل</span><span><strong>بازبینی پزشکی:</strong> <a href="#medical-content-governance"><time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></a></span></div>
-</details>
-</figcaption>
+<figcaption class="hero-figure-caption" id="caption-saeed-ghezelbash-portrait-master"><span class="hero-caption-title">دکتر سعید قزلباش، پزشک زیبایی</span></figcaption>
 </figure>
 <div aria-label="نشانه‌های اعتماد و وضعیت مراجعه" class="hero-trust-strip" role="group">
 <a class="hero-trust-item" href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" rel="me external noopener"><span aria-hidden="true" class="hero-trust-icon">✓</span><span class="hero-trust-copy"><strong>نظام پزشکی</strong><span>۱۶۷۴۳۰</span></span></a>
