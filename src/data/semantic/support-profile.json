@@ -408,10 +408,8 @@
         "url",
         "creator",
         "publisher",
-        "identifier",
         "license",
         "isAccessibleForFree",
-        "version",
         "distribution"
       ],
       "refAllow": {
