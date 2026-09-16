@@ -50,6 +50,9 @@ jobs:
       - name: Enforce high-severity dependency advisory gate
         if: steps.tip.outputs.current == 'true'
         run: npm run security:dependencies
+      - name: Verify transport retry boundary
+        if: steps.tip.outputs.current == 'true'
+        run: node scripts/test-transient-retry.mjs
       - name: Load canonical platform contract
         if: steps.tip.outputs.current == 'true'
         shell: bash
@@ -90,6 +93,14 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/cloudflare-pages.mjs ensure
+      - name: Verify immutable Cloudflare deployment bytes
+        if: steps.tip.outputs.current == 'true'
+        env:
+          CANDIDATE_SHA: ${{ github.sha }}
+          VERIFY_BASE_URL: ${{ steps.cloudflare.outputs.deployment_url }}
+        run: |
+          set -euo pipefail
+          node scripts/run-transient-command.mjs -- node scripts/cloudflare-pages.mjs verify --fresh-only
       - name: Reconcile canonical Cloudflare edge
         if: steps.tip.outputs.current == 'true'
         env:
@@ -128,28 +139,33 @@ jobs:
           CANDIDATE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          node scripts/cloudflare-pages.mjs verify
-          npm run verify:production
-          node scripts/verify-live.mjs current --website-only
-          if npm run verify:public-discovery; then
+          node scripts/run-transient-command.mjs -- node scripts/cloudflare-pages.mjs verify
+          node scripts/run-transient-command.mjs -- npm run verify:production
+          node scripts/run-transient-command.mjs -- node scripts/verify-live.mjs current --website-only
+          if node scripts/run-transient-command.mjs -- npm run verify:public-discovery; then
             echo 'PUBLIC_DISCOVERY_T0_PASS'
           else
-            echo '::warning::T+0 public discovery sampled a stale Cloudflare PoP after exact production bytes were already proven; delayed convergence gates will decide final success.'
+            echo '::warning::T+0 public discovery did not prove convergence; delayed gates will decide final success.'
           fi
       - name: Require public discovery convergence by T+5m
         if: steps.tip.outputs.current == 'true'
         run: |
           set -euo pipefail
           sleep 120
-          if npm run verify:public-discovery; then
+          if node scripts/run-transient-command.mjs -- npm run verify:public-discovery; then
             echo 'PUBLIC_DISCOVERY_T2_PASS'
           else
-            echo '::warning::T+2 public discovery still sampled distributed edge drift; T+5 remains the hard convergence gate.'
+            echo '::warning::T+2 public discovery has not passed; T+5 remains the hard convergence gate.'
           fi
           sleep 180
-          npm run verify:public-discovery
-          node scripts/verify-live.mjs current --website-only
+          node scripts/run-transient-command.mjs -- npm run verify:public-discovery
+          node scripts/run-transient-command.mjs -- node scripts/verify-live.mjs current --website-only
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
+      - name: Verify Dataset production acceptance
+        if: steps.tip.outputs.current == 'true'
+        run: |
+          set -euo pipefail
+          node scripts/run-transient-command.mjs -- node scripts/verify-dataset-production.mjs
       - name: Notify IndexNow after verified production convergence
         if: steps.tip.outputs.current == 'true'
         run: |
