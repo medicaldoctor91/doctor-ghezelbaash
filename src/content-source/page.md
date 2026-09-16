@@ -20,9 +20,17 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 <a class="hero-action" href="https://doctor.ghezelbaash.ir/" aria-label="مشاهده آدرس دقیق کلینیک دکتر سعید قزلباش" rel="external">آدرس دقیق کلینیک</a>
 </div>
 <figure aria-labelledby="caption-saeed-ghezelbash-portrait-master" class="hero-figure" id="image-saeed-ghezelbash-portrait-master">
+<div class="hero-portrait-media">
 {{PHYSICIAN_IMAGE_MICRODATA}}
 <picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.f41e5aa1c0dd.avif 640w, /media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif 768w, /media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w" type="image/avif"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.5c350c081420.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp 768w, /media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.4a98e8621f1d.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.5c350c081420.webp" width="640">
 </picture>
+<a aria-label="مشاهده امتیاز و نظرهای کلینیک در Google Maps" class="hero-rating-seal" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" data-review-count="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}" href="{{CLINIC_MAPS_URL}}" rel="external noopener">
+<span class="hero-rating-seal__provider google-maps-attribution" translate="no">Google Maps</span>
+<span class="hero-rating-seal__score"><data data-clinic-rating value="{{CLINIC_GOOGLE_RATING_RAW}}">{{CLINIC_GOOGLE_RATING_FA}}</data><small> / ۵</small></span>
+<span aria-hidden="true" class="hero-rating-seal__stars">★★★★★</span>
+<span class="hero-rating-seal__reviews"><data data-clinic-review-count value="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}">{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}</data> نظر</span>
+</a>
+</div>
 <figcaption class="hero-figure-caption">
 <details class="caption-disclosure">
 <summary class="hero-caption-title" id="caption-saeed-ghezelbash-portrait-master">دکتر سعید قزلباش، پزشک زیبایی</summary>
@@ -30,7 +38,11 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 </details>
 </figcaption>
 </figure>
-<p aria-label="امتیاز و تعداد نظرات کلینیک در گوگل مپس" class="hero-reputation" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" data-review-count="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}"><strong><data data-clinic-rating value="{{CLINIC_GOOGLE_RATING_RAW}}">{{CLINIC_GOOGLE_RATING_FA}}</data> از ۵</strong> · بر پایهٔ <strong><data data-clinic-review-count value="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}">{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}</data></strong> نظر در <a href="{{CLINIC_MAPS_URL}}" rel="external noopener"><span class="google-maps-attribution" translate="no">Google Maps</span></a></p>
+<div aria-label="نشانه‌های اعتماد و وضعیت مراجعه" class="hero-trust-strip" role="group">
+<a class="hero-trust-item" href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" rel="me external noopener"><span aria-hidden="true" class="hero-trust-icon">✓</span><span class="hero-trust-copy"><strong>نظام پزشکی</strong><span>۱۶۷۴۳۰</span></span></a>
+<span class="hero-trust-item hero-trust-item--status" data-clinic-open-status data-open="{{CLINIC_HOURS_OPEN_COMPACT_FA}}" data-close="{{CLINIC_HOURS_CLOSE_COMPACT_FA}}"><span aria-hidden="true" class="hero-trust-icon">●</span><span class="hero-trust-copy"><strong data-clinic-open-status-label>ساعات مراجعه</strong><span data-clinic-open-status-detail>شنبه تا پنجشنبه {{CLINIC_HOURS_OPEN_COMPACT_FA}}–{{CLINIC_HOURS_CLOSE_COMPACT_FA}}</span></span></span>
+<a class="hero-trust-item hero-trust-item--review" href="#medical-content-governance"><span aria-hidden="true" class="hero-trust-icon">✓</span><span class="hero-trust-copy"><strong>بازبینی پزشکی</strong><time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span></a>
+</div>
 </header>
 <p>یک عکس ثابت درباره صورت دروغ‌های زیادی می‌گوید. ممکن است خطی که در عکس عمیق دیده می‌شود فقط هنگام اخم ساخته شود. ممکن است گودی زیر چشم با یک نور دیگر ناپدید شود، چون اصلاً گودی نبوده؛ سایه بوده. صورت را در استراحت می‌بینم، بعد هنگام اخم، لبخند و حرف‌زدن. <a href="https://www.instagram.com/reel/DD7gKJJJyh7/">پوست</a> را لمس می‌کنم. حرکت عضله، جای چربی، حمایت استخوان، التهاب، عدم تقارن و اثر تزریق‌های قبلی را کنار هم می‌گذارم. بعد درباره درمان حرف می‌زنم. نه زودتر.</p>
 <figure aria-labelledby="caption-saeed-ghezelbash-clinical-office-master" id="image-saeed-ghezelbash-clinical-office-master">
