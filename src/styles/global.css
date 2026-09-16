@@ -1142,111 +1142,8 @@ html {
   outline: 4px solid rgb(10 107 88/0.28);
   outline-offset: 5px;
 }
-.guide-search {
-  width: min(92vw, 48rem);
-  max-height: min(88vh, 52rem);
-  padding: 0;
-  border: 0;
-  border-radius: 1.1rem;
-  background: #fff;
-  color: var(--ink);
-  box-shadow: 0 30px 100px rgb(8 34 27/0.28);
-}
-.guide-search::backdrop {
-  background: rgb(9 25 20/0.58);
-  backdrop-filter: blur(4px);
-}
-.guide-search__panel {
-  padding: clamp(1rem, 3vw, 1.5rem);
-}
-.guide-search__header {
-  display: flex;
-  gap: 1rem;
-  align-items: start;
-  justify-content: space-between;
-}
-.guide-search__header h2 {
-  margin: 0.15rem 0 1rem;
-  padding: 0;
-  border: 0;
-  font-size: clamp(1.3rem, 3vw, 1.85rem);
-}
-.guide-search__eyebrow {
-  margin: 0;
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-}
-.guide-search__close {
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--ink);
-  font: inherit;
-  font-size: 1.55rem;
-  line-height: 1;
-  cursor: pointer;
-}
-.guide-search__field {
-  display: grid;
-  gap: 0.45rem;
-  font-weight: 800;
-}
-.guide-search__field input {
-  width: 100%;
-  min-height: 3.1rem;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid #a9c9bd;
-  border-radius: 0.7rem;
-  background: #fbfdfc;
-  color: var(--ink);
-  font: inherit;
-}
-.guide-search__status {
-  margin: 0.7rem 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-}
-.guide-search__results {
-  display: grid;
-  gap: 0.35rem;
-  max-height: 48vh;
-  margin: 0.5rem 0 0;
-  padding: 0;
-  overflow: auto;
-  list-style: none;
-}
-.guide-search__results a {
-  display: block;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 0.65rem;
-  background: var(--surface-soft);
-  text-decoration: none;
-  /* Keep keyboard focus inside the independently scrolling result list. */
-  outline-offset: -4px;
-}
-.guide-search__results a:hover {
-  border-color: #acd0c3;
-  background: var(--accent-soft);
-}
 .js [data-guide-search-open] {
   visibility: visible;
-}
-@media (max-width: 720px) {
-  .guide-search {
-    width: calc(100vw - 1rem);
-    max-height: calc(100dvh - 1rem);
-  }
-  .guide-search__results {
-    max-height: 50dvh;
-  }
 }
 @media print {
   .hero-actions,
@@ -1259,8 +1156,7 @@ html {
   :focus-visible {
     outline-width: 4px;
   }
-  .hero-action,
-  .guide-search__results a {
+  .hero-action {
     border-width: 2px;
   }
 }
