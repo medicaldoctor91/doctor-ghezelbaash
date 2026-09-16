@@ -50,6 +50,9 @@ jobs:
       - name: Enforce high-severity dependency advisory gate
         if: steps.tip.outputs.current == 'true'
         run: npm run security:dependencies
+      - name: Verify transport retry boundary
+        if: steps.tip.outputs.current == 'true'
+        run: node scripts/test-transient-retry.mjs
       - name: Load canonical platform contract
         if: steps.tip.outputs.current == 'true'
         shell: bash
