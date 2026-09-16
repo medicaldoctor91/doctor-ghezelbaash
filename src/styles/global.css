@@ -245,7 +245,7 @@ blockquote {
 .entity-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-  grid-template-areas: "title portrait" "subtitle portrait" "search portrait" "lead portrait" "identity portrait" "actions portrait";
+  grid-template-areas: "title portrait" "subtitle portrait" "search portrait" "lead portrait" "identity portrait" "actions portrait" "reputation reputation";
   column-gap: clamp(1.3rem, 3vw, 3rem);
   align-items: start;
   margin-block-end: clamp(2rem, 5vw, 4rem);
@@ -490,7 +490,7 @@ blockquote {
   }
   .entity-hero {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "title" "subtitle" "search" "portrait" "actions" "lead" "identity";
+    grid-template-areas: "title" "subtitle" "search" "portrait" "reputation" "actions" "lead" "identity";
     gap: 0.5rem;
     margin-block-end: 2.2rem;
   }
@@ -650,9 +650,20 @@ blockquote {
   content: " · ";
   color: #93a19c;
 }
-.hero-caption-facts strong {
+.hero-caption-facts strong,
+.hero-reputation strong {
   color: #36584e;
   font-weight: 760;
+}
+.entity-hero .hero-reputation {
+  grid-area: reputation;
+  justify-self: center;
+  width: min(100%, 46rem);
+  margin: 0.15rem auto 0;
+  color: var(--muted);
+  font-size: clamp(0.78rem, 0.76rem + 0.12vw, 0.82rem);
+  line-height: 1.6;
+  text-align: center;
 }
 .google-maps-attribution {
   color: #5e5e5e;
