@@ -1,0 +1,127 @@
+name: Validate Google Dataset power-up
+
+on:
+  push:
+    branches: [feat/google-dataset-eligibility]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Enforce dependency advisory gate
+        run: npm run security:dependencies
+      - name: Validate canonical release contract
+        run: npm run validate:release-contract
+      - name: Validate Astro source
+        run: npm run validate:source
+      - name: Build exact distribution
+        run: npm run build
+      - name: Assert Google Dataset delivery contract
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          import { parse } from 'parse5';
+
+          const html = await readFile('dist/index.html', 'utf8');
+          const doc = parse(html);
+          const walk = function* (node) {
+            yield node;
+            for (const child of node.childNodes || []) yield* walk(child);
+            if (node.content) yield* walk(node.content);
+          };
+          const attr = (node, name) => node.attrs?.find((item) => item.name === name)?.value;
+          const text = (node) => (node.childNodes || []).map((child) => child.value || text(child)).join('');
+          const elements = [...walk(doc)].filter((node) => node.tagName);
+          const jsonLd = new Map(
+            elements
+              .filter((node) => node.tagName === 'script' && attr(node, 'type') === 'application/ld+json' && attr(node, 'id'))
+              .map((node) => [attr(node, 'id'), JSON.parse(text(node))]),
+          );
+          if (jsonLd.size !== 2 || !jsonLd.has('entity-core') || !jsonLd.has('entity-support')) {
+            throw new Error(`Expected exactly entity-core + entity-support JSON-LD blocks; received ${[...jsonLd.keys()].join(', ')}`);
+          }
+
+          const datasetId = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
+          const physicianId = 'https://www.ghezelbaash.ir/#saeed-ghezelbash';
+          const selectedDistributionIds = [
+            'https://www.ghezelbaash.ir/graph.jsonld#download',
+            'https://www.ghezelbaash.ir/graph.ttl#download',
+            'https://www.ghezelbaash.ir/entity-facts.csv#download',
+          ];
+          const allNodes = [...jsonLd.values()].flatMap((graph) => graph['@graph'] || []);
+          const datasetMatches = allNodes.filter((node) => node?.['@id'] === datasetId);
+          if (datasetMatches.length !== 1) throw new Error(`Dataset must occur exactly once in delivered JSON-LD; found ${datasetMatches.length}`);
+          if ((jsonLd.get('entity-core')['@graph'] || []).some((node) => node?.['@id'] === datasetId)) {
+            throw new Error('Dataset leaked into entity-core');
+          }
+          const supportNodes = jsonLd.get('entity-support')['@graph'] || [];
+          const byId = new Map(supportNodes.map((node) => [node?.['@id'], node]));
+          const dataset = byId.get(datasetId);
+          if (!dataset || dataset['@type'] !== 'Dataset') throw new Error('Canonical Dataset missing from entity-support');
+          if (typeof dataset.name !== 'string' || !dataset.name.trim()) throw new Error('Dataset name missing');
+          if (typeof dataset.description !== 'string' || dataset.description.trim().length < 50 || dataset.description.trim().length > 5000) {
+            throw new Error('Dataset description violates Google length contract');
+          }
+          if (dataset.url !== 'https://www.ghezelbaash.ir/') throw new Error('Dataset landing URL must remain canonical root');
+          if (dataset.creator?.['@id'] !== physicianId || dataset.publisher?.['@id'] !== physicianId) {
+            throw new Error('Dataset creator/publisher must remain physician-first');
+          }
+          const projectedDistributions = (dataset.distribution || []).map((item) => item?.['@id']);
+          if (JSON.stringify(projectedDistributions) !== JSON.stringify(selectedDistributionIds)) {
+            throw new Error(`Dataset distribution projection drift: ${JSON.stringify(projectedDistributions)}`);
+          }
+          const expectedFormats = new Map([
+            [selectedDistributionIds[0], ['https://www.ghezelbaash.ir/graph.jsonld', 'application/ld+json']],
+            [selectedDistributionIds[1], ['https://www.ghezelbaash.ir/graph.ttl', 'text/turtle']],
+            [selectedDistributionIds[2], ['https://www.ghezelbaash.ir/entity-facts.csv', 'text/csv']],
+          ]);
+          for (const [id, [contentUrl, encodingFormat]] of expectedFormats) {
+            const node = byId.get(id);
+            if (!node || node['@type'] !== 'DataDownload') throw new Error(`Missing DataDownload: ${id}`);
+            if (node.contentUrl !== contentUrl || node.encodingFormat !== encodingFormat) {
+              throw new Error(`DataDownload contract drift: ${id}`);
+            }
+            if (node.isPartOf?.['@id'] !== datasetId) throw new Error(`DataDownload lost Dataset parent: ${id}`);
+          }
+
+          const coreNodes = jsonLd.get('entity-core')['@graph'] || [];
+          const profile = coreNodes.find((node) => node?.['@id'] === 'https://www.ghezelbaash.ir/#webpage');
+          if (!profile || profile.mainEntity?.['@id'] !== physicianId) throw new Error('ProfilePage.mainEntity no longer resolves to physician');
+
+          const normalizedText = html.replace(/\s+/g, ' ');
+          if (!normalizedText.includes(dataset.name) || !normalizedText.includes(dataset.description)) {
+            throw new Error('Dataset name/description are not visibly disclosed in rendered HTML');
+          }
+          const requiredFooterLinks = [
+            ['/graph.jsonld', 'application/ld+json'],
+            ['/graph.ttl', 'text/turtle'],
+            ['/entity-facts.csv', 'text/csv; charset=utf-8; header=present'],
+          ];
+          for (const [href, type] of requiredFooterLinks) {
+            const link = elements.find((node) => node.tagName === 'a' && attr(node, 'href') === href && attr(node, 'type') === type);
+            if (!link || !attr(link, 'rel')) throw new Error(`Typed footer resource link missing: ${href}`);
+          }
+          console.log(JSON.stringify({
+            dataset: datasetId,
+            deliveredJsonLdBlocks: jsonLd.size,
+            projectedDistributions,
+            profileMainEntity: profile.mainEntity['@id'],
+            visibleDisclosure: true,
+            typedFooterLinks: requiredFooterLinks.length,
+          }, null, 2));
+          NODE
