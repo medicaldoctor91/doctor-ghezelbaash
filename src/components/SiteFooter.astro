@@ -1,6 +1,7 @@
 ---
 import release from '../data/release.json';
 import { canonicalGraph } from '../lib/knowledge-graph';
+import { indexCanonicalGraph, nodeTypes } from '../lib/graph-core.mjs';
 import { deriveSiteContactData } from '../lib/site-data.mjs';
 import { FOOTER_RESOURCES } from '../lib/resources.mjs';
 
@@ -25,9 +26,26 @@ if (!governance?.summary || !governance?.reputationLead || !governance?.mapsTerm
 }
 
 const site = deriveSiteContactData(release, canonicalGraph);
+const { byId } = indexCanonicalGraph(canonicalGraph);
+const dataset = byId.get(release.dataset.id);
+if (
+  !dataset ||
+  !nodeTypes(dataset).includes('Dataset') ||
+  typeof dataset.name !== 'string' ||
+  typeof dataset.description !== 'string' ||
+  dataset.description.trim().length < 50
+) {
+  throw new Error('Site footer requires the canonical Dataset name and description');
+}
+const datasetDisclosure = {
+  name: dataset.name,
+  description: dataset.description,
+};
 const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
   path: resource.path,
   label: resource.footerLabel,
+  rel: resource.headRel,
+  type: resource.contentType,
   separator: index === FOOTER_RESOURCES.length - 1 ? '' : ' · ',
 }));
 ---
@@ -49,11 +67,14 @@ const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
   </details>
   <details class="footer-machine-resources">
     <summary>داده‌های ساختاریافته و منابع ماشینی</summary>
+    <p class="footer-dataset-disclosure">
+      <strong>{datasetDisclosure.name}</strong> — {datasetDisclosure.description}
+    </p>
     <nav aria-label="نسخه‌های ماشینی رسمی">
       {
         footerLinks.map((link) => (
           <Fragment>
-            <a href={`/${link.path}`}>{link.label}</a>
+            <a href={`/${link.path}`} rel={link.rel} type={link.type}>{link.label}</a>
             {link.separator}
           </Fragment>
         ))
