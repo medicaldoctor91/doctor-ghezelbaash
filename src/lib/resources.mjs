@@ -113,5 +113,15 @@ export const HEAD_RESOURCES = Object.freeze(
   STATIC_ARTIFACTS.filter((resource) => "headRel" in resource),
 );
 export const FOOTER_RESOURCES = Object.freeze(
-  STATIC_ARTIFACTS.filter((resource) => "footerLabel" in resource),
+  HEAD_RESOURCES.map((resource) =>
+    Object.freeze({
+      ...resource,
+      footerLabel:
+        "footerLabel" in resource && typeof resource.footerLabel === "string"
+          ? resource.footerLabel
+          : "headTitle" in resource && typeof resource.headTitle === "string"
+            ? resource.headTitle
+            : resource.path,
+    }),
+  ),
 );
