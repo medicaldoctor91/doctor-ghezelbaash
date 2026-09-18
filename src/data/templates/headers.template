@@ -23,7 +23,7 @@ https://:version.:project.pages.dev/*
   Cloudflare-CDN-Cache-Control: public, max-age=300, stale-if-error=86400
   Content-Security-Policy: {{MAIN_CSP}}
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", {{HTTP_RESOURCE_LINKS}}
-  Link: <{{HERO_PRELOAD_HREF}}>; rel="preload"; as="image"; type="image/avif"; fetchpriority="high"
+  Link: <{{HERO_PRELOAD_HREF}}>; rel="preload"; as="image"; type="image/avif"
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="author", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="about"
 
 /404.html
