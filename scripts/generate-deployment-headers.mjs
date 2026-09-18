@@ -132,6 +132,10 @@ const headers = compileHeadersTemplate(headersTemplate, {
 });
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
+const expectedHeroHttpPreload =
+  `Link: <${HERO_IMAGE_768_HREF}>; rel="preload"; as="image"; type="image/avif"; fetchpriority="high"`;
+if (!headers.includes(expectedHeroHttpPreload))
+  throw new Error("Canonical Hero HTTP preload must carry fetchpriority=high");
 await writeFile(path.join(dist, "_headers"), headers);
 
 const dataPackage = JSON.parse(
