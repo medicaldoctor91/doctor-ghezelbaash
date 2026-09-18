@@ -1,6 +1,7 @@
 ---
 import release from '../data/release.json';
 import {
+  HERO_IMAGE_768_HREF,
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
@@ -226,6 +227,7 @@ const discoveryLinks: DiscoveryLink[] = [
     <link
       as="image"
       fetchpriority="high"
+      href={HERO_IMAGE_768_HREF}
       imagesizes={HERO_IMAGE_SIZES}
       imagesrcset={HERO_PRELOAD_SRCSET}
       rel="preload"
