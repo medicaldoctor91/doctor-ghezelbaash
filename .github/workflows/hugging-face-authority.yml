@@ -78,7 +78,6 @@ jobs:
           CURRENT_VERSION="$(node -p "require('./src/data/release.json').release")"
           CURRENT_RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
           CURRENT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
-          CONCEPT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.conceptDoi")"
           HF_URL="$(node -p "require('./src/data/release.json').dataset.huggingFace.dataset")"
           HF_REPO="${HF_URL#https://huggingface.co/datasets/}"
           RELEASE_DATE="$(date -u +%F)"
@@ -102,8 +101,8 @@ jobs:
             test -n "$FROZEN_SOURCE_SHA"
             if [ "$BASE_SHA" = "$FROZEN_SOURCE_SHA" ]; then FROZEN_SOURCE_AT_HEAD=true; fi
           fi
-          printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
-            "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
+          printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
+            "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
       - name: Detect GitHub immutable releases capability
         if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
@@ -152,7 +151,7 @@ jobs:
           set -euo pipefail
           test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           python scripts/zenodo_release.py verify-public \
-            --record "$CURRENT_RECORD" --doi "$CURRENT_DOI" --concept-doi "$CONCEPT_DOI" --version "$CURRENT_VERSION"
+            --record "$CURRENT_RECORD" --doi "$CURRENT_DOI" --version "$CURRENT_VERSION"
       - name: Prepare current Hugging Face distribution
         if: steps.release.outputs.mode == 'current'
         shell: bash
@@ -254,7 +253,7 @@ jobs:
             test -z "$(git tag -l "v$RELEASE_TARGET")"
             python scripts/zenodo_release.py reserve \
               --current-record "$CURRENT_RECORD" --current-doi "$CURRENT_DOI" --current-version "$CURRENT_VERSION" \
-              --concept-doi "$CONCEPT_DOI" --version "$RELEASE_TARGET" --date "$RELEASE_DATE"
+              --version "$RELEASE_TARGET" --date "$RELEASE_DATE"
             RECORD="$(node -p "require('./.release/runtime/zenodo-reservation.json').recordId")"
             DOI="$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")"
             node scripts/promote-release.mjs \
@@ -538,7 +537,7 @@ jobs:
           test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           export SOURCE_COMMIT="$CANDIDATE_SHA"
           python scripts/zenodo_release.py verify-public \
-            --record "$ZENODO_RECORD" --doi "$ZENODO_DOI" --concept-doi "$CONCEPT_DOI" --version "$RELEASE_TARGET"
+            --record "$ZENODO_RECORD" --doi "$ZENODO_DOI" --version "$RELEASE_TARGET"
       - name: Verify public Hugging Face and website release truth
         if: steps.release.outputs.mode == 'new'
         shell: bash
