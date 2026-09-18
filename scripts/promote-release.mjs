@@ -95,7 +95,6 @@ must(
   /^10\.5281\/zenodo\.\d+$/.test(next.versionDoi || ""),
   "Invalid --zenodo-doi",
 );
-must(next.versionDoi !== z.conceptDoi, "Concept DOI cannot be the Version DOI");
 if (next.release === old.release) {
   must(
     next.versionDoi === old.versionDoi &&
@@ -219,13 +218,6 @@ const expectedIdentifiers = [
   release.dataset.id,
   {
     "@type": "PropertyValue",
-    propertyID: "Zenodo Concept DOI",
-    name: "Zenodo Concept DOI for the continuing Dataset lineage",
-    value: z.conceptDoi,
-    url: `https://doi.org/${z.conceptDoi}`,
-  },
-  {
-    "@type": "PropertyValue",
     propertyID: "Zenodo Version DOI",
     name: `Zenodo Version DOI ${old.release}`,
     value: old.versionDoi,
@@ -332,7 +324,6 @@ dataset.version = next.release;
 dataset.dateModified = next.date;
 dataset.identifier = [
   expectedIdentifiers[0],
-  expectedIdentifiers[1],
   {
     "@type": "PropertyValue",
     propertyID: "Zenodo Version DOI",
@@ -442,7 +433,6 @@ if (dryRun) {
         prepared: true,
         from: old,
         to: next,
-        conceptDoi: z.conceptDoi,
         history: z.releaseHistory,
         releaseBoundNodes: releaseBound.length,
         externalRdfTripleCount: rdfMeasurement.triples,
@@ -464,7 +454,6 @@ console.log(
       transactionId: transaction.transactionId,
       from: old,
       to: next,
-      conceptDoi: z.conceptDoi,
       history: z.releaseHistory,
       releaseBoundNodes: releaseBound.length,
       externalRdfTripleCount: rdfMeasurement.triples,

@@ -398,7 +398,6 @@ if (typeof release.medicalReviewedAt !== "string" || !release.medicalReviewedAt)
 const reviewedAt = release.medicalReviewedAt;
 const matrix = {
   release: release.release,
-  conceptDoi: release.dataset.zenodo.conceptDoi,
   versionDoi: release.dataset.zenodo.versionDoi,
   recordId: String(release.dataset.zenodo.recordId),
   datasetIri: release.dataset.id,

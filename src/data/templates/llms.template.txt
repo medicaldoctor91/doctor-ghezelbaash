@@ -105,7 +105,6 @@ Evidence tiers are assessments maintained by this first-party project; sources a
 - [Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld#dataset): Stable first-party Dataset identifier.
 - [Canonical project repository](https://github.com/medicaldoctor91/doctor-ghezelbaash): Version-controlled source and current build history.
 - [Release archive DOI]({{ZENODO_VERSION_DOI_URL}}): Immutable release {{RELEASE}} archive, Zenodo record {{ZENODO_RECORD_ID}}; preservation is not independent corroboration.
-- [Dataset lineage DOI]({{ZENODO_CONCEPT_DOI_URL}}): Concept DOI linking the archived release lineage.
 - [Hugging Face distribution]({{HUGGING_FACE_DATASET}}): First-party Dataset distribution; repository revision distinguishes its snapshots.
 - [Official portrait master](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.0a44eaa5e463.jpg): First-party master with identity and rights metadata.
 - [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 portrait depicting Q140287622 and linked as Wikidata P18.

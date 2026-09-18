@@ -41,7 +41,7 @@ const walk = async (dir) => {
 };
 const zenodo = release.dataset.zenodo;
 const attestation = {
-  schema: "https://www.ghezelbaash.ir/release-attestation/v3",
+  schema: "https://www.ghezelbaash.ir/release-attestation/v4",
   release: release.release,
   releasePublishedAt: release.dateModified,
   medicalReviewedAt: release.medicalReviewedAt,
@@ -49,7 +49,6 @@ const attestation = {
   primaryEntity: release.primaryEntity.wikidata,
   sourceRepository: release.dataset.github.repository,
   sourceCommit: headCommit,
-  zenodoConceptDoi: zenodo.conceptDoi,
   zenodoVersionDoi: zenodo.versionDoi,
   zenodoRecordId: String(zenodo.recordId),
   releaseHistory: zenodo.releaseHistory,

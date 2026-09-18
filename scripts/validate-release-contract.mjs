@@ -82,18 +82,15 @@ const redirectsSha256 = createHash("sha256")
 
 exactKeys(
   Z,
-  ["conceptDoi", "recordId", "releaseHistory", "role", "versionDoi"],
+  ["recordId", "releaseHistory", "role", "versionDoi"],
   "Zenodo release truth",
 );
 if (
   Z.role !== "preservation" ||
-  !validDoi(Z.conceptDoi) ||
   !validDoi(Z.versionDoi) ||
   !validRecord(Z.recordId)
 )
   fail("Zenodo release identity contract failure");
-if (Z.conceptDoi === Z.versionDoi)
-  fail("Concept DOI and Version DOI must be distinct");
 if (!Array.isArray(Z.releaseHistory) || !Z.releaseHistory.length)
   fail("releaseHistory must be a non-empty array");
 const releases = new Set(),
@@ -472,7 +469,6 @@ console.log(
     {
       stage: "RELEASE_CONTRACT",
       release: R,
-      conceptDoi: Z.conceptDoi,
       versionDoi: Z.versionDoi,
       recordId: String(Z.recordId),
       releaseHistory: Z.releaseHistory.length,

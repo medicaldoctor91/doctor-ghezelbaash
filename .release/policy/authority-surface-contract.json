@@ -18,7 +18,6 @@
     "zenodo": {
       "role": "immutable-doi-preservation",
       "resourceTarget": "zenodo",
-      "conceptDoiRef": "release.dataset.zenodo.conceptDoi",
       "versionDoiRef": "release.dataset.zenodo.versionDoi"
     },
     "huggingFace": {

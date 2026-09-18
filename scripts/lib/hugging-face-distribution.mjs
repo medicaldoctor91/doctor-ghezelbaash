@@ -182,10 +182,6 @@ const validateHuggingFaceManifest = ({ manifest, release, hf, descriptor }) => {
     "HF dist-sha256 Dataset IRI drift",
   );
   must(
-    manifest.conceptDoi === release.dataset.zenodo.conceptDoi,
-    "HF dist-sha256 Concept DOI drift",
-  );
-  must(
     manifest.zenodoVersionDoi === release.dataset.zenodo.versionDoi,
     "HF dist-sha256 Version DOI drift",
   );

@@ -56,7 +56,6 @@ def self_test(module):
         release["release"],
         release["dateModified"],
         zenodo["versionDoi"],
-        zenodo["conceptDoi"],
     )
     creator = (metadata.get("creators") or [{}])[0]
     if (

@@ -250,7 +250,6 @@ export function renderLlmsGuide(template, { release, evidenceRegistry }) {
       release.primaryEntity.reconciliationAliases.join(" | "),
     "{{RETRIEVAL_VARIANTS}}":
       release.primaryEntity.retrievalVariants.join(" | "),
-    "{{ZENODO_CONCEPT_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.conceptDoi}`,
     "{{ZENODO_VERSION_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.versionDoi}`,
     "{{ZENODO_RECORD_ID}}": String(release.dataset.zenodo.recordId),
     "{{HUGGING_FACE_DATASET}}": release.dataset.huggingFace.dataset,

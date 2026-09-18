@@ -431,7 +431,6 @@ async function command_discovery() {
     );
   for (const [k, v] of Object.entries({
     release: release.release,
-    conceptDoi: release.dataset.zenodo.conceptDoi,
     versionDoi: release.dataset.zenodo.versionDoi,
     recordId: String(release.dataset.zenodo.recordId),
     personWikidata: release.primaryEntity.wikidata,
@@ -547,7 +546,6 @@ async function command_discovery() {
           encodedBytes: x.encodedBytes.length,
           decodedBytes: x.b.length,
           release: matrix.release,
-          conceptDoi: matrix.conceptDoi,
           versionDoi: matrix.versionDoi,
         });
       }
@@ -562,7 +560,6 @@ async function command_discovery() {
         lanes: rows.length,
         releaseContext: {
           release: matrix.release,
-          conceptDoi: matrix.conceptDoi,
           versionDoi: matrix.versionDoi,
           recordId: String(matrix.recordId),
         },
@@ -607,7 +604,6 @@ async function command_release() {
     );
   if (
     zenodo.doi !== z.versionDoi ||
-    zenodo.conceptdoi !== z.conceptDoi ||
     md.version !== release.release ||
     md.title !== release.dataset.name
   )
@@ -688,7 +684,7 @@ async function command_release() {
       })}`,
     );
   const expectedAttestation = {
-    schema: "https://www.ghezelbaash.ir/release-attestation/v3",
+    schema: "https://www.ghezelbaash.ir/release-attestation/v4",
     release: release.release,
     releasePublishedAt: release.dateModified,
     medicalReviewedAt: release.medicalReviewedAt,
@@ -696,7 +692,6 @@ async function command_release() {
     primaryEntity: release.primaryEntity.wikidata,
     sourceRepository: release.dataset.github.repository,
     sourceCommit: head,
-    zenodoConceptDoi: z.conceptDoi,
     zenodoVersionDoi: z.versionDoi,
     zenodoRecordId: String(z.recordId),
     releaseHistory: z.releaseHistory,
@@ -719,7 +714,6 @@ async function command_release() {
   for (const token of [
     release.release,
     z.versionDoi,
-    z.conceptDoi,
     release.primaryEntity.wikidata,
     release.dataset.id,
     "text-retrieval",

@@ -258,7 +258,6 @@ AI/retrieval distribution of the canonical physician-owned Dataset at \`${releas
 - Canonical Dataset IRI: \`${release.dataset.id}\`
 - Source: \`${release.dataset.github.repository}\`
 - Base release lineage: \`${release.release}\`
-- Zenodo Concept DOI: \`${zenodo.conceptDoi}\`
 - Frozen Zenodo Version DOI: \`${zenodo.versionDoi}\`
 
 ## Retrieval architecture
@@ -273,7 +272,6 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
   const hashes = {
     release: release.release,
     canonicalDatasetIri: release.dataset.id,
-    conceptDoi: zenodo.conceptDoi,
     zenodoVersionDoi: zenodo.versionDoi,
     files: {},
   };
@@ -387,7 +385,6 @@ async function commandVerify() {
     release.primaryEntity.orcid,
     release.primaryEntity.irimc,
     release.dataset.id,
-    release.dataset.zenodo.conceptDoi,
     release.dataset.zenodo.versionDoi,
     retrievalPolicy.retrievalPolicy,
     retrievalPolicy.resolutionMode,
@@ -439,7 +436,6 @@ async function commandVerify() {
         repo,
         primaryEntity: release.primaryEntity.wikidata,
         datasetIri: release.dataset.id,
-        conceptDoi: release.dataset.zenodo.conceptDoi,
         versionDoi: release.dataset.zenodo.versionDoi,
         tasks: hf.taskCategories,
         languages: retrievalPolicy.languages,
