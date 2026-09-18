@@ -30,7 +30,7 @@ function bindExactHeroTokens(value, expectedCount, context) {
 export function bindHeroPictureSizes(value) {
   const source = String(value);
   const fallback = source.match(
-    /<img\b(?=[^>]*\bsrc=["']\/media\/images\/physician\/saeed-ghezelbash-portrait-delivery-640\.[0-9a-f]{12}\.webp["'])[^>]*>/i,
+    /<img\b(?=[^>]*\bsrc=["']\/media\/images\/physician\/saeed-ghezelbash-portrait-768\.[0-9a-f]{12}\.webp["'])[^>]*>/i,
   )?.[0];
   if (!fallback)
     throw new Error("Canonical Hero picture: fallback img missing");
