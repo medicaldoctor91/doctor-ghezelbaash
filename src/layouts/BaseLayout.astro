@@ -109,6 +109,14 @@ const googlePageMicrodata = isMain
         })();
       </script>
       <noscript><link href={externalCssHref} rel="stylesheet"></noscript>
+      {isMain && (
+        <script
+          is:inline
+          id="entity-core"
+          type="application/ld+json"
+          set:html={headGraphRaw}
+        ></script>
+      )}
     </DocumentHead>
   </head>
   <body>
@@ -138,20 +146,12 @@ const googlePageMicrodata = isMain
       </article>
     </main>
     {isMain && (
-      <>
-        <script
-          is:inline
-          id="entity-core"
-          type="application/ld+json"
-          set:html={headGraphRaw}
-        ></script>
-        <script
-          is:inline
-          id="entity-support"
-          type="application/ld+json"
-          set:html={supportGraphRaw}
-        ></script>
-      </>
+      <script
+        is:inline
+        id="entity-support"
+        type="application/ld+json"
+        set:html={supportGraphRaw}
+      ></script>
     )}
     {!noindex && footerGovernance && <SiteFooter governance={footerGovernance} />}
     {!noindex && <FloatingActionDock />}
