@@ -4,6 +4,7 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
+import { HERO_IMAGE_768_HREF } from "../src/lib/hero-image-contract.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -127,6 +128,7 @@ const headers = compileHeadersTemplate(headersTemplate, {
   mainCsp,
   csp404,
   httpResourceLinks,
+  heroPreloadHref: HERO_IMAGE_768_HREF,
 });
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
