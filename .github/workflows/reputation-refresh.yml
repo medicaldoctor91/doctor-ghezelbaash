@@ -1,8 +1,6 @@
 name: Refresh static Google Maps reputation
 
 on:
-  schedule:
-    - cron: "23 */6 * * *"
   workflow_dispatch:
 
 permissions:
