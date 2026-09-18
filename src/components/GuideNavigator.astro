@@ -132,7 +132,6 @@ const intentTargets = Object.fromEntries(
   addEventListener("scroll", syncTop, { passive: true });
   addEventListener("resize", syncTop, { passive: true });
   addEventListener("pageshow", syncTop);
-  syncTop();
 
   let tocLinks, targetChunk, currentTocLink;
   const syncTarget = () => {
