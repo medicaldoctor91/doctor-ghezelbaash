@@ -23,7 +23,7 @@ export function assertCloudflareHeadersContract(headers) {
 
 export function compileHeadersTemplate(
   template,
-  { mainCsp, csp404, httpResourceLinks } = {},
+  { mainCsp, csp404, httpResourceLinks, heroPreloadHref } = {},
 ) {
   const source = String(template);
   if (typeof mainCsp !== "string" || !mainCsp)
@@ -32,11 +32,14 @@ export function compileHeadersTemplate(
     throw new Error("_headers compiler: 404_CSP missing");
   if (typeof httpResourceLinks !== "string" || !httpResourceLinks)
     throw new Error("_headers compiler: HTTP resource links missing");
+  if (typeof heroPreloadHref !== "string" || !heroPreloadHref.startsWith("/media/"))
+    throw new Error("_headers compiler: Hero preload href missing");
 
   const bindings = new Map([
     ["{{MAIN_CSP}}", mainCsp],
     ["{{404_CSP}}", csp404],
     ["{{HTTP_RESOURCE_LINKS}}", httpResourceLinks],
+    ["{{HERO_PRELOAD_HREF}}", heroPreloadHref],
   ]);
   const discovered = source.match(ANY_TOKEN_PATTERN) || [];
   for (const token of discovered) {
