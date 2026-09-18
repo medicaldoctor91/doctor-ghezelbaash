@@ -2,7 +2,7 @@ name: Verify canonical Cloudflare Git deployment
 
 on:
   push:
-    branches: [main]
+    branches: [production]
   workflow_dispatch:
 
 permissions:
@@ -24,17 +24,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Select only the current main revision
+      - name: Select only the current production revision
         id: tip
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --no-tags origin main
+          git fetch --no-tags origin production
           if [ "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)" ]; then
             echo 'current=true' >> "$GITHUB_OUTPUT"
           else
             echo 'current=false' >> "$GITHUB_OUTPUT"
-            echo 'STALE_MAIN_REVISION_SKIPPED'
+            echo 'STALE_PRODUCTION_REVISION_SKIPPED'
           fi
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         if: steps.tip.outputs.current == 'true'

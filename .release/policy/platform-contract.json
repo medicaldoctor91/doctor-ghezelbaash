@@ -13,7 +13,7 @@
   "cloudflare": {
     "accountId": "884d1d90bd1fb6ecca14992c6c60d677",
     "pagesProject": "doctor-ghezelbaash",
-    "productionBranch": "main",
+    "productionBranch": "production",
     "expectedEnvironment": "production",
     "planTier": "free",
     "requiredCustomDomains": [
