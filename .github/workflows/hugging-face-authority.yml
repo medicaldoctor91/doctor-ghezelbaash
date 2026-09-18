@@ -75,6 +75,8 @@ jobs:
           set -euo pipefail
           [[ "$RELEASE_TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           BASE_SHA="$(git rev-parse HEAD)"
+          git fetch --no-tags origin production
+          PRODUCTION_BASE_SHA="$(git rev-parse FETCH_HEAD)"
           CURRENT_VERSION="$(node -p "require('./src/data/release.json').release")"
           CURRENT_RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
           CURRENT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
@@ -101,9 +103,19 @@ jobs:
             test -n "$FROZEN_SOURCE_SHA"
             if [ "$BASE_SHA" = "$FROZEN_SOURCE_SHA" ]; then FROZEN_SOURCE_AT_HEAD=true; fi
           fi
-          printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
-            "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
+          printf 'BASE_SHA=%s\nPRODUCTION_BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
+            "$BASE_SHA" "$PRODUCTION_BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+      - name: Refuse current-version mutation from development main
+        if: steps.release.outputs.mode == 'current'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$FROZEN_SOURCE_AT_HEAD" = true || {
+            echo "Current release reconciliation must run from its exact frozen source; use the verify job for routine checks." >&2
+            exit 1
+          }
+
       - name: Detect GitHub immutable releases capability
         if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
         env:
@@ -349,9 +361,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
+          git fetch origin main production
           test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse refs/remotes/origin/production)" = "$PRODUCTION_BASE_SHA"
           git merge-base --is-ancestor "$BASE_SHA" "$CANDIDATE_SHA"
+          git merge-base --is-ancestor "$PRODUCTION_BASE_SHA" "$CANDIDATE_SHA"
           test "$(git ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
           test "$(git -C .release/huggingface ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           node -e "const s=require('./.release/runtime/zenodo-stage.json');if(s.release!==process.env.RELEASE_TARGET||s.recordId!==process.env.ZENODO_RECORD||s.versionDoi!==process.env.ZENODO_DOI||s.sourceCommit!==process.env.CANDIDATE_SHA)throw new Error('Zenodo stage ledger drift')"
@@ -365,7 +379,7 @@ jobs:
           test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           export SOURCE_COMMIT="$CANDIDATE_SHA"
           python scripts/zenodo_release.py publish
-      - name: Promote exact candidate to canonical GitHub main and tag
+      - name: Promote exact candidate to canonical GitHub main production and tag
         if: steps.release.outputs.mode == 'new'
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -377,10 +391,10 @@ jobs:
           if git ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_TARGET" >/dev/null 2>&1; then
             test "$(git ls-remote origin "refs/tags/v$RELEASE_TARGET^{}" | awk '{print $1}')" = "$CANDIDATE_SHA" || \
               test "$(git ls-remote origin "refs/tags/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
-            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push --atomic origin HEAD:main HEAD:production
           else
             git tag -a "v$RELEASE_TARGET" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RELEASE_TARGET"
-            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push --atomic origin HEAD:main "refs/tags/v$RELEASE_TARGET"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push --atomic origin HEAD:main HEAD:production "refs/tags/v$RELEASE_TARGET"
           fi
           unset GITHUB_AUTH
       - name: Create or verify exact GitHub Release
