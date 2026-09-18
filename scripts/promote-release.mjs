@@ -139,6 +139,8 @@ z.versionDoi = next.versionDoi;
 z.recordId = next.recordId;
 release.release = next.release;
 release.dateModified = next.date;
+release.datasetRevisionDate = next.date;
+release.currentSource.dateModified = next.date;
 
 pkg.version = next.release;
 lock.version = next.release;
