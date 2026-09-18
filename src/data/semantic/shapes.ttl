@@ -215,18 +215,31 @@ ex:ProfessionalSocialSubjectShape a sh:NodeShape ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] .
 
-ex:RetiredIdentifierExclusionShape a sh:NodeShape ;
+# Validate current identity ownership without republishing retired identifiers.
+ex:CoreEntityWikidataOwnershipShape a sh:NodeShape ;
   sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;
   sh:sparql [
-    sh:message "Retired/deleted or superseded identifiers must not re-enter the active canonical RDF graph." ;
+    sh:message "Wikidata ownership must remain physician-specific; the clinic has no declared Wikidata identity." ;
     sh:select """
+      PREFIX schema: <https://schema.org/>
+      PREFIX ex: <https://www.ghezelbaash.ir/#>
       SELECT $this WHERE {
-        ?s ?p ?o .
-        FILTER(
-          CONTAINS(STR(?o), "Q140288589") ||
-          CONTAINS(STR(?o), "Q140304972") ||
-          CONTAINS(STR(?o), "Q700236")
-        )
+        {
+          ex:saeed-ghezelbash schema:sameAs ?value .
+          FILTER(CONTAINS(STR(?value), "wikidata.org/") &&
+                 STR(?value) != "https://www.wikidata.org/entity/Q140287622")
+        } UNION {
+          ex:saeed-ghezelbash schema:identifier ?identifier .
+          ?identifier schema:propertyID "Wikidata item ID" ; schema:value ?value .
+          FILTER(STR(?value) != "Q140287622")
+        } UNION {
+          ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah
+            (schema:sameAs|schema:identifier/schema:url) ?value .
+          FILTER(CONTAINS(STR(?value), "wikidata.org/"))
+        } UNION {
+          ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah schema:identifier ?identifier .
+          ?identifier schema:propertyID "Wikidata item ID" .
+        }
       }
     """
   ] .
