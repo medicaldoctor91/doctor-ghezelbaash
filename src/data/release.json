@@ -1,5 +1,5 @@
 {
-  "release": "1.3.2",
+  "release": "1.3.3",
   "dateModified": "2026-09-18",
   "canonicalUrl": "https://www.ghezelbaash.ir/",
   "primaryEntity": {
@@ -17,8 +17,8 @@
     },
     "zenodo": {
       "role": "preservation",
-      "versionDoi": "10.5281/zenodo.22837575",
-      "recordId": "22837575",
+      "versionDoi": "10.5281/zenodo.22838416",
+      "recordId": "22838416",
       "releaseHistory": [
         {
           "release": "1.0.0",
@@ -84,6 +84,12 @@
           "release": "1.3.2",
           "recordId": "22837575",
           "versionDoi": "10.5281/zenodo.22837575",
+          "publicationDate": "2026-09-18"
+        },
+        {
+          "release": "1.3.3",
+          "recordId": "22838416",
+          "versionDoi": "10.5281/zenodo.22838416",
           "publicationDate": "2026-09-18"
         }
       ]
