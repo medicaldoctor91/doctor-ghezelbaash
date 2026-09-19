@@ -67,7 +67,6 @@ Source maintenance is expected to preserve the emitted distribution unless a dis
 Production delivery uses the native Cloudflare Pages Git integration on the dedicated `production` branch. `main` is intentionally decoupled from live deployment, so source maintenance on `main` does not change the canonical website until an explicit release promotion advances `production`. Operational automation is kept in `.github/workflows/` and is intentionally separate from the static build:
 
 - `cloudflare-pages-deploy.yml` — verifies and reconciles the canonical Cloudflare deployment after a `production` push.
-- `reputation-refresh.yml` — refreshes the bounded Google Places reputation observation and commits only a validated source change.
 - `github-pages-bridge.yml` — publishes the canonical GitHub Pages redirect bridge from the frozen `production` source.
 - `hugging-face-authority.yml` — verifies or explicitly publishes external authority/release surfaces.
 
