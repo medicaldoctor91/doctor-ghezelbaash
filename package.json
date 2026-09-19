@@ -29,8 +29,6 @@
     "verify:production": "node scripts/verify-production.mjs full",
     "verify:public-discovery": "node scripts/verify-live.mjs discovery",
     "indexnow:submit": "node scripts/indexnow.mjs submit",
-    "validate:reputation": "node scripts/reputation.mjs validate",
-    "reputation:update": "node scripts/reputation.mjs google",
     "verify:mojavez": "node scripts/verify-mojavez-evidence.mjs",
     "validate:release-contract": "node scripts/validate-release-contract.mjs",
     "validate:source": "npm run check:astro"
