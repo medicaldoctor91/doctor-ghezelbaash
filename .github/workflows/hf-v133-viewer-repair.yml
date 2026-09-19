@@ -29,7 +29,8 @@ jobs:
       ASTRO_TELEMETRY_DISABLED: "1"
       SOURCE_SHA: ${{ inputs.source_sha }}
       EXPECTED_HF_MAIN_SHA: ${{ inputs.expected_hf_main_sha }}
-      REPAIR_BASE_SHA: a9b224e94391597ea00e45409329155fe2b20e20
+      REPAIR_CHAIN_BASE_SHA: a9b224e94391597ea00e45409329155fe2b20e20
+      REPAIR_PARENT_SHA: 9ce52dcc45c4d0cedeb80166ec79f9dcf59fa696
       FROZEN_SOURCE_SHA: a6b93084f97318f05766a962375233277e1d425c
       GITHUB_TAG_OBJECT_SHA: 634bd496f14e68c4bbc92ea794f82f282920bc8a
       HF_MAIN_BEFORE: d8e55c116019838750f9e45981ddf30e8ae920dc
@@ -56,7 +57,7 @@ jobs:
           test "$EXPECTED_HF_MAIN_SHA" = "$HF_MAIN_BEFORE"
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
           test "$(git rev-list --parents -n 1 "$SOURCE_SHA" | wc -w)" -eq 2
-          test "$(git rev-parse "$SOURCE_SHA^")" = "$REPAIR_BASE_SHA"
+          test "$(git rev-parse "$SOURCE_SHA^")" = "$REPAIR_PARENT_SHA"
           git fetch --no-tags origin \
             "+refs/heads/main:refs/remotes/origin/main" \
             "+refs/heads/production:refs/remotes/origin/production"
@@ -65,7 +66,7 @@ jobs:
           test "$(git rev-parse refs/remotes/origin/production)" = "$FROZEN_SOURCE_SHA"
           test "$(git rev-parse refs/tags/v1.3.3)" = "$GITHUB_TAG_OBJECT_SHA"
           test "$(git rev-parse 'refs/tags/v1.3.3^{commit}')" = "$FROZEN_SOURCE_SHA"
-          mapfile -t CHANGED < <(git diff --name-only "$REPAIR_BASE_SHA" "$SOURCE_SHA")
+          mapfile -t CHANGED < <(git diff --name-only "$REPAIR_CHAIN_BASE_SHA" "$SOURCE_SHA")
           test "${#CHANGED[@]}" -eq 3
           printf '%s\n' "${CHANGED[@]}" | sort > /tmp/actual-repair-files
           printf '%s\n' \
@@ -288,6 +289,7 @@ jobs:
           });
           const response = await fetch(`https://datasets-server.huggingface.co/statistics?${params}`, {
             headers: { accept: 'application/json', 'cache-control': 'no-cache' },
+            signal: AbortSignal.timeout(60000),
           });
           const body = await response.json();
           must(response.ok && !body.error, `query_matrix statistics HTTP ${response.status}`);
