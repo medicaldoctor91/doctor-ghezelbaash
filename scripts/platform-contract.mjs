@@ -1,6 +1,5 @@
 import { loadPublicationData } from "./lib/publication-context.mjs";
 import { readFile } from "node:fs/promises";
-import { validateReputationObservation } from "../src/lib/reputation-observation.mjs";
 
 const readJson = (file) => readFile(file, "utf8").then(JSON.parse);
 
@@ -23,20 +22,15 @@ async function exportContract() {
 }
 
 async function validateContract() {
-  const [contract, release, pkg, lock, codemeta, graph, refreshWorkflow] =
-    await Promise.all([
-      readJson(".release/policy/platform-contract.json"),
-      loadPublicationData(),
-      readJson("package.json"),
-      readJson("package-lock.json"),
-      readJson("codemeta.json"),
-      readJson("src/data/semantic/knowledge-graph.jsonld"),
-      readFile(".github/workflows/reputation-refresh.yml", "utf8"),
-    ]);
-  const observation = validateReputationObservation(graph, release);
+  const [contract, release, pkg, lock, codemeta] = await Promise.all([
+    readJson(".release/policy/platform-contract.json"),
+    loadPublicationData(),
+    readJson("package.json"),
+    readJson("package-lock.json"),
+    readJson("codemeta.json"),
+  ]);
   const cf = contract.cloudflare;
   const runtime = contract.runtime;
-  const refresh = contract.automation?.reputationRefresh;
   const fail = (message) => {
     throw new Error(message);
   };
@@ -54,13 +48,13 @@ async function validateContract() {
   )
     fail("Platform repository drift");
   if (
-    cf.productionBranch !== "main" ||
+    cf.productionBranch !== "production" ||
     cf.expectedEnvironment !== "production" ||
     cf.preview?.deploymentSetting !== "none" ||
     cf.preview?.branchIncludes?.length ||
     cf.preview?.branchExcludes?.length
   )
-    fail("Platform main-only/no-preview contract drift");
+    fail("Platform production/no-preview contract drift");
   if (
     cf.build?.command !== "npm run build" ||
     cf.build?.destinationDir !== "dist" ||
@@ -82,50 +76,13 @@ async function validateContract() {
   )
     fail("Required custom domains contract incomplete");
   if (
-    refresh?.workflow !== ".github/workflows/reputation-refresh.yml" ||
-    refresh?.schedule !== "23 */6 * * *" ||
-    refresh?.sourceFile !== "src/data/semantic/knowledge-graph.jsonld" ||
-    refresh?.source !== "Google Places API (New)" ||
-    JSON.stringify(refresh?.fieldMask) !==
-      JSON.stringify([
-        "id",
-        "rating",
-        "userRatingCount",
-        "businessStatus",
-        "movedPlace",
-        "movedPlaceId",
-      ]) ||
-    JSON.stringify(refresh?.requiredGitHubSecrets) !==
-      JSON.stringify(["GOOGLE_PLACES_API_KEY"]) ||
-    refresh?.upstreamCallsPerRun !== 1 ||
-    refresh?.publishOnChangeOnly !== true
-  )
-    fail("Static reputation refresh contract drift");
-  if (
-    observation.entity !== release.clinic.id ||
-    observation.placeId !== release.clinic.placeId ||
-    observation.source !== refresh.source
-  )
-    fail("Static reputation observation identity drift");
-  if (
-    !refreshWorkflow.includes(`cron: "${refresh.schedule}"`) ||
-    !refreshWorkflow.includes("GOOGLE_PLACES_API_KEY") ||
-    !refreshWorkflow.includes("node scripts/reputation.mjs google") ||
-    !refreshWorkflow.includes(refresh.sourceFile) ||
-    refreshWorkflow.split("places.googleapis.com/v1/places/").length - 1 !== 1 ||
-    refreshWorkflow.includes("--retry") ||
-    refreshWorkflow.includes("wrangler") ||
-    refreshWorkflow.includes("zenodo") ||
-    refreshWorkflow.includes("huggingface")
-  )
-    fail("Static reputation workflow contract drift");
-  if (
     !runtime?.node ||
     !runtime?.nodeEngine ||
     !runtime?.npm ||
     !runtime?.npmEngine
   )
     fail("Canonical runtime contract incomplete");
+
   const nvmrc = (await readFile(".nvmrc", "utf8")).trim();
   if (
     nvmrc !== runtime.node ||
@@ -177,11 +134,6 @@ async function validateContract() {
         canonicalHost: contract.canonicalHost,
         planTier: cf.planTier,
         delivery: cf.delivery,
-        reputationRefresh: {
-          schedule: refresh.schedule,
-          upstreamCallsPerRun: refresh.upstreamCallsPerRun,
-          publishOnChangeOnly: refresh.publishOnChangeOnly,
-        },
         runtime,
         approvedInstallScripts: approvedScripts,
         codemetaRuntime: codemeta.runtimePlatform,
