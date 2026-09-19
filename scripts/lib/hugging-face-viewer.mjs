@@ -119,8 +119,8 @@ function verifyCroissant(response, configs) {
  */
 export async function verifyHuggingFaceViewer({
   repo, configs: suppliedConfigs, expectedRevision, fetchImpl = fetch, sleep = delay,
-  log = (message) => console.error(message), maxAttempts = 6,
-  retryDelayMs = 10000, requestTimeoutMs = 60000,
+  log = (message) => console.error(message), maxAttempts = 10,
+  retryDelayMs = 60000, requestTimeoutMs = 60000,
   baseUrl = "https://datasets-server.huggingface.co",
   croissantUrl = `https://huggingface.co/api/datasets/${repo}/croissant`,
 }) {
