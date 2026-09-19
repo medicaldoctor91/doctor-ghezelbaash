@@ -1,0 +1,163 @@
+name: Maintain current release visibility and consistency
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/authority-maintenance.yml
+      - scripts/huggingface.mjs
+      - scripts/verify-live.mjs
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Reconcile Cloudflare settings and the public profile against the frozen production release
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  maintain:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - run: npm ci
+      - name: Validate operational source
+        run: |
+          set -euo pipefail
+          npm run security:dependencies
+          npm run validate:release-contract
+          node scripts/verify-live.mjs test-release-context
+          node scripts/test-transient-retry.mjs
+      - name: Pin production and the immutable release before any mutation
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin production
+          PRODUCTION_SHA="$(git rev-parse FETCH_HEAD)"
+          VERSION="$(node -p "require('./src/data/release.json').release")"
+          test "$(git rev-parse "refs/tags/v$VERSION^{commit}")" = "$PRODUCTION_SHA"
+          git worktree add --detach .release/frozen "$PRODUCTION_SHA"
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          const main = await readFile('src/data/release.json', 'utf8');
+          const production = await readFile('.release/frozen/src/data/release.json', 'utf8');
+          if (main !== production) throw new Error('Main release lifecycle differs from production');
+          NODE
+          printf 'PRODUCTION_SHA=%s\n' "$PRODUCTION_SHA" >> "$GITHUB_ENV"
+          node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
+          mkdir -p .release/runtime/finalization
+      - name: Prove every DIST file remains identical to the frozen release
+        run: |
+          set -euo pipefail
+          npm run build
+          (
+            cd .release/frozen
+            npm ci
+            export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+            export CF_PAGES_COMMIT_SHA="$PRODUCTION_SHA"
+            npm run build
+          )
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          def hashes(root):
+              return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                      for p in root.rglob('*') if p.is_file()}
+          main, frozen = hashes(Path('dist')), hashes(Path('.release/frozen/dist'))
+          drift = sorted(k for k in set(main) | set(frozen) if main.get(k) != frozen.get(k))
+          if drift:
+              raise SystemExit(f'DIST drift requires a coordinated new release: {drift}')
+          result = {'distInvariant': 'PASS', 'files': len(main), 'hashes': main}
+          Path('.release/runtime/finalization/dist-invariance.json').write_text(json.dumps(result, indent=2) + '\n')
+          print(f'DIST_INVARIANCE_PASS files={len(main)}')
+          PY
+      - name: Verify frozen Zenodo and Hugging Face release bytes
+        run: |
+          set -euo pipefail
+          node scripts/run-transient-command.mjs -- node scripts/verify-live.mjs release \
+            --source-root .release/frozen --dist-root dist \
+            > .release/runtime/finalization/frozen-release.json
+          cat .release/runtime/finalization/frozen-release.json
+      - name: Reconcile Cloudflare production settings and cache
+        if: github.event_name == 'push' || inputs.apply
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd .release/frozen
+          export CF_PAGES_COMMIT_SHA="$PRODUCTION_SHA" CF_EXPECTED_COMMIT="$PRODUCTION_SHA"
+          node scripts/cloudflare-pages.mjs ensure --configure
+          node scripts/cloudflare-pages.mjs ensure --verify-config
+          node scripts/cloudflare-pages.mjs ensure
+          python scripts/configure-cloudflare-edge.py --apply --outcome ../runtime/finalization/cloudflare-edge.json
+          python scripts/configure-pages-dev-redirect.py
+      - name: Synchronize the public organization profile from frozen production
+        if: github.event_name == 'push' || inputs.apply
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: node scripts/huggingface.mjs sync-profile --source-root .release/frozen
+      - name: Verify current public bytes, discovery and dataset viewer
+        run: |
+          set -euo pipefail
+          node scripts/huggingface.mjs sync-profile --source-root .release/frozen --check
+          node scripts/run-transient-command.mjs -- node scripts/verify-live.mjs current > .release/runtime/finalization/current-serving.json
+          node scripts/run-transient-command.mjs -- node scripts/huggingface.mjs verify > .release/runtime/finalization/huggingface.json
+          node scripts/run-transient-command.mjs -- npm run verify:production
+          node scripts/run-transient-command.mjs -- npm run verify:public-discovery
+          node scripts/run-transient-command.mjs -- node scripts/verify-dataset-production.mjs
+      - name: Verify GitHub public discovery settings and immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY" > .release/runtime/finalization/github-repository.json
+          VERSION="$(node -p "require('./src/data/release.json').release")"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$VERSION" > .release/runtime/finalization/github-release.json
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          import { loadPublicationData } from './scripts/lib/publication-context.mjs';
+          const release = await loadPublicationData('.release/frozen');
+          const repo = JSON.parse(await readFile('.release/runtime/finalization/github-repository.json'));
+          const published = JSON.parse(await readFile('.release/runtime/finalization/github-release.json'));
+          if (repo.private || repo.archived || repo.homepage !== release.canonicalUrl)
+            throw new Error('GitHub repository public discovery settings drift');
+          for (const token of [release.primaryEntity.name, release.primaryEntity.wikidata, 'Zenodo', 'Hugging Face'])
+            if (!repo.description?.includes(token)) throw new Error(`Repository description missing ${token}`);
+          for (const topic of ['saeed-ghezelbash', 'knowledge-graph', 'json-ld', 'rdf', 'wikidata', 'zenodo', 'huggingface'])
+            if (!repo.topics?.includes(topic)) throw new Error(`Repository topic missing ${topic}`);
+          if (published.immutable !== true || published.draft || published.prerelease ||
+              published.tag_name !== `v${release.release}` || !published.body?.includes(release.dataset.zenodo.versionDoi))
+            throw new Error('GitHub immutable release identity drift');
+          console.log('GITHUB_VISIBILITY_AND_IMMUTABLE_RELEASE_PASS');
+          NODE
+      - name: Notify IndexNow only after all publication checks pass
+        if: github.event_name == 'push' || inputs.apply
+        run: npm run indexnow:submit
+      - name: Preserve verification evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: current-authority-verification
+          path: .release/runtime/finalization/
+          retention-days: 14
+          if-no-files-found: warn

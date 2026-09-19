@@ -66,6 +66,8 @@ jobs:
       - run: npm ci
       - name: Enforce high-severity dependency advisory gate
         run: npm run security:dependencies
+      - name: Verify frozen-source publication context
+        run: node scripts/verify-live.mjs test-release-context
       - name: Load canonical platform contract
         run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - name: Resolve release transaction
@@ -206,6 +208,11 @@ jobs:
             RELEASE_RECOVERY=true
           fi
           printf 'RELEASE_RECOVERY=%s\n' "$RELEASE_RECOVERY" >> "$GITHUB_ENV"
+      - name: Synchronize current organization profile release pointer
+        if: steps.release.outputs.mode == 'current'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: node scripts/huggingface.mjs sync-profile
       - name: Verify current Hugging Face surfaces
         if: steps.release.outputs.mode == 'current'
         shell: bash
@@ -231,6 +238,11 @@ jobs:
           else
             node scripts/cloudflare-pages.mjs ensure --verify-config
           fi
+      - name: Reconcile current Cloudflare edge and invalidate stale release objects
+        if: steps.release.outputs.mode == 'current'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python scripts/configure-cloudflare-edge.py --apply --outcome .release/runtime/current-edge.json
       - name: Verify current website after reconciliation
         if: steps.release.outputs.mode == 'current'
         shell: bash
@@ -541,6 +553,16 @@ jobs:
           export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" CF_EXPECTED_COMMIT="$CANDIDATE_SHA"
           node scripts/cloudflare-pages.mjs ensure --configure
           node scripts/cloudflare-pages.mjs ensure
+      - name: Reconcile released Cloudflare edge before checking public bytes
+        if: steps.release.outputs.mode == 'new'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python scripts/configure-cloudflare-edge.py --apply --outcome .release/runtime/release-edge.json
+      - name: Synchronize organization profile with the published release
+        if: steps.release.outputs.mode == 'new'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: node scripts/huggingface.mjs sync-profile
       - name: Verify published Zenodo release truth
         if: steps.release.outputs.mode == 'new'
         env:
@@ -568,6 +590,14 @@ jobs:
             sleep 10
           done
           node scripts/verify-live.mjs release
+      - name: Verify public discovery and submit the canonical URL
+        if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
+        run: |
+          set -euo pipefail
+          node scripts/run-transient-command.mjs -- npm run verify:production
+          node scripts/run-transient-command.mjs -- npm run verify:public-discovery
+          node scripts/run-transient-command.mjs -- node scripts/verify-dataset-production.mjs
+          npm run indexnow:submit
       - name: Remove successful candidate branches
         if: (steps.release.outputs.mode == 'new' || (env.FROZEN_SOURCE_AT_HEAD == 'true' && env.RELEASE_RECOVERY == 'true')) && success()
         env:
@@ -582,3 +612,12 @@ jobs:
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin --delete "release/v$RELEASE_TARGET" || true
           node scripts/huggingface.mjs push .release/huggingface --delete "release/v$RELEASE_TARGET" || true
           unset GITHUB_AUTH
+
+  publish-bridge:
+    needs: release
+    if: needs.release.result == 'success'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/github-pages-bridge.yml

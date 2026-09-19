@@ -404,6 +404,7 @@ async function commandVerify() {
       release.primaryEntity.wikidata,
       release.canonicalUrl,
       datasetUrl,
+      release.dataset.zenodo.versionDoi,
     ]) {
       if (!profile.includes(String(token)))
         throw new Error(
@@ -450,12 +451,74 @@ async function commandVerify() {
   );
 }
 
+async function commandSyncProfile() {
+  const args = process.argv.slice(2);
+  const checkOnly = args.includes("--check");
+  const options = args.filter((arg) => arg !== "--check");
+  must(
+    options.length === 0 || (options.length === 2 && options[0] === "--source-root"),
+    "Usage: node scripts/huggingface.mjs sync-profile [--source-root path] [--check]",
+  );
+  const root = path.resolve(options[1] || ".");
+  const [release, authority] = await Promise.all([
+    loadPublicationData(root),
+    readJson(path.join(root, ".release/policy/authority-surface-contract.json")),
+  ]);
+  const organization = authority.surfaces.huggingFace.organization;
+  must(/^[A-Za-z0-9_-]+$/.test(organization), "Invalid HF organization");
+  const repo = `${organization}/README`;
+  const request = async (url, options = {}) => {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(60000),
+      ...options,
+      headers: {
+        "cache-control": "no-cache",
+        "user-agent": "ghezelbaash-profile-release-sync/1.0",
+        ...options.headers,
+      },
+    });
+    must(response.ok, `HF profile request failed HTTP ${response.status}`);
+    return response;
+  };
+  const metadata = await (await request(`https://huggingface.co/api/spaces/${repo}?_=${Date.now()}`)).json();
+  must(metadata.private === false && /^[a-f0-9]{40}$/.test(metadata.sha), "HF profile must be public with a pinned commit");
+  const original = await (await request(`https://huggingface.co/spaces/${repo}/raw/${metadata.sha}/README.md`)).text();
+  for (const token of [release.primaryEntity.name, release.primaryEntity.wikidata, release.canonicalUrl, release.dataset.huggingFace.dataset])
+    must(original.includes(token), `HF profile identity missing ${token}`);
+  const versionLine = /^- Current immutable Version DOI \(v\d+\.\d+\.\d+\): https:\/\/doi\.org\/10\.5281\/zenodo\.\d+\r?$/gm;
+  must([...original.matchAll(versionLine)].length === 1, "HF profile must contain exactly one current version DOI line");
+  const expected = original.replace(versionLine,
+    `- Current immutable Version DOI (v${release.release}): https://doi.org/${release.dataset.zenodo.versionDoi}`);
+  const changed = original !== expected;
+  if (checkOnly) {
+    must(!changed, `HF profile current version drift; expected v${release.release} / ${release.dataset.zenodo.versionDoi}`);
+  } else if (changed) {
+    must(process.env.HF_TOKEN, "HF_TOKEN is required to synchronize the organization profile");
+    const result = await (await request(`https://huggingface.co/api/spaces/${repo}/commit/main`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.HF_TOKEN}`, "content-type": "application/x-ndjson" },
+      body: [
+        { key: "header", value: { summary: `Synchronize current release v${release.release}`, parentCommit: metadata.sha } },
+        { key: "file", value: { path: "README.md", content: expected, encoding: "utf-8" } },
+      ].map((row) => JSON.stringify(row)).join("\n") + "\n",
+    })).json();
+    must(result.success === true, "HF profile commit did not succeed");
+    const readback = await (await request(`https://huggingface.co/spaces/${repo}/raw/main/README.md?_=${Date.now()}`)).text();
+    must(readback === expected, "HF profile post-publication readback drift");
+  }
+  console.log(JSON.stringify({ profileRelease: "PASS", repo, release: release.release,
+    versionDoi: release.dataset.zenodo.versionDoi, changed, checkOnly }));
+}
+
 const usage =
-  "Usage: node scripts/huggingface.mjs <prepare|verify|push> [options]";
+  "Usage: node scripts/huggingface.mjs <prepare|verify|push|sync-profile> [options]";
 const command = process.argv[2];
 if (!command) throw new Error(usage);
 process.argv.splice(2, 1);
 switch (command) {
+  case "sync-profile":
+    await commandSyncProfile();
+    break;
   case "prepare":
     await commandPrepare();
     break;

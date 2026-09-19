@@ -69,8 +69,11 @@ Production delivery uses the native Cloudflare Pages Git integration on the dedi
 - `cloudflare-pages-deploy.yml` — verifies and reconciles the canonical Cloudflare deployment after a `production` push.
 - `github-pages-bridge.yml` — publishes the canonical GitHub Pages redirect bridge from the frozen `production` source.
 - `hugging-face-authority.yml` — verifies or explicitly publishes external authority/release surfaces.
+- `authority-maintenance.yml` — proves complete DIST identity against frozen production, reconciles Cloudflare and the Hugging Face organization profile, and verifies the current immutable release. It runs when its operational source changes on `main`, or manually (verification only unless `apply` is selected). It never promotes `main` or creates a DOI.
 
 Release, Zenodo and Hugging Face publication are explicit operations; `npm run build` does not perform them.
+
+The release transaction reconciles the Cloudflare edge and purges stale release objects before checking public bytes. It also advances the organization profile's current Version DOI and submits the canonical URL to IndexNow after the public checks pass. These steps run within the release transaction because a `GITHUB_TOKEN` push does not trigger the separate production-push workflows.
 
 ## Release and provenance
 

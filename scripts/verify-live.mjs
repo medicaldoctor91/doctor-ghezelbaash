@@ -170,7 +170,7 @@ async function releaseContext(locations) {
   await readdir(distRoot);
   return {
     ...locations,
-    release,
+    release: await loadPublicationData(sourceRoot),
     tag,
     head,
     core,
@@ -197,8 +197,18 @@ async function command_test_release_context() {
         }).trim();
     await mkdir(path.join(sourceRoot, "src/data"), { recursive: true });
     await mkdir(distRoot);
+    const fixtureRelease = JSON.parse(await readFile("src/data/release.json", "utf8")),
+      fixtureGraph = JSON.parse(await readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"));
+    fixtureRelease.release = "9.8.7";
+    fixtureGraph["@graph"].find((node) => node["@id"] === fixtureRelease.dataset.id).name =
+      "Historical source dataset";
+    await mkdir(path.join(sourceRoot, "src/data/semantic"));
+    await writeFile(
+      path.join(sourceRoot, "src/data/semantic/knowledge-graph.jsonld"),
+      JSON.stringify(fixtureGraph),
+    );
     const releasePath = path.join(sourceRoot, "src/data/release.json"),
-      releaseBytes = JSON.stringify({ release: "9.8.7" }),
+      releaseBytes = JSON.stringify(fixtureRelease),
       resource = {
         path: "historical.json",
         source: ".generated/historical.json",
@@ -242,6 +252,10 @@ async function command_test_release_context() {
     git("tag", "v9.8.7");
     const context = await releaseContext(locations);
     assert.equal(context.release.release, "9.8.7");
+    assert.equal(context.release.dataset.name, "Historical source dataset");
+    assert.ok(context.release.primaryEntity.wikidata);
+    assert.ok(context.release.primaryEntity.orcid);
+    assert.ok(context.release.medicalReviewedAt);
     assert.deepEqual(
       context.core.map(({ path: file }) => file),
       ["historical.json", "historical-only.json"],
