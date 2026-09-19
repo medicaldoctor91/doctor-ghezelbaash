@@ -589,12 +589,17 @@ async function command_release() {
   const { release, tag, head, core, distRoot, localFile } =
       await releaseContext(releaseLocations(process.argv.slice(2))),
     z = release.dataset.zenodo;
-  const sha = (b) => createHash("sha256").update(b).digest("hex"),
+  const zenodoHeaders = (url) =>
+      new URL(url).origin === "https://zenodo.org" && process.env.ZENODO_TOKEN
+        ? { Authorization: `Bearer ${process.env.ZENODO_TOKEN}` }
+        : {},
+    sha = (b) => createHash("sha256").update(b).digest("hex"),
     fetchBytes = async (url) => {
       const r = await fetch(url, {
         headers: {
           "Cache-Control": "no-cache",
           "User-Agent": "ghezelbaash-release-snapshot-verifier/1.0",
+          ...zenodoHeaders(url),
         },
         signal: AbortSignal.timeout(60000),
       });
@@ -604,7 +609,7 @@ async function command_release() {
   const zenodoResponse = await fetch(
     `https://zenodo.org/api/records/${z.recordId}?_=${Date.now()}`,
     {
-      headers: { "Cache-Control": "no-cache" },
+      headers: { "Cache-Control": "no-cache", ...zenodoHeaders("https://zenodo.org") },
       signal: AbortSignal.timeout(60000),
     },
   );

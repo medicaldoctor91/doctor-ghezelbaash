@@ -251,6 +251,8 @@ jobs:
           node scripts/verify-live.mjs current --website-only
       - name: Verify the repaired or current frozen release snapshot
         if: steps.release.outputs.mode == 'current' && env.FROZEN_SOURCE_AT_HEAD == 'true'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
@@ -576,6 +578,8 @@ jobs:
             --record "$ZENODO_RECORD" --doi "$ZENODO_DOI" --version "$RELEASE_TARGET"
       - name: Verify public Hugging Face and website release truth
         if: steps.release.outputs.mode == 'new'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
