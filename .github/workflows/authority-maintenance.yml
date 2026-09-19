@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       apply:
-        description: Reconcile Cloudflare, public profile and Viewer packaging against the frozen production release
+        description: Reconcile mutable public surfaces against the exact frozen production release
         type: boolean
         default: false
 
@@ -20,6 +20,11 @@ on:
         description: Reconcile the frozen production release
         type: boolean
         default: false
+      source_sha:
+        description: Exact post-release commit to verify and, when apply is true, reconcile
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -39,9 +44,11 @@ jobs:
     timeout-minutes: 35
     env:
       ASTRO_TELEMETRY_DISABLED: "1"
+      MAINTENANCE_SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ inputs.source_sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -65,8 +72,31 @@ jobs:
           node scripts/platform-contract.mjs validate
           node scripts/verify-live.mjs test-release-context
           node scripts/test-transient-retry.mjs
+          if test -f scripts/publish-hf-release.py; then python3 scripts/publish-hf-release.py --self-test; fi
+          if test -f scripts/sync-hf-retrieval.py; then python3 scripts/sync-hf-retrieval.py --self-test; fi
           python3 scripts/build-hf-viewer.py --self-test
           node scripts/test-hugging-face-viewer.mjs
+      - name: Verify the selected maintenance source
+        run: |
+          set -euo pipefail
+          [[ "$MAINTENANCE_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$MAINTENANCE_SOURCE_SHA"
+      - name: Authorize manual public reconciliation against one frozen source
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./src/data/release.json').release")"
+          git fetch --no-tags origin \
+            "+refs/heads/main:refs/remotes/origin/main" \
+            "+refs/heads/production:refs/remotes/origin/production"
+          git fetch --force origin "refs/tags/v$VERSION:refs/tags/v$VERSION"
+          MAIN_SHA="$(git rev-parse refs/remotes/origin/main)"
+          PRODUCTION_SHA="$(git rev-parse refs/remotes/origin/production)"
+          TAG_SHA="$(git rev-parse "refs/tags/v$VERSION^{commit}")"
+          test "$MAIN_SHA" = "$MAINTENANCE_SOURCE_SHA"
+          test "$PRODUCTION_SHA" = "$MAINTENANCE_SOURCE_SHA"
+          test "$TAG_SHA" = "$MAINTENANCE_SOURCE_SHA"
+          echo "MANUAL_PUBLIC_RECONCILIATION_AUTHORIZED source=$MAINTENANCE_SOURCE_SHA version=$VERSION"
       - name: Pin production and the immutable release before any mutation
         run: |
           set -euo pipefail
@@ -118,25 +148,17 @@ jobs:
             --source-root .release/frozen --dist-root dist \
             > .release/runtime/finalization/frozen-release.json
           cat .release/runtime/finalization/frozen-release.json
-      - name: Prepare reversible Hugging Face Viewer packaging
+      - name: Prepare Hugging Face Viewer packaging for read-only comparison
         run: |
           set -euo pipefail
           mkdir -p .release/huggingface
           node scripts/huggingface.mjs prepare dist .release/huggingface
-      - name: Synchronize Hugging Face packaging while preserving frozen source bytes
-        if: github.event_name == 'push' || inputs.apply
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-        run: |
-          node scripts/huggingface.mjs sync-dataset .release/huggingface --source-root .release/frozen \
-            > .release/runtime/finalization/huggingface-packaging.json
-          cat .release/runtime/finalization/huggingface-packaging.json
-      - name: Verify exact published Hugging Face packaging
+      - name: Verify exact published Hugging Face dataset packaging without mutation
         run: node scripts/huggingface.mjs sync-dataset .release/huggingface --source-root .release/frozen --check
       - name: Reconcile registered workflows with maintained source
         env:
           GH_TOKEN: ${{ github.token }}
-          APPLY_WORKFLOW_CLEANUP: ${{ github.event_name == 'push' || inputs.apply }}
+          APPLY_WORKFLOW_CLEANUP: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
@@ -225,7 +247,7 @@ jobs:
           NODE
       - name: Reconcile Cloudflare production settings and cache
         id: cloudflare
-        if: github.event_name == 'push' || inputs.apply
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -238,7 +260,7 @@ jobs:
           node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- python scripts/configure-cloudflare-edge.py --apply --outcome ../runtime/finalization/cloudflare-edge.json
           node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- python scripts/configure-pages-dev-redirect.py
       - name: Verify the immutable Cloudflare deployment bytes
-        if: github.event_name == 'push' || inputs.apply
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true
         env:
           VERIFY_BASE_URL: ${{ steps.cloudflare.outputs.deployment_url }}
         run: |
@@ -246,10 +268,23 @@ jobs:
           test -n "$VERIFY_BASE_URL"
           node scripts/run-transient-command.mjs -- node scripts/cloudflare-pages.mjs verify --fresh-only
       - name: Synchronize the public organization profile from frozen production
-        if: github.event_name == 'push' || inputs.apply
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         run: node scripts/huggingface.mjs sync-profile --source-root .release/frozen
+      - name: Build exact source retrieval demo
+        if: hashFiles('scripts/build-hf-demo.mjs') != ''
+        run: node scripts/build-hf-demo.mjs --source-dist dist --out-dir .release/runtime/hf-demo
+      - name: Synchronize static retrieval and existing public collections
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true && hashFiles('scripts/sync-hf-retrieval.py') != ''
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: python3 scripts/sync-hf-retrieval.py --directory .release/runtime/hf-demo --source-root .release/frozen --output .release/runtime/finalization/hf-retrieval.json
+      - name: Verify static retrieval, source hashes and collection links
+        if: hashFiles('scripts/sync-hf-retrieval.py') != ''
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: python3 scripts/sync-hf-retrieval.py --directory .release/runtime/hf-demo --source-root .release/frozen --check
       - name: Verify current public bytes, discovery and dataset viewer
         run: |
           set -euo pipefail
@@ -294,7 +329,7 @@ jobs:
           console.log('GITHUB_VISIBILITY_IMMUTABLE_RELEASE_AND_BRANCH_PROTECTION_PASS');
           NODE
       - name: Notify IndexNow only after all publication checks pass
-        if: github.event_name == 'push' || inputs.apply
+        if: github.event_name == 'workflow_dispatch' && inputs.apply == true
         run: npm run indexnow:submit
       - name: Preserve verification evidence
         if: always()
