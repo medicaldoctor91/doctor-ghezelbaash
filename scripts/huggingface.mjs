@@ -732,23 +732,47 @@ async function commandSyncDataset() {
   if (checkOnly) must(updates.length === 0, `HF packaging source drift: ${updates.map(([file]) => file).join(", ")}`);
   else if (updates.length) {
     must(process.env.HF_TOKEN, "HF_TOKEN is required to synchronize Dataset packaging");
-    const response = await request(`https://huggingface.co/api/datasets/${repo}/commit/main`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.HF_TOKEN}`, "content-type": "application/x-ndjson" },
-      body: [
-        { key: "header", value: {
-          summary: `Repair typed Viewer access for source v${release.release}`,
-          description: "Preserve every frozen source byte and version tag; publish reversible typed Parquet, provenance and dataset documentation atomically.",
-          parentCommit: currentMeta.sha,
-        } },
-        ...updates.map(([file, bytes]) => ({ key: "file", value: { path: file, content: bytes.toString("base64"), encoding: "base64" } })),
-      ].map((row) => JSON.stringify(row)).join("\n") + "\n",
+    // The official client pre-uploads binary blobs through Xet/LFS, then
+    // commits this exact allowlist once with the same parentCommit guard.
+    const upload = spawnSync("python3", ["-c", `
+import base64, io, json, os, re, sys
+import huggingface_hub
+from huggingface_hub import HfApi, CommitOperationAdd
+assert huggingface_hub.__version__ == "1.32.0", "Unpinned Hub client"
+plan = json.load(sys.stdin)
+token = os.environ["HF_TOKEN"]
+try:
+    result = HfApi(endpoint="https://huggingface.co", token=token).create_commit(
+        repo_id=plan["repo"], repo_type="dataset", revision="main",
+        parent_commit=plan["parent"], create_pr=False,
+        commit_message=plan["message"],
+        commit_description="Preserve frozen source bytes and tags; publish typed Viewer access and documentation atomically.",
+        operations=[CommitOperationAdd(path_in_repo=row["path"],
+            path_or_fileobj=io.BytesIO(base64.b64decode(row["content"]))) for row in plan["files"]],
+    )
+    print(json.dumps({"oid": result.oid}))
+except Exception as error:
+    message = re.sub(r"https?://\\S+", "[URL]", str(error)).replace(token, "[REDACTED]")[:2000]
+    print(json.dumps({"error": type(error).__name__, "message": message}))
+    sys.exit(1)
+`], {
+      input: JSON.stringify({ repo, parent: currentMeta.sha,
+        message: `Repair typed Viewer access for source v${release.release}`,
+        files: updates.map(([file, bytes]) => ({ path: file, content: bytes.toString("base64") })),
+      }),
+      encoding: "utf8", timeout: 300000, maxBuffer: 1024 * 1024,
+      env: { ...process.env, HF_HUB_DISABLE_PROGRESS_BARS: "1", HF_HUB_DISABLE_TELEMETRY: "1", HF_HUB_VERBOSITY: "error" },
     });
-    const result = await response.json();
-    must(result.success === true, "HF Dataset packaging commit did not succeed");
-    const published = await metadata("main");
-    must(published.sha !== currentMeta.sha, "HF Dataset publication did not advance main");
-    publishedSha = published.sha;
+    must(!upload.error && upload.status === 0,
+      `HF Dataset official client upload failed: ${upload.error?.message || upload.stdout || "no response"}`);
+    const result = JSON.parse(upload.stdout);
+    must(/^[a-f0-9]{40}$/.test(result.oid) && result.oid !== currentMeta.sha,
+      "HF Dataset publication did not advance main");
+    const published = await metadata(result.oid);
+    must(published.sha === result.oid, "HF Dataset published revision drift");
+    const mainAfter = await metadata("main");
+    must(mainAfter.sha === result.oid, "HF Dataset main advanced concurrently after publication");
+    publishedSha = result.oid;
     const readback = await remoteDistribution(published, hf);
     for (const [file, bytes] of staged.files)
       must(readback.files.get(file)?.equals(bytes), `HF post-publication readback differs: ${file}`);
