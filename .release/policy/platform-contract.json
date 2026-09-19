@@ -36,26 +36,5 @@
       "dynamicRoutes": [],
       "requiredProductionBindings": []
     }
-  },
-  "automation": {
-    "reputationRefresh": {
-      "workflow": ".github/workflows/reputation-refresh.yml",
-      "schedule": "23 */6 * * *",
-      "sourceFile": "src/data/semantic/knowledge-graph.jsonld",
-      "source": "Google Places API (New)",
-      "fieldMask": [
-        "id",
-        "rating",
-        "userRatingCount",
-        "businessStatus",
-        "movedPlace",
-        "movedPlaceId"
-      ],
-      "requiredGitHubSecrets": [
-        "GOOGLE_PLACES_API_KEY"
-      ],
-      "upstreamCallsPerRun": 1,
-      "publishOnChangeOnly": true
-    }
   }
 }
