@@ -676,7 +676,12 @@ async function commandSyncDataset() {
       signal: AbortSignal.timeout(60000), ...options,
       headers: { "cache-control": "no-cache", "user-agent": "ghezelbaash-hf-packaging-sync/1.0", ...options.headers },
     });
-    must(response.ok, `HF dataset request failed HTTP ${response.status}: ${new URL(url).pathname}`);
+    if (!response.ok) {
+      const failure = await response.json().catch(() => ({}));
+      const detail = String(failure.error || failure.message || "").slice(0, 1200)
+        .replaceAll(process.env.HF_TOKEN || "__NO_HF_TOKEN__", "[REDACTED]");
+      throw new Error(`HF dataset request failed HTTP ${response.status}: ${new URL(url).pathname} ${detail}`);
+    }
     return response;
   };
   const metadata = async (revision) => {

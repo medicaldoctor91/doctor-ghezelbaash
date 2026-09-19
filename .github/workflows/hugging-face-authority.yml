@@ -61,6 +61,8 @@ jobs:
       - name: Install pinned Viewer packaging dependency
         run: python3 -m pip install --requirement scripts/requirements-hf-viewer.txt
       - name: Enforce high-severity dependency advisory gate
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: npm run security:dependencies
       - name: Verify frozen-source publication context
         run: node scripts/verify-live.mjs test-release-context

@@ -55,9 +55,12 @@ jobs:
       - name: Install pinned Viewer packaging dependency
         run: python3 -m pip install --requirement scripts/requirements-hf-viewer.txt
       - name: Validate operational source
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           npm run security:dependencies
+          node scripts/dependency-advisory-gate.mjs --self-test
           npm run validate:release-contract
           node scripts/platform-contract.mjs validate
           node scripts/verify-live.mjs test-release-context
