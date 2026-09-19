@@ -1,0 +1,451 @@
+name: Repair Hugging Face Viewer for immutable v1.3.3
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact audited repair commit on main
+        required: true
+        type: string
+      expected_hf_main_sha:
+        description: Exact Hugging Face main parent protected by compare-and-swap
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  repair:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      EXPECTED_HF_MAIN_SHA: ${{ inputs.expected_hf_main_sha }}
+      REPAIR_BASE_SHA: a9b224e94391597ea00e45409329155fe2b20e20
+      FROZEN_SOURCE_SHA: a6b93084f97318f05766a962375233277e1d425c
+      GITHUB_TAG_OBJECT_SHA: 634bd496f14e68c4bbc92ea794f82f282920bc8a
+      HF_MAIN_BEFORE: d8e55c116019838750f9e45981ddf30e8ae920dc
+      HF_TAG_OBJECT_SHA: a95dfbd5cf05ae924ae3ad151409a2bba2ab27b3
+      HF_TAG_COMMIT_SHA: a0cc0ee51215f3b9074a049f9b29ae1c0a5dfcdc
+      CANCELLED_PREP_SHA: ed7307c8ff16d843746e4c08d97d6a63413de533
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+      HF_URL: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Pin the only authorized GitHub source and immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$SOURCE_SHA" = "$GITHUB_SHA"
+          test "$EXPECTED_HF_MAIN_SHA" = "$HF_MAIN_BEFORE"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git rev-list --parents -n 1 "$SOURCE_SHA" | wc -w)" -eq 2
+          test "$(git rev-parse "$SOURCE_SHA^")" = "$REPAIR_BASE_SHA"
+          git fetch --no-tags origin \
+            "+refs/heads/main:refs/remotes/origin/main" \
+            "+refs/heads/production:refs/remotes/origin/production"
+          git fetch --force origin "refs/tags/v1.3.3:refs/tags/v1.3.3"
+          test "$(git rev-parse refs/remotes/origin/main)" = "$SOURCE_SHA"
+          test "$(git rev-parse refs/remotes/origin/production)" = "$FROZEN_SOURCE_SHA"
+          test "$(git rev-parse refs/tags/v1.3.3)" = "$GITHUB_TAG_OBJECT_SHA"
+          test "$(git rev-parse 'refs/tags/v1.3.3^{commit}')" = "$FROZEN_SOURCE_SHA"
+          mapfile -t CHANGED < <(git diff --name-only "$REPAIR_BASE_SHA" "$SOURCE_SHA")
+          test "${#CHANGED[@]}" -eq 3
+          printf '%s\n' "${CHANGED[@]}" | sort > /tmp/actual-repair-files
+          printf '%s\n' \
+            .github/workflows/hf-v133-viewer-repair.yml \
+            scripts/build-hf-viewer.py \
+            scripts/huggingface.mjs | sort > /tmp/expected-repair-files
+          diff -u /tmp/expected-repair-files /tmp/actual-repair-files
+          V14_GITHUB_BRANCH="$(git ls-remote --heads origin refs/heads/release/v1.4.0)"
+          V14_GITHUB_TAG="$(git ls-remote --tags origin refs/tags/v1.4.0 'refs/tags/v1.4.0^{}')"
+          test -z "$V14_GITHUB_BRANCH"
+          test -z "$V14_GITHUB_TAG"
+          node --input-type=module <<'NODE'
+          import release from './src/data/release.json' with { type: 'json' };
+          if (release.release !== '1.3.3' || release.dataset.zenodo.recordId !== '22838416' ||
+              release.dataset.zenodo.versionDoi !== '10.5281/zenodo.22838416')
+            throw new Error('The repair source is not the frozen v1.3.3 identity');
+          const request = async tag => fetch(`https://api.github.com/repos/${process.env.GITHUB_REPOSITORY}/releases/tags/${tag}`, {
+            headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${process.env.GH_TOKEN}`,
+              'user-agent': 'ghezelbaash-hf-repair/1.0', 'x-github-api-version': '2026-03-10' },
+          });
+          const frozenResponse = await request('v1.3.3');
+          if (!frozenResponse.ok) throw new Error(`GitHub v1.3.3 Release HTTP ${frozenResponse.status}`);
+          const frozen = await frozenResponse.json();
+          if (frozen.tag_name !== 'v1.3.3' || frozen.target_commitish !== process.env.FROZEN_SOURCE_SHA ||
+              frozen.draft || frozen.prerelease || frozen.immutable !== true)
+            throw new Error('GitHub v1.3.3 Release is not the expected immutable release');
+          const cancelled = await request('v1.4.0');
+          if (cancelled.status !== 404) throw new Error(`Unexpected GitHub v1.4.0 Release state: HTTP ${cancelled.status}`);
+          NODE
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - run: npm ci
+      - name: Install pinned Hugging Face dependencies
+        run: python3 -m pip install --requirement scripts/requirements-hf-viewer.txt
+
+      - name: Validate the narrowly audited repair code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          npm run security:dependencies
+          npm run validate:release-contract
+          node scripts/platform-contract.mjs validate
+          python3 scripts/build-hf-viewer.py --self-test
+          node scripts/test-hugging-face-viewer.mjs
+
+      - name: Prove the site distribution remains byte-identical to immutable v1.3.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach .release/frozen "$FROZEN_SOURCE_SHA"
+          npm run build
+          (
+            cd .release/frozen
+            npm ci
+            export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+            export CF_PAGES_COMMIT_SHA="$FROZEN_SOURCE_SHA"
+            npm run build
+          )
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          def hashes(root):
+              return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                      for p in root.rglob('*') if p.is_file()}
+
+          current = hashes(Path('dist'))
+          frozen = hashes(Path('.release/frozen/dist'))
+          if current != frozen:
+              drift = sorted(path for path in current.keys() | frozen.keys()
+                             if current.get(path) != frozen.get(path))
+              raise SystemExit(f'Repair changed frozen site distribution: {drift}')
+          Path('.release/runtime').mkdir(parents=True, exist_ok=True)
+          Path('.release/runtime/dist-invariance.json').write_text(
+              json.dumps({'status': 'PASS', 'files': len(current), 'hashes': current}, indent=2) + '\n')
+          print(f'DIST_INVARIANCE_PASS files={len(current)}')
+          PY
+
+      - name: Prepare the two-config v1.3.3 Hugging Face distribution
+        run: |
+          set -euo pipefail
+          mkdir -p .release/huggingface
+          node scripts/huggingface.mjs prepare dist .release/huggingface \
+            | tee .release/runtime/hf-prepare.json
+
+      - name: Pin Hugging Face refs and prove the exact three-file repair plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          HF_MAIN_REF="$(git ls-remote --heads "$HF_URL" refs/heads/main | awk '{print $1}')"
+          HF_RELEASE_BRANCH="$(git ls-remote --heads "$HF_URL" refs/heads/release/v1.3.3 | awk '{print $1}')"
+          HF_TAG_REF="$(git ls-remote --tags "$HF_URL" refs/tags/v1.3.3 | awk '{print $1}')"
+          HF_TAG_PEELED="$(git ls-remote --tags "$HF_URL" 'refs/tags/v1.3.3^{}' | awk '{print $1}')"
+          test "$HF_MAIN_REF" = "$EXPECTED_HF_MAIN_SHA"
+          test "$HF_RELEASE_BRANCH" = "$HF_TAG_COMMIT_SHA"
+          test "$HF_TAG_REF" = "$HF_TAG_OBJECT_SHA"
+          test "$HF_TAG_PEELED" = "$HF_TAG_COMMIT_SHA"
+          V14_HF_BRANCH="$(git ls-remote --heads "$HF_URL" refs/heads/release/v1.4.0)"
+          V14_HF_TAG="$(git ls-remote --tags "$HF_URL" refs/tags/v1.4.0 'refs/tags/v1.4.0^{}')"
+          test -z "$V14_HF_BRANCH"
+          test -z "$V14_HF_TAG"
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto';
+          import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+          import path from 'node:path';
+
+          const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+          const must = (condition, message) => { if (!condition) throw new Error(message); };
+          const walkAll = async (directory, prefix = '') => {
+            const rows = [];
+            for (const entry of await readdir(path.join(directory, prefix), { withFileTypes: true })) {
+              const relative = path.posix.join(prefix, entry.name);
+              if (entry.isDirectory()) rows.push(...await walkAll(directory, relative));
+              else rows.push(relative);
+            }
+            return rows.sort();
+          };
+          const repo = process.env.HF_REPO;
+          const revision = process.env.EXPECTED_HF_MAIN_SHA;
+          const base = `https://huggingface.co/datasets/${repo}`;
+          const metaResponse = await fetch(`${base.replace('/datasets/', '/api/datasets/')}/revision/${revision}?blobs=false`);
+          must(metaResponse.ok, `HF metadata HTTP ${metaResponse.status}`);
+          const metadata = await metaResponse.json();
+          must(metadata.sha === revision && metadata.private === false &&
+            [false, null, undefined, 'false'].includes(metadata.gated), 'HF main metadata drift');
+          const staged = await walkAll('.release/huggingface');
+          const remote = (metadata.siblings || []).map(row => row.rfilename).sort();
+          must(JSON.stringify(remote) === JSON.stringify([...staged, '.gitattributes'].sort()),
+            'HF repository inventory drift before repair');
+          const rollbackRoot = '.release/runtime/hf-rollback';
+          await mkdir(rollbackRoot, { recursive: true });
+          const comparisons = await Promise.all(staged.map(async file => {
+            const response = await fetch(`${base}/resolve/${revision}/${file}?download=true`, { redirect: 'follow' });
+            must(response.ok, `HF file fetch failed ${file}: ${response.status}`);
+            const before = Buffer.from(await response.arrayBuffer());
+            const after = await readFile(path.join('.release/huggingface', file));
+            if (['dist-sha256.json', 'viewer/packaging.json', 'viewer/query-matrix.parquet'].includes(file)) {
+              const destination = path.join(rollbackRoot, file);
+              await mkdir(path.dirname(destination), { recursive: true });
+              await writeFile(destination, before);
+            }
+            return before.equals(after) ? null : file;
+          }));
+          const changed = comparisons.filter(Boolean);
+          const expected = ['dist-sha256.json', 'viewer/packaging.json', 'viewer/query-matrix.parquet'];
+          must(JSON.stringify(changed.sort()) === JSON.stringify(expected),
+            `Unexpected HF repair plan: ${changed.join(', ')}`);
+          const exact = {
+            'dist-sha256.json': [5043, '3042d43da73d4a42fbef3d30880f5845b3e60db52b28f1aa03c795cb817c9ef6'],
+            'viewer/packaging.json': [5323, '4ad7a2f188267f6eb4a7e7fd7e1cc5c8e1bad730bb09de83a2bda3f2f96aa62b'],
+            'viewer/query-matrix.parquet': [23604, 'd0add20b8ce40a4aa561894936102b5f7abf612e51b0b9e7d1d6489f00aa4c35'],
+          };
+          for (const [file, [bytes, digest]] of Object.entries(exact)) {
+            const content = await readFile(path.join('.release/huggingface', file));
+            must(content.length === bytes && sha256(content) === digest, `Unexpected repaired bytes: ${file}`);
+          }
+          const source = await readFile('.release/huggingface/query-matrix.jsonl');
+          const rows = source.toString('utf8').trimEnd().split('\n').map(line => JSON.parse(line));
+          must(source.length === 913407 && sha256(source) === '846611b354a451bc1d0b8a8cbe288dfe7c430fedd9bf043313810021607423bd' &&
+            rows.length === 876 && rows.filter(row => !Object.hasOwn(row, 'service_types')).length === 168,
+          'Frozen query source identity drift');
+          const result = { status: 'PASS', revision, changed, exact,
+            frozenSource: { bytes: source.length, sha256: sha256(source), rows: rows.length,
+              omittedServiceTypes: rows.filter(row => !Object.hasOwn(row, 'service_types')).length } };
+          await writeFile('.release/runtime/hf-preflight.json', JSON.stringify(result, null, 2) + '\n');
+          console.log(`HF_REPAIR_PLAN_PASS files=${changed.join(',')}`);
+          NODE
+
+      - name: Publish the access-layer repair with a parent commit guard
+        id: publish
+        continue-on-error: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          set +e
+          node scripts/huggingface.mjs sync-dataset .release/huggingface \
+            --source-root .release/frozen --expected-main "$EXPECTED_HF_MAIN_SHA" \
+            --expected-updates dist-sha256.json,viewer/packaging.json,viewer/query-matrix.parquet \
+            --state-out .release/runtime/hf-publication-state.json \
+            | tee .release/runtime/hf-publish.json
+          STATUS="${PIPESTATUS[0]}"
+          set -e
+          if test -f .release/runtime/hf-publication-state.json; then
+            PUBLISHED_SHA="$(node -p "JSON.parse(require('fs').readFileSync('.release/runtime/hf-publication-state.json','utf8')).publishedCommit")"
+            [[ "$PUBLISHED_SHA" =~ ^[0-9a-f]{40}$ ]]
+            test "$PUBLISHED_SHA" != "$EXPECTED_HF_MAIN_SHA"
+            echo "published_sha=$PUBLISHED_SHA" >> "$GITHUB_OUTPUT"
+          fi
+          exit "$STATUS"
+
+      - name: Verify every public Viewer endpoint at the repaired revision
+        id: viewer
+        if: steps.publish.outcome == 'success'
+        continue-on-error: true
+        env:
+          PUBLISHED_SHA: ${{ steps.publish.outputs.published_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/huggingface.mjs sync-dataset .release/huggingface \
+            --source-root .release/frozen --expected-main "$PUBLISHED_SHA" --check \
+            | tee .release/runtime/hf-readback.json
+          node scripts/huggingface.mjs verify --viewer \
+            | tee .release/runtime/hf-viewer-verification.json
+          node --input-type=module <<'NODE'
+          const must = (condition, message) => { if (!condition) throw new Error(message); };
+          const params = new URLSearchParams({
+            dataset: process.env.HF_REPO, config: 'query_matrix', split: 'train',
+          });
+          const response = await fetch(`https://datasets-server.huggingface.co/statistics?${params}`, {
+            headers: { accept: 'application/json', 'cache-control': 'no-cache' },
+          });
+          const body = await response.json();
+          must(response.ok && !body.error, `query_matrix statistics HTTP ${response.status}`);
+          must(response.headers.get('x-revision') === process.env.PUBLISHED_SHA,
+            'query_matrix statistics served a stale revision');
+          must(body.num_examples === 876 && Array.isArray(body.statistics) && body.statistics.length === 20,
+            'query_matrix statistics coverage drift');
+          const serviceTypes = body.statistics.find(row => row.column_name === 'service_types');
+          must(serviceTypes?.column_type === 'list' && serviceTypes.column_statistics?.nan_count === 0 &&
+            serviceTypes.column_statistics?.min === 0 && serviceTypes.column_statistics?.max === 3,
+          'query_matrix service_types statistics are not repaired');
+          console.log('HF_QUERY_MATRIX_STATISTICS_PASS rows=876 columns=20 service_types=[0,3] nulls=0');
+          NODE
+
+      - name: Recover an acknowledged commit if the publication response was interrupted
+        id: recover_publication
+        if: steps.publish.outcome == 'failure' && steps.publish.outputs.published_sha == ''
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          CURRENT_HF_MAIN="$(git ls-remote --heads "$HF_URL" refs/heads/main | awk '{print $1}')"
+          [[ "$CURRENT_HF_MAIN" =~ ^[0-9a-f]{40}$ ]]
+          if test "$CURRENT_HF_MAIN" = "$EXPECTED_HF_MAIN_SHA"; then
+            echo "status=no_commit" >> "$GITHUB_OUTPUT"
+            echo "HF_PUBLICATION_RECOVERY_PASS no_commit"
+            exit 0
+          fi
+          HF_HISTORY="$(mktemp -d)"
+          git -C "$HF_HISTORY" init --quiet
+          git -C "$HF_HISTORY" fetch --quiet --depth=2 "$HF_URL" refs/heads/main
+          test "$(git -C "$HF_HISTORY" rev-parse FETCH_HEAD)" = "$CURRENT_HF_MAIN"
+          test "$(git -C "$HF_HISTORY" rev-list --parents -n 1 FETCH_HEAD | wc -w)" -eq 2
+          test "$(git -C "$HF_HISTORY" rev-list --parents -n 1 FETCH_HEAD | awk '{print $2}')" = "$EXPECTED_HF_MAIN_SHA"
+          node scripts/huggingface.mjs sync-dataset .release/huggingface \
+            --source-root .release/frozen --expected-main "$CURRENT_HF_MAIN" --check \
+            | tee .release/runtime/hf-recovered-readback.json
+          node - "$EXPECTED_HF_MAIN_SHA" "$CURRENT_HF_MAIN" <<'NODE'
+          const [previousCommit, publishedCommit] = process.argv.slice(2);
+          const state = { status: 'RECOVERED_AFTER_INTERRUPTED_RESPONSE', repo: process.env.HF_REPO,
+            previousCommit, publishedCommit,
+            files: ['dist-sha256.json', 'viewer/packaging.json', 'viewer/query-matrix.parquet'] };
+          require('fs').writeFileSync('.release/runtime/hf-publication-state.json', JSON.stringify(state, null, 2) + '\n');
+          NODE
+          echo "status=recovered_commit" >> "$GITHUB_OUTPUT"
+          echo "published_sha=$CURRENT_HF_MAIN" >> "$GITHUB_OUTPUT"
+          echo "HF_PUBLICATION_RECOVERY_PASS commit=$CURRENT_HF_MAIN"
+
+      - name: Forward-restore the previous access files after any post-commit failure
+        id: forward_restore
+        if: (steps.publish.outcome == 'failure' && (steps.publish.outputs.published_sha != '' || steps.recover_publication.outputs.published_sha != '')) || steps.viewer.outcome == 'failure'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+          PUBLISHED_SHA: ${{ steps.publish.outputs.published_sha || steps.recover_publication.outputs.published_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          python3 - <<'PY'
+          import io, os
+          from pathlib import Path
+          import huggingface_hub
+          from huggingface_hub import CommitOperationAdd, HfApi, hf_hub_download
+
+          assert huggingface_hub.__version__ == '1.32.0'
+          api = HfApi(endpoint='https://huggingface.co', token=os.environ['HF_TOKEN'])
+          repo = os.environ['HF_REPO']
+          parent = os.environ['PUBLISHED_SHA']
+          assert api.dataset_info(repo, revision='main').sha == parent, 'HF main changed after the repair commit'
+          root = Path('.release/runtime/hf-rollback')
+          files = ['dist-sha256.json', 'viewer/packaging.json', 'viewer/query-matrix.parquet']
+          result = api.create_commit(
+              repo_id=repo, repo_type='dataset', revision='main', parent_commit=parent, create_pr=False,
+              commit_message='Forward-restore v1.3.3 Viewer packaging after failed public verification',
+              commit_description='Restore only the three previous mutable access files; preserve frozen sources and v1.3.3 tag.',
+              operations=[CommitOperationAdd(path_in_repo=file,
+                  path_or_fileobj=io.BytesIO((root / file).read_bytes())) for file in files],
+          )
+          assert result.oid != parent and api.dataset_info(repo, revision='main').sha == result.oid
+          for file in files:
+              restored = Path(hf_hub_download(repo_id=repo, filename=file, repo_type='dataset',
+                                              revision=result.oid, token=False)).read_bytes()
+              assert restored == (root / file).read_bytes(), f'Forward restore readback differs: {file}'
+          Path('.release/runtime/hf-forward-restore.json').write_text(
+              '{"status":"PASS","restoredCommit":"' + result.oid + '"}\n')
+          print(f'HF_FORWARD_RESTORE_PASS commit={result.oid}')
+          PY
+          test "$(git ls-remote --tags "$HF_URL" refs/tags/v1.3.3 | awk '{print $1}')" = "$HF_TAG_OBJECT_SHA"
+          test "$(git ls-remote --tags "$HF_URL" 'refs/tags/v1.3.3^{}' | awk '{print $1}')" = "$HF_TAG_COMMIT_SHA"
+
+      - name: Fail closed after any publication or Viewer verification failure
+        if: steps.publish.outcome == 'failure' || steps.viewer.outcome == 'failure'
+        run: |
+          if test -n "${{ steps.publish.outputs.published_sha || steps.recover_publication.outputs.published_sha }}"; then
+            echo "The Hugging Face repair did not complete; the previous access files were restored with a forward commit." >&2
+          elif test "${{ steps.recover_publication.outputs.status }}" = no_commit; then
+            echo "The Hugging Face repair failed and live main remained at the exact pre-repair commit; no rollback mutation was needed." >&2
+          else
+            echo "The Hugging Face repair failed and the remote publication state could not be proven; no destructive rollback was attempted." >&2
+          fi
+          exit 1
+
+      - name: Verify the remaining Hugging Face authority surface and immutable refs
+        if: steps.publish.outcome == 'success' && steps.viewer.outcome == 'success'
+        env:
+          PUBLISHED_SHA: ${{ steps.publish.outputs.published_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/huggingface.mjs verify --profile \
+            | tee .release/runtime/hf-profile-verification.json
+          test "$(git ls-remote --heads "$HF_URL" refs/heads/main | awk '{print $1}')" = "$PUBLISHED_SHA"
+          test "$(git ls-remote --heads "$HF_URL" refs/heads/release/v1.3.3 | awk '{print $1}')" = "$HF_TAG_COMMIT_SHA"
+          test "$(git ls-remote --tags "$HF_URL" refs/tags/v1.3.3 | awk '{print $1}')" = "$HF_TAG_OBJECT_SHA"
+          test "$(git ls-remote --tags "$HF_URL" 'refs/tags/v1.3.3^{}' | awk '{print $1}')" = "$HF_TAG_COMMIT_SHA"
+          V14_HF_TAG="$(git ls-remote --tags "$HF_URL" refs/tags/v1.4.0 'refs/tags/v1.4.0^{}')"
+          test -z "$V14_HF_TAG"
+
+      - name: Upload repair evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: hf-v1.3.3-viewer-repair-evidence
+          path: .release/runtime/*.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  remove_cancelled_prep_branch:
+    needs: repair
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      CANCELLED_PREP_SHA: ed7307c8ff16d843746e4c08d97d6a63413de533
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Delete only the unchanged cancelled v1.4.0 preparation branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          REMOTE_SHA="$(git ls-remote --heads origin refs/heads/release-prep/v1.4.0 | awk '{print $1}')"
+          if test -z "$REMOTE_SHA"; then
+            echo "CANCELLED_PREP_BRANCH_ALREADY_ABSENT"
+            git config --local --unset-all http.https://github.com/.extraheader || true
+            exit 0
+          fi
+          test "$REMOTE_SHA" = "$CANCELLED_PREP_SHA"
+          git push \
+            --force-with-lease="refs/heads/release-prep/v1.4.0:$CANCELLED_PREP_SHA" \
+            origin :refs/heads/release-prep/v1.4.0
+          REMOTE_AFTER="$(git ls-remote --heads origin refs/heads/release-prep/v1.4.0)"
+          test -z "$REMOTE_AFTER"
+          git config --local --unset-all http.https://github.com/.extraheader || true

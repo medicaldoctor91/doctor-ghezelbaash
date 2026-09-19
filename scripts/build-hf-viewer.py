@@ -92,7 +92,8 @@ def restore_queries(rows):
         require(len(set(omitted)) == len(omitted) and set(omitted) <= OPTIONAL_FIELDS,
                 "Invalid omitted-field marker")
         for name in omitted:
-            require(row[name] is None, f"Omitted field unexpectedly contains a value: {name}")
+            require(row[name] == [] if name in LIST_FIELDS else row[name] is None,
+                    f"Omitted field unexpectedly contains a value: {name}")
             del row[name]
         originals.append(row)
     return originals
@@ -101,6 +102,20 @@ def restore_queries(rows):
 def field_descriptor(field):
     return {"name": field.name, "type": "list<string>" if pa.types.is_list(field.type) else "string",
             "nullable": field.nullable}
+
+
+def assert_hosted_statistics_safe(config, table):
+    """Reject native list-length ranges that crash the hosted statistics worker."""
+    for field in table.schema:
+        if not pa.types.is_list(field.type):
+            continue
+        values = [value for value in table[field.name].to_pylist() if value is not None]
+        if not values:
+            continue
+        lengths = [len(value) for value in values]
+        minimum, maximum = min(lengths), max(lengths)
+        require(minimum == maximum or maximum - minimum != 1,
+                f"Hosted statistics-unsafe list range: {config}.{field.name} [{minimum},{maximum}]")
 
 
 def encode_table(table):
@@ -134,11 +149,13 @@ def build(hub, release, doi, dataset, check=False, expectations_out=None):
         **metadata, b"source_sha256": digest(sources["query-matrix.jsonl"]).encode(),
         b"roundtrip_note": b"Remove fields listed by _source_omitted_fields, then remove that helper.",
     })
-    normalized = [{**{name: row.get(name) for name in QUERY_FIELDS},
+    normalized = [{**{name: row.get(name, [] if name in LIST_FIELDS else None) for name in QUERY_FIELDS},
                    OMITTED: [name for name in QUERY_FIELDS if name not in row]} for row in queries]
     tables = {"entity_facts": pa.Table.from_pylist(facts, schema=fact_schema),
               "query_matrix": pa.Table.from_pylist(normalized, schema=query_schema)}
     originals = {"entity_facts": facts, "query_matrix": queries}
+    for config, table in tables.items():
+        assert_hosted_statistics_safe(config, table)
     manifest = {
         "schemaVersion": 1, "packagingRevision": 1,
         "role": "reversible-viewer-access-derivatives",
@@ -229,8 +246,20 @@ def self_test():
             raise ValueError("Modified remote derivative was accepted")
         changed.write_bytes(before["viewer/query-matrix.parquet"])
         require(pq.read_table(hub / "viewer/entity-facts.parquet").to_pylist() == [fact], "CSV lexical values were coerced")
-        require(restore_queries(pq.read_table(hub / "viewer/query-matrix.parquet").to_pylist()) == [query, second],
+        query_rows = pq.read_table(hub / "viewer/query-matrix.parquet").to_pylist()
+        require(query_rows[1]["service_types"] == [] and "service_types" in query_rows[1][OMITTED],
+                "Omitted list field was not encoded as an empty list with a presence marker")
+        require(restore_queries(query_rows) == [query, second],
                 "Optional presence/list ordering was lost")
+        unsafe = pa.table({"items": pa.array([["a", "b"], ["a", "b", "c"]], type=pa.list_(pa.string()))})
+        try:
+            assert_hosted_statistics_safe("unsafe", unsafe)
+        except ValueError:
+            pass
+        else:
+            raise ValueError("Hosted statistics-unsafe adjacent list range was accepted")
+        safe = pa.table({"items": pa.array([[], ["a", "b"], ["a", "b", "c"]], type=pa.list_(pa.string()))})
+        assert_hosted_statistics_safe("safe", safe)
         for bad, label in [({**query, "answer_id": None}, "explicit null"),
                            ({**query, "service_ids": "wrong"}, "list type"),
                            ({**query, "version_doi": "wrong"}, "DOI"),

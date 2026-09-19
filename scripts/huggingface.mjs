@@ -654,10 +654,35 @@ async function commandVerify() {
 // equal to the existing immutable tag. parentCommit prevents concurrent overwrites.
 async function commandSyncDataset() {
   const args = process.argv.slice(2);
-  const checkOnly = args.includes("--check");
-  const options = args.filter((arg) => arg !== "--check");
+  let checkOnly = false,
+    expectedMain = null,
+    expectedUpdates = null,
+    stateOut = null;
+  const options = [];
+  for (let index = 0; index < args.length; index++) {
+    if (args[index] === "--check") {
+      must(!checkOnly, "Duplicate --check option");
+      checkOnly = true;
+    } else if (args[index] === "--expected-main") {
+      must(expectedMain === null && /^[a-f0-9]{40}$/.test(args[index + 1] || ""),
+        "--expected-main requires one full commit SHA");
+      expectedMain = args[++index];
+    } else if (args[index] === "--expected-updates") {
+      must(expectedUpdates === null && typeof args[index + 1] === "string" && args[index + 1],
+        "--expected-updates requires one comma-separated path list");
+      expectedUpdates = args[++index].split(",").sort();
+      must(expectedUpdates.length === new Set(expectedUpdates).size && expectedUpdates.every((file) =>
+        /^[a-z0-9][a-z0-9._/-]*$/i.test(file) && !file.includes("..")),
+      "--expected-updates contains an invalid or duplicate path");
+    } else if (args[index] === "--state-out") {
+      must(stateOut === null && /^\.release\/runtime\/[a-z0-9._/-]+$/i.test(args[index + 1] || "") &&
+        !args[index + 1].includes(".."), "--state-out requires a safe .release/runtime path");
+      stateOut = args[++index];
+    } else options.push(args[index]);
+  }
   must(options.length === 3 && options[1] === "--source-root",
-    "Usage: node scripts/huggingface.mjs sync-dataset <hub> --source-root <frozen-root> [--check]");
+    "Usage: node scripts/huggingface.mjs sync-dataset <hub> --source-root <frozen-root> [--expected-main <sha>] [--expected-updates <paths>] [--state-out <path>] [--check]");
+  must(!checkOnly || stateOut === null, "--state-out is only valid for publication");
   const [hub, , frozenRoot] = options;
   const [release, frozenRelease, authority, frozenAuthority] = await Promise.all([
     loadPublicationData(), loadPublicationData(path.resolve(frozenRoot)),
@@ -711,6 +736,8 @@ async function commandSyncDataset() {
     must(frozen.repositoryFiles.includes(file) || allowedChanges.has(file), `Undeclared packaging addition: ${file}`);
 
   const currentMeta = await metadata("main");
+  must(expectedMain === null || currentMeta.sha === expectedMain,
+    `HF Dataset main changed: actual=${currentMeta.sha} expected=${expectedMain}`);
   const hasPackaging = currentMeta.siblings?.some((row) => row.rfilename === hf.viewerPackaging.manifestPath);
   const current = await remoteDistribution(currentMeta, hasPackaging ? hf : frozenHf);
   for (const [file, bytes] of frozen.files) {
@@ -727,6 +754,11 @@ async function commandSyncDataset() {
       must(allowedChanges.has(file), `Packaging attempted to mutate source resource: ${file}`);
       updates.push([file, bytes]);
     }
+  }
+  if (expectedUpdates !== null) {
+    const actualUpdates = updates.map(([file]) => file).sort();
+    must(JSON.stringify(actualUpdates) === JSON.stringify(expectedUpdates),
+      `HF packaging update plan drift: actual=${actualUpdates.join(",") || "none"} expected=${expectedUpdates.join(",")}`);
   }
   let publishedSha = currentMeta.sha;
   if (checkOnly) must(updates.length === 0, `HF packaging source drift: ${updates.map(([file]) => file).join(", ")}`);
@@ -768,12 +800,20 @@ except Exception as error:
     const result = JSON.parse(upload.stdout);
     must(/^[a-f0-9]{40}$/.test(result.oid) && result.oid !== currentMeta.sha,
       "HF Dataset publication did not advance main");
+    if (stateOut !== null) {
+      await mkdir(path.dirname(stateOut), { recursive: true });
+      await writeFile(stateOut, JSON.stringify({ status: "COMMITTED", repo,
+        previousCommit: currentMeta.sha, publishedCommit: result.oid,
+        files: updates.map(([file]) => file) }, null, 2) + "\n");
+    }
     const published = await metadata(result.oid);
     must(published.sha === result.oid, "HF Dataset published revision drift");
     const mainAfter = await metadata("main");
     must(mainAfter.sha === result.oid, "HF Dataset main advanced concurrently after publication");
     publishedSha = result.oid;
     const readback = await remoteDistribution(published, hf);
+    must(readback.manifestBytes.equals(staged.manifestBytes),
+      "HF post-publication readback differs: dist-sha256.json");
     for (const [file, bytes] of staged.files)
       must(readback.files.get(file)?.equals(bytes), `HF post-publication readback differs: ${file}`);
     const frozenAfter = await metadata(`v${release.release}`);
@@ -782,7 +822,7 @@ except Exception as error:
   console.log(JSON.stringify({ datasetPackaging: "PASS", repo, release: release.release,
     versionDoi: release.dataset.zenodo.versionDoi, checkOnly, changed: updates.length > 0,
     files: updates.map(([file]) => file), previousCommit: currentMeta.sha, publishedCommit: publishedSha,
-    frozenCommit: frozenMeta.sha, frozenSourceBytes: "UNCHANGED" }, null, 2));
+    expectedMain, expectedUpdates, frozenCommit: frozenMeta.sha, frozenSourceBytes: "UNCHANGED" }, null, 2));
 }
 
 async function commandSyncProfile() {
