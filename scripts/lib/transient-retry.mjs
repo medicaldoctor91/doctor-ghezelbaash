@@ -16,6 +16,7 @@ const TRANSIENT_CODES = new Set([
 const TRANSIENT_HTTP_STATUS = new Set([429, 500, 502, 503, 504]);
 const TRANSIENT_TEXT_PATTERNS = [
   /\bECONNRESET\b/i,
+  /<urlopen error \[Errno 104\] Connection reset by peer>/i,
   /\bECONNREFUSED\b/i,
   /\bEPIPE\b/i,
   /\bETIMEDOUT\b/i,

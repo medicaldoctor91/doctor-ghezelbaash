@@ -16,6 +16,9 @@ permissions:
 jobs:
   verify:
     if: github.event_name != 'workflow_dispatch' || inputs.version == ''
+    permissions:
+      contents: read
+      actions: write
     uses: ./.github/workflows/authority-maintenance.yml
     with:
       apply: false

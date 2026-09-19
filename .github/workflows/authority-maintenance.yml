@@ -32,6 +32,9 @@ concurrency:
 jobs:
   maintain:
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      actions: write
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
@@ -108,6 +111,96 @@ jobs:
             --source-root .release/frozen --dist-root dist \
             > .release/runtime/finalization/frozen-release.json
           cat .release/runtime/finalization/frozen-release.json
+      - name: Reconcile registered workflows with maintained source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPLY_WORKFLOW_CLEANUP: ${{ github.event_name == 'push' || inputs.apply }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { writeFile } from 'node:fs/promises';
+          import { setTimeout } from 'node:timers/promises';
+          const repo = process.env.GITHUB_REPOSITORY;
+          if (repo !== 'medicaldoctor91/doctor-ghezelbaash') throw new Error('Unexpected workflow repository');
+          const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+          const sourcePath = path => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(path);
+          const tracked = new Set(execFileSync('git', ['ls-files', '-z', '--', '.github/workflows'],
+            { encoding: 'utf8' }).split('\0').filter(sourcePath));
+          if (!tracked.has('.github/workflows/authority-maintenance.yml')) throw new Error('Maintained workflow source missing');
+          const api = (endpoint, { method = 'GET', paginate = false } = {}) => {
+            const args = ['api', '--method', method, '-H', 'X-GitHub-Api-Version: 2026-03-10'];
+            if (paginate) args.push('--paginate', '--slurp');
+            const output = execFileSync('gh', [...args, endpoint],
+              { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, timeout: 60000 });
+            return output.trim() ? JSON.parse(output) : null;
+          };
+          const inventory = () => {
+            const pages = api(`repos/${repo}/actions/workflows?per_page=100`, { paginate: true });
+            const rows = pages.flatMap(page => page.workflows);
+            if (!pages.length || pages.some(page => page.total_count !== rows.length) ||
+                new Set(rows.map(row => row.id)).size !== rows.length ||
+                rows.some(row => !Number.isSafeInteger(row.id) || row.id <= 0 || typeof row.path !== 'string'))
+              throw new Error('Incomplete or inconsistent workflow inventory');
+            return rows;
+          };
+          const retiredActive = rows => rows.filter(row =>
+            sourcePath(row.path) && !tracked.has(row.path) && row.state === 'active');
+          const assertCurrentMain = () => {
+            if (api(`repos/${repo}/git/ref/heads/main`).object.sha !== sourceCommit)
+              throw new Error('Main advanced during workflow reconciliation; rerun from the current source');
+          };
+          const summarize = ({ id, name, path, state }) => ({ id, name, path, state });
+          const artifact = (name, value) => writeFile(`.release/runtime/finalization/${name}.json`,
+            JSON.stringify(value, null, 2) + '\n');
+          const apply = process.env.APPLY_WORKFLOW_CLEANUP === 'true';
+          const result = { status: 'RUNNING', apply, sourceCommit, disabledWorkflowIds: [] };
+          try {
+            assertCurrentMain();
+            const before = inventory();
+            const targets = retiredActive(before);
+            Object.assign(result, { totalBefore: before.length, retiredActiveBefore: targets.length,
+              retained: before.filter(row => tracked.has(row.path)).map(summarize),
+              platformPreserved: before.filter(row => !sourcePath(row.path)).map(summarize) });
+            await artifact('github-workflows-before', before);
+            await artifact('github-workflow-reconciliation', result);
+            if (apply && targets.length) {
+              const requiredRequests = targets.length * 2 + Math.ceil(before.length / 100) + 12;
+              const remaining = api('rate_limit').resources.core.remaining;
+              if (!Number.isFinite(remaining) || remaining < requiredRequests)
+                throw new Error(`Insufficient GitHub API budget: remaining=${remaining} required=${requiredRequests}`);
+              for (const [index, workflow] of targets.entries()) {
+                assertCurrentMain();
+                api(`repos/${repo}/actions/workflows/${workflow.id}/disable`, { method: 'PUT' });
+                result.disabledWorkflowIds.push(workflow.id);
+                await artifact('github-workflow-reconciliation', result);
+                if ((index + 1) % 25 === 0 || index + 1 === targets.length)
+                  console.log(`RETIRED_WORKFLOW_PROGRESS disabled=${index + 1}/${targets.length}`);
+                if (index + 1 < targets.length) await setTimeout(1100);
+              }
+            }
+            const after = apply && targets.length ? inventory() : before;
+            await artifact('github-workflows-after', after);
+            Object.assign(result, { totalAfter: after.length, retiredActiveAfter: retiredActive(after).length });
+            const byId = new Map(after.map(row => [row.id, row]));
+            for (const row of [...result.retained, ...result.platformPreserved])
+              if (byId.get(row.id)?.path !== row.path || byId.get(row.id)?.state !== row.state)
+                throw new Error(`Preserved workflow changed: ${row.path}`);
+            for (const id of result.disabledWorkflowIds)
+              if (byId.get(id)?.state !== 'disabled_manually')
+                throw new Error(`Workflow disable readback failed: ${id}`);
+            assertCurrentMain();
+            if (result.retiredActiveAfter) throw new Error(`Retired active workflows remain: ${result.retiredActiveAfter}`);
+            result.status = 'PASS';
+            console.log(`WORKFLOW_RECONCILIATION_PASS disabled=${result.disabledWorkflowIds.length} retained=${result.retained.length} platform=${result.platformPreserved.length}`);
+          } catch (error) {
+            result.status = 'FAIL';
+            result.error = error.message;
+            throw error;
+          } finally {
+            await artifact('github-workflow-reconciliation', result);
+          }
+          NODE
       - name: Reconcile Cloudflare production settings and cache
         id: cloudflare
         if: github.event_name == 'push' || inputs.apply
@@ -117,11 +210,11 @@ jobs:
           set -euo pipefail
           cd .release/frozen
           export CF_PAGES_COMMIT_SHA="$PRODUCTION_SHA" CF_EXPECTED_COMMIT="$PRODUCTION_SHA"
-          node scripts/cloudflare-pages.mjs ensure --configure
-          node scripts/cloudflare-pages.mjs ensure --verify-config
-          node scripts/cloudflare-pages.mjs ensure
-          python scripts/configure-cloudflare-edge.py --apply --outcome ../runtime/finalization/cloudflare-edge.json
-          python scripts/configure-pages-dev-redirect.py
+          node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- node scripts/cloudflare-pages.mjs ensure --configure
+          node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- node scripts/cloudflare-pages.mjs ensure --verify-config
+          node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- node scripts/cloudflare-pages.mjs ensure
+          node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- python scripts/configure-cloudflare-edge.py --apply --outcome ../runtime/finalization/cloudflare-edge.json
+          node "$GITHUB_WORKSPACE/scripts/run-transient-command.mjs" -- python scripts/configure-pages-dev-redirect.py
       - name: Verify the immutable Cloudflare deployment bytes
         if: github.event_name == 'push' || inputs.apply
         env:
