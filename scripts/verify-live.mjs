@@ -607,14 +607,26 @@ async function command_release() {
       return Buffer.from(await r.arrayBuffer());
     };
   const zenodoResponse = await fetch(
-    `https://zenodo.org/api/records/${z.recordId}?_=${Date.now()}`,
+    `https://zenodo.org/api/records/${z.recordId}`,
     {
-      headers: { "Cache-Control": "no-cache", ...zenodoHeaders("https://zenodo.org") },
+      headers: {
+        "Cache-Control": "no-cache",
+        Accept: "application/json",
+        "User-Agent": "ghezelbaash-release-snapshot-verifier/1.0",
+        ...zenodoHeaders("https://zenodo.org"),
+      },
       signal: AbortSignal.timeout(60000),
     },
   );
-  if (!zenodoResponse.ok)
-    throw new Error(`Zenodo HTTP ${zenodoResponse.status}`);
+  if (!zenodoResponse.ok) {
+    const body = await zenodoResponse.text();
+    let detail;
+    try { detail = JSON.parse(body).message; }
+    catch { detail = body.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]; }
+    detail = String(detail || "Record request rejected").slice(0, 300);
+    if (process.env.ZENODO_TOKEN) detail = detail.replaceAll(process.env.ZENODO_TOKEN, "[redacted]");
+    throw new Error(`Zenodo HTTP ${zenodoResponse.status}: ${detail}`);
+  }
   const zenodo = await zenodoResponse.json(),
     md = zenodo.metadata || {},
     remoteRows = zenodo.files || [],
