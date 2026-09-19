@@ -3,6 +3,8 @@ import path from "node:path";
 import os from "node:os";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { setTimeout as delay } from "node:timers/promises";
+import { parse } from "parse5";
 import {
   chmod,
   mkdtemp,
@@ -26,6 +28,99 @@ const must = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
+
+function profileResourceUrl(release, hf, registry, file) {
+  const resource = registry.resources.find((entry) => entry.path === file);
+  must(resource?.targets.includes(hf.resourceTarget), `HF profile resource is not distributed: ${file}`);
+  return resource.targets.includes("website")
+    ? new URL(file, release.canonicalUrl).href
+    : `${release.dataset.huggingFace.dataset}/resolve/main/${file}`;
+}
+
+// A static organization Space renders index.html. Keep that public card and its
+// README/configuration in one commit, independent of the frozen Dataset payload.
+function organizationProfileFiles(release, hf, registry) {
+  const escape = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[character]);
+  const link = (label, url) => `<li>${escape(label)}: <a href="${escape(url)}">${escape(url)}</a></li>`;
+  const datasetUrl = release.dataset.huggingFace.dataset;
+  const instagram = release.primaryEntity.verifiedWebIdentityMesh.find((url) =>
+    new URL(url).hostname === "www.instagram.com");
+  const configs = hf.configs;
+  const queryConfig = configs.find((config) => config.name === "query_matrix");
+  must(queryConfig, "HF profile requires the registered query_matrix config");
+  const sections = [
+    ["Canonical identity", [
+      ["Official website", release.canonicalUrl],
+      ["Physician", release.primaryEntity.id],
+      ["Physician Wikidata", `https://www.wikidata.org/wiki/${release.primaryEntity.wikidata}`],
+      ["ORCID", `https://orcid.org/${release.primaryEntity.orcid}`],
+      ["Google Knowledge Graph", `https://www.google.com/search?kgmid=${release.primaryEntity.googleKnowledgeGraphId}`],
+      ["Supporting clinic", release.clinic.id],
+      ...(instagram ? [["Instagram", instagram]] : []),
+    ]],
+    ["Canonical AI / machine entrypoints", [
+      ["JSON-LD entity graph", "graph.jsonld"],
+      ["Full LLM/RAG corpus", "llms-full.txt"],
+      ["Entity facts", "entity-facts.csv"],
+      ["Query matrix", queryConfig.path],
+      ["Croissant metadata", "croissant.json"],
+      ["DCAT catalog", "dcat.ttl"],
+      ["Provenance", "provenance.jsonld"],
+    ].map(([label, file]) => [label, profileResourceUrl(release, hf, registry, file)])],
+    ["Source, preservation and AI distribution", [
+      ["Version-controlled source", release.dataset.github.repository],
+      [`Current immutable Version DOI (v${release.release})`, `https://doi.org/${release.dataset.zenodo.versionDoi}`],
+      ["Hugging Face Dataset", datasetUrl],
+      ["Immutable Hugging Face release", `${datasetUrl}/tree/v${release.release}`],
+    ]],
+  ];
+  const title = `Dr. ${release.primaryEntity.name}`;
+  const description = `Physician-owned public knowledge graph and AI/retrieval distribution for ${title}.`;
+  const body = `<main>
+  <h1>${escape(title)}</h1>
+  <p>${escape(description)} The physician is the primary entity; the clinic is the supporting clinical/local entity. These are first-party publications.</p>
+${sections.map(([heading, links]) => `  <section>
+    <h2>${escape(heading)}</h2>
+    <ul>\n${links.map(([label, url]) => `      ${link(label, url)}`).join("\n")}\n    </ul>
+  </section>`).join("\n")}
+  <p>The Dataset supports multilingual question answering, text retrieval, text generation, RAG and entity resolution. Its release DOI and immutable tag identify the preserved version; main may contain later verified distribution updates.</p>
+</main>`;
+  const frontmatter = [
+    "---", `title: ${JSON.stringify(title)}`, "emoji: 🩺", "colorFrom: blue",
+    "colorTo: indigo", "sdk: static", "app_file: index.html", "pinned: false",
+    "datasets:", `- ${datasetUrl.replace("https://huggingface.co/datasets/", "")}`, "---",
+  ].join("\n");
+  return new Map([
+    ["README.md", `${frontmatter}\n\n${body}\n`],
+    ["index.html", `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${escape(title)} — Public Knowledge Graph</title>
+  <meta name="description" content="${escape(description)}">
+</head>
+<body>
+${body}
+</body>
+</html>
+`],
+  ]);
+}
+
+function renderedProfileEvidence(html) {
+  const values = [];
+  const visit = (node) => {
+    if (["head", "script", "style", "template"].includes(node.tagName)) return;
+    if (node.nodeName === "#text") values.push(node.value);
+    if (node.tagName === "a") values.push(node.attrs.find((attr) => attr.name === "href")?.value || "");
+    for (const child of node.childNodes || []) visit(child);
+  };
+  visit(parse(html));
+  return values.join(" ");
+}
 async function walkFiles(root, current = root) {
   const files = [];
   for (const entry of await readdir(current, { withFileTypes: true })) {
@@ -320,10 +415,11 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
 }
 
 async function commandVerify() {
-  const [release, authority, retrievalPolicy] = await Promise.all([
+  const [release, authority, retrievalPolicy, registry] = await Promise.all([
     loadPublicationData(),
     readJson(".release/policy/authority-surface-contract.json"),
     readJson("src/data/retrieval/query-matrix-policy.json"),
+    readJson("src/data/machine-resources.json"),
   ]);
   const hf = authority.surfaces.huggingFace;
   const configs = huggingFaceConfigs(hf);
@@ -396,20 +492,39 @@ async function commandVerify() {
       throw new Error(`HF README authority token missing ${token}`);
 
   if (mode !== "viewer") {
-    const profile = await text(
-      `https://huggingface.co/${hf.organization}?_=${nonce()}`,
-    );
-    for (const token of [
+    const queryConfig = configs.find((config) => config.name === "query_matrix");
+    must(queryConfig, "HF profile requires the registered query_matrix config");
+    const queryUrl = profileResourceUrl(release, hf, registry, queryConfig.path);
+    const requiredProfileTokens = [
       release.primaryEntity.name,
       release.primaryEntity.wikidata,
       release.canonicalUrl,
       datasetUrl,
       release.dataset.zenodo.versionDoi,
-    ]) {
-      if (!profile.includes(String(token)))
-        throw new Error(
-          `HF organization profile authority token missing ${token}`,
-        );
+      release.clinic.id,
+      queryUrl,
+    ];
+    // Hub commit success does not prove that the organization card was rendered.
+    // Wait briefly for the public static Space and card, then fail closed.
+    for (let attempt = 1; attempt <= 7; attempt++) {
+      const [profile, profileMetadata] = await Promise.all([
+        text(`https://huggingface.co/${hf.organization}?_=${nonce()}`),
+        json(`https://huggingface.co/api/spaces/${hf.organization}/README?_=${nonce()}`),
+      ]);
+      must(profileMetadata.private === false, "HF organization profile must be public");
+      const evidence = renderedProfileEvidence(profile);
+      const missing = requiredProfileTokens.filter((token) => !evidence.includes(String(token)));
+      const websiteQueryUrl = new URL(queryConfig.path, release.canonicalUrl).href;
+      const forbidden = ["Q140304972", "Q140288589", ...(queryUrl !== websiteQueryUrl ? [websiteQueryUrl] : [])]
+        .filter((token) => evidence.includes(token));
+      const runtime = profileMetadata.runtime?.stage;
+      const configured = profileMetadata.cardData?.sdk === "static" &&
+        profileMetadata.cardData?.app_file === "index.html";
+      if (configured && runtime === "RUNNING" && !missing.length && !forbidden.length) break;
+      const problem = `HF organization profile drift: configured=${configured} runtime=${runtime || "missing"} missing=${missing.join(",") || "none"} retired=${forbidden.join(",") || "none"}`;
+      must(attempt < 7, problem);
+      console.error(`${problem}; waiting for public rendering (${attempt}/7)`);
+      await delay(5000);
     }
   }
   if (mode !== "profile") {
@@ -460,11 +575,13 @@ async function commandSyncProfile() {
     "Usage: node scripts/huggingface.mjs sync-profile [--source-root path] [--check]",
   );
   const root = path.resolve(options[1] || ".");
-  const [release, authority] = await Promise.all([
+  const [release, authority, registry] = await Promise.all([
     loadPublicationData(root),
     readJson(path.join(root, ".release/policy/authority-surface-contract.json")),
+    readJson(path.join(root, "src/data/machine-resources.json")),
   ]);
-  const organization = authority.surfaces.huggingFace.organization;
+  const hf = authority.surfaces.huggingFace;
+  const organization = hf.organization;
   must(/^[A-Za-z0-9_-]+$/.test(organization), "Invalid HF organization");
   const repo = `${organization}/README`;
   const request = async (url, options = {}) => {
@@ -482,32 +599,39 @@ async function commandSyncProfile() {
   };
   const metadata = await (await request(`https://huggingface.co/api/spaces/${repo}?_=${Date.now()}`)).json();
   must(metadata.private === false && /^[a-f0-9]{40}$/.test(metadata.sha), "HF profile must be public with a pinned commit");
-  const original = await (await request(`https://huggingface.co/spaces/${repo}/raw/${metadata.sha}/README.md`)).text();
-  for (const token of [release.primaryEntity.name, release.primaryEntity.wikidata, release.canonicalUrl, release.dataset.huggingFace.dataset])
-    must(original.includes(token), `HF profile identity missing ${token}`);
-  const versionLine = /^- Current immutable Version DOI \(v\d+\.\d+\.\d+\): https:\/\/doi\.org\/10\.5281\/zenodo\.\d+\r?$/gm;
-  must([...original.matchAll(versionLine)].length === 1, "HF profile must contain exactly one current version DOI line");
-  const expected = original.replace(versionLine,
-    `- Current immutable Version DOI (v${release.release}): https://doi.org/${release.dataset.zenodo.versionDoi}`);
-  const changed = original !== expected;
+  const expected = organizationProfileFiles(release, hf, registry);
+  const original = new Map(await Promise.all([...expected.keys()].map(async (file) => [
+    file, await (await request(`https://huggingface.co/spaces/${repo}/raw/${metadata.sha}/${file}`)).text(),
+  ])));
+  for (const [file, content] of original)
+    for (const token of [release.primaryEntity.name, release.primaryEntity.wikidata, release.canonicalUrl, release.dataset.huggingFace.dataset])
+      must(content.includes(token), `HF profile identity missing ${token} in ${file}`);
+  const updates = [...expected].filter(([file, content]) => original.get(file) !== content);
+  const changed = updates.length > 0;
   if (checkOnly) {
-    must(!changed, `HF profile current version drift; expected v${release.release} / ${release.dataset.zenodo.versionDoi}`);
+    must(!changed, `HF profile source drift in ${updates.map(([file]) => file).join(", ")}; expected v${release.release} / ${release.dataset.zenodo.versionDoi}`);
   } else if (changed) {
     must(process.env.HF_TOKEN, "HF_TOKEN is required to synchronize the organization profile");
     const result = await (await request(`https://huggingface.co/api/spaces/${repo}/commit/main`, {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.HF_TOKEN}`, "content-type": "application/x-ndjson" },
       body: [
-        { key: "header", value: { summary: `Synchronize current release v${release.release}`, parentCommit: metadata.sha } },
-        { key: "file", value: { path: "README.md", content: expected, encoding: "utf-8" } },
+        { key: "header", value: { summary: `Synchronize public organization profile v${release.release}`, parentCommit: metadata.sha } },
+        ...updates.map(([file, content]) => ({ key: "file", value: { path: file, content, encoding: "utf-8" } })),
       ].map((row) => JSON.stringify(row)).join("\n") + "\n",
     })).json();
     must(result.success === true, "HF profile commit did not succeed");
-    const readback = await (await request(`https://huggingface.co/spaces/${repo}/raw/main/README.md?_=${Date.now()}`)).text();
-    must(readback === expected, "HF profile post-publication readback drift");
+    const published = await (await request(`https://huggingface.co/api/spaces/${repo}?_=${Date.now()}`)).json();
+    must(published.private === false && /^[a-f0-9]{40}$/.test(published.sha) && published.sha !== metadata.sha,
+      "HF profile publication did not advance the public commit");
+    for (const [file, content] of expected) {
+      const readback = await (await request(`https://huggingface.co/spaces/${repo}/raw/${published.sha}/${file}`)).text();
+      must(readback === content, `HF profile post-publication readback drift in ${file}`);
+    }
   }
   console.log(JSON.stringify({ profileRelease: "PASS", repo, release: release.release,
-    versionDoi: release.dataset.zenodo.versionDoi, changed, checkOnly }));
+    versionDoi: release.dataset.zenodo.versionDoi, changed, checkOnly,
+    files: [...expected.keys()], previousCommit: metadata.sha }));
 }
 
 const usage =

@@ -66,10 +66,9 @@ Source maintenance is expected to preserve the emitted distribution unless a dis
 
 Production delivery uses the native Cloudflare Pages Git integration on the dedicated `production` branch. `main` is intentionally decoupled from live deployment, so source maintenance on `main` does not change the canonical website until an explicit release promotion advances `production`. Operational automation is kept in `.github/workflows/` and is intentionally separate from the static build:
 
-- `cloudflare-pages-deploy.yml` — verifies and reconciles the canonical Cloudflare deployment after a `production` push.
 - `github-pages-bridge.yml` — publishes the canonical GitHub Pages redirect bridge from the frozen `production` source.
-- `hugging-face-authority.yml` — verifies or explicitly publishes external authority/release surfaces.
-- `authority-maintenance.yml` — proves complete DIST identity against frozen production, reconciles Cloudflare and the Hugging Face organization profile, and verifies the current immutable release. It runs when its operational source changes on `main`, or manually (verification only unless `apply` is selected). It never promotes `main` or creates a DOI.
+- `hugging-face-authority.yml` — runs the shared read-only maintenance verification twice weekly, or explicitly publishes a coordinated new release.
+- `authority-maintenance.yml` — proves complete DIST identity against frozen production, reconciles Cloudflare and the Hugging Face organization profile, and verifies the current immutable release. It runs when its operational source changes on `main`, through the shared scheduled verification, or manually (verification only unless `apply` is selected). It also verifies immutable deployment bytes and stable media aliases; a duplicate Cloudflare workflow is unnecessary. It never promotes `main` or creates a DOI.
 
 Release, Zenodo and Hugging Face publication are explicit operations; `npm run build` does not perform them.
 
@@ -94,5 +93,7 @@ npm run verify:mojavez
 ## Entity scope
 
 The physician is the primary canonical entity. The clinic is a distinct related entity and must not be merged semantically with the physician. Public structured data, machine-readable resources and external authority surfaces should remain consistent with the canonical graph and with visible claims.
+
+`main` and `production` are protected against deletion and force-push. Normal maintenance remains possible on `main`; only an explicitly verified release advances `production`. Published release tags and assets remain immutable.
 
 Repository metadata and first-party publication are provenance and identity signals; they are not presented as independent third-party corroboration.

@@ -4,13 +4,20 @@ on:
   push:
     branches: [main]
     paths:
-      - .github/workflows/authority-maintenance.yml
-      - scripts/huggingface.mjs
-      - scripts/verify-live.mjs
+      - .github/workflows/**
+      - scripts/**
+      - .release/policy/**
   workflow_dispatch:
     inputs:
       apply:
         description: Reconcile Cloudflare settings and the public profile against the frozen production release
+        type: boolean
+        default: false
+
+  workflow_call:
+    inputs:
+      apply:
+        description: Reconcile the frozen production release
         type: boolean
         default: false
 
@@ -47,6 +54,7 @@ jobs:
           set -euo pipefail
           npm run security:dependencies
           npm run validate:release-contract
+          node scripts/platform-contract.mjs validate
           node scripts/verify-live.mjs test-release-context
           node scripts/test-transient-retry.mjs
       - name: Pin production and the immutable release before any mutation
@@ -101,6 +109,7 @@ jobs:
             > .release/runtime/finalization/frozen-release.json
           cat .release/runtime/finalization/frozen-release.json
       - name: Reconcile Cloudflare production settings and cache
+        id: cloudflare
         if: github.event_name == 'push' || inputs.apply
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -113,6 +122,14 @@ jobs:
           node scripts/cloudflare-pages.mjs ensure
           python scripts/configure-cloudflare-edge.py --apply --outcome ../runtime/finalization/cloudflare-edge.json
           python scripts/configure-pages-dev-redirect.py
+      - name: Verify the immutable Cloudflare deployment bytes
+        if: github.event_name == 'push' || inputs.apply
+        env:
+          VERIFY_BASE_URL: ${{ steps.cloudflare.outputs.deployment_url }}
+        run: |
+          set -euo pipefail
+          test -n "$VERIFY_BASE_URL"
+          node scripts/run-transient-command.mjs -- node scripts/cloudflare-pages.mjs verify --fresh-only
       - name: Synchronize the public organization profile from frozen production
         if: github.event_name == 'push' || inputs.apply
         env:
@@ -122,6 +139,7 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/huggingface.mjs sync-profile --source-root .release/frozen --check
+          node scripts/run-transient-command.mjs -- node scripts/cloudflare-pages.mjs verify
           node scripts/run-transient-command.mjs -- node scripts/verify-live.mjs current > .release/runtime/finalization/current-serving.json
           node scripts/run-transient-command.mjs -- node scripts/huggingface.mjs verify > .release/runtime/finalization/huggingface.json
           node scripts/run-transient-command.mjs -- npm run verify:production
@@ -135,6 +153,8 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY" > .release/runtime/finalization/github-repository.json
           VERSION="$(node -p "require('./src/data/release.json').release")"
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$VERSION" > .release/runtime/finalization/github-release.json
+          gh api "repos/$GITHUB_REPOSITORY/rules/branches/main" > .release/runtime/finalization/github-main-rules.json
+          gh api "repos/$GITHUB_REPOSITORY/rules/branches/production" > .release/runtime/finalization/github-production-rules.json
           node --input-type=module <<'NODE'
           import { readFile } from 'node:fs/promises';
           import { loadPublicationData } from './scripts/lib/publication-context.mjs';
@@ -150,7 +170,13 @@ jobs:
           if (published.immutable !== true || published.draft || published.prerelease ||
               published.tag_name !== `v${release.release}` || !published.body?.includes(release.dataset.zenodo.versionDoi))
             throw new Error('GitHub immutable release identity drift');
-          console.log('GITHUB_VISIBILITY_AND_IMMUTABLE_RELEASE_PASS');
+          for (const branch of ['main', 'production']) {
+            const rules = JSON.parse(await readFile(`.release/runtime/finalization/github-${branch}-rules.json`));
+            for (const required of ['deletion', 'non_fast_forward'])
+              if (!rules.some(rule => rule.type === required))
+                throw new Error(`GitHub ${branch} lacks active ${required} protection`);
+          }
+          console.log('GITHUB_VISIBILITY_IMMUTABLE_RELEASE_AND_BRANCH_PROTECTION_PASS');
           NODE
       - name: Notify IndexNow only after all publication checks pass
         if: github.event_name == 'push' || inputs.apply
