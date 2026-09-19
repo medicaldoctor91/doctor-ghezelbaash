@@ -369,7 +369,6 @@ async function command_current() {
   if (verifyHf) {
     const hf = authority.surfaces.huggingFace,
       repo = huggingFaceDatasetRepo(release),
-      base = `https://huggingface.co/datasets/${repo}/resolve/main/`,
       nonce = Date.now(),
       core = resourcesForTarget(hf.resourceTarget);
     const metaBytes = (
@@ -384,6 +383,9 @@ async function command_current() {
     } catch {
       throw new Error("HF Dataset API metadata is not valid JSON");
     }
+    if (!/^[a-f0-9]{40}$/.test(metadata.sha))
+      throw new Error("HF Dataset API requires a pinned commit");
+    const base = `https://huggingface.co/datasets/${repo}/resolve/${metadata.sha}/`;
     const remote = await verifyHuggingFaceRemoteDistribution({
       release,
       hf,

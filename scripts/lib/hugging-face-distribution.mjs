@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { resourcesForTarget, sourceForDistribution } from "../../src/lib/resources.mjs";
 
@@ -12,6 +14,42 @@ export const HUGGING_FACE_MANIFEST_FILE = "dist-sha256.json";
 const HUGGING_FACE_AUXILIARY_FILES = Object.freeze(["README.md"]);
 const HUGGING_FACE_REPOSITORY_METADATA = Object.freeze([".gitattributes"]);
 const HUGGING_FACE_PACKAGE_FILE = "datapackage.json";
+const VIEWER_PACKAGING = Object.freeze({
+  schemaVersion: 1,
+  revision: 1,
+  manifestPath: "viewer/packaging.json",
+  builder: "pyarrow",
+  builderVersion: "25.0.1",
+  derivatives: [
+    { config: "entity_facts", source: "entity-facts.csv", path: "viewer/entity-facts.parquet" },
+    { config: "query_matrix", source: "query-matrix.jsonl", path: "viewer/query-matrix.parquet" },
+  ],
+});
+const canonicalJson = (value) => JSON.stringify(value, (_key, item) =>
+  item && typeof item === "object" && !Array.isArray(item)
+    ? Object.fromEntries(Object.entries(item).sort(([left], [right]) => left.localeCompare(right)))
+    : item);
+
+// Historical tags intentionally have no packaging policy. Current packaging
+// admits these exact derivatives only; it is not a wildcard inventory exception.
+export const huggingFaceViewerPackaging = (hf) => {
+  if (hf?.viewerPackaging === undefined) return null;
+  must(canonicalJson(hf.viewerPackaging) === canonicalJson(VIEWER_PACKAGING),
+    "Unsupported Hugging Face viewer packaging contract");
+  const core = new Set(resourcesForTarget(hf.resourceTarget).map((resource) => resource.path));
+  for (const row of hf.viewerPackaging.derivatives) {
+    must(core.has(row.source), `HF viewer source is not a core resource: ${row.source}`);
+    must(!core.has(row.path), `HF viewer derivative overlaps a frozen source: ${row.path}`);
+    must(hf.configs.some((config) => config.name === row.config && config.path === row.path),
+      `HF viewer derivative/config drift: ${row.config}`);
+  }
+  return hf.viewerPackaging;
+};
+
+export const huggingFaceViewerPackagingFiles = (hf) => {
+  const policy = huggingFaceViewerPackaging(hf);
+  return Object.freeze(policy ? [policy.manifestPath, ...policy.derivatives.map((row) => row.path)].sort() : []);
+};
 
 // A portable package resolves paths next to its descriptor. The registry owns
 // core outputs; the descriptor also owns generated resources such as VTT tracks.
@@ -49,7 +87,7 @@ const verifyPackageResource = (resource, bytes) => {
 };
 
 export const stageHuggingFaceDistributionResources = async ({
-  hf, dist, hub, root = process.cwd(),
+  hf, dist, hub, release, root = process.cwd(),
 }) => {
   const registry = resourcesForTarget(hf.resourceTarget);
   const descriptorResource = registry.find((resource) => resource.path === HUGGING_FACE_PACKAGE_FILE);
@@ -77,6 +115,17 @@ export const stageHuggingFaceDistributionResources = async ({
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, bytes);
   }
+  if (huggingFaceViewerPackaging(hf)) {
+    must(release?.release && release?.dataset?.zenodo?.versionDoi && release?.dataset?.id,
+      "HF viewer staging requires the canonical release identity");
+    const builder = fileURLToPath(new URL("../build-hf-viewer.py", import.meta.url));
+    const result = spawnSync("python3", [builder,
+      "--hub", path.resolve(root, hub), "--release", release.release,
+      "--doi", release.dataset.zenodo.versionDoi, "--dataset", release.dataset.id,
+    ], { encoding: "utf8", timeout: 120000, maxBuffer: 1024 * 1024 });
+    must(!result.error && result.status === 0,
+      `HF viewer packaging failed: ${result.error?.message || result.stderr || result.stdout}`);
+  }
   return descriptor;
 };
 
@@ -88,6 +137,7 @@ export const huggingFaceConfigs = (hf) => {
   const availableFiles = new Set([
     ...resourcesForTarget(hf.resourceTarget).map((resource) => resource.path),
     ...HUGGING_FACE_AUXILIARY_FILES,
+    ...huggingFaceViewerPackagingFiles(hf),
   ]);
   const names = new Set(),
     paths = new Set();
@@ -140,6 +190,7 @@ export const huggingFaceManifestFiles = (hf, descriptor) => {
   const registeredFiles = [
     ...resourcesForTarget(hf.resourceTarget).map((resource) => resource.path),
     ...HUGGING_FACE_AUXILIARY_FILES,
+    ...huggingFaceViewerPackagingFiles(hf),
   ];
   must(
     new Set(registeredFiles).size === registeredFiles.length,
@@ -210,6 +261,62 @@ const validateHuggingFaceManifest = ({ manifest, release, hf, descriptor }) => {
   return expected;
 };
 
+const validateViewerPackaging = ({ hf, release, files, manifest }) => {
+  const policy = huggingFaceViewerPackaging(hf);
+  if (!policy) return null;
+  let packaging;
+  try {
+    packaging = JSON.parse(files.get(policy.manifestPath).toString("utf8"));
+  } catch {
+    throw new Error("HF viewer packaging manifest is not valid JSON");
+  }
+  must(packaging.schemaVersion === policy.schemaVersion &&
+    packaging.packagingRevision === policy.revision &&
+    packaging.role === "reversible-viewer-access-derivatives",
+  "HF viewer packaging identity drift");
+  must(packaging.release === release.release &&
+    packaging.zenodoVersionDoi === release.dataset.zenodo.versionDoi &&
+    packaging.canonicalDatasetIri === release.dataset.id,
+  "HF viewer packaging source release/DOI/Dataset drift");
+  must(packaging.builder?.name === policy.builder && packaging.builder?.version === policy.builderVersion,
+    "HF viewer packaging builder drift");
+  const expected = policy.derivatives.map((row) => row.path);
+  must(packaging.files && sameStrings(Object.keys(packaging.files), expected),
+    "HF viewer packaging derivative inventory drift");
+  const schemaFields = {
+    entity_facts: ["subject", "type", "name", "predicate", "value", "object", "object_name",
+      "language", "datatype", "provenance", "dataset", "version", "modified", "row_id", "value_kind", "value_media_type"],
+    query_matrix: ["row_kind", "query", "intent_family", "language", "query_scope", "practice_location",
+      "canonical_subject", "canonical_subject_iri", "dataset_iri", "release", "version_doi", "retrieval_policy",
+      "resolution_mode", "stable_evidence_refs", "answer_id", "answer_strategy", "service_ids", "service_families",
+      "service_types", "_source_omitted_fields"],
+  };
+  const listFields = new Set(["stable_evidence_refs", "service_ids", "service_families", "service_types", "_source_omitted_fields"]);
+  for (const derivative of policy.derivatives) {
+    const entry = packaging.files[derivative.path];
+    const derivativeHash = manifest.files[derivative.path];
+    const sourceHash = manifest.files[derivative.source];
+    must(entry?.config === derivative.config && entry?.format === "parquet" &&
+      entry?.roundtrip === "exact-values-list-order-row-order-and-field-presence",
+    `HF viewer packaging semantics drift: ${derivative.path}`);
+    must(entry.bytes === derivativeHash.bytes && entry.sha256 === derivativeHash.sha256,
+      `HF viewer derivative digest drift: ${derivative.path}`);
+    must(entry.source?.path === derivative.source && entry.source?.bytes === sourceHash.bytes &&
+      entry.source?.sha256 === sourceHash.sha256,
+    `HF viewer source digest drift: ${derivative.path}`);
+    must(Number.isSafeInteger(entry.rows) && entry.rows > 0,
+      `HF viewer row count is invalid: ${derivative.path}`);
+    const fields = schemaFields[derivative.config].map((name) => ({
+      name,
+      type: derivative.config === "query_matrix" && listFields.has(name) ? "list<string>" : "string",
+      nullable: derivative.config === "query_matrix" && ["answer_id", "service_types"].includes(name),
+    }));
+    must(canonicalJson(entry.fields) === canonicalJson(fields),
+      `HF viewer typed schema drift: ${derivative.path}`);
+  }
+  return packaging;
+};
+
 export const verifyHuggingFaceRemoteDistribution = async ({
   release,
   hf,
@@ -270,11 +377,13 @@ export const verifyHuggingFaceRemoteDistribution = async ({
   }
   for (const resource of packageResources)
     verifyPackageResource(resource, files.get(resource.path));
+  const viewerPackaging = validateViewerPackaging({ hf, release, files, manifest });
   return Object.freeze({
     manifest,
     manifestBytes,
     files,
     repositoryFiles: expectedRepository,
+    viewerPackaging,
   });
 };
 

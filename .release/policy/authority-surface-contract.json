@@ -31,15 +31,34 @@
         "text-retrieval",
         "text-generation"
       ],
+      "viewerPackaging": {
+        "schemaVersion": 1,
+        "revision": 1,
+        "manifestPath": "viewer/packaging.json",
+        "builder": "pyarrow",
+        "builderVersion": "25.0.1",
+        "derivatives": [
+          {
+            "config": "entity_facts",
+            "source": "entity-facts.csv",
+            "path": "viewer/entity-facts.parquet"
+          },
+          {
+            "config": "query_matrix",
+            "source": "query-matrix.jsonl",
+            "path": "viewer/query-matrix.parquet"
+          }
+        ]
+      },
       "configs": [
         {
           "name": "entity_facts",
-          "path": "entity-facts.csv",
+          "path": "viewer/entity-facts.parquet",
           "default": true
         },
         {
           "name": "query_matrix",
-          "path": "query-matrix.jsonl",
+          "path": "viewer/query-matrix.parquet",
           "default": false
         }
       ]

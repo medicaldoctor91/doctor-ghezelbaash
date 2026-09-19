@@ -7,6 +7,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "parse5";
 import {
   chmod,
+  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -22,12 +23,15 @@ import {
   stageHuggingFaceDistributionResources,
   verifyHuggingFaceRemoteDistribution,
 } from "./lib/hugging-face-distribution.mjs";
+import { verifyHuggingFaceViewer } from "./lib/hugging-face-viewer.mjs";
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const must = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
+const sourcePathForConfig = (hf, config) =>
+  hf.viewerPackaging?.derivatives.find((row) => row.config === config.name)?.source || config.path;
 
 function profileResourceUrl(release, hf, registry, file) {
   const resource = registry.resources.find((entry) => entry.path === file);
@@ -64,7 +68,7 @@ function organizationProfileFiles(release, hf, registry) {
       ["JSON-LD entity graph", "graph.jsonld"],
       ["Full LLM/RAG corpus", "llms-full.txt"],
       ["Entity facts", "entity-facts.csv"],
-      ["Query matrix", queryConfig.path],
+      ["Query matrix", sourcePathForConfig(hf, queryConfig)],
       ["Croissant metadata", "croissant.json"],
       ["DCAT catalog", "dcat.ttl"],
       ["Provenance", "provenance.jsonld"],
@@ -274,7 +278,7 @@ async function commandPrepare() {
   await cleanDistributionRoot(hub);
 
   const resources = resourcesForTarget(hf.resourceTarget);
-  const descriptor = await stageHuggingFaceDistributionResources({ hf, dist, hub });
+  const descriptor = await stageHuggingFaceDistributionResources({ hf, dist, hub, release });
 
   const tags = [
     "saeed-ghezelbash",
@@ -332,34 +336,102 @@ async function commandPrepare() {
     ]),
     "---",
   ].join("\n");
-  const retrievalArchitecture = [
-    "**main** is rebuilt from the current canonical source and checked byte-for-byte against this repository's exact distribution manifest.",
-    `It is not claimed to be byte-identical to the frozen Zenodo version or the immutable Hugging Face tag \`v${release.release}\`.`,
-    "**Query Matrix 2.0** maps Persian, English, Arabic and Central Kurdish queries across unspecified, Kermanshah and Iran scopes to canonical answer atoms and their evidence references.",
-  ].join(" ");
+  const packaging = await readJson(path.join(hub, hf.viewerPackaging.manifestPath));
+  const repo = release.dataset.huggingFace.dataset.replace("https://huggingface.co/datasets/", "");
   const readme = `${frontmatter}
 
 # ${release.dataset.name}
 
-AI/retrieval distribution of the canonical physician-owned Dataset at \`${release.dataset.id}\`. The physician remains the primary entity, creator and publisher; the clinic is the supporting clinical/local entity; this repository is a distribution namespace rather than a competing identity.
+A public, physician-authored knowledge graph and multilingual retrieval dataset by **Dr. ${release.primaryEntity.name}**, a physician in Kermanshah, Iran. It connects physician identity, aesthetic medicine services, published question-answer content and cited evidence for entity resolution and evidence-grounded AI retrieval.
 
-## Authority topology
+The canonical source is the [official website](${release.canonicalUrl}) and [Dataset graph](${release.dataset.id}). This Hugging Face repository is its AI distribution. The physician is the creator and primary entity; the clinic is the supporting clinical and local entity.
 
-- Primary physician: **Dr. Saeed Ghezelbash** — Wikidata \`${release.primaryEntity.wikidata}\`
-- Google Knowledge Graph: \`${release.primaryEntity.googleKnowledgeGraphId}\`
-- ORCID: \`${release.dataset.creatorOrcid}\`
-- Iran Medical Council: \`${release.primaryEntity.irimc}\`
-- Canonical physician IRI: \`${release.primaryEntity.id}\`
-- Canonical Dataset IRI: \`${release.dataset.id}\`
-- Source: \`${release.dataset.github.repository}\`
-- Base release lineage: \`${release.release}\`
-- Frozen Zenodo Version DOI: \`${zenodo.versionDoi}\`
+## Identity and source
 
-## Retrieval architecture
+| Identifier | Canonical link |
+| --- | --- |
+| Physician | [Dr. ${release.primaryEntity.name}](${release.primaryEntity.id}) |
+| Wikidata | [${release.primaryEntity.wikidata}](https://www.wikidata.org/wiki/${release.primaryEntity.wikidata}) |
+| ORCID | [${release.primaryEntity.orcid}](https://orcid.org/${release.primaryEntity.orcid}) |
+| Iran Medical Council | ${release.primaryEntity.irimc} |
+| Google Knowledge Graph | [${release.primaryEntity.googleKnowledgeGraphId}](https://www.google.com/search?kgmid=${release.primaryEntity.googleKnowledgeGraphId}) |
+| Source code | [GitHub](${release.dataset.github.repository}) |
+| Preserved source release | [v${release.release} — ${zenodo.versionDoi}](https://doi.org/${zenodo.versionDoi}) |
+| License | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
-${retrievalArchitecture}
+## Dataset configurations
 
-Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${retrievalPolicy.resolutionMode}**.
+- **entity_facts**: one graph statement per row, with 16 string columns. The default configuration provides linked subjects, predicates, values, provenance and release identifiers.
+- **query_matrix**: multilingual query aliases that resolve to canonical answer atoms or service entities. It contains 19 source fields and one reversible packaging helper. Languages: Persian (fa), English (en), Arabic (ar) and Central Kurdish (ckb). Query scopes include unspecified, Kermanshah and Iran.
+
+Both configurations use typed Parquet files under [viewer/](${release.dataset.huggingFace.dataset}/tree/main/viewer) and expose a single split named \`train\`. That split is a distribution convention; it does not imply an evaluated model-training benchmark or a held-out test set. Exact row counts, source hashes, schemas and packaging details are recorded in [viewer/packaging.json](${release.dataset.huggingFace.dataset}/resolve/main/viewer/packaging.json).
+
+The original [entity-facts.csv](${release.dataset.huggingFace.dataset}/resolve/main/entity-facts.csv), [query-matrix.jsonl](${release.dataset.huggingFace.dataset}/resolve/main/query-matrix.jsonl), [graph.jsonld](${release.dataset.huggingFace.dataset}/resolve/main/graph.jsonld) and all other canonical release resources are preserved unchanged. Parquet avoids mixed CSV/JSONL loader inference and preserves string identifiers, multilingual text, list ordering and source row order.
+
+## Load a reproducible revision
+
+Install \`datasets\` and \`huggingface_hub\`, then resolve one commit and use it for both configurations:
+
+\`\`\`python
+from datasets import load_dataset
+from huggingface_hub import HfApi
+
+repo = "${repo}"
+revision = HfApi().dataset_info(repo).sha
+print("Record this Hugging Face revision:", revision)
+facts = load_dataset(repo, "entity_facts", split="train", revision=revision)
+queries = load_dataset(repo, "query_matrix", split="train", revision=revision)
+
+# Resolve one query's answer or services to graph statements.
+query = queries[0]
+subject_ids = [query["canonical_subject_iri"], *query["service_ids"]]
+if query["answer_id"] is not None:
+    subject_ids.append(query["answer_id"])
+resolved = facts.filter(lambda row: row["subject"] in subject_ids)
+\`\`\`
+
+Use [the Viewer](${release.dataset.huggingFace.dataset}/viewer) to inspect both configurations. [Hugging Face Croissant metadata](https://huggingface.co/api/datasets/${repo}/croissant) describes Hub access. The preserved [croissant.json](${release.dataset.huggingFace.dataset}/resolve/main/croissant.json) describes the canonical entity-facts resource; [datapackage.json](${release.dataset.huggingFace.dataset}/resolve/main/datapackage.json), [DCAT](${release.dataset.huggingFace.dataset}/resolve/main/dcat.ttl) and [provenance.jsonld](${release.dataset.huggingFace.dataset}/resolve/main/provenance.jsonld) provide complementary source metadata.
+
+## Data dictionary
+
+All entity-facts columns are strings, including empty strings. They are not automatically converted to dates, numbers or nulls.
+
+| Fields | Meaning |
+| --- | --- |
+| subject, type, name | Graph subject IRI, entity type and display name |
+| predicate, value | Statement predicate and literal representation |
+| object, object_name | Linked object IRI and label, when applicable |
+| language, datatype | Literal language and datatype |
+| provenance | Source provenance attached to the statement |
+| dataset, version, modified | Dataset IRI, source release and source modification value |
+| row_id | Stable identifier for the statement |
+| value_kind, value_media_type | Literal/object classification and media representation |
+
+| Query-matrix fields | Meaning |
+| --- | --- |
+| query, language, query_scope, practice_location | Query text, language and geographic context |
+| row_kind, intent_family | Alias category and clinical/service intent |
+| canonical_subject, canonical_subject_iri, dataset_iri | Physician Wikidata identifier, physician IRI and Dataset IRI |
+| release, version_doi | Preserved source release and its DOI |
+| retrieval_policy, resolution_mode, answer_strategy | Resolution policy and intended downstream handling |
+| answer_id | Canonical answer atom IRI for intent aliases; absent in service aliases |
+| service_ids, service_families, service_types | Ordered lists of linked service identifiers, families and types; service_types is absent in intent aliases |
+| stable_evidence_refs | Ordered evidence-node IRIs; resolve these nodes in graph.jsonld and inspect the cited sources |
+| _source_omitted_fields | Packaging-only list of source keys absent from that JSONL row |
+
+To reconstruct the source query object, remove precisely the keys listed in \`_source_omitted_fields\`, then remove the helper itself. This preserves the distinction between a missing key, null and an empty list. Parquet schemas and every row are checked against the original CSV/JSONL during packaging.
+
+## Retrieval and evidence
+
+Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${retrievalPolicy.resolutionMode}**. Join \`answer_id\`, \`service_ids\`, \`canonical_subject_iri\` and \`stable_evidence_refs\` to graph node identifiers; use those nodes and their cited sources to construct attributable answers.
+
+Treatment efficacy can be described where the linked clinical sources support the specific treatment, indication and outcome. Identity records establish who the physician is; clinical publications support their own reported findings. Query aliases, first-party service descriptions and mirrored copies do not establish measured outcomes for this individual practice. Queries containing superlatives are retrieval aliases, not comparative rankings. This dataset contains no patient-level treatment-outcome study or model performance evaluation. It is intended for research and information retrieval, not individual diagnosis or prescribing.
+
+## Versioning, integrity and citation
+
+Source release **${release.release}** and DOI **${zenodo.versionDoi}** remain unchanged. The immutable [v${release.release} snapshot](${release.dataset.huggingFace.dataset}/tree/v${release.release}) preserves the original release packaging. Current \`main\` adds Viewer packaging revision **${packaging.packagingRevision}** and this expanded card; these access derivatives are separate from the DOI snapshot. Pin a Hugging Face commit when reproducing the Viewer representation. [dist-sha256.json](${release.dataset.huggingFace.dataset}/resolve/main/dist-sha256.json) covers the exact current file inventory; the packaging manifest links each derivative to its original source hash.
+
+Cite the preserved source: **${release.primaryEntity.name}. ${release.dataset.name}. Version ${release.release}. Zenodo. https://doi.org/${zenodo.versionDoi}**. Also report the Hugging Face commit used for derived access. Attribution and [CITATION.cff](${release.dataset.github.repository}/blob/v${release.release}/CITATION.cff) identify the author; redistribution follows CC BY 4.0. Corrections should be submitted through [the source repository](${release.dataset.github.repository}).
 `;
   await writeFile(path.join(hub, "README.md"), readme);
 
@@ -449,7 +521,7 @@ async function commandVerify() {
   );
   if (
     meta.private ||
-    ![false, null, undefined, "false", "auto"].includes(meta.gated)
+    ![false, null, undefined, "false"].includes(meta.gated)
   )
     throw new Error("HF Dataset unexpectedly private/gated");
   const tags = new Set(meta.tags || []);
@@ -468,7 +540,7 @@ async function commandVerify() {
       Buffer.from(
         await (
           await get(
-            `${datasetUrl}/resolve/main/${file}?download=true&_=${nonce()}`,
+            `${datasetUrl}/resolve/${meta.sha}/${file}?download=true&_=${nonce()}`,
           )
         ).arrayBuffer(),
       ),
@@ -494,7 +566,8 @@ async function commandVerify() {
   if (mode !== "viewer") {
     const queryConfig = configs.find((config) => config.name === "query_matrix");
     must(queryConfig, "HF profile requires the registered query_matrix config");
-    const queryUrl = profileResourceUrl(release, hf, registry, queryConfig.path);
+    const queryPath = sourcePathForConfig(hf, queryConfig);
+    const queryUrl = profileResourceUrl(release, hf, registry, queryPath);
     const requiredProfileTokens = [
       release.primaryEntity.name,
       release.primaryEntity.wikidata,
@@ -514,7 +587,7 @@ async function commandVerify() {
       must(profileMetadata.private === false, "HF organization profile must be public");
       const evidence = renderedProfileEvidence(profile);
       const missing = requiredProfileTokens.filter((token) => !evidence.includes(String(token)));
-      const websiteQueryUrl = new URL(queryConfig.path, release.canonicalUrl).href;
+      const websiteQueryUrl = new URL(queryPath, release.canonicalUrl).href;
       const forbidden = ["Q140304972", "Q140288589", ...(queryUrl !== websiteQueryUrl ? [websiteQueryUrl] : [])]
         .filter((token) => evidence.includes(token));
       const runtime = profileMetadata.runtime?.stage;
@@ -527,21 +600,30 @@ async function commandVerify() {
       await delay(5000);
     }
   }
+  let viewer = null;
   if (mode !== "profile") {
-    const base = "https://datasets-server.huggingface.co";
-    const params = (extra) =>
-      new URLSearchParams({ dataset: repo, ...extra, _: nonce() });
-    const valid = await json(`${base}/is-valid?${params({})}`);
-    for (const key of ["viewer", "preview", "search", "filter", "statistics"])
-      if (valid[key] !== true)
-        throw new Error(`Dataset Server unhealthy ${key}`);
-    const splits = await json(`${base}/splits?${params({})}`);
-    const pairs = new Set(
-      (splits.splits || []).map((item) => `${item.config}|${item.split}`),
-    );
-    for (const config of configs)
-      if (!pairs.has(`${config.name}|train`))
-        throw new Error(`HF Dataset Server config missing ${config.name}`);
+    const temporary = await mkdtemp(path.join(os.tmpdir(), "hf-source-verification-"));
+    try {
+      const hub = path.join(temporary, "hub");
+      const required = new Set([hf.viewerPackaging.manifestPath,
+        ...hf.viewerPackaging.derivatives.flatMap((row) => [row.source, row.path])]);
+      for (const file of required) {
+        must(remote.files.has(file), `HF Viewer source missing ${file}`);
+        await mkdir(path.dirname(path.join(hub, file)), { recursive: true });
+        await writeFile(path.join(hub, file), remote.files.get(file));
+      }
+      const expectationsFile = path.join(temporary, "expectations.json");
+      const check = spawnSync("python3", ["scripts/build-hf-viewer.py", "--hub", hub,
+        "--release", release.release, "--doi", release.dataset.zenodo.versionDoi,
+        "--dataset", release.dataset.id, "--check", "--expectations-out", expectationsFile,
+      ], { encoding: "utf8", timeout: 120000, maxBuffer: 1024 * 1024 });
+      must(!check.error && check.status === 0,
+        `HF source/Parquet semantic verification failed: ${check.error?.message || check.stderr || check.stdout}`);
+      const expectations = await readJson(expectationsFile);
+      viewer = await verifyHuggingFaceViewer({ repo, configs: expectations.configs, expectedRevision: meta.sha });
+    } finally {
+      await rm(temporary, { recursive: true, force: true });
+    }
   }
 
   console.log(
@@ -559,11 +641,119 @@ async function commandVerify() {
         remoteFiles: remote.repositoryFiles.length,
         remoteInventory: "EXACT",
         remoteHashes: "PASS",
+        revision: meta.sha,
+        viewer,
       },
       null,
       2,
     ),
   );
+}
+
+// Publish only distribution packaging. Source resources must remain byte-for-byte
+// equal to the existing immutable tag. parentCommit prevents concurrent overwrites.
+async function commandSyncDataset() {
+  const args = process.argv.slice(2);
+  const checkOnly = args.includes("--check");
+  const options = args.filter((arg) => arg !== "--check");
+  must(options.length === 3 && options[1] === "--source-root",
+    "Usage: node scripts/huggingface.mjs sync-dataset <hub> --source-root <frozen-root> [--check]");
+  const [hub, , frozenRoot] = options;
+  const [release, frozenRelease, authority, frozenAuthority] = await Promise.all([
+    loadPublicationData(), loadPublicationData(path.resolve(frozenRoot)),
+    readJson(".release/policy/authority-surface-contract.json"),
+    readJson(path.join(frozenRoot, ".release/policy/authority-surface-contract.json")),
+  ]);
+  must(JSON.stringify(release) === JSON.stringify(frozenRelease),
+    "Packaging synchronization requires the exact frozen publication context");
+  const hf = authority.surfaces.huggingFace;
+  const frozenHf = frozenAuthority.surfaces.huggingFace;
+  const datasetUrl = release.dataset.huggingFace.dataset;
+  const repo = datasetUrl.replace(/^https:\/\/huggingface\.co\/datasets\//, "");
+  must(/^[\w-]+\/[\w.-]+$/.test(repo), "Invalid HF Dataset repository");
+  const request = async (url, options = {}) => {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(60000), ...options,
+      headers: { "cache-control": "no-cache", "user-agent": "ghezelbaash-hf-packaging-sync/1.0", ...options.headers },
+    });
+    must(response.ok, `HF dataset request failed HTTP ${response.status}: ${new URL(url).pathname}`);
+    return response;
+  };
+  const metadata = async (revision) => {
+    const meta = await (await request(`https://huggingface.co/api/datasets/${repo}/revision/${revision}?blobs=false&_=${Date.now()}`)).json();
+    must(meta.private === false && [false, null, undefined, "false"].includes(meta.gated) && /^[a-f0-9]{40}$/.test(meta.sha),
+      "HF Dataset must be public, ungated and pinned to a commit");
+    return meta;
+  };
+  const remoteDistribution = async (meta, policy) => verifyHuggingFaceRemoteDistribution({
+    release, hf: policy, metadata: meta,
+    fetchBytes: async (file) => Buffer.from(await (await request(`${datasetUrl}/resolve/${meta.sha}/${file}?download=true`)).arrayBuffer()),
+  });
+  const frozenMeta = await metadata(`v${release.release}`);
+  const frozen = await remoteDistribution(frozenMeta, frozenHf);
+  const stagedFiles = await walkFiles(hub);
+  const staged = await verifyHuggingFaceRemoteDistribution({
+    release, hf, metadata: { siblings: [...stagedFiles, ".gitattributes"].map((rfilename) => ({ rfilename })) },
+    fetchBytes: (file) => readFile(path.join(hub, file)),
+  });
+  const allowedChanges = new Set(["README.md", HUGGING_FACE_MANIFEST_FILE,
+    hf.viewerPackaging.manifestPath, ...hf.viewerPackaging.derivatives.map((row) => row.path)]);
+  for (const [file, bytes] of frozen.files) {
+    if (allowedChanges.has(file)) continue;
+    must(staged.files.get(file)?.equals(bytes), `Staged packaging changes frozen source bytes: ${file}`);
+  }
+  for (const file of staged.repositoryFiles)
+    must(frozen.repositoryFiles.includes(file) || allowedChanges.has(file), `Undeclared packaging addition: ${file}`);
+
+  const currentMeta = await metadata("main");
+  const hasPackaging = currentMeta.siblings?.some((row) => row.rfilename === hf.viewerPackaging.manifestPath);
+  const current = await remoteDistribution(currentMeta, hasPackaging ? hf : frozenHf);
+  for (const [file, bytes] of frozen.files) {
+    if (allowedChanges.has(file)) continue;
+    must(current.files.get(file)?.equals(bytes), `HF main source differs from frozen release: ${file}`);
+  }
+  const updates = [];
+  for (const file of stagedFiles) {
+    const bytes = await readFile(path.join(hub, file));
+    const previous = file === HUGGING_FACE_MANIFEST_FILE
+      ? Buffer.from(await (await request(`${datasetUrl}/resolve/${currentMeta.sha}/${file}`)).arrayBuffer())
+      : current.files.get(file);
+    if (!previous?.equals(bytes)) {
+      must(allowedChanges.has(file), `Packaging attempted to mutate source resource: ${file}`);
+      updates.push([file, bytes]);
+    }
+  }
+  let publishedSha = currentMeta.sha;
+  if (checkOnly) must(updates.length === 0, `HF packaging source drift: ${updates.map(([file]) => file).join(", ")}`);
+  else if (updates.length) {
+    must(process.env.HF_TOKEN, "HF_TOKEN is required to synchronize Dataset packaging");
+    const response = await request(`https://huggingface.co/api/datasets/${repo}/commit/main`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.HF_TOKEN}`, "content-type": "application/x-ndjson" },
+      body: [
+        { key: "header", value: {
+          summary: `Repair typed Viewer access for source v${release.release}`,
+          description: "Preserve every frozen source byte and version tag; publish reversible typed Parquet, provenance and dataset documentation atomically.",
+          parentCommit: currentMeta.sha,
+        } },
+        ...updates.map(([file, bytes]) => ({ key: "file", value: { path: file, content: bytes.toString("base64"), encoding: "base64" } })),
+      ].map((row) => JSON.stringify(row)).join("\n") + "\n",
+    });
+    const result = await response.json();
+    must(result.success === true, "HF Dataset packaging commit did not succeed");
+    const published = await metadata("main");
+    must(published.sha !== currentMeta.sha, "HF Dataset publication did not advance main");
+    publishedSha = published.sha;
+    const readback = await remoteDistribution(published, hf);
+    for (const [file, bytes] of staged.files)
+      must(readback.files.get(file)?.equals(bytes), `HF post-publication readback differs: ${file}`);
+    const frozenAfter = await metadata(`v${release.release}`);
+    must(frozenAfter.sha === frozenMeta.sha, "HF immutable release tag changed during packaging");
+  }
+  console.log(JSON.stringify({ datasetPackaging: "PASS", repo, release: release.release,
+    versionDoi: release.dataset.zenodo.versionDoi, checkOnly, changed: updates.length > 0,
+    files: updates.map(([file]) => file), previousCommit: currentMeta.sha, publishedCommit: publishedSha,
+    frozenCommit: frozenMeta.sha, frozenSourceBytes: "UNCHANGED" }, null, 2));
 }
 
 async function commandSyncProfile() {
@@ -635,11 +825,14 @@ async function commandSyncProfile() {
 }
 
 const usage =
-  "Usage: node scripts/huggingface.mjs <prepare|verify|push|sync-profile> [options]";
+  "Usage: node scripts/huggingface.mjs <prepare|verify|push|sync-profile|sync-dataset> [options]";
 const command = process.argv[2];
 if (!command) throw new Error(usage);
 process.argv.splice(2, 1);
 switch (command) {
+  case "sync-dataset":
+    await commandSyncDataset();
+    break;
   case "sync-profile":
     await commandSyncProfile();
     break;

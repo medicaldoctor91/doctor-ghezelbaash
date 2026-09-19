@@ -58,6 +58,8 @@ jobs:
           sudo apt-get install --no-install-recommends -y ffmpeg
           ffprobe -version
       - run: npm ci
+      - name: Install pinned Viewer packaging dependency
+        run: python3 -m pip install --requirement scripts/requirements-hf-viewer.txt
       - name: Enforce high-severity dependency advisory gate
         run: npm run security:dependencies
       - name: Verify frozen-source publication context
@@ -212,11 +214,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 18); do
-            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
-            test "$attempt" -lt 18
-            sleep 10
-          done
+          node scripts/run-transient-command.mjs -- node scripts/huggingface.mjs verify
       - name: Reconcile or verify current Cloudflare deployment contract
         if: steps.release.outputs.mode == 'current'
         env:
@@ -577,11 +575,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 18); do
-            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
-            test "$attempt" -lt 18
-            sleep 10
-          done
+          node scripts/run-transient-command.mjs -- node scripts/huggingface.mjs verify
           for attempt in $(seq 1 24); do
             if node scripts/verify-live.mjs current --website-only; then break; fi
             test "$attempt" -lt 24
