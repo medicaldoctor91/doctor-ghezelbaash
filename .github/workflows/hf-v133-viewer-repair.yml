@@ -30,10 +30,10 @@ jobs:
       SOURCE_SHA: ${{ inputs.source_sha }}
       EXPECTED_HF_MAIN_SHA: ${{ inputs.expected_hf_main_sha }}
       REPAIR_CHAIN_BASE_SHA: a9b224e94391597ea00e45409329155fe2b20e20
-      REPAIR_PARENT_SHA: 9ce52dcc45c4d0cedeb80166ec79f9dcf59fa696
+      REPAIR_PARENT_SHA: 38d366aca1a530e7315e9254afc5e827fa978d96
       FROZEN_SOURCE_SHA: a6b93084f97318f05766a962375233277e1d425c
       GITHUB_TAG_OBJECT_SHA: 634bd496f14e68c4bbc92ea794f82f282920bc8a
-      HF_MAIN_BEFORE: d8e55c116019838750f9e45981ddf30e8ae920dc
+      HF_MAIN_BEFORE: 5b841cb27be9a68238dd4408671977b450e124b9
       HF_TAG_OBJECT_SHA: a95dfbd5cf05ae924ae3ad151409a2bba2ab27b3
       HF_TAG_COMMIT_SHA: a0cc0ee51215f3b9074a049f9b29ae1c0a5dfcdc
       CANCELLED_PREP_SHA: ed7307c8ff16d843746e4c08d97d6a63413de533
@@ -280,6 +280,41 @@ jobs:
           node scripts/huggingface.mjs sync-dataset .release/huggingface \
             --source-root .release/frozen --expected-main "$PUBLISHED_SHA" --check \
             | tee .release/runtime/hf-readback.json
+          node --input-type=module <<'NODE'
+          import { setTimeout as delay } from 'node:timers/promises';
+          const repo = process.env.HF_REPO;
+          const expected = process.env.PUBLISHED_SHA;
+          const probes = [['splits', {}], ['parquet', {}], ['size', {}],
+            ...['entity_facts', 'query_matrix'].flatMap(config =>
+              ['first-rows', 'statistics'].map(endpoint => [endpoint, { config, split: 'train' }]))];
+          for (let attempt = 1; attempt <= 30; attempt++) {
+            const statuses = await Promise.all(probes.map(async ([endpoint, params]) => {
+              const response = await fetch(`https://datasets-server.huggingface.co/${endpoint}?${new URLSearchParams({ dataset: repo, ...params })}`, {
+                headers: { accept: 'application/json', 'cache-control': 'no-cache' },
+                signal: AbortSignal.timeout(60000),
+              });
+              const body = await response.json();
+              const revision = response.headers.get('x-revision');
+              const code = response.headers.get('x-error-code') || body.error_code;
+              if ([401, 403].includes(response.status)) throw new Error(`Viewer access denied: ${endpoint}`);
+              if (revision && revision !== expected) return `${endpoint}:stale`;
+              if (['ResponseNotReady', 'CachedResponseNotFound'].includes(code) && !body.cause_exception)
+                return `${endpoint}:queued`;
+              if (!response.ok || body.error || body.failed?.length)
+                throw new Error(`Viewer processing failed: ${endpoint} ${JSON.stringify(body).slice(0, 1000)}`);
+              if (body.pending?.length || body.partial === true) return `${endpoint}:pending`;
+              return null;
+            }));
+            const pending = statuses.filter(Boolean);
+            if (!pending.length) {
+              console.log(`HF_PROCESSING_READY revision=${expected}`);
+              break;
+            }
+            if (attempt === 30) throw new Error(`HF processing deadline exceeded: ${pending.join(',')}`);
+            console.log(`HF_PROCESSING_WAIT ${attempt}/30 ${pending.join(',')}`);
+            await delay(60000);
+          }
+          NODE
           node scripts/huggingface.mjs verify --viewer \
             | tee .release/runtime/hf-viewer-verification.json
           node --input-type=module <<'NODE'
