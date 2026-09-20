@@ -85,6 +85,87 @@ assert.equal(healthy.status, "PASS");
 assert.equal(healthy.configs.length, 2);
 assert.equal(healthy.requestCount, 15);
 
+// Publication race: the aggregate validity response can become available
+// before its capability flags and conversion inventories have finished.
+const readinessLogs = [];
+const aggregateReadiness = run(({ key, body, count }) => {
+  if (key === "is-valid/" && count <= 2)
+    return Response.json({ error: "The response is not ready yet." },
+      { status: 500, headers: { "x-error-code": "ResponseNotReady" } });
+  if (key === "is-valid/" && count === 3) {
+    body.viewer = false;
+    body.preview = false;
+  }
+  if (["parquet/", "size/"].includes(key) && count < 4)
+    body.pending.push({ config: "query_matrix", kind: "config-parquet" });
+}, { maxAttempts: 4, log: (message) => { readinessLogs.push(message); } });
+const aggregateReadinessResult = await aggregateReadiness.promise;
+assert.equal(aggregateReadinessResult.status, "PASS");
+assert.equal(aggregateReadinessResult.readinessRetries, 9);
+for (const key of ["is-valid/", "parquet/", "size/"])
+  assert.equal(aggregateReadiness.counts.get(key), 4);
+assert.equal(aggregateReadiness.sleeps.length, 9);
+assert.ok(aggregateReadiness.sleeps.every((ms) => ms === 1));
+assert.ok(readinessLogs.some((message) =>
+  message.includes("attempt=3/4") && message.includes("is-valid pending capabilities: viewer,preview")));
+
+for (const capability of ["viewer", "preview", "search", "filter", "statistics"]) {
+  const recoveringValidity = run(({ key, body, count }) => {
+    if (key === "is-valid/" && count === 1) body[capability] = false;
+  });
+  assert.equal((await recoveringValidity.promise).status, "PASS");
+  assert.equal(recoveringValidity.counts.get("is-valid/"), 2);
+  assert.equal(recoveringValidity.sleeps.length, 1);
+
+  const unavailableValidity = run(({ key, body }) => {
+    if (key === "is-valid/") body[capability] = false;
+  });
+  await assert.rejects(unavailableValidity.promise,
+    new RegExp(`HF_VIEWER_NOT_READY exhausted=3 is-valid pending capabilities: ${capability}`));
+  assert.equal(unavailableValidity.counts.get("is-valid/"), 3);
+  assert.equal(unavailableValidity.sleeps.length, 2);
+  assert.equal(unavailableValidity.counts.get("first-rows/entity_facts"), undefined);
+}
+
+const validityNoRetry = run(({ key, body }) => {
+  if (key === "is-valid/") body.viewer = false;
+}, { maxAttempts: 1 });
+await assert.rejects(validityNoRetry.promise, /HF_VIEWER_NOT_READY exhausted=1/);
+assert.equal(validityNoRetry.counts.get("is-valid/"), 1);
+assert.equal(validityNoRetry.sleeps.length, 0);
+
+// Validate every field before classifying false as pending: an earlier false
+// must not cause a missing or nonboolean field to consume the retry budget.
+for (const malformed of [undefined, null, "false", "true", 0, 1, {}, []]) {
+  const malformedValidity = run(({ key, body }) => {
+    if (key === "is-valid/") {
+      body.viewer = false;
+      body.statistics = malformed;
+    }
+  });
+  await assert.rejects(malformedValidity.promise, /HF_VIEWER_INVALID is-valid statistics must be boolean/);
+  assert.equal(malformedValidity.counts.get("is-valid/"), 1);
+  assert.equal(malformedValidity.sleeps.length, 0);
+}
+for (const response of [
+  () => Response.json({ error: "Unauthorized" }, { status: 401 }),
+  () => Response.json({ error: "The response is not ready yet." },
+    { status: 403, headers: { "x-error-code": "ResponseNotReady" } }),
+  () => Response.json({ error: "Cannot extract features", cause_exception: "ParserError" },
+    { status: 500, headers: { "x-error-code": "ResponseNotReady" } }),
+  () => Response.json({ error: "Unsupported dataset" }, { status: 500 }),
+  () => new Response("not JSON", { status: 200 }),
+]) {
+  const invalidValidity = run(({ key }) => key === "is-valid/" ? response() : undefined);
+  await assert.rejects(invalidValidity.promise, /HF_VIEWER_INVALID/);
+  assert.equal(invalidValidity.counts.get("is-valid/"), 1);
+  assert.equal(invalidValidity.sleeps.length, 0);
+}
+await assert.rejects(run(({ key, body, count }) => {
+  if (key === "is-valid/" && count === 1) body.viewer = false;
+  if (key === "rows/query_matrix") body.rows[0].row.refs = [];
+}).promise, /query_matrix final row row 1 differs from source/);
+
 // Regression: global validity and split enumeration can be green while one
 // config has failed CSV parsing and no Parquet export. That must never pass.
 await assert.rejects(run(({ key, body }) => {
@@ -216,4 +297,4 @@ const currentParserFailure = run(({ key }) => {
 }, { expectedRevision: "b".repeat(40) });
 await assert.rejects(currentParserFailure.promise, /ParserError/);
 assert.equal(currentParserFailure.counts.get("first-rows/query_matrix"), 1);
-console.log("HF_VIEWER_VERIFICATION_PASS completeness, schema, lists, source rows, statistics, retrieval, Croissant, upstream search diagnostics, retry boundaries");
+console.log("HF_VIEWER_VERIFICATION_PASS completeness, schema, lists, source rows, statistics, retrieval, Croissant, upstream search diagnostics, aggregate validity readiness, retry boundaries");

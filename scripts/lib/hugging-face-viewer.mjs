@@ -226,8 +226,16 @@ export async function verifyHuggingFaceViewer({
   };
   await parallel([
     request("is-valid", {}, (body) => {
-      for (const key of ["viewer", "preview", "search", "filter", "statistics"])
-        must(body[key] === true, `is-valid ${key} unavailable`);
+      const capabilities = ["viewer", "preview", "search", "filter", "statistics"];
+      // Conversion can return valid boolean flags before its cached jobs are
+      // ready. Validate the complete shape first so a false flag never masks
+      // a malformed response, then use the same bounded readiness budget as
+      // the aggregate inventories. Every capability must still become true.
+      for (const key of capabilities)
+        must(typeof body[key] === "boolean", `is-valid ${key} must be boolean`);
+      const unavailable = capabilities.filter((key) => body[key] === false);
+      if (unavailable.length)
+        throw new NotReady(`is-valid pending capabilities: ${unavailable.join(",")}`);
     }),
     request("splits", {}, (body) => {
       completed(body, "splits");

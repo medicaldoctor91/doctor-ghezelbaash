@@ -1,6 +1,6 @@
 {
-  "release": "1.4.0",
-  "dateModified": "2026-09-20",
+  "release": "1.3.3",
+  "dateModified": "2026-09-18",
   "canonicalUrl": "https://www.ghezelbaash.ir/",
   "primaryEntity": {
     "id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -17,8 +17,8 @@
     },
     "zenodo": {
       "role": "preservation",
-      "versionDoi": "10.5281/zenodo.22857496",
-      "recordId": "22857496",
+      "versionDoi": "10.5281/zenodo.22838416",
+      "recordId": "22838416",
       "releaseHistory": [
         {
           "release": "1.0.0",
@@ -91,12 +91,6 @@
           "recordId": "22838416",
           "versionDoi": "10.5281/zenodo.22838416",
           "publicationDate": "2026-09-18"
-        },
-        {
-          "release": "1.4.0",
-          "recordId": "22857496",
-          "versionDoi": "10.5281/zenodo.22857496",
-          "publicationDate": "2026-09-20"
         }
       ]
     },
@@ -106,8 +100,8 @@
       "distributionMode": "ai-retrieval"
     }
   },
-  "datasetRevisionDate": "2026-09-20",
+  "datasetRevisionDate": "2026-09-18",
   "currentSource": {
-    "dateModified": "2026-09-20"
+    "dateModified": "2026-09-18"
   }
 }
