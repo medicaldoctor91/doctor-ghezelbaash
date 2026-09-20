@@ -18,14 +18,11 @@
     "build": "npm run prepare:distribution && npm run compile:dist"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.10",
-    "@types/node": "24.13.3",
     "astro": "7.2.8",
     "csso": "5.0.5",
     "jsonld": "9.0.0",
     "parse5": "8.0.1",
-    "rdf-canonize": "5.0.0",
-    "typescript": "6.0.3"
+    "rdf-canonize": "5.0.0"
   },
   "engines": {
     "node": ">=24.19.0 <25",
