@@ -1,0 +1,62 @@
+name: Minimize production dependencies
+
+on:
+  push:
+    branches: [ops/source-minimal-deps]
+    paths:
+      - .github/workflows/minimize-production-dependencies.yml
+
+permissions:
+  contents: write
+
+jobs:
+  minimize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/source-minimal-deps
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Remove unused development-only dependencies and regenerate lock
+        run: |
+          set -euo pipefail
+          npm pkg delete devDependencies.@astrojs/check
+          npm pkg delete devDependencies.@types/node
+          npm pkg delete devDependencies.typescript
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci
+          npm run build
+      - name: Prove DIST still equals live production
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, pathlib, urllib.parse, urllib.request, json
+          root=pathlib.Path("dist"); base="https://www.ghezelbaash.ir"; skip={"_headers","_redirects"}
+          bad=[]; checked=0
+          for p in sorted(root.rglob("*")):
+              if not p.is_file(): continue
+              rel=p.relative_to(root).as_posix()
+              if rel in skip: continue
+              path="/" if rel=="index.html" else "/"+urllib.parse.quote(rel,safe="/-._~")
+              req=urllib.request.Request(base+path+"?__deps=minimal",headers={"Cache-Control":"no-cache, no-store","Accept-Encoding":"identity","User-Agent":"ghezelbaash-dependency-minimizer/1.0"})
+              with urllib.request.urlopen(req,timeout=60) as r: remote=r.read()
+              local=p.read_bytes(); checked+=1
+              if hashlib.sha256(local).digest()!=hashlib.sha256(remote).digest():
+                  bad.append(rel)
+          if bad: raise SystemExit("DIST drift after dependency minimization: "+", ".join(bad))
+          print(json.dumps({"dependencyMinimality":"PASS","checked":checked}))
+          PY
+      - name: Commit minimized package metadata
+        run: |
+          set -euo pipefail
+          git config user.name "ghezelbaash-maintenance"
+          git config user.email "actions@users.noreply.github.com"
+          git add package.json package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "cleanup: remove unused development-only dependencies"
+          git push origin HEAD:ops/source-minimal-deps
