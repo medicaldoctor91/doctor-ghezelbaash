@@ -38,4 +38,4 @@ Generated files belong under `.generated/` and `dist/` and are not committed as 
 
 Only website-consumed resources are generated. The separately published Hugging Face Viewer tables and Zenodo release remain available in their existing repositories.
 
-Cloudflare Pages builds from the `production` branch. The normal build has no code path that mutates Hugging Face, Zenodo, GitHub releases, Google Places, or any other external service.
+Cloudflare Pages builds from the `main` branch, which is the canonical website source. The normal build has no code path that mutates Hugging Face, Zenodo, GitHub releases, Google Places, or any other external service.
