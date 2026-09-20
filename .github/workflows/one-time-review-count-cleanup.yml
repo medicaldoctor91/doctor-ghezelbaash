@@ -53,30 +53,44 @@ jobs:
           python3 -m pip install -r scripts/requirements-hf-viewer.txt
           mkdir -p .release/hf-corrected
           node scripts/huggingface.mjs prepare dist .release/hf-corrected
-          git clone https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data .release/hf-repo
-          rsync -a --delete --exclude=.git --exclude=.gitattributes .release/hf-corrected/ .release/hf-repo/
-          git -C .release/hf-repo config user.name "ghezelbaash-maintenance"
-          git -C .release/hf-repo config user.email "actions@users.noreply.github.com"
-          git -C .release/hf-repo add -A
-          if ! git -C .release/hf-repo diff --cached --quiet; then
-            git -C .release/hf-repo commit -m "maintenance: remove volatile Google review count from v1.3.3 data"
-          fi
-          tmp="$(mktemp -d)"
-          cat > "$tmp/askpass.sh" <<'SH'
-          #!/bin/sh
-          case "$1" in
-            *Username*) printf '%s\n' "oauth2" ;;
-            *Password*) printf '%s\n' "$HF_TOKEN" ;;
-            *) exit 1 ;;
-          esac
-          SH
-          chmod 700 "$tmp/askpass.sh"
-          export GIT_ASKPASS="$tmp/askpass.sh" GIT_TERMINAL_PROMPT=0
-          git -C .release/hf-repo -c credential.helper= -c core.hooksPath=/dev/null push origin HEAD:main
-          git -C .release/hf-repo -c credential.helper= -c core.hooksPath=/dev/null push origin HEAD:release/v1.3.3
-          git -C .release/hf-repo tag -f v1.3.3
-          git -C .release/hf-repo -c credential.helper= -c core.hooksPath=/dev/null push --force origin refs/tags/v1.3.3
-          rm -rf "$tmp"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from huggingface_hub import HfApi, CommitOperationAdd, CommitOperationDelete, hf_hub_download
+          from huggingface_hub.errors import HfHubHTTPError
+
+          repo="doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+          root=Path(".release/hf-corrected")
+          token=os.environ["HF_TOKEN"]
+          api=HfApi(endpoint="https://huggingface.co", token=token)
+          info=api.dataset_info(repo, revision="main")
+          staged=sorted(str(p.relative_to(root)).replace(os.sep,"/") for p in root.rglob("*") if p.is_file())
+          remote=set(api.list_repo_files(repo_id=repo, repo_type="dataset", revision="main"))
+          keep={".gitattributes"}
+          ops=[CommitOperationAdd(path_in_repo=name,path_or_fileobj=str(root/name)) for name in staged]
+          ops += [CommitOperationDelete(path_in_repo=name) for name in sorted(remote-set(staged)-keep)]
+          result=api.create_commit(
+              repo_id=repo, repo_type="dataset", revision="main",
+              parent_commit=info.sha, create_pr=False,
+              commit_message="maintenance: remove volatile Google review count from v1.3.3 data",
+              commit_description="Same-release correction: remove volatile Google Maps review-count data while preserving rating and DOI identity.",
+              operations=ops,
+          )
+          oid=result.oid
+          graph=Path(hf_hub_download(repo_id=repo, repo_type="dataset", revision=oid, filename="graph.jsonld", token=token)).read_text()
+          forbidden=("schema.org/reviewCount","google-maps-review-count-current",'"value": 166')
+          if any(x in graph for x in forbidden):
+              raise RuntimeError("HF corrected graph still contains review-count data")
+          for kind,name in (("branch","release/v1.3.3"),("tag","v1.3.3")):
+              try:
+                  if kind=="branch": api.delete_branch(repo_id=repo, repo_type="dataset", branch=name)
+                  else: api.delete_tag(repo_id=repo, repo_type="dataset", tag=name)
+              except HfHubHTTPError as e:
+                  if e.response is None or e.response.status_code != 404: raise
+              if kind=="branch": api.create_branch(repo_id=repo, repo_type="dataset", branch=name, revision=oid)
+              else: api.create_tag(repo_id=repo, repo_type="dataset", tag=name, revision=oid)
+          print({"hfCorrected":"PASS","commit":oid,"files":len(staged)})
+          PY
       - name: Correct same Zenodo v1.3.3 record and DOI
         run: |
           set -euo pipefail
