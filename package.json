@@ -9,29 +9,13 @@
     "fsevents@2.3.3": true
   },
   "scripts": {
-    "security:dependencies": "node scripts/dependency-advisory-gate.mjs",
     "clean:generated": "node scripts/generated-workspace.mjs reset",
-    "prepare:site": "npm run clean:generated && node scripts/generate-projections.mjs site",
     "prepare:distribution": "npm run clean:generated && npm run rdf:generate && node scripts/generate-projections.mjs distribution && node scripts/generate-retrieval-projections.mjs && node scripts/generate-descriptors.mjs",
-    "dev": "npm run prepare:site && ASTRO_TELEMETRY_DISABLED=1 astro dev",
-    "check:astro": "ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
-    "check": "npm run prepare:site && npm run check:astro",
     "materialize:static": "node scripts/materialize-static-artifacts.mjs",
     "rdf:generate": "node scripts/generate-rdf.mjs",
     "indexnow:prepare": "node scripts/indexnow.mjs prepare",
     "compile:dist": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run materialize:static && npm run indexnow:prepare && node scripts/generate-deployment-headers.mjs",
-    "build": "npm run prepare:distribution && npm run compile:dist",
-    "release:attest": "node scripts/write-release-attestation.mjs",
-    "release": "npm run validate:release-contract && npm run build && npm run release:attest && npm run package:dist",
-    "package:dist": "node scripts/package-dist.mjs",
-    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "verify:subdomains": "node scripts/verify-production.mjs subdomains",
-    "verify:production": "node scripts/verify-production.mjs full",
-    "verify:public-discovery": "node scripts/verify-live.mjs discovery",
-    "indexnow:submit": "node scripts/indexnow.mjs submit",
-    "verify:mojavez": "node scripts/verify-mojavez-evidence.mjs",
-    "validate:release-contract": "node scripts/validate-release-contract.mjs",
-    "validate:source": "npm run check:astro"
+    "build": "npm run prepare:distribution && npm run compile:dist"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
