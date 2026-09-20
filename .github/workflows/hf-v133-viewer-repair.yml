@@ -30,10 +30,10 @@ jobs:
       SOURCE_SHA: ${{ inputs.source_sha }}
       EXPECTED_HF_MAIN_SHA: ${{ inputs.expected_hf_main_sha }}
       REPAIR_CHAIN_BASE_SHA: a9b224e94391597ea00e45409329155fe2b20e20
-      REPAIR_PARENT_SHA: 38d366aca1a530e7315e9254afc5e827fa978d96
+      REPAIR_PARENT_SHA: c5aaa47bbf53caec61441b0d3293e37a2c0cd640
       FROZEN_SOURCE_SHA: a6b93084f97318f05766a962375233277e1d425c
       GITHUB_TAG_OBJECT_SHA: 634bd496f14e68c4bbc92ea794f82f282920bc8a
-      HF_MAIN_BEFORE: 5b841cb27be9a68238dd4408671977b450e124b9
+      HF_MAIN_BEFORE: 63c78faf83f19e0bc9964ac55657e1c8c8df6149
       HF_TAG_OBJECT_SHA: a95dfbd5cf05ae924ae3ad151409a2bba2ab27b3
       HF_TAG_COMMIT_SHA: a0cc0ee51215f3b9074a049f9b29ae1c0a5dfcdc
       CANCELLED_PREP_SHA: ed7307c8ff16d843746e4c08d97d6a63413de533
@@ -284,7 +284,8 @@ jobs:
           import { setTimeout as delay } from 'node:timers/promises';
           const repo = process.env.HF_REPO;
           const expected = process.env.PUBLISHED_SHA;
-          const probes = [['splits', {}], ['parquet', {}], ['size', {}],
+          const capabilities = ['viewer', 'preview', 'search', 'filter', 'statistics'];
+          const probes = [['is-valid', {}], ['splits', {}], ['parquet', {}], ['size', {}],
             ...['entity_facts', 'query_matrix'].flatMap(config =>
               ['first-rows', 'statistics'].map(endpoint => [endpoint, { config, split: 'train' }]))];
           for (let attempt = 1; attempt <= 30; attempt++) {
@@ -302,6 +303,15 @@ jobs:
                 return `${endpoint}:queued`;
               if (!response.ok || body.error || body.failed?.length)
                 throw new Error(`Viewer processing failed: ${endpoint} ${JSON.stringify(body).slice(0, 1000)}`);
+              // The aggregate capability cache can lag successful split jobs.
+              // Keep waiting for all capabilities; the strict verifier below
+              // still requires every capability and every functional probe.
+              if (endpoint === 'is-valid') {
+                if (capabilities.some(key => typeof body[key] !== 'boolean'))
+                  throw new Error('Viewer capability response is malformed');
+                const unavailable = capabilities.filter(key => !body[key]);
+                if (unavailable.length) return `is-valid:pending(${unavailable.join('+')})`;
+              }
               if (body.pending?.length || body.partial === true) return `${endpoint}:pending`;
               return null;
             }));
