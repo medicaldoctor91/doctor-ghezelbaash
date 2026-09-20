@@ -28,6 +28,7 @@ jobs:
           import hashlib
           import json
           import os
+          import subprocess
           import time
           import urllib.error
           import urllib.request
@@ -138,9 +139,14 @@ jobs:
           print("PROJECT_AFTER", json.dumps(project_summary(project)), flush=True)
 
           ensure_heads()
-          boundary = "main-migration-form-boundary"
-          body = ("--" + boundary + "\r\nContent-Disposition: form-data; name=\"branch\"\r\n\r\nmain\r\n--" + boundary + "--\r\n").encode()
-          deployment = api("cf", PROJECT + "/deployments", "POST", body, "multipart/form-data; boundary=" + boundary)
+          candidates = api("cf", PROJECT + "/deployments?per_page=25")
+          deployment = next((item for item in candidates if item.get("environment") == "production"
+              and item.get("deployment_trigger", {}).get("metadata", {}).get("commit_hash") == SHA
+              and not item.get("is_skipped")), None)
+          if deployment is None:
+              boundary = "main-migration-form-boundary"
+              body = ("--" + boundary + "\r\nContent-Disposition: form-data; name=\"branch\"\r\n\r\nmain\r\n--" + boundary + "--\r\n").encode()
+              deployment = api("cf", PROJECT + "/deployments", "POST", body, "multipart/form-data; boundary=" + boundary)
           deployment_id = deployment["id"]
           for attempt in range(90):
               deployment = api("cf", PROJECT + "/deployments/" + deployment_id)
@@ -170,9 +176,9 @@ jobs:
               "assets/site.f7e10a1ed44f.css": "f7e10a1ed44fe6b04c21441bf72f9b375e017c5e1fcf46e3b47554e131c2b900",
           }
           for path, expected in expected_files.items():
-              url = "https://www.ghezelbaash.ir/" + path + "?migration_verify=" + SHA
-              with urllib.request.urlopen(url, timeout=45) as response:
-                  actual = hashlib.sha256(response.read()).hexdigest()
+              url = "https://www.ghezelbaash.ir/" + path
+              public_bytes = subprocess.check_output(["curl", "--fail", "--silent", "--show-error", "--max-time", "45", url])
+              actual = hashlib.sha256(public_bytes).hexdigest()
               if actual != expected:
                   raise RuntimeError("Live output changed for " + (path or "index.html"))
           print("LIVE_BYTES_UNCHANGED", flush=True)
