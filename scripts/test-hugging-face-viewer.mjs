@@ -175,7 +175,6 @@ for (const response of [
   () => Response.json({ error: "Unknown index failure" }, { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } }),
   () => Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
     { status: 403, headers: { "x-error-code": "UnprocessableIndexError" } }),
-  () => new Response("<html>Internal Server Error</html>", { status: 500 }),
   () => Response.json({ error: "the dataset index is loading, this can take a minute" }, { status: 403 }),
 ]) {
   const failed = run(({ key }) => key === "search/query_matrix" ? response() : undefined);
@@ -183,6 +182,12 @@ for (const response of [
   assert.equal(failed.counts.get("search/query_matrix"), 1);
   assert.equal(failed.sleeps.length, 0);
 }
+const transientGateway = run(({ key }) =>
+  key === "rows/query_matrix" ? new Response("<html>Bad Gateway</html>", { status: 502 }) : undefined);
+const transientGatewayResult = await transientGateway.promise;
+assert.ok(transientGatewayResult.readinessRetries >= 1);
+assert.ok(transientGateway.counts.get("rows/query_matrix") >= 2);
+
 const digest = run(({ key }) => { if (key === "search/query_matrix") throw new Error("Repr-Digest mismatch"); });
 await assert.rejects(digest.promise, /Repr-Digest mismatch/);
 assert.equal(digest.counts.get("search/query_matrix"), 1);
