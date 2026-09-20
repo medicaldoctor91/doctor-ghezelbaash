@@ -51,7 +51,8 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install -r scripts/requirements-hf-viewer.txt
-          mkdir -p .release/hf-corrected\n          node scripts/huggingface.mjs prepare dist .release/hf-corrected
+          mkdir -p .release/hf-corrected
+          node scripts/huggingface.mjs prepare dist .release/hf-corrected
           git clone https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data .release/hf-repo
           rsync -a --delete --exclude=.git --exclude=.gitattributes .release/hf-corrected/ .release/hf-repo/
           git -C .release/hf-repo config user.name "ghezelbaash-maintenance"
