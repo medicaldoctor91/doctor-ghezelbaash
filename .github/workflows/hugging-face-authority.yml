@@ -742,7 +742,9 @@ jobs:
               --repo "$GITHUB_REPOSITORY" --verify-tag \
               --target "$RELEASE_SHA" \
               --title "$TITLE" \
-              --notes "$BODY"
+              --notes "$BODY" --draft
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json "$JSON_FIELDS" > "$STATE"
+            EXISTS=true
           else
             node - "$STATE" "$TAG" "$TITLE" "$BODY" \
               "$(basename "$ATTESTATION")" "$(basename "$MANIFEST")" <<'NODE'
@@ -879,7 +881,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/run-transient-command.mjs -- node scripts/huggingface.mjs verify
+          node scripts/run-transient-command.mjs -- node scripts/huggingface.mjs verify --viewer
           if [ "$RELEASE_MODE" = new ]; then
             for attempt in $(seq 1 24); do
               if node scripts/verify-live.mjs current --website-only; then break; fi
