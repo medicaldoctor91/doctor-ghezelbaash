@@ -72,8 +72,6 @@ jobs:
           node scripts/platform-contract.mjs validate
           node scripts/verify-live.mjs test-release-context
           node scripts/test-transient-retry.mjs
-          if test -f scripts/publish-hf-release.py; then python3 scripts/publish-hf-release.py --self-test; fi
-          if test -f scripts/sync-hf-retrieval.py; then python3 scripts/sync-hf-retrieval.py --self-test; fi
           python3 scripts/build-hf-viewer.py --self-test
           node scripts/test-hugging-face-viewer.mjs
       - name: Verify the selected maintenance source
@@ -272,19 +270,6 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         run: node scripts/huggingface.mjs sync-profile --source-root .release/frozen
-      - name: Build exact source retrieval demo
-        if: hashFiles('scripts/build-hf-demo.mjs') != ''
-        run: node scripts/build-hf-demo.mjs --source-dist dist --out-dir .release/runtime/hf-demo
-      - name: Synchronize static retrieval and existing public collections
-        if: github.event_name == 'workflow_dispatch' && inputs.apply == true && hashFiles('scripts/sync-hf-retrieval.py') != ''
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-        run: python3 scripts/sync-hf-retrieval.py --directory .release/runtime/hf-demo --source-root .release/frozen --output .release/runtime/finalization/hf-retrieval.json
-      - name: Verify static retrieval, source hashes and collection links
-        if: hashFiles('scripts/sync-hf-retrieval.py') != ''
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-        run: python3 scripts/sync-hf-retrieval.py --directory .release/runtime/hf-demo --source-root .release/frozen --check
       - name: Verify current public bytes, discovery and dataset viewer
         run: |
           set -euo pipefail

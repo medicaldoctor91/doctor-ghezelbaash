@@ -292,7 +292,6 @@ jobs:
           if [ "$FROZEN_SOURCE_AT_HEAD" = true ]; then
             npm run release
             python scripts/zenodo_release.py prepare-auxiliaries
-            node scripts/build-hf-demo.mjs --source-dist dist --out-dir .release/runtime/hf-demo
           else
             npm run build
           fi
@@ -505,8 +504,6 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$CANDIDATE_SHA")"
           export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
           npm run release
-          node scripts/build-hf-demo.mjs --source-dist dist --out-dir .release/runtime/hf-demo
-          python3 scripts/sync-hf-retrieval.py --self-test
           python3 scripts/build-hf-viewer.py --self-test
           node scripts/test-hugging-face-viewer.mjs
       - name: Prepare Hugging Face candidate
@@ -1077,26 +1074,21 @@ jobs:
           test "$(git rev-parse refs/remotes/origin/production)" = "$RELEASE_SHA"
           test "$(git rev-list -n 1 "v$RELEASE_TARGET")" = "$RELEASE_SHA"
           printf 'RELEASE_SHA=%s\n' "$RELEASE_SHA" >> "$GITHUB_ENV"
-      - name: Build exact frozen retrieval package
+      - name: Build exact frozen release package
         run: |
           set -euo pipefail
           export SOURCE_COMMIT="$RELEASE_SHA"
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$RELEASE_SHA")"
           export CF_PAGES_COMMIT_SHA="$RELEASE_SHA"
           npm run release
-          node scripts/build-hf-demo.mjs --source-dist dist --out-dir .release/runtime/hf-demo
-      - name: Synchronize public profile static retrieval and existing collections
+      - name: Synchronize public organization profile
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           node scripts/huggingface.mjs sync-profile
-          python3 scripts/sync-hf-retrieval.py \
-            --directory .release/runtime/hf-demo \
-            --output .release/runtime/hf-retrieval.json
           node scripts/huggingface.mjs sync-profile --check
-          python3 scripts/sync-hf-retrieval.py --directory .release/runtime/hf-demo --check
       - name: Verify all enriched public authority surfaces
         run: |
           set -euo pipefail
@@ -1114,7 +1106,6 @@ jobs:
           path: |
             .release/runtime/release-attestation.json
             .release/runtime/dist-sha256.json
-            .release/runtime/hf-retrieval.json
           retention-days: 30
           if-no-files-found: warn
 
