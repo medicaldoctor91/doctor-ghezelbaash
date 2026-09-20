@@ -65,24 +65,31 @@ jobs:
           api=HfApi(endpoint="https://huggingface.co", token=token)
           info=api.dataset_info(repo, revision="main")
           staged=sorted(str(p.relative_to(root)).replace(os.sep,"/") for p in root.rglob("*") if p.is_file())
-          remote=set(api.list_repo_files(repo_id=repo, repo_type="dataset", revision="main"))
-          keep={".gitattributes"}
-          ops=[CommitOperationAdd(path_in_repo=name,path_or_fileobj=str(root/name)) for name in staged]
-          ops += [CommitOperationDelete(path_in_repo=name) for name in sorted(remote-set(staged)-keep)]
-          result=api.create_commit(
-              repo_id=repo, repo_type="dataset", revision="main",
-              parent_commit=info.sha, create_pr=False,
-              commit_message="maintenance: remove volatile Google review count from v1.3.3 data",
-              commit_description="Same-release correction: remove volatile Google Maps review-count data while preserving rating and DOI identity.",
-              operations=ops,
-          )
-          oid=result.oid
-          graph=Path(hf_hub_download(repo_id=repo, repo_type="dataset", revision=oid, filename="graph.jsonld", token=token)).read_text()
           forbidden=("schema.org/reviewCount","google-maps-review-count-current",'"value": 166')
+          current_graph=Path(hf_hub_download(repo_id=repo, repo_type="dataset", revision=info.sha, filename="graph.jsonld", token=token)).read_text()
+          if any(x in current_graph for x in forbidden):
+              remote=set(api.list_repo_files(repo_id=repo, repo_type="dataset", revision="main"))
+              keep={".gitattributes"}
+              ops=[CommitOperationAdd(path_in_repo=name,path_or_fileobj=str(root/name)) for name in staged]
+              ops += [CommitOperationDelete(path_in_repo=name) for name in sorted(remote-set(staged)-keep)]
+              result=api.create_commit(
+                  repo_id=repo, repo_type="dataset", revision="main",
+                  parent_commit=info.sha, create_pr=False,
+                  commit_message="maintenance: remove volatile Google review count from v1.3.3 data",
+                  commit_description="Same-release correction: remove volatile Google Maps review-count data while preserving rating and DOI identity.",
+                  operations=ops,
+              )
+              oid=result.oid
+          else:
+              oid=info.sha
+          graph=Path(hf_hub_download(repo_id=repo, repo_type="dataset", revision=oid, filename="graph.jsonld", token=token)).read_text()
           if any(x in graph for x in forbidden):
               raise RuntimeError("HF corrected graph still contains review-count data")
           for kind,name in (("branch","release/v1.3.3"),("tag","v1.3.3")):
               try:
+                  ref=api.dataset_info(repo, revision=name)
+                  if ref.sha == oid:
+                      continue
                   if kind=="branch": api.delete_branch(repo_id=repo, repo_type="dataset", branch=name)
                   else: api.delete_tag(repo_id=repo, repo_type="dataset", tag=name)
               except HfHubHTTPError as e:
@@ -95,40 +102,119 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import importlib.util, json, os, sys
+          import hashlib, importlib.util, json, os, urllib.error, urllib.parse, urllib.request
           from pathlib import Path
+
           spec=importlib.util.spec_from_file_location("z","scripts/lib/zenodo_release_impl.py")
           z=importlib.util.module_from_spec(spec); spec.loader.exec_module(z)
+
+          token=os.environ["ZENODO_TOKEN"]
           release=json.loads(Path("src/data/release.json").read_text())
-          token=os.environ["ZENODO_TOKEN"]; record=str(release["dataset"]["zenodo"]["recordId"]); doi=release["dataset"]["zenodo"]["versionDoi"]
-          draft_url=f"{z.BASE}/deposit/depositions/{record}"
-          edited=False
+          record=str(release["dataset"]["zenodo"]["recordId"])
+          doi=release["dataset"]["zenodo"]["versionDoi"]
+          version=release["release"]
+          base="https://zenodo.org/api"
+
+          def request(method, url, payload=None, raw=None, content_type="application/json", ok=(200,201,202,204)):
+              headers={"Authorization":f"Bearer {token}","Accept":"application/json"}
+              if raw is not None:
+                  data=raw
+                  headers["Content-Type"]=content_type
+              elif payload is not None:
+                  data=json.dumps(payload).encode()
+                  headers["Content-Type"]="application/json"
+              else:
+                  data=b"" if method in {"POST","PUT"} else None
+              req=urllib.request.Request(url,data=data,method=method,headers=headers)
+              try:
+                  with urllib.request.urlopen(req,timeout=180) as resp:
+                      body=resp.read()
+                      if resp.status not in ok:
+                          raise RuntimeError(f"Zenodo HTTP {resp.status} {method} {url}")
+                      return resp.status, json.loads(body) if body else None
+              except urllib.error.HTTPError as e:
+                  body=e.read().decode("utf-8","replace")
+                  raise RuntimeError(f"Zenodo HTTP {e.code} {method} {url}: {body[:1200]}") from e
+
+          _, public=request("GET",f"{base}/records/{record}")
+          public_doi=((public.get("pids") or {}).get("doi") or {}).get("identifier") or public.get("doi")
+          if public_doi != doi or (public.get("metadata") or {}).get("version") != version:
+              raise RuntimeError("Zenodo public identity drift before correction")
+
+          # Remove any abandoned metadata-edit draft from an earlier attempt.
           try:
-              public=z.call(token,"GET",f"{z.BASE}/records/{record}")
-              if public.get("doi")!=doi or (public.get("metadata") or {}).get("version")!=release["release"]:
-                  raise RuntimeError("Zenodo public identity drift before correction")
-              dep=z.call(token,"GET",draft_url)
-              if dep.get("submitted") is True:
-                  z.call(token,"POST",f"{draft_url}/actions/edit")
-                  edited=True
-              dep=z.call(token,"GET",draft_url)
-              if dep.get("submitted") is True:
-                  raise RuntimeError("Zenodo record did not enter editable state")
-              bucket=(dep.get("links") or {}).get("bucket")
-              if not bucket:
-                  raise RuntimeError("Zenodo editable bucket missing")
+              request("DELETE",f"{base}/records/{record}/draft",ok=(204,))
+          except RuntimeError as e:
+              if "HTTP 404" not in str(e):
+                  raise
+
+          # Create an edit draft for the already-published record.
+          request("POST",f"{base}/records/{record}/draft",ok=(201,))
+
+          published=False
+          try:
+              # Unlock the published file bucket using the same endpoint as Zenodo's
+              # official "Edit published files" UI.
+              status, unlock=request(
+                  "POST",
+                  f"{base}/records/{record}/file-modification",
+                  payload={
+                      "reason":"correction",
+                      "comment":"Remove a volatile Google Maps review-count observation to prevent future factual drift while preserving the rating and record identity."
+                  },
+                  ok=(200,201),
+              )
+              if status != 200:
+                  raise RuntimeError("Zenodo file modification was not immediately authorized")
+
+              _, current=request("GET",f"{base}/records/{record}/draft/files")
+              for entry in current.get("entries",[]):
+                  key=urllib.parse.quote(entry["key"],safe="")
+                  request("DELETE",f"{base}/records/{record}/draft/files/{key}",ok=(204,))
+
               sources=z.exact_sources(os.environ["SOURCE_COMMIT"])
-              hashes=z.synchronize_exact_files(token,draft_url,bucket,sources)
-              remote=z.call(token,"GET",f"{draft_url}/files")
-              if {x.get("filename") for x in remote}!=set(sources):
-                  raise RuntimeError("Zenodo corrected inventory mismatch")
-              z.call(token,"POST",f"{draft_url}/actions/publish")
-              result=z.verify_public_record(token,record,doi,release["release"],hashes)
-              print(json.dumps(result,separators=(",",":")))
+              names=sorted(sources)
+              request("POST",f"{base}/records/{record}/draft/files",payload=[{"key":n} for n in names],ok=(201,))
+
+              expected={}
+              for name in names:
+                  path=Path(sources[name])
+                  data=path.read_bytes()
+                  expected[name]=hashlib.md5(data).hexdigest()
+                  key=urllib.parse.quote(name,safe="")
+                  request("PUT",f"{base}/records/{record}/draft/files/{key}/content",raw=data,content_type="application/octet-stream",ok=(200,))
+                  request("POST",f"{base}/records/{record}/draft/files/{key}/commit",ok=(200,))
+
+              _, draft_files=request("GET",f"{base}/records/{record}/draft/files")
+              got={e["key"]:str(e.get("checksum","")).removeprefix("md5:") for e in draft_files.get("entries",[])}
+              if set(got)!=set(expected) or any(got[k]!=v for k,v in expected.items()):
+                  raise RuntimeError("Zenodo corrected draft file inventory/hash mismatch")
+
+              request("POST",f"{base}/records/{record}/draft/actions/publish",ok=(202,))
+              published=True
+
+              _, final=request("GET",f"{base}/records/{record}")
+              final_doi=((final.get("pids") or {}).get("doi") or {}).get("identifier") or final.get("doi")
+              if final_doi != doi or (final.get("metadata") or {}).get("version") != version:
+                  raise RuntimeError("Zenodo identity changed after same-record correction")
+              _, final_files=request("GET",f"{base}/records/{record}/files")
+              final_got={e["key"]:str(e.get("checksum","")).removeprefix("md5:") for e in final_files.get("entries",[])}
+              if set(final_got)!=set(expected) or any(final_got[k]!=v for k,v in expected.items()):
+                  raise RuntimeError("Zenodo public corrected file inventory/hash mismatch")
+              graph_key=urllib.parse.quote("graph.jsonld",safe="")
+              req=urllib.request.Request(f"{base}/records/{record}/files/{graph_key}/content",headers={"Authorization":f"Bearer {token}"})
+              with urllib.request.urlopen(req,timeout=120) as resp:
+                  graph=resp.read().decode("utf-8")
+              forbidden=("schema.org/reviewCount","google-maps-review-count-current",'"value": 166')
+              if any(x in graph for x in forbidden):
+                  raise RuntimeError("Zenodo public graph still exposes volatile review count")
+              print(json.dumps({"zenodoCorrected":"PASS","record":record,"doi":doi,"version":version,"files":len(expected)},separators=(",",":")))
           except Exception:
-              if edited:
-                  try: z.call(token,"POST",f"{draft_url}/actions/discard")
-                  except Exception: pass
+              if not published:
+                  try:
+                      request("DELETE",f"{base}/records/{record}/draft",ok=(204,))
+                  except Exception:
+                      pass
               raise
           PY
       - name: Final no-count readback from corrected artifacts
