@@ -182,11 +182,13 @@ for (const response of [
   assert.equal(failed.counts.get("search/query_matrix"), 1);
   assert.equal(failed.sleeps.length, 0);
 }
-const transientGateway = run(({ key }) =>
-  key === "rows/query_matrix" ? new Response("<html>Bad Gateway</html>", { status: 502 }) : undefined);
+const transientGateway = run(({ key, count }) =>
+  key === "rows/query_matrix" && count === 1
+    ? new Response("<html>Bad Gateway</html>", { status: 502 })
+    : undefined);
 const transientGatewayResult = await transientGateway.promise;
-assert.ok(transientGatewayResult.readinessRetries >= 1);
-assert.ok(transientGateway.counts.get("rows/query_matrix") >= 2);
+assert.equal(transientGatewayResult.readinessRetries, 1);
+assert.equal(transientGateway.counts.get("rows/query_matrix"), 2);
 
 const digest = run(({ key }) => { if (key === "search/query_matrix") throw new Error("Repr-Digest mismatch"); });
 await assert.rejects(digest.promise, /Repr-Digest mismatch/);
