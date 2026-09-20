@@ -8940,23 +8940,6 @@
       "maxValue": 5
     },
     {
-      "@id": "https://www.ghezelbaash.ir/#observation-clinic-google-maps-review-count-current",
-      "@type": "Observation",
-      "observationAbout": {
-        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      },
-      "observationDate": {
-        "@value": "2026-09-04T03:30:42Z",
-        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
-      },
-      "measurementMethod": "Google Places API (New)",
-      "prov:wasDerivedFrom": {
-        "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"
-      },
-      "measuredProperty": "https://schema.org/reviewCount",
-      "value": 166
-    },
-    {
       "@id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic",
       "@type": "WebPage",
       "name": "OpenStreetMap node for Dr. Saeed Ghezelbash Aesthetic Clinic",

@@ -736,7 +736,7 @@ blockquote {
   grid-template-columns: auto auto;
   grid-template-areas:
     "score stars"
-    "provider reviews";
+    "provider provider";
   gap: 0.12rem 0.48rem;
   place-items: center start;
   align-content: center;
@@ -806,13 +806,6 @@ blockquote {
   font-size: 0.72rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
-}
-.hero-rating-seal__reviews {
-  grid-area: reviews;
-  justify-self: end;
-  color: #51625c;
-  font-size: 0.62rem;
-  font-weight: 720;
 }
 .hero-trust-strip {
   grid-area: trust;

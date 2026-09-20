@@ -1,10 +1,9 @@
 import { indexCanonicalGraph } from "./graph-core.mjs";
 
-const SCHEMA_VERSION = "2.0";
+const SCHEMA_VERSION = "3.0";
 const SOURCE = "Google Places API (New)";
 const XSD_DATETIME = "http://www.w3.org/2001/XMLSchema#dateTime";
 const RATING_SUFFIX = "observation-clinic-google-maps-rating-current";
-const REVIEW_COUNT_SUFFIX = "observation-clinic-google-maps-review-count-current";
 const EVIDENCE_SUFFIX = "evidence-google-maps-clinic";
 
 const values = (value) =>
@@ -63,6 +62,7 @@ export function validateReputationObservation(graph, release) {
   const placeId = release?.clinic?.placeId;
   if (!/^https:\/\/www\.ghezelbaash\.ir\/$/.test(canonicalUrl) || !entity)
     throw new Error("Clinic reputation requires canonical publication identity");
+
   const { byId } = indexCanonicalGraph(graph);
   const ratingNode = requireObservation(
     byId,
@@ -73,39 +73,24 @@ export function validateReputationObservation(graph, release) {
       evidenceId: `${canonicalUrl}#${EVIDENCE_SUFFIX}`,
     },
   );
-  const reviewNode = requireObservation(
-    byId,
-    `${canonicalUrl}#${REVIEW_COUNT_SUFFIX}`,
-    {
-      entityId: entity,
-      property: "https://schema.org/reviewCount",
-      evidenceId: `${canonicalUrl}#${EVIDENCE_SUFFIX}`,
-    },
-  );
   const rating = Number(ratingNode.value);
-  const reviewCount = Number(reviewNode.value);
   const ratingObservedAt = explicitDateTime(ratingNode.observationDate);
-  const reviewObservedAt = explicitDateTime(reviewNode.observationDate);
   if (
-    ratingObservedAt !== reviewObservedAt ||
     Number(ratingNode.maxValue) !== 5 ||
     !Number.isFinite(rating) ||
     rating < 1 ||
-    rating > 5 ||
-    !Number.isSafeInteger(reviewCount) ||
-    reviewCount < 1
+    rating > 5
   )
-    throw new Error("Canonical Google Maps reputation values drift");
+    throw new Error("Canonical Google Maps rating value drift");
+
   return Object.freeze({
     schemaVersion: SCHEMA_VERSION,
     source: SOURCE,
     entity,
     placeId,
     rating,
-    reviewCount,
     valueObservedAt: ratingObservedAt,
     ratingNodeId: ratingNode["@id"],
-    reviewCountNodeId: reviewNode["@id"],
   });
 }
 
@@ -113,7 +98,6 @@ export function evaluateGoogleReputation({ place, current, release }) {
   if (!current || typeof current !== "object")
     throw new Error("Current canonical Google Maps reputation is required");
   const rating = Number(place?.rating);
-  const reviewCount = Number(place?.userRatingCount);
   if (
     place?.id !== release.clinic.placeId ||
     place?.businessStatus !== "OPERATIONAL" ||
@@ -121,17 +105,13 @@ export function evaluateGoogleReputation({ place, current, release }) {
     place?.movedPlaceId ||
     !Number.isFinite(rating) ||
     rating < 1 ||
-    rating > 5 ||
-    !Number.isSafeInteger(reviewCount) ||
-    reviewCount < 1
+    rating > 5
   )
     throw new Error("Google Places reputation response is invalid");
+
   return Object.freeze({
     rating,
-    reviewCount,
-    changed:
-      rating !== Number(current.rating) ||
-      reviewCount !== Number(current.reviewCount),
+    changed: rating !== Number(current.rating),
   });
 }
 
@@ -140,20 +120,17 @@ export function applyReputationObservation(graph, { evaluation, release, observe
     throw new Error("Refusing to apply an unchanged reputation observation");
   if (!isIsoSecond(observedAt))
     throw new Error("Google Maps reputation observation time is invalid");
+
   const next = structuredClone(graph);
   const { byId } = indexCanonicalGraph(next);
   const ratingNode = byId.get(
     `${release.canonicalUrl}#${RATING_SUFFIX}`,
   );
-  const reviewNode = byId.get(
-    `${release.canonicalUrl}#${REVIEW_COUNT_SUFFIX}`,
-  );
-  if (!ratingNode || !reviewNode)
-    throw new Error("Canonical Google Maps reputation nodes are missing");
+  if (!ratingNode)
+    throw new Error("Canonical Google Maps rating observation is missing");
+
   ratingNode.value = evaluation.rating;
   ratingNode.observationDate = dateTimeValue(observedAt);
-  reviewNode.value = evaluation.reviewCount;
-  reviewNode.observationDate = dateTimeValue(observedAt);
   validateReputationObservation(next, release);
   return next;
 }
@@ -163,16 +140,18 @@ export function assertRenderedClinicReputation(html, { graph, release, mapsUrl }
   const url = new URL(mapsUrl);
   if (url.protocol !== "https:")
     throw new Error("Clinic Maps URL must use HTTPS");
+
   const source = String(html);
   const escapedUrl = url.href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const checks = [
-    new RegExp(`data-clinic-reputation[^>]*data-rating=["']${canonical.rating}["'][^>]*data-review-count=["']${canonical.reviewCount}["']`, "i"),
+    new RegExp(`data-clinic-reputation[^>]*data-rating=["']${canonical.rating}["']`, "i"),
     new RegExp(`data-clinic-rating[^>]*value=["']${canonical.rating}["']`, "i"),
-    new RegExp(`data-clinic-review-count[^>]*value=["']${canonical.reviewCount}["']`, "i"),
     new RegExp(`href=["']${escapedUrl}["']`, "i"),
   ];
   if (checks.some((pattern) => !pattern.test(source)))
     throw new Error("Rendered clinic reputation block drift");
+  if (/data-review-count|data-clinic-review-count|CLINIC_GOOGLE_REVIEW_COUNT|schema\.org\/reviewCount/i.test(source))
+    throw new Error("Rendered clinic reputation must not expose a volatile review count");
   return true;
 }
 
@@ -181,7 +160,6 @@ export const reputationObservationContract = Object.freeze({
   source: SOURCE,
   sourceFile: "src/data/semantic/knowledge-graph.jsonld",
   ratingNodeSuffix: RATING_SUFFIX,
-  reviewCountNodeSuffix: REVIEW_COUNT_SUFFIX,
   refreshCron: "23 */6 * * *",
   upstreamCallsPerRun: 1,
 });

@@ -100,8 +100,6 @@ export function deriveSiteData(release, graph) {
     ...contact,
     googleRating: reputation.rating,
     googleRatingFa: faNumber(reputation.rating, 1),
-    googleReviewCount: reputation.reviewCount,
-    googleReviewCountFa: faNumber(reputation.reviewCount),
     googleReputationObservedAt: reputation.valueObservedAt,
   });
 }
@@ -132,8 +130,6 @@ function siteTokenValues(site) {
     "{{CLINIC_HOURS_CLOSE_COMPACT_FA}}": site.hoursCloseCompactFa,
     "{{CLINIC_GOOGLE_RATING_RAW}}": String(site.googleRating),
     "{{CLINIC_GOOGLE_RATING_FA}}": site.googleRatingFa,
-    "{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}": String(site.googleReviewCount),
-    "{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}": site.googleReviewCountFa,
   });
 }
 
