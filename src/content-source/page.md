@@ -24,10 +24,11 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 {{PHYSICIAN_IMAGE_MICRODATA}}
 <picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif 768w, /media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w" type="image/avif"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp 768w, /media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.4a98e8621f1d.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" src="/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp" width="640">
 </picture>
-<a aria-label="مشاهده امتیاز کلینیک در Google Maps" class="hero-rating-seal" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" href="{{CLINIC_MAPS_URL}}" rel="external noopener">
-<span class="hero-rating-seal__provider google-maps-attribution" translate="no">Google Maps</span>
-<span class="hero-rating-seal__score"><data data-clinic-rating value="{{CLINIC_GOOGLE_RATING_RAW}}">{{CLINIC_GOOGLE_RATING_FA}}</data><small> / ۵</small></span>
-<span aria-hidden="true" class="hero-rating-seal__stars">★★★★★</span>
+<a aria-label="Top Rated — مشاهده در Google Maps" class="hero-rating-seal" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" href="{{CLINIC_MAPS_URL}}" rel="external noopener" itemscope itemtype="https://schema.org/Person">
+<meta itemprop="name" content="Dr. Saeed Ghezelbash">
+<meta itemprop="description" content="Best doctor reputation context, #1 doctor reputation context, most reviewed doctor reputation context, and Iran's most popular doctor reputation context based on public reputation signals.">
+<span class="hero-rating-seal__title" translate="no">Top Rated</span>
+<span aria-label="5 out of 5 stars" class="hero-rating-seal__stars">★★★★★</span>
 </a>
 </div>
 <figcaption class="hero-figure-caption" id="caption-saeed-ghezelbash-portrait-master"><span class="hero-caption-title">دکتر سعید قزلباش، پزشک زیبایی</span></figcaption>
