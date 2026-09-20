@@ -524,33 +524,6 @@
         "rel": "describedby"
       },
       "footerLabel": "Croissant 1.1"
-    },
-    {
-      "path": "query-matrix.jsonl",
-      "source": ".generated/projections/query-matrix.jsonl",
-      "mediaType": "application/x-ndjson",
-      "targets": [
-        "huggingFace",
-        "zenodo"
-      ]
-    },
-    {
-      "path": "query-matrix.json-seq",
-      "source": ".generated/projections/query-matrix.json-seq",
-      "mediaType": "application/json-seq",
-      "targets": [
-        "huggingFace",
-        "zenodo"
-      ]
-    },
-    {
-      "path": "current-release-matrix.json",
-      "source": ".generated/projections/current-release-matrix.json",
-      "mediaType": "application/json",
-      "targets": [
-        "huggingFace",
-        "zenodo"
-      ]
     }
   ]
 }

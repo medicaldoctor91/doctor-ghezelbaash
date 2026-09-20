@@ -1,25 +1,11 @@
-import { projectNode } from "./semantic-projection.mjs";
-
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
 const refId = (value) => (typeof value === "string" ? value : value?.["@id"]);
-const graphNodes = (document) =>
-  Array.isArray(document) ? document : document?.["@graph"];
 const requireValue = (value, label) => {
   if (value == null || value === "")
     throw new Error(`Google page projection is missing ${label}`);
   return value;
 };
-
-export function deriveGooglePageNode(graphDocument, headProfile, pageId) {
-  const nodes = graphNodes(graphDocument);
-  if (!Array.isArray(nodes)) throw new Error("Canonical graph lacks @graph");
-  const canonicalPage = nodes.find((node) => node?.["@id"] === pageId);
-  if (!canonicalPage) throw new Error(`Canonical graph is missing ${pageId}`);
-  const spec = headProfile?.nodes?.[pageId];
-  if (!spec) throw new Error(`Head profile is missing ${pageId}`);
-  return projectNode(canonicalPage, spec);
-}
 
 /**
  * Builds the deliberately small DOM-bound Microdata view of the canonical

@@ -91,30 +91,3 @@ export function validateReputationObservation(graph, release) {
     ratingNodeId: ratingNode["@id"],
   });
 }
-
-export function assertRenderedClinicReputation(html, { graph, release, mapsUrl }) {
-  const canonical = validateReputationObservation(graph, release);
-  const url = new URL(mapsUrl);
-  if (url.protocol !== "https:")
-    throw new Error("Clinic Maps URL must use HTTPS");
-
-  const source = String(html);
-  const escapedUrl = url.href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const checks = [
-    new RegExp(`data-clinic-reputation[^>]*data-rating=["']${canonical.rating}["']`, "i"),
-    new RegExp(`data-clinic-rating[^>]*value=["']${canonical.rating}["']`, "i"),
-    new RegExp(`href=["']${escapedUrl}["']`, "i"),
-  ];
-  if (checks.some((pattern) => !pattern.test(source)))
-    throw new Error("Rendered clinic reputation block drift");
-  if (/data-review-count|data-clinic-review-count|CLINIC_GOOGLE_REVIEW_COUNT|schema\.org\/reviewCount/i.test(source))
-    throw new Error("Rendered clinic reputation must not expose a volatile review count");
-  return true;
-}
-
-export const reputationObservationContract = Object.freeze({
-  schemaVersion: SCHEMA_VERSION,
-  source: SOURCE,
-  sourceFile: "src/data/semantic/knowledge-graph.jsonld",
-  ratingNodeSuffix: RATING_SUFFIX,
-});

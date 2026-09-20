@@ -83,11 +83,6 @@ export const resourcesForTarget = (target) =>
   Object.freeze(
     MACHINE_RESOURCES.filter((resource) => resource.targets.includes(target)),
   );
-export const sourceForDistribution = (resource, dist = "dist") =>
-  resource.targets.includes("website")
-    ? `${String(dist).replace(/[\\/]+$/, "")}/${resource.path}`
-    : resource.source;
-
 export const STATIC_ARTIFACTS = Object.freeze(
   MACHINE_RESOURCES.filter((resource) => resource.materialize).map((resource) =>
     Object.freeze({
@@ -102,13 +97,6 @@ export const STATIC_ARTIFACTS = Object.freeze(
   ),
 );
 
-const byRoute = new Map(
-  STATIC_ARTIFACTS.map((resource) => [`/${resource.path}`, resource]),
-);
-if (byRoute.size !== STATIC_ARTIFACTS.length)
-  throw new Error("Duplicate static resource route");
-export const staticArtifactForRoute = (route) =>
-  byRoute.get(String(route)) ?? null;
 export const HEAD_RESOURCES = Object.freeze(
   STATIC_ARTIFACTS.filter((resource) => "headRel" in resource),
 );

@@ -16,6 +16,7 @@ export const generatedWorkspace = (root = process.cwd()) => {
 const resetGeneratedWorkspace = async (root = process.cwd()) => {
   const workspace = generatedWorkspace(root);
   await rm(workspace.root, { recursive: true, force: true });
+  await rm(path.join(root, "dist"), { recursive: true, force: true });
   await mkdir(workspace.root, { recursive: true });
   return workspace;
 };

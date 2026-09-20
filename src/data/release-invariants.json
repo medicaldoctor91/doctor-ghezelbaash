@@ -1,6 +1,3 @@
 {
-  "maxRagPassageChars": 4200,
-  "googlebotFetchBudgetBytes": 2000000,
-  "googlebotReservedResponseHeaderBytes": 20000,
-  "googlebotSafetyMarginBytes": 30000
+  "maxRagPassageChars": 4200
 }

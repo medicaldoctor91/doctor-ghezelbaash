@@ -1,11 +1,8 @@
 export const HERO_IMAGE_SIZES =
   "(max-width: 720px) and (max-width: 79rem) calc(100vw - 2.56rem), (max-width: 720px) 76.44rem, (max-width: calc(45.19828rem + 2.1978px)) 18rem, (max-width: 80rem) calc(41.86vw - .92rem - .92px), (max-width: 100rem) calc(35.88rem - 4.14vw - .92px), calc(31.74rem - .92px)";
-export const HERO_FIGURE_TOTAL_BORDER_PX = 2;
 const HERO_IMAGE_SIZES_TOKEN = "{{HERO_IMAGE_SIZES}}";
 export const HERO_IMAGE_768_HREF =
   "/media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif";
-export const HERO_IMAGE_768_WEBP_HREF =
-  "/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp";
 export const HERO_PRELOAD_HREF = HERO_IMAGE_768_HREF;
 export const HERO_IMAGE_960_HREF =
   "/media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif";
