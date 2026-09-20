@@ -1,0 +1,124 @@
+name: One-time remove volatile Google review count
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/one-time-review-count-cleanup.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: one-time-review-count-cleanup
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SOURCE_COMMIT: "1ae261553896c92531566b97c1e32bed00417eb5"
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 1ae261553896c92531566b97c1e32bed00417eb5
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: npm ci
+      - name: Build corrected distribution
+        run: |
+          set -euo pipefail
+          npm run validate:release-contract
+          npm run build
+          npm run release:attest
+          python3 scripts/zenodo_release.py prepare-auxiliaries
+      - name: Prove review count is absent
+        run: |
+          set -euo pipefail
+          ! grep -RIE 'schema.org/reviewCount|google-maps-review-count-current|data-review-count|data-clinic-review-count|CLINIC_GOOGLE_REVIEW_COUNT' dist .generated src/data/semantic/knowledge-graph.jsonld
+          ! grep -RIE '۱۶۶[[:space:]]*نظر|166[[:space:]]*review' dist .generated
+          grep -q 'data-clinic-rating' dist/index.html
+      - name: Correct Hugging Face main and v1.3.3 refs without a new release
+        run: |
+          set -euo pipefail
+          python3 -m pip install -r scripts/requirements-hf-viewer.txt
+          node scripts/huggingface.mjs prepare dist .release/hf-corrected
+          git clone https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data .release/hf-repo
+          rsync -a --delete --exclude=.git --exclude=.gitattributes .release/hf-corrected/ .release/hf-repo/
+          git -C .release/hf-repo config user.name "ghezelbaash-maintenance"
+          git -C .release/hf-repo config user.email "actions@users.noreply.github.com"
+          git -C .release/hf-repo add -A
+          if ! git -C .release/hf-repo diff --cached --quiet; then
+            git -C .release/hf-repo commit -m "maintenance: remove volatile Google review count from v1.3.3 data"
+          fi
+          tmp="$(mktemp -d)"
+          cat > "$tmp/askpass.sh" <<'SH'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' "oauth2" ;;
+            *Password*) printf '%s\n' "$HF_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          SH
+          chmod 700 "$tmp/askpass.sh"
+          export GIT_ASKPASS="$tmp/askpass.sh" GIT_TERMINAL_PROMPT=0
+          git -C .release/hf-repo -c credential.helper= -c core.hooksPath=/dev/null push origin HEAD:main
+          git -C .release/hf-repo -c credential.helper= -c core.hooksPath=/dev/null push origin HEAD:release/v1.3.3
+          git -C .release/hf-repo tag -f v1.3.3
+          git -C .release/hf-repo -c credential.helper= -c core.hooksPath=/dev/null push --force origin refs/tags/v1.3.3
+          rm -rf "$tmp"
+      - name: Correct same Zenodo v1.3.3 record and DOI
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util, json, os, sys
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location("z","scripts/lib/zenodo_release_impl.py")
+          z=importlib.util.module_from_spec(spec); spec.loader.exec_module(z)
+          release=json.loads(Path("src/data/release.json").read_text())
+          token=os.environ["ZENODO_TOKEN"]; record=str(release["dataset"]["zenodo"]["recordId"]); doi=release["dataset"]["zenodo"]["versionDoi"]
+          draft_url=f"{z.BASE}/deposit/depositions/{record}"
+          edited=False
+          try:
+              public=z.call(token,"GET",f"{z.BASE}/records/{record}")
+              if public.get("doi")!=doi or (public.get("metadata") or {}).get("version")!=release["release"]:
+                  raise RuntimeError("Zenodo public identity drift before correction")
+              dep=z.call(token,"GET",draft_url)
+              if dep.get("submitted") is True:
+                  z.call(token,"POST",f"{draft_url}/actions/edit")
+                  edited=True
+              dep=z.call(token,"GET",draft_url)
+              if dep.get("submitted") is True:
+                  raise RuntimeError("Zenodo record did not enter editable state")
+              bucket=(dep.get("links") or {}).get("bucket")
+              if not bucket:
+                  raise RuntimeError("Zenodo editable bucket missing")
+              sources=z.exact_sources(os.environ["SOURCE_COMMIT"])
+              hashes=z.synchronize_exact_files(token,draft_url,bucket,sources)
+              remote=z.call(token,"GET",f"{draft_url}/files")
+              if {x.get("filename") for x in remote}!=set(sources):
+                  raise RuntimeError("Zenodo corrected inventory mismatch")
+              z.call(token,"POST",f"{draft_url}/actions/publish")
+              result=z.verify_public_record(token,record,doi,release["release"],hashes)
+              print(json.dumps(result,separators=(",",":")))
+          except Exception:
+              if edited:
+                  try: z.call(token,"POST",f"{draft_url}/actions/discard")
+                  except Exception: pass
+              raise
+          PY
+      - name: Final no-count readback from corrected artifacts
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/graph.jsonld?download=true" > /tmp/hf-graph.jsonld
+          ! grep -E 'schema.org/reviewCount|google-maps-review-count-current|"value"[[:space:]]*:[[:space:]]*166' /tmp/hf-graph.jsonld
+          python3 scripts/zenodo_release.py verify-public --record 22838416 --doi 10.5281/zenodo.22838416 --version 1.3.3
