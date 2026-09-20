@@ -103,7 +103,7 @@ const googlePageMicrodata = isMain
             link.removeAttribute('as');
           };
 
-          link.addEventListener('load', activate, { once as true });
+          link.addEventListener('load', activate, { once: true });
           link.addEventListener('error', activate, { once: true });
           if (link.sheet) activate();
           else setTimeout(activate, 2500);
