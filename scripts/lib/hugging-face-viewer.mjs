@@ -165,7 +165,11 @@ export async function verifyHuggingFaceViewer({
         });
         let body;
         try { body = await response.json(); }
-        catch { throw new Error(`HF_VIEWER_INVALID ${endpoint} non-JSON response, status ${response.status}`); }
+        catch {
+          if (response.status >= 500 && response.status <= 599)
+            throw new NotReady(`${endpoint} ${params.config || "dataset"} transient HTTP ${response.status} non-JSON response`);
+          throw new Error(`HF_VIEWER_INVALID ${endpoint} non-JSON response, status ${response.status}`);
+        }
         must(body && typeof body === "object" && !Array.isArray(body), `${endpoint} invalid JSON object`);
         const revision = response.headers.get("x-revision");
         // The official Dataset Server sends X-Revision for cached responses.
