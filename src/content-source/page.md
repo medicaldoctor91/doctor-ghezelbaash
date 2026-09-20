@@ -6,7 +6,7 @@ dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 socialImageAlt: "دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه"
 socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
-footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده","mapsLead":"پیوند Google Maps صرفاً برای مشاهده مستقیم پروفایل عمومی کلینیک ارائه شده است. استفاده از Google Maps تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
+footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده","mapsLead":"نشان «Top Rated / 5 out of 5» بر پایهٔ مشاهدهٔ ثبت‌شده از پروفایل کلینیک در Google Maps در تاریخ 2026-09-04 است؛ امتیاز جاری را در همان پروفایل ببینید. این نمایش، نشان اهدایی گوگل یا دادهٔ زنده نیست. استفاده از Google Maps تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
 ---
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">
