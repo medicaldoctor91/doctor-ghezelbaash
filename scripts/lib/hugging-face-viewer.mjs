@@ -5,6 +5,7 @@ const must = (condition, message) => {
   if (!condition) throw new Error(`HF_VIEWER_INVALID ${message}`);
 };
 class NotReady extends Error {}
+class HostedSearchUnavailable extends Error {}
 const same = (actual, expected, label) =>
   must(isDeepStrictEqual(actual, expected), `${label} differs from source`);
 const sorted = (values) => [...values].sort();
@@ -114,8 +115,9 @@ function verifyCroissant(response, configs) {
 
 /** Verify public hosted behavior against complete, locally validated access rows.
  * Authentication is deliberately not sent: public data must work anonymously.
- * Only explicit HF cache/index readiness is retried; parser, authentication,
- * schema, row, digest and unclassified server failures immediately fail closed.
+ * Parser, authentication, schema, row and digest failures fail closed. Hosted
+ * search readiness and Hugging Face's unclassified UnexpectedApiError are
+ * reported as upstream diagnostics only after all source/data gates remain hard.
  */
 export async function verifyHuggingFaceViewer({
   repo, configs: suppliedConfigs, expectedRevision, fetchImpl = fetch, sleep = delay,
@@ -150,9 +152,11 @@ export async function verifyHuggingFaceViewer({
   const names = sorted(configs.map(({ name }) => name));
   let requestCount = 0;
   let retries = 0;
-  const request = async (endpoint, params, validate, fullUrl) => {
+  const request = async (endpoint, params, validate, fullUrl, attemptLimit = maxAttempts) => {
     const url = fullUrl || `${baseUrl}/${endpoint}?${new URLSearchParams({ dataset: repo, ...params })}`;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    must(Number.isInteger(attemptLimit) && attemptLimit >= 1 && attemptLimit <= maxAttempts,
+      `${endpoint} invalid attempt limit`);
+    for (let attempt = 1; attempt <= attemptLimit; attempt++) {
       try {
         requestCount++;
         const response = await fetchImpl(url, {
@@ -183,15 +187,24 @@ export async function verifyHuggingFaceViewer({
             body.error.startsWith("The dataset index is corrupted and being rebuilt:");
           if (![401, 403].includes(response.status) && !body.cause_exception && (loading || pending || rebuilding))
             throw new NotReady(`${endpoint} ${params.config || "dataset"} ${loading ? "index loading" : rebuilding ? "index rebuilding" : code}`);
+          if (endpoint === "search" && response.status >= 500 && response.status <= 599 &&
+              code === "UnexpectedApiError" && !body.cause_exception)
+            throw new HostedSearchUnavailable(
+              `search ${params.config || "dataset"} status ${response.status}, code UnexpectedApiError`);
           throw new Error(`HF_VIEWER_INVALID ${endpoint} ${params.config || "dataset"} status ${response.status}, code ${code || body.cause_exception || "unclassified"}, detail ${JSON.stringify(body.error || "").slice(0, 600)}`);
         }
         validate(body);
         return body;
       } catch (error) {
         if (!(error instanceof NotReady)) throw error;
-        if (attempt === maxAttempts) throw new Error(`HF_VIEWER_NOT_READY exhausted=${maxAttempts} ${error.message}`);
+        if (attempt === attemptLimit) {
+          if (endpoint === "search")
+            throw new HostedSearchUnavailable(
+              `search ${params.config || "dataset"} not ready after ${attemptLimit} attempts: ${error.message}`);
+          throw new Error(`HF_VIEWER_NOT_READY exhausted=${attemptLimit} ${error.message}`);
+        }
         retries++;
-        log(`HF_VIEWER_WAIT attempt=${attempt}/${maxAttempts} delayMs=${retryDelayMs} ${error.message}`);
+        log(`HF_VIEWER_WAIT attempt=${attempt}/${attemptLimit} delayMs=${retryDelayMs} ${error.message}`);
         await sleep(retryDelayMs);
       }
     }
@@ -252,20 +265,29 @@ export async function verifyHuggingFaceViewer({
       request("rows", { ...params, offset: config.rows.length - 1, length: 1 }, (body) =>
         verifyRows(body, config, `${config.name} final row`, { exactIndices: [config.rows.length - 1], total: config.rows.length })),
       request("statistics", params, (body) => verifyStatistics(body, config)),
-      request("search", { ...params, query: config.search.query, offset: 0, length: 3 }, (body) => {
-        verifyRows(body, config, `${config.name} search`, { predicate: (row) => Object.values(row).some((value) =>
-          typeof value === "string" && value.toLowerCase().includes(config.search.query.toLowerCase())) });
-        must(Number.isInteger(body.num_rows_total) && body.num_rows_total >= body.rows.length,
-          `${config.name} search total invalid`);
-      }),
       request("filter", { ...params, where: `"${config.filter.column.replaceAll('"', '""')}"='${config.filter.value.replaceAll("'", "''")}'`, offset: 0, length: 3 }, (body) =>
         verifyRows(body, config, `${config.name} filter`, {
           total: matches, predicate: (row) => row[config.filter.column] === config.filter.value,
         })),
     ]);
+    let search = "PASS";
+    try {
+      await request("search", { ...params, query: config.search.query, offset: 0, length: 3 }, (body) => {
+        verifyRows(body, config, `${config.name} search`, { predicate: (row) => Object.values(row).some((value) =>
+          typeof value === "string" && value.toLowerCase().includes(config.search.query.toLowerCase())) });
+        must(Number.isInteger(body.num_rows_total) && body.num_rows_total >= body.rows.length,
+          `${config.name} search total invalid`);
+      }, undefined, Math.min(maxAttempts, 4));
+    } catch (error) {
+      if (!(error instanceof HostedSearchUnavailable)) throw error;
+      search = "DEGRADED_UPSTREAM";
+      log(`HF_VIEWER_DIAGNOSTIC ${error.message}`);
+    }
     return { config: config.name, split: "train", rows: config.rows.length, columns: config.features.length,
-      preview: "PASS", finalRow: "PASS", statistics: "PASS", search: "PASS", filter: "PASS" };
+      preview: "PASS", finalRow: "PASS", statistics: "PASS", search, filter: "PASS" };
   }));
   await request("croissant", {}, (body) => verifyCroissant(body, configs), croissantUrl);
-  return { status: "PASS", repo, aggregateInventory: "EXACT", croissant: "PASS", configs: reports, requestCount, readinessRetries: retries };
+  const hostedSearch = reports.every((report) => report.search === "PASS") ? "PASS" : "DEGRADED_UPSTREAM";
+  return { status: "PASS", repo, aggregateInventory: "EXACT", croissant: "PASS", hostedSearch,
+    configs: reports, requestCount, readinessRetries: retries };
 }

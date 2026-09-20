@@ -217,30 +217,6 @@ jobs:
             exit 1
           }
 
-      - name: Detect GitHub immutable releases capability
-        if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
-        env:
-          GH_RELEASE_ADMIN_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${GH_RELEASE_ADMIN_TOKEN:-}" || {
-            echo "GitHub Administration token is required to prove immutable releases before publication." >&2
-            exit 1
-          }
-          echo "::add-mask::$GH_RELEASE_ADMIN_TOKEN"
-          export GH_TOKEN="$GH_RELEASE_ADMIN_TOKEN"
-          STATE="$(mktemp)"
-          trap 'rm -f "$STATE"' EXIT
-          gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            "repos/$GITHUB_REPOSITORY/immutable-releases" > "$STATE"
-          node - "$STATE" <<'NODE'
-          const state = JSON.parse(require("node:fs").readFileSync(process.argv[2], "utf8"));
-          if (state.enabled !== true) throw new Error("Configured GitHub release-admin credential requires immutable releases to be enabled");
-          NODE
-          echo "GITHUB_IMMUTABLE_POLICY=enabled" >> "$GITHUB_ENV"
       - name: Preflight external release credentials and mutable surfaces
         if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
         env:

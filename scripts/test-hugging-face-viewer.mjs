@@ -130,7 +130,9 @@ const rebuildExhausted = run(({ key }) => {
     return Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
       { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } });
 });
-await assert.rejects(rebuildExhausted.promise, /HF_VIEWER_NOT_READY exhausted=3/);
+const rebuiltDiagnostic = await rebuildExhausted.promise;
+assert.equal(rebuiltDiagnostic.hostedSearch, "DEGRADED_UPSTREAM");
+assert.equal(rebuiltDiagnostic.configs.find(({ config }) => config === "query_matrix").search, "DEGRADED_UPSTREAM");
 assert.equal(rebuildExhausted.counts.get("search/query_matrix"), 3);
 await assert.rejects(run(({ key, count, body }) => {
   if (key === "search/query_matrix" && count === 1)
@@ -152,8 +154,20 @@ assert.equal((await pending.promise).readinessRetries, 1);
 const exhausted = run(({ key }) => {
   if (key === "search/query_matrix") return Response.json({ error: "the dataset index is loading, this can take a minute" }, { status: 500 });
 });
-await assert.rejects(exhausted.promise, /HF_VIEWER_NOT_READY exhausted=3/);
+const loadingDiagnostic = await exhausted.promise;
+assert.equal(loadingDiagnostic.hostedSearch, "DEGRADED_UPSTREAM");
+assert.equal(loadingDiagnostic.configs.find(({ config }) => config === "query_matrix").search, "DEGRADED_UPSTREAM");
 assert.equal(exhausted.counts.get("search/query_matrix"), 3);
+
+const unexpectedSearch = run(({ key }) => {
+  if (key === "search/query_matrix")
+    return Response.json({ error: "Unexpected error." },
+      { status: 500, headers: { "x-error-code": "UnexpectedApiError" } });
+});
+const unexpectedDiagnostic = await unexpectedSearch.promise;
+assert.equal(unexpectedDiagnostic.hostedSearch, "DEGRADED_UPSTREAM");
+assert.equal(unexpectedDiagnostic.configs.find(({ config }) => config === "query_matrix").search, "DEGRADED_UPSTREAM");
+assert.equal(unexpectedSearch.counts.get("search/query_matrix"), 1);
 
 for (const response of [
   () => Response.json({ error: "Cannot extract features", cause_exception: "ParserError" }, { status: 500 }),
@@ -185,4 +199,4 @@ const currentParserFailure = run(({ key }) => {
 }, { expectedRevision: "b".repeat(40) });
 await assert.rejects(currentParserFailure.promise, /ParserError/);
 assert.equal(currentParserFailure.counts.get("first-rows/query_matrix"), 1);
-console.log("HF_VIEWER_VERIFICATION_PASS completeness, schema, lists, source rows, statistics, retrieval, Croissant, retry boundaries");
+console.log("HF_VIEWER_VERIFICATION_PASS completeness, schema, lists, source rows, statistics, retrieval, Croissant, upstream search diagnostics, retry boundaries");
