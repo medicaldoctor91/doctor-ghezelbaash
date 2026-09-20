@@ -8,14 +8,13 @@
   "@type": "SoftwareSourceCode",
   "@id": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
   "name": "Dr. Saeed Ghezelbash canonical site and knowledge-graph source",
-  "description": "Deterministic Astro source, semantic knowledge graph, machine-readable projection generators, validation contracts, Cloudflare deployment and synchronized Zenodo/Hugging Face release automation for the canonical first-party physician Dataset.",
+  "description": "Deterministic Astro source for the canonical Dr. Saeed Ghezelbash website and its physician-authored public knowledge-graph distribution.",
   "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
   "issueTracker": "https://github.com/medicaldoctor91/doctor-ghezelbaash/issues",
   "license": "https://spdx.org/licenses/CC-BY-4.0",
   "programmingLanguage": [
     "JavaScript",
     "TypeScript",
-    "Python",
     "Astro"
   ],
   "runtimePlatform": "Node.js 24.19.0",

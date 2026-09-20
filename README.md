@@ -19,7 +19,7 @@ The build:
 4. generates dataset descriptors;
 5. builds the static Astro routes;
 6. materializes registered static resources, redirects and stable media aliases;
-7. materializes the IndexNow verification key;
+7. copies the static IndexNow verification key;
 8. derives deployment headers from the finished distribution.
 
 Generated files belong under `.generated/` and `dist/` and are not committed as authored source.

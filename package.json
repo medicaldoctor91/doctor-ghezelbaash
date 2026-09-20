@@ -10,11 +10,10 @@
   },
   "scripts": {
     "clean:generated": "node scripts/generated-workspace.mjs reset",
-    "prepare:distribution": "npm run clean:generated && npm run rdf:generate && node scripts/generate-projections.mjs distribution && node scripts/generate-retrieval-projections.mjs && node scripts/generate-descriptors.mjs",
+    "prepare:distribution": "npm run clean:generated && npm run rdf:generate && node scripts/generate-projections.mjs && node scripts/generate-retrieval-projections.mjs && node scripts/generate-descriptors.mjs",
     "materialize:static": "node scripts/materialize-static-artifacts.mjs",
     "rdf:generate": "node scripts/generate-rdf.mjs",
-    "indexnow:prepare": "node scripts/indexnow.mjs prepare",
-    "compile:dist": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run materialize:static && npm run indexnow:prepare && node scripts/generate-deployment-headers.mjs",
+    "compile:dist": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run materialize:static && node scripts/generate-deployment-headers.mjs",
     "build": "npm run prepare:distribution && npm run compile:dist"
   },
   "devDependencies": {
