@@ -31,8 +31,6 @@ const explicitDateTime = (value) => {
     return null;
   return value["@value"];
 };
-const dateTimeValue = (value) =>
-  Object.freeze({ "@value": value, "@type": XSD_DATETIME });
 const exactRef = (value, label) => {
   const refs = values(value).map(refId).filter(Boolean);
   if (refs.length !== 1) throw new Error(`${label} requires one reference`);
@@ -94,47 +92,6 @@ export function validateReputationObservation(graph, release) {
   });
 }
 
-export function evaluateGoogleReputation({ place, current, release }) {
-  if (!current || typeof current !== "object")
-    throw new Error("Current canonical Google Maps reputation is required");
-  const rating = Number(place?.rating);
-  if (
-    place?.id !== release.clinic.placeId ||
-    place?.businessStatus !== "OPERATIONAL" ||
-    place?.movedPlace ||
-    place?.movedPlaceId ||
-    !Number.isFinite(rating) ||
-    rating < 1 ||
-    rating > 5
-  )
-    throw new Error("Google Places reputation response is invalid");
-
-  return Object.freeze({
-    rating,
-    changed: rating !== Number(current.rating),
-  });
-}
-
-export function applyReputationObservation(graph, { evaluation, release, observedAt }) {
-  if (!evaluation?.changed)
-    throw new Error("Refusing to apply an unchanged reputation observation");
-  if (!isIsoSecond(observedAt))
-    throw new Error("Google Maps reputation observation time is invalid");
-
-  const next = structuredClone(graph);
-  const { byId } = indexCanonicalGraph(next);
-  const ratingNode = byId.get(
-    `${release.canonicalUrl}#${RATING_SUFFIX}`,
-  );
-  if (!ratingNode)
-    throw new Error("Canonical Google Maps rating observation is missing");
-
-  ratingNode.value = evaluation.rating;
-  ratingNode.observationDate = dateTimeValue(observedAt);
-  validateReputationObservation(next, release);
-  return next;
-}
-
 export function assertRenderedClinicReputation(html, { graph, release, mapsUrl }) {
   const canonical = validateReputationObservation(graph, release);
   const url = new URL(mapsUrl);
@@ -160,6 +117,4 @@ export const reputationObservationContract = Object.freeze({
   source: SOURCE,
   sourceFile: "src/data/semantic/knowledge-graph.jsonld",
   ratingNodeSuffix: RATING_SUFFIX,
-  refreshCron: "23 */6 * * *",
-  upstreamCallsPerRun: 1,
 });
