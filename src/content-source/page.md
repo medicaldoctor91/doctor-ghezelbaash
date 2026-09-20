@@ -9,7 +9,6 @@ socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
 footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده","reputationLead":"امتیاز کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
 ---
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
-<link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">
 <h1 class="hero-title" id="saeed-ghezelbash"><span class="hero-title__name" itemprop="name">دکتر سعید قزلباش</span><span class="hero-title__semantic-separator">؛ </span><span class="hero-title__descriptor" id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span>
 </h1>
 <p class="hero-subtitle">سفارش از منوی خدمات زیبایی <strong class="hero-subtitle__stop">ممنوع!</strong></p><button type="button" aria-controls="guide-search" aria-haspopup="dialog" aria-keyshortcuts="/" aria-label="باز کردن جست‌وجوی راهنمای جامع" class="hero-action hero-search-launch" data-guide-search-open><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>جست‌وجو</span><kbd aria-hidden="true">/</kbd></button>
@@ -24,9 +23,15 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 {{PHYSICIAN_IMAGE_MICRODATA}}
 <picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif 768w, /media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w" type="image/avif"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp 768w, /media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.4a98e8621f1d.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" src="/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp" width="640">
 </picture>
-<a aria-label="Top Rated — مشاهده در Google Maps" class="hero-rating-seal" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" href="{{CLINIC_MAPS_URL}}" rel="external noopener" itemscope itemtype="https://schema.org/Person">
-<meta itemprop="name" content="Dr. Saeed Ghezelbash">
 <meta itemprop="description" content="Best doctor reputation context, #1 doctor reputation context, most reviewed doctor reputation context, and Iran's most popular doctor reputation context based on public reputation signals.">
+<a aria-label="Top Rated — مشاهده در Google Maps" class="hero-rating-seal" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" href="{{CLINIC_MAPS_URL}}" rel="external noopener" itemprop="workLocation" itemscope itemtype="https://schema.org/MedicalClinic" itemid="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">
+<meta itemprop="name" content="Dr. Saeed Ghezelbash Aesthetic Clinic">
+<link itemprop="url" href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">
+<link itemprop="sameAs" href="{{CLINIC_MAPS_URL}}">
+<span itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+<meta itemprop="ratingValue" content="{{CLINIC_GOOGLE_RATING_RAW}}">
+<meta itemprop="bestRating" content="5">
+</span>
 <span class="hero-rating-seal__title" translate="no">Top Rated</span>
 <span aria-label="5 out of 5 stars" class="hero-rating-seal__stars">★★★★★</span>
 </a>
