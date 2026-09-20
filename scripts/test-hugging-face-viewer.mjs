@@ -116,6 +116,35 @@ const loading = run(({ key, count }) => {
 assert.equal((await loading.promise).readinessRetries, 2);
 assert.equal(loading.counts.get("search/query_matrix"), 3);
 assert.equal(loading.sleeps.length, 2);
+const rebuilding = run(({ key, count }) => {
+  if (key === "search/query_matrix" && count === 1)
+    return Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
+      { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } });
+  if (key === "search/query_matrix" && count === 2)
+    return Response.json({ error: "the dataset index is loading, this may take longer than usual" }, { status: 500 });
+});
+assert.equal((await rebuilding.promise).readinessRetries, 2);
+assert.equal(rebuilding.counts.get("search/query_matrix"), 3);
+const rebuildExhausted = run(({ key }) => {
+  if (key === "search/query_matrix")
+    return Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
+      { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } });
+});
+await assert.rejects(rebuildExhausted.promise, /HF_VIEWER_NOT_READY exhausted=3/);
+assert.equal(rebuildExhausted.counts.get("search/query_matrix"), 3);
+await assert.rejects(run(({ key, count, body }) => {
+  if (key === "search/query_matrix" && count === 1)
+    return Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
+      { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } });
+  if (key === "search/query_matrix") body.rows[0].row.query = "incorrect result";
+}).promise, /query_matrix search row 0 differs from source/);
+const wrongEndpointRebuild = run(({ key }) => {
+  if (key === "first-rows/query_matrix")
+    return Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
+      { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } });
+});
+await assert.rejects(wrongEndpointRebuild.promise, /HF_VIEWER_INVALID/);
+assert.equal(wrongEndpointRebuild.counts.get("first-rows/query_matrix"), 1);
 const pending = run(({ key, body, count }) => {
   if (key === "parquet/" && count === 1) body.pending.push({ config: "query_matrix", kind: "config-parquet" });
 });
@@ -129,6 +158,9 @@ assert.equal(exhausted.counts.get("search/query_matrix"), 3);
 for (const response of [
   () => Response.json({ error: "Cannot extract features", cause_exception: "ParserError" }, { status: 500 }),
   () => Response.json({ error: "Unsupported query" }, { status: 500 }),
+  () => Response.json({ error: "Unknown index failure" }, { status: 500, headers: { "x-error-code": "UnprocessableIndexError" } }),
+  () => Response.json({ error: "The dataset index is corrupted and being rebuilt: invalid database" },
+    { status: 403, headers: { "x-error-code": "UnprocessableIndexError" } }),
   () => new Response("<html>Internal Server Error</html>", { status: 500 }),
   () => Response.json({ error: "the dataset index is loading, this can take a minute" }, { status: 403 }),
 ]) {

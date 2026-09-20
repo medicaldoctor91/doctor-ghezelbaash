@@ -30,10 +30,10 @@ jobs:
       SOURCE_SHA: ${{ inputs.source_sha }}
       EXPECTED_HF_MAIN_SHA: ${{ inputs.expected_hf_main_sha }}
       REPAIR_CHAIN_BASE_SHA: a9b224e94391597ea00e45409329155fe2b20e20
-      REPAIR_PARENT_SHA: c5aaa47bbf53caec61441b0d3293e37a2c0cd640
+      REPAIR_PARENT_SHA: 61c4f18b9c499b9323e9145fdd3ef9a5fb7360fa
       FROZEN_SOURCE_SHA: a6b93084f97318f05766a962375233277e1d425c
       GITHUB_TAG_OBJECT_SHA: 634bd496f14e68c4bbc92ea794f82f282920bc8a
-      HF_MAIN_BEFORE: 63c78faf83f19e0bc9964ac55657e1c8c8df6149
+      HF_MAIN_BEFORE: f672b582c5376a0f703f240be2e033b329c70022
       HF_TAG_OBJECT_SHA: a95dfbd5cf05ae924ae3ad151409a2bba2ab27b3
       HF_TAG_COMMIT_SHA: a0cc0ee51215f3b9074a049f9b29ae1c0a5dfcdc
       CANCELLED_PREP_SHA: ed7307c8ff16d843746e4c08d97d6a63413de533
@@ -67,12 +67,14 @@ jobs:
           test "$(git rev-parse refs/tags/v1.3.3)" = "$GITHUB_TAG_OBJECT_SHA"
           test "$(git rev-parse 'refs/tags/v1.3.3^{commit}')" = "$FROZEN_SOURCE_SHA"
           mapfile -t CHANGED < <(git diff --name-only "$REPAIR_CHAIN_BASE_SHA" "$SOURCE_SHA")
-          test "${#CHANGED[@]}" -eq 3
+          test "${#CHANGED[@]}" -eq 5
           printf '%s\n' "${CHANGED[@]}" | sort > /tmp/actual-repair-files
           printf '%s\n' \
             .github/workflows/hf-v133-viewer-repair.yml \
             scripts/build-hf-viewer.py \
-            scripts/huggingface.mjs | sort > /tmp/expected-repair-files
+            scripts/huggingface.mjs \
+            scripts/lib/hugging-face-viewer.mjs \
+            scripts/test-hugging-face-viewer.mjs | sort > /tmp/expected-repair-files
           diff -u /tmp/expected-repair-files /tmp/actual-repair-files
           V14_GITHUB_BRANCH="$(git ls-remote --heads origin refs/heads/release/v1.4.0)"
           V14_GITHUB_TAG="$(git ls-remote --tags origin refs/tags/v1.4.0 'refs/tags/v1.4.0^{}')"
@@ -383,9 +385,9 @@ jobs:
           echo "published_sha=$CURRENT_HF_MAIN" >> "$GITHUB_OUTPUT"
           echo "HF_PUBLICATION_RECOVERY_PASS commit=$CURRENT_HF_MAIN"
 
-      - name: Forward-restore the previous access files after any post-commit failure
+      - name: Forward-restore only after an incomplete publication or readback
         id: forward_restore
-        if: (steps.publish.outcome == 'failure' && (steps.publish.outputs.published_sha != '' || steps.recover_publication.outputs.published_sha != '')) || steps.viewer.outcome == 'failure'
+        if: steps.publish.outcome == 'failure' && (steps.publish.outputs.published_sha != '' || steps.recover_publication.outputs.published_sha != '')
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
           PUBLISHED_SHA: ${{ steps.publish.outputs.published_sha || steps.recover_publication.outputs.published_sha }}
@@ -429,7 +431,9 @@ jobs:
       - name: Fail closed after any publication or Viewer verification failure
         if: steps.publish.outcome == 'failure' || steps.viewer.outcome == 'failure'
         run: |
-          if test -n "${{ steps.publish.outputs.published_sha || steps.recover_publication.outputs.published_sha }}"; then
+          if test "${{ steps.publish.outcome }}" = success && test "${{ steps.viewer.outcome }}" = failure; then
+            echo "Exact three-file publication and readback passed, but public service verification did not. Preserve the lossless repair; do not restart Hub processing by restoring the known statistics defect. No completion or cleanup is authorized until read-only verification passes." >&2
+          elif test -n "${{ steps.publish.outputs.published_sha || steps.recover_publication.outputs.published_sha }}"; then
             echo "The Hugging Face repair did not complete; the previous access files were restored with a forward commit." >&2
           elif test "${{ steps.recover_publication.outputs.status }}" = no_commit; then
             echo "The Hugging Face repair failed and live main remained at the exact pre-repair commit; no rollback mutation was needed." >&2

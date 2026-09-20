@@ -172,11 +172,18 @@ export async function verifyHuggingFaceViewer({
           throw new NotReady(`${endpoint} ${params.config || "dataset"} cached revision ${revision}`);
         if (!response.ok || body.error) {
           const code = response.headers.get("x-error-code") || body.error_code;
-          const loading = body.error === "the dataset index is loading, this can take a minute";
+          const loading = ["the dataset index is loading, this can take a minute",
+            "the dataset index is loading, this may take longer than usual"].includes(body.error);
           const pending = ["ResponseNotReady", "CachedResponseNotFound"].includes(code);
-          if (![401, 403].includes(response.status) && !body.cause_exception && (loading || pending))
-            throw new NotReady(`${endpoint} ${params.config || "dataset"} ${loading ? "index loading" : code}`);
-          throw new Error(`HF_VIEWER_INVALID ${endpoint} ${params.config || "dataset"} status ${response.status}, code ${code || body.cause_exception || "unclassified"}`);
+          // Dataset Viewer explicitly removes a corrupt local DuckDB index
+          // and rebuilds it on the next request. Retry only that documented
+          // self-recovery response, never arbitrary index or parser errors.
+          const rebuilding = ["search", "filter"].includes(endpoint) &&
+            code === "UnprocessableIndexError" && typeof body.error === "string" &&
+            body.error.startsWith("The dataset index is corrupted and being rebuilt:");
+          if (![401, 403].includes(response.status) && !body.cause_exception && (loading || pending || rebuilding))
+            throw new NotReady(`${endpoint} ${params.config || "dataset"} ${loading ? "index loading" : rebuilding ? "index rebuilding" : code}`);
+          throw new Error(`HF_VIEWER_INVALID ${endpoint} ${params.config || "dataset"} status ${response.status}, code ${code || body.cause_exception || "unclassified"}, detail ${JSON.stringify(body.error || "").slice(0, 600)}`);
         }
         validate(body);
         return body;
