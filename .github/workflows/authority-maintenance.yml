@@ -72,6 +72,7 @@ jobs:
           node scripts/platform-contract.mjs validate
           node scripts/verify-live.mjs test-release-context
           node scripts/test-transient-retry.mjs
+          python3 scripts/publish-hf-release.py --self-test
           python3 scripts/build-hf-viewer.py --self-test
           node scripts/test-hugging-face-viewer.mjs
       - name: Verify the selected maintenance source
