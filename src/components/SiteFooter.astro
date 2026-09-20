@@ -11,7 +11,7 @@ interface GovernanceLink {
 }
 interface GovernanceCopy {
   summary: string;
-  reputationLead: string;
+  mapsLead: string;
   mapsTerms: GovernanceLink;
   privacyPolicy: GovernanceLink;
   tail: string;
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const { governance } = Astro.props;
-if (!governance?.summary || !governance?.reputationLead || !governance?.mapsTerms?.href || !governance?.mapsTerms?.label || !governance?.privacyPolicy?.href || !governance?.privacyPolicy?.label || !governance?.tail) {
+if (!governance?.summary || !governance?.mapsLead || !governance?.mapsTerms?.href || !governance?.mapsTerms?.label || !governance?.privacyPolicy?.href || !governance?.privacyPolicy?.label || !governance?.tail) {
   throw new Error('Site footer requires page-owned governance copy');
 }
 
@@ -59,7 +59,7 @@ const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
   <details class="editorial-governance" id="privacy-and-terms">
     <summary>{governance.summary}</summary>
     <p>
-      {governance.reputationLead}
+      {governance.mapsLead}
       <a href={governance.mapsTerms.href} rel="external noopener">{governance.mapsTerms.label}</a>
       و <a href={governance.privacyPolicy.href} rel="external noopener">{governance.privacyPolicy.label}</a>
       {governance.tail}

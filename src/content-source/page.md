@@ -6,7 +6,7 @@ dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 socialImageAlt: "دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه"
 socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
-footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده","reputationLead":"امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
+footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده","mapsLead":"پیوند Google Maps صرفاً برای مشاهده مستقیم پروفایل عمومی کلینیک ارائه شده است. استفاده از Google Maps تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
 ---
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation">
@@ -24,11 +24,10 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 {{PHYSICIAN_IMAGE_MICRODATA}}
 <picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif 768w, /media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w" type="image/avif"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp 768w, /media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.4a98e8621f1d.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" src="/media/images/physician/saeed-ghezelbash-portrait-768.d11aad26e8b1.webp" width="640">
 </picture>
-<a aria-label="مشاهده امتیاز و نظرهای کلینیک در Google Maps" class="hero-rating-seal" id="google-maps-clinic-reputation-current" data-clinic-reputation data-rating="{{CLINIC_GOOGLE_RATING_RAW}}" data-review-count="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}" href="{{CLINIC_MAPS_URL}}" rel="external noopener">
-<span class="hero-rating-seal__provider google-maps-attribution" translate="no">Google Maps</span>
-<span class="hero-rating-seal__score"><data data-clinic-rating value="{{CLINIC_GOOGLE_RATING_RAW}}">{{CLINIC_GOOGLE_RATING_FA}}</data><small> / ۵</small></span>
+<a aria-label="Top Rated — 5 out of 5؛ مشاهده پروفایل کلینیک در Google Maps" class="hero-rating-seal" id="clinic-top-rated-badge" href="{{CLINIC_MAPS_URL}}" rel="external noopener">
+<span class="hero-rating-seal__provider" translate="no">Top Rated</span>
+<span class="hero-rating-seal__score" translate="no">5 out of 5</span>
 <span aria-hidden="true" class="hero-rating-seal__stars">★★★★★</span>
-<span class="hero-rating-seal__reviews"><data data-clinic-review-count value="{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}">{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}</data> نظر</span>
 </a>
 </div>
 <figcaption class="hero-figure-caption" id="caption-saeed-ghezelbash-portrait-master"><span class="hero-caption-title">دکتر سعید قزلباش، پزشک زیبایی</span></figcaption>

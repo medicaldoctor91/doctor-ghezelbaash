@@ -1,6 +1,5 @@
 import { exactLanguageLiteral } from "./semantic-projection.mjs";
 import { deriveCanonicalGraphFacts } from "./canonical-authority.mjs";
-import { validateReputationObservation } from "./reputation-observation.mjs";
 
 const faDigits = (value) =>
   String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
@@ -21,13 +20,6 @@ const formatDate = (value, calendar) =>
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${value}T00:00:00Z`));
-const faNumber = (value, digits = 0) =>
-  new Intl.NumberFormat("fa-IR", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-    useGrouping: true,
-  }).format(Number(value));
-
 function deriveSiteContactDataFromFacts(facts) {
   const { clinic, address } = facts;
   const phone = normalizePhone(clinic.telephone);
@@ -86,24 +78,7 @@ export function deriveSiteContactData(release, graph) {
 }
 
 export function deriveSiteData(release, graph) {
-  const facts = deriveCanonicalGraphFacts(release, graph);
-  const contact = deriveSiteContactDataFromFacts(facts);
-  const reputation = validateReputationObservation(graph, {
-    canonicalUrl: release.canonicalUrl,
-    clinic: {
-      id: release.clinic.id,
-      placeId: facts.identifiers.clinic.placeId,
-    },
-  });
-
-  return Object.freeze({
-    ...contact,
-    googleRating: reputation.rating,
-    googleRatingFa: faNumber(reputation.rating, 1),
-    googleReviewCount: reputation.reviewCount,
-    googleReviewCountFa: faNumber(reputation.reviewCount),
-    googleReputationObservedAt: reputation.valueObservedAt,
-  });
+  return deriveSiteContactData(release, graph);
 }
 
 const siteTokenPattern = /{{(?:CLINIC_[A-Z0-9_]+|OFFICIAL_[A-Z0-9_]+)}}/g;
@@ -130,10 +105,6 @@ function siteTokenValues(site) {
     "{{CLINIC_HOURS_CLOSE_FA}}": site.hoursCloseFa,
     "{{CLINIC_HOURS_OPEN_COMPACT_FA}}": site.hoursOpenCompactFa,
     "{{CLINIC_HOURS_CLOSE_COMPACT_FA}}": site.hoursCloseCompactFa,
-    "{{CLINIC_GOOGLE_RATING_RAW}}": String(site.googleRating),
-    "{{CLINIC_GOOGLE_RATING_FA}}": site.googleRatingFa,
-    "{{CLINIC_GOOGLE_REVIEW_COUNT_RAW}}": String(site.googleReviewCount),
-    "{{CLINIC_GOOGLE_REVIEW_COUNT_FA}}": site.googleReviewCountFa,
   });
 }
 

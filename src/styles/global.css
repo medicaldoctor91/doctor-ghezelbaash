@@ -735,8 +735,8 @@ blockquote {
   display: grid;
   grid-template-columns: auto auto;
   grid-template-areas:
-    "score stars"
-    "provider reviews";
+    "provider provider"
+    "score stars";
   gap: 0.12rem 0.48rem;
   place-items: center start;
   align-content: center;
@@ -778,9 +778,10 @@ blockquote {
   grid-area: provider;
   justify-self: start;
   margin: 0;
-  color: #6c746f;
-  font-size: 0.6rem;
-  font-weight: 650;
+  color: #36584e;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
 }
 .hero-rating-seal__score {
   grid-area: score;
@@ -793,11 +794,6 @@ blockquote {
   font-weight: 900;
   letter-spacing: -0.035em;
 }
-.hero-rating-seal__score small {
-  font-size: 0.55rem;
-  font-weight: 720;
-  letter-spacing: 0;
-}
 .hero-rating-seal__stars {
   grid-area: stars;
   justify-self: end;
@@ -806,13 +802,6 @@ blockquote {
   font-size: 0.72rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
-}
-.hero-rating-seal__reviews {
-  grid-area: reviews;
-  justify-self: end;
-  color: #51625c;
-  font-size: 0.62rem;
-  font-weight: 720;
 }
 .hero-trust-strip {
   grid-area: trust;
@@ -948,17 +937,6 @@ a.hero-trust-item:hover {
   .hero-trust-icon {
     color: CanvasText;
   }
-}
-.google-maps-attribution {
-  color: #5e5e5e;
-  font-family: Arial, sans-serif;
-  font-style: normal;
-  font-weight: 400;
-  letter-spacing: normal;
-  white-space: nowrap;
-}
-.google-maps-provider-attributions {
-  margin-inline-start: 0.15rem;
 }
 @media (max-width: 720px) {
   .entity-hero .hero-action.hero-search-launch {
