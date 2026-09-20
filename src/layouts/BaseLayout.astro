@@ -9,6 +9,7 @@ import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 import GuideNavigator from '../components/GuideNavigator.astro';
+import ReputationBadge from '../components/ReputationBadge.astro';
 
 interface Frontmatter {
   title: string;
@@ -102,7 +103,7 @@ const googlePageMicrodata = isMain
             link.removeAttribute('as');
           };
 
-          link.addEventListener('load', activate, { once: true });
+          link.addEventListener('load', activate, { once as true });
           link.addEventListener('error', activate, { once: true });
           if (link.sheet) activate();
           else setTimeout(activate, 2500);
@@ -138,6 +139,7 @@ const googlePageMicrodata = isMain
           ))}
         </>
       )}
+      {isMain && <ReputationBadge />}
       <article
         class:list={['medical-guide', { 'medical-guide--entity-home': isMain }]}
         aria-labelledby={entityHeadingId}
