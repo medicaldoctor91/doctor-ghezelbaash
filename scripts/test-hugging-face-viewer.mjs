@@ -190,6 +190,16 @@ const transientGatewayResult = await transientGateway.promise;
 assert.equal(transientGatewayResult.readinessRetries, 1);
 assert.equal(transientGateway.counts.get("rows/query_matrix"), 2);
 
+const transientHubAuth = run(({ key, count }) =>
+  key === "filter/entity_facts" && count === 1
+    ? Response.json(
+        { error: "Authentication check on the Hugging Face Hub failed or timed out. Please try again later, it's a temporary internal issue." },
+        { status: 500, headers: { "x-error-code": "AuthCheckHubRequestError" } })
+    : undefined);
+const transientHubAuthResult = await transientHubAuth.promise;
+assert.equal(transientHubAuthResult.readinessRetries, 1);
+assert.equal(transientHubAuth.counts.get("filter/entity_facts"), 2);
+
 const digest = run(({ key }) => { if (key === "search/query_matrix") throw new Error("Repr-Digest mismatch"); });
 await assert.rejects(digest.promise, /Repr-Digest mismatch/);
 assert.equal(digest.counts.get("search/query_matrix"), 1);

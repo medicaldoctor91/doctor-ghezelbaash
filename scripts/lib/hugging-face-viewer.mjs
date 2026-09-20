@@ -189,8 +189,11 @@ export async function verifyHuggingFaceViewer({
           const rebuilding = ["search", "filter"].includes(endpoint) &&
             code === "UnprocessableIndexError" && typeof body.error === "string" &&
             body.error.startsWith("The dataset index is corrupted and being rebuilt:");
-          if (![401, 403].includes(response.status) && !body.cause_exception && (loading || pending || rebuilding))
-            throw new NotReady(`${endpoint} ${params.config || "dataset"} ${loading ? "index loading" : rebuilding ? "index rebuilding" : code}`);
+          const upstreamAuth = response.status >= 500 && response.status <= 599 &&
+            code === "AuthCheckHubRequestError" &&
+            /temporary internal issue|failed or timed out/i.test(String(body.error || ""));
+          if (![401, 403].includes(response.status) && !body.cause_exception && (loading || pending || rebuilding || upstreamAuth))
+            throw new NotReady(`${endpoint} ${params.config || "dataset"} ${upstreamAuth ? "upstream Hub auth unavailable" : loading ? "index loading" : rebuilding ? "index rebuilding" : code}`);
           if (endpoint === "search" && response.status >= 500 && response.status <= 599 &&
               code === "UnexpectedApiError" && !body.cause_exception)
             throw new HostedSearchUnavailable(
