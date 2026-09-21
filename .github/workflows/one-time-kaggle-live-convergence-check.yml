@@ -102,6 +102,31 @@ jobs:
               try: meta=json.loads(mp.read_text())
               except Exception: meta={'rawPrefix':mp.read_text(errors='ignore')[:500]}
 
+          # Compare the Kaggle source snapshot with the current authored source tree.
+          source_candidates=[
+              Path('src/content-source/page.md'),
+              Path('src/data/semantic/knowledge-graph.jsonld'),
+              Path('src/data/semantic/shapes.ttl'),
+              Path('src/data/release.json'),
+              Path('src/data/machine-resources.json'),
+              Path('README.md'),
+              Path('CITATION.cff'),
+              Path('codemeta.json'),
+              Path('package.json'),
+              Path('package-lock.json'),
+          ]
+          source_comparison=[]
+          for rel in source_candidates:
+              kp=root/rel
+              lp=Path(rel)
+              if kp.is_file() and lp.is_file():
+                  source_comparison.append({
+                      'file':rel.as_posix(),
+                      'sha256Equal':sha(kp)==sha(lp),
+                      'kaggleSha256':sha(kp),
+                      'currentSha256':sha(lp),
+                  })
+
           result={
               'kaggleLiveCheck':'PASS',
               'kaggleFileCount':len(kaggle_files),
@@ -111,6 +136,9 @@ jobs:
               'byteEqualOverlap':sum(1 for x in overlap if x['sha256Equal']),
               'byteMismatches':mismatches,
               'overlap':overlap,
+              'sourceComparison':source_comparison,
+              'sourceEqualCount':sum(1 for x in source_comparison if x['sha256Equal']),
+              'sourceMismatchCount':sum(1 for x in source_comparison if not x['sha256Equal']),
               'claimPresence':claim_presence,
               'identity':identity,
               'apiMetadata':meta,
