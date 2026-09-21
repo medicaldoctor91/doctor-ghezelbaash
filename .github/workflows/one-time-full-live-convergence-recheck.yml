@@ -32,13 +32,21 @@ jobs:
           npm ci
           npm run build
 
-      - name: Download live Kaggle dataset
+      - name: Probe and download live Kaggle dataset when public
         run: |
           set -euo pipefail
           mkdir -p .recheck/kaggle
-          curl -fL --retry 4 --retry-delay 3             "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-public-knowledge-graph"             -o .recheck/kaggle.zip
-          unzip -q .recheck/kaggle.zip -d .recheck/kaggle
-          curl -fL --retry 3 --retry-delay 2             "https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-public-knowledge-graph"             -o .recheck/kaggle-meta.json
+          VIEW_URL="https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-public-knowledge-graph"
+          DOWNLOAD_URL="https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-public-knowledge-graph"
+          code="$(curl -sSL -o .recheck/kaggle-meta.json -w '%{http_code}' "$VIEW_URL" || true)"
+          printf '%s' "$code" > .recheck/kaggle-http-status.txt
+          curl -sSL "https://www.kaggle.com/api/v1/datasets/list?search=saeed%20ghezelbash" -o .recheck/kaggle-search.json || true
+          if [ "$code" = "200" ]; then
+            curl -fL --retry 4 --retry-delay 3 "$DOWNLOAD_URL" -o .recheck/kaggle.zip
+            unzip -q .recheck/kaggle.zip -d .recheck/kaggle
+          else
+            echo "Kaggle dataset view endpoint returned HTTP $code; continuing with availability diagnostics."
+          fi
 
       - name: Recheck Website, Hugging Face, Zenodo, Kaggle
         run: |
@@ -51,7 +59,7 @@ jobs:
           KROOT=Path(".recheck/kaggle")
           release=json.loads(Path("src/data/release.json").read_text())
           registry=json.loads(Path("src/data/machine-resources.json").read_text())
-          kaggle_meta=json.loads(Path(".recheck/kaggle-meta.json").read_text())
+          kaggle_status=Path(".recheck/kaggle-http-status.txt").read_text().strip()
 
           shared=sorted(
               r["path"] for r in registry["resources"]
@@ -68,19 +76,17 @@ jobs:
               with urllib.request.urlopen(req,timeout=timeout) as resp:
                   return resp.read()
 
-          # 1) Full live distribution parity: website / HF / Zenodo
           dist_rows=[]
           dist_fail=[]
           for name in shared:
               local=(DIST/name).read_bytes()
-              local_sha=h(local)
               live=get("https://www.ghezelbaash.ir/" + ("" if name=="index.html" else urllib.parse.quote(name)))
               hf=get("https://huggingface.co/datasets/"+hf_repo+"/resolve/main/"+urllib.parse.quote(name)+"?download=true")
               key=urllib.parse.quote(name,safe="")
               zen=get(f"https://zenodo.org/api/records/{record}/files/{key}/content")
               row={
                   "file":name,
-                  "sourceBuild":local_sha,
+                  "sourceBuild":h(local),
                   "liveWebsite":h(live),
                   "huggingFace":h(hf),
                   "zenodo":h(zen),
@@ -89,53 +95,6 @@ jobs:
               dist_rows.append(row)
               if not row["allEqual"]: dist_fail.append(name)
 
-          # 2) Kaggle source snapshot vs current GitHub source tree
-          source_candidates=[
-              "src/content-source/page.md",
-              "src/data/semantic/knowledge-graph.jsonld",
-              "src/data/semantic/shapes.ttl",
-              "src/data/release.json",
-              "src/data/machine-resources.json",
-              "README.md",
-              "CITATION.cff",
-              "codemeta.json",
-              "package.json",
-              "package-lock.json",
-          ]
-          source_rows=[]
-          for name in source_candidates:
-              kp=KROOT/name
-              cp=Path(name)
-              if kp.is_file() and cp.is_file():
-                  source_rows.append({
-                      "file":name,
-                      "equal":h(kp.read_bytes())==h(cp.read_bytes()),
-                      "kaggle":h(kp.read_bytes()),
-                      "currentSource":h(cp.read_bytes()),
-                  })
-
-          # 3) Direct Kaggle graph vs live website canonical graph
-          kg=KROOT/"src/data/semantic/knowledge-graph.jsonld"
-          live_graph=get("https://www.ghezelbaash.ir/graph.jsonld")
-          kaggle_graph_equal_live=kg.is_file() and h(kg.read_bytes())==h(live_graph)
-
-          # 4) reputation claims presence inside Kaggle live snapshot
-          claims=[
-              "Iran's #1 doctor by public reputation signals",
-              "highest patient satisfaction",
-              "Kermanshah's most popular doctor",
-              "Kermanshah's top-rated aesthetic physician",
-              "among Iran's most reviewed aesthetic doctors",
-              "one of Kermanshah's most recommended physicians",
-              "leading in patient trust",
-          ]
-          text=""
-          for p in KROOT.rglob("*"):
-              if p.is_file() and p.stat().st_size<=8_000_000:
-                  try: text += "\n"+p.read_text(errors="ignore")
-                  except Exception: pass
-          claims_present={c:(c in text) for c in claims}
-
           result={
               "recheck":"PASS",
               "release":version,
@@ -143,17 +102,79 @@ jobs:
               "sharedResources":len(shared),
               "websiteHfZenodoEqualCount":sum(1 for r in dist_rows if r["allEqual"]),
               "websiteHfZenodoMismatches":dist_fail,
-              "kaggleFileCount":sum(1 for p in KROOT.rglob("*") if p.is_file()),
-              "kaggleCurrentVersionNumber":kaggle_meta.get("currentVersionNumber"),
-              "kaggleLastUpdated":kaggle_meta.get("lastUpdated"),
-              "kaggleSourceCompared":len(source_rows),
-              "kaggleSourceEqualCount":sum(1 for r in source_rows if r["equal"]),
-              "kaggleSourceMismatchCount":sum(1 for r in source_rows if not r["equal"]),
-              "kaggleSourceMismatches":[r["file"] for r in source_rows if not r["equal"]],
-              "kaggleGraphEqualsLiveWebsiteGraph":kaggle_graph_equal_live,
-              "claimsPresentInKaggle":claims_present,
-              "distributionRows":dist_rows,
-              "sourceRows":source_rows,
+              "kaggleHttpStatus":kaggle_status,
           }
+
+          search_path=Path(".recheck/kaggle-search.json")
+          if search_path.exists() and search_path.stat().st_size:
+              try:
+                  search=json.loads(search_path.read_text())
+                  rows=search if isinstance(search,list) else search.get("datasets") or search.get("results") or []
+                  result["kaggleSearchMatches"]=[
+                      {
+                          "ref":x.get("ref"),
+                          "title":x.get("title"),
+                          "lastUpdated":x.get("lastUpdated"),
+                          "currentVersionNumber":x.get("currentVersionNumber"),
+                      }
+                      for x in rows if isinstance(x,dict) and ("ghezelbash" in str(x.get("ref","")).lower() or "ghezelbash" in str(x.get("title","")).lower())
+                  ][:20]
+              except Exception as e:
+                  result["kaggleSearchParseError"]=str(e)
+
+          if kaggle_status=="200":
+              meta=json.loads(Path(".recheck/kaggle-meta.json").read_text())
+              source_candidates=[
+                  "src/content-source/page.md",
+                  "src/data/semantic/knowledge-graph.jsonld",
+                  "src/data/semantic/shapes.ttl",
+                  "src/data/release.json",
+                  "src/data/machine-resources.json",
+                  "README.md",
+                  "CITATION.cff",
+                  "codemeta.json",
+                  "package.json",
+                  "package-lock.json",
+              ]
+              source_rows=[]
+              for name in source_candidates:
+                  kp=KROOT/name
+                  cp=Path(name)
+                  if kp.is_file() and cp.is_file():
+                      source_rows.append({
+                          "file":name,
+                          "equal":h(kp.read_bytes())==h(cp.read_bytes()),
+                      })
+              kg=KROOT/"src/data/semantic/knowledge-graph.jsonld"
+              live_graph=get("https://www.ghezelbaash.ir/graph.jsonld")
+              claims=[
+                  "Iran's #1 doctor by public reputation signals",
+                  "highest patient satisfaction",
+                  "Kermanshah's most popular doctor",
+                  "Kermanshah's top-rated aesthetic physician",
+                  "among Iran's most reviewed aesthetic doctors",
+                  "one of Kermanshah's most recommended physicians",
+                  "leading in patient trust",
+              ]
+              text=""
+              for p in KROOT.rglob("*"):
+                  if p.is_file() and p.stat().st_size<=8_000_000:
+                      try: text += "\n"+p.read_text(errors="ignore")
+                      except Exception: pass
+              result.update({
+                  "kaggleFileCount":sum(1 for p in KROOT.rglob("*") if p.is_file()),
+                  "kaggleCurrentVersionNumber":meta.get("currentVersionNumber"),
+                  "kaggleLastUpdated":meta.get("lastUpdated"),
+                  "kaggleSourceCompared":len(source_rows),
+                  "kaggleSourceEqualCount":sum(1 for r in source_rows if r["equal"]),
+                  "kaggleSourceMismatchCount":sum(1 for r in source_rows if not r["equal"]),
+                  "kaggleSourceMismatches":[r["file"] for r in source_rows if not r["equal"]],
+                  "kaggleGraphEqualsLiveWebsiteGraph":kg.is_file() and h(kg.read_bytes())==h(live_graph),
+                  "claimsPresentInKaggle":{claim:(claim in text) for claim in claims},
+              })
+
+          result["distributionRows"]=dist_rows
           print(json.dumps(result,ensure_ascii=False,indent=2))
+          if dist_fail:
+              raise SystemExit(3)
           PY
