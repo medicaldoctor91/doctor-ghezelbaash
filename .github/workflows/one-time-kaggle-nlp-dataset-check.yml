@@ -126,6 +126,29 @@ jobs:
               result["sourceMismatchCount"]=sum(1 for r in source_rows if not r["equalCurrentSource"])
               result["sourceRows"]=source_rows
 
+              # Compare all packaged root resources that also exist in the current built distribution.
+              dist_rows=[]
+              for name in names:
+                  dp=Path("dist")/name
+                  if "/" not in name and dp.is_file():
+                      dist_rows.append({
+                          "file":name,
+                          "equalCurrentDist":h(z.read(name))==h(dp.read_bytes()),
+                          "kaggleSha256":h(z.read(name)),
+                          "currentDistSha256":h(dp.read_bytes()),
+                      })
+              result["distCompared"]=len(dist_rows)
+              result["distEqualCount"]=sum(1 for r in dist_rows if r["equalCurrentDist"])
+              result["distMismatchCount"]=sum(1 for r in dist_rows if not r["equalCurrentDist"])
+              result["distMismatches"]=[r["file"] for r in dist_rows if not r["equalCurrentDist"]]
+              result["distRows"]=dist_rows
+
+              if "kaggle-manifest.json" in names:
+                  try:
+                      result["kaggleManifest"]=json.loads(z.read("kaggle-manifest.json"))
+                  except Exception:
+                      result["kaggleManifestRaw"]=z.read("kaggle-manifest.json").decode("utf-8","ignore")
+
               live_graph_status,live_graph,_=get("https://www.ghezelbaash.ir/graph.jsonld")
               kg_name="src/data/semantic/knowledge-graph.jsonld"
               result["graphEqualsLiveWebsiteGraph"]=(
