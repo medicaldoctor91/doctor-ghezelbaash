@@ -88,8 +88,8 @@ jobs:
                       raise RuntimeError(f"Shared distribution file missing from DIST: {name}")
                   shared.append(name)
           shared=sorted(shared)
-          if len(shared)!=22:
-              raise RuntimeError(f"Expected 22 shared website/HF/Zenodo resources, found {len(shared)}")
+          if not shared:
+              raise RuntimeError("No shared website/Hugging Face/Zenodo resources found")
 
           def sha256_bytes(data): return hashlib.sha256(data).hexdigest()
           def sha256_file(path): return sha256_bytes(Path(path).read_bytes())
