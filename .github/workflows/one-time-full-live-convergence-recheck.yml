@@ -42,9 +42,15 @@ jobs:
           printf '%s' "$code" > .recheck/kaggle-http-status.txt
           curl -sSL "https://www.kaggle.com/api/v1/datasets/list?search=saeed%20ghezelbash" -o .recheck/kaggle-search.json || true
           if [ "$code" = "200" ]; then
-            curl -fL --retry 4 --retry-delay 3 "$DOWNLOAD_URL" -o .recheck/kaggle.zip
-            unzip -q .recheck/kaggle.zip -d .recheck/kaggle
+            dcode="$(curl -sSL -o .recheck/kaggle.zip -w '%{http_code}' "$DOWNLOAD_URL" || true)"
+            printf '%s' "$dcode" > .recheck/kaggle-download-http-status.txt
+            if [ "$dcode" = "200" ]; then
+              unzip -q .recheck/kaggle.zip -d .recheck/kaggle
+            else
+              echo "Kaggle bulk download endpoint returned HTTP $dcode; metadata is still available."
+            fi
           else
+            printf 'not-attempted' > .recheck/kaggle-download-http-status.txt
             echo "Kaggle dataset view endpoint returned HTTP $code; continuing with availability diagnostics."
           fi
 
@@ -60,6 +66,7 @@ jobs:
           release=json.loads(Path("src/data/release.json").read_text())
           registry=json.loads(Path("src/data/machine-resources.json").read_text())
           kaggle_status=Path(".recheck/kaggle-http-status.txt").read_text().strip()
+          kaggle_download_status=Path(".recheck/kaggle-download-http-status.txt").read_text().strip()
 
           shared=sorted(
               r["path"] for r in registry["resources"]
@@ -103,6 +110,7 @@ jobs:
               "websiteHfZenodoEqualCount":sum(1 for r in dist_rows if r["allEqual"]),
               "websiteHfZenodoMismatches":dist_fail,
               "kaggleHttpStatus":kaggle_status,
+              "kaggleDownloadHttpStatus":kaggle_download_status,
           }
 
           search_path=Path(".recheck/kaggle-search.json")
@@ -124,6 +132,17 @@ jobs:
 
           if kaggle_status=="200":
               meta=json.loads(Path(".recheck/kaggle-meta.json").read_text())
+              result["kaggleMetadataSummary"]={
+                  "ref":meta.get("ref"),
+                  "title":meta.get("title"),
+                  "currentVersionNumber":meta.get("currentVersionNumber"),
+                  "lastUpdated":meta.get("lastUpdated"),
+                  "totalBytes":meta.get("totalBytes"),
+                  "isPrivate":meta.get("isPrivate"),
+                  "licenseName":meta.get("licenseName"),
+                  "fileCount":len(meta.get("datasetFiles") or meta.get("files") or []),
+                  "topLevelKeys":sorted(meta.keys()),
+              }
               source_candidates=[
                   "src/content-source/page.md",
                   "src/data/semantic/knowledge-graph.jsonld",
@@ -137,14 +156,15 @@ jobs:
                   "package-lock.json",
               ]
               source_rows=[]
-              for name in source_candidates:
-                  kp=KROOT/name
-                  cp=Path(name)
-                  if kp.is_file() and cp.is_file():
-                      source_rows.append({
-                          "file":name,
-                          "equal":h(kp.read_bytes())==h(cp.read_bytes()),
-                      })
+              if kaggle_download_status=="200":
+                  for name in source_candidates:
+                      kp=KROOT/name
+                      cp=Path(name)
+                      if kp.is_file() and cp.is_file():
+                          source_rows.append({
+                              "file":name,
+                              "equal":h(kp.read_bytes())==h(cp.read_bytes()),
+                          })
               kg=KROOT/"src/data/semantic/knowledge-graph.jsonld"
               live_graph=get("https://www.ghezelbaash.ir/graph.jsonld")
               claims=[
@@ -157,10 +177,11 @@ jobs:
                   "leading in patient trust",
               ]
               text=""
-              for p in KROOT.rglob("*"):
-                  if p.is_file() and p.stat().st_size<=8_000_000:
-                      try: text += "\n"+p.read_text(errors="ignore")
-                      except Exception: pass
+              if kaggle_download_status=="200":
+                  for p in KROOT.rglob("*"):
+                      if p.is_file() and p.stat().st_size<=8_000_000:
+                          try: text += "\n"+p.read_text(errors="ignore")
+                          except Exception: pass
               result.update({
                   "kaggleFileCount":sum(1 for p in KROOT.rglob("*") if p.is_file()),
                   "kaggleCurrentVersionNumber":meta.get("currentVersionNumber"),
