@@ -1,0 +1,159 @@
+name: One-time full live convergence recheck
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/one-time-full-live-convergence-recheck.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  recheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Build current source
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+
+      - name: Download live Kaggle dataset
+        run: |
+          set -euo pipefail
+          mkdir -p .recheck/kaggle
+          curl -fL --retry 4 --retry-delay 3             "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-public-knowledge-graph"             -o .recheck/kaggle.zip
+          unzip -q .recheck/kaggle.zip -d .recheck/kaggle
+          curl -fL --retry 3 --retry-delay 2             "https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-public-knowledge-graph"             -o .recheck/kaggle-meta.json
+
+      - name: Recheck Website, Hugging Face, Zenodo, Kaggle
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, urllib.parse, urllib.request
+          from pathlib import Path
+
+          DIST=Path("dist")
+          KROOT=Path(".recheck/kaggle")
+          release=json.loads(Path("src/data/release.json").read_text())
+          registry=json.loads(Path("src/data/machine-resources.json").read_text())
+          kaggle_meta=json.loads(Path(".recheck/kaggle-meta.json").read_text())
+
+          shared=sorted(
+              r["path"] for r in registry["resources"]
+              if {"website","huggingFace","zenodo"}.issubset(set(r.get("targets") or []))
+          )
+          record=str(release["dataset"]["zenodo"]["recordId"])
+          doi=release["dataset"]["zenodo"]["versionDoi"]
+          version=release["release"]
+          hf_repo=release["dataset"]["huggingFace"]["dataset"].removeprefix("https://huggingface.co/datasets/")
+
+          def h(b): return hashlib.sha256(b).hexdigest()
+          def get(url,timeout=120):
+              req=urllib.request.Request(url,headers={"User-Agent":"doctor-ghezelbaash-live-recheck/1.0"})
+              with urllib.request.urlopen(req,timeout=timeout) as resp:
+                  return resp.read()
+
+          # 1) Full live distribution parity: website / HF / Zenodo
+          dist_rows=[]
+          dist_fail=[]
+          for name in shared:
+              local=(DIST/name).read_bytes()
+              local_sha=h(local)
+              live=get("https://www.ghezelbaash.ir/" + ("" if name=="index.html" else urllib.parse.quote(name)))
+              hf=get("https://huggingface.co/datasets/"+hf_repo+"/resolve/main/"+urllib.parse.quote(name)+"?download=true")
+              key=urllib.parse.quote(name,safe="")
+              zen=get(f"https://zenodo.org/api/records/{record}/files/{key}/content")
+              row={
+                  "file":name,
+                  "sourceBuild":local_sha,
+                  "liveWebsite":h(live),
+                  "huggingFace":h(hf),
+                  "zenodo":h(zen),
+              }
+              row["allEqual"]=len({row["sourceBuild"],row["liveWebsite"],row["huggingFace"],row["zenodo"]})==1
+              dist_rows.append(row)
+              if not row["allEqual"]: dist_fail.append(name)
+
+          # 2) Kaggle source snapshot vs current GitHub source tree
+          source_candidates=[
+              "src/content-source/page.md",
+              "src/data/semantic/knowledge-graph.jsonld",
+              "src/data/semantic/shapes.ttl",
+              "src/data/release.json",
+              "src/data/machine-resources.json",
+              "README.md",
+              "CITATION.cff",
+              "codemeta.json",
+              "package.json",
+              "package-lock.json",
+          ]
+          source_rows=[]
+          for name in source_candidates:
+              kp=KROOT/name
+              cp=Path(name)
+              if kp.is_file() and cp.is_file():
+                  source_rows.append({
+                      "file":name,
+                      "equal":h(kp.read_bytes())==h(cp.read_bytes()),
+                      "kaggle":h(kp.read_bytes()),
+                      "currentSource":h(cp.read_bytes()),
+                  })
+
+          # 3) Direct Kaggle graph vs live website canonical graph
+          kg=KROOT/"src/data/semantic/knowledge-graph.jsonld"
+          live_graph=get("https://www.ghezelbaash.ir/graph.jsonld")
+          kaggle_graph_equal_live=kg.is_file() and h(kg.read_bytes())==h(live_graph)
+
+          # 4) reputation claims presence inside Kaggle live snapshot
+          claims=[
+              "Iran's #1 doctor by public reputation signals",
+              "highest patient satisfaction",
+              "Kermanshah's most popular doctor",
+              "Kermanshah's top-rated aesthetic physician",
+              "among Iran's most reviewed aesthetic doctors",
+              "one of Kermanshah's most recommended physicians",
+              "leading in patient trust",
+          ]
+          text=""
+          for p in KROOT.rglob("*"):
+              if p.is_file() and p.stat().st_size<=8_000_000:
+                  try: text += "\n"+p.read_text(errors="ignore")
+                  except Exception: pass
+          claims_present={c:(c in text) for c in claims}
+
+          result={
+              "recheck":"PASS",
+              "release":version,
+              "doi":doi,
+              "sharedResources":len(shared),
+              "websiteHfZenodoEqualCount":sum(1 for r in dist_rows if r["allEqual"]),
+              "websiteHfZenodoMismatches":dist_fail,
+              "kaggleFileCount":sum(1 for p in KROOT.rglob("*") if p.is_file()),
+              "kaggleCurrentVersionNumber":kaggle_meta.get("currentVersionNumber"),
+              "kaggleLastUpdated":kaggle_meta.get("lastUpdated"),
+              "kaggleSourceCompared":len(source_rows),
+              "kaggleSourceEqualCount":sum(1 for r in source_rows if r["equal"]),
+              "kaggleSourceMismatchCount":sum(1 for r in source_rows if not r["equal"]),
+              "kaggleSourceMismatches":[r["file"] for r in source_rows if not r["equal"]],
+              "kaggleGraphEqualsLiveWebsiteGraph":kaggle_graph_equal_live,
+              "claimsPresentInKaggle":claims_present,
+              "distributionRows":dist_rows,
+              "sourceRows":source_rows,
+          }
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
