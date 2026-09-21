@@ -211,9 +211,7 @@ jobs:
           att.update({
               "release":version,
               "releasePublishedAt":release["dateModified"],
-              "medicalReviewedAt":release.get("medicalReviewedAt"),
               "canonicalDatasetIri":release["dataset"]["id"],
-              "primaryEntity":release["primaryEntity"]["wikidata"],
               "sourceRepository":release["dataset"]["github"]["repository"],
               "sourceCommit":SOURCE_COMMIT,
               "zenodoVersionDoi":doi,
