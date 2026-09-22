@@ -131,6 +131,49 @@ jobs:
           files_url=links.get("files") or f"{base}/records/{record}/draft/files"
           publish_url=links.get("publish") or f"{base}/records/{record}/draft/actions/publish"
 
+          # Zenodo/InvenioRDM keeps published-record file buckets locked until
+          # the official file-modification action is accepted. This is the
+          # same endpoint used by the "Enable file editing" UI.
+          _,public_body,_=request(f"{base}/records/{record}")
+          public_record=json.loads(public_body)
+          file_modification_url=(
+              (public_record.get("links") or {}).get("file_modification")
+              or links.get("file_modification")
+          )
+          if not file_modification_url:
+              raise RuntimeError(
+                  "Zenodo did not expose record.links.file_modification; "
+                  f"public_links={sorted((public_record.get('links') or {}).keys())}; "
+                  f"draft_links={sorted(links.keys())}"
+              )
+          unlock_payload=json.dumps({
+              "comment": (
+                  "Minor presentation-only correction to synchronize index.html "
+                  "with the current website; no research findings, canonical graph "
+                  "data, DOI, or release identity are changed."
+              )
+          }).encode()
+          unlock_status,unlock_body,_=request(
+              file_modification_url,
+              method="POST",
+              data=unlock_payload,
+              content_type="application/json",
+              allowed=(200,201),
+          )
+          if unlock_status == 201:
+              detail=unlock_body[:1200].decode("utf-8","replace")
+              raise RuntimeError(
+                  "Zenodo created a file-modification request instead of unlocking "
+                  f"the bucket directly; approval is required before sync: {detail}"
+              )
+
+          # Refresh the draft after the unlock action.
+          _,body,_=request(f"{base}/records/{record}/draft")
+          draft=json.loads(body)
+          links=draft.get("links") or {}
+          files_url=links.get("files") or f"{base}/records/{record}/draft/files"
+          publish_url=links.get("publish") or f"{base}/records/{record}/draft/actions/publish"
+
           try:
               request(f"{files_url}/index.html",method="DELETE",allowed=(200,204))
           except RuntimeError as exc:
