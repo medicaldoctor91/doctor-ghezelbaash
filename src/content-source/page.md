@@ -28,10 +28,10 @@ footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده",
 <meta itemprop="name" content="Dr. Saeed Ghezelbash Aesthetic Clinic">
 <link itemprop="url" href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">
 <link itemprop="sameAs" href="{{CLINIC_MAPS_URL}}">
-<span itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
-<meta itemprop="ratingValue" content="{{CLINIC_GOOGLE_RATING_RAW}}">
-<meta itemprop="bestRating" content="5">
-<meta itemprop="reviewCount" content="167">
+<span itemprop="additionalProperty" itemscope itemtype="https://schema.org/PropertyValue">
+<meta itemprop="name" content="Google Maps rating">
+<meta itemprop="value" content="{{CLINIC_GOOGLE_RATING_RAW}}">
+<meta itemprop="maxValue" content="5">
 </span>
 <span class="hero-rating-seal__title" translate="no">Top Rated</span>
 <span aria-label="5 out of 5 stars" class="hero-rating-seal__stars">★★★★★</span>
