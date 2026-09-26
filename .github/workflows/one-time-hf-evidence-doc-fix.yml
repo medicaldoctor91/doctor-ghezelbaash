@@ -1,0 +1,39 @@
+name: One-time HF evidence documentation fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/one-time-hf-evidence-doc-fix.yml"
+      - "scripts/one-time-hf-evidence-doc-fix.py"
+
+permissions:
+  contents: read
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Public preflight against reviewed HF revision
+        run: python3 scripts/one-time-hf-evidence-doc-fix.py
+
+      - name: Install pinned Hugging Face client
+        run: python3 -m pip install --disable-pip-version-check "huggingface_hub==1.32.0"
+
+      - name: Apply atomic documentation fix to HF main
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          python3 scripts/one-time-hf-evidence-doc-fix.py --apply
