@@ -46,3 +46,8 @@ Clinic entity: Q140288589 — canonical website https://www.ghezelbaash.ir/
 
 ## SEO interpretation
 Embedded metadata is a supporting signal and provenance layer, not a substitute for on-page image SEO. The higher-leverage ranking surfaces remain the host page's visible text, image filename, alt/caption, surrounding copy, structured data, crawlability/indexability, internal linking, and consistent entity reconciliation.
+
+## Final validation
+- Corrected Persian attribution spelling in the XMP rights field.
+- Verified compressed JPEG image stream is byte-identical to the source master for all three files; no pixel recompression occurred.
+- Verified XMP, IPTC-IIM and provenance metadata layers are embedded in every output.
