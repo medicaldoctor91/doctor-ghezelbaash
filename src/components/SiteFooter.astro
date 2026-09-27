@@ -48,6 +48,16 @@ const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
   type: resource.contentType,
   separator: index === FOOTER_RESOURCES.length - 1 ? '' : ' · ',
 }));
+const kaggleResources = [
+  { id: 'https://www.ghezelbaash.ir/#project-kaggle-dataset', label: 'Kaggle Dataset' },
+  { id: 'https://www.ghezelbaash.ir/#project-kaggle-notebook', label: 'Kaggle Notebook' },
+].map(({ id, label }) => {
+  const resource = byId.get(id);
+  if (!resource || typeof resource.url !== 'string' || !resource.url.startsWith('https://www.kaggle.com/')) {
+    throw new Error(`Site footer requires canonical Kaggle resource URL: ${id}`);
+  }
+  return { href: resource.url, label };
+});
 ---
 
 <footer aria-label="تماس، حریم خصوصی و داده‌های رسمی" class="site-footer">
@@ -76,6 +86,16 @@ const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
           <Fragment>
             <a href={`/${link.path}`} rel={link.rel} type={link.type}>{link.label}</a>
             {link.separator}
+          </Fragment>
+        ))
+      }
+    </nav>
+    <nav aria-label="منابع Kaggle">
+      {
+        kaggleResources.map((link, index) => (
+          <Fragment>
+            <a href={link.href} rel="external noopener">{link.label}</a>
+            {index === kaggleResources.length - 1 ? '' : ' · '}
           </Fragment>
         ))
       }

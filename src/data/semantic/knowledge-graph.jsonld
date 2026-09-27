@@ -8080,6 +8080,12 @@
           "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset"
         },
         {
+          "@id": "https://www.ghezelbaash.ir/#project-kaggle-dataset"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-kaggle-notebook"
+        },
+        {
           "@id": "https://www.ghezelbaash.ir/#project-zenodo-release"
         },
         {
@@ -8319,6 +8325,60 @@
       "version": "1.3.3"
     },
     {
+      "@id": "https://www.ghezelbaash.ir/#project-kaggle-dataset",
+      "@type": "DataDownload",
+      "name": "Dr. Saeed Ghezelbash Knowledge Graph and NLP Data — Kaggle dataset",
+      "url": "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        }
+      ],
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#distribution-platform-kaggle"
+      },
+      "description": "Kaggle dataset distribution of the Dr. Saeed Ghezelbash Public Knowledge Graph and NLP data.",
+      "isAccessibleForFree": true
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#project-kaggle-notebook",
+      "@type": "SoftwareSourceCode",
+      "name": "Dr. Saeed Ghezelbash Knowledge Graph Starter — Kaggle notebook",
+      "url": "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+      "codeRepository": "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
+      },
+      "isBasedOn": {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
+      },
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#distribution-platform-kaggle"
+      },
+      "description": "Kaggle starter notebook for exploring the Dr. Saeed Ghezelbash Knowledge Graph and NLP dataset."
+    },
+    {
       "@id": "https://www.ghezelbaash.ir/#project-zenodo-release",
       "@type": "DataDownload",
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Zenodo preservation distribution 1.3.3",
@@ -8406,6 +8466,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-kaggle-dataset"
         },
         {
           "@id": "https://www.ghezelbaash.ir/datapackage.json#download"
@@ -8503,6 +8566,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#distribution-platform-hugging-face"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#distribution-platform-kaggle"
         }
       ],
       "variableMeasured": [
@@ -8547,6 +8613,12 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-kaggle-dataset"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-kaggle-notebook"
         }
       ],
       "citation": [
@@ -21337,6 +21409,12 @@
       "@type": "Organization",
       "name": "Hugging Face",
       "url": "https://huggingface.co/"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#distribution-platform-kaggle",
+      "@type": "Organization",
+      "name": "Kaggle",
+      "url": "https://www.kaggle.com/"
     },
     {
       "@id": "https://www.ghezelbaash.ir/entity-facts.csv#download",
