@@ -82,6 +82,7 @@ const googlePageMicrodata = isMain
       isMain={isMain}
     >
       <style is:inline set:html={criticalCss}></style>
+      {isMain && <style is:inline>.hero-title__name > a, .hero-title__name > a:visited, .hero-title__name > a:hover, .hero-title__name > a:active { color: inherit; text-decoration: none !important; border-bottom: 0 !important; background-image: none !important; box-shadow: none !important; }</style>}
       <link
         as="style"
         data-deferred-stylesheet
