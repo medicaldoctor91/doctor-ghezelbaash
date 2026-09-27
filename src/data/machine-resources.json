@@ -6,7 +6,9 @@
       "source": "dist/index.html",
       "mediaType": "text/html",
       "targets": [
-        "website"
+        "website",
+        "huggingFace",
+        "zenodo"
       ],
       "mediaTypeParameters": {
         "charset": "utf-8"
