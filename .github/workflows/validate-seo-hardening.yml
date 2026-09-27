@@ -1,0 +1,46 @@
+name: Validate SEO hardening
+
+on:
+  push:
+    branches:
+      - seo/canonicalize-index-distribution
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Assert SEO invariants
+        run: |
+          set -euo pipefail
+          test -s dist/index.html
+          grep -Fq 'rel="canonical"' dist/index.html
+          grep -Fq 'https://schema.org/ProfilePage' dist/index.html
+          grep -Fq 'https://schema.org/Person' dist/index.html
+          grep -Fq 'index, follow, max-image-preview:large' dist/index.html
+          ! grep -Fq "Iran's #1 doctor" dist/index.html
+          ! grep -Fq 'highest patient satisfaction' dist/index.html
+          ! grep -Fq "Kermanshah's most popular doctor" dist/index.html
+          ! grep -Fq 'most reviewed aesthetic doctors' dist/index.html
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('src/data/machine-resources.json','utf8'));
+          const index=r.resources.find(x=>x.path==='index.html');
+          if (!index) throw new Error('index.html registry entry missing');
+          if (JSON.stringify(index.targets)!==JSON.stringify(['website'])) throw new Error('index.html must be website-only');
+          for (const p of ['graph.jsonld','graph.ttl','entity-facts.csv','llms.txt','llms-full.txt']) {
+            const x=r.resources.find(v=>v.path===p);
+            if (!x) throw new Error(`${p} missing`);
+            for (const t of ['website','huggingFace','zenodo']) if (!x.targets.includes(t)) throw new Error(`${p} lost ${t}`);
+          }
+          NODE
