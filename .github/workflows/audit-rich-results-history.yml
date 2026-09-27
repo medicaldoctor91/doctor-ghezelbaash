@@ -1,0 +1,83 @@
+name: Audit rich-results history
+
+on:
+  push:
+    branches:
+      - audit/rich-results-history
+    paths:
+      - .github/workflows/audit-rich-results-history.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: pre-reputation
+            ref: a194227ca9ca4ff8323eb1006d45e4a9014bfa5a
+          - label: post-sep22
+            ref: 2c508a5045c3d2428dcf0093a49c4c42c8d77202
+          - label: current
+            ref: f54cdb8fdd9e1335c7d99d03162fdda69d716612
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Summarize built structured data
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('dist/index.html','utf8');
+          const scripts=[...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+          const docs=[];
+          for(const m of scripts){
+            try{docs.push(JSON.parse(m[1]));}
+            catch(e){docs.push({__parse_error:String(e)});}
+          }
+          const flatten=(d)=>Array.isArray(d)?d:(Array.isArray(d?.['@graph'])?d['@graph']:[d]);
+          const nodes=docs.flatMap(flatten).filter(Boolean);
+          const types={};
+          for(const n of nodes){
+            const ts=Array.isArray(n?.['@type'])?n['@type']:[n?.['@type']];
+            for(const t of ts.filter(Boolean)) types[t]=(types[t]||0)+1;
+          }
+          const canon=(html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)/i)||html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["']canonical["']/i)||[])[1]||null;
+          const robots=(html.match(/<meta[^>]*name=["']robots["'][^>]*content=["']([^"']+)/i)||html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']robots["']/i)||[])[1]||null;
+          const itemtypes=[...new Set([...html.matchAll(/itemtype=["']([^"']+)["']/gi)].map(m=>m[1]))].sort();
+          const risky=["Iran's #1 doctor","highest patient satisfaction","most popular doctor","most reviewed aesthetic doctors"].filter(x=>html.includes(x));
+          const profileNodes=nodes.filter(n=>[...(Array.isArray(n?.['@type'])?n['@type']:[n?.['@type']])].includes('ProfilePage'));
+          const datasetNodes=nodes.filter(n=>[...(Array.isArray(n?.['@type'])?n['@type']:[n?.['@type']])].includes('Dataset'));
+          const videoNodes=nodes.filter(n=>[...(Array.isArray(n?.['@type'])?n['@type']:[n?.['@type']])].includes('VideoObject'));
+          const reviewish=nodes.filter(n=>JSON.stringify(n).includes('AggregateRating')||JSON.stringify(n).includes('Review'));
+          console.log('AUDIT_SUMMARY '+JSON.stringify({
+            label:process.env.LABEL,
+            ref:process.env.REF,
+            bytes:Buffer.byteLength(html),
+            canonical:canon,
+            robots,
+            jsonLdScriptCount:scripts.length,
+            jsonLdParseErrors:docs.filter(x=>x?.__parse_error).length,
+            types,
+            itemtypes,
+            risky,
+            profileNodes:profileNodes.map(n=>({id:n['@id'],type:n['@type'],mainEntity:n.mainEntity,name:n.name,dateCreated:n.dateCreated,dateModified:n.dateModified,lastReviewed:n.lastReviewed})),
+            datasetNodes:datasetNodes.map(n=>({id:n['@id'],name:n.name,url:n.url,distribution:n.distribution})),
+            videoCount:videoNodes.length,
+            reviewishCount:reviewish.length
+          }));
+          NODE
+        env:
+          LABEL: ${{ matrix.label }}
+          REF: ${{ matrix.ref }}
