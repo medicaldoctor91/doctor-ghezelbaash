@@ -4969,6 +4969,9 @@
           "@id": "https://www.ghezelbaash.ir/#identifier-person-huggingface"
         },
         {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-kaggle"
+        },
+        {
           "@id": "https://www.ghezelbaash.ir/#identifier-person-instagram"
         },
         {
@@ -5030,6 +5033,7 @@
         "https://scholar.google.com/citations?user=BcWBirUAAAAJ",
         "https://github.com/medicaldoctor91",
         "https://huggingface.co/Ghezelbaash",
+        "https://www.kaggle.com/saeedghezelbash",
         "https://www.instagram.com/doctor.ghezelbaash/",
         "https://profile.google.com/@doctor.ghezelbaash",
         "https://about.me/ghezelbaash",
@@ -19211,6 +19215,13 @@
       "propertyID": "Hugging Face user ID",
       "value": "ghezelbaash",
       "url": "https://huggingface.co/Ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-kaggle",
+      "@type": "PropertyValue",
+      "propertyID": "Kaggle user ID",
+      "value": "saeedghezelbash",
+      "url": "https://www.kaggle.com/saeedghezelbash"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#identifier-person-instagram",
