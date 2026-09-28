@@ -8198,7 +8198,7 @@
       },
       "isAccessibleForFree": true,
       "dateModified": "2026-09-18",
-      "description": "Version-controlled source project for Version 1.3.3 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
+      "description": "Version-controlled source project for Version 1.3.3 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -8515,7 +8515,7 @@
           "@id": "https://www.ghezelbaash.ir/#project-github-source"
         }
       ],
-      "description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is its AI/retrieval distribution layer; these access points are related resources, not identity-equivalent entities.",
+      "description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, Hugging Face is its AI/retrieval distribution layer, and Kaggle is its data-science and notebook distribution layer; these access points are related resources, not identity-equivalent entities.",
       "mentions": [
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-irimc"
@@ -8569,7 +8569,8 @@
         "historical patient-origin evidence",
         "GitHub",
         "Zenodo",
-        "Hugging Face"
+        "Hugging Face",
+        "Kaggle"
       ],
       "alternateName": [
         "Primary physician entity Dataset",
