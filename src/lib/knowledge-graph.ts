@@ -4,7 +4,7 @@ import supportGraphRawSource from "../../.generated/semantic/support-graph.json?
 
 type ContextValue = string | number | boolean | Record<string, unknown>;
 type Graph = {
-  "@context"?: Record<string, ContextValue>;
+  "@context"?: string | Record<string, ContextValue>;
   "@graph": unknown[];
   [key: string]: unknown;
 };
@@ -20,25 +20,8 @@ function parseProjection(source: string, label: string) {
   const parsed = JSON.parse(source) as Graph;
   if (!Array.isArray(parsed["@graph"]))
     throw new Error(`${label} lacks @graph`);
-  const context = parsed["@context"];
-  if (
-    !context ||
-    context["@version"] !== 1.1 ||
-    context["@vocab"] !== "https://schema.org/" ||
-    context.schema !== "https://schema.org/"
-  )
-    throw new Error(`${label} lost Schema.org context authority`);
-  for (const [key, value] of Object.entries(context)) {
-    if (key === "@version" || key === "@vocab" || key === "schema") continue;
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      typeof value["@id"] === "string" &&
-      value["@id"].startsWith("https://schema.org/")
-    )
-      continue;
-    throw new Error(`${label} contains a non-Schema.org context term: ${key}`);
-  }
+  if (parsed["@context"] !== "https://schema.org")
+    throw new Error(`${label} must use the public Schema.org context`);
   return parsed;
 }
 
