@@ -11,58 +11,16 @@ const appendUnique = (target, values) => {
   for (const value of values || [])
     if (!target.includes(value)) target.push(value);
 };
-/** Retains only context terms used by this projection and their dependencies. */
-export function projectSchemaContext(context, nodes) {
+const GOOGLE_SCHEMA_CONTEXT = "https://schema.org";
+
+/** Keep the canonical graph contract separate from the published page context. */
+function assertCanonicalSchemaContext(context) {
   if (
     context?.["@version"] !== 1.1 ||
     context?.["@vocab"] !== "https://schema.org/" ||
     context?.schema !== "https://schema.org/"
   )
     throw new Error("Canonical graph lacks the Schema.org projection context");
-  const required = new Set([
-    ...Object.keys(context).filter((key) => key.startsWith("@")),
-    "schema",
-  ]);
-  const includeTerm = (term) => {
-    if (typeof term !== "string") return;
-    if (Object.hasOwn(context, term)) required.add(term);
-    const colon = term.indexOf(":");
-    if (colon > 0 && Object.hasOwn(context, term.slice(0, colon)))
-      required.add(term.slice(0, colon));
-  };
-  const visit = (value, termValue = false) => {
-    if (Array.isArray(value)) {
-      for (const item of value) visit(item, termValue);
-    } else if (typeof value === "string") {
-      if (termValue || value.includes(":")) includeTerm(value);
-    } else if (value && typeof value === "object") {
-      for (const [key, nested] of Object.entries(value)) {
-        includeTerm(key);
-        visit(nested, key === "@type" || context[key]?.["@type"] === "@vocab");
-      }
-    }
-  };
-  visit(nodes);
-  // A term definition can itself use another term, prefix, or scoped context.
-  // Iterate to closure so datatype/prefix dependencies never disappear.
-  const visited = new Set();
-  const visitDefinition = (value) => {
-    if (typeof value === "string") includeTerm(value);
-    else if (Array.isArray(value)) value.forEach(visitDefinition);
-    else if (value && typeof value === "object")
-      for (const [key, nested] of Object.entries(value)) {
-        includeTerm(key);
-        visitDefinition(nested);
-      }
-  };
-  for (const term of required) {
-    if (visited.has(term)) continue;
-    visited.add(term);
-    visitDefinition(context[term]);
-  }
-  return Object.fromEntries(
-    Object.entries(context).filter(([key]) => required.has(key)),
-  );
 }
 const mergeProjectionProfiles = (profiles) => {
   const active = (profiles || []).filter(
@@ -322,6 +280,7 @@ export function deriveGraphProjections({
   headProfile,
   supportProfile,
 }) {
+  assertCanonicalSchemaContext(graph["@context"]);
   const { byId } = indexCanonicalGraph(graph);
   for (const [label, profile] of [["Head", headProfile], ["Support", supportProfile]]) {
     const fields = ["ids", "maxBytes", "nodes", "typeProfiles"];
@@ -421,7 +380,7 @@ export function deriveGraphProjections({
   assertPureSchemaHomepageNodes(supportNodes, "Support");
   assertHomepagePhysicianPerson(homepageHeadNodes, release.primaryEntity.id);
   const headDoc = {
-    "@context": projectSchemaContext(graph["@context"], homepageHeadNodes),
+    "@context": GOOGLE_SCHEMA_CONTEXT,
     "@graph": homepageHeadNodes,
   };
   const headRaw = `${JSON.stringify(headDoc)}\n`;
@@ -430,7 +389,7 @@ export function deriveGraphProjections({
       `Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`,
     );
   const supportDoc = {
-    "@context": projectSchemaContext(graph["@context"], supportNodes),
+    "@context": GOOGLE_SCHEMA_CONTEXT,
     "@graph": supportNodes,
   };
   const supportRaw = `${JSON.stringify(supportDoc)}\n`;
