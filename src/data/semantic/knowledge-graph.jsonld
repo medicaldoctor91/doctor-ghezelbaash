@@ -5294,6 +5294,12 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#claim-kums-affiliation-2021"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-kaggle-dataset"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-zenodo-release"
         }
       ],
       "description": [
@@ -8396,9 +8402,17 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
       },
-      "about": {
-        "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
-      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
+        }
+      ],
       "sameAs": "https://zenodo.org/records/22838416",
       "subjectOf": [
         {
