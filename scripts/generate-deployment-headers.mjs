@@ -45,6 +45,13 @@ const scriptBlocks = [
 const ldScripts = scriptBlocks.filter((script) =>
   /type=["']application\/ld\+json["']/i.test(script.attrs),
 );
+for (const script of ldScripts) {
+  const document = JSON.parse(script.body);
+  if (document["@context"] !== "https://schema.org")
+    throw new Error("Published JSON-LD must use the public Schema.org context");
+  if (!Array.isArray(document["@graph"]))
+    throw new Error("Published JSON-LD must contain @graph");
+}
 const execScripts = scriptBlocks.filter(
   (script) => !/type=["']application\/ld\+json["']/i.test(script.attrs),
 );
