@@ -9,6 +9,7 @@ import { deriveCanonicalAuthority, selectCanonicalSocialImage } from '../lib/can
 import { canonicalGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
 import { exactLanguageLiteral, refId, values } from '../lib/graph-core.mjs';
+import { resolveBuildIdentity } from '../lib/build-identity.mjs';
 
 type DiscoveryLink = {
   href: string;
@@ -34,6 +35,7 @@ interface Props {
 const appleMobileWebAppTitle = 'دکتر قزلباش';
 const themeColor = '#075244';
 const twitterCard = 'summary_large_image';
+const buildIdentity = resolveBuildIdentity();
 const authority = deriveCanonicalAuthority(release, canonicalGraph);
 const {
   title,
@@ -261,6 +263,10 @@ const discoveryLinks: DiscoveryLink[] = [
 {isMain && <meta content="telephone=no" name="format-detection">}
 {isMain && <meta content="light" name="color-scheme">}
 <meta content={themeColor} name="theme-color">
+{isMain && <meta content={release.release} name="x-build-release">}
+{isMain && <meta content={buildIdentity.commit} name="x-build-commit">}
+{isMain && <meta content={buildIdentity.branch} name="x-build-branch">}
+{isMain && <meta content={buildIdentity.provider} name="x-build-provider">}
 {
   isMain && (
     <link
