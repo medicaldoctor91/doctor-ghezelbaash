@@ -32,13 +32,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build exact baseline distribution
-        run: npm run build
+      - name: Build exact baseline distribution with live identity
+        run: CF_PAGES=1 CF_PAGES_COMMIT_SHA=5280827462a666704836e470566dd7fbc5043839 CF_PAGES_BRANCH=main npm run build
 
       - name: Verify baseline fingerprint
         run: |
           test -f dist/build-info.json
-          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("dist/build-info.json","utf8")); if (x.commit !== "5280827462a666704836e470566dd7fbc5043839") { console.error(x); process.exit(1); } console.log(x)'
+          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("dist/build-info.json","utf8")); if (x.commit !== "5280827462a666704836e470566dd7fbc5043839" || x.branch !== "main" || x.provider !== "cloudflare-pages") { console.error(x); process.exit(1); } console.log(x)'
 
       - name: Upload source snapshot
         uses: actions/upload-artifact@v4
