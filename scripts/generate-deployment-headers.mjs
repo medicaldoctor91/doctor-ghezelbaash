@@ -5,6 +5,8 @@ import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { HERO_IMAGE_768_HREF } from "../src/lib/hero-image-contract.mjs";
+import release from "../src/data/release.json" with { type: "json" };
+import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -42,19 +44,90 @@ const styleBlocks = [
 const scriptBlocks = [
   ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
 ].map((match) => ({ attrs: match[1], body: match[2] }));
+const attributeValue = (attrs, name) => {
+  const match = attrs.match(
+    new RegExp(`(?:^|\\s)${name}=(["'])(.*?)\\1`, "i"),
+  );
+  return match?.[2] ?? null;
+};
 const ldScripts = scriptBlocks.filter((script) =>
   /type=["']application\/ld\+json["']/i.test(script.attrs),
 );
+const ldDocuments = new Map();
 for (const script of ldScripts) {
+  const id = attributeValue(script.attrs, "id");
+  if (!id || ldDocuments.has(id))
+    throw new Error(`Published JSON-LD requires a unique script id: ${id || "missing"}`);
   const document = JSON.parse(script.body);
   if (document["@context"] !== "https://schema.org")
     throw new Error("Published JSON-LD must use the public Schema.org context");
   if (!Array.isArray(document["@graph"]))
     throw new Error("Published JSON-LD must contain @graph");
+  ldDocuments.set(id, document);
 }
+const expectedLdIds = ["entity-core", "entity-support"];
+if (
+  ldDocuments.size !== expectedLdIds.length ||
+  expectedLdIds.some((id) => !ldDocuments.has(id))
+)
+  throw new Error(
+    `Published JSON-LD scripts must be exactly: ${expectedLdIds.join(", ")}`,
+  );
+
+const nodeTypes = (node) =>
+  [node?.["@type"]].flat().filter((value) => typeof value === "string");
+const coreDocument = ldDocuments.get("entity-core");
+const pageId = `${release.canonicalUrl}#webpage`;
+const pageNode = coreDocument["@graph"].find((node) => node?.["@id"] === pageId);
+const personNode = coreDocument["@graph"].find(
+  (node) => node?.["@id"] === release.primaryEntity.id,
+);
+if (
+  !pageNode ||
+  !nodeTypes(pageNode).includes("ProfilePage") ||
+  pageNode.mainEntity?.["@id"] !== release.primaryEntity.id ||
+  !personNode ||
+  !nodeTypes(personNode).includes("Person")
+)
+  throw new Error(
+    "Google profile-page contract requires ProfilePage mainEntity -> canonical Person",
+  );
+
 const execScripts = scriptBlocks.filter(
   (script) => !/type=["']application\/ld\+json["']/i.test(script.attrs),
 );
+const buildIdentity = resolveBuildIdentity();
+const namedMeta = new Map(
+  [...html.matchAll(/<meta\\b([^>]*)>/gi)]
+    .map((match) => match[1])
+    .map((attrs) => [
+      attributeValue(attrs, "name"),
+      attributeValue(attrs, "content"),
+    ])
+    .filter(([name]) => name),
+);
+for (const [name, expected] of [
+  ["x-build-release", release.release],
+  ["x-build-commit", buildIdentity.commit],
+  ["x-build-branch", buildIdentity.branch],
+  ["x-build-provider", buildIdentity.provider],
+]) {
+  if (namedMeta.get(name) !== expected)
+    throw new Error(
+      `Deployment identity mismatch for ${name}: expected=${expected} actual=${namedMeta.get(name) || "missing"}`,
+    );
+}
+const buildInfo = JSON.parse(
+  await readFile(path.join(dist, "build-info.json"), "utf8"),
+);
+if (
+  buildInfo.release !== release.release ||
+  buildInfo.commit !== buildIdentity.commit ||
+  buildInfo.branch !== buildIdentity.branch ||
+  buildInfo.provider !== buildIdentity.provider
+)
+  throw new Error("build-info.json does not match the rendered deployment identity");
+
 const notFoundStyles = [
   ...notFound.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi),
 ].map((match) => match[1]);
@@ -182,6 +255,8 @@ console.log(
       descriptorResources: (dataPackage.resources || []).length,
       headersSha256: shaHex(Buffer.from(headers)),
       descriptorIntegrity: "PASS",
+      jsonLdContract: "PASS",
+      buildIdentity,
     },
     null,
     2,
