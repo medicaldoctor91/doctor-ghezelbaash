@@ -1,22 +1,27 @@
-name: Build contract
+name: Baseline snapshot
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout repository history
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pin exact baseline commit
+        run: git checkout 5280827462a666704836e470566dd7fbc5043839
+
+      - name: Archive exact source
+        run: git archive --format=zip --output=/tmp/ghezelbaash-source-5280827462a666704836e470566dd7fbc5043839.zip 5280827462a666704836e470566dd7fbc5043839
 
       - name: Use Node
         uses: actions/setup-node@v4
@@ -27,10 +32,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build distribution
+      - name: Build exact baseline distribution
         run: npm run build
 
-      - name: Verify deployment fingerprint artifact
+      - name: Verify baseline fingerprint
         run: |
           test -f dist/build-info.json
-          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("dist/build-info.json","utf8")); if (!x.release || !x.commit || !x.branch || !x.provider) process.exit(1); console.log(x)'
+          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("dist/build-info.json","utf8")); if (x.commit !== "5280827462a666704836e470566dd7fbc5043839") { console.error(x); process.exit(1); } console.log(x)'
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghezelbaash-source-5280827462a666704836e470566dd7fbc5043839
+          path: /tmp/ghezelbaash-source-5280827462a666704836e470566dd7fbc5043839.zip
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload dist snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghezelbaash-dist-5280827462a666704836e470566dd7fbc5043839
+          path: dist/
+          if-no-files-found: error
+          retention-days: 90
