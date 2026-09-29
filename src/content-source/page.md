@@ -9,42 +9,7 @@ socialAlternateLocales: ["en_US", "ar_IQ", "ckb_IQ"]
 footerGovernance: {"summary":"حریم خصوصی و شرایط استفاده","reputationLead":"امتیاز کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع","mapsTerms":{"href":"https://www.google.com/help/terms_maps/","label":"شرایط Google Maps"},"privacyPolicy":{"href":"https://policies.google.com/privacy","label":"خط‌مشی حریم خصوصی Google"},"tail":"است."}
 ---
 <!-- Google-facing LocalBusiness JSON-LD is intentionally authored directly in the canonical page source. -->
-<script id="manual-google-localbusiness-jsonld" type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": [
-    "MedicalClinic",
-    "LocalBusiness"
-  ],
-  "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
-  "name": "کلینیک زیبایی دکتر سعید قزلباش",
-  "alternateName": "Dr. Saeed Ghezelbash Aesthetic Clinic",
-  "url": "https://www.ghezelbaash.ir/",
-  "telephone": "+989308209494",
-  "image": [
-    "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.3bf7a3083ee9.webp",
-    "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.a73e2b1cde35.webp",
-    "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1c8cf4717021.webp"
-  ],
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "میدان ۱۷ شهریور، ساختمان ویستا",
-    "addressLocality": "کرمانشاه",
-    "addressRegion": "Kermanshah Province",
-    "postalCode": "6714657412",
-    "addressCountry": "IR"
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 34.3401243,
-    "longitude": 47.0851778
-  },
-  "sameAs": [
-    "https://www.google.com/maps?cid=12350483144643112463",
-    "https://www.openstreetmap.org/node/13530287096"
-  ]
-}
-</script>
+<script id="manual-google-localbusiness-jsonld" type="application/ld+json">{"@context":"https://schema.org","@type":["MedicalClinic","LocalBusiness"],"@id":"https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah","name":"کلینیک زیبایی دکتر سعید قزلباش","alternateName":"Dr. Saeed Ghezelbash Aesthetic Clinic","url":"https://www.ghezelbaash.ir/","telephone":"+989308209494","image":["https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.3bf7a3083ee9.webp","https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.a73e2b1cde35.webp","https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1c8cf4717021.webp"],"address":{"@type":"PostalAddress","streetAddress":"میدان ۱۷ شهریور، ساختمان ویستا","addressLocality":"کرمانشاه","addressRegion":"Kermanshah Province","postalCode":"6714657412","addressCountry":"IR"},"geo":{"@type":"GeoCoordinates","latitude":34.3401243,"longitude":47.0851778},"sameAs":["https://www.google.com/maps?cid=12350483144643112463","https://www.openstreetmap.org/node/13530287096"]}</script>
 <header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity author publisher reviewedBy about" itemscope itemtype="https://schema.org/Person">
 <h1 class="hero-title" id="saeed-ghezelbash"><span class="hero-title__name" itemprop="name"><a href="https://profile.google.com/@doctor.ghezelbaash">دکتر سعید قزلباش</a></span><span class="hero-title__semantic-separator">؛ </span><span class="hero-title__descriptor" id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span>
 </h1>
