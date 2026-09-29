@@ -98,7 +98,7 @@ const execScripts = scriptBlocks.filter(
 );
 const buildIdentity = resolveBuildIdentity();
 const namedMeta = new Map(
-  [...html.matchAll(/<meta\\b([^>]*)>/gi)]
+  [...html.matchAll(/<meta\b([^>]*)>/gi)]
     .map((match) => match[1])
     .map((attrs) => [
       attributeValue(attrs, "name"),
