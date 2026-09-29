@@ -23,7 +23,7 @@ const pageSurface = (
   .sort();
 if (
   JSON.stringify(pageSurface) !==
-  JSON.stringify(["404.astro", "favicon.png.ts", "index.astro"])
+  JSON.stringify(["404.astro", "build-info.json.ts", "favicon.png.ts", "index.astro"])
 )
   throw new Error(`Astro route surface drift: ${pageSurface.join(", ")}`);
 
