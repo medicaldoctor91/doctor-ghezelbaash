@@ -2,7 +2,7 @@
 import globalCss from '../styles/global.css?raw';
 import renderCalibrationRaw from '../data/render-calibration.json?raw';
 import release from '../data/release.json';
-import { headGraph, headGraphRaw, supportGraphRaw } from '../lib/knowledge-graph';
+import { headGraph } from '../lib/knowledge-graph';
 import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs';
 import { assembleCssSource, deriveCssDelivery } from '../lib/css-delivery.mjs';
 import DocumentHead from '../components/DocumentHead.astro';
@@ -110,14 +110,6 @@ const googlePageMicrodata = isMain
         })();
       </script>
       <noscript><link href={externalCssHref} rel="stylesheet"></noscript>
-      {isMain && (
-        <script
-          is:inline
-          id="entity-core"
-          type="application/ld+json"
-          set:html={headGraphRaw}
-        ></script>
-      )}
     </DocumentHead>
   </head>
   <body>
@@ -146,14 +138,6 @@ const googlePageMicrodata = isMain
         <slot />
       </article>
     </main>
-    {isMain && (
-      <script
-        is:inline
-        id="entity-support"
-        type="application/ld+json"
-        set:html={supportGraphRaw}
-      ></script>
-    )}
     {!noindex && footerGovernance && <SiteFooter governance={footerGovernance} />}
     {!noindex && <FloatingActionDock />}
     {isMain && <GuideNavigator />}
