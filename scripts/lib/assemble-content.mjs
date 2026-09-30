@@ -1,11 +1,9 @@
 import path from "node:path";
-import { readFile, readdir } from "node:fs/promises";
-import { bindHeroPictureSizes } from "../../src/lib/hero-image-contract.mjs";
-import { bindReleaseTokens } from "../../src/lib/release-tokens.mjs";
-import { bindSiteTokens, deriveSiteData } from "../../src/lib/site-data.mjs";
+import { readdir } from "node:fs/promises";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../../src/lib/answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
+import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 
 const compactAuthoredHtmlLayout = (source) =>
   String(source).replace(/>\s*\r?\n\s*</g, "><");
@@ -32,16 +30,6 @@ export function physicianImageUrls(graph, release) {
   return urls;
 }
 
-const bindPhysicianImages = (content, graph, release) => {
-  const token = "{{PHYSICIAN_IMAGE_MICRODATA}}";
-  if (content.split(token).length !== 2)
-    throw new Error("Canonical content requires exactly one physician image token");
-  const escapeAttribute = (value) => value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
-  return content.replace(token, physicianImageUrls(graph, release)
-    .map((url) => `<link href="${escapeAttribute(url)}" itemprop="image">`)
-    .join(""));
-};
-
 async function canonicalSourceNames(root = process.cwd()) {
   const sourceDir = path.join(root, "src/content-source");
   const names = (await readdir(sourceDir))
@@ -63,20 +51,10 @@ export async function assembleCanonicalContent({
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
   const names = await canonicalSourceNames(root);
-  const rawRelease = await readFile(
-    path.join(root, "src/data/release.json"),
-    "utf8",
-  ).then(JSON.parse);
-  const release = derivePublicationData(rawRelease, graph);
-  const site = deriveSiteData(release, graph);
-  let content = await readFile(
-    path.join(root, "src/content-source/page.md"),
-    "utf8",
-  );
-  content = bindHeroPictureSizes(content);
-  content = bindReleaseTokens(content, release);
-  content = bindSiteTokens(content, site);
-  content = bindPhysicianImages(content, graph, release);
+  const { lifecycle, pageSource: content } = readCanonicalInputs(root);
+  const release = derivePublicationData(lifecycle, graph);
+  if (/{{[A-Z][A-Z0-9_]*}}/.test(content))
+    throw new Error("Canonical page contains an unresolved legacy token");
   const answerProjection = deriveCanonicalAnswerProjection(graph, release);
   validateProjectedAnswerHtml(content, answerProjection);
   return {

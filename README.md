@@ -1,8 +1,6 @@
-# Dr. Saeed Ghezelbash — production source
+# Dr. Saeed Ghezelbash — static source
 
-Canonical static Astro source for <https://www.ghezelbaash.ir/>.
-
-This repository contains only the authored inputs and deterministic build machinery required to reproduce the production website and its machine-readable distribution. External publication, release orchestration, platform repair, live verification and one-time migration tooling are intentionally not part of the final website source.
+Static Astro source for <https://www.ghezelbaash.ir/>.
 
 ## Build
 
@@ -11,31 +9,33 @@ npm ci
 npm run build
 ```
 
-The build:
+The build produces the complete static website in `dist/`, serializes the graph to RDF, exports readable and machine formats, and checks the finished files. It does not update external repositories or publish a release.
 
-1. clears the generated workspace and previous `dist/` output;
-2. serializes the canonical JSON-LD graph to RDF;
-3. generates page, semantic, retrieval and contact projections;
-4. generates the website’s dataset descriptors;
-5. builds the static Astro routes;
-6. materializes registered static resources, redirects and stable media aliases;
-7. copies the static IndexNow verification key;
-8. derives deployment headers from the finished distribution.
+## The two canonical files
 
-Generated files belong under `.generated/` and `dist/` and are not committed as authored source.
+- `src/content-source/page.md` owns the page body, its inline JSON-LD and Microdata, head values, discovery links, resource registry, footer and search labels, intent destinations, retrieval settings, and the complete `llms.txt` guide.
+- `src/data/semantic/knowledge-graph.jsonld` owns the entity facts, identifiers, media rights, Dataset version and distribution URLs, DOI history, distribution titles and profiles, and explicitly authored evidence assessments.
 
-## Canonical authored inputs
+`src/lib/canonical-inputs.mjs` reads those files. Consumers select and format existing data; they do not keep parallel release, evidence, resource, retrieval, or page-graph policy files. Evidence observations are copied faithfully, including absent status or date values. A build does not claim a new external verification.
 
-- `src/content-source/page.md` — human-facing canonical page content.
-- `src/styles/global.css` and `src/data/render-calibration.json` — production presentation inputs.
-- `src/data/semantic/knowledge-graph.jsonld` — canonical entity and semantic graph.
-- `src/data/semantic/head-profile.json` and `support-profile.json` — graph projection policies.
-- `src/data/semantic/shapes.ttl` — published SHACL distribution source.
-- `src/data/release.json` — current release identity and canonical entity pointers.
-- `src/data/machine-resources.json` — machine-resource registry.
-- `src/data/evidence-registry.json`, `src/data/retrieval/`, `src/data/templates/`, `src/data/redirects.json`, and `src/data/stable-media-aliases.json` — deterministic distribution inputs.
-- `public/` — canonical static media and browser-facing assets.
+The current Dataset release label is `1.3.3`. Historical DOI records retain their actual versions and publication dates. Updating the current content does not automatically increment that label. Publication dates and the current Dataset revision date describe different events.
 
-Only website-consumed resources are generated. The separately published Hugging Face Viewer tables and Zenodo release remain available in their existing repositories.
+The page contains concrete authored values. There are no contact, release, image-size, or image-Microdata placeholders to inject at build time. When an authored fact changes, update the corresponding graph data and visible page text where applicable. The `llmsGuide` field is authored text and is maintained with the page.
 
-Cloudflare Pages builds from the `main` branch, which is the canonical website source. The normal build has no code path that mutates Hugging Face, Zenodo, GitHub releases, Google Places, or any other external service.
+Microdata is HTML markup. ImageObject attribution and licensing are stored directly on the canonical page's image figure. The image binaries are static assets; HTML Microdata is not inserted into them.
+
+## Presentation and generated files
+
+`src/styles/global.css` contains the complete static presentation, including the preserved chunk-size rules. Astro components provide layout and interaction. `public/` contains media and browser assets. Redirects, media aliases, HTTP-header templates and SHACL shapes are technical delivery or validation inputs.
+
+Generated files live in `.generated/` and `dist/`. File hashes, RDF measurements, build identity and Content Security Policy hashes are measured from outputs and do not become canonical authoring requirements. No fixed graph, answer, passage or resource totals are required.
+
+`npm run validate:dist` checks canonical head values, search destinations, image rights, exact graph publication, resource presence, faithful evidence projections and the absence of legacy placeholders. The normal build also checks HTML structure, authored JSON-LD preservation and descriptor integrity.
+
+## Content paths
+
+The authored graph uses path IRIs. Page headings, answers and linked elements have matching HTML IDs. The build derives a finite set of content paths from the finished document and emits Cloudflare Pages `200` aliases to the single `index.html`; it does not generate a separate copy of the page for each path or use a catchall. The browser navigates these paths with the History API, reveals the destination and moves keyboard focus. Direct path loads receive the same canonical document. Without JavaScript, its full content remains readable.
+
+Legacy redirects point directly to the current content paths. HTML keeps the homepage canonical URL. A shared document CSP covers the path aliases and the existing 404 page; individual machine resources retain their own delivery metadata. This source produces a static distribution and does not deploy it.
+
+Search intent destinations come from `page.md`. Their headings come from each canonical `Answer.url`, without assuming that the answer immediately follows its heading. When the existing detector recognizes an intent, its authored destination is the first result; other results retain the lexical ranking.

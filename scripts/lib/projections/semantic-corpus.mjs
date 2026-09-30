@@ -1,5 +1,6 @@
 import path from "node:path";
-import { readFile, writeFile } from "node:fs/promises";
+import { pageFrontmatter } from "../../../src/lib/canonical-inputs.mjs";
+import { writeFile } from "node:fs/promises";
 import { compileKnowledgeXml } from "../knowledge-xml.mjs";
 import {
   refIds,
@@ -16,7 +17,6 @@ import { deriveCanonicalAnswerProjection } from "../../../src/lib/answer-project
 
 export async function compileSemanticCorpus(context) {
   const {
-    data,
     projections,
     release,
     graph,
@@ -143,7 +143,7 @@ ${answers.join("\n---\n\n")}`,
       graph: "src/data/semantic/knowledge-graph.jsonld",
       answerText: "Answer.text",
       visibleHtml: ".answer-projection[id]",
-      jsonLd: "graph.jsonld#answer-*",
+      jsonLd: "Canonical Answer @id",
       retrieval: "answers.txt::ANSWER",
     },
     records: answerRecords.map((record) => ({
@@ -168,10 +168,7 @@ ${answers.join("\n---\n\n")}`,
     `${JSON.stringify(factMap, null, 2)}\n`,
   );
 
-  const intentSource = await readFile(
-    path.join(data, "templates/llms.template.txt"),
-    "utf8",
-  );
+  const intentSource = pageFrontmatter.llmsGuide;
   const knowledge = compileKnowledgeXml({
     release,
     graph,

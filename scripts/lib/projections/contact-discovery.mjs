@@ -133,7 +133,7 @@ export async function compileContactDiscovery(context) {
   );
   const personPortrait = requiredNode(
     byId,
-    `${release.canonicalUrl}#image-saeed-ghezelbash-portrait-master`,
+    requiredReferenceId(requiredNode(byId, person.mainEntityOfPage["@id"], "physician page").primaryImageOfPage, "primary image"),
     "primary physician portrait",
   );
   if (!Array.isArray(clinic.image) || !clinic.image.length)
@@ -147,7 +147,7 @@ export async function compileContactDiscovery(context) {
     requiredNode(byId, id, "owned clinic image");
   const clinicPhoto = requiredNode(
     byId,
-    `${release.canonicalUrl}#image-ghezelbaash-clinic-interior`,
+    clinicImageIds[0],
     "owned clinic contact photo",
   );
   if (!clinicImageIds.includes(clinicPhoto["@id"]))
@@ -227,11 +227,11 @@ export async function compileContactDiscovery(context) {
     return `${dateModified.replaceAll("-", "")}T000000Z`;
   };
   const doctorRev = vCardRev(
-    `${release.canonicalUrl}doctor.vcf#document`,
+    graph["@graph"].find((node) => node.url === `${release.canonicalUrl}doctor.vcf` && node.about?.["@id"] === person["@id"])?.["@id"],
     "physician vCard document",
   );
   const clinicRev = vCardRev(
-    `${release.canonicalUrl}clinic.vcf#document`,
+    graph["@graph"].find((node) => node.url === `${release.canonicalUrl}clinic.vcf` && node.about?.["@id"] === clinic["@id"])?.["@id"],
     "clinic vCard document",
   );
   await mkdir(generatedPublic, { recursive: true });
@@ -279,7 +279,7 @@ export async function compileContactDiscovery(context) {
       `X-GOOGLE-PLACE-ID:${release.clinic.placeId}`,
       `X-GOOGLE-MAPS-CID:${release.clinic.cid}`,
       `X-OWNER:${release.primaryEntity.id}`,
-      `X-PRICE-RANGE:${release.clinic.priceRange}`,
+      release.clinic.priceRange ? `X-PRICE-RANGE:${release.clinic.priceRange}` : null,
       `X-HOURS:${release.clinic.hours}`,
       `X-ENTITY-VERSION:${release.release}`,
       `REV:${clinicRev}`,
@@ -301,7 +301,7 @@ export async function compileContactDiscovery(context) {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">',
     "  <url>",
     `    <loc>${release.canonicalUrl}</loc>`,
-    `    <lastmod>${requiredNode(byId, `${release.canonicalUrl}#webpage`, "canonical WebPage").dateModified}</lastmod>`,
+    `    <lastmod>${requiredNode(byId, person.mainEntityOfPage["@id"], "canonical WebPage").dateModified}</lastmod>`,
     "",
   ].join("\n");
   for (const url of imageLocs)

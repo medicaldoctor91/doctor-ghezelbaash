@@ -1,4 +1,4 @@
-import release from '../data/release.json';
+import { canonicalLifecycle as release } from '../lib/canonical-inputs.mjs';
 import { resolveBuildIdentity } from '../lib/build-identity.mjs';
 
 export const prerender = true;

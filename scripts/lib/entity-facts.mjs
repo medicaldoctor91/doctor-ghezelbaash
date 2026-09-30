@@ -94,7 +94,7 @@ export function entityFactsCsvwMetadata() {
 }
 
 export function entityFactsRecordSet(canonicalUrl, fileObjectId) {
-  const recordId = `${canonicalUrl}entity-facts.csv#records`;
+  const recordId = `${canonicalUrl}entity-facts.csv/records`;
   if (typeof fileObjectId !== "string" || !URL.canParse(fileObjectId))
     throw new Error("Croissant record set requires the registered distribution IRI");
   return {
@@ -203,7 +203,7 @@ export async function buildEntityFacts({ graph, release, byId, nodeName }) {
     records.push({
       subject: node["@id"], type: nodeTypes(node).join("|"), name: nodeName(node),
       predicate, value: literal, object, object_name: nodeName(byId.get(object)),
-      language, datatype, provenance: sourceUrl, dataset: `${sourceUrl}#dataset`,
+      language, datatype, provenance: sourceUrl, dataset: release.dataset.id,
       version: release.release, modified, row_id: rowId,
       value_kind: valueKind, value_media_type: embedded ? "application/json" : "",
     });

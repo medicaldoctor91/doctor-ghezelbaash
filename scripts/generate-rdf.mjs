@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { datasetRevisionDate } from "./lib/release-graph.mjs";
@@ -13,7 +14,7 @@ const generated = generatedWorkspace();
 const target = path.join(generated.semantic, "knowledge-graph.ttl");
 const lockPath = path.join(generated.semantic, "rdf-lock.json");
 fs.mkdirSync(generated.semantic, { recursive: true });
-const release = JSON.parse(fs.readFileSync("src/data/release.json", "utf8"));
+const release = canonicalLifecycle;
 const doc = JSON.parse(fs.readFileSync(source, "utf8"));
 const measurement = await canonicalizeRdfDocument(doc);
 fs.writeFileSync(target, measurement.text);

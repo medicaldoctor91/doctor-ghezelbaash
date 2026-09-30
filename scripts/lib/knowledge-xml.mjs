@@ -1,3 +1,4 @@
+import { canonicalContentHtmlId } from "../../src/lib/graph-core.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 
 const types = (node) =>
@@ -55,7 +56,7 @@ const canonicalDownloadUrl = (node) => {
   return uniqueUrls[0];
 };
 
-function canonicalIntentClusters(intentSource) {
+function canonicalIntentClusters(intentSource, canonicalUrl) {
   const marker = "## Canonical search-intent clusters";
   const start = intentSource.indexOf(marker);
   if (start < 0)
@@ -65,9 +66,9 @@ function canonicalIntentClusters(intentSource) {
     section = next >= 0 ? rest.slice(0, next) : rest;
   const intents = [
     ...section.matchAll(
-      /^- \[([^\]]+)\]\((https:\/\/www\.ghezelbaash\.ir\/#([^)]+))\)\s*$/gm,
+      /^- \[([^\]]+)\]\((https:\/\/www\.ghezelbaash\.ir\/[^)]+)\)\s*$/gm,
     ),
-  ].map((match) => ({ label: match[1], url: match[2], anchor: match[3] }));
+  ].map((match) => ({ label: match[1], url: match[2], anchor: canonicalContentHtmlId(match[2], canonicalUrl) }));
   if (!intents.length)
     throw new Error("knowledge.xml: no canonical intent clusters were parsed");
   return `  <intentClusters count="${intents.length}">${intents.map((item) => `<intent id="${xml(item.anchor)}" url="${xml(item.url)}"><label>${xml(item.label)}</label></intent>`).join("")}</intentClusters>`;
@@ -145,7 +146,7 @@ function canonicalMediaInventory(nodes, byId) {
 
 function canonicalAestheticAuthoredWorks(nodes, personId) {
   const specialtyId =
-    "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine";
+    "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine";
   const refIds = (value) =>
     (Array.isArray(value) ? value : value == null ? [] : [value])
       .map(refId)
@@ -234,7 +235,7 @@ export function compileKnowledgeXml({
   if (!nodes.length) throw new Error("knowledge.xml: canonical graph is empty");
   const person = byId.get(release.primaryEntity.id);
   const clinic = byId.get(release.clinic.id);
-  const dataset = byId.get(`${release.canonicalUrl}graph.jsonld#dataset`);
+  const dataset = byId.get(release.dataset.id);
   if (!person || !clinic || !dataset)
     throw new Error(
       "knowledge.xml: canonical entity, clinic or Dataset node missing",
@@ -314,7 +315,7 @@ export function compileKnowledgeXml({
     ownedClinicXml,
     `  <dataset id="${xml(dataset["@id"])}" version="${xml(release.release)}" creator="${xml(release.primaryEntity.id)}" publisher="${xml(release.primaryEntity.id)}">${distributionXml}</dataset>`,
     `  <answers count="${questions.length}">${questionXml}</answers>`,
-    canonicalIntentClusters(intentSource),
+    canonicalIntentClusters(intentSource, release.canonicalUrl),
     canonicalEvidence(evidenceRegistry),
     canonicalAestheticAuthoredWorks(nodes, person["@id"]),
     canonicalMediaInventory(nodes, byId),

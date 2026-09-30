@@ -3,8 +3,6 @@ import { indexCanonicalGraph } from "./graph-core.mjs";
 const SCHEMA_VERSION = "3.0";
 const SOURCE = "Google Places API (New)";
 const XSD_DATETIME = "http://www.w3.org/2001/XMLSchema#dateTime";
-const RATING_SUFFIX = "observation-clinic-google-maps-rating-current";
-const EVIDENCE_SUFFIX = "evidence-google-maps-clinic";
 
 const values = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
@@ -62,15 +60,15 @@ export function validateReputationObservation(graph, release) {
     throw new Error("Clinic reputation requires canonical publication identity");
 
   const { byId } = indexCanonicalGraph(graph);
-  const ratingNode = requireObservation(
-    byId,
-    `${canonicalUrl}#${RATING_SUFFIX}`,
-    {
-      entityId: entity,
-      property: "https://schema.org/ratingValue",
-      evidenceId: `${canonicalUrl}#${EVIDENCE_SUFFIX}`,
-    },
-  );
+  const candidates = graph["@graph"].filter((node) => types(node).includes("Observation") &&
+    refId(node.observationAbout) === entity && node.measuredProperty === "https://schema.org/ratingValue" && node.measurementMethod === SOURCE);
+  if (candidates.length !== 1) throw new Error("Canonical clinic requires one recorded rating observation");
+  const observation = candidates[0];
+  const evidenceId = exactRef(observation["prov:wasDerivedFrom"], "rating source");
+  if (!byId.has(evidenceId)) throw new Error("Canonical rating source is missing");
+  const ratingNode = requireObservation(byId, observation["@id"], {
+    entityId: entity, property: "https://schema.org/ratingValue", evidenceId,
+  });
   const rating = Number(ratingNode.value);
   const ratingObservedAt = explicitDateTime(ratingNode.observationDate);
   if (

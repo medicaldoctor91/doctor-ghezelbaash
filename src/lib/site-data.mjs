@@ -34,6 +34,17 @@ function deriveSiteContactDataFromFacts(facts) {
   if (!/^\+98\d{10}$/.test(phone))
     throw new Error(`Invalid canonical clinic telephone: ${clinic.telephone}`);
   const localPhone = `0${phone.slice(3)}`;
+  const actions = [...new Set([clinic.potentialAction, facts.person.potentialAction].flat(2).map((ref) => ref?.["@id"]).filter(Boolean))].map((id) => facts.byId.get(id));
+  const actionTarget = (type, recipient, predicate) => {
+    const matches = actions.filter((node) => [node?.["@type"]].flat().includes(type) &&
+      node.recipient?.["@id"] === recipient && predicate(node.target));
+    if (matches.length !== 1) throw new Error(`Canonical action is ambiguous: ${type} ${recipient}`);
+    return matches[0].target;
+  };
+  const chatUrl = actionTarget("CommunicateAction", facts.person["@id"], (target) => target?.startsWith("https://ig.me/"));
+  const telHref = actionTarget("CommunicateAction", clinic["@id"], (target) => target?.startsWith("tel:"));
+  const maps = actions.filter((node) => [node?.["@type"]].flat().includes("ViewAction") && node.object?.["@id"] === clinic["@id"]);
+  if (maps.length !== 1) throw new Error("Canonical clinic map action is missing");
   const instagramUrl = facts.instagramUrl;
   const instagramHandle = new URL(instagramUrl).pathname
     .split("/")
@@ -58,14 +69,14 @@ function deriveSiteContactDataFromFacts(facts) {
 
   return Object.freeze({
     phone,
-    telHref: `tel:${phone}`,
+    telHref,
     phoneDisplay: faDigits(localPhone),
     phoneDisplayGrouped: faDigits(groupLocalPhone(localPhone)),
     phoneDisplayInternational: groupInternationalPhone(phone),
     instagramUrl,
     instagramHandle,
-    chatUrl: `https://ig.me/m/${instagramHandle}`,
-    mapsUrl: `https://www.google.com/maps?cid=${facts.identifiers.clinic.cid}`,
+    chatUrl,
+    mapsUrl: maps[0].target,
     directionsUrl: directions.toString(),
     clinicName,
     street,
@@ -104,49 +115,3 @@ export function deriveSiteData(release, graph) {
   });
 }
 
-const siteTokenPattern = /{{(?:CLINIC_[A-Z0-9_]+|OFFICIAL_[A-Z0-9_]+)}}/g;
-
-function siteTokenValues(site) {
-  if (
-    !site?.telHref ||
-    !site?.instagramUrl ||
-    !site?.chatUrl ||
-    !site?.mapsUrl ||
-    !site?.hoursOpenFa ||
-    !site?.hoursCloseFa
-  )
-    throw new Error("Invalid canonical site token source");
-  return Object.freeze({
-    "{{CLINIC_TEL_HREF}}": site.telHref,
-    "{{CLINIC_PHONE_FA}}": site.phoneDisplayGrouped,
-    "{{CLINIC_PHONE_INTL}}": site.phoneDisplayInternational,
-    "{{OFFICIAL_INSTAGRAM_URL}}": site.instagramUrl,
-    "{{OFFICIAL_CHAT_URL}}": site.chatUrl,
-    "{{CLINIC_MAPS_URL}}": site.mapsUrl,
-    "{{CLINIC_POSTAL_CODE_FA}}": faDigits(site.postalCode),
-    "{{CLINIC_HOURS_OPEN_FA}}": site.hoursOpenFa,
-    "{{CLINIC_HOURS_CLOSE_FA}}": site.hoursCloseFa,
-    "{{CLINIC_HOURS_OPEN_COMPACT_FA}}": site.hoursOpenCompactFa,
-    "{{CLINIC_HOURS_CLOSE_COMPACT_FA}}": site.hoursCloseCompactFa,
-    "{{CLINIC_GOOGLE_RATING_RAW}}": String(site.googleRating),
-    "{{CLINIC_GOOGLE_RATING_FA}}": site.googleRatingFa,
-  });
-}
-
-export function bindSiteTokens(content, site) {
-  const source = String(content);
-  const values = siteTokenValues(site);
-  const seen = new Set(source.match(siteTokenPattern) || []);
-  for (const token of seen)
-    if (!Object.hasOwn(values, token))
-      throw new Error(`Unknown site token: ${token}`);
-  const bound = source.replace(siteTokenPattern, (token) =>
-    String(values[token]),
-  );
-  const unresolved = bound.match(siteTokenPattern) || [];
-  if (unresolved.length)
-    throw new Error(
-      `Unresolved site token: ${[...new Set(unresolved)].join(", ")}`,
-    );
-  return bound;
-}

@@ -1,10 +1,6 @@
 ---
-import release from '../data/release.json';
-import {
-  HERO_IMAGE_768_HREF,
-  HERO_IMAGE_SIZES,
-  HERO_PRELOAD_SRCSET,
-} from '../lib/hero-image-contract.mjs';
+import { canonicalLifecycle as release, pageFrontmatter } from '../lib/canonical-inputs.mjs';
+const { href: HERO_IMAGE_768_HREF, sizes: HERO_IMAGE_SIZES, srcset: HERO_PRELOAD_SRCSET } = pageFrontmatter.heroPreload;
 import { deriveCanonicalAuthority, selectCanonicalSocialImage } from '../lib/canonical-authority.mjs';
 import { canonicalGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
@@ -32,9 +28,10 @@ interface Props {
   isMain: boolean;
 }
 
-const appleMobileWebAppTitle = 'دکتر قزلباش';
-const themeColor = '#075244';
-const twitterCard = 'summary_large_image';
+const headValues = pageFrontmatter.headValues;
+const appleMobileWebAppTitle = headValues['apple-mobile-web-app-title'];
+const themeColor = headValues['theme-color'];
+const twitterCard = headValues['twitter:card'];
 const buildIdentity = resolveBuildIdentity();
 const authority = deriveCanonicalAuthority(release, canonicalGraph);
 const {
@@ -245,7 +242,7 @@ const discoveryLinks: DiscoveryLink[] = [
 {
   isMain && (
     <meta
-      content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ"
+      content={headValues['google-site-verification']}
       name="google-site-verification"
     >
   )
@@ -260,8 +257,8 @@ const discoveryLinks: DiscoveryLink[] = [
     >
   )
 }
-{isMain && <meta content="telephone=no" name="format-detection">}
-{isMain && <meta content="light" name="color-scheme">}
+{isMain && <meta content={headValues['format-detection']} name="format-detection">}
+{isMain && <meta content={headValues['color-scheme']} name="color-scheme">}
 <meta content={themeColor} name="theme-color">
 {isMain && <meta content={release.release} name="x-build-release">}
 {isMain && <meta content={buildIdentity.commit} name="x-build-commit">}

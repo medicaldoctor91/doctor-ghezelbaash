@@ -1,4 +1,12 @@
-import registry from "../data/machine-resources.json" with { type: "json" };
+import { pageFrontmatter, canonicalGraph } from "./canonical-inputs.mjs";
+const byId = new Map(canonicalGraph["@graph"].map((node) => [node["@id"], node]));
+const registry = { resources: pageFrontmatter.machineResources.map((resource) => {
+  const node = byId.get(resource.distributionIri);
+  return { ...resource,
+    descriptorTitle: node?.["dcterms:title"]?.["@value"] ?? node?.["dcterms:title"] ?? node?.name,
+    profileIri: node?.["dcterms:conformsTo"]?.["@id"] ?? node?.["dcterms:conformsTo"],
+  };
+}) };
 
 export const quoteHttpParameter = (value) => {
   if (typeof value !== "string" || /[\r\n\u0000-\u001f\u007f]/.test(value))
@@ -65,7 +73,7 @@ const distributionIris = resources.map((resource) => resource.distributionIri).f
 if (new Set(distributionIris).size !== distributionIris.length)
   throw new Error("Duplicate machine distribution IRI");
 for (const resource of resources) {
-  if (resource.distributionIri && !/^https?:\/\/[^\s"<>]+#.+$/.test(resource.distributionIri))
+  if (resource.distributionIri && (!/^https?:\/\/[^\s"<>]+$/.test(resource.distributionIri) || !byId.has(resource.distributionIri)))
     throw new Error(`Invalid distribution IRI: ${resource.path}`);
   if (resource.descriptorRoles.some((role) => !["dcat", "data-package", "croissant"].includes(role)))
     throw new Error(`Unknown descriptor role: ${resource.path}`);

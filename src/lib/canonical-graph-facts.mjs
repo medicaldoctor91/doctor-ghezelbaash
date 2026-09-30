@@ -1,4 +1,4 @@
-import { indexCanonicalGraph } from "./graph-core.mjs";
+import { indexCanonicalGraph, identifierFor } from "./graph-core.mjs";
 
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
@@ -60,49 +60,33 @@ export function deriveCanonicalGraphFacts(release, graph) {
   };
   const person = requireNode(release.primaryEntity.id, "physician");
   const clinic = requireNode(release.clinic.id, "clinic");
-  const page = requireNode(`${base}#webpage`, "WebPage");
-  const website = requireNode(`${base}#website`, "WebSite");
+  const page = requireNode(exactRef(person.mainEntityOfPage, "physician mainEntityOfPage"), "WebPage");
+  const website = requireNode(exactRef(page.isPartOf, "WebPage isPartOf"), "WebSite");
   const address = requireNode(
     exactRef(clinic.address, "clinic address"),
     "clinic address",
   );
-  const identifierNode = (owner, suffix, label) => {
-    const id = `${base}#${suffix}`;
-    const node = requireNode(id, label);
-    const references = asArray(owner.identifier).map(refId);
-    if (
-      references.filter((reference) => reference === id).length !== 1 ||
-      !asArray(node["@type"]).includes("PropertyValue")
-    )
-      throw new Error(
-        `Canonical ${label} must be linked once from its owner as a PropertyValue`,
-      );
-    nonempty(node.value, label);
-    return node;
+  const hours = asArray(clinic.openingHoursSpecification).map((ref) => requireNode(exactRef(ref, "opening hours"), "opening hours"));
+  const weekdaySpecs = hours.filter((node) => asArray(node.dayOfWeek).includes("https://schema.org/Saturday"));
+  const fridaySpecs = hours.filter((node) => asArray(node.dayOfWeek).includes("https://schema.org/Friday"));
+  if (weekdaySpecs.length !== 1 || fridaySpecs.length !== 1)
+    throw new Error("Canonical clinic requires its weekday and Friday specifications");
+  const [weekdayHours] = weekdaySpecs;
+  const [friday] = fridaySpecs;
+  const clock = (value) => {
+    const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+    if (!match || Number(match[1]) > 23 || Number(match[2]) > 59 || Number(match[3] || 0) > 59)
+      throw new Error(`Invalid canonical opening time: ${value}`);
+    return { text: `${match[1]}:${match[2]}`, seconds: Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3] || 0) };
   };
-  const identifierValue = (owner, suffix, label) =>
-    identifierNode(owner, suffix, label).value;
-
-  const openingHours = nonempty(clinic.openingHours, "clinic openingHours");
-  const hoursMatch = openingHours.match(/^Sa-Th (\d{2}:\d{2})-(\d{2}:\d{2})$/);
-  if (!hoursMatch)
-    throw new Error(`Unsupported canonical clinic openingHours: ${openingHours}`);
-  const weekdayHours = requireNode(
-    `${base}#clinic-opening-hours-sat-thu`,
-    "Saturday–Thursday opening hours",
-  );
-  const friday = requireNode(`${base}#clinic-friday-closed`, "Friday closure");
-  const openingHourRefs = asArray(clinic.openingHoursSpecification).map(refId);
-  const fridayClosed =
-    openingHourRefs.includes(weekdayHours["@id"]) &&
-    openingHourRefs.includes(friday["@id"]) &&
-    asArray(friday["@type"]).includes("OpeningHoursSpecification") &&
-    friday.dayOfWeek === "https://schema.org/Friday" &&
-    friday.opens === "00:00" &&
-    friday.closes === "00:00";
-  if (!fridayClosed) throw new Error("Canonical Friday closure drift");
-
-
+  const open = clock(weekdayHours.opens), close = clock(weekdayHours.closes);
+  const fridayClosed = clock(friday.opens).seconds === 0 && clock(friday.closes).seconds === 0;
+  const weekdays = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"].map((day) => `https://schema.org/${day}`);
+  if (open.seconds >= close.seconds || !fridayClosed ||
+      weekdays.length !== asArray(weekdayHours.dayOfWeek).length ||
+      weekdays.some((day) => !asArray(weekdayHours.dayOfWeek).includes(day)) ||
+      clinic.openingHours !== `Sa-Th ${open.text}-${close.text}`)
+    throw new Error("Canonical clinic opening-hour representations disagree");
 
   const reviewedBy = exactRef(page.reviewedBy, "WebPage reviewedBy");
   if (reviewedBy !== release.primaryEntity.id)
@@ -138,24 +122,16 @@ export function deriveCanonicalGraphFacts(release, graph) {
     instagramUrl,
     openStreetMapUrl,
     clinicHours: Object.freeze({
-      open: hoursMatch[1],
-      close: hoursMatch[2],
+      open: open.text,
+      close: close.text,
       fridayClosed,
     }),
     weekdayHours,
     fridayClosure: friday,
     identifiers: Object.freeze({
       clinic: Object.freeze({
-        placeId: identifierValue(
-          clinic,
-          "identifier-clinic-google-place-id",
-          "clinic Google Place ID",
-        ),
-        cid: identifierValue(
-          clinic,
-          "identifier-clinic-google-maps-cid",
-          "clinic Google Maps CID",
-        ),
+        placeId: identifierFor(clinic, byId, "Google Place ID").value,
+        cid: identifierFor(clinic, byId, "Google Maps CID").value,
       }),
     }),
   });
@@ -178,19 +154,13 @@ export function deriveClinicOwnerConfirmation(facts) {
   )
     throw new Error("Clinic owner confirmation requires canonical graph facts");
 
-  const ownerConfirmationId = `${base}#claim-clinic-owner-confirmed-operating-facts`;
-  const ownerConfirmation = byId.get(ownerConfirmationId);
-  if (!ownerConfirmation)
-    throw new Error(
-      `Canonical authority missing owner-confirmed clinic claim: ${ownerConfirmationId}`,
-    );
-
+  const expectedConfirmationAbout = [clinic["@id"], weekdayHours["@id"], fridayClosure["@id"]];
+  const claims = asArray(clinic.subjectOf).map(refId).map((id) => byId.get(id)).filter((node) =>
+    asArray(node?.["@type"]).includes("Claim") && refId(node.author) === person["@id"] &&
+    expectedConfirmationAbout.every((id) => asArray(node.about).map(refId).includes(id)));
+  if (claims.length !== 1) throw new Error("Canonical clinic requires one owner-confirmed operating-facts claim");
+  const [ownerConfirmation] = claims;
   const confirmationAbout = asArray(ownerConfirmation.about).map(refId);
-  const expectedConfirmationAbout = [
-    clinic["@id"],
-    weekdayHours["@id"],
-    fridayClosure["@id"],
-  ];
   const ownerConfirmationDate = nonempty(
     ownerConfirmation.dateCreated,
     "owner-confirmed clinic claim dateCreated",

@@ -23,7 +23,7 @@ export function assertCloudflareHeadersContract(headers) {
 
 export function compileHeadersTemplate(
   template,
-  { mainCsp, csp404, httpResourceLinks, heroPreloadHref } = {},
+  { mainCsp, csp404, documentCsp, httpResourceLinks, heroPreloadHref } = {},
 ) {
   const source = String(template);
   if (typeof mainCsp !== "string" || !mainCsp)
@@ -38,6 +38,7 @@ export function compileHeadersTemplate(
   const bindings = new Map([
     ["{{MAIN_CSP}}", mainCsp],
     ["{{404_CSP}}", csp404],
+    ["{{DOCUMENT_CSP}}", documentCsp],
     ["{{HTTP_RESOURCE_LINKS}}", httpResourceLinks],
     ["{{HERO_PRELOAD_HREF}}", heroPreloadHref],
   ]);

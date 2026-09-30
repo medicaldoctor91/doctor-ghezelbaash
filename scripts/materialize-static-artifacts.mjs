@@ -8,6 +8,8 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
+import { canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
+import { contentRoutePaths } from "./lib/content-routes.mjs";
 import {
   canonicalHostRedirectRows,
   loadRedirectRegistry,
@@ -74,7 +76,7 @@ const validateStableAliases = (aliases) => {
   for (const alias of aliases) {
     if (
       !alias ||
-      ![alias.path, alias.target, alias.imageId].every(
+      ![alias.path, alias.target].every(
         (value) => typeof value === "string" && value.length,
       )
     )
@@ -107,7 +109,14 @@ for (const artifact of STATIC_ARTIFACTS)
   await copyExact(artifact.source, artifact.path);
 const redirectRegistry = await loadRedirectRegistry(root);
 const canonicalRedirects = canonicalHostRedirectRows(redirectRegistry);
-await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry));
+const contentPaths = contentRoutePaths(await readFile(path.join(dist, "index.html"), "utf8"), canonicalLifecycle.canonicalUrl);
+const registeredSources = new Set(canonicalRedirects.map((row) => row.source));
+if (contentPaths.some((route) => registeredSources.has(route)))
+  throw new Error("Authored content path collides with a legacy redirect");
+if (canonicalRedirects.length + contentPaths.length > 2000)
+  throw new Error("Static document aliases exceed the deployment redirect limit");
+await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry) +
+  contentPaths.map((route) => `${route} /index.html 200`).join("\n") + "\n");
 const generatedPublic = path.join(root, ".generated/public");
 const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)
   .filter((source) => path.posix.dirname(source) === ".generated/public")
@@ -190,6 +199,7 @@ console.log(
       staleGeneratedAssetsRemoved: staleGeneratedAssets.length,
       stableMediaAliases: stableMedia.aliases.length,
       canonicalHostRedirects: canonicalRedirects.length,
+      contentRoutes: contentPaths.length,
       destinations: destinations.size,
       deliveryMode: "static-assets",
     },

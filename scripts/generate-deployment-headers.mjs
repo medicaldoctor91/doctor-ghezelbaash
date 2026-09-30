@@ -4,8 +4,8 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
-import { HERO_IMAGE_768_HREF } from "../src/lib/hero-image-contract.mjs";
-import release from "../src/data/release.json" with { type: "json" };
+import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
+const HERO_IMAGE_768_HREF = pageFrontmatter.heroPreload.href;
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
 
 const root = process.cwd();
@@ -59,13 +59,11 @@ for (const script of ldScripts) {
   if (!id || ldDocuments.has(id))
     throw new Error(`Published JSON-LD requires a unique script id: ${id || "missing"}`);
   const document = JSON.parse(script.body);
-  if (document["@context"] !== "https://schema.org")
-    throw new Error("Published JSON-LD must use the public Schema.org context");
   if (!Array.isArray(document["@graph"]))
     throw new Error("Published JSON-LD must contain @graph");
   ldDocuments.set(id, document);
 }
-const expectedLdIds = ["entity-core", "entity-support"];
+const expectedLdIds = pageJsonLd.map((script) => script.id);
 if (
   ldDocuments.size !== expectedLdIds.length ||
   expectedLdIds.some((id) => !ldDocuments.has(id))
@@ -76,8 +74,12 @@ if (
 
 const nodeTypes = (node) =>
   [node?.["@type"]].flat().filter((value) => typeof value === "string");
-const coreDocument = ldDocuments.get("entity-core");
-const pageId = `${release.canonicalUrl}#webpage`;
+for (const script of pageJsonLd) {
+  if (JSON.stringify(ldDocuments.get(script.id)) !== JSON.stringify(script.document))
+    throw new Error(`Published JSON-LD differs from canonical page: ${script.id}`);
+}
+const coreDocument = ldDocuments.get(pageJsonLd[0].id);
+const pageId = pageFrontmatter.pageMicrodata.itemId;
 const pageNode = coreDocument["@graph"].find((node) => node?.["@id"] === pageId);
 const personNode = coreDocument["@graph"].find(
   (node) => node?.["@id"] === release.primaryEntity.id,
@@ -135,7 +137,7 @@ const notFoundScripts = [
   ...notFound.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
 ].map((match) => ({ attrs: match[1], body: match[2] }));
 if (
-  ldScripts.length !== 2 ||
+  ldScripts.length !== pageJsonLd.length ||
   execScripts.length !== 2 ||
   !execScripts.some((script) =>
     /id=["']site-runtime["']/i.test(script.attrs),
@@ -152,45 +154,19 @@ if (
     `Unexpected inline assets: styles=${styleBlocks.length}, ld=${ldScripts.length}, exec=${execScripts.length}, exec404=${notFoundScripts.length}`,
   );
 
-const scriptHashes = scriptBlocks
-  .map((script) => `'sha256-${shaB64(Buffer.from(script.body))}'`)
-  .join(" ");
-const styleHashes = styleBlocks
-  .map((style) => `'sha256-${shaB64(Buffer.from(style))}'`)
-  .join(" ");
 const joinCsp = (directives) => directives.join("; ");
-const mainCsp = joinCsp([
+const documentCsp = (scripts, styles) => joinCsp([
   "default-src 'none'",
   "base-uri 'self'",
-  `script-src ${scriptHashes}`,
-  `style-src 'self' ${styleHashes}`,
-  "img-src 'self' data:",
-  "media-src 'self'",
-  "font-src 'self'",
-  "manifest-src 'self'",
-  "connect-src 'none'",
-  "object-src 'none'",
-  "frame-src 'none'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "upgrade-insecure-requests",
+  `script-src ${scripts.map((script) => `'sha256-${shaB64(Buffer.from(script.body))}'`).join(" ")}`,
+  `style-src 'self' ${styles.map((style) => `'sha256-${shaB64(Buffer.from(style))}'`).join(" ")}`,
+  "img-src 'self' data:", "media-src 'self'", "font-src 'self'", "manifest-src 'self'",
+  "connect-src 'none'", "object-src 'none'", "frame-src 'none'", "frame-ancestors 'none'",
+  "form-action 'self'", "upgrade-insecure-requests",
 ]);
-const csp404 = joinCsp([
-  "default-src 'none'",
-  "base-uri 'self'",
-  `script-src ${notFoundScripts
-    .map((script) => `'sha256-${shaB64(Buffer.from(script.body))}'`)
-    .join(" ")}`,
-  `style-src 'self' ${notFoundStyles
-    .map((style) => `'sha256-${shaB64(Buffer.from(style))}'`)
-    .join(" ")}`,
-  "img-src 'self' data:",
-  "font-src 'self'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "object-src 'none'",
-  "upgrade-insecure-requests",
-]);
+const mainCsp = documentCsp(scriptBlocks, styleBlocks);
+const csp404 = documentCsp(notFoundScripts, notFoundStyles);
+const sharedDocumentCsp = documentCsp([...scriptBlocks, ...notFoundScripts], [...styleBlocks, ...notFoundStyles]);
 
 const headersTemplate = await readFile(
   path.join(data, "templates/headers.template"),
@@ -201,12 +177,13 @@ const httpResourceLinks = resourcesForTarget("website")
   .map((resource) => {
     if (!resource.head?.rel || !resource.mediaType)
       throw new Error(`HTTP discovery metadata missing: ${resource.path}`);
-    return `<https://www.ghezelbaash.ir/${resource.path}>; rel=${quoteHttpParameter(resource.head.rel)}; type=${quoteHttpParameter(resource.contentType)}`;
+    return `<${release.canonicalUrl}${resource.path}>; rel=${quoteHttpParameter(resource.head.rel)}; type=${quoteHttpParameter(resource.contentType)}`;
   })
   .join(", ");
 const headers = compileHeadersTemplate(headersTemplate, {
   mainCsp,
   csp404,
+  documentCsp: sharedDocumentCsp,
   httpResourceLinks,
   heroPreloadHref: HERO_IMAGE_768_HREF,
 });

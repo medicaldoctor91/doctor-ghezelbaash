@@ -1,4 +1,4 @@
-import { exactLanguageLiteral } from "./graph-core.mjs";
+import { exactLanguageLiteral, identifierFor } from "./graph-core.mjs";
 import {
   deriveCanonicalGraphFacts,
   deriveClinicOwnerConfirmation,
@@ -36,58 +36,9 @@ const exactRef = (value, label) => {
     throw new Error(`Canonical authority requires one ${label}`);
   return refs[0];
 };
-const exactKeys = (value, expected, label) => {
-  if (
-    !value ||
-    typeof value !== "object" ||
-    Array.isArray(value) ||
-    Object.keys(value).length !== expected.length ||
-    expected.some((key) => !Object.hasOwn(value, key))
-  )
-    throw new Error(`${label} must contain only: ${expected.join(", ")}`);
-};
-
-export function assertReleaseLifecycleSource(release) {
-  exactKeys(
-    release,
-    [
-      "release",
-      "dateModified",
-      "canonicalUrl",
-      "primaryEntity",
-      "clinic",
-      "dataset",
-      "datasetRevisionDate",
-      "currentSource",
-    ],
-    "Release lifecycle source",
-  );
-  exactKeys(release.primaryEntity, ["id"], "Release physician pointer");
-  exactKeys(release.clinic, ["id"], "Release clinic pointer");
-  exactKeys(
-    release.dataset,
-    ["id", "license", "github", "zenodo", "huggingFace"],
-    "Release dataset lifecycle",
-  );
-}
-
-const identifierValueFromFacts = (facts, owner, suffix, label) => {
-  const id = `${facts.base}#${suffix}`;
-  const node = facts.byId.get(id);
-  const references = asArray(owner.identifier).map(refId);
-  if (
-    !node ||
-    references.filter((reference) => reference === id).length !== 1 ||
-    !asArray(node["@type"]).includes("PropertyValue")
-  )
-    throw new Error(
-      `Canonical ${label} must be linked once from its owner as a PropertyValue`,
-    );
-  return nonempty(node.value, label);
-};
+const identifierValueFromFacts = (facts, owner, propertyID) => identifierFor(owner, facts.byId, propertyID).value;
 
 export function deriveCanonicalAuthority(release, graph) {
-  assertReleaseLifecycleSource(release);
   if (typeof release?.dataset?.id !== "string" || !release.dataset.id)
     throw new Error("Canonical authority requires a Dataset pointer");
 
@@ -137,13 +88,13 @@ export function deriveCanonicalAuthority(release, graph) {
   const personWikidata = identifierValueFromFacts(
     facts,
     facts.person,
-    "identifier-person-wikidata",
+    "Wikidata item ID",
     "physician Wikidata identifier",
   );
   const personOrcid = identifierValueFromFacts(
     facts,
     facts.person,
-    "identifier-person-orcid",
+    "ORCID",
     "physician ORCID",
   );
   const wikidataIri = `https://www.wikidata.org/entity/${personWikidata}`;
@@ -181,7 +132,7 @@ export function deriveCanonicalAuthority(release, graph) {
       googleKnowledgeGraphId: identifierValueFromFacts(
         facts,
         facts.person,
-        "identifier-person-google-kgid",
+        "Google Knowledge Graph ID",
         "physician Google Knowledge Graph ID",
       ),
       wikidata: personWikidata,
@@ -191,26 +142,26 @@ export function deriveCanonicalAuthority(release, graph) {
       irimc: identifierValueFromFacts(
         facts,
         facts.person,
-        "identifier-person-irimc",
+        "Iran Medical Council code",
         "physician IRIMC",
       ),
       orcid: personOrcid,
       openAlex: identifierValueFromFacts(
         facts,
         facts.person,
-        "identifier-person-openalex",
+        "OpenAlex author ID",
         "physician OpenAlex",
       ),
       semanticScholar: identifierValueFromFacts(
         facts,
         facts.person,
-        "identifier-person-semantic-scholar",
+        "Semantic Scholar author ID",
         "physician Semantic Scholar",
       ),
       googleScholar: identifierValueFromFacts(
         facts,
         facts.person,
-        "identifier-person-google-scholar",
+        "Google Scholar Author ID",
         "physician Google Scholar",
       ),
       verifiedWebIdentityMesh: Object.freeze(verifiedWebIdentityMesh),
@@ -220,14 +171,14 @@ export function deriveCanonicalAuthority(release, graph) {
       googleLocalKgmid: identifierValueFromFacts(
         facts,
         facts.clinic,
-        "identifier-clinic-google-kgid",
+        "Google Knowledge Graph ID",
         "clinic Google Knowledge Graph ID",
       ),
       placeId: facts.identifiers.clinic.placeId,
       cid: facts.identifiers.clinic.cid,
       postalCode: nonempty(facts.address.postalCode, "clinic postalCode"),
       hours: `Saturday–Thursday ${facts.clinicHours.open}–${facts.clinicHours.close}; Friday closed`,
-      priceRange: nonempty(facts.clinic.priceRange, "clinic priceRange"),
+      ...(facts.clinic.priceRange ? { priceRange: facts.clinic.priceRange } : {}),
       fridayClosed: facts.clinicHours.fridayClosed,
       ownerConfirmed: clinicOwnerConfirmation.ownerConfirmed,
       truthVerifiedAt: clinicOwnerConfirmation.truthVerifiedAt,
@@ -277,9 +228,8 @@ export function composePublicationData(release, authority) {
 }
 
 /**
- * Compatibility read model for publication consumers that still expect release
- * lifecycle and semantic authority in one object. It is derived, immutable and
- * never persisted back to the lifecycle source.
+ * Read-only publication view derived from the canonical graph.
+ * No entity facts are authored or persisted by this selector.
  */
 export function derivePublicationData(release, graph) {
   const authority = deriveCanonicalAuthority(release, graph);

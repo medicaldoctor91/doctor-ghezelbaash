@@ -1,5 +1,6 @@
 import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
+import { retrievalPolicy } from "../src/lib/canonical-inputs.mjs";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { generatedWorkspace } from "./generated-workspace.mjs";
@@ -17,13 +18,14 @@ const outputDir = projections;
 const readJson = async (p) =>
   JSON.parse(await readFile(path.join(root, p), "utf8"));
 const release = await loadPublicationData(root);
-const retrievalPolicy = await readJson(
-  "src/data/retrieval/query-matrix-policy.json",
-);
+
 const rdfLock = await readJson(".generated/semantic/rdf-lock.json");
 const graph = await readJson("src/data/semantic/knowledge-graph.jsonld");
 await mkdir(outputDir, { recursive: true });
 const { byId } = indexCanonicalGraph(graph);
+const catalog = graph["@graph"].find((node) => arrType(node).includes("DataCatalog"));
+function arrType(node) { return [node?.["@type"]].flat(); }
+if (!catalog) throw new Error("Canonical data catalog is missing");
 const dataset = byId.get(release.dataset.id),
   person = byId.get(release.primaryEntity.id),
   clinic = byId.get(release.clinic.id);
@@ -160,7 +162,7 @@ const voidTtl = `${[
   "@prefix foaf: <http://xmlns.com/foaf/0.1/> .",
   "@prefix schema: <https://schema.org/> .",
   "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
-  `<${release.canonicalUrl}graph.jsonld#dataset> a void:Dataset ;`,
+  `<${release.dataset.id}> a void:Dataset ;`,
   `  dct:title ${ttlString(datasetName)}@en ;`,
   `  dct:publisher <${release.primaryEntity.id}> ;`,
   `  dct:modified ${ttlString(datasetModifiedAt)}^^xsd:date ;`,
@@ -180,14 +182,14 @@ const distributionIris = dcatMeta
   .map((m) => `<${m.distributionIri}>`)
   .join(", ");
 const catalogTriple = [
-  `<${release.canonicalUrl}#data-catalog> a dcat:Catalog ;`,
-  `dct:title "${datasetName} — Data Catalog"@en ;`,
+  `<${catalog["@id"]}> a dcat:Catalog ;`,
+  `dct:title ${ttlString(catalog.name)}@en ;`,
   `dct:publisher <${release.primaryEntity.id}> ;`,
   `dct:modified "${datasetModifiedAt}"^^xsd:date ;`,
-  `dcat:dataset <${release.canonicalUrl}graph.jsonld#dataset> .`,
+  `dcat:dataset <${release.dataset.id}> .`,
 ].join(" ");
 const datasetTriple = [
-  `<${release.canonicalUrl}graph.jsonld#dataset> a dcat:Dataset ;`,
+  `<${release.dataset.id}> a dcat:Dataset ;`,
   `dct:title ${ttlString(datasetName)}@en ;`,
   `dct:description ${ttlString(datasetDescription)}@en ;`,
   `dct:creator <${release.primaryEntity.id}> ;`,
@@ -256,7 +258,7 @@ for (const f of (await walkFiles(vttBase)).filter((x) =>
     bytes: b.length,
     sha256: shaHex(b),
     mediaType: "text/vtt",
-    distributionIri: `${release.canonicalUrl}${f.rel}#croissant-file`,
+    distributionIri: `${release.canonicalUrl}${f.rel}/croissant-file`,
     title:
       kind === "caption"
         ? "Persian WebVTT caption track for a self-hosted physician video."
@@ -384,7 +386,7 @@ const croissant = {
     recordSet: "cr:recordSet",
     source: "cr:source",
   },
-  "@id": `${release.canonicalUrl}graph.jsonld#dataset`,
+  "@id": `${release.dataset.id}`,
   "@type": "sc:Dataset",
   conformsTo: resourceByPath.get("croissant.json").profileIri,
   name: datasetName,
@@ -405,17 +407,7 @@ const croissant = {
     "@type": "sc:Person",
     name: personName,
   },
-  keywords: [
-    personName,
-    ...release.primaryEntity.officialAliases.slice(0, 2),
-    "physician knowledge graph",
-    "aesthetic medicine",
-    practiceCityName,
-    "entity data",
-    "linked data",
-    "query matrix",
-    "multilingual retrieval",
-  ],
+  keywords: dataset.keywords,
   inLanguage: retrievalPolicy.languages,
   isLiveDataset: true,
   recordSet: [entityFactsRecordSet(release.canonicalUrl, resourceByPath.get("entity-facts.csv").distributionIri)],

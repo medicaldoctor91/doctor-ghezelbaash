@@ -1,5 +1,5 @@
 import { defineConfig } from "astro/config";
-import release from "./src/data/release.json" with { type: "json" };
+import { canonicalLifecycle as release } from "./src/lib/canonical-inputs.mjs";
 
 export default defineConfig({
   site: release.canonicalUrl,

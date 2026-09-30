@@ -2,7 +2,7 @@
 @prefix schema: <https://schema.org/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix ex: <https://www.ghezelbaash.ir/#> .
+@prefix ex: <https://www.ghezelbaash.ir/> .
 @prefix dcat: <http://www.w3.org/ns/dcat#> .
 @prefix dct: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -20,9 +20,9 @@ ex:PhysicianEntityShape a sh:NodeShape ;
   sh:property [ sh:path schema:medicalSpecialty ; sh:hasValue ex:medical-specialty-aesthetic-medicine ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:availableService ; sh:minCount 120 ] ;
-  sh:property [ sh:path schema:identifier ; sh:minCount 4 ] ;
-  sh:property [ sh:path schema:sameAs ; sh:minCount 7 ] .
+  sh:property [ sh:path schema:availableService ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:identifier ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:sameAs ; sh:minCount 1 ] .
 
 ex:ClinicAssetShape a sh:NodeShape ;
   sh:targetNode ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ;
@@ -35,10 +35,10 @@ ex:ClinicAssetShape a sh:NodeShape ;
   sh:property [ sh:path schema:medicalSpecialty ; sh:hasValue ex:medical-specialty-aesthetic-medicine ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:availableService ; sh:minCount 120 ] ;
-  sh:property [ sh:path schema:identifier ; sh:minCount 5 ] ;
+  sh:property [ sh:path schema:availableService ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:identifier ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:openingHoursSpecification ; sh:minCount 2 ] ;
-  sh:property [ sh:path schema:priceRange ; sh:hasValue "$$$$" ] .
+  sh:property [ sh:path schema:priceRange ; sh:datatype xsd:string ] .
 
 ex:WebPageDominanceShape a sh:NodeShape ;
   sh:targetNode ex:webpage ;
@@ -47,7 +47,7 @@ ex:WebPageDominanceShape a sh:NodeShape ;
   sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] .
 
 ex:CanonicalDatasetRoleShape a sh:NodeShape ;
-  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;
+  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;
   sh:property [ sh:path schema:creator ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -64,7 +64,7 @@ ex:DataCatalogRoleShape a sh:NodeShape ;
   sh:targetNode ex:data-catalog ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:DataCatalog ] ;
   sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/dcat.ttl> ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:dataset ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld#dataset> ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:dataset ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld/dataset> ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:GitHubSourceRoleShape a sh:NodeShape ;
   sh:targetNode ex:project-github-source ;
@@ -79,8 +79,8 @@ ex:MedicalConditionTreatmentShape a sh:NodeShape ;
 
 ex:FridayClosedShape a sh:NodeShape ;
   sh:targetNode ex:clinic-friday-closed ;
-  sh:property [ sh:path schema:opens ; sh:hasValue "00:00" ] ;
-  sh:property [ sh:path schema:closes ; sh:hasValue "00:00" ] .
+  sh:property [ sh:path schema:opens ; sh:hasValue "00:00:00"^^xsd:time ] ;
+  sh:property [ sh:path schema:closes ; sh:hasValue "00:00:00"^^xsd:time ] .
 
 ex:AvailableServiceProviderShape a sh:NodeShape ;
   sh:targetObjectsOf schema:availableService ;
@@ -147,9 +147,9 @@ ex:DistributionChecksumShape a sh:NodeShape ;
 # Ordinary source nodes remain unconstrained by this first-party assessment
 # contract even when both have the standard prov:Entity type.
 ex:EvidenceAssessmentShape a sh:NodeShape ;
-  sh:targetClass prov:Entity ;
+  sh:targetClass prov:Collection ;
   sh:or (
-    [ sh:not [ sh:pattern "^https://www[.]ghezelbaash[.]ir/provenance[.]jsonld#assessment-" ] ]
+    [ sh:not [ sh:pattern "^https://www[.]ghezelbaash[.]ir/provenance[.]jsonld/assessment-" ] ]
     [
       sh:class schema:CreativeWork ;
       sh:property [ sh:path schema:creator ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -158,9 +158,9 @@ ex:EvidenceAssessmentShape a sh:NodeShape ;
       sh:property [ sh:path schema:dateModified ; sh:maxCount 0 ] ;
       sh:property [ sh:path schema:additionalType ; sh:maxCount 0 ] ;
       sh:property [
-        sh:path schema:additionalProperty ;
+        sh:path prov:hadMember ;
         sh:qualifiedValueShape [
-          sh:property [ sh:path schema:propertyID ; sh:hasValue "Evidence role" ] ;
+          sh:property [ sh:path schema:propertyID ; sh:hasValue "role" ] ;
           sh:property [ sh:path schema:value ; sh:in ( "identity-reference" "medical-reference" "first-party-release-preservation" ) ; sh:minCount 1 ; sh:maxCount 1 ]
         ] ;
         sh:qualifiedMinCount 1 ; sh:qualifiedMaxCount 1
@@ -171,8 +171,9 @@ ex:EvidenceAssessmentShape a sh:NodeShape ;
 ex:EvidenceObservationDateShape a sh:NodeShape ;
   sh:targetClass schema:PropertyValue ;
   sh:or (
-    [ sh:not [ sh:property [ sh:path schema:propertyID ; sh:hasValue "Evidence observation date" ] ] ]
-    [ sh:property [ sh:path schema:value ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ]
+    [ sh:not [ sh:property [ sh:path schema:propertyID ; sh:hasValue "verifiedAt" ] ] ]
+    [ sh:property [ sh:path schema:value ; sh:datatype xsd:string ; sh:pattern "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" ; sh:minCount 1 ; sh:maxCount 1 ] ;
+      sh:property [ sh:path dct:date ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ]
   ) .
 
 
@@ -217,12 +218,12 @@ ex:ProfessionalSocialSubjectShape a sh:NodeShape ;
 
 # Validate current identity ownership without republishing retired identifiers.
 ex:CoreEntityWikidataOwnershipShape a sh:NodeShape ;
-  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;
+  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;
   sh:sparql [
     sh:message "Wikidata ownership must remain physician-specific; the clinic has no declared Wikidata identity." ;
     sh:select """
       PREFIX schema: <https://schema.org/>
-      PREFIX ex: <https://www.ghezelbaash.ir/#>
+      PREFIX ex: <https://www.ghezelbaash.ir/>
       SELECT $this WHERE {
         {
           ex:saeed-ghezelbash schema:sameAs ?value .

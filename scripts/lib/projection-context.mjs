@@ -1,6 +1,6 @@
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { hashIdentityFingerprint } from "./release-identity.mjs";
 import { generatedWorkspace } from "../generated-workspace.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
@@ -34,56 +34,10 @@ export const csvCell = (value) => {
 };
 export const sha256 = (value) =>
   createHash("sha256").update(value).digest("hex");
-export const evidenceAssessmentId = (release, evidenceId) => {
-  const source = new URL(evidenceId);
-  if (
-    !evidenceId.startsWith(`${release.canonicalUrl}#evidence-`) ||
-    !source.hash
-  )
-    throw new Error(
-      `Evidence assessment requires a canonical source IRI: ${evidenceId}`,
-    );
-  return `${release.canonicalUrl}provenance.jsonld#assessment-${source.hash.slice(1)}`;
-};
-export const deriveEvidenceRegistry = (release, registry) => {
-  const currentId = `${release.canonicalUrl}#evidence-zenodo-current-release`;
-  return {
-    ...registry,
-    evidence: registry.evidence.map((source) => {
-      if (source.id !== currentId) return { ...source };
-      const { releaseBinding, verifiedRelease, ...entry } = source;
-      if (releaseBinding !== "zenodo-version" || "url" in source)
-        throw new Error(
-          "Current release evidence URL must be derived from release metadata",
-        );
-      if (
-        entry.tier !== "P" ||
-        entry.role !== "first-party-release-preservation"
-      )
-        throw new Error(
-          "Release preservation must not claim independent corroboration",
-        );
-      entry.url = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
-      if (verifiedRelease !== release.release) {
-        delete entry.verifiedAt;
-        entry.liveStatus = "not-verified-for-current-release";
-      }
-      return entry;
-    }),
-  };
-};
 export const deriveEvidenceSnapshot = (release, registry) => {
   const evidence = registry.evidence;
   if (!Array.isArray(evidence) || !evidence.length)
     throw new Error("Evidence registry is empty");
-  for (const entry of evidence)
-    if (
-      (typeof entry.verifiedAt !== "string" || !entry.verifiedAt) &&
-      entry.liveStatus !== "not-verified-for-current-release"
-    )
-      throw new Error(
-        `Evidence entry lacks its canonical verification date: ${entry.id}`,
-      );
   return {
     release: release.release,
     observedAt: registry.verifiedAt,
@@ -95,7 +49,7 @@ export const deriveEvidenceSnapshot = (release, registry) => {
       status: entry.liveStatus,
       verifiedAt: entry.verifiedAt,
       role: entry.role,
-      assessmentId: evidenceAssessmentId(release, entry.id),
+      assessmentId: entry.assessmentId,
       expectedMarkers: entry.expectedMarkers ?? [],
     })),
   };
@@ -105,23 +59,10 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const data = path.join(root, "src/data");
   const semantic = path.join(data, "semantic");
   const generated = generatedWorkspace(root);
-  const [rawRelease, invariants, rawEvidenceRegistry, graph] =
-    await Promise.all([
-      readFile(path.join(data, "release.json"), "utf8").then(JSON.parse),
-      readFile(path.join(data, "release-invariants.json"), "utf8").then(
-        JSON.parse,
-      ),
-      readFile(path.join(data, "evidence-registry.json"), "utf8").then(
-        JSON.parse,
-      ),
-      readFile(path.join(semantic, "knowledge-graph.jsonld"), "utf8").then(
-        JSON.parse,
-      ),
-    ]);
+  const { lifecycle: rawRelease, graph, evidenceRegistry, retrievalPolicy } = readCanonicalInputs(root);
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
   const release = derivePublicationData(rawRelease, graph);
-  const evidenceRegistry = deriveEvidenceRegistry(release, rawEvidenceRegistry);
   const evidenceEntries = evidenceRegistry.evidence;
   if (
     !Array.isArray(evidenceEntries) ||
@@ -183,7 +124,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     generatedAssets: generated.assets,
     release,
     rawRelease,
-    invariants,
+    retrievalPolicy,
     evidenceRegistry,
     evidenceSnapshot,
     graph,

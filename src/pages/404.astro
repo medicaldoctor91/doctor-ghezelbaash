@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import release from '../data/release.json';
-import { headGraph } from '../lib/knowledge-graph';
+import { canonicalLifecycle as release, pageFrontmatter } from '../lib/canonical-inputs.mjs';
+import { canonicalGraph } from '../lib/knowledge-graph';
 import { deriveSiteContactData } from '../lib/site-data.mjs';
 
-const site = deriveSiteContactData(release, headGraph);
+const site = deriveSiteContactData(release, canonicalGraph);
 const frontmatter = {
   title: 'صفحه پیدا نشد | دکتر سعید قزلباش',
   description:
@@ -21,12 +21,12 @@ const frontmatter = {
     <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
     <p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. از مسیرهای اصلی زیر ادامه دهید.</p>
     <nav class="not-found-page__links" aria-label="مسیرهای اصلی">
-      <a href="/#botox">بوتاکس</a>
-      <a href="/#filler">فیلر</a>
-      <a href="/#thread-lift">لیفت نخ</a>
-      <a href="/#acne-pigmentation-and-scars">جوش، لک و اسکار</a>
-      <a href="/#hair-loss">ریزش مو</a>
-      <a href="/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a>
+      <a href="/botox">بوتاکس</a>
+      <a href="/filler">فیلر</a>
+      <a href="/thread-lift">لیفت نخ</a>
+      <a href="/acne-pigmentation-and-scars">جوش، لک و اسکار</a>
+      <a href="/hair-loss">ریزش مو</a>
+      <a href="/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a>
     </nav>
     <div class="not-found-page__actions">
       <a class="not-found-page__primary" href="/">بازگشت به صفحه اصلی</a>

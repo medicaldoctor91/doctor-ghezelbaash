@@ -3,10 +3,10 @@ import { datasetRevisionDate, validRevisionDate } from "../release-graph.mjs";
 import { readFile, writeFile } from "node:fs/promises";
 import { parseFragment } from "parse5";
 import {
-  evidenceAssessmentId,
   sha256,
   valueText,
 } from "../projection-context.mjs";
+import { pageFrontmatter } from "../../../src/lib/canonical-inputs.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
 
 const attribute = (node, name) =>
@@ -211,59 +211,12 @@ const sentenceChunks = (text, max) => {
   return out;
 };
 
-const bindLlmsTemplate = (template, bindings) => {
-  const tokenPattern = /{{[A-Z0-9_]+}}/g;
-  const known = new Set(Object.keys(bindings));
-  const seen = new Set(template.match(tokenPattern) || []);
-  for (const token of seen)
-    if (!known.has(token))
-      throw new Error(`llms.txt: unknown template token ${token}`);
-  const output = String(template).replace(tokenPattern, (token) =>
-    String(bindings[token]),
-  );
-  const unresolved = output.match(tokenPattern) || [];
-  if (unresolved.length)
-    throw new Error(
-      `llms.txt: unresolved template token ${[...new Set(unresolved)].join(", ")}`,
-    );
-  return output;
-};
-
-// llms.txt is an on-demand file guide; full content remains in the other projections.
-export function renderLlmsGuide(template, { release, evidenceRegistry }) {
-  const tiers = evidenceRegistry.tiers;
-  if (!tiers || typeof tiers !== "object" || Array.isArray(tiers))
-    throw new Error("llms.txt: evidence tiers are required");
-  for (const tier of ["A", "B", "C", "P"])
-    if (typeof tiers[tier] !== "string" || !tiers[tier])
-      throw new Error(
-        `llms.txt: evidence tier ${tier} definition missing from evidence registry`,
-      );
-  const evidenceTierLine = `- Evidence tiers: ${Object.keys(tiers)
-    .sort()
-    .map((tier) => `Tier ${tier} = ${tiers[tier]}`)
-    .join("; ")}.`;
-  return bindLlmsTemplate(template, {
-    "{{RELEASE}}": release.release,
-    "{{OFFICIAL_ALIASES}}": release.primaryEntity.officialAliases.join(" | "),
-    "{{RECONCILIATION_ALIASES}}":
-      release.primaryEntity.reconciliationAliases.join(" | "),
-    "{{RETRIEVAL_VARIANTS}}":
-      release.primaryEntity.retrievalVariants.join(" | "),
-    "{{ZENODO_VERSION_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.versionDoi}`,
-    "{{ZENODO_RECORD_ID}}": String(release.dataset.zenodo.recordId),
-    "{{HUGGING_FACE_DATASET}}": release.dataset.huggingFace.dataset,
-    "{{EVIDENCE_TIER_LINE}}": evidenceTierLine,
-  });
-}
-
 export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   const {
-    data,
     projections,
     generatedContent,
     release,
-    invariants,
+    retrievalPolicy,
     graph,
     byId,
     sourceNodesForUrl,
@@ -284,26 +237,10 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   const frontmatter = home.match(/^---\r?\n([\s\S]*?)\r?\n---\s*/);
   if (!frontmatter)
     throw new Error("Retrieval compiler requires Markdown frontmatter");
-  const frontmatterLines = frontmatter[1].split(/\r?\n/);
-  const frontmatterValue = (key) => {
-    const matches = frontmatterLines.filter((line) =>
-      line.startsWith(`${key}:`),
-    );
-    if (matches.length !== 1)
-      throw new Error(`Retrieval frontmatter requires one ${key}`);
-    const raw = matches[0].slice(key.length + 1).trim();
-    let value;
-    try {
-      value = JSON.parse(raw);
-    } catch {
-      throw new Error(`Retrieval frontmatter ${key} must be a JSON string`);
-    }
-    if (typeof value !== "string" || !value.trim())
-      throw new Error(`Retrieval frontmatter ${key} must be nonempty`);
-    return value;
-  };
-  const pageTitle = frontmatterValue("title");
-  const pageLanguage = frontmatterValue("lang");
+  const pageTitle = pageFrontmatter.title;
+  const pageLanguage = pageFrontmatter.lang;
+  if (![pageTitle, pageLanguage].every((value) => typeof value === "string" && value.trim()))
+    throw new Error("Canonical page requires a nonempty title and lang");
   const body = home.slice(frontmatter[0].length);
   const blocks = buildRetrievalBlocks(body, {
     canonicalUrl: release.canonicalUrl,
@@ -323,12 +260,12 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     markdown += `${renderRetrievalBlock(block)}\n`;
     if (/^h[1-6]$/.test(block.tag)) {
       if (block.id)
-        markdown += `<!-- anchor: ${release.canonicalUrl}#${block.id} -->\n`;
+        markdown += `<!-- anchor: ${new URL(block.id, release.canonicalUrl).href} -->\n`;
       if (block.retrievalAlias)
         markdown += `<!-- retrieval-alias: ${block.retrievalAlias} -->\n`;
     }
     if (block.answerId)
-      markdown += `<!-- answer-id: ${release.canonicalUrl}#${block.answerId} -->\n`;
+      markdown += `<!-- answer-id: ${new URL(block.answerId, release.canonicalUrl).href} -->\n`;
     markdown += "\n";
   }
   markdown = markdown.replace(/\n{3,}/g, "\n\n");
@@ -380,9 +317,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   }
   flush();
 
-  const maxPassage = invariants.maxRagPassageChars;
+  const maxPassage = retrievalPolicy.maxPassageChars;
   if (!Number.isInteger(maxPassage) || maxPassage < 1)
-    throw new Error("Release invariants lack a valid maxRagPassageChars value");
+    throw new Error("Canonical page retrieval.maxPassageChars must be a positive integer");
   const emitted = [];
   for (const section of sections) {
     const chunks = [];
@@ -403,7 +340,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         for (const text of units)
           chunks.push({
             text,
-            answerIds: [`${release.canonicalUrl}#${part.answerId}`],
+            answerIds: [`${new URL(part.answerId, release.canonicalUrl).href}`],
           });
         continue;
       }
@@ -421,7 +358,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     }
     flushPending();
     chunks.forEach(({ text, answerIds }, index) => {
-      const anchor = `${release.canonicalUrl}#${section.id}`;
+      const anchor = `${new URL(section.id, release.canonicalUrl).href}`;
       const hash = sha256(Buffer.from(`${anchor}|${index}|${text}`)).slice(
         0,
         16,
@@ -499,7 +436,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     `CID: ${release.clinic.cid}`,
     `POSTAL_CODE: ${release.clinic.postalCode}`,
     `HOURS: ${release.clinic.hours}`,
-    `PRICE_RANGE: ${release.clinic.priceRange}`,
+    ...(release.clinic.priceRange ? [`PRICE_RANGE: ${release.clinic.priceRange}`] : []),
     `CANONICAL: ${release.canonicalUrl}`,
     `RELEASE: ${release.release}`,
     `MODIFIED: ${currentDatasetDate}`,
@@ -548,7 +485,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
 
   const provenanceGraph = [
     {
-      "@id": `${release.canonicalUrl}provenance.jsonld#dataset`,
+      "@id": `${release.canonicalUrl}provenance.jsonld/dataset`,
       "@type": ["Dataset", "prov:Entity"],
       name: `${englishPersonName} claim and passage provenance graph`,
       creator: { "@id": release.primaryEntity.id },
@@ -559,7 +496,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       ],
       version: release.release,
       dateModified: currentDatasetDate,
-      isBasedOn: { "@id": `${release.canonicalUrl}graph.jsonld#dataset` },
+      isBasedOn: { "@id": release.dataset.id },
       identifier: {
         "@type": "PropertyValue",
         propertyID: "Primary entity identity fingerprint SHA-256",
@@ -585,60 +522,18 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         ? { about: sourceSubjects }
         : {}),
     });
-    provenanceGraph.push({
-      "@id": evidenceAssessmentId(release, evidence.id),
-      "@type": ["CreativeWork", "prov:Entity"],
-      name: `First-party evidence assessment — ${evidence.id.split("#").at(-1)}`,
-      creator: { "@id": release.primaryEntity.id },
-      publisher: { "@id": release.primaryEntity.id },
-      about: { "@id": evidence.id },
-      isBasedOn: { "@id": evidence.id },
-      isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld#dataset` },
-      identifier: {
-        "@type": "PropertyValue",
-        propertyID: "Evidence tier",
-        value: evidence.tier,
-      },
-      additionalProperty: [
-        {
-          "@type": "PropertyValue",
-          propertyID: "Evidence role",
-          value: evidence.role,
-        },
-        {
-          "@type": "PropertyValue",
-          propertyID: "Evidence supports",
-          value: evidence.supports.join(" | "),
-        },
-        {
-          "@type": "PropertyValue",
-          propertyID: "Evidence observation status",
-          value: evidence.liveStatus,
-        },
-        ...(evidence.verifiedAt
-          ? [
-              {
-                "@type": "PropertyValue",
-                propertyID: "Evidence observation date",
-                value: {
-                  "@value": evidence.verifiedAt,
-                  "@type": "http://www.w3.org/2001/XMLSchema#date",
-                },
-              },
-            ]
-          : []),
-      ],
-    });
+    provenanceGraph.push(byId.get(evidence.assessmentId));
   }
+  provenanceGraph.push(...evidenceRegistry.tierNodes, evidenceRegistry.registryNode);
   for (const passage of emitted) {
     provenanceGraph.push({
-      "@id": `${release.canonicalUrl}provenance.jsonld#passage-${passage.hash}`,
+      "@id": `${release.canonicalUrl}provenance.jsonld/passage-${passage.hash}`,
       "@type": ["CreativeWork", "prov:Entity"],
       name: `Passage provenance — ${passage.title}`,
       url: passage.anchor,
       inLanguage: passage.lang,
       about: passage.entityIds.map((id) => ({ "@id": id })),
-      isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld#dataset` },
+      isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld/dataset` },
       identifier: {
         "@type": "PropertyValue",
         propertyID: "SHA-256",
@@ -682,12 +577,12 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     if (!validRevisionDate(answerModifiedAt) || answerModifiedAt > currentDatasetDate)
       throw new Error(`Invalid answer provenance revision date: ${q["@id"]}`);
     provenanceGraph.push({
-      "@id": `${release.canonicalUrl}provenance.jsonld#answer-${sourceHash.slice(0, 16)}`,
+      "@id": `${release.canonicalUrl}provenance.jsonld/answer-${sourceHash.slice(0, 16)}`,
       "@type": ["CreativeWork", "prov:Entity"],
       name: `Answer provenance — ${valueText(q.name)}`,
       url: sourceUrl,
       about: [q.about].flat().filter(Boolean),
-      isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld#dataset` },
+      isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld/dataset` },
       isBasedOn: graphNodeIds.map((id) => ({ "@id": id })),
       identifier: {
         "@type": "PropertyValue",
@@ -730,12 +625,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     `${JSON.stringify(evidenceSnapshot, null, 2)}\n`,
   );
 
-  const template = await readFile(
-    path.join(data, "templates/llms.template.txt"),
-    "utf8",
-  );
-  const llms = renderLlmsGuide(template, { release, evidenceRegistry });
-  await writeFile(path.join(projections, "llms.txt"), llms);
+  await writeFile(path.join(projections, "llms.txt"), pageFrontmatter.llmsGuide);
 
   return {
     markdownBytes: Buffer.byteLength(markdown),

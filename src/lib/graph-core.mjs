@@ -8,6 +8,25 @@ export const refId = (value) =>
 
 export const nodeTypes = (node) => values(node?.["@type"]);
 
+/** Resolve an identifier only through its owner's authored identifier relation. */
+export const identifierFor = (owner, byId, propertyID) => {
+  const matches = values(owner.identifier)
+    .map((ref) => byId.get(refId(ref)))
+    .filter((node) => node?.propertyID === propertyID && nodeTypes(node).includes("PropertyValue"));
+  if (matches.length !== 1 || typeof matches[0].value !== "string" || !matches[0].value)
+    throw new Error(`Canonical ${owner["@id"]} requires one ${propertyID} identifier`);
+  return matches[0];
+};
+
+/** The authored page uses a single path segment as its visible element ID. */
+export const canonicalContentHtmlId = (url, canonicalUrl) => {
+  const parsed = new URL(url);
+  const base = new URL(canonicalUrl);
+  if (parsed.origin !== base.origin || parsed.hash || parsed.search || !/^\/[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(parsed.pathname))
+    throw new Error(`Not a canonical content path: ${url}`);
+  return decodeURIComponent(parsed.pathname.slice(1));
+};
+
 export const directLanguageLiterals = (value, language, label) => {
   const matches = values(value).filter(
     (item) => item?.["@language"] === language,

@@ -14,11 +14,13 @@
     "materialize:static": "node scripts/materialize-static-artifacts.mjs",
     "rdf:generate": "node scripts/generate-rdf.mjs",
     "compile:dist": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run materialize:static && node scripts/generate-deployment-headers.mjs",
-    "build": "npm run prepare:distribution && npm run compile:dist"
+    "build": "npm run prepare:distribution && npm run compile:dist && npm run validate:dist",
+    "validate:dist": "node scripts/validate-dist.mjs"
   },
   "devDependencies": {
     "astro": "7.2.8",
     "csso": "5.0.5",
+    "js-yaml": "4.3.2",
     "jsonld": "9.0.0",
     "parse5": "8.0.1",
     "rdf-canonize": "5.0.0"

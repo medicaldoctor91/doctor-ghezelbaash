@@ -1,4 +1,5 @@
 import { parseFragment } from "parse5";
+import { canonicalContentHtmlId } from "./graph-core.mjs";
 
 const values = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
@@ -47,24 +48,6 @@ const walkElements = (node, output = []) => {
   return output;
 };
 
-const canonicalFragment = (url, label, canonicalDocument) => {
-  if (typeof url !== "string" || !url.trim())
-    throw new Error(`${label} must be an absolute URL: ${url}`);
-  let parsed;
-  try {
-    parsed = new URL(url);
-  } catch {
-    throw new Error(`${label} must be an absolute URL: ${url}`);
-  }
-  if (!parsed.hash)
-    throw new Error(`${label} lacks a visible fragment: ${url}`);
-  const documentUrl = new URL(parsed);
-  documentUrl.hash = "";
-  if (documentUrl.href !== canonicalDocument.href)
-    throw new Error(`${label} is outside the canonical document: ${url}`);
-  return parsed.hash.slice(1);
-};
-
 const graphIndex = (graph) => {
   if (!Array.isArray(graph?.["@graph"]))
     throw new Error("Canonical graph lacks @graph");
@@ -82,11 +65,10 @@ const graphIndex = (graph) => {
 const subjectIds = (node) => values(node?.about).map(refId).sort();
 
 export const canonicalAnswerHtmlId = (answerId, canonicalUrl) => {
-  const document = new URL(canonicalUrl);
-  const fragment = canonicalFragment(answerId, "Answer ID", document);
-  if (!/^answer-[A-Za-z0-9][A-Za-z0-9._:-]*$/u.test(fragment))
-    throw new Error(`Answer ID lacks the canonical answer fragment: ${answerId}`);
-  return fragment;
+  const htmlId = canonicalContentHtmlId(answerId, canonicalUrl);
+  if (!/^answer-[A-Za-z0-9][A-Za-z0-9._:-]*$/u.test(htmlId))
+    throw new Error(`Answer ID lacks the canonical answer path: ${answerId}`);
+  return htmlId;
 };
 
 /**
@@ -96,26 +78,14 @@ export const canonicalAnswerHtmlId = (answerId, canonicalUrl) => {
  */
 export const deriveCanonicalAnswerTopology = (graph, release) => {
   const { nodes, byId } = graphIndex(graph);
-  let canonicalDocument;
-  try {
-    canonicalDocument = new URL(release?.canonicalUrl);
-  } catch {
-    throw new Error("Answer projection requires a canonical URL");
-  }
-  canonicalDocument.hash = "";
-
   const questions = nodes.filter((node) => nodeTypes(node).includes("Question"));
   const graphAnswers = nodes.filter((node) => nodeTypes(node).includes("Answer"));
   const records = questions.map((question) => {
     const questionId = question?.["@id"];
     const answerId = refId(question?.acceptedAnswer);
-    canonicalFragment(questionId, "Question ID", canonicalDocument);
-    const sourceFragment = canonicalFragment(
-      question?.url,
-      "Question source URL",
-      canonicalDocument,
-    );
-    const answerFragment = canonicalAnswerHtmlId(
+    canonicalContentHtmlId(questionId, release.canonicalUrl);
+    const sourceHtmlId = canonicalContentHtmlId(question.url, release.canonicalUrl);
+    const answerHtmlId = canonicalAnswerHtmlId(
       answerId,
       release.canonicalUrl,
     );
@@ -154,14 +124,9 @@ export const deriveCanonicalAnswerTopology = (graph, release) => {
       questionId,
       answerId,
       sourceUrl: question.url,
-      sourceFragment,
-      questionFragment: canonicalFragment(
-        questionId,
-        "Question ID",
-        canonicalDocument,
-      ),
-      htmlId: answerFragment,
-      htmlUrl: `${release.canonicalUrl}#${answerFragment}`,
+      sourceHtmlId,
+      htmlId: answerHtmlId,
+      htmlUrl: answerId,
       questionText: question.name,
       language: question.inLanguage,
       aboutIds: questionSubjects,
@@ -265,7 +230,7 @@ export const extractVisibleAnswerTexts = (content, projection) => {
     if (!text)
       throw new Error(`Visible answer text is empty: ${record.answerId}`);
     const matchingHeadings = headings.filter(
-      (candidate) => attr(candidate, "id") === record.sourceFragment,
+      (candidate) => attr(candidate, "id") === record.sourceHtmlId,
     );
     if (matchingHeadings.length !== 1)
       throw new Error(`Visible answer requires exactly one question heading: ${record.sourceUrl}`);
