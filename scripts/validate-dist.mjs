@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
+import { canonicalMetadataRedirectRows, renderStaticRedirects } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
@@ -37,7 +38,33 @@ for (const [intent, url] of Object.entries(page.intentTargets)) {
 
 const paths = contentRoutePaths(html, lifecycle.canonicalUrl);
 const redirects = (await readFile(path.join(dist, "_redirects"), "utf8")).trim().split(/\r?\n/);
+renderStaticRedirects(redirects.map((line) => {
+  const [source, target, statusCode] = line.split(/\s+/);
+  return { source, target, statusCode: Number(statusCode) };
+}));
 for (const route of paths) assert(redirects.includes(`${route} /index.html 200`), `Missing content route: ${route}`);
+const metadataRoutes = canonicalMetadataRedirectRows(graph, lifecycle.canonicalUrl);
+for (const { source, target, statusCode } of metadataRoutes)
+  assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing metadata description: ${source}`);
+
+// Check actual published links and media URLs, including chapter parameters.
+// Canonical RDF identities are validated separately from browser resources.
+const localOrigin = new URL(lifecycle.canonicalUrl).origin;
+const redirectSources = new Set(redirects.map((line) => line.split(/\s+/)[0]));
+for (const node of elements) {
+  for (const name of ["href", "src", "poster", "data-poster"]) {
+    const value = attr(node, name);
+    if (!value) continue;
+    const url = new URL(value, lifecycle.canonicalUrl);
+    if (url.origin !== localOrigin) continue;
+    if (url.pathname === "/") {
+      if (url.hash) assert(ids.includes(decodeURIComponent(url.hash.slice(1))), `Missing local target: ${value}`);
+      continue;
+    }
+    if (redirectSources.has(url.pathname)) continue;
+    assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(), `Missing published resource: ${value}`);
+  }
+}
 const answerValidation = validateProjectedAnswerHtml(html, deriveCanonicalAnswerProjection(graph, lifecycle));
 
 const figure = elements.find((node) => attr(node, "id") === "image-saeed-ghezelbash-portrait-master");
@@ -72,4 +99,4 @@ for (const entry of evidenceRegistry.evidence) {
 assert(!JSON.stringify(snapshot).includes("not-verified-for-current-release"));
 assert(!/PRICE_RANGE: undefined|X-PRICE-RANGE:undefined/.test(
   await readFile(path.join(dist, "llms-full.txt"), "utf8") + await readFile(path.join(dist, "clinic.vcf"), "utf8")));
-console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));
+console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, metadataRoutes: metadataRoutes.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));

@@ -1,25 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { Content, frontmatter } from '../../.generated/content/home.md';
+import { pageBody, pageFrontmatter } from '../lib/canonical-inputs.mjs';
+import { renderCanonicalPageHtml } from '../lib/canonical-page-html.mjs';
 
-const pageFrontmatter = frontmatter as {
-  title: string;
-  description: string;
-  lang: string;
-  dir: string;
-  robots: string;
-  socialImageAlt: string;
-  socialAlternateLocales: string[];
-  footerGovernance: {
-    summary: string;
-    reputationLead: string;
-    mapsTerms: { href: string; label: string };
-    privacyPolicy: { href: string; label: string };
-    tail: string;
-  };
-};
+// This release has one authored HTML document. Do not compile a second Markdown
+// copy or turn its finite content paths into additional pages.
+const html = renderCanonicalPageHtml(pageBody);
 ---
 
 <BaseLayout frontmatter={pageFrontmatter} isMain={true}>
-  <Content />
+  <Fragment set:html={html} />
 </BaseLayout>

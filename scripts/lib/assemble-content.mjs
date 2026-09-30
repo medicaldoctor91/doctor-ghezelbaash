@@ -1,12 +1,8 @@
-import path from "node:path";
-import { readdir } from "node:fs/promises";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../../src/lib/answer-projection.mjs";
 import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-
-const compactAuthoredHtmlLayout = (source) =>
-  String(source).replace(/>\s*\r?\n\s*</g, "><");
+import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 
 export function physicianImageUrls(graph, release) {
   const { byId } = indexCanonicalGraph(graph);
@@ -30,18 +26,6 @@ export function physicianImageUrls(graph, release) {
   return urls;
 }
 
-async function canonicalSourceNames(root = process.cwd()) {
-  const sourceDir = path.join(root, "src/content-source");
-  const names = (await readdir(sourceDir))
-    .filter((name) => /\.(?:md|html)$/i.test(name))
-    .sort();
-  if (names.length !== 1 || names[0] !== "page.md")
-    throw new Error(
-      "Canonical page source contract drift: " + names.join(", "),
-    );
-  return names;
-}
-
 export async function assembleCanonicalContent({
   root = process.cwd(),
   graph,
@@ -50,16 +34,15 @@ export async function assembleCanonicalContent({
     throw new Error(
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
-  const names = await canonicalSourceNames(root);
-  const { lifecycle, pageSource: content } = readCanonicalInputs(root);
+  const { lifecycle, pageBody } = readCanonicalInputs(root);
+  const content = renderCanonicalPageHtml(pageBody);
   const release = derivePublicationData(lifecycle, graph);
   if (/{{[A-Z][A-Z0-9_]*}}/.test(content))
     throw new Error("Canonical page contains an unresolved legacy token");
   const answerProjection = deriveCanonicalAnswerProjection(graph, release);
   validateProjectedAnswerHtml(content, answerProjection);
   return {
-    content: compactAuthoredHtmlLayout(content),
-    names,
+    content,
     answerProjection,
   };
 }

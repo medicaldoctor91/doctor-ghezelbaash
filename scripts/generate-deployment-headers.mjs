@@ -5,7 +5,6 @@ import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
-const HERO_IMAGE_768_HREF = pageFrontmatter.heroPreload.href;
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
 
 const root = process.cwd();
@@ -185,7 +184,6 @@ const headers = compileHeadersTemplate(headersTemplate, {
   csp404,
   documentCsp: sharedDocumentCsp,
   httpResourceLinks,
-  heroPreloadHref: HERO_IMAGE_768_HREF,
 });
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
