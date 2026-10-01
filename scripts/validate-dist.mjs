@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
-import { canonicalMetadataRedirectRows, renderStaticRedirects } from "./lib/redirect-registry.mjs";
+import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, contentAliasTargets, renderStaticRewrites } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { readCanonicalInputs } from "../src/lib/canonical-inputs.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
+import { assertCloudflareHeadersContract } from "./lib/headers-template.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
 
 const root = process.cwd();
@@ -38,14 +39,41 @@ for (const [intent, url] of Object.entries(page.intentTargets)) {
 
 const paths = contentRoutePaths(html, lifecycle.canonicalUrl);
 const redirects = (await readFile(path.join(dist, "_redirects"), "utf8")).trim().split(/\r?\n/);
-renderStaticRedirects(redirects.map((line) => {
+const rewriteRows = redirects.map((line) => {
   const [source, target, statusCode] = line.split(/\s+/);
   return { source, target, statusCode: Number(statusCode) };
-}));
+});
+renderStaticRewrites(rewriteRows);
+for (const { source, target, statusCode } of rewriteRows) {
+  assert.equal(statusCode, 200, `URL-changing redirect: ${source}`);
+  assert((await stat(path.join(dist, target.slice(1))).catch(() => null))?.isFile(),
+    `Rewrite must serve a physical file directly: ${source} -> ${target}`);
+}
+const legacyAliases = canonicalHostAliasRows(await loadAliasRegistry(root));
+const machinePaths = new Set(MACHINE_RESOURCES.filter((item) => item.materialize).map((item) => "/" + item.path));
+const expectedAliases = contentAliasTargets(legacyAliases, machinePaths);
+assert.deepEqual(JSON.parse(attr(search, "data-content-route-aliases")), { ...expectedAliases });
+for (const target of Object.values(expectedAliases))
+  assert(target === "/" || ids.includes(target.slice(1)), `Missing legacy content target: ${target}`);
+for (const { source, target } of legacyAliases.filter((row) => row.source !== "/index.html"))
+  assert(redirects.includes(`${source} ${machinePaths.has(target) ? target : "/index.html"} 200`),
+    `Missing direct legacy alias: ${source}`);
 for (const route of paths) assert(redirects.includes(`${route} /index.html 200`), `Missing content route: ${route}`);
-const metadataRoutes = canonicalMetadataRedirectRows(graph, lifecycle.canonicalUrl);
+const metadataRoutes = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl);
 for (const { source, target, statusCode } of metadataRoutes)
   assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing metadata description: ${source}`);
+
+const deliveryHeaders = await readFile(path.join(dist, "_headers"), "utf8");
+assertCloudflareHeadersContract(deliveryHeaders);
+for (const source of ["/graph.jsonld/*", "/provenance.jsonld/*", "/website",
+  "/medical-specialty-aesthetic-medicine",
+  ...legacyAliases.filter((row) => row.target === "/graph.jsonld").map((row) => row.source)]) {
+  const block = deliveryHeaders.split(/\n\n/).find((block) => block.startsWith(source + "\n"));
+  assert(block?.includes("Content-Type: application/ld+json"), `Missing graph MIME: ${source}`);
+  assert(block?.includes("Access-Control-Allow-Origin: *"), `Missing graph CORS: ${source}`);
+  assert(block?.includes('<' + lifecycle.canonicalUrl + 'graph.jsonld>; rel="canonical"'),
+    `Missing graph canonical: ${source}`);
+}
 
 // Check actual published links and media URLs, including chapter parameters.
 // Canonical RDF identities are validated separately from browser resources.
