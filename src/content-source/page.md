@@ -8,7 +8,7 @@ author: دکتر سعید قزلباش
 authorId: https://www.ghezelbaash.ir/saeed-ghezelbash
 publisher: دکتر سعید قزلباش
 publisherId: https://www.ghezelbaash.ir/saeed-ghezelbash
-dateModified: '2026-09-30'
+dateModified: '2026-10-01'
 lastReviewed: '2026-09-30'
 schemaVersion: https://schema.org/version/30.1/
 socialImage: https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg
@@ -16,7 +16,7 @@ knowledgeGraph:
   url: https://www.ghezelbaash.ir/graph.jsonld
   datasetId: https://www.ghezelbaash.ir/graph.jsonld/dataset
   version: 1.3.3
-  dateModified: '2026-09-30'
+  dateModified: '2026-10-01'
   license: https://creativecommons.org/licenses/by/4.0/
 lang: fa-IR
 dir: rtl
@@ -440,6 +440,90 @@ machineResources:
     head:
       rel: describedby
     footerLabel: Croissant 1.1
+discovery:
+  # Authored equivalent questions only. Sorani keeps ckb-IQ in HTML/RDF;
+  # hreflang uses Google's supported ISO 639-1 Kurdish language code ku.
+  translationGroups:
+    - members:
+        - path: /who-is-dr-saeed-ghezelbash-en
+          lang: en
+          hreflang: en
+        - path: /who-is-dr-saeed-ghezelbash-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /who-is-dr-saeed-ghezelbash-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /which-facial-cosmetic-surgery-procedures-are-assessed-en
+          lang: en
+          hreflang: en
+        - path: /which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /which-non-surgical-aesthetic-treatments-are-available-en
+          lang: en
+          hreflang: en
+        - path: /which-non-surgical-aesthetic-treatments-are-available-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /which-non-surgical-aesthetic-treatments-are-available-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /does-dr-ghezelbash-accept-filler-correction-cases-en
+          lang: en
+          hreflang: en
+        - path: /does-dr-ghezelbash-accept-filler-correction-cases-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /can-iraqi-patients-send-photos-before-travel-en
+          lang: en
+          hreflang: en
+        - path: /can-iraqi-patients-send-photos-before-travel-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /can-iraqi-patients-send-photos-before-travel-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /central-lip-lift-versus-lip-filler-en
+          lang: en
+          hreflang: en
+        - path: /central-lip-lift-versus-lip-filler-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /central-lip-lift-versus-lip-filler-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /is-buccal-fat-removal-suitable-for-every-full-face-en
+          lang: en
+          hreflang: en
+        - path: /is-buccal-fat-removal-suitable-for-every-full-face-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
+    - members:
+        - path: /can-surgical-and-non-surgical-treatments-be-combined-en
+          lang: en
+          hreflang: en
+        - path: /can-surgical-and-non-surgical-treatments-be-combined-ar-iq
+          lang: ar-IQ
+          hreflang: ar-IQ
+        - path: /can-surgical-and-non-surgical-treatments-be-combined-ckb-iq
+          lang: ckb-IQ
+          hreflang: ku-IQ
 retrieval:
   schemaVersion: '2.6'
   scopes:
@@ -470,7 +554,7 @@ guideSearch:
   ariaLabel: جست‌وجوی درون راهنمای پزشکی زیبایی
   inputAriaLabel: جست‌وجو در راهنمای پزشکی زیبایی
   placeholder: بوتاکس، فیلر، عوارض یا انتخاب پزشک…
-  initialStatus: عنوان‌های H1 تا H5 و مسیرهای موضوعی همین صفحه جست‌وجو می‌شوند.
+  initialStatus: عنوان‌های H1 تا H6 و مسیرهای موضوعی همین صفحه جست‌وجو می‌شوند.
   resultsAriaLabel: نتایج جست‌وجوی همین صفحه
   minimumQuery: برای جست‌وجوی دقیق‌تر دست‌کم دو حرف وارد کنید.
   empty: نتیجه‌ای پیدا نشد؛ عبارت کوتاه‌تر یا اصطلاح نزدیک‌تری را امتحان کنید.
@@ -548,8 +632,9 @@ llmsGuide: >
 
 
   > Official website of Mohammad Saeed Ghezelbash (دکتر سعید قزلباش), an aesthetic physician in Kermanshah,
-  Iran. This guide links his identity, clinical content, authored works and physician-owned clinic to one
-  canonical page and its first-party machine-readable projections.
+  Iran. This guide links his identity, clinical content, authored works and physician-owned clinic through
+  a comprehensive homepage, independently canonical topic entry URLs and first-party machine-readable
+  projections. All topic URLs share the same single-page reader and the same physician entity.
 
 
   Canonical page: https://www.ghezelbaash.ir/. Primary entity: https://www.ghezelbaash.ir/saeed-ghezelbash.
@@ -582,11 +667,16 @@ llmsGuide: >
   not sameAs profiles.
 
 
-  The canonical HTML page is the human-readable citation destination. Markdown, passage and answer exports
-  carry its source anchors and physician attribution; answers retain their clinical context and are not
-  individualized medical assessments. Machine representations are public and crawlable, with Googlebot-scoped
-  noindex, follow; the canonical HTML URL alone is declared in the Google-facing sitemap. The two vCards are
-  separate noindex contact utilities.
+  The comprehensive homepage remains the physician's primary entity page. Topic entry URLs provide focused,
+  self-canonical human-readable citation destinations with their own mainEntity; their author and publisher
+  resolve to the same physician IRI and they remain part of the comprehensive homepage. Direct entry shows
+  the relevant section; the complete guide expands in the same document without reloading. Markdown,
+  passage and answer exports carry the corresponding source URLs, heading context and physician attribution;
+  answers retain their clinical context and are not individualized medical assessments. Machine representations
+  are public and crawlable, with Googlebot-scoped noindex, follow. The Google-facing sitemap declares the
+  comprehensive homepage and independently canonical topic entry URLs. Explicit hreflang groups connect
+  only authored equivalent English, Iraqi Arabic and Sorani Kurdish questions; language is not a claim of
+  a separate clinic location. The two vCards are separate noindex contact utilities.
 
 
   Evidence tiers are assessments maintained by this first-party project; sources and assessment records are

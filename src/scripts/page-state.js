@@ -7,11 +7,21 @@
     lang: doc.documentElement.getAttribute("lang"),
     dir: doc.documentElement.getAttribute("dir"),
     articleLabel: doc.querySelector("article.medical-guide")?.getAttribute("aria-labelledby"),
+    articleLang: doc.querySelector("article.medical-guide")?.getAttribute("lang"),
+    articleDir: doc.querySelector("article.medical-guide")?.getAttribute("dir"),
     metas: [...doc.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map((node) => node.cloneNode(true)),
     canonical: doc.head.querySelector('link[rel="canonical"]')?.cloneNode(true),
+    alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map((node) => node.cloneNode(true)),
     scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map((node) => node.cloneNode(true)),
     context: doc.querySelector("[data-route-context]")?.cloneNode(true),
   });
+  // The complete guide retains its authored language even when the current
+  // route's metadata and context use another language.
+  const initialArticle = d.querySelector("article.medical-guide");
+  if (!focused() && initialArticle) for (const attr of ["lang", "dir"]) {
+    const value = initialArticle.getAttribute(attr) || d.documentElement.getAttribute(attr);
+    if (value) initialArticle.setAttribute(attr, value);
+  }
   cache.set(keyFor(location.pathname), snapshot(d));
   const removeExpandControls = () => {
     if (focused()) return;
@@ -33,12 +43,22 @@
       d.title = state.title;
       if (state.lang) d.documentElement.setAttribute("lang", state.lang);
       if (state.dir) d.documentElement.setAttribute("dir", state.dir);
-      for (const node of d.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],link[rel="canonical"]')) node.remove();
+      for (const node of d.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
       for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
-      for (const node of [...state.metas, state.canonical, ...state.scripts].filter(Boolean)) d.head.append(node.cloneNode(true));
+      for (const node of [...state.metas, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean)) d.head.append(node.cloneNode(true));
+      const article = d.querySelector("article.medical-guide");
       d.querySelector("[data-route-context]")?.remove();
-      if (state.context) d.querySelector("article.medical-guide")?.prepend(state.context.cloneNode(true));
-      if (state.articleLabel) d.querySelector("article.medical-guide")?.setAttribute("aria-labelledby", state.articleLabel);
+      if (state.context) {
+        const context = state.context.cloneNode(true);
+        if (state.lang && !context.getAttribute("lang")) context.setAttribute("lang", state.lang);
+        if (state.dir && !context.getAttribute("dir")) context.setAttribute("dir", state.dir);
+        article?.prepend(context);
+      }
+      if (state.articleLabel) article?.setAttribute("aria-labelledby", state.articleLabel);
+      if (focused()) {
+        if (state.articleLang || state.lang) article?.setAttribute("lang", state.articleLang || state.lang);
+        if (state.articleDir || state.dir) article?.setAttribute("dir", state.articleDir || state.dir);
+      }
       removeExpandControls();
     } catch { /* Keep readable content when a metadata request fails. */ }
   };
@@ -68,6 +88,12 @@
         for (const video of current.querySelectorAll("video[id]"))
           fullVideos.find((node) => node.id === video.id)?.replaceWith(video);
         const context = current.querySelector("[data-route-context]");
+        for (const attr of ["lang", "dir"]) {
+          const contextValue = context?.getAttribute(attr) || d.documentElement.getAttribute(attr);
+          if (context && contextValue) context.setAttribute(attr, contextValue);
+          const guideValue = full.getAttribute(attr) || home.documentElement.getAttribute(attr);
+          if (guideValue) current.setAttribute(attr, guideValue);
+        }
         current.replaceChildren(...[context, ...full.childNodes].filter(Boolean));
         delete d.documentElement.dataset.routeView;
         removeExpandControls();

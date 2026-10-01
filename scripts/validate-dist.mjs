@@ -209,12 +209,25 @@ const sharedStyles = new Set([...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style
 const records = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
 assert.deepEqual(records.map((record) => record.path), paths);
 const pageIds = new Set();
+let translatedPages = 0, topicalPages = 0;
+const homeArticle = elements.find((node) => node.tagName === "article" && (attr(node, "class") || "").split(/\s+/).includes("medical-guide"));
+assert.equal(attr(homeArticle, "lang"), page.lang, "Complete guide needs its own language");
+assert.equal(attr(homeArticle, "dir"), page.dir, "Complete guide needs its own direction");
+assert(!elements.some((node) => node.tagName === "link" && attr(node, "hreflang")), "Homepage must not claim unrelated translations");
+const sitemapHtml = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 for (const record of records) {
   const source = await readFile(path.join(dist, record.file), "utf8");
   const scoped = assertDocumentContract(source), scopedIds = new Set(scoped.ids);
   const canonicals = scoped.elements.filter((node) => node.tagName === "link" && attr(node, "rel") === "canonical");
   assert.equal(canonicals.length, 1);
   assert.equal(attr(canonicals[0], "href"), record.canonicalUrl, "Independent self canonical");
+  const actualAlternates = scoped.elements.filter((node) => node.tagName === "link" && attr(node, "rel") === "alternate" && attr(node, "hreflang"))
+    .map((node) => ({ href: attr(node, "href"), hrefLang: attr(node, "hreflang") }));
+  assert.deepEqual(actualAlternates, record.alternates || [], "Route language alternates must match validated authored translations");
+  if (actualAlternates.length) translatedPages++;
+  const routeArticle = scoped.elements.find((node) => node.tagName === "article" && (attr(node, "class") || "").split(/\s+/).includes("medical-guide"));
+  assert.equal(attr(routeArticle, "lang"), record.lang, "Focused article language");
+  assert.equal(attr(routeArticle, "dir"), record.dir, "Focused article direction");
   assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
@@ -228,6 +241,9 @@ for (const record of records) {
   const pageGraph = new Map(documents[0]["@graph"].map((node) => [node["@id"], node]));
   const pageEntity = pageGraph.get(pageId), refs = [pageEntity.mainEntity].flat();
   assert.equal(pageEntity.url, record.canonicalUrl);
+  const aboutIds = [pageEntity.about].flat().map((ref) => ref?.["@id"]).filter(Boolean);
+  assert(aboutIds.includes(primaryProfile.mainEntity["@id"]), "Every topic must retain its fixed physician about relation");
+  if (aboutIds.some((id) => id !== primaryProfile.mainEntity["@id"])) topicalPages++;
   assert(refs.some((ref) => ref["@id"] === record.entityId), "Route mainEntity mismatch");
   assert(pageGraph.get(record.entityId)?.["@type"], "Route mainEntity must retain its type");
   const scopedAuthor = pageGraph.get(primaryProfile.mainEntity["@id"]);
@@ -249,6 +265,10 @@ for (const record of records) {
     assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(), "Broken scoped resource: " + value);
   }
 }
-console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true }));
+const translationMembers = (page.discovery?.translationGroups || []).flatMap((group) => group.members);
+assert.equal(translatedPages, translationMembers.length, "Every authored translation member must be rendered once");
+assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
+  "Sitemap must publish every reciprocal language alternate");
+console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
 
 console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, metadataRoutes: metadataRoutes.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));

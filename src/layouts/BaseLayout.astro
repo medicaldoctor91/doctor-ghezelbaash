@@ -115,6 +115,8 @@ const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(globalCss)
       <article
         class:list={['medical-guide', { 'medical-guide--entity-home': isMain }]}
         aria-labelledby={entityHeadingId}
+        lang={lang}
+        dir={dir}
       >
         <slot />
       </article>
