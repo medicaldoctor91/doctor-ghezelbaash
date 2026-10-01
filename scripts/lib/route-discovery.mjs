@@ -38,6 +38,30 @@ export function deriveRouteDiscovery(homeHtml, graph, metadata, canonicalUrl) {
       record.contextTitle = (record.contextTitle || record.title) + " | " + parent.title;
       record.documentTitle = record.contextTitle.includes(doctorName) ? record.contextTitle : record.contextTitle + " | " + doctorName;
     }
+    // Short question labels can be clear inside the guide but lack their
+    // medical topic in search results. Use an actual same-language ancestor
+    // only in the document title; visible headings and entity names stay authored.
+    if (values(record.entityTypes).some((type) => ["Question", "Answer"].includes(type))) {
+      const questionParent = [...record.navigation.ancestors].reverse().find((entry) =>
+        entry.lang.toLowerCase() === record.lang.toLowerCase() &&
+        normalized(entry.title) !== normalized(record.title));
+      if (questionParent) {
+        const subjectTitle = record.contextTitle || record.title;
+        const parentTitle = questionParent.title;
+        const repeatsParent = normalized(subjectTitle).includes(normalized(parentTitle));
+        const repeatsPhysician = subjectTitle.includes(doctorName) && parentTitle.includes(doctorName);
+        if (!repeatsParent && !repeatsPhysician) {
+          const contextualTitle = subjectTitle + " | " + parentTitle;
+          const documentTitle = contextualTitle.includes(doctorName)
+            ? contextualTitle : contextualTitle + " | " + doctorName;
+          // Preserve a long authored medical title rather than truncating it.
+          if (documentTitle.length <= 150) {
+            record.documentTitle = documentTitle;
+            record.metadataContext = questionParent;
+          }
+        }
+      }
+    }
     const page = record.document["@graph"].find((node) => node["@id"] === record.canonicalUrl + "#webpage");
     const breadcrumb = record.document["@graph"].find((node) => node["@id"] === page?.breadcrumb?.["@id"]);
     if (!breadcrumb) throw new Error("Route discovery lost its breadcrumb: " + record.path);

@@ -1,0 +1,47 @@
+name: Live production contract
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-production
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout expected main commit
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test production verification without network requests
+        run: node --test scripts/tests/live-smoke.test.mjs
+
+      - name: Verify public production deployment
+        run: node scripts/verify-live.mjs
+
+      - name: Retain production verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-production-${{ github.sha }}
+          path: live-smoke-report.json
+          if-no-files-found: warn
+          retention-days: 14

@@ -6,7 +6,7 @@ import { deriveRouteDiscovery } from "../lib/route-discovery.mjs";
 import { addHomeTopicNavigation } from "../lib/home-topic-navigation.mjs";
 import { navigationRoots } from "../lib/topic-navigation.mjs";
 import { contentRoutePaths } from "../lib/content-routes.mjs";
-import { renderIndependentPage } from "../lib/independent-pages.mjs";
+import { deriveIndependentPages, renderIndependentPage } from "../lib/independent-pages.mjs";
 import { inspectHtml } from "../lib/html-contract.mjs";
 
 const inputs = readCanonicalInputs(), canonicalUrl = inputs.lifecycle.canonicalUrl;
@@ -60,7 +60,71 @@ test("finished topic records share truthful breadcrumbs, translation alternative
     assert.equal(person.mainEntityOfPage["@id"], canonicalUrl + "webpage");
     if (record.metadataContext) {
       assert(record.navigation.ancestors.some((entry) => entry.path === record.metadataContext.path));
-      assert(record.contextTitle.includes(record.metadataContext.title));
+      assert(record.documentTitle.includes(record.metadataContext.title));
     }
   }
+});
+
+test("generic question and answer document titles carry their real Botox context without changing headings or subjects", () => {
+  const pairs = [
+    ["botox-onset-of-action", "botox-faq", "پرسش‌های پرتکرار بوتاکس"],
+    ["botox-dynamic-facial-examination", "botox-pre-injection-clinical-assessment", "پرونده، دوز و تصمیم قبل از تزریق بوتاکس"],
+  ];
+  const doctorName = "دکتر سعید قزلباش";
+  for (const [source, parentPath, parentTitle] of pairs) for (const prefix of ["", "answer-"]) {
+    const record = records.find((entry) => entry.path === "/" + prefix + source);
+    const expected = record.title + " | " + parentTitle + " | " + doctorName;
+    assert.equal(record.documentTitle, expected);
+    assert.equal(record.contextTitle, record.title);
+    assert.equal(record.metadataContext.path, "/" + parentPath);
+    assert.equal(record.metadataContext.lang, record.lang);
+    assert.equal(record.documentTitle.split(doctorName).length - 1, 1);
+    assert.equal(record.documentTitle.split(parentTitle).length - 1, 1);
+    const rendered = inspectHtml(renderIndependentPage(home, record));
+    const heading = rendered.headings.find((node) => attr(node, "id") === "route-page-title");
+    const text = (node) => node.nodeName === "#text" ? node.value : (node.childNodes || []).map(text).join("");
+    assert.equal(text(heading), record.title);
+    const title = rendered.elements.find((node) => node.tagName === "title");
+    assert.equal(text(title), expected);
+    const canonicals = rendered.elements.filter((node) => node.tagName === "link" && attr(node, "rel") === "canonical");
+    assert.equal(canonicals.length, 1);
+    assert.equal(attr(canonicals[0], "href"), record.canonicalUrl);
+    const page = record.document["@graph"].find((node) => node["@id"] === record.canonicalUrl + "#webpage");
+    assert.equal(page.name, record.title);
+    assert([page.mainEntity].flat().some((ref) => ref["@id"] === record.entityId));
+    const subject = record.document["@graph"].find((node) => node["@id"] === record.entityId);
+    const original = inputs.graph["@graph"].find((node) => node["@id"] === record.entityId);
+    if (record.entityTypes.includes("Question")) assert.equal(subject.name, original.name);
+    else assert.equal(subject.text, original.text);
+  }
+});
+
+test("context titles retain their language and avoid duplicating an already named physician", () => {
+  const english = records.find((record) => record.path === "/which-non-surgical-aesthetic-treatments-are-available-en");
+  assert.equal(english.metadataContext.lang, "en");
+  assert.equal(english.metadataContext.path, "/frequently-asked-questions-dr-saeed-ghezelbash-en");
+  assert(english.documentTitle.includes("Frequently asked questions about Dr. Saeed Ghezelbash"));
+  assert(!english.documentTitle.includes("پرسش"));
+  const identity = records.find((record) => record.path === "/who-is-dr-saeed-ghezelbash-en");
+  assert.equal(identity.documentTitle, identity.title);
+  assert.equal(identity.documentTitle.split("Saeed Ghezelbash").length - 1, 1);
+});
+
+test("long specific medical titles are retained and complete-section and homepage titles remain unchanged", () => {
+  const baseline = deriveIndependentPages(home, inputs.graph, canonicalUrl,
+    { focusedViews: inputs.pageFrontmatter.discovery.focusedViews });
+  const long = records.find((record) => record.path === "/clinic-before-visit-information");
+  const oldLong = baseline.find((record) => record.path === long.path);
+  const parent = [...long.navigation.ancestors].reverse().find((entry) =>
+    entry.lang === long.lang && entry.title !== long.title);
+  assert((long.title + " | " + parent.title).length > 150);
+  assert.equal(long.documentTitle, oldLong.documentTitle);
+  assert.equal(long.contextTitle, oldLong.contextTitle);
+  const botox = records.find((record) => record.path === "/botox");
+  const oldBotox = baseline.find((record) => record.path === botox.path);
+  assert.equal(botox.documentTitle, oldBotox.documentTitle);
+  assert.equal(botox.contextTitle, oldBotox.contextTitle);
+  assert.equal(botox.bodyHtml, oldBotox.bodyHtml);
+  assert.equal(botox.canonicalUrl, oldBotox.canonicalUrl);
+  assert.equal(inspectHtml(home).elements.find((node) => node.tagName === "title").childNodes[0].value, "Home");
 });
