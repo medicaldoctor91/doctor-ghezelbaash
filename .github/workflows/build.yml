@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test browser discovery and history restoration
+        run: node --test scripts/tests/*.test.mjs
+
       - name: Build distribution
         run: npm run build
 
@@ -34,3 +37,14 @@ jobs:
         run: |
           test -f dist/build-info.json
           node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("dist/build-info.json","utf8")); if (!x.release || !x.commit || !x.branch || !x.provider) process.exit(1); console.log(x)'
+
+      - name: Retain the validated distribution and its hashes
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-dist-${{ github.sha }}
+          path: |
+            dist/
+            .generated/dist-manifest.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

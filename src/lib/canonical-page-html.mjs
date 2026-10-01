@@ -1,4 +1,5 @@
 import { parseFragment } from "parse5";
+import { projectPageJsonLd } from "./page-discovery-jsonld.mjs";
 
 const attr = (node, name) =>
   node.attrs?.find((attribute) => attribute.name === name)?.value;
@@ -13,15 +14,25 @@ const replaceSpans = (source, replacements) => {
 
 /**
  * The finite canonical page body is already HTML. Keep its medical markup and
- * text intact; derive a native guide link and compact JSON-LD data scripts at
+ * text intact; derive a native guide link and browser JSON-LD discovery at
  * their parsed source spans.
  * Escaping '<' prevents JSON strings from entering HTML script escape states or
- * terminating a data script. It leaves the decoded JSON-LD values unchanged.
+ * terminating a data script. The full authored graph remains in graph.jsonld.
  */
 export function renderCanonicalPageHtml(body) {
   const source = String(body);
   const document = parseFragment(source, { sourceCodeLocationInfo: true });
   const replacements = [];
+  const scripts = [];
+  const collectScripts = (node) => {
+    if (node.tagName === "script" && attr(node, "type") === "application/ld+json")
+      scripts.push({ id: attr(node, "id"), document: JSON.parse(
+        source.slice(node.sourceCodeLocation.startTag.endOffset, node.sourceCodeLocation.endTag.startOffset)) });
+    for (const child of node.childNodes || []) collectScripts(child);
+  };
+  collectScripts(document);
+  const discovery = projectPageJsonLd(scripts);
+  const people = scripts.flatMap((script) => script.document["@graph"]);
   const visit = (node) => {
     // The enhanced search replaces this link after initialization. Until then,
     // it is a useful native table-of-contents link, including without JavaScript.
@@ -57,14 +68,35 @@ export function renderCanonicalPageHtml(body) {
         text: `<a ${attributes.map(({ name, value }) => `${name}="${escapeAttribute(value)}"`).join(" ")}>${inner}</a>`,
       });
     }
+    if (node.tagName === "link" && attr(node, "itemprop") === "creator") {
+      const id = attr(node, "href");
+      const person = people.find((entry) => entry["@id"] === id &&
+        [entry["@type"]].flat().includes("Person"));
+      if (!person) throw new Error("Image creator must resolve to an authored Person");
+      const names = [person.name].flat();
+      const name = names.find((entry) => entry?.["@language"] === "fa")?.["@value"]
+        ?? names.find((entry) => entry?.["@value"])?.["@value"] ?? names[0];
+      if (typeof name !== "string") throw new Error("Image creator name missing");
+      replacements.push({
+        start: node.sourceCodeLocation.startOffset,
+        end: node.sourceCodeLocation.endOffset,
+        text: '<span itemprop="creator" itemscope itemtype="https://schema.org/Person" itemid="' +
+          escapeAttribute(id) + '"><meta itemprop="name" content="' + escapeAttribute(name) +
+          '"><link itemprop="url" href="' + escapeAttribute(id) + '"></span>',
+      });
+    }
     if (node.tagName === "script") {
       if (attr(node, "type") !== "application/ld+json")
         throw new Error("Canonical page supports JSON-LD data scripts only");
       const location = node.sourceCodeLocation;
       if (!location?.startTag || !location.endTag)
         throw new Error("Canonical JSON-LD script must have explicit HTML tags");
-      const text = source.slice(location.startTag.endOffset, location.endTag.startOffset);
-      const compact = JSON.stringify(JSON.parse(text)).replaceAll("<", "\\u003c");
+      const projected = discovery.find((script) => script.id === attr(node, "id"));
+      if (!projected) {
+        replacements.push({ start: location.startOffset, end: location.endOffset, text: "" });
+        return;
+      }
+      const compact = JSON.stringify(projected.document).replaceAll("<", "\\u003c");
       replacements.push({
         start: location.startTag.endOffset,
         end: location.endTag.startOffset,

@@ -28,13 +28,13 @@ Microdata is HTML markup. ImageObject attribution and licensing are stored direc
 
 ## Presentation and generated files
 
-The canonical body is already HTML. `index.astro` renders it directly through `canonical-page-html.mjs`; there is no generated Markdown copy or second front matter parse. The projection compacts the two JSON-LD scripts and escapes `<` for safe HTML embedding while preserving their decoded values and the medical text's whitespace.
+The canonical body is already HTML. `index.astro` renders it directly through `canonical-page-html.mjs`; there is no generated Markdown copy or second front matter parse. The projection derives one browser discovery JSON-LD graph from the authored page and escapes `<` for safe HTML embedding. It selects the page, physician, clinic and visible media, formats multilingual literals as text, and omits an optional ProfilePage modification timestamp when only a calendar date is known. Historical events, self-hosted reviews and external profile evidence remain in the complete, byte-identical `graph.jsonld` and RDF exports. Medical text and whitespace are preserved. The image creator uses a typed Person in Microdata; the page uses JSON-LD without a competing URL-valued ProfilePage Microdata scope.
 
 `src/styles/global.css` contains the static presentation and finite chunk-height estimates. Content visibility defers offscreen layout and remembers measured heights; estimates vary with device fonts and viewport. Astro components provide layout. The small progressively enhanced search/navigation runtime lives in `src/scripts/guide-runtime.js` and is minified at build time into one inline script with an exact CSP hash. `public/` contains media and browser assets. Redirects, media aliases, HTTP-header templates and SHACL shapes are technical delivery or validation inputs.
 
 Generated files live in `.generated/` and `dist/`. File hashes, RDF measurements, build identity and Content Security Policy hashes are measured from outputs and do not become canonical authoring requirements. No fixed graph, answer, passage or resource totals are required.
 
-`npm run validate:dist` checks canonical head values, search destinations, image rights, exact graph publication, actual internal links and media resources, metadata routes, faithful evidence projections and the absence of legacy placeholders. The normal build also checks HTML structure, authored JSON-LD preservation, descriptor integrity and Cloudflare's static rule limits. Passage provenance records only explicitly known source revisions and includes the actual answer sources; it does not substitute an archived release date for an unknown revision.
+`npm run validate:dist` checks canonical head values, search destinations, image rights, exact graph publication, actual internal links and media resources, metadata routes, faithful evidence projections and the absence of legacy placeholders. The normal build also checks HTML structure, the browser discovery projection, descriptor integrity and Cloudflare's static rule limits. Passage provenance records only explicitly known source revisions and includes the actual answer sources; it does not substitute an archived release date for an unknown revision.
 
 ## Content paths
 
@@ -45,3 +45,7 @@ Legacy redirects point directly to valid content paths or assets. Defined subjec
 HTML keeps the homepage canonical URL. A shared hash-based CSP covers content aliases and unknown 404 requests; machine resources retain their delivery metadata. Responsive hero preload stays in HTML, without a competing fixed-size HTTP preload. Search supports keyboard navigation, Escape, IME composition and Ctrl/Meta+K; without enhancement its launcher is a native guide link.
 
 Search intent destinations come from `page.md`. Their headings come from each canonical `Answer.url`, without assuming that the answer immediately follows its heading. When the existing detector recognizes an intent, its authored destination is the first result; other results retain the lexical ranking.
+
+## Reviewable build output
+
+CI runs the browser discovery regression tests and the full build, then retains the validated `dist/` and `.generated/dist-manifest.json` with SHA-256 hashes for every final file. Build identity records the checked-out commit (a PR merge ref in PR CI), not proof of a production deployment. Back/Forward reloads skip initial deep-link scrolling so the browser can restore its saved position without BFCache. Production redirect, CSP and Google URL Inspection results still require verification against the deployed final commit; a successful build does not make that claim.

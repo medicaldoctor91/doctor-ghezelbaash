@@ -221,17 +221,23 @@
   });
   const initialSelection=videoFromUrl(new URL(location.href)),
     initialTarget=!location.hash&&(initialSelection?.video||(location.pathname!=="/"&&targetFromPath(location.pathname)));
+  // A full-document Back load may not use BFCache. In that case the browser
+  // still owns its saved scroll position; do not apply fresh deep-link scrolling.
+  const restoringHistory = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
   let initialInteraction=false;
-  if(initialTarget){
+  if(initialTarget && !restoringHistory){
     // All authored content is parsed here: reveal deep links before the first paint.
     selectVideo(initialSelection,{scroll:true,focus:Boolean(initialSelection)});
     if(!initialSelection)moveTo(initialTarget);
     for(const type of ["pointerdown","wheel","keydown"])
       addEventListener(type,()=>{initialInteraction=true},{once:true,passive:true});
-  }else syncTarget();
+  }else {
+    syncTarget(initialSelection?.video || targetFromPath(location.pathname));
+    selectVideo(initialSelection);
+  }
   addEventListener("pageshow", (event) => {
     // BFCache and browser history own restored scroll; loading must not steal it.
-    if(event.persisted||!initialTarget||initialInteraction)return;
+    if(event.persisted||restoringHistory||!initialTarget||initialInteraction)return;
     const rect=initialTarget.getBoundingClientRect();
     if(rect.bottom<=0||rect.top>=innerHeight)moveTo(initialTarget);
   });
