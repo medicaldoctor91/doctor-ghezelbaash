@@ -1,4 +1,5 @@
 import path from "node:path";
+import { renderDiscoverySitemap } from "../discovery-sitemap.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { nodeTypes, valueText } from "../projection-context.mjs";
 import { assembleCanonicalContent, physicianImageUrls } from "../assemble-content.mjs";
@@ -35,22 +36,6 @@ export const vCardEntityKind = (node) => {
   if (individual === organization)
     throw new Error(`Contact discovery: vCard entity kind is ambiguous or unsupported: ${node?.["@id"]}`);
   return individual ? "individual" : "org";
-};
-const xmlEsc = (value) =>
-  String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-const isoDurationSeconds = (value) => {
-  const match = String(value ?? "").match(
-    /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/,
-  );
-  if (!match) return null;
-  return Math.round(
-    Number(match[1] || 0) * 3600 +
-      Number(match[2] || 0) * 60 +
-      Number(match[3] || 0),
-  );
 };
 const requiredText = (value, label) => {
   if (typeof value !== "string" || !value.trim())
@@ -296,46 +281,19 @@ export async function compileContactDiscovery(context) {
   );
   if (!videos.length)
     throw new Error("Contact discovery: canonical video facts are required");
-  let sitemap = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">',
-    "  <url>",
-    `    <loc>${release.canonicalUrl}</loc>`,
-    `    <lastmod>${requiredNode(byId, person.mainEntityOfPage["@id"], "canonical WebPage").dateModified}</lastmod>`,
-    "",
-  ].join("\n");
-  for (const url of imageLocs)
-    sitemap += `    <image:image><image:loc>${xmlEsc(url)}</image:loc></image:image>\n`;
-  for (const video of videos) {
-    const videoId = requiredText(video["@id"], "video @id");
-    const thumb = requiredText(
-      video.thumbnailUrl,
-      `${videoId} thumbnailUrl`,
-    );
-    const content = requiredText(video.contentUrl, `${videoId} contentUrl`);
-    const title = requiredText(valueText(video.name), `${videoId} name`);
-    const description = requiredText(
-      valueText(video.description),
-      `${videoId} description`,
-    );
-    const date = requiredText(video.uploadDate, `${videoId} uploadDate`);
-    const duration = isoDurationSeconds(
-      requiredText(video.duration, `${videoId} duration`),
-    );
-    if (!Number.isInteger(duration) || duration < 1)
-      throw new Error(`Contact discovery: ${videoId} duration is invalid`);
-    sitemap += `${[
-      "    <video:video>",
-      `<video:thumbnail_loc>${xmlEsc(thumb)}</video:thumbnail_loc>`,
-      `<video:title>${xmlEsc(title)}</video:title>`,
-      `<video:description>${xmlEsc(description)}</video:description>`,
-      `<video:content_loc>${xmlEsc(content)}</video:content_loc>`,
-      `<video:publication_date>${xmlEsc(date)}</video:publication_date>`,
-      `<video:duration>${duration}</video:duration>`,
-      "</video:video>",
-    ].join("")}\n`;
-  }
-  sitemap += "  </url>\n</urlset>\n";
+  const sitemap = renderDiscoverySitemap({
+    canonicalUrl: release.canonicalUrl,
+    lastmod: requiredNode(byId, person.mainEntityOfPage["@id"], "canonical WebPage").dateModified,
+    imageUrls: imageLocs,
+    videos: videos.map((video) => ({
+      thumbnailUrl: video.thumbnailUrl,
+      contentUrl: video.contentUrl,
+      title: valueText(video.name),
+      description: valueText(video.description),
+      publicationDate: video.uploadDate,
+      duration: video.duration,
+    })),
+  });
   await writeFile(path.join(projections, "sitemap.xml"), sitemap);
   return { imageCount: imageLocs.length, videoCount: videos.length };
 }
