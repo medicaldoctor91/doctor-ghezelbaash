@@ -35,7 +35,7 @@ test("profile, questions, answers and visible videos retain their distinct autho
   const question = pages.find((page) => page.pageType === "FAQPage");
   assert(question.entityTypes.includes("Question"));
   assert(question.document["@graph"].some((node) => node["@type"] === "Answer"));
-  const video = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
+  const video = pages.find((page) => page.path === "/video-saeed-ghezelbash-jalupro-vs-profhilo");
   assert(video.entityTypes.includes("VideoObject"));
   assert.equal(video.videos.length, 1);
 });
@@ -197,4 +197,130 @@ test("focused HTML renders only declared language alternates and rejects ambiguo
   assert.deepEqual(declaredLinks.map((node) => ({ href: attr(node, "href"), hrefLang: attr(node, "hreflang") })), alternates);
   assert.throws(() => renderIndependentPage(home, { ...page, alternates: [...alternates, alternates[0]] }), /Invalid authored language alternate/);
   assert.throws(() => renderIndependentPage(home, { ...page, alternates: [{ href: "https://example.com/", hrefLang: "en" }] }), /Invalid authored language alternate/);
+});
+
+test("a question embedding its authored video keeps FAQ identity, answer and supporting media", () => {
+  const page = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
+  assert.equal(page.pageType, "FAQPage");
+  assert(page.entityTypes.includes("Question"));
+  const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+  const questionId = inputs.lifecycle.canonicalUrl + "question-jalupro-vs-profhilo-selection";
+  const answerId = inputs.lifecycle.canonicalUrl + "answer-jalupro-vs-profhilo-selection";
+  const videoId = inputs.lifecycle.canonicalUrl + "video-jalupro-vs-profhilo";
+  assert.equal(page.entityId, questionId);
+  assert.deepEqual(byId.get(questionId).acceptedAnswer, { "@id": answerId });
+  assert.equal(byId.get(answerId)["@type"], "Answer");
+  assert.equal(byId.get(videoId)["@type"], "VideoObject");
+  assert.equal(page.videos.length, 1);
+  const player = pages.find((entry) => entry.path === "/video-saeed-ghezelbash-jalupro-vs-profhilo");
+  assert(player.entityTypes.includes("VideoObject"));
+  assert.equal(player.entityId, videoId);
+});
+
+test("media summaries describe their authored subject without browser fallback or chapter controls", () => {
+  for (const path of ["/video-thread-lift-workshop", "/video-kurdish-patient-experience",
+      "/video-saeed-ghezelbash-thread-lift-workshop", "/video-saeed-ghezelbash-kurdish-patient-review"]) {
+    const page = pages.find((entry) => entry.path === path);
+    const media = page.document["@graph"].find((node) => node["@id"] === page.entityId);
+    assert.equal(page.description, media.description);
+    assert(!page.description.includes("مرورگر"));
+    assert(!page.description.includes("00:00"));
+    assert(!page.description.includes("وێبگەڕەکەت"));
+    assert(renderIndependentPage(home, page).includes('content="' + page.description + '"'));
+  }
+});
+
+test("focused body headings start below the route H1 and retain the authored hierarchy and IDs", () => {
+  const page = pages.find((entry) => entry.path === "/forehead-botox-brow-compensation-and-ptosis-risk");
+  const fragment = inspectHtml(page.bodyHtml, { wrapMain: true });
+  assert.equal(fragment.headings[0].tagName, "h2");
+  assert.equal(fragment.headings[1].tagName, "h3");
+  assert(fragment.ids.includes("forehead-botox-rest-and-movement-assessment"));
+  assert(fragment.ids.includes("forehead-botox-brow-compensation-and-ptosis-risk"));
+  const focused = inspectHtml(renderIndependentPage(home, page));
+  assert.equal(focused.headings.filter((node) => node.tagName === "h1").length, 1);
+  assert.equal(focused.headings[1].tagName, "h2");
+  const original = inspectHtml(home).headings.find((node) => node.attrs?.some((entry) =>
+    entry.name === "id" && entry.value === page.htmlId));
+  assert.equal(original.tagName, "h4");
+});
+
+test("named section heading entries show their introduction while section paths retain all subtopics", () => {
+  for (const section of ["botox", "filler", "thread-lift"]) {
+    const complete = pages.find((page) => page.path === "/" + section);
+    const overview = pages.find((page) => page.path === "/" + section + "-heading");
+    assert(complete && overview);
+    assert(overview.description && overview.bodyHtml.length < complete.bodyHtml.length);
+    const overviewContent = inspectHtml(overview.bodyHtml, { wrapMain: true });
+    const completeContent = inspectHtml(complete.bodyHtml, { wrapMain: true });
+    assert.equal(overviewContent.headings.length, 1);
+    assert(completeContent.headings.length > 1);
+    assert(overview.bodyHtml.includes("قاعده من:"));
+    assert.notEqual(overview.bodyHtml, complete.bodyHtml);
+    assert.equal(overview.canonicalUrl, inputs.lifecycle.canonicalUrl + section + "-heading");
+    assert.equal(complete.canonicalUrl, inputs.lifecycle.canonicalUrl + section);
+    const rendered = renderIndependentPage(home, overview);
+    assert(rendered.includes('data-guide-expand'));
+  }
+});
+
+test("answer summaries retain their authored answer and section summaries begin with medical prose", () => {
+  const answer = pages.find((page) => page.path === "/answer-botox-onset-of-action");
+  const original = inputs.graph["@graph"].find((node) => node["@id"] === answer.entityId);
+  assert.equal(answer.description, original.description || original.text);
+  const overview = pages.find((page) => page.path === "/botox-heading");
+  assert(overview.description.startsWith("قاعده من:"));
+  assert(!overview.description.startsWith(overview.title));
+});
+
+
+test("declared historical summary keeps its own geographic evidence distinct from travel guidance", () => {
+  const withViews = deriveIndependentPages(home, inputs.graph, inputs.lifecycle.canonicalUrl,
+    { focusedViews: inputs.pageFrontmatter.discovery.focusedViews });
+  const summary = withViews.find((page) => page.path === "/historical-patient-origin-summary");
+  const travel = withViews.find((page) => page.path === "/out-of-town-aesthetic-patients-iran");
+  assert.equal(summary.scopeKind, "disclosure-summary");
+  assert(summary.bodyHtml.includes("کرمانشاه و استان کرمانشاه"));
+  assert(summary.bodyHtml.includes("عراق و اقلیم کردستان"));
+  assert(!summary.bodyHtml.includes("نوع مراجعه"));
+  assert(summary.description.includes("تعداد بیماران یا ارائهٔ خدمات فعلی"));
+  assert.equal(summary.title, inputs.pageFrontmatter.discovery.focusedViews[0].title);
+  assert.notEqual(summary.bodyHtml, travel.bodyHtml);
+  assert(summary.bodyHtml.length < travel.bodyHtml.length);
+  assert(inspectHtml(summary.bodyHtml, { wrapMain: true }).ids.includes("historical-patient-origin-summary"));
+  assert.equal(summary.entityId, inputs.lifecycle.canonicalUrl + "historical-patient-origin-summary");
+  assert(summary.entityTypes.includes("CreativeWork"));
+  const original = inputs.graph["@graph"].find((node) => node["@id"] === summary.entityId);
+  const originalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  const scopedById = new Map(summary.document["@graph"].map((node) => [node["@id"], node]));
+  const browserById = new Map(inspectHtml(home).elements
+    .filter((node) => node.tagName === "script" && node.attrs?.some((entry) =>
+      entry.name === "type" && entry.value === "application/ld+json"))
+    .flatMap((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join(""))["@graph"])
+    .map((node) => [node["@id"], node]));
+  assert.deepEqual(scopedById.get(summary.entityId).spatialCoverage, original.spatialCoverage);
+  assert.equal(scopedById.get(summary.entityId).temporalCoverage, "historical");
+  const queue = [...original.spatialCoverage];
+  const visited = new Set();
+  while (queue.length) {
+    const ref = queue.shift();
+    if (visited.has(ref["@id"])) continue;
+    visited.add(ref["@id"]);
+    const authoredPlace = originalById.get(ref["@id"]);
+    assert(authoredPlace, "Geographic evidence must refer to an authored place");
+    assert.deepEqual(scopedById.get(ref["@id"]), browserById.get(ref["@id"]),
+      "Historical geography keeps its authored place definition and containment");
+    const parents = Array.isArray(authoredPlace.containedInPlace)
+      ? authoredPlace.containedInPlace : authoredPlace.containedInPlace ? [authoredPlace.containedInPlace] : [];
+    queue.push(...parents);
+  }
+  assert(!scopedById.has(inputs.lifecycle.canonicalUrl + "graph.jsonld/dataset"),
+    "Historical geography must not import the comprehensive homepage Dataset");
+});
+
+test("declared focused views fail rather than selecting missing or unrelated source regions", () => {
+  const valid = inputs.pageFrontmatter.discovery.focusedViews[0];
+  for (const patch of [{ path: "/missing" }, { sourceHeading: "unrelated" }, { mode: "random" }])
+    assert.throws(() => deriveIndependentPages(home, inputs.graph, inputs.lifecycle.canonicalUrl,
+      { focusedViews: [{ ...valid, ...patch }] }), /declared|Declared/);
 });

@@ -1,11 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { pageBody, pageFrontmatter } from '../lib/canonical-inputs.mjs';
+import { pageBody, pageFrontmatter, canonicalGraph, canonicalLifecycle } from '../lib/canonical-inputs.mjs';
 import { renderCanonicalPageHtml } from '../lib/canonical-page-html.mjs';
+import { addHomeTopicNavigation } from '../../scripts/lib/home-topic-navigation.mjs';
 
 // The comprehensive home remains the shared single-page reader. Focused direct
 // entry documents are derived from this rendered content after the Astro build.
-const html = renderCanonicalPageHtml(pageBody);
+const html = addHomeTopicNavigation(renderCanonicalPageHtml(pageBody), canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
 ---
 
 <BaseLayout frontmatter={pageFrontmatter} isMain={true}>

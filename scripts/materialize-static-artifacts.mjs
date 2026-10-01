@@ -10,8 +10,8 @@ import {
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { canonicalGraph, canonicalLifecycle, pageFrontmatter } from "../src/lib/canonical-inputs.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
-import { applyTranslationAlternates } from "./lib/translation-alternates.mjs";
-import { deriveIndependentPages, renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
+import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
+import { renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
 import {
   canonicalHostAliasRows,
   canonicalMetadataAliasRows,
@@ -114,11 +114,7 @@ const aliasRegistry = await loadAliasRegistry(root);
 const legacyAliases = canonicalHostAliasRows(aliasRegistry);
 const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
 const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
-const independentPages = applyTranslationAlternates(
-  deriveIndependentPages(homeHtml, canonicalGraph, canonicalLifecycle.canonicalUrl),
-  pageFrontmatter.discovery?.translationGroups ?? [],
-  { canonicalUrl: canonicalLifecycle.canonicalUrl, graph: canonicalGraph },
-);
+const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
 for (const record of independentPages) await writeExact(record.file, renderIndependentPage(homeHtml, record));
 await writeFile(path.join(root, ".generated/independent-pages.json"), JSON.stringify(independentPages.map(({ bodyHtml, document, ...record }) => record)));
 const registeredSources = new Set(legacyAliases.map((row) => row.source));
