@@ -84,3 +84,12 @@ test("confirmed patient rating and precise workshop day survive all source proje
   assert(inputs.pageBody.includes("امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵"));
   assert(inputs.pageBody.includes('<time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time>'));
 });
+
+test("events retain their real location address and incomplete locations are reported", () => {
+  const document = structuredClone(projectPageJsonLd(inputs.pageJsonLd)[0].document);
+  const city = document["@graph"].find((node) => node["@id"] === "https://www.ghezelbaash.ir/city-tehran");
+  assert.deepEqual(city.address, { "@type": "PostalAddress", addressLocality: "تهران", addressCountry: "IR" });
+  delete city.address;
+  const result = assertRichResultsDocument(document);
+  assert(result.incompleteCandidates.some((node) => node.missing.includes("location.address")));
+});

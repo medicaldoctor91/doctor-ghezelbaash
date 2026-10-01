@@ -4764,6 +4764,11 @@ skipLinkLabel: پرش به محتوای اصلی
       ],
       "containedInPlace": {
         "@id": "https://www.ghezelbaash.ir/country-iran"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "تهران",
+        "addressCountry": "IR"
       }
     },
     {

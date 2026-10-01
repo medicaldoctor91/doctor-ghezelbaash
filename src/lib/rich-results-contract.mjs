@@ -107,7 +107,13 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   for (const node of nodes) {
     const missing = [];
     if (hasType(node, "Review") && !node.reviewRating) missing.push("reviewRating");
-    if ((hasType(node, "Event") || hasType(node, "EducationEvent")) && !node.startDate) missing.push("startDate");
+    if (hasType(node, "Event") || hasType(node, "EducationEvent")) {
+      if (!node.startDate) missing.push("startDate");
+      const location = byId.get(node.location?.["@id"]) ?? node.location;
+      if (!location?.name) missing.push("location.name");
+      const address = byId.get(location?.address?.["@id"]) ?? location?.address;
+      if (!address || !hasType(address, "PostalAddress")) missing.push("location.address");
+    }
     if (hasType(node, "Dataset") && !node.description) missing.push("description");
     if (missing.length) incompleteCandidates.push({ id: node["@id"], types: values(node["@type"]), missing });
   }
