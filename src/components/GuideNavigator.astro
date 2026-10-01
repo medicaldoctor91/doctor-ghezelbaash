@@ -3,12 +3,13 @@ import { canonicalLifecycle as rawRelease, pageFrontmatter } from '../lib/canoni
 import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
 import { canonicalGraph } from '../lib/knowledge-graph';
 import { canonicalContentHtmlId } from '../lib/graph-core.mjs';
+import { createGuideSearch } from '../lib/guide-search.mjs';
 import runtimeSource from '../scripts/guide-runtime.js?raw';
 import { transformSync } from 'esbuild';
 import { STATIC_ARTIFACTS } from '../lib/resources.mjs';
 import { loadAliasRegistry, canonicalHostAliasRows, contentAliasTargets } from '../../scripts/lib/redirect-registry.mjs';
 
-const runtime = transformSync(runtimeSource, {
+const runtime = transformSync(`const createGuideSearch = (${createGuideSearch.toString()});\n${runtimeSource}`, {
   minify: true,
   target: 'es2022',
   legalComments: 'none',
