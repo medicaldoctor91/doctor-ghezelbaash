@@ -233,6 +233,11 @@ for (const record of records) {
   const scopedAuthor = pageGraph.get(primaryProfile.mainEntity["@id"]);
   assert.equal(scopedAuthor.url, lifecycle.canonicalUrl, "Doctor homepage URL must remain central");
   assert.deepEqual(scopedAuthor.mainEntityOfPage, { "@id": primaryProfile["@id"] }, "Doctor main profile must remain the homepage");
+  const homeAuthor = browserById.get(primaryProfile.mainEntity["@id"]);
+  for (const property of ["sameAs", "hasCredential", "memberOf", "identifier"])
+    assert.deepEqual(scopedAuthor[property], homeAuthor[property], "Doctor identity/qualification drift: " + property);
+  for (const ref of [...scopedAuthor.hasCredential, ...scopedAuthor.identifier, scopedAuthor.worksFor, scopedAuthor.alumniOf])
+    assert(pageGraph.get(ref["@id"])?.["@type"], "Doctor qualification or identity needs its authored typed node");
   assert([pageEntity.isPartOf].flat().some((ref) => ref["@id"] === primaryProfile["@id"]), "Topic must relate to the comprehensive homepage");
   for (const body of execBodies(source)) assert(sharedExec.has(body), "New unapproved executable script in scoped page");
   for (const match of source.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi))

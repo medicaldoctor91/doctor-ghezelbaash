@@ -92,7 +92,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     const pageType = typed(entity, "Person") ? "ProfilePage"
       : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
     const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: title, description,
-      inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] },
+      inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
       mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
       dateModified: revision };
     if (pageType === "ProfilePage") delete pageNode.dateModified;
@@ -107,7 +107,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     // accidentally turn every scoped page back into the complete graph.
     const relationKeys = ["acceptedAnswer", "suggestedAnswer", "creator", "publisher", "author", "address", "geo",
       "openingHoursSpecification", "provider", "image", "logo", "primaryImageOfPage", "hasCourseInstance", "location",
-      "instructor", "organizer", "reviewRating", "itemReviewed", "about", "isBasedOn", "citation", "hasPart"];
+      "instructor", "organizer", "reviewRating", "itemReviewed", "about", "isBasedOn", "citation", "hasPart",
+      "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy", "identifier", "hasOccupation", "medicalSpecialty"];
     while (queue.length) {
       const node = queue.shift();
       if (!node || selected.has(node["@id"])) continue;
@@ -116,7 +117,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       delete output.subjectOf; delete output.mentions;
       if (typed(output, "WebSite")) delete output.hasPart;
       if (typed(output, "WebPageElement")) { delete output.isPartOf; delete output.hasPart; }
-      if (typed(output, "Person")) { delete output.knowsAbout; delete output.hasCredential; delete output.memberOf; }
+      if (typed(output, "Person") && output["@id"] !== person["@id"]) { delete output.knowsAbout; delete output.hasCredential; delete output.memberOf; }
       if (!typed(output, "VideoObject") && !typed(output, "Question")) delete output.hasPart;
       if (typed(output, "WebPage") || typed(output, "ProfilePage") || typed(output, "MedicalWebPage")) continue;
       selected.set(output["@id"], output);
