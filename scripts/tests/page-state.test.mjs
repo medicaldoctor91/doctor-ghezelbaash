@@ -6,15 +6,16 @@ import { runInNewContext } from "node:vm";
 
 const source = readFileSync(new URL("../../src/scripts/page-state.js", import.meta.url), "utf8");
 const origin = "https://www.ghezelbaash.ir";
-const home = '<html lang="fa-IR" dir="rtl"><head><title>Home</title><link rel="canonical" href="' + origin + '/"></head><body><main id="main-content"><article class="medical-guide" aria-labelledby="home-title"><script type="application/ld+json">{"@graph":[{"@id":"home"}]}</script><h1 id="home-title">Home</h1><h2 id="botox">Botox</h2><h2 id="filler">Filler</h2><h2 id="english">English</h2><video id="patient-video"></video></article></main></body></html>';
-const focused = (title, slug, lang = "fa-IR", dir = "rtl") => '<html lang="' + lang + '" dir="' + dir + '" data-route-view="focused"><head><title>' + title + '</title><meta name="description" content="' + title +
-  '"><link rel="canonical" href="' + origin + '/' + slug + '"><script type="application/ld+json">{"@graph":[{"@id":"' + slug +
-  '"}]}</script></head><body><main id="main-content"><article class="medical-guide" aria-labelledby="route-page-title"><header data-route-context><h1 id="route-page-title">' + title +
+const home = '<html lang="fa-IR" dir="rtl"><head><title>Home</title><link rel="canonical" href="' + origin + '/"></head><body><main id="main-content"><article class="medical-guide" lang="fa-IR" dir="rtl" aria-labelledby="home-title"><script type="application/ld+json">{"@graph":[{"@id":"home"}]}</script><h1 id="home-title">Home</h1><h2 id="botox">Botox</h2><h2 id="filler">Filler</h2><h2 id="english">English</h2><video id="patient-video"></video></article></main></body></html>';
+const focused = (title, slug, lang = "fa-IR", dir = "rtl", alternates = []) => '<html lang="' + lang + '" dir="' + dir + '" data-route-view="focused"><head><title>' + title + '</title><meta name="description" content="' + title +
+  '"><link rel="canonical" href="' + origin + '/' + slug + '">' + alternates.map(({ href, hrefLang }) => '<link rel="alternate" hreflang="' + hrefLang + '" href="' + href + '">').join("") + '<script type="application/ld+json">{"@graph":[{"@id":"' + slug +
+  '"}]}</script></head><body><main id="main-content"><article class="medical-guide" lang="' + lang + '" dir="' + dir + '" aria-labelledby="route-page-title"><header data-route-context lang="' + lang + '" dir="' + dir + '"><h1 id="route-page-title">' + title +
   '</h1><a href="/" data-guide-expand data-loading="Loading…" data-error="Retry">Show the complete guide</a><p data-guide-expand-status></p></header><h2 id="' + slug + '">' + title +
   '</h2><video id="patient-video"></video></article></main><input id="guide-search-input"></body></html>';
 // The adapter executes actual page-state code and its delegated user events.
 const matches = (node, selector) => {
   if (selector === "script") return node.tagName === "script";
+  if (selector === 'link[rel="alternate"][hreflang]') return node.tagName === "link" && node.getAttribute("rel") === "alternate" && node.hasAttribute("hreflang");
   if (selector === "article.medical-guide") return node.tagName === "article" && (node.getAttribute("class") || "").split(/\s+/).includes("medical-guide");
   if (selector.startsWith("#")) return node.id === selector.slice(1);
   const present = /^(?:(a|video))?\[([a-z-]+)\]$/.exec(selector);
@@ -81,10 +82,14 @@ function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce
     replaceState: (_, __, path) => { location.pathname = path; },
   } };
   const requests = [];
+  const englishAlternates = [
+    { href: origin + "/english", hrefLang: "en" },
+    { href: origin + "/arabic", hrefLang: "ar-IQ" },
+  ];
   const fetch = async (path) => {
     requests.push(path);
     if (failOnce) { failOnce = false; return { ok: false }; }
-    return { ok: true, text: async () => path === "/" ? home : path === "/english" ? focused("English", "english", "en", "ltr") : focused("Filler", "filler") };
+    return { ok: true, text: async () => path === "/" ? home : path === "/english" ? focused("English", "english", "en", "ltr", englishAlternates) : focused("Filler", "filler") };
   };
   class DOMParser { parseFromString(html) { return documentFor(html); } }
   class CustomEvent { constructor(type) { this.type = type; } }
@@ -168,4 +173,43 @@ test("home is already complete and never fetches itself during initialization or
   await window.expandCompleteGuide();
   assert(window.document.getElementById("filler"));
   assert.deepEqual(requests, []);
+});
+
+test("English entry expansion preserves route language while the full Persian article retains its direction", async () => {
+  const { window } = reader({ initial: focused("English", "english", "en", "ltr"), path: "/english" });
+  const document = window.document, article = document.querySelector("article.medical-guide");
+  assert.equal(article.getAttribute("lang"), "en");
+  assert.equal(article.getAttribute("dir"), "ltr");
+  assert.equal(await window.expandCompleteGuide(), true);
+  assert.equal(document.documentElement.getAttribute("lang"), "en");
+  assert.equal(document.documentElement.getAttribute("dir"), "ltr");
+  assert.equal(article.getAttribute("lang"), "fa-IR");
+  assert.equal(article.getAttribute("dir"), "rtl");
+  assert.equal(document.querySelector("[data-route-context]").getAttribute("lang"), "en");
+  assert.equal(document.querySelector("[data-route-context]").getAttribute("dir"), "ltr");
+});
+test("same-document route language never changes the complete Persian article's direction", async () => {
+  const { window } = reader({ initial: home, path: "/" }), document = window.document;
+  window.history.pushState(null, "", "/english");
+  await window.syncGuidePageState("/english");
+  assert.equal(document.documentElement.getAttribute("lang"), "en");
+  assert.equal(document.querySelector("article.medical-guide").getAttribute("lang"), "fa-IR");
+  assert.equal(document.querySelector("article.medical-guide").getAttribute("dir"), "rtl");
+  assert.equal(document.querySelector("[data-route-context]").getAttribute("lang"), "en");
+  assert.equal(document.querySelector("[data-route-context]").getAttribute("dir"), "ltr");
+});
+test("SPA navigation removes stale language alternates and restores them from its cache", async () => {
+  const { window, requests } = reader({ initial: home, path: "/" }), document = window.document;
+  window.history.pushState(null, "", "/english");
+  await window.syncGuidePageState("/english");
+  const selector = 'link[rel="alternate"][hreflang]';
+  assert.equal(document.head.querySelectorAll(selector).length, 2);
+  assert.equal(document.head.querySelectorAll(selector)[0].getAttribute("hreflang"), "en");
+  window.history.pushState(null, "", "/filler");
+  await window.syncGuidePageState("/filler");
+  assert.equal(document.head.querySelectorAll(selector).length, 0);
+  window.history.replaceState(null, "", "/english");
+  await window.syncGuidePageState("/english");
+  assert.equal(document.head.querySelectorAll(selector).length, 2);
+  assert.deepEqual(requests, ["/english", "/filler"]);
 });

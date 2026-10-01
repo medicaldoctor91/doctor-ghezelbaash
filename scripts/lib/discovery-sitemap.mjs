@@ -1,5 +1,5 @@
 /** Render the canonical document and its media using sitemap protocol bounds. */
-function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos }, allowEmptyMedia = false) {
+function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos, alternates = [] }, allowEmptyMedia = false) {
   const required = (value, label) => {
     if (typeof value !== "string" || !value.trim() || value !== value.trim())
       throw new Error("Sitemap requires normalized " + label);
@@ -10,11 +10,27 @@ function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos }, all
     return value;
   };
   const escape = (value) => String(value).replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    .replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
   const canonical = new URL(required(canonicalUrl, "canonical URL"));
   if (canonical.protocol !== "https:" || canonical.username || canonical.password || canonical.hash || canonical.search)
     throw new Error("Sitemap canonical URL must be an absolute HTTPS document URL");
   if (canonical.href.length > 2048) throw new Error("Sitemap canonical URL exceeds 2048 characters");
+  if (!Array.isArray(alternates) || alternates.length > 50)
+    throw new Error("Sitemap alternates must be a list of at most 50 language equivalents");
+  const alternateLanguages = new Set(), alternateUrls = new Set();
+  const alternateXml = alternates.map((alternate) => {
+    const hrefLang = required(alternate?.hrefLang, "alternate language");
+    if (!/^[a-z]{2}(?:-[A-Z]{2})?$/.test(hrefLang) || alternateLanguages.has(hrefLang))
+      throw new Error("Sitemap alternate language is invalid or repeated");
+    const href = required(alternate.href, "alternate URL"), url = new URL(href);
+    if (url.protocol !== "https:" || url.origin !== canonical.origin || url.username || url.password ||
+        url.search || url.hash || url.href !== href || href.length > 2048 || alternateUrls.has(href))
+      throw new Error("Sitemap alternate URL must be a unique canonical HTTPS URL on the same origin");
+    alternateLanguages.add(hrefLang); alternateUrls.add(href);
+    return '    <xhtml:link rel="alternate" hreflang="' + escape(hrefLang) + '" href="' + escape(href) + '"/>';
+  });
+  if (alternates.length && !alternateUrls.has(canonical.href))
+    throw new Error("Sitemap language alternates must include the canonical page itself");
   const mediaUrl = (value, label) => {
     const url = new URL(required(value, label));
     if (url.protocol !== "https:" || url.origin !== canonical.origin || url.hash || url.username || url.password)
@@ -65,10 +81,11 @@ function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos }, all
   });
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     "  <url>",
     "    <loc>" + escape(canonical.href) + "</loc>",
     "    <lastmod>" + escape(date(lastmod, "document modification date")) + "</lastmod>",
+    ...alternateXml,
     ...images.map((url) => "    <image:image><image:loc>" + escape(url) + "</image:loc></image:image>"),
     ...videoXml,
     "  </url>",
@@ -93,6 +110,13 @@ export function renderDiscoverySitemap(input) {
     seen.add(url.href);
     return renderDocumentSitemap({ ...record, imageUrls: record.imageUrls || [], videos: record.videos || [] }, true);
   });
+  const byCanonical = new Map(input.pages.map((record) => [record.canonicalUrl, record]));
+  const signature = (alternates) => JSON.stringify(alternates.map(({ href, hrefLang }) => [href, hrefLang]).sort());
+  for (const record of input.pages) for (const alternate of record.alternates || []) {
+    const target = byCanonical.get(alternate.href);
+    if (!target || signature(record.alternates) !== signature(target.alternates || []))
+      throw new Error("Sitemap language alternates must reference existing reciprocal pages from the same reviewed group");
+  }
   const first = documents[0];
   const xml = first.slice(0, first.indexOf("  <url>")) + documents.map((document) =>
     document.slice(document.indexOf("  <url>"), document.indexOf("</urlset>"))).join("") + "</urlset>\n";

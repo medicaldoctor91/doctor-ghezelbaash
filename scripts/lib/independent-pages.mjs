@@ -7,6 +7,9 @@ import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.m
 const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const typed = (node, type) => values(node?.["@type"]).includes(type);
+const namedReferences = (value) => values(value).filter((entry) =>
+  entry && typeof entry === "object" && typeof entry["@id"] === "string").map((entry) => ({ "@id": entry["@id"] }));
+const uniqueReferences = (references) => [...new Map(references.map((entry) => [entry["@id"], entry])).values()];
 const text = (node) => node.nodeName === "#text" ? node.value : (node.childNodes || []).map(text).join(" ");
 const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
 const escape = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
@@ -92,11 +95,24 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     const description = visible.slice(0, 300);
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };
     const entity = sourceMatch ?? exact ?? synthesized;
+    // A fine-grained heading inherits its existing authored section's topic.
+    // An entity's own topic remains authoritative when it is explicitly set.
+    const ownAbout = namedReferences(entity.about);
+    let inheritedAbout = [];
+    if (!ownAbout.length) for (let parent = target.parentNode; parent; parent = parent.parentNode) {
+      const id = attr(parent, "id");
+      const authored = id ? byId.get(origin + "/" + id) : undefined;
+      const references = namedReferences(authored?.about);
+      if (references.length) { inheritedAbout = references; break; }
+    }
+    const topicalReferences = uniqueReferences(ownAbout.length ? ownAbout : inheritedAbout);
+    if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
       : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
     const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: title, description,
       inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
       mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
+      about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
       dateModified: revision };
     if (pageType === "ProfilePage") delete pageNode.dateModified;
         const breadcrumb = { "@id": url + "#breadcrumb", "@type": "BreadcrumbList", itemListElement: [
@@ -105,13 +121,14 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     ] };
     pageNode.breadcrumb = { "@id": breadcrumb["@id"] };
     const selected = new Map([[pageNode["@id"], pageNode], [breadcrumb["@id"], breadcrumb]]);
-    const queue = [entity, person, website, ...videoNodes];
+    const queue = [entity, person, website, ...videoNodes, ...topicalReferences.map((ref) => byId.get(ref["@id"]))];
     // Relevant outward relationships only: broad home hasPart/mentions would
     // accidentally turn every scoped page back into the complete graph.
     const relationKeys = ["acceptedAnswer", "suggestedAnswer", "creator", "publisher", "author", "address", "geo",
       "openingHoursSpecification", "provider", "image", "logo", "primaryImageOfPage", "hasCourseInstance", "location",
       "instructor", "organizer", "reviewRating", "itemReviewed", "about", "isBasedOn", "citation", "hasPart",
-      "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy", "identifier", "hasOccupation", "medicalSpecialty"];
+      "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy", "identifier", "hasOccupation", "medicalSpecialty",
+      "dcterms:subject", "category", "inDefinedTermSet"];
     while (queue.length) {
       const node = queue.shift();
       if (!node || selected.has(node["@id"])) continue;
@@ -125,7 +142,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       if (typed(output, "WebPage") || typed(output, "ProfilePage") || typed(output, "MedicalWebPage")) continue;
       selected.set(output["@id"], output);
       for (const key of relationKeys) for (const ref of values(output[key])) {
-        if (ref && typeof ref === "object" && byId.has(ref["@id"])) queue.push(byId.get(ref["@id"]));
+        const id = typeof ref === "string" ? ref : ref?.["@id"];
+        if (byId.has(id)) queue.push(byId.get(id));
       }
     }
     const document = { "@context": browserContext, "@graph": [...selected.values()] };
@@ -155,16 +173,20 @@ export function renderIndependentPage(homeHtml, record) {
   const copy = copies[record.lang.split("-")[0]] || copies.fa;
   const declaredLocales = parsed.elements.filter((node) => node.tagName === "meta" &&
     ["og:locale", "og:locale:alternate"].includes(attr(node, "property"))).map((node) => attr(node, "content"));
-  const regionalLocale = record.lang.replace("-", "_");
-  const socialLocale = /^[a-z]{2,3}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
-    : declaredLocales.find((locale) => locale?.startsWith(record.lang.split("-")[0] + "_"));
+  const socialLanguage = record.lang.replace(/^ckb(?=-|$)/, "ku");
+  const regionalLocale = socialLanguage.replace("-", "_");
+  const socialLocale = /^[a-z]{2}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
+    : declaredLocales.find((locale) => locale?.startsWith(socialLanguage.split("-")[0] + "_"));
   let html = homeHtml.slice(0, location.startTag.endOffset) +
-    '<header id="route-context" data-route-context><h1 id="route-page-title">' + escape(record.title) + '</h1><p>' + escape(record.description) +
+    '<header id="route-context" data-route-context lang="' + escape(record.lang) + '" dir="' + escape(record.dir) +
+    '"><h1 id="route-page-title">' + escape(record.title) + '</h1><p>' + escape(record.description) +
     '</p><p><a href="/" data-guide-expand aria-controls="main-content" data-loading="' + escape(copy[2]) + '" data-error="' +
     escape(copy[3]) + '">' + escape(copy[0]) + '</a> · <a href="/">' + escape(copy[1]) +
     '</a></p><p data-guide-expand-status role="status" aria-live="polite"></p></header>' +
     record.bodyHtml + homeHtml.slice(location.endTag.startOffset);
-  html = html.replace(/(<article\b[^>]*\baria-labelledby=)["\'][^"\']*["\']/i, '$1"route-page-title"');
+  html = html.replace(/<article\b([^>]*)>/i, (_, attrs) => "<article" +
+    attrs.replace(/\s(?:lang|dir|aria-labelledby)=["\'][^"\']*["\']/gi, "") +
+    ' aria-labelledby="route-page-title" lang="' + escape(record.lang) + '" dir="' + escape(record.dir) + '">');
   html = stripData(html).replace("<html ", '<html data-route-view="focused" ');
   html = html.replace(/<html\b([^>]*)>/i, (_, attrs) => "<html" + attrs.replace(/\s(?:lang|dir)=["\'][^"\']*["\']/gi, "") + ' lang="' + escape(record.lang) + '" dir="' + record.dir + '">');
   html = html.replace(/<title>[\s\S]*?<\/title>/i, "<title>" + escape(record.documentTitle) + "</title>");
@@ -181,6 +203,17 @@ export function renderIndependentPage(homeHtml, record) {
     if (key?.startsWith("profile:") && record.pageType !== "ProfilePage") return "";
     return whole;
   });
-  return html.replace("</head>", '<script id="schema-core-mainentity" type="application/ld+json">' +
+  const declaredAlternates = values(record.alternates);
+  const locales = new Set();
+  const alternateLinks = declaredAlternates.map(({ href, hrefLang }) => {
+    if (typeof hrefLang !== "string" || !/^(?:[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*|x-default)$/.test(hrefLang) ||
+        locales.has(hrefLang.toLowerCase()) || typeof href !== "string" || !URL.canParse(href) ||
+        new URL(href).origin !== new URL(record.canonicalUrl).origin || new URL(href).hash)
+      throw new Error("Invalid authored language alternate for " + record.path);
+    locales.add(hrefLang.toLowerCase());
+    return '<link rel="alternate" hreflang="' + escape(hrefLang) + '" href="' + escape(href) + '">';
+  }).join("");
+  html = html.replace(/<link\b[^>]*\bhreflang=["\'][^"\']*["\'][^>]*>/gi, "");
+  return html.replace("</head>", alternateLinks + '<script id="schema-core-mainentity" type="application/ld+json">' +
     scriptJson(record.document) + "</script></head>");
 }

@@ -23,6 +23,7 @@ test("every authored destination has its own canonical, page identity and readab
     const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
     const document = byId.get(page.canonicalUrl + "#webpage");
     assert.equal(document.url, page.canonicalUrl);
+    assert(document.about.some((node) => node["@id"] === inputs.lifecycle.primaryEntity.id));
     assert([document.mainEntity].flat().some((node) => node["@id"] === page.entityId));
     assert(byId.get(page.entityId)?.["@type"]);
   }
@@ -120,12 +121,80 @@ test("topic document titles keep the authored doctor name while the visible head
   assert(renderIndependentPage(home, page).includes("<title>" + page.documentTitle + "</title>"));
 });
 
-test("English social metadata uses an authored regional locale rather than a bare language code", () => {
+test("social locales use supported regional ISO 639-1 codes while HTML retains precise languages", () => {
+  const template = home.replace("</head>", '<meta property="og:locale" content="fa_IR"><meta property="og:locale:alternate" content="en_US"><meta property="og:locale:alternate" content="ku_IQ"></head>');
+  const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
+  for (const [language, locale] of [["en", "en_US"], ["ckb-IQ", "ku_IQ"]]) {
+    const page = pages.find((page) => page.lang === language);
+    assert(page);
+    const inspected = inspectHtml(renderIndependentPage(template, page));
+    const metas = inspected.elements.filter((node) => node.tagName === "meta");
+    assert.equal(attr(metas.find((node) => attr(node, "property") === "og:locale"), "content"), locale);
+    assert(!metas.some((node) => attr(node, "property") === "og:locale:alternate" && attr(node, "content") === locale));
+    assert.equal(attr(inspected.elements.find((node) => node.tagName === "html"), "lang"), language);
+  }
+});
+
+test("fine-grained Botox headings inherit authored topics and preserve their physician provider without unrelated procedures", () => {
+  const page = pages.find((page) => page.path === "/botox-clinical-assessment-checklist");
+  assert(page);
+  assert.equal(page.entityId, page.canonicalUrl + "#content");
+  const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+  const physicianId = inputs.lifecycle.primaryEntity.id;
+  const procedureId = inputs.lifecycle.canonicalUrl + "procedure-botulinum-toxin-aesthetic-treatment";
+  const conceptId = inputs.lifecycle.canonicalUrl + "biomedical-concept-botulinum-toxin-a";
+  const ownContent = byId.get(page.entityId);
+  const route = byId.get(page.canonicalUrl + "#webpage");
+  assert.deepEqual(ownContent.about, [{ "@id": procedureId }, { "@id": conceptId }]);
+  assert.deepEqual(route.about, [{ "@id": physicianId }, ...ownContent.about]);
+  assert.deepEqual(byId.get(procedureId).provider, { "@id": physicianId });
+  assert.equal(byId.get(conceptId)["@type"], "DefinedTerm");
+  assert(byId.has(inputs.lifecycle.canonicalUrl + "biomedical-concept-registry"));
+  assert(byId.has(inputs.lifecycle.canonicalUrl + "biomedical-concept-cosmetic-techniques"));
+  assert(!byId.has(inputs.lifecycle.canonicalUrl + "procedure-facial-and-lip-dermal-filler"));
+  assert(!byId.has(inputs.lifecycle.canonicalUrl + "biomedical-concept-dermal-fillers"));
+  assert.equal(byId.get(physicianId).mainEntityOfPage["@id"], inputs.lifecycle.canonicalUrl + "webpage");
+  assert.equal(byId.get(physicianId).url, inputs.lifecycle.canonicalUrl);
+});
+
+test("an exact answer's authored topic takes precedence over its broader containing section", () => {
+  const page = pages.find((page) => page.path === "/answer-botox-onset-of-action");
+  const original = inputs.graph["@graph"].find((node) => node["@id"] === page.entityId);
+  assert(original.about);
+  const route = page.document["@graph"].find((node) => node["@id"] === page.canonicalUrl + "#webpage");
+  assert.deepEqual(route.about, [{ "@id": inputs.lifecycle.primaryEntity.id }, ...[original.about].flat()]);
+  assert(!route.about.some((ref) => ref["@id"] === inputs.lifecycle.canonicalUrl + "biomedical-concept-botulinum-toxin-a"));
+});
+
+test("foreign-language entry articles and route context override inherited homepage language and direction", () => {
   const page = pages.find((page) => page.lang === "en");
   assert(page);
-  const template = home.replace("</head>", '<meta property="og:locale" content="fa_IR"><meta property="og:locale:alternate" content="en_US"></head>');
+  const template = home.replace('<article class="medical-guide">', '<article class="medical-guide" lang="fa-IR" dir="rtl">')
+    .replace("<body>", '<body lang="fa-IR" dir="rtl">');
+  const inspected = inspectHtml(renderIndependentPage(template, page));
   const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
-  const metas = inspectHtml(renderIndependentPage(template, page)).elements.filter((node) => node.tagName === "meta");
-  assert.equal(attr(metas.find((node) => attr(node, "property") === "og:locale"), "content"), "en_US");
-  assert(!metas.some((node) => attr(node, "property") === "og:locale:alternate" && attr(node, "content") === "en_US"));
+  const article = inspected.guideArticles[0];
+  const context = inspected.elements.find((node) => attr(node, "data-route-context") !== undefined);
+  for (const node of [article, context]) {
+    assert.equal(attr(node, "lang"), "en");
+    assert.equal(attr(node, "dir"), "ltr");
+  }
+  assert.equal(attr(article, "aria-labelledby"), "route-page-title");
+  const body = inspected.elements.find((node) => node.tagName === "body");
+  assert.equal(attr(body, "lang"), "fa-IR");
+  assert.equal(attr(body, "dir"), "rtl");
+});
+
+test("focused HTML renders only declared language alternates and rejects ambiguous or foreign destinations", () => {
+  const page = pages.find((page) => page.lang === "en");
+  const arabic = pages.find((page) => page.lang.startsWith("ar"));
+  assert(page && arabic);
+  const alternates = [{ href: page.canonicalUrl, hrefLang: "en" }, { href: arabic.canonicalUrl, hrefLang: arabic.lang }];
+  const template = home.replace("</head>", '<link rel="alternate" hreflang="fa-IR" href="' + inputs.lifecycle.canonicalUrl + '"></head>');
+  const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
+  const declaredLinks = inspectHtml(renderIndependentPage(template, { ...page, alternates })).elements
+    .filter((node) => node.tagName === "link" && attr(node, "hreflang"));
+  assert.deepEqual(declaredLinks.map((node) => ({ href: attr(node, "href"), hrefLang: attr(node, "hreflang") })), alternates);
+  assert.throws(() => renderIndependentPage(home, { ...page, alternates: [...alternates, alternates[0]] }), /Invalid authored language alternate/);
+  assert.throws(() => renderIndependentPage(home, { ...page, alternates: [{ href: "https://example.com/", hrefLang: "en" }] }), /Invalid authored language alternate/);
 });

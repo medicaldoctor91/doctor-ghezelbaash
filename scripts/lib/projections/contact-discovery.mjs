@@ -1,4 +1,5 @@
 import { deriveIndependentPages } from "../independent-pages.mjs";
+import { applyTranslationAlternates } from "../translation-alternates.mjs";
 import { renderCanonicalPageHtml } from "../../../src/lib/canonical-page-html.mjs";
 import path from "node:path";
 import { renderDiscoverySitemap } from "../discovery-sitemap.mjs";
@@ -283,7 +284,7 @@ export async function compileContactDiscovery(context) {
   );
   if (!videos.length)
     throw new Error("Contact discovery: canonical video facts are required");
-  const focusedPages = deriveIndependentPages('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content) + '</article></main></body></html>', graph, release.canonicalUrl);
+  const focusedPages = applyTranslationAlternates(deriveIndependentPages('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content) + '</article></main></body></html>', graph, release.canonicalUrl), context.pageFrontmatter.discovery?.translationGroups ?? [], { canonicalUrl: release.canonicalUrl, graph });
   const sitemap = renderDiscoverySitemap({ pages: [{
     canonicalUrl: release.canonicalUrl,
     lastmod: requiredNode(byId, person.mainEntityOfPage["@id"], "canonical WebPage").dateModified,

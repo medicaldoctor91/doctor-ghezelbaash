@@ -106,7 +106,7 @@ const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(globalCss)
       <noscript><link href={externalCssHref} rel="stylesheet"></noscript>
     </DocumentHead>
   </head>
-  <body>
+  <body lang={lang} dir={dir}>
     <a class="skip-link" href="#main-content">{pageFrontmatter.skipLinkLabel}</a>
     <main
       id="main-content"
@@ -115,6 +115,8 @@ const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(globalCss)
       <article
         class:list={['medical-guide', { 'medical-guide--entity-home': isMain }]}
         aria-labelledby={entityHeadingId}
+        lang={lang}
+        dir={dir}
       >
         <slot />
       </article>

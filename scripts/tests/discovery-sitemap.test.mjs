@@ -74,3 +74,37 @@ test("independent canonical pages may be text-only and are emitted exactly once"
   assert.throws(() => renderDiscoverySitemap({ pages: [...input.pages, input.pages[0]] }), /duplicate canonical/);
   assert.throws(() => renderDiscoverySitemap({ pages: [input.pages[0], { ...input.pages[1], canonicalUrl: "https://other.test/botox" }] }), /origin/);
 });
+
+const translatedPages = () => {
+  const alternates = [
+    { href: "https://www.ghezelbaash.ir/who-en", hrefLang: "en" },
+    { href: "https://www.ghezelbaash.ir/who-ar-iq", hrefLang: "ar-IQ" },
+    { href: "https://www.ghezelbaash.ir/who-ckb-iq", hrefLang: "ku-IQ" },
+  ];
+  return alternates.map(({ href }) => ({ canonicalUrl: href, lastmod: "2026-10-01", alternates: structuredClone(alternates) }));
+};
+test("sitemap publishes reciprocal equivalents with XHTML namespace even when home is the first entry", () => {
+  const pages = translatedPages(), homepage = { canonicalUrl: "https://www.ghezelbaash.ir/", lastmod: "2026-10-01" };
+  const xml = renderDiscoverySitemap({ pages: [homepage, ...pages] });
+  assert(xml.includes('xmlns:xhtml="http://www.w3.org/1999/xhtml"'));
+  assert.equal([...xml.matchAll(/<xhtml:link /g)].length, 9);
+  assert(xml.includes('<xhtml:link rel="alternate" hreflang="ku-IQ" href="https://www.ghezelbaash.ir/who-ckb-iq"/>'));
+  const homeEntry = xml.slice(xml.indexOf("  <url>"), xml.indexOf("  </url>"));
+  assert(!homeEntry.includes("xhtml:link"));
+});
+test("sitemap rejects missing, nonreciprocal, repeated or noncanonical language equivalents", () => {
+  for (const change of [
+    (pages) => { pages[0].alternates = pages[0].alternates.slice(1); },
+    (pages) => { pages[1].alternates = []; },
+    (pages) => { pages[0].alternates.push({ ...pages[0].alternates[0] }); },
+    (pages) => { pages[0].alternates[1].href = "https://elsewhere.test/who"; },
+    (pages) => { pages[0].alternates[1].href += "?variant=1"; },
+    (pages) => { pages[0].alternates[1].href += "#content"; },
+    (pages) => { pages[0].alternates[1].href = "https://www.ghezelbaash.ir/missing"; },
+    (pages) => { pages[0].alternates[2].hrefLang = "ckb-IQ"; },
+    (pages) => { pages[0].alternates[2].hrefLang = "en"; },
+  ]) {
+    const pages = translatedPages(); change(pages);
+    assert.throws(() => renderDiscoverySitemap({ pages }), /alternate/);
+  }
+});

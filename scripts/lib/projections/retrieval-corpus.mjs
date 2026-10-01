@@ -39,6 +39,12 @@ const blockText = (node, canonicalUrl) =>
     .replace(/ *\n */g, "\n")
     .trim();
 
+const headingTag = (tag) => /^h[1-6]$/.test(tag ?? "");
+const containsHeading = (node) =>
+  headingTag(node.tagName) ||
+  (!["script", "style", "template"].includes(node.tagName) &&
+    (node.childNodes ?? []).some(containsHeading));
+
 // Both text distributions consume this single structural representation of HTML.
 // Unsupported structural shapes fail here instead of silently losing content.
 export function buildRetrievalBlocks(html, { canonicalUrl, language }) {
@@ -61,6 +67,12 @@ export function buildRetrievalBlocks(html, { canonicalUrl, language }) {
     const lang = ownLanguage === undefined ? inheritedLanguage : ownLanguage;
     const tag = node.tagName;
     if (["script", "style", "template"].includes(tag)) return;
+    // A details summary may contain a real heading. Preserve that heading's
+    // source ID and language instead of flattening it into anonymous summary text.
+    if (tag === "summary" && (node.childNodes ?? []).some(containsHeading)) {
+      for (const child of node.childNodes ?? []) visit(child, lang);
+      return;
+    }
     const base = {
       tag,
       id: attribute(node, "id"),
@@ -210,6 +222,64 @@ const sentenceChunks = (text, max) => {
   return out;
 };
 
+/** Topic boundaries and visible heading ancestry shared by passage exports. */
+export function buildRetrievalSections(blocks) {
+  const sections = [], headingPath = [];
+  let current;
+  const flush = () => {
+    if (current?.parts.length) sections.push(current);
+  };
+  for (const block of blocks) {
+    if (headingTag(block.tag)) {
+      if (!block.id)
+        throw new Error(`Retrieval heading lacks an ID: ${block.text}`);
+      flush();
+      const level = Number(block.tag[1]);
+      while (headingPath.length && headingPath.at(-1).level >= level)
+        headingPath.pop();
+      headingPath.push({
+        level, title: block.text, id: block.id, lang: block.lang,
+      });
+      current = {
+        level,
+        title: block.text,
+        id: block.id,
+        retrievalAlias: block.retrievalAlias,
+        lang: block.lang,
+        headingPath: [...headingPath],
+        parts: [],
+      };
+    } else {
+      if (!current)
+        throw new Error(`Retrieval content precedes its heading: ${block.tag}`);
+      if (block.lang !== current.lang) {
+        const previous = current;
+        flush();
+        current = {
+          level: previous.level,
+          title: block.tag === "summary" ? block.text : previous.title,
+          id: block.id === undefined ? previous.id : block.id,
+          retrievalAlias:
+            block.retrievalAlias === undefined
+              ? previous.retrievalAlias
+              : block.retrievalAlias,
+          lang: block.lang,
+          headingPath: [...previous.headingPath],
+          parts: [],
+        };
+      }
+      current.parts.push({
+        text: renderRetrievalBlock(block),
+        atomic: ["table", "definition"].includes(block.tag) ||
+          Boolean(block.answerId),
+        answerId: block.answerId,
+      });
+    }
+  }
+  flush();
+  return sections;
+}
+
 export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   const {
     projections,
@@ -266,51 +336,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   markdown = markdown.replace(/\n{3,}/g, "\n\n");
   await writeFile(path.join(projections, "index.md"), markdown);
 
-  const sections = [];
-  let current;
-  const flush = () => {
-    if (current?.parts.length) sections.push(current);
-  };
-  for (const block of blocks) {
-    if (/^h[1-4]$/.test(block.tag)) {
-      if (!block.id)
-        throw new Error(`Retrieval heading lacks an ID: ${block.text}`);
-      flush();
-      current = {
-        level: Number(block.tag[1]),
-        title: block.text,
-        id: block.id,
-        retrievalAlias: block.retrievalAlias,
-        lang: block.lang,
-        parts: [],
-      };
-    } else {
-      if (!current)
-        throw new Error(`Retrieval content precedes its heading: ${block.tag}`);
-      if (block.lang !== current.lang) {
-        const previous = current;
-        flush();
-        current = {
-          level: previous.level,
-          title: block.tag === "summary" ? block.text : previous.title,
-          id: block.id === undefined ? previous.id : block.id,
-          retrievalAlias:
-            block.retrievalAlias === undefined
-              ? previous.retrievalAlias
-              : block.retrievalAlias,
-          lang: block.lang,
-          parts: [],
-        };
-      }
-      current.parts.push({
-        text: renderRetrievalBlock(block),
-        atomic: ["table", "definition"].includes(block.tag) ||
-          Boolean(block.answerId),
-        answerId: block.answerId,
-      });
-    }
-  }
-  flush();
+  const sections = buildRetrievalSections(blocks);
 
   const maxPassage = retrievalPolicy.maxPassageChars;
   if (!Number.isInteger(maxPassage) || maxPassage < 1)
@@ -354,6 +380,11 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     flushPending();
     chunks.forEach(({ text, answerIds }, index) => {
       const anchor = `${new URL(section.id, release.canonicalUrl).href}`;
+      for (const answerId of answerIds) {
+        const answer = byId.get(answerId);
+        if (!answer || answer.url !== anchor)
+          throw new Error(`Retrieval answer source binding drift: ${answerId}`);
+      }
       const hash = sha256(Buffer.from(`${anchor}|${index}|${text}`)).slice(
         0,
         16,
@@ -447,6 +478,8 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       `PASSAGE_ID: ${passage.hash}`,
       `LEVEL: H${passage.level}`,
       `TITLE: ${passage.title}`,
+      `HEADING_PATH: ${passage.headingPath.map((heading) => `H${heading.level} ${heading.title}`).join(" | ")}`,
+      `HEADING_IDS: ${passage.headingPath.map((heading) => new URL(heading.id, release.canonicalUrl).href).join(" | ")}`,
       `ANCHOR: ${passage.anchor}`,
       ...(passage.graphNodeIds.length
         ? [`GRAPH_NODE_IDS: ${passage.graphNodeIds.join(" | ")}`]
