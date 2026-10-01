@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveIndependentPages, renderIndependentPage } from "../lib/independent-pages.mjs";
-import { inspectHtml } from "../lib/html-contract.mjs";
+import { inspectHtml, assertDocumentContract } from "../lib/html-contract.mjs";
 import { projectFocusedMedia } from "../lib/focused-media.mjs";
 
 const inputs = readCanonicalInputs();
@@ -109,4 +109,15 @@ test("comprehensive homepage bytes and lazy poster policy remain unchanged", () 
   const homepageVideos = inspectHtml(home).videos;
   assert(homepageVideos.length > 0);
   assert(homepageVideos.every((node) => attr(node, "poster") === undefined && attr(node, "data-poster")));
+});
+
+test("document contract permits only authored focused posters and keeps home videos deferred", () => {
+  const video = '<video id="topic-video" data-poster="/poster.webp" poster="/poster.webp" preload="none"></video>';
+  assertDocumentContract(focused(video));
+  assert.throws(() => assertDocumentContract(focused(video).replace('data-route-view="focused"', "")),
+    /eagerly declares poster/);
+  assert.throws(() => assertDocumentContract(focused(video.replace('poster="/poster.webp" preload',
+    'poster="/wrong.webp" preload'))), /eagerly declares poster/);
+  assert.throws(() => assertDocumentContract(focused(video.replace('preload="none"', 'preload="auto"'))),
+    /preload must be none/);
 });

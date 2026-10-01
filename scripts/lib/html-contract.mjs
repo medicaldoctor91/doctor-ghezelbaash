@@ -61,6 +61,7 @@ export function inspectHtml(source, { wrapMain = false } = {}) {
   const headings = elements.filter((node) => /^h[1-6]$/.test(node.tagName));
   const videos = elements.filter((node) => node.tagName === "video");
   const videoErrors = [];
+  const focusedView = elements.some((node) => node.tagName === "html" && attr(node, "data-route-view") === "focused");
   for (const video of videos) {
     const children = (video.childNodes || []).filter(
       (node) =>
@@ -81,7 +82,10 @@ export function inspectHtml(source, { wrapMain = false } = {}) {
           `${attr(video, "id") || "(video)"} has ${child.tagName} after fallback text`,
         );
     }
-    if (attr(video, "poster"))
+    const poster = attr(video, "poster");
+    // Direct topic entries expose their existing poster; the full home retains
+    // deferred loading. A focused poster must still match its authored resource.
+    if (poster && (!focusedView || poster !== attr(video, "data-poster")))
       videoErrors.push(
         `${attr(video, "id") || "(video)"} eagerly declares poster`,
       );
