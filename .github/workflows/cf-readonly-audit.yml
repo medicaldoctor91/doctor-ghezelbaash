@@ -232,5 +232,8 @@ jobs:
               "https://doctor-ghezelbaash.pages.dev/botox.html",
               "https://www.ghezelbaash.ir/filler",
               "https://doctor-ghezelbaash.pages.dev/filler",
+              "https://09d732b0.doctor-ghezelbaash.pages.dev/botox",
+              "https://09d732b0.doctor-ghezelbaash.pages.dev/botox.html",
+              "https://09d732b0.doctor-ghezelbaash.pages.dev/filler",
           ]:
               print("PROBE", json.dumps(probe(url), sort_keys=True))
