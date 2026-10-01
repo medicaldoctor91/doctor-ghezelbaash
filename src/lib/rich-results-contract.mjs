@@ -23,8 +23,9 @@ const instant = (value, label) => {
 const duration = (value, label) => {
   text(value, label);
   const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(value);
-  if (!match || Number(match[1] || 0) * 86400 + Number(match[2] || 0) * 3600 +
-      Number(match[3] || 0) * 60 + Number(match[4] || 0) <= 0)
+  const seconds = match && Number(match[1] || 0) * 86400 + Number(match[2] || 0) * 3600 +
+      Number(match[3] || 0) * 60 + Number(match[4] || 0);
+  if (!match || value.endsWith("T") || !Number.isFinite(seconds) || seconds <= 0)
     fail(label + " must be a positive ISO duration");
 };
 
