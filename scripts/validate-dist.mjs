@@ -217,7 +217,8 @@ for (const record of records) {
   assert.equal(attr(canonicals[0], "href"), record.canonicalUrl, "Independent self canonical");
   assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
-  assert(source.includes('data-route-view="focused"'), "Direct entry must load the shared reader");
+  assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
+  assert(scoped.elements.some((node) => attr(node, "data-guide-expand") !== undefined), "Direct entry needs an explicit complete-guide control");
   const documents = scoped.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
     .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
   assert.equal(documents.length, 1);
@@ -229,6 +230,15 @@ for (const record of records) {
   assert.equal(pageEntity.url, record.canonicalUrl);
   assert(refs.some((ref) => ref["@id"] === record.entityId), "Route mainEntity mismatch");
   assert(pageGraph.get(record.entityId)?.["@type"], "Route mainEntity must retain its type");
+  const scopedAuthor = pageGraph.get(primaryProfile.mainEntity["@id"]);
+  assert.equal(scopedAuthor.url, lifecycle.canonicalUrl, "Doctor homepage URL must remain central");
+  assert.deepEqual(scopedAuthor.mainEntityOfPage, { "@id": primaryProfile["@id"] }, "Doctor main profile must remain the homepage");
+  const homeAuthor = browserById.get(primaryProfile.mainEntity["@id"]);
+  for (const property of ["sameAs", "hasCredential", "memberOf", "identifier"])
+    assert.deepEqual(scopedAuthor[property], homeAuthor[property], "Doctor identity/qualification drift: " + property);
+  for (const ref of [...scopedAuthor.hasCredential, ...scopedAuthor.identifier, scopedAuthor.worksFor, scopedAuthor.alumniOf])
+    assert(pageGraph.get(ref["@id"])?.["@type"], "Doctor qualification or identity needs its authored typed node");
+  assert([pageEntity.isPartOf].flat().some((ref) => ref["@id"] === primaryProfile["@id"]), "Topic must relate to the comprehensive homepage");
   for (const body of execBodies(source)) assert(sharedExec.has(body), "New unapproved executable script in scoped page");
   for (const match of source.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi))
     assert(sharedStyles.has(match[1]), "New unapproved style in scoped page");
