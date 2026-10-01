@@ -2,11 +2,13 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
-import { compileHeadersTemplate } from "./lib/headers-template.mjs";
+import { compileHeadersTemplate, expandMachineAliasHeaders } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
 import { projectPageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
+
+import { canonicalHostAliasRows, loadAliasRegistry } from "./lib/redirect-registry.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -181,12 +183,18 @@ const httpResourceLinks = resourcesForTarget("website")
     return `<${release.canonicalUrl}${resource.path}>; rel=${quoteHttpParameter(resource.head.rel)}; type=${quoteHttpParameter(resource.contentType)}`;
   })
   .join(", ");
-const headers = compileHeadersTemplate(headersTemplate, {
+const compiledHeaders = compileHeadersTemplate(headersTemplate, {
   mainCsp,
   csp404,
   documentCsp: sharedDocumentCsp,
   httpResourceLinks,
 });
+const machineAliases = canonicalHostAliasRows(await loadAliasRegistry(root))
+  .filter((row) => row.target === "/graph.jsonld").map((row) => row.source);
+const headers = expandMachineAliasHeaders(compiledHeaders, [
+  "/graph.jsonld/*", "/provenance.jsonld/*", "/website", "/medical-specialty-aesthetic-medicine",
+  ...machineAliases,
+]);
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
 await writeFile(path.join(dist, "_headers"), headers);
