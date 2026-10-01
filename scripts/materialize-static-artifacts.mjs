@@ -134,8 +134,7 @@ const metadataAliases = canonicalMetadataAliasRows(canonicalGraph, canonicalLife
   .filter(({ source }) => !contentSources.has(source));
 await writeExact("_redirects", renderStaticRewrites([
   ...legacyAliases.filter(({ source }) => source !== "/index.html")
-    .map((row) => ({ ...row, target: row.target === "/" ? "/index.html" : contentSources.has(row.target) ? "/" + routeDocumentFile(row.target) : row.target })),
-  ...contentPaths.map((source) => ({ source, target: "/" + routeDocumentFile(source), statusCode: 200 })),
+    .map((row) => ({ ...row, target: row.target === "/" ? "/index.html" : row.target })),
   ...metadataAliases,
 ]));
 const generatedPublic = path.join(root, ".generated/public");
