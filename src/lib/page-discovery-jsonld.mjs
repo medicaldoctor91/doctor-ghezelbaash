@@ -1,3 +1,5 @@
+import { assertRichResultsDocument } from "./rich-results-contract.mjs";
+
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const types = (node) => values(node?.["@type"]);
 const referenceId = (value) => value?.["@id"];
@@ -75,5 +77,7 @@ export function projectPageJsonLd(scripts) {
     }
     return output;
   });
-  return [{ id: scripts[0].id, document: { "@context": "https://schema.org", "@graph": projected } }];
+  const document = { "@context": "https://schema.org", "@graph": projected };
+  assertRichResultsDocument(document);
+  return [{ id: scripts[0].id, document }];
 }
