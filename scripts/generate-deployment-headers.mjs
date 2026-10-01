@@ -164,12 +164,12 @@ const documentCsp = (scripts, styles) => joinCsp([
   `script-src ${scripts.map((script) => `'sha256-${shaB64(Buffer.from(script.body))}'`).join(" ")}`,
   `style-src 'self' ${styles.map((style) => `'sha256-${shaB64(Buffer.from(style))}'`).join(" ")}`,
   "img-src 'self' data:", "media-src 'self'", "font-src 'self'", "manifest-src 'self'",
-  "connect-src 'none'", "object-src 'none'", "frame-src 'none'", "frame-ancestors 'none'",
+  "connect-src 'self'", "object-src 'none'", "frame-src 'none'", "frame-ancestors 'none'",
   "form-action 'self'", "upgrade-insecure-requests",
 ]);
-const mainCsp = documentCsp(scriptBlocks, styleBlocks);
+const mainCsp = documentCsp(execScripts, styleBlocks);
 const csp404 = documentCsp(notFoundScripts, notFoundStyles);
-const sharedDocumentCsp = documentCsp([...scriptBlocks, ...notFoundScripts], [...styleBlocks, ...notFoundStyles]);
+const sharedDocumentCsp = documentCsp([...execScripts, ...notFoundScripts], [...styleBlocks, ...notFoundStyles]);
 
 const headersTemplate = await readFile(
   path.join(data, "templates/headers.template"),

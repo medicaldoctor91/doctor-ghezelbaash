@@ -62,3 +62,15 @@ test("invalid XML controls and unnormalized values cannot enter sitemap", () => 
   assert.throws(() => renderDiscoverySitemap(withVideo({ description: " توضیح" })), /normalized/);
   assert.throws(() => renderDiscoverySitemap(withVideo({ thumbnailUrl: "https://www.ghezelbaash.ir/media/thumb.jpg " })), /normalized/);
 });
+
+test("independent canonical pages may be text-only and are emitted exactly once", () => {
+  const input = { pages: [
+    { canonicalUrl: "https://www.ghezelbaash.ir/", lastmod: "2026-09-30", imageUrls: [], videos: [] },
+    { canonicalUrl: "https://www.ghezelbaash.ir/botox", lastmod: "2026-09-30", imageUrls: [], videos: [] },
+  ] };
+  const xml = renderDiscoverySitemap(input);
+  assert.equal([...xml.matchAll(/<url>/g)].length, 2);
+  assert(xml.includes("<loc>https://www.ghezelbaash.ir/botox</loc>"));
+  assert.throws(() => renderDiscoverySitemap({ pages: [...input.pages, input.pages[0]] }), /duplicate canonical/);
+  assert.throws(() => renderDiscoverySitemap({ pages: [input.pages[0], { ...input.pages[1], canonicalUrl: "https://other.test/botox" }] }), /origin/);
+});

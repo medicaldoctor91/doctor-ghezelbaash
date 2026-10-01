@@ -4,10 +4,10 @@ import { canonicalLifecycle as release } from "./src/lib/canonical-inputs.mjs";
 export default defineConfig({
   site: release.canonicalUrl,
   output: "static",
-  trailingSlash: "always",
+  trailingSlash: "never",
   compressHTML: true,
   build: {
-    format: "directory",
+    format: "file",
     inlineStylesheets: "always",
   },
   vite: {

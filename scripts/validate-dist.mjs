@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { assertRichResultsDocument } from "../src/lib/rich-results-contract.mjs";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
+import { routeDocumentFile } from "./lib/independent-pages.mjs";
 import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, contentAliasTargets, renderStaticRewrites } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 import { readFile, stat } from "node:fs/promises";
@@ -57,9 +58,9 @@ assert.deepEqual(JSON.parse(attr(search, "data-content-route-aliases")), { ...ex
 for (const target of Object.values(expectedAliases))
   assert(target === "/" || ids.includes(target.slice(1)), `Missing legacy content target: ${target}`);
 for (const { source, target } of legacyAliases.filter((row) => row.source !== "/index.html"))
-  assert(redirects.includes(`${source} ${machinePaths.has(target) ? target : "/index.html"} 200`),
+  assert(redirects.includes(`${source} ${machinePaths.has(target) ? target : target === "/" ? "/index.html" : "/" + routeDocumentFile(target)} 200`),
     `Missing direct legacy alias: ${source}`);
-for (const route of paths) assert(redirects.includes(`${route} /index.html 200`), `Missing content route: ${route}`);
+for (const route of paths) assert(redirects.includes(`${route} /${routeDocumentFile(route)} 200`), `Missing independent content route: ${route}`);
 const metadataRoutes = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl);
 for (const { source, target, statusCode } of metadataRoutes)
   assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing metadata description: ${source}`);
@@ -114,16 +115,22 @@ const ldDocuments = elements.filter((node) => node.tagName === "script" &&
   .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
 assert.equal(ldDocuments.length, 1, "One browser discovery graph is required");
 const richResultCounts = assertRichResultsDocument(ldDocuments[0]);
-console.log(JSON.stringify({ pageRichResultValidation: "PASS", ...richResultCounts }));
-assert.equal(ldDocuments[0]["@context"], "https://schema.org");
+console.log(JSON.stringify({ pageStructuredDataValidation: "PASS", ...richResultCounts }));
+assert(ldDocuments[0]["@context"].includes("https://schema.org"));
 const browserNodes = ldDocuments[0]["@graph"];
 const browserById = new Map(browserNodes.map((node) => [node["@id"], node]));
-const profileNodes = browserNodes.filter((node) => node["@type"] === "ProfilePage");
-assert.equal(profileNodes.length, 1, "External evidence profiles must not become page profiles");
-assert.equal(profileNodes[0]["@id"], page.pageMicrodata.itemId);
-assert.equal(browserById.get(profileNodes[0].mainEntity["@id"])?.["@type"], "Person");
-assert(!browserNodes.some((node) => ["Event", "EducationEvent", "CourseInstance", "Review"].includes(node["@type"])),
-  "Historical events and self-hosted reviews belong in the full graph");
+const typeHas = (node, type) => [node["@type"]].flat().includes(type);
+const profileNodes = browserNodes.filter((node) => typeHas(node, "ProfilePage"));
+const primaryProfile = browserById.get(page.pageMicrodata.itemId);
+assert(typeHas(primaryProfile, "ProfilePage"));
+assert(typeHas(browserById.get(primaryProfile.mainEntity["@id"]), "Person"));
+for (const authored of graph["@graph"]) {
+  const published = browserById.get(authored["@id"]);
+  assert(published, "Lost authored semantic entity: " + authored["@id"]);
+  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Lost authored entity types");
+}
+assert(browserNodes.some((node) => typeHas(node, "FAQPage")), "Comprehensive home requires its visible FAQ coverage");
+assert.equal(richResultCounts.incompleteCandidates.length, 0, "Known required candidate fields must be completed from authored/user facts");
 assert(!elements.some((node) => (attr(node, "itemtype") || "").includes("ProfilePage")),
   "Do not duplicate the JSON-LD profile with URL-valued Microdata");
 const inspectBrowserValue = (value) => {
@@ -131,11 +138,11 @@ const inspectBrowserValue = (value) => {
   if (!value || typeof value !== "object") return;
   assert(!("@value" in value), "Browser strings must not use RDF language-value objects");
   if (value["@id"] && Object.keys(value).length === 1)
-    assert(browserById.has(value["@id"]), "Unresolved browser entity: " + value["@id"]);
+    assert(browserById.has(value["@id"]) || /^https?:\/\//.test(value["@id"]), "Invalid browser entity reference: " + value["@id"]);
   Object.values(value).forEach(inspectBrowserValue);
 };
 inspectBrowserValue(browserNodes);
-for (const node of browserNodes.filter((node) => ["ProfilePage", "Person", "MedicalClinic", "ImageObject", "VideoObject"].includes(node["@type"])))
+for (const node of browserNodes.filter((node) => ["ProfilePage", "Person", "MedicalClinic", "VideoObject"].some((type) => typeHas(node, type))))
   assert.equal(typeof node.name, "string", "Browser name must be a text value");
 const creator = descendants.find((node) => attr(node, "itemprop") === "creator");
 assert.equal(attr(creator, "itemtype"), "https://schema.org/Person");
@@ -146,7 +153,7 @@ assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && at
 const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 const xmlValue = (value) => value.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => xmlValue(match[1]));
-assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl], "Only the canonical document belongs in sitemap");
+assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
 const pageNode = graph["@graph"].find((node) => node["@id"] === page.pageMicrodata.itemId);
 assert(sitemap.includes("<lastmod>" + pageNode.dateModified + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
@@ -155,7 +162,7 @@ for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:co
   assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(),
     "Missing sitemap media: " + url.href);
 }
-const browserVideos = browserNodes.filter((node) => node["@type"] === "VideoObject");
+const browserVideos = browserNodes.filter((node) => typeHas(node, "VideoObject"));
 assert.equal(browserVideos.length, graph["@graph"].filter((node) => [node["@type"]].flat().includes("VideoObject")).length);
 const visibleVideos = elements.filter((node) => node.tagName === "video");
 assert.equal(browserVideos.length, visibleVideos.length, "Each visible video needs one complete discovery object");
@@ -194,4 +201,44 @@ for (const entry of evidenceRegistry.evidence) {
 assert(!JSON.stringify(snapshot).includes("not-verified-for-current-release"));
 assert(!/PRICE_RANGE: undefined|X-PRICE-RANGE:undefined/.test(
   await readFile(path.join(dist, "llms-full.txt"), "utf8") + await readFile(path.join(dist, "clinic.vcf"), "utf8")));
+
+const execBodies = (source) => [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+  .filter((match) => !/type=["']application\/ld\+json/.test(match[1])).map((match) => match[2]);
+const sharedExec = new Set(execBodies(html));
+const sharedStyles = new Set([...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]));
+const records = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
+assert.deepEqual(records.map((record) => record.path), paths);
+const pageIds = new Set();
+for (const record of records) {
+  const source = await readFile(path.join(dist, record.file), "utf8");
+  const scoped = assertDocumentContract(source), scopedIds = new Set(scoped.ids);
+  const canonicals = scoped.elements.filter((node) => node.tagName === "link" && attr(node, "rel") === "canonical");
+  assert.equal(canonicals.length, 1);
+  assert.equal(attr(canonicals[0], "href"), record.canonicalUrl, "Independent self canonical");
+  assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
+  assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
+  assert(source.includes('data-route-view="focused"'), "Direct entry must load the shared reader");
+  const documents = scoped.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
+    .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
+  assert.equal(documents.length, 1);
+  const pageId = record.canonicalUrl + "#webpage";
+  assertRichResultsDocument(documents[0], { primaryPageId: pageId });
+  assert(!pageIds.has(pageId)); pageIds.add(pageId);
+  const pageGraph = new Map(documents[0]["@graph"].map((node) => [node["@id"], node]));
+  const pageEntity = pageGraph.get(pageId), refs = [pageEntity.mainEntity].flat();
+  assert.equal(pageEntity.url, record.canonicalUrl);
+  assert(refs.some((ref) => ref["@id"] === record.entityId), "Route mainEntity mismatch");
+  assert(pageGraph.get(record.entityId)?.["@type"], "Route mainEntity must retain its type");
+  for (const body of execBodies(source)) assert(sharedExec.has(body), "New unapproved executable script in scoped page");
+  for (const match of source.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi))
+    assert(sharedStyles.has(match[1]), "New unapproved style in scoped page");
+  for (const node of scoped.elements) for (const name of ["href", "src", "data-poster"]) {
+    const value = attr(node, name); if (!value) continue;
+    const url = new URL(value, lifecycle.canonicalUrl);
+    if (url.origin !== localOrigin || url.pathname === "/" || redirectSources.has(url.pathname)) continue;
+    assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(), "Broken scoped resource: " + value);
+  }
+}
+console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true }));
+
 console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, metadataRoutes: metadataRoutes.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));

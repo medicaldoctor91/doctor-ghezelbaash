@@ -1,6 +1,6 @@
 import { inspectHtml } from "./html-contract.mjs";
 
-/** Finite aliases of the one authored document; never a catchall route. */
+/** Finite authored content destinations, served as independently described documents. */
 export function contentRoutePaths(html, canonicalUrl) {
   const { elements, ids } = inspectHtml(html);
   const idSet = new Set(ids);

@@ -1,4 +1,5 @@
-(() => {
+(async () => {
+  if (window.completeGuideReady) await window.completeGuideReady;
   const d=document,s=d.documentElement;
   s.classList.add("js");
   const clinicHoursNodes=d.querySelectorAll('[data-clinic-open-status]'),clinicFaDigits='۰۱۲۳۴۵۶۷۸۹',clinicAscii=(value)=>String(value||'').replace(/[۰-۹]/g,(digit)=>String(clinicFaDigits.indexOf(digit))),clinicWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',weekday:'short'}),clinicClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),syncClinicHours=()=>{const now=new Date(),day=clinicWeekday.format(now),[hour,minute]=clinicClock.format(now).split(':').map(Number),currentMinutes=hour*60+minute;for(const node of clinicHoursNodes){const openFa=node.dataset.open||'',closeFa=node.dataset.close||'',openMinutes=Number(clinicAscii(openFa))*60,closeMinutes=Number(clinicAscii(closeFa))*60;if(!Number.isFinite(openMinutes)||!Number.isFinite(closeMinutes))continue;const isFriday=day==='Fri',isOpen=!isFriday&&currentMinutes>=openMinutes&&currentMinutes<closeMinutes,label=node.querySelector('[data-clinic-open-status-label]'),detail=node.querySelector('[data-clinic-open-status-detail]');node.dataset.state=isOpen?'open':'closed';if(label)label.textContent=isOpen?'اکنون باز است':'اکنون بسته است';if(!detail)continue;if(isOpen)detail.textContent=`تا ساعت ${closeFa}`;else if(isFriday||(day==='Thu'&&currentMinutes>=closeMinutes))detail.textContent=`بازگشایی شنبه ${openFa}`;else if(currentMinutes<openMinutes)detail.textContent=`امروز از ${openFa}`;else detail.textContent=`فردا از ${openFa}`}};
@@ -205,12 +206,14 @@
     event.preventDefault();
     const destination=url.pathname+url.search;
     if(destination!==location.pathname+location.search||location.hash)history.pushState(null,"",destination);
+    window.syncGuidePageState?.(url.pathname);
     if(searchReady)closeResults();
     syncTarget();
     selectVideo(selection,{scroll:true,focus:true});
     if(!selection)moveTo(target,true);
   });
   addEventListener("popstate", () => {
+    window.syncGuidePageState?.(location.pathname);
     const selection=videoFromUrl(new URL(location.href));
     syncTarget(selection?.video||targetFromPath(location.pathname));
     selectVideo(selection);

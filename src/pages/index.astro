@@ -3,8 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { pageBody, pageFrontmatter } from '../lib/canonical-inputs.mjs';
 import { renderCanonicalPageHtml } from '../lib/canonical-page-html.mjs';
 
-// This release has one authored HTML document. Do not compile a second Markdown
-// copy or turn its finite content paths into additional pages.
+// The comprehensive home remains the shared single-page reader. Focused direct
+// entry documents are derived from this rendered content after the Astro build.
 const html = renderCanonicalPageHtml(pageBody);
 ---
 

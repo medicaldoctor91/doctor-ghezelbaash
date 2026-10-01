@@ -1,5 +1,5 @@
 /** Render the canonical document and its media using sitemap protocol bounds. */
-export function renderDiscoverySitemap({ canonicalUrl, lastmod, imageUrls, videos }) {
+function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos }, allowEmptyMedia = false) {
   const required = (value, label) => {
     if (typeof value !== "string" || !value.trim() || value !== value.trim())
       throw new Error("Sitemap requires normalized " + label);
@@ -38,11 +38,11 @@ export function renderDiscoverySitemap({ canonicalUrl, lastmod, imageUrls, video
       throw new Error("Sitemap video duration must be between 1 and 28800 seconds");
     return seconds;
   };
-  if (!Array.isArray(imageUrls) || !imageUrls.length || imageUrls.length > 1000)
+  if (!Array.isArray(imageUrls) || (!allowEmptyMedia && !imageUrls.length) || imageUrls.length > 1000)
     throw new Error("Sitemap requires 1 to 1000 images for the canonical document");
   const images = imageUrls.map((value) => mediaUrl(value, "image URL"));
   if (new Set(images).size !== images.length) throw new Error("Sitemap contains duplicate image URLs");
-  if (!Array.isArray(videos) || !videos.length) throw new Error("Sitemap requires canonical videos");
+  if (!Array.isArray(videos) || (!allowEmptyMedia && !videos.length)) throw new Error("Sitemap requires canonical videos");
   const contentUrls = new Set();
   const videoXml = videos.map((video) => {
     const thumbnail = mediaUrl(video.thumbnailUrl, "video thumbnail URL");
@@ -75,6 +75,27 @@ export function renderDiscoverySitemap({ canonicalUrl, lastmod, imageUrls, video
     "</urlset>",
     "",
   ].join("\n");
+  if (new TextEncoder().encode(xml).byteLength > 50 * 1024 * 1024)
+    throw new Error("Sitemap exceeds the uncompressed 50 MB protocol limit");
+  return xml;
+}
+
+/** One canonical entry per direct-entry document, including text-only topics. */
+export function renderDiscoverySitemap(input) {
+  if (!("pages" in input)) return renderDocumentSitemap(input);
+  if (!Array.isArray(input.pages) || !input.pages.length || input.pages.length > 50000)
+    throw new Error("Sitemap requires 1 to 50000 pages");
+  const seen = new Set(), origin = new URL(input.pages[0].canonicalUrl).origin;
+  const documents = input.pages.map((record) => {
+    const url = new URL(record.canonicalUrl);
+    if (url.origin !== origin) throw new Error("Sitemap pages must share the canonical origin");
+    if (seen.has(url.href)) throw new Error("Sitemap contains duplicate canonical pages");
+    seen.add(url.href);
+    return renderDocumentSitemap({ ...record, imageUrls: record.imageUrls || [], videos: record.videos || [] }, true);
+  });
+  const first = documents[0];
+  const xml = first.slice(0, first.indexOf("  <url>")) + documents.map((document) =>
+    document.slice(document.indexOf("  <url>"), document.indexOf("</urlset>"))).join("") + "</urlset>\n";
   if (new TextEncoder().encode(xml).byteLength > 50 * 1024 * 1024)
     throw new Error("Sitemap exceeds the uncompressed 50 MB protocol limit");
   return xml;
