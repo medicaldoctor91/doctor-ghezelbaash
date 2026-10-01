@@ -80,3 +80,19 @@ export function compileHeadersTemplate(
   assertCloudflareHeadersContract(output);
   return output;
 }
+
+/** Rewrites keep the request path, so machine aliases need delivery headers there. */
+export function expandMachineAliasHeaders(headers, machineAliasPaths) {
+  const block = /^\/graph\.jsonld\r?\n((?:[ \t]+[^\n]*(?:\n|$))*)/m.exec(headers)?.[1];
+  if (!block) throw new Error("Canonical graph delivery headers are missing");
+  const existing = new Set(String(headers).split(/\r?\n/).filter((line) =>
+    line && !/^\s|^#/.test(line)));
+  const aliases = [...new Set(machineAliasPaths)].filter((source) => !existing.has(source));
+  for (const source of aliases)
+    if (!source.startsWith("/") || source.startsWith("//") || /[\s?#\\]/u.test(source))
+      throw new Error(`Unsafe machine header alias: ${source}`);
+  const output = headers.trimEnd() + "\n\n" +
+    aliases.map((source) => source + "\n" + block.trimEnd() + "\n").join("\n");
+  assertCloudflareHeadersContract(output);
+  return output;
+}

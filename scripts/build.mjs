@@ -18,6 +18,7 @@ const steps = [
   ["scripts/materialize-static-artifacts.mjs"],
   ["scripts/generate-deployment-headers.mjs"],
   ["scripts/validate-dist.mjs"],
+  ["scripts/write-dist-manifest.mjs"],
 ];
 
 // One finite static distribution: derive its published formats, compile the

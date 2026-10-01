@@ -3,26 +3,24 @@
   s.classList.add("js");
   const clinicHoursNodes=d.querySelectorAll('[data-clinic-open-status]'),clinicFaDigits='۰۱۲۳۴۵۶۷۸۹',clinicAscii=(value)=>String(value||'').replace(/[۰-۹]/g,(digit)=>String(clinicFaDigits.indexOf(digit))),clinicWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',weekday:'short'}),clinicClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),syncClinicHours=()=>{const now=new Date(),day=clinicWeekday.format(now),[hour,minute]=clinicClock.format(now).split(':').map(Number),currentMinutes=hour*60+minute;for(const node of clinicHoursNodes){const openFa=node.dataset.open||'',closeFa=node.dataset.close||'',openMinutes=Number(clinicAscii(openFa))*60,closeMinutes=Number(clinicAscii(closeFa))*60;if(!Number.isFinite(openMinutes)||!Number.isFinite(closeMinutes))continue;const isFriday=day==='Fri',isOpen=!isFriday&&currentMinutes>=openMinutes&&currentMinutes<closeMinutes,label=node.querySelector('[data-clinic-open-status-label]'),detail=node.querySelector('[data-clinic-open-status-detail]');node.dataset.state=isOpen?'open':'closed';if(label)label.textContent=isOpen?'اکنون باز است':'اکنون بسته است';if(!detail)continue;if(isOpen)detail.textContent=`تا ساعت ${closeFa}`;else if(isFriday||(day==='Thu'&&currentMinutes>=closeMinutes))detail.textContent=`بازگشایی شنبه ${openFa}`;else if(currentMinutes<openMinutes)detail.textContent=`امروز از ${openFa}`;else detail.textContent=`فردا از ${openFa}`}};
   if(clinicHoursNodes.length){syncClinicHours();setInterval(syncClinicHours,60000)}
-  const norm=(v)=>(v||"").toLocaleLowerCase("fa").replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[\u200c\u200f\u200e]/g," ").replace(/[^\p{L}\p{N}\s-]/gu," ").replace(/\s+/g," ").trim(),
+  const norm=createGuideSearch().normalize,
     search=d.getElementById("guide-search"),input=d.getElementById("guide-search-input"),results=d.getElementById("guide-search-results"),status=d.getElementById("guide-search-status"),launcher=d.querySelector("[data-guide-search-open]"),top=d.querySelector("[data-quick-actions-top]"),
+    contentRouteAliases=JSON.parse(search?.dataset.contentRouteAliases||"{}"),
     plainClick=(e)=>e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.shiftKey,
-    targetFromPath=(pathname)=>{if(pathname==="/")return d.getElementById("main-content");if(!/^\/[A-Za-z0-9][A-Za-z0-9._-]*\/?$/.test(pathname))return null;return d.getElementById(pathname.replace(/^\/|\/$/g,""))};
+    targetFromPath=(pathname)=>{let decoded;try{decoded=decodeURI(pathname)}catch{return null}const key=Object.hasOwn(contentRouteAliases,decoded)?decoded:decoded.replace(/\/$/,""),route=contentRouteAliases[key]||decoded;if(route==="/")return d.getElementById("main-content");if(!/^\/[A-Za-z0-9][A-Za-z0-9._-]*\/?$/.test(route))return null;return d.getElementById(route.replace(/^\/|\/$/g,""))};
   const searchReady=Boolean(search&&input&&results&&status&&launcher);
   if(searchReady){launcher.replaceWith(search);search.dataset.mounted="true"}
 
-  const aliases=(search?.dataset.entityAliases||"").split("|").map(norm).filter((x)=>x.length>2).sort((a,b)=>b.length-a.length),
-    intentTargets=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentTargets||"{}")).map(([intent,url])=>[intent,new URL(url).pathname.slice(1)])),
+  const intentTargets=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentTargets||"{}")).map(([intent,url])=>[intent,new URL(url).pathname.slice(1)])),
     intentAnswers=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentHeadings||"{}")).map(([intent,heading])=>[heading,intentTargets[intent]])),
     copy=JSON.parse(search?.dataset.copy||"{}"),
-    stop=new Set(copy.stopWords),
-    alt=copy.synonyms,
-    tokenMatch=(key,t)=>[t,alt[t]].filter(Boolean).some((v)=>key.includes(v)),
     detectIntent=(text,entity)=>{const has=(x)=>text.includes(x),select=entity||/(بهترین|دکتر|پزشک|متخصص|کلینیک)/u.test(text);if((has("میگرن")||has("سردرد"))&&has("بوتاکس"))return"migraine-botox";if(has("نظر دوم")||has("نظر پزشکی دوم"))return"second-opinion";if(/اورفیل|بیش از حد فیلر|صورت پر شده|پرونده پیچیده/u.test(text))return"complex-correction";if(/اصلاح|ترمیم|نتیجه نامطلوب/u.test(text))return"revision";if(!select)return null;if(/فیلر|ژل/u.test(text))return"filler";if(/بوتاکس|بوتولینوم/u.test(text))return"botox";if(/زیبایی|جوانسازی|جوان سازی/u.test(text))return"aesthetic-physician";return null},
-    queryInfo=(value)=>{const original=norm(value);let reduced=original,entity=false;for(const a of aliases)if(reduced.includes(a)){reduced=reduced.replaceAll(a," ");entity=true}reduced=norm(reduced);const raw=reduced.split(" ").filter(Boolean),filtered=raw.filter((t)=>t.length>1&&!stop.has(t));return{original,phrase:reduced||original,tokens:filtered.length?filtered:raw,entity,entityOnly:entity&&!raw.length,intent:detectIntent(original,entity)}};
+    searchEngine=createGuideSearch({aliases:(search?.dataset.entityAliases||"").split("|"),stopWords:copy.stopWords,synonyms:copy.synonyms,detectIntent}),
+    queryInfo=searchEngine.queryInfo;
 
   let index;
-  const build=()=>{if(index)return index;const stack=[];return(index=[...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id]")].map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;const answer=intentAnswers[h.id]||"",titleKey=norm(text+" "+(h.dataset.retrievalAlias||"")),contextKey=norm(parents.join(" "));return{id:h.id,text,level,parents,answer,titleKey,contextKey}}))},
-    score=(x,q)=>{if(q.entityOnly)return x.level===1?0:99;if(!q.tokens.length)return 99;let rank=x.level*2;if(x.titleKey===q.phrase)rank-=100;else if(x.titleKey.startsWith(q.phrase))rank-=80;else if(q.phrase.length>2&&x.titleKey.includes(q.phrase))rank-=60;let title=0,context=0;for(const t of q.tokens)tokenMatch(x.titleKey,t)?title++:tokenMatch(x.contextKey,t)&&context++;const matched=title+context,coverage=matched/q.tokens.length;if(!matched||(q.tokens.length>1&&coverage<.5))return 99;return rank+Math.round((1-coverage)*80)-title*20-context*6-(q.entity?3:0)},
+  const build=()=>{if(index)return index;const stack=[];return(index=searchEngine.build([...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id],main h6[id]")].map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;return{id:h.id,text,level,parents,answer:intentAnswers[h.id]||"",retrievalAlias:h.dataset.retrievalAlias||""}})))},
+    score=searchEngine.score,
     closeResults=()=>{results.hidden=true},
     render=()=>{const q=queryInfo(input.value);results.replaceChildren();if(q.original.length<2){closeResults();status.textContent=copy.minimumQuery;return}const target=q.intent&&intentTargets[q.intent],hits=build().map((x)=>({...x,rank:score(x,q)})).filter((x)=>x.rank<99||(target&&x.answer===target)).sort((a,b)=>(b.answer===target)-(a.answer===target)||a.rank-b.rank||a.level-b.level||a.text.length-b.text.length).slice(0,16);if(!hits.length){const li=d.createElement("li");li.className="guide-search__empty";li.textContent=copy.empty;results.append(li)}else for(const hit of hits){const li=d.createElement("li"),a=d.createElement("a"),title=d.createElement("span"),context=d.createElement("span");a.href="/"+(target&&hit.answer===target?target:hit.id);title.className="guide-search__result-title";title.textContent=hit.text;a.append(title);const path=hit.parents.slice(-2).join(" ← ");if(path){context.className="guide-search__result-context";context.textContent=path;a.append(context)}li.append(a);results.append(li)}results.hidden=false;status.textContent=hits.length?copy.resultCount.replace("{count}",String(hits.length)):copy.noResultsStatus};
 
@@ -221,17 +219,23 @@
   });
   const initialSelection=videoFromUrl(new URL(location.href)),
     initialTarget=!location.hash&&(initialSelection?.video||(location.pathname!=="/"&&targetFromPath(location.pathname)));
+  // A full-document Back load may not use BFCache. In that case the browser
+  // still owns its saved scroll position; do not apply fresh deep-link scrolling.
+  const restoringHistory = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
   let initialInteraction=false;
-  if(initialTarget){
+  if(initialTarget && !restoringHistory){
     // All authored content is parsed here: reveal deep links before the first paint.
     selectVideo(initialSelection,{scroll:true,focus:Boolean(initialSelection)});
     if(!initialSelection)moveTo(initialTarget);
     for(const type of ["pointerdown","wheel","keydown"])
       addEventListener(type,()=>{initialInteraction=true},{once:true,passive:true});
-  }else syncTarget();
+  }else {
+    syncTarget(initialSelection?.video || targetFromPath(location.pathname));
+    selectVideo(initialSelection);
+  }
   addEventListener("pageshow", (event) => {
     // BFCache and browser history own restored scroll; loading must not steal it.
-    if(event.persisted||!initialTarget||initialInteraction)return;
+    if(event.persisted||restoringHistory||!initialTarget||initialInteraction)return;
     const rect=initialTarget.getBoundingClientRect();
     if(rect.bottom<=0||rect.top>=innerHeight)moveTo(initialTarget);
   });

@@ -2,10 +2,13 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
-import { compileHeadersTemplate } from "./lib/headers-template.mjs";
+import { compileHeadersTemplate, expandMachineAliasHeaders } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
+import { projectPageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
+
+import { canonicalHostAliasRows, loadAliasRegistry } from "./lib/redirect-registry.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -62,7 +65,8 @@ for (const script of ldScripts) {
     throw new Error("Published JSON-LD must contain @graph");
   ldDocuments.set(id, document);
 }
-const expectedLdIds = pageJsonLd.map((script) => script.id);
+const projectedJsonLd = projectPageJsonLd(pageJsonLd);
+const expectedLdIds = projectedJsonLd.map((script) => script.id);
 if (
   ldDocuments.size !== expectedLdIds.length ||
   expectedLdIds.some((id) => !ldDocuments.has(id))
@@ -73,11 +77,11 @@ if (
 
 const nodeTypes = (node) =>
   [node?.["@type"]].flat().filter((value) => typeof value === "string");
-for (const script of pageJsonLd) {
+for (const script of projectedJsonLd) {
   if (JSON.stringify(ldDocuments.get(script.id)) !== JSON.stringify(script.document))
-    throw new Error(`Published JSON-LD differs from canonical page: ${script.id}`);
+    throw new Error(`Published JSON-LD differs from browser discovery projection: ${script.id}`);
 }
-const coreDocument = ldDocuments.get(pageJsonLd[0].id);
+const coreDocument = ldDocuments.get(projectedJsonLd[0].id);
 const pageId = pageFrontmatter.pageMicrodata.itemId;
 const pageNode = coreDocument["@graph"].find((node) => node?.["@id"] === pageId);
 const personNode = coreDocument["@graph"].find(
@@ -136,7 +140,7 @@ const notFoundScripts = [
   ...notFound.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
 ].map((match) => ({ attrs: match[1], body: match[2] }));
 if (
-  ldScripts.length !== pageJsonLd.length ||
+  ldScripts.length !== projectedJsonLd.length ||
   execScripts.length !== 2 ||
   !execScripts.some((script) =>
     /id=["']site-runtime["']/i.test(script.attrs),
@@ -179,12 +183,18 @@ const httpResourceLinks = resourcesForTarget("website")
     return `<${release.canonicalUrl}${resource.path}>; rel=${quoteHttpParameter(resource.head.rel)}; type=${quoteHttpParameter(resource.contentType)}`;
   })
   .join(", ");
-const headers = compileHeadersTemplate(headersTemplate, {
+const compiledHeaders = compileHeadersTemplate(headersTemplate, {
   mainCsp,
   csp404,
   documentCsp: sharedDocumentCsp,
   httpResourceLinks,
 });
+const machineAliases = canonicalHostAliasRows(await loadAliasRegistry(root))
+  .filter((row) => row.target === "/graph.jsonld").map((row) => row.source);
+const headers = expandMachineAliasHeaders(compiledHeaders, [
+  "/graph.jsonld/*", "/provenance.jsonld/*", "/website", "/medical-specialty-aesthetic-medicine",
+  ...machineAliases,
+]);
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
 await writeFile(path.join(dist, "_headers"), headers);

@@ -3,10 +3,13 @@ import { canonicalLifecycle as rawRelease, pageFrontmatter } from '../lib/canoni
 import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
 import { canonicalGraph } from '../lib/knowledge-graph';
 import { canonicalContentHtmlId } from '../lib/graph-core.mjs';
+import { createGuideSearch } from '../lib/guide-search.mjs';
 import runtimeSource from '../scripts/guide-runtime.js?raw';
 import { transformSync } from 'esbuild';
+import { STATIC_ARTIFACTS } from '../lib/resources.mjs';
+import { loadAliasRegistry, canonicalHostAliasRows, contentAliasTargets } from '../../scripts/lib/redirect-registry.mjs';
 
-const runtime = transformSync(runtimeSource, {
+const runtime = transformSync(`const createGuideSearch = (${createGuideSearch.toString()});\n${runtimeSource}`, {
   minify: true,
   target: 'es2022',
   legalComments: 'none',
@@ -14,6 +17,8 @@ const runtime = transformSync(runtimeSource, {
 if (/<\/script|<!--/i.test(runtime))
   throw new Error('Runtime is unsafe for an inline HTML script');
 const copy = pageFrontmatter.guideSearch;
+const contentRouteAliases = contentAliasTargets(canonicalHostAliasRows(await loadAliasRegistry()),
+  new Set(STATIC_ARTIFACTS.map((resource) => '/' + resource.path)));
 
 const authority = deriveCanonicalAuthority(rawRelease, canonicalGraph);
 const entityAliases = [
@@ -32,6 +37,7 @@ const intentHeadings = Object.fromEntries(Object.entries(intentTargets).map(([in
   aria-label={copy.ariaLabel}
   class="guide-search"
   data-canonical-origin={new URL(rawRelease.canonicalUrl).origin}
+  data-content-route-aliases={JSON.stringify(contentRouteAliases)}
   data-entity-aliases={entityAliases}
   data-intent-targets={JSON.stringify(intentTargets)}
   data-intent-headings={JSON.stringify(intentHeadings)}

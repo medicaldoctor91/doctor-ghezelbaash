@@ -1,32 +1,32 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 
-const REDIRECT_REGISTRY_PATH = "src/data/redirects.json";
+const ALIAS_REGISTRY_PATH = "src/data/redirects.json";
 
-export async function loadRedirectRegistry(root = process.cwd()) {
+export async function loadAliasRegistry(root = process.cwd()) {
   const registry = JSON.parse(
-    await readFile(path.join(root, REDIRECT_REGISTRY_PATH), "utf8"),
+    await readFile(path.join(root, ALIAS_REGISTRY_PATH), "utf8"),
   );
-  if (registry.schemaVersion !== 3)
+  if (registry.schemaVersion !== 4)
     throw new Error(
-      `Unsupported redirect registry schema ${registry.schemaVersion}`,
+      `Unsupported alias registry schema ${registry.schemaVersion}`,
     );
   if (
     registry.zone !== "ghezelbaash.ir" ||
     registry.canonicalOrigin !== "https://www.ghezelbaash.ir"
   )
-    throw new Error("Redirect registry authority drift");
+    throw new Error("Alias registry authority drift");
   return registry;
 }
 
-export function canonicalHostRedirectRows(registry) {
-  const surface = registry.canonicalHostRedirects;
+export function canonicalHostAliasRows(registry) {
+  const surface = registry.canonicalHostAliases;
   if (
     surface?.host !== "www.ghezelbaash.ir" ||
     !Array.isArray(surface.rules) ||
     !surface.rules.length
   )
-    throw new Error("Canonical-host redirect surface is missing");
+    throw new Error("Canonical-host alias surface is missing");
   const seen = new Set();
   const rows = surface.rules.map((rule, index) => {
     if (
@@ -37,11 +37,11 @@ export function canonicalHostRedirectRows(registry) {
       /[\s?#]/u.test(rule.source)
     )
       throw new Error(
-        `Invalid canonical-host redirect source at index ${index}: ${rule?.source}`,
+        `Invalid canonical-host alias source at index ${index}: ${rule?.source}`,
       );
     if (seen.has(rule.source))
       throw new Error(
-        `Duplicate canonical-host redirect source: ${rule.source}`,
+        `Duplicate canonical-host alias source: ${rule.source}`,
       );
     seen.add(rule.source);
     if (
@@ -50,15 +50,15 @@ export function canonicalHostRedirectRows(registry) {
       rule.target.startsWith("//") ||
       /[\s]/u.test(rule.target)
     )
-      throw new Error(`Invalid canonical-host redirect target: ${rule.target}`);
+      throw new Error(`Invalid canonical-host alias target: ${rule.target}`);
     const target = new URL(rule.target, registry.canonicalOrigin);
-    if (target.origin !== registry.canonicalOrigin || target.search)
+    if (target.origin !== registry.canonicalOrigin || target.search || target.hash)
       throw new Error(
-        `Canonical-host redirect target escaped its scope: ${rule.target}`,
+        `Canonical-host alias target escaped its scope: ${rule.target}`,
       );
-    if (rule.statusCode !== 301)
+    if (rule.statusCode !== 200)
       throw new Error(
-        `Canonical-host redirect must be permanent: ${rule.source}`,
+        `Canonical-host alias must preserve the URL: ${rule.source}`,
       );
     return {
       source: rule.source,
@@ -79,8 +79,8 @@ export function canonicalHostRedirectRows(registry) {
       return [row];
     const source = row.source.slice(0, -1);
     if (
-      normalizedRedirectPath(source, registry.canonicalOrigin) ===
-      normalizedRedirectPath(row.target, registry.canonicalOrigin)
+      normalizedAliasPath(source, registry.canonicalOrigin) ===
+      normalizedAliasPath(row.target, registry.canonicalOrigin)
     )
       return [row];
     const existing = bySource.get(source);
@@ -98,21 +98,17 @@ export function canonicalHostRedirectRows(registry) {
   });
 }
 
-export function renderCanonicalHostRedirects(registry) {
-  return renderStaticRedirects(canonicalHostRedirectRows(registry));
-}
-
 /** Check the final deployed rules, including document aliases. */
-export function renderStaticRedirects(rows) {
+export function renderStaticRewrites(rows) {
   const sources = new Set();
   const lines = rows.map(({ source, target, statusCode }) => {
     if (!source?.startsWith("/") || source.startsWith("//") || /[\s?#\\*:]/u.test(source))
-      throw new Error(`Invalid static redirect source: ${source}`);
+      throw new Error(`Invalid static alias source: ${source}`);
     if (!target?.startsWith("/") || target.startsWith("//") || /[\s\\]/u.test(target))
-      throw new Error(`Invalid static redirect destination: ${target}`);
-    if (![200, 301, 302, 303, 307, 308].includes(statusCode))
-      throw new Error(`Unsupported static redirect status: ${statusCode}`);
-    if (sources.has(source)) throw new Error(`Duplicate static redirect source: ${source}`);
+      throw new Error(`Invalid static rewrite destination: ${target}`);
+    if (statusCode !== 200)
+      throw new Error(`Unsupported static rewrite status: ${statusCode}`);
+    if (sources.has(source)) throw new Error(`Duplicate static alias source: ${source}`);
     sources.add(source);
     const line = `${source} ${target} ${statusCode}`;
     if (line.length > 1_000)
@@ -125,7 +121,7 @@ export function renderStaticRedirects(rows) {
 }
 
 /** Metadata subjects are identifiers; their authoritative description is the graph. */
-export function canonicalMetadataRedirectRows(graph, canonicalUrl) {
+export function canonicalMetadataAliasRows(graph, canonicalUrl) {
   const origin = new URL(canonicalUrl).origin;
   // These two graph-only subjects are also advertised by the authored HTML head.
   const advertisedSubjects = new Set(["/website", "/medical-specialty-aesthetic-medicine"]);
@@ -146,12 +142,25 @@ export function canonicalMetadataRedirectRows(graph, canonicalUrl) {
     Object.values(value).forEach(collect);
   };
   collect(graph["@graph"]);
-  return [...paths].sort().map((source) => ({ source, target: "/graph.jsonld", statusCode: 303 }));
+  return [...paths].sort().map((source) => ({ source, target: "/graph.jsonld", statusCode: 200 }));
 }
 
-export function normalizedRedirectPath(
+export function normalizedAliasPath(
   value,
   origin = "https://www.ghezelbaash.ir",
 ) {
   return decodeURI(new URL(value, origin).pathname);
+}
+
+/** URL decoding must match browser pathname decoding without inventing routes. */
+export function contentAliasTargets(rows, machinePaths) {
+  const aliases = Object.create(null);
+  for (const { source, target } of rows) {
+    if (machinePaths.has(target)) continue;
+    const key = normalizedAliasPath(source);
+    if (Object.hasOwn(aliases, key) && aliases[key] !== target)
+      throw new Error(`Decoded content aliases disagree: ${source}`);
+    aliases[key] = target;
+  }
+  return aliases;
 }
