@@ -20,7 +20,7 @@
     queryInfo=searchEngine.queryInfo;
 
   let index;
-  const build=()=>{if(index)return index;const stack=[];return(index=searchEngine.build([...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id],main h6[id]")].map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;return{id:h.id,text,level,parents,answer:intentAnswers[h.id]||"",retrievalAlias:h.dataset.retrievalAlias||""}})))},
+  const build=()=>{if(index)return index;const stack=[];return(index=searchEngine.build([...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id],main h6[id]")].filter((h)=>!h.closest?.("[data-route-context]")).map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;return{id:h.id,text,level,parents,answer:intentAnswers[h.id]||"",retrievalAlias:h.dataset.retrievalAlias||""}})))},
     score=searchEngine.score,
     closeResults=()=>{results.hidden=true},
     render=()=>{const q=queryInfo(input.value);results.replaceChildren();if(q.original.length<2){closeResults();status.textContent=copy.minimumQuery;return}const target=q.intent&&intentTargets[q.intent],hits=build().map((x)=>({...x,rank:score(x,q)})).filter((x)=>x.rank<99||(target&&x.answer===target)).sort((a,b)=>(b.answer===target)-(a.answer===target)||a.rank-b.rank||a.level-b.level||a.text.length-b.text.length).slice(0,16);if(!hits.length){const li=d.createElement("li");li.className="guide-search__empty";li.textContent=copy.empty;results.append(li)}else for(const hit of hits){const li=d.createElement("li"),a=d.createElement("a"),title=d.createElement("span"),context=d.createElement("span");a.href="/"+(target&&hit.answer===target?target:hit.id);title.className="guide-search__result-title";title.textContent=hit.text;a.append(title);const path=hit.parents.slice(-2).join(" ← ");if(path){context.className="guide-search__result-context";context.textContent=path;a.append(context)}li.append(a);results.append(li)}results.hidden=false;status.textContent=hits.length?copy.resultCount.replace("{count}",String(hits.length)):copy.noResultsStatus};
@@ -162,7 +162,7 @@
     syncClinicHours();
     refreshPosters();
     if (searchReady && norm(input.value).length >= 2) render();
-    if (d.activeElement !== input) moveTo(targetFromPath(location.pathname));
+    if (d.activeElement !== input) moveTo(targetFromHash(location.hash) || targetFromPath(location.pathname));
     else syncTarget();
   });
   const targetFromHash = (hash) => {

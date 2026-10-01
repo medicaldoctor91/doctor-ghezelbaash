@@ -82,7 +82,9 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     for (let parent = target; parent; parent = parent.parentNode) {
       if (attr(parent, "lang")) { language = attr(parent, "lang"); direction = attr(parent, "dir") || (language.startsWith("en") ? "ltr" : "rtl"); break; }
     }
-    const title = normalize(text(heading ?? target) || exact?.name || sourceMatch?.name);
+    const mediaEntity = sourceMatch ?? exact;
+    const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
+    const title = normalize(mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
     if (!title) throw new Error("Route lacks authored title: " + route);
     const description = visible.slice(0, 300);
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };

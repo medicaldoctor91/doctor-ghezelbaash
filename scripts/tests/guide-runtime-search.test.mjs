@@ -18,7 +18,8 @@ const intentHeadings = Object.fromEntries(Object.entries(pageFrontmatter.intentT
   const answer = canonicalGraph["@graph"].find((node) => node["@id"] === id);
   return [intent, new URL(answer.url).pathname.slice(1)];
 }));
-function searchFor(query) {
+function searchFor(query, routeTitle) {
+  const indexedHeadings = routeTitle ? [{ id: "route-page-title", textContent: routeTitle, tagName: "H1", dataset: {}, closest: () => ({}) }, ...headings] : headings;
   const listeners = new Map();
   const element = (tagName) => ({
     tagName, children: [], dataset: {},
@@ -41,7 +42,7 @@ function searchFor(query) {
     documentElement: { classList: { add() {} } },
     getElementById: (id) => nodes[id] ?? null,
     querySelector: (selector) => selector === "[data-guide-search-open]" ? launcher : null,
-    querySelectorAll: (selector) => selector.startsWith("main h1") ? headings : [],
+    querySelectorAll: (selector) => selector.startsWith("main h1") ? indexedHeadings : [],
     createElement: element, addEventListener() {},
   };
   runInNewContext(source, {
@@ -73,3 +74,9 @@ for (const [intent, query] of Object.entries(queries)) {
     assert.equal(searchFor(variant)[0], new URL(pageFrontmatter.intentTargets[intent]).pathname);
   });
 }
+
+test("focused route context titles never become nonexistent search destinations", () => {
+  const results = searchFor("بوتاکس", "بوتاکس");
+  assert(results.length > 0);
+  assert(!results.includes("/route-page-title"));
+});

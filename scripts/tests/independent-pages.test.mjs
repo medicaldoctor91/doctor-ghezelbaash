@@ -93,3 +93,12 @@ test("the empty historical alias scopes its following region without unrelated c
   assert(!page.bodyHtml.includes('id="answer-clinic-before-visit-information"'));
   assert(page.entityTypes.includes("CreativeWork"));
 });
+
+test("video player and figure entries use their actual video's title instead of an unrelated preceding heading", () => {
+  for (const path of ["/video-thread-lift-workshop", "/video-kurdish-patient-experience"]) {
+    const page = pages.find((page) => page.path === path);
+    const video = page.document["@graph"].find((node) => node["@id"] === page.entityId);
+    assert(page.entityTypes.includes("VideoObject"));
+    assert.equal(page.title, video.name);
+  }
+});
