@@ -25,7 +25,7 @@ socialImageAlt: دکتر سعید قزلباش، پزشک ایرانی در مح
 socialAlternateLocales:
   - en_US
   - ar_IQ
-  - ckb_IQ
+  - ku_IQ
 footerGovernance:
   summary: حریم خصوصی و شرایط استفاده
   reputationLead: >-

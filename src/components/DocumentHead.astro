@@ -69,7 +69,9 @@ const pageLanguages = (Array.isArray(page.inLanguage) ? page.inLanguage : [page.
 if (isMain && !pageLanguages.includes(lang)) {
   throw new Error(`Canonical page language is not declared by graph: ${lang}`);
 }
-const openGraphLocaleMatch = /^([a-z]{2,3})-([A-Z]{2})$/.exec(lang);
+// Open Graph locales use ISO 639-1, while HTML/RDF retain precise Sorani ckb.
+const socialLanguage = (value: string) => value.replace(/^ckb(?=-|$)/, "ku");
+const openGraphLocaleMatch = /^([a-z]{2})-([A-Z]{2})$/.exec(socialLanguage(lang));
 if (isMain && !openGraphLocaleMatch) {
   throw new Error(`Canonical page language cannot project an Open Graph locale: ${lang}`);
 }
@@ -86,9 +88,9 @@ if (isMain) {
   if (!alternateLocales.length || new Set(alternateLocales).size !== alternateLocales.length) {
     throw new Error('Canonical page frontmatter requires unique socialAlternateLocales');
   }
-  const graphLanguageBases = new Set(pageLanguages.map((value) => value.split('-')[0]));
+  const graphLanguageBases = new Set(pageLanguages.map((value) => socialLanguage(value).split('-')[0]));
   for (const locale of alternateLocales) {
-    const match = /^([a-z]{2,3})_([A-Z]{2})$/.exec(locale);
+    const match = /^([a-z]{2})_([A-Z]{2})$/.exec(locale);
     if (!match || locale === openGraphLocale || !graphLanguageBases.has(match[1])) {
       throw new Error(`Invalid canonical social alternate locale: ${locale}`);
     }

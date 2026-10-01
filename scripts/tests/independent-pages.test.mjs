@@ -121,14 +121,18 @@ test("topic document titles keep the authored doctor name while the visible head
   assert(renderIndependentPage(home, page).includes("<title>" + page.documentTitle + "</title>"));
 });
 
-test("English social metadata uses an authored regional locale rather than a bare language code", () => {
-  const page = pages.find((page) => page.lang === "en");
-  assert(page);
-  const template = home.replace("</head>", '<meta property="og:locale" content="fa_IR"><meta property="og:locale:alternate" content="en_US"></head>');
+test("social locales use supported regional ISO 639-1 codes while HTML retains precise languages", () => {
+  const template = home.replace("</head>", '<meta property="og:locale" content="fa_IR"><meta property="og:locale:alternate" content="en_US"><meta property="og:locale:alternate" content="ku_IQ"></head>');
   const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
-  const metas = inspectHtml(renderIndependentPage(template, page)).elements.filter((node) => node.tagName === "meta");
-  assert.equal(attr(metas.find((node) => attr(node, "property") === "og:locale"), "content"), "en_US");
-  assert(!metas.some((node) => attr(node, "property") === "og:locale:alternate" && attr(node, "content") === "en_US"));
+  for (const [language, locale] of [["en", "en_US"], ["ckb-IQ", "ku_IQ"]]) {
+    const page = pages.find((page) => page.lang === language);
+    assert(page);
+    const inspected = inspectHtml(renderIndependentPage(template, page));
+    const metas = inspected.elements.filter((node) => node.tagName === "meta");
+    assert.equal(attr(metas.find((node) => attr(node, "property") === "og:locale"), "content"), locale);
+    assert(!metas.some((node) => attr(node, "property") === "og:locale:alternate" && attr(node, "content") === locale));
+    assert.equal(attr(inspected.elements.find((node) => node.tagName === "html"), "lang"), language);
+  }
 });
 
 test("fine-grained Botox headings inherit authored topics and preserve their physician provider without unrelated procedures", () => {

@@ -173,9 +173,10 @@ export function renderIndependentPage(homeHtml, record) {
   const copy = copies[record.lang.split("-")[0]] || copies.fa;
   const declaredLocales = parsed.elements.filter((node) => node.tagName === "meta" &&
     ["og:locale", "og:locale:alternate"].includes(attr(node, "property"))).map((node) => attr(node, "content"));
-  const regionalLocale = record.lang.replace("-", "_");
-  const socialLocale = /^[a-z]{2,3}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
-    : declaredLocales.find((locale) => locale?.startsWith(record.lang.split("-")[0] + "_"));
+  const socialLanguage = record.lang.replace(/^ckb(?=-|$)/, "ku");
+  const regionalLocale = socialLanguage.replace("-", "_");
+  const socialLocale = /^[a-z]{2}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
+    : declaredLocales.find((locale) => locale?.startsWith(socialLanguage.split("-")[0] + "_"));
   let html = homeHtml.slice(0, location.startTag.endOffset) +
     '<header id="route-context" data-route-context lang="' + escape(record.lang) + '" dir="' + escape(record.dir) +
     '"><h1 id="route-page-title">' + escape(record.title) + '</h1><p>' + escape(record.description) +

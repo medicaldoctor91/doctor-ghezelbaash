@@ -234,6 +234,8 @@ for (const record of records) {
   const routeBody = scoped.elements.find((node) => node.tagName === "body");
   assert.equal(attr(routeBody, "lang"), page.lang, "Shared UI language must not inherit route language");
   assert.equal(attr(routeBody, "dir"), page.dir, "Shared UI direction must not inherit route direction");
+  const localeMeta = scoped.elements.find((node) => node.tagName === "meta" && attr(node, "property") === "og:locale");
+  if (localeMeta) assert(/^[a-z]{2}_[A-Z]{2}$/.test(attr(localeMeta, "content")), "Open Graph locale must use ISO 639-1");
   assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
