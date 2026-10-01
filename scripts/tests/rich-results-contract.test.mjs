@@ -62,3 +62,13 @@ test("duplicate entities and research candidates cannot enter the published grap
 test("ProfilePage modification timestamps reject impossible dates", () => {
   assert.throws(() => projectPageJsonLd(mutate("ProfilePage", (node) => { node.dateModified = "2026-02-30T10:00:00Z"; })), /ProfilePage.dateModified/);
 });
+
+test("a typed clinic address cannot silently lose its authored physical-address fields", () => {
+  const projected = projectPageJsonLd(inputs.pageJsonLd)[0].document;
+  for (const property of ["streetAddress", "addressLocality", "addressRegion", "addressCountry", "postalCode"]) {
+    const document = structuredClone(projected);
+    const address = document["@graph"].find((node) => typed(node, "PostalAddress"));
+    delete address[property];
+    assert.throws(() => assertRichResultsDocument(document), new RegExp("clinic address." + property));
+  }
+});
