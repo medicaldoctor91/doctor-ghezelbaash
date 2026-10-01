@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { assertRichResultsDocument } from "../src/lib/rich-results-contract.mjs";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, contentAliasTargets, renderStaticRewrites } from "./lib/redirect-registry.mjs";
@@ -112,6 +113,8 @@ const ldDocuments = elements.filter((node) => node.tagName === "script" &&
   attr(node, "type") === "application/ld+json")
   .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
 assert.equal(ldDocuments.length, 1, "One browser discovery graph is required");
+const richResultCounts = assertRichResultsDocument(ldDocuments[0]);
+console.log(JSON.stringify({ pageRichResultValidation: "PASS", ...richResultCounts }));
 assert.equal(ldDocuments[0]["@context"], "https://schema.org");
 const browserNodes = ldDocuments[0]["@graph"];
 const browserById = new Map(browserNodes.map((node) => [node["@id"], node]));
@@ -154,9 +157,22 @@ for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:co
 }
 const browserVideos = browserNodes.filter((node) => node["@type"] === "VideoObject");
 assert.equal(browserVideos.length, graph["@graph"].filter((node) => [node["@type"]].flat().includes("VideoObject")).length);
-for (const video of browserVideos)
-  assert(sitemap.includes("<video:content_loc>" + video.contentUrl + "</video:content_loc>"),
+const visibleVideos = elements.filter((node) => node.tagName === "video");
+assert.equal(browserVideos.length, visibleVideos.length, "Each visible video needs one complete discovery object");
+const matchedVideos = new Set();
+for (const video of browserVideos) {
+  const escapeXml = (value) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  assert(sitemap.includes("<video:content_loc>" + escapeXml(video.contentUrl) + "</video:content_loc>"),
     "Browser video and sitemap must agree");
+  const visible = visibleVideos.find((node) => node.childNodes.some((child) =>
+    child.tagName === "source" && new URL(attr(child, "src"), lifecycle.canonicalUrl).href === video.contentUrl));
+  assert(visible, "VideoObject has no matching visible player: " + video["@id"]);
+  const thumbnail = [video.thumbnailUrl].flat()[0];
+  assert.equal(new URL(attr(visible, "data-poster"), lifecycle.canonicalUrl).href, thumbnail,
+    "VideoObject thumbnail differs from its visible player");
+  matchedVideos.add(visible);
+}
+assert.equal(matchedVideos.size, visibleVideos.length, "Duplicate or missing VideoObject for a visible player");
 
 assert.deepEqual(await readFile(path.join(dist, "graph.jsonld")),
   await readFile(path.join(root, "src/data/semantic/knowledge-graph.jsonld")), "Published graph differs from canonical graph");
