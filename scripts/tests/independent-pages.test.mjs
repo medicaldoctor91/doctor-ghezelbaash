@@ -111,3 +111,21 @@ test("video player and figure entries use their actual video's title instead of 
     assert.equal(page.title, video.name);
   }
 });
+
+test("topic document titles keep the authored doctor name while the visible heading stays focused", () => {
+  const page = pages.find((page) => page.path === "/answer-botox-onset-of-action");
+  assert.equal(page.title, "چند روز بعد نتیجه دیده می‌شود؟");
+  assert(page.documentTitle.includes(page.title));
+  assert(page.documentTitle.includes("سعید قزلباش"));
+  assert(renderIndependentPage(home, page).includes("<title>" + page.documentTitle + "</title>"));
+});
+
+test("English social metadata uses an authored regional locale rather than a bare language code", () => {
+  const page = pages.find((page) => page.lang === "en");
+  assert(page);
+  const template = home.replace("</head>", '<meta property="og:locale" content="fa_IR"><meta property="og:locale:alternate" content="en_US"></head>');
+  const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
+  const metas = inspectHtml(renderIndependentPage(template, page)).elements.filter((node) => node.tagName === "meta");
+  assert.equal(attr(metas.find((node) => attr(node, "property") === "og:locale"), "content"), "en_US");
+  assert(!metas.some((node) => attr(node, "property") === "og:locale:alternate" && attr(node, "content") === "en_US"));
+});

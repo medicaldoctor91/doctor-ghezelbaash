@@ -1,7 +1,7 @@
 import { parseFragment, serialize } from "parse5";
 import { inspectHtml } from "./html-contract.mjs";
 import { contentRoutePaths } from "./content-routes.mjs";
-import { projectPageJsonLd, browserContext } from "../../src/lib/page-discovery-jsonld.mjs";
+import { projectPageJsonLd, browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 
 const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
@@ -30,6 +30,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
   const homePage = browser.find((node) => node.url === canonicalUrl && typed(node, "ProfilePage"));
   const revision = graph["@graph"].find((node) => node["@id"] === homePage["@id"]).dateModified;
   const person = byId.get(homePage.mainEntity["@id"]);
+  const authoredPerson = graph["@graph"].find((node) => node["@id"] === person["@id"]);
   const website = browser.find((node) => typed(node, "WebSite"));
   const origin = new URL(canonicalUrl).origin;
   const paths = contentRoutePaths(html, canonicalUrl);
@@ -86,6 +87,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
     const title = normalize(mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
     if (!title) throw new Error("Route lacks authored title: " + route);
+    const physicianName = localizedText(authoredPerson.name, language);
+    const documentTitle = title.includes(physicianName) ? title : title + " | " + physicianName;
     const description = visible.slice(0, 300);
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };
     const entity = sourceMatch ?? exact ?? synthesized;
@@ -129,7 +132,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     assertRichResultsDocument(document, { primaryPageId: pageNode["@id"] });
     const imageUrls = [...new Set(parsed.elements.filter((node) => node.tagName === "img").map((node) => attr(node, "src"))
       .filter(Boolean).map((value) => new URL(value, canonicalUrl).href).filter((value) => value.startsWith(origin + "/")))];
-    return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, description, htmlId,
+    return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, documentTitle, description, htmlId,
       lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), pageType, bodyHtml, document,
       lastmod: revision, imageUrls, videos: videoNodes.map((video) => ({ thumbnailUrl: values(video.thumbnailUrl)[0],
         contentUrl: video.contentUrl, title: video.name, description: video.description,
@@ -150,6 +153,11 @@ export function renderIndependentPage(homeHtml, record) {
     ckb: ["پیشاندانی ڕێبەری تەواو", "پەڕەی سەرەکی دکتۆر سەعید قزڵباش", "ڕێبەری تەواو بار دەکرێت…", "بارکردن سەرکەوتوو نەبوو؛ دووبارە هەوڵ بدەوە."],
   };
   const copy = copies[record.lang.split("-")[0]] || copies.fa;
+  const declaredLocales = parsed.elements.filter((node) => node.tagName === "meta" &&
+    ["og:locale", "og:locale:alternate"].includes(attr(node, "property"))).map((node) => attr(node, "content"));
+  const regionalLocale = record.lang.replace("-", "_");
+  const socialLocale = /^[a-z]{2,3}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
+    : declaredLocales.find((locale) => locale?.startsWith(record.lang.split("-")[0] + "_"));
   let html = homeHtml.slice(0, location.startTag.endOffset) +
     '<header id="route-context" data-route-context><h1 id="route-page-title">' + escape(record.title) + '</h1><p>' + escape(record.description) +
     '</p><p><a href="/" data-guide-expand aria-controls="main-content" data-loading="' + escape(copy[2]) + '" data-error="' +
@@ -159,14 +167,16 @@ export function renderIndependentPage(homeHtml, record) {
   html = html.replace(/(<article\b[^>]*\baria-labelledby=)["\'][^"\']*["\']/i, '$1"route-page-title"');
   html = stripData(html).replace("<html ", '<html data-route-view="focused" ');
   html = html.replace(/<html\b([^>]*)>/i, (_, attrs) => "<html" + attrs.replace(/\s(?:lang|dir)=["\'][^"\']*["\']/gi, "") + ' lang="' + escape(record.lang) + '" dir="' + record.dir + '">');
-  html = html.replace(/<title>[\s\S]*?<\/title>/i, "<title>" + escape(record.title) + "</title>");
+  html = html.replace(/<title>[\s\S]*?<\/title>/i, "<title>" + escape(record.documentTitle) + "</title>");
   html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi, '<link rel="canonical" href="' + escape(record.canonicalUrl) + '">');
   html = html.replace(/<meta\b[^>]*name=["']description["'][^>]*>/gi, '<meta name="description" content="' + escape(record.description) + '">');
   html = html.replace(/<meta\b([^>]*)>/gi, (whole, attrs) => {
     const key = /(?:name|property)=["']([^"']+)["']/i.exec(attrs)?.[1];
-    const changed = { "og:title": record.title, "twitter:title": record.title, "og:description": record.description,
+    if (key === "og:locale" && !socialLocale) return "";
+    if (key === "og:locale:alternate" && /content=["\']([^"\']+)["\']/i.exec(attrs)?.[1] === socialLocale) return "";
+    const changed = { "og:title": record.documentTitle, "twitter:title": record.documentTitle, "og:description": record.description,
       "twitter:description": record.description, "og:url": record.canonicalUrl, "twitter:url": record.canonicalUrl,
-      "og:type": record.pageType === "ProfilePage" ? "profile" : "article", "og:locale": record.lang.replace("-", "_") };
+      "og:type": record.pageType === "ProfilePage" ? "profile" : "article", "og:locale": socialLocale };
     if (key in changed) return '<meta ' + (key.startsWith("og:") ? "property" : "name") + '="' + key + '" content="' + escape(changed[key]) + '">';
     if (key?.startsWith("profile:") && record.pageType !== "ProfilePage") return "";
     return whole;
