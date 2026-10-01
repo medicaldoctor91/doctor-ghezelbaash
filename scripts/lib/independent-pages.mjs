@@ -65,8 +65,9 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       .map((child) => new URL(attr(child, "src"), canonicalUrl).href)));
     const videoNodes = browser.filter((node) => typed(node, "VideoObject") && contentUrls.has(node.contentUrl));
     const exact = byId.get(url);
-    const sourceMatch = browser.find((node) => node.url === url && typed(node, "Question"))
-      ?? browser.find((node) => node.url === url && typed(node, "VideoObject"));
+    const sourceMatch = browser.find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
+      ?? (["video", "figure"].includes(target.tagName) && videoNodes.length === 1 ? videoNodes[0] : undefined)
+      ?? browser.find((node) => node.url === url && typed(node, "Question"));
         let language = "fa-IR", direction = "rtl";
     for (let parent = target; parent; parent = parent.parentNode) {
       if (attr(parent, "lang")) { language = attr(parent, "lang"); direction = attr(parent, "dir") || (language.startsWith("en") ? "ltr" : "rtl"); break; }
