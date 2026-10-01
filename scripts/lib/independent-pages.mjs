@@ -33,6 +33,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
   const website = browser.find((node) => typed(node, "WebSite"));
   const origin = new URL(canonicalUrl).origin;
   const paths = contentRoutePaths(html, canonicalUrl);
+  const pathSet = new Set(paths);
   return paths.map((route) => {
     const htmlId = route.slice(1), target = byHtmlId.get(htmlId), url = origin + route;
     if (!target?.sourceCodeLocation) throw new Error("Route lacks authored HTML target: " + route);
@@ -58,7 +59,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     let bodyHtml = serialize(parseFragment(stripData(html.slice(start, end)))).replace(/<h1\b/g, "<h2").replaceAll("</h1>", "</h2>");
     if (!normalize(text(parseFragment(bodyHtml)))) throw new Error("Route has no readable content: " + route);
     // Fragment fallbacks now point to the comprehensive home target.
-    bodyHtml = bodyHtml.replace(/href="#([^"]+)"/g, (_, id) => 'href="/' + escape(id) + '"');
+    bodyHtml = bodyHtml.replace(/(<a\b[^>]*\bhref=)"#([^"]+)"/g, (_, prefix, id) => prefix + '"' + (pathSet.has("/" + id) ? "/" : "/#") + escape(id) + '"');
     const parsed = inspectHtml(bodyHtml, { wrapMain: true });
     const visible = normalize(text(parseFragment(bodyHtml)));
     const contentUrls = new Set(parsed.videos.flatMap((video) => (video.childNodes || []).filter((child) => child.tagName === "source")
