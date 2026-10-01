@@ -213,6 +213,9 @@ let translatedPages = 0, topicalPages = 0;
 const homeArticle = elements.find((node) => node.tagName === "article" && (attr(node, "class") || "").split(/\s+/).includes("medical-guide"));
 assert.equal(attr(homeArticle, "lang"), page.lang, "Complete guide needs its own language");
 assert.equal(attr(homeArticle, "dir"), page.dir, "Complete guide needs its own direction");
+const homeBody = elements.find((node) => node.tagName === "body");
+assert.equal(attr(homeBody, "lang"), page.lang, "Shared UI needs its authored language");
+assert.equal(attr(homeBody, "dir"), page.dir, "Shared UI needs its authored direction");
 assert(!elements.some((node) => node.tagName === "link" && attr(node, "hreflang")), "Homepage must not claim unrelated translations");
 const sitemapHtml = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 for (const record of records) {
@@ -228,6 +231,9 @@ for (const record of records) {
   const routeArticle = scoped.elements.find((node) => node.tagName === "article" && (attr(node, "class") || "").split(/\s+/).includes("medical-guide"));
   assert.equal(attr(routeArticle, "lang"), record.lang, "Focused article language");
   assert.equal(attr(routeArticle, "dir"), record.dir, "Focused article direction");
+  const routeBody = scoped.elements.find((node) => node.tagName === "body");
+  assert.equal(attr(routeBody, "lang"), page.lang, "Shared UI language must not inherit route language");
+  assert.equal(attr(routeBody, "dir"), page.dir, "Shared UI direction must not inherit route direction");
   assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");

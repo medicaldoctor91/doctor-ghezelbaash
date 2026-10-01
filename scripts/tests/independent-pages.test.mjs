@@ -165,7 +165,8 @@ test("an exact answer's authored topic takes precedence over its broader contain
 test("foreign-language entry articles and route context override inherited homepage language and direction", () => {
   const page = pages.find((page) => page.lang === "en");
   assert(page);
-  const template = home.replace('<article class="medical-guide">', '<article class="medical-guide" lang="fa-IR" dir="rtl">');
+  const template = home.replace('<article class="medical-guide">', '<article class="medical-guide" lang="fa-IR" dir="rtl">')
+    .replace("<body>", '<body lang="fa-IR" dir="rtl">');
   const inspected = inspectHtml(renderIndependentPage(template, page));
   const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
   const article = inspected.guideArticles[0];
@@ -175,6 +176,9 @@ test("foreign-language entry articles and route context override inherited homep
     assert.equal(attr(node, "dir"), "ltr");
   }
   assert.equal(attr(article, "aria-labelledby"), "route-page-title");
+  const body = inspected.elements.find((node) => node.tagName === "body");
+  assert.equal(attr(body, "lang"), "fa-IR");
+  assert.equal(attr(body, "dir"), "rtl");
 });
 
 test("focused HTML renders only declared language alternates and rejects ambiguous or foreign destinations", () => {
