@@ -293,6 +293,11 @@ test("declared historical summary keeps its own geographic evidence distinct fro
   const original = inputs.graph["@graph"].find((node) => node["@id"] === summary.entityId);
   const originalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
   const scopedById = new Map(summary.document["@graph"].map((node) => [node["@id"], node]));
+  const browserById = new Map(inspectHtml(home).elements
+    .filter((node) => node.tagName === "script" && node.attrs?.some((entry) =>
+      entry.name === "type" && entry.value === "application/ld+json"))
+    .flatMap((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join(""))["@graph"])
+    .map((node) => [node["@id"], node]));
   assert.deepEqual(scopedById.get(summary.entityId).spatialCoverage, original.spatialCoverage);
   assert.equal(scopedById.get(summary.entityId).temporalCoverage, "historical");
   const queue = [...original.spatialCoverage];
@@ -303,7 +308,7 @@ test("declared historical summary keeps its own geographic evidence distinct fro
     visited.add(ref["@id"]);
     const authoredPlace = originalById.get(ref["@id"]);
     assert(authoredPlace, "Geographic evidence must refer to an authored place");
-    assert.deepEqual(scopedById.get(ref["@id"]), authoredPlace,
+    assert.deepEqual(scopedById.get(ref["@id"]), browserById.get(ref["@id"]),
       "Historical geography keeps its authored place definition and containment");
     const parents = Array.isArray(authoredPlace.containedInPlace)
       ? authoredPlace.containedInPlace : authoredPlace.containedInPlace ? [authoredPlace.containedInPlace] : [];

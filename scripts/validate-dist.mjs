@@ -263,7 +263,12 @@ for (const record of records) {
   if (record.scopeKind === "overview") overviewPages++;
   if (record.metadataContext) contextualTitles++;
   nativePosters += scoped.elements.filter((node) => node.tagName === "video" && attr(node, "poster")).length;
-  const scopeText = record.bodyHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const routeContext = scoped.elements.find((node) => attr(node, "data-route-context") !== undefined);
+  assert(routeContext?.sourceCodeLocation && routeArticle?.sourceCodeLocation?.endTag,
+    "Focused scope needs its authored article and context boundaries");
+  const scopeHtml = source.slice(routeContext.sourceCodeLocation.endOffset,
+    routeArticle.sourceCodeLocation.endTag.startOffset);
+  const scopeText = scopeHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   if (!scopeTexts.has(scopeText)) scopeTexts.set(scopeText, []);
   scopeTexts.get(scopeText).push(record.path);
   assert(scoped.elements.some((node) => attr(node, "data-guide-expand") !== undefined), "Direct entry needs an explicit complete-guide control");
