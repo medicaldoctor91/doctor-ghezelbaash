@@ -52,4 +52,4 @@ CI runs the browser discovery regression tests and the full build, then retains 
 
 ## Sitemap scope
 
-The sitemap publishes the canonical document once, its real authored revision, visible high-resolution image representations and the videos actually present on the page. The path aliases all serve the same canonical document, so they are not listed as separate indexable pages. Media URLs, video text limits, durations and publication dates are checked during generation; final validation confirms each media resource exists. A successful source build does not guarantee a particular search ranking.
+The sitemap publishes home and every independently rendered content path once, with its authored revision and visible media. Legacy aliases, media timestamp query variants and machine graph subjects are not extra HTML sitemap entries. Media URLs, video text limits, durations and publication dates are checked during generation; final validation confirms each media resource exists. A successful source build does not guarantee a particular search ranking.

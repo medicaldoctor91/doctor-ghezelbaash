@@ -37,9 +37,20 @@ export function projectPageJsonLd(scripts) {
   const projected = all.map((node) => {
     const output = clean(node);
     if (values(output["@type"]).includes("ProfilePage")) {
-      const entities = values(output.mainEntity);
-      output.mainEntity = entities[0];
-      if (entities.length > 1) output.about = [...values(output.about), ...entities.slice(1)];
+            const entities = values(output.mainEntity);
+      const subject = byId.get(entities[0]?.["@id"]);
+      const profileTypes = ["Person", "Organization", "MedicalClinic", "LocalBusiness"];
+      const owner = byId.get(subject?.owner?.["@id"] ?? subject?.creator?.["@id"]);
+      if (!values(subject?.["@type"]).some((type) => profileTypes.includes(type)) &&
+          values(owner?.["@type"]).some((type) => profileTypes.includes(type))) {
+        // A repository is a CreativeWork. Its account profile describes its
+        // authored owner; retain the original repository relation as about.
+        output.mainEntity = { "@id": owner["@id"] };
+        output.about = [...values(output.about), ...entities];
+      } else {
+        output.mainEntity = entities[0];
+        if (entities.length > 1) output.about = [...values(output.about), ...entities.slice(1)];
+      }
       for (const key of ["dateCreated", "dateModified"])
         if (key in output && !/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(output[key])) delete output[key];
     }
