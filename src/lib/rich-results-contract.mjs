@@ -31,7 +31,7 @@ const duration = (value, label) => {
 /**
  * Checks this site's published discovery graph, not Google's ranking or live
  * crawler access. Required ProfilePage/VideoObject/LocalBusiness fields and
- * the site's authored image provenance must survive projection.
+ * the site's complete authored clinic address and image provenance must survive projection.
  */
 export function assertRichResultsDocument(document) {
   if (document?.["@context"] !== "https://schema.org" || !Array.isArray(document["@graph"]))
@@ -75,7 +75,7 @@ export function assertRichResultsDocument(document) {
     text(clinic.name, "LocalBusiness.name");
     const address = resolve(clinic.address, ["PostalAddress"], "LocalBusiness.address");
     for (const property of ["streetAddress", "addressLocality", "addressRegion", "addressCountry", "postalCode"])
-      if (property in address) text(address[property], "PostalAddress." + property);
+      text(address[property], "Published clinic address." + property);
   }
   const images = nodes.filter((node) => hasType(node, "ImageObject"));
   for (const image of images) {
