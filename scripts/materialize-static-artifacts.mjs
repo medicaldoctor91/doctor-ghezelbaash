@@ -11,10 +11,10 @@ import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { canonicalGraph, canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import {
-  canonicalHostRedirectRows,
-  canonicalMetadataRedirectRows,
-  loadRedirectRegistry,
-  renderStaticRedirects,
+  canonicalHostAliasRows,
+  canonicalMetadataAliasRows,
+  loadAliasRegistry,
+  renderStaticRewrites,
 } from "./lib/redirect-registry.mjs";
 
 const root = process.cwd();
@@ -108,24 +108,25 @@ const validateStableAliases = (aliases) => {
 
 for (const artifact of STATIC_ARTIFACTS)
   await copyExact(artifact.source, artifact.path);
-const redirectRegistry = await loadRedirectRegistry(root);
-const canonicalRedirects = canonicalHostRedirectRows(redirectRegistry);
+const aliasRegistry = await loadAliasRegistry(root);
+const legacyAliases = canonicalHostAliasRows(aliasRegistry);
 const contentPaths = contentRoutePaths(await readFile(path.join(dist, "index.html"), "utf8"), canonicalLifecycle.canonicalUrl);
-const registeredSources = new Set(canonicalRedirects.map((row) => row.source));
+const registeredSources = new Set(legacyAliases.map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
-  throw new Error("Authored content path collides with a legacy redirect");
+  throw new Error("Authored content path collides with a legacy alias");
 const contentSources = new Set(contentPaths);
-for (const { source, target } of canonicalRedirects) {
+for (const { source, target } of legacyAliases) {
   const targetPath = new URL(target, canonicalLifecycle.canonicalUrl).pathname;
   if (targetPath !== "/" && !contentSources.has(targetPath) && !destinations.has(targetPath.slice(1)))
-    throw new Error(`Legacy redirect has no deployed destination: ${source} -> ${target}`);
+    throw new Error(`Legacy alias has no deployed destination: ${source} -> ${target}`);
 }
-const metadataRedirects = canonicalMetadataRedirectRows(canonicalGraph, canonicalLifecycle.canonicalUrl)
+const metadataAliases = canonicalMetadataAliasRows(canonicalGraph, canonicalLifecycle.canonicalUrl)
   .filter(({ source }) => !contentSources.has(source));
-await writeExact("_redirects", renderStaticRedirects([
-  ...canonicalRedirects,
+await writeExact("_redirects", renderStaticRewrites([
+  ...legacyAliases.filter(({ source }) => source !== "/index.html")
+    .map((row) => ({ ...row, target: row.target === "/" || contentSources.has(row.target) ? "/index.html" : row.target })),
   ...contentPaths.map((source) => ({ source, target: "/index.html", statusCode: 200 })),
-  ...metadataRedirects,
+  ...metadataAliases,
 ]));
 const generatedPublic = path.join(root, ".generated/public");
 const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)
@@ -208,9 +209,9 @@ console.log(
       generatedPublicFiles: generatedPublicFiles.length + assetEntries.length,
       staleGeneratedAssetsRemoved: staleGeneratedAssets.length,
       stableMediaAliases: stableMedia.aliases.length,
-      canonicalHostRedirects: canonicalRedirects.length,
+      legacyAliases: legacyAliases.length,
       contentRoutes: contentPaths.length,
-      metadataIdentityRedirects: metadataRedirects.length,
+      metadataAliases: metadataAliases.length,
       destinations: destinations.size,
       deliveryMode: "static-assets",
     },
