@@ -50,6 +50,8 @@ function documentFor(html) {
   const all = []; const collect = (node) => { all.push(node); node.childNodes.forEach(collect); }; collect(root);
   root.documentElement = all.find((node) => node.tagName === "html");
   root.head = all.find((node) => node.tagName === "head");
+  root.body = all.find((node) => node.tagName === "body");
+  root.addEventListener = () => {};
   const title = all.find((node) => node.tagName === "title");
   Object.defineProperty(root, "title", { get: () => title.textContent, set: (value) => title.replaceChildren(new DomNode({ value })) });
   root.getElementById = (id) => { const nodes = []; const walk = (node) => { nodes.push(node); node.childNodes.forEach(walk); }; walk(root); return nodes.find((node) => node.getAttribute("id") === id); };

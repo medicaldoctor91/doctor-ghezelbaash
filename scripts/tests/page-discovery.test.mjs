@@ -63,3 +63,9 @@ test("text containing an HTML script terminator stays inside JSON data", () => {
   assert.equal([...html.matchAll(/<script\b/g)].length, 1);
   assert(html.includes("\\u003c/script>"));
 });
+
+test("formatting an already projected home is idempotent and never duplicates FAQ entities", () => {
+  const first = projectPageJsonLd(inputs.pageJsonLd);
+  const second = projectPageJsonLd(first);
+  assert.deepEqual(second, first);
+});

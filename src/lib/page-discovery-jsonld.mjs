@@ -60,7 +60,7 @@ export function projectPageJsonLd(scripts) {
     return output;
   });
     const questions = projected.filter((node) => values(node["@type"]).includes("Question") && node.acceptedAnswer);
-  if (questions.length) projected.push({
+  if (questions.length && !byId.has(home.url + "#questions")) projected.push({
     "@id": home.url + "#questions", "@type": "FAQPage", url: home.url,
     name: "پرسش‌ها و پاسخ‌های راهنمای پزشکی زیبایی دکتر سعید قزلباش",
     isPartOf: { "@id": home["@id"] }, mainEntity: questions.map((node) => ({ "@id": node["@id"] })),

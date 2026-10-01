@@ -8,7 +8,24 @@
     scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map((node) => node.cloneNode(true)),
     context: doc.querySelector("[data-route-context]")?.cloneNode(true),
   });
-  const homePath = "/", initialPath = location.pathname.replace(/\/$/, "") || "/";
+    const homePath = "/", initialPath = location.pathname.replace(/\/$/, "") || "/";
+  let bootstrapPending = d.documentElement.dataset.routeView === "focused";
+  if (bootstrapPending) d.addEventListener("click", (event) => {
+    if (!bootstrapPending || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    const link = event.target.closest?.("a[href]");
+    if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+    const url = new URL(link.href);
+    if (url.hash || !/^\/[A-Za-z0-9][A-Za-z0-9._-]*\/?$/.test(url.pathname) && url.pathname !== "/") return;
+    if (![origin, d.querySelector("#guide-search")?.dataset.canonicalOrigin].includes(url.origin)) return;
+    event.preventDefault();
+    window.completeGuideReady.then(() => {
+      const retry = d.createElement("a");
+      retry.href = url.pathname + url.search;
+      d.body.append(retry);
+      retry.click();
+      retry.remove();
+    });
+  }, true);
   cache.set(initialPath, snapshot(d));
   let ticket = 0;
   window.syncGuidePageState = async (path) => {
@@ -46,5 +63,5 @@
       current.replaceChildren(...[context, ...full.childNodes].filter(Boolean));
       delete d.documentElement.dataset.routeView;
     } catch { /* The focused initial document is still complete for its topic. */ }
-  })();
+  })().finally(() => { bootstrapPending = false; });
 })();
