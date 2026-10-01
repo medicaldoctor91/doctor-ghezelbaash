@@ -38,21 +38,30 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     const htmlId = route.slice(1), target = byHtmlId.get(htmlId), url = origin + route;
     if (!target?.sourceCodeLocation) throw new Error("Route lacks authored HTML target: " + route);
     let owner = target;
-    // Empty aliases and media/control destinations inherit their visible region.
-    if (!/^h[1-6]$/.test(target.tagName) && !["section", "figure"].includes(target.tagName)) {
+    const classes = (attr(target, "class") || "").split(/\s+/);
+    const answerTarget = classes.includes("answer-projection") && normalize(text(target));
+    const emptyAlias = classes.includes("semantic-alias-anchor") && !normalize(text(target));
+    // Readable answer paragraphs own their scope. Empty aliases and controls
+    // need a visible region rather than inheriting unrelated whole sections.
+    if (!answerTarget && !/^h[1-6]$/.test(target.tagName) && !["section", "figure"].includes(target.tagName)) {
       for (let parent = target.parentNode; parent && parent.tagName !== "article"; parent = parent.parentNode) {
         if (["figure", "section", "header"].includes(parent.tagName)) { owner = parent; break; }
       }
     }
+    const aliasHeading = emptyAlias ? headings.find((node) =>
+      node.sourceCodeLocation.startOffset >= target.sourceCodeLocation.endOffset &&
+      node.sourceCodeLocation.endOffset <= owner.sourceCodeLocation.endOffset) : undefined;
     const heading = /^h[1-6]$/.test(target.tagName) ? target
-      : headings.find((node) => node.sourceCodeLocation.startOffset >= owner.sourceCodeLocation.startOffset &&
+      : aliasHeading ?? headings.find((node) => node.sourceCodeLocation.startOffset >= owner.sourceCodeLocation.startOffset &&
           node.sourceCodeLocation.endOffset <= owner.sourceCodeLocation.endOffset)
         ?? headings.filter((node) => node.sourceCodeLocation.startOffset <= target.sourceCodeLocation.startOffset).at(-1);
     let start = owner.sourceCodeLocation.startOffset, end = owner.sourceCodeLocation.endOffset;
-    if (/^h[1-6]$/.test(target.tagName)) {
-      const level = Number(target.tagName.slice(1));
-      const next = headings.find((node) => node.sourceCodeLocation.startOffset > start && Number(node.tagName.slice(1)) <= level);
-      let container = target.parentNode;
+    const regionHeading = /^h[1-6]$/.test(target.tagName) ? target : aliasHeading;
+    if (regionHeading) {
+      if (aliasHeading) start = target.sourceCodeLocation.startOffset;
+      const level = Number(regionHeading.tagName.slice(1));
+      const next = headings.find((node) => node.sourceCodeLocation.startOffset > regionHeading.sourceCodeLocation.startOffset && Number(node.tagName.slice(1)) <= level);
+      let container = regionHeading.parentNode;
       while (container && !["section", "header", "article"].includes(container.tagName)) container = container.parentNode;
       end = Math.min(next?.sourceCodeLocation.startOffset ?? html.length, container?.sourceCodeLocation?.endTag?.startOffset ?? html.length);
     }
@@ -73,7 +82,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     for (let parent = target; parent; parent = parent.parentNode) {
       if (attr(parent, "lang")) { language = attr(parent, "lang"); direction = attr(parent, "dir") || (language.startsWith("en") ? "ltr" : "rtl"); break; }
     }
-    const title = normalize(exact?.name || sourceMatch?.name || text(heading ?? target));
+    const title = normalize(text(heading ?? target) || exact?.name || sourceMatch?.name);
     if (!title) throw new Error("Route lacks authored title: " + route);
     const description = visible.slice(0, 300);
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };
@@ -81,7 +90,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     const pageType = typed(entity, "Person") ? "ProfilePage"
       : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
     const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: title, description,
-      inLanguage: language, isPartOf: { "@id": website["@id"] }, author: { "@id": person["@id"] },
+      inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] },
       mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
       dateModified: revision };
     if (pageType === "ProfilePage") delete pageNode.dateModified;
@@ -101,7 +110,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       const node = queue.shift();
       if (!node || selected.has(node["@id"])) continue;
       const output = structuredClone(node);
-      delete output.mainEntityOfPage; delete output.subjectOf; delete output.mentions;
+      if (output["@id"] !== person["@id"]) delete output.mainEntityOfPage;
+      delete output.subjectOf; delete output.mentions;
       if (typed(output, "WebSite")) delete output.hasPart;
       if (typed(output, "WebPageElement")) { delete output.isPartOf; delete output.hasPart; }
       if (typed(output, "Person")) { delete output.knowsAbout; delete output.hasCredential; delete output.memberOf; }
@@ -130,9 +140,18 @@ export function renderIndependentPage(homeHtml, record) {
   if (homeTemplate?.source !== homeHtml) homeTemplate = { source: homeHtml, parsed: inspectHtml(homeHtml) };
   const parsed = homeTemplate.parsed;
   const article = parsed.guideArticles[0], location = article.sourceCodeLocation;
+  const copies = {
+    fa: ["نمایش راهنمای کامل", "صفحهٔ اصلی دکتر سعید قزلباش", "در حال بارگذاری راهنمای کامل…", "بارگذاری انجام نشد؛ دوباره تلاش کنید."],
+    en: ["Show the complete guide", "Dr. Saeed Ghezelbash homepage", "Loading the complete guide…", "The guide could not load. Please try again."],
+    ar: ["عرض الدليل الكامل", "الصفحة الرئيسية للدكتور سعيد قزلباش", "جارٍ تحميل الدليل الكامل…", "تعذّر التحميل. حاول مرة أخرى."],
+    ckb: ["پیشاندانی ڕێبەری تەواو", "پەڕەی سەرەکی دکتۆر سەعید قزڵباش", "ڕێبەری تەواو بار دەکرێت…", "بارکردن سەرکەوتوو نەبوو؛ دووبارە هەوڵ بدەوە."],
+  };
+  const copy = copies[record.lang.split("-")[0]] || copies.fa;
   let html = homeHtml.slice(0, location.startTag.endOffset) +
     '<header id="route-context" data-route-context><h1 id="route-page-title">' + escape(record.title) + '</h1><p>' + escape(record.description) +
-    '</p><p><a href="/">راهنمای کامل دکتر سعید قزلباش</a></p></header>' +
+    '</p><p><a href="/" data-guide-expand aria-controls="main-content" data-loading="' + escape(copy[2]) + '" data-error="' +
+    escape(copy[3]) + '">' + escape(copy[0]) + '</a> · <a href="/">' + escape(copy[1]) +
+    '</a></p><p data-guide-expand-status role="status" aria-live="polite"></p></header>' +
     record.bodyHtml + homeHtml.slice(location.endTag.startOffset);
   html = html.replace(/(<article\b[^>]*\baria-labelledby=)["\'][^"\']*["\']/i, '$1"route-page-title"');
   html = stripData(html).replace("<html ", '<html data-route-view="focused" ');

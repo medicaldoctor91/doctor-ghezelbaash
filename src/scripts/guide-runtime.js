@@ -2,15 +2,15 @@
   if (window.completeGuideReady) await window.completeGuideReady;
   const d=document,s=d.documentElement;
   s.classList.add("js");
-  const clinicHoursNodes=d.querySelectorAll('[data-clinic-open-status]'),clinicFaDigits='۰۱۲۳۴۵۶۷۸۹',clinicAscii=(value)=>String(value||'').replace(/[۰-۹]/g,(digit)=>String(clinicFaDigits.indexOf(digit))),clinicWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',weekday:'short'}),clinicClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),syncClinicHours=()=>{const now=new Date(),day=clinicWeekday.format(now),[hour,minute]=clinicClock.format(now).split(':').map(Number),currentMinutes=hour*60+minute;for(const node of clinicHoursNodes){const openFa=node.dataset.open||'',closeFa=node.dataset.close||'',openMinutes=Number(clinicAscii(openFa))*60,closeMinutes=Number(clinicAscii(closeFa))*60;if(!Number.isFinite(openMinutes)||!Number.isFinite(closeMinutes))continue;const isFriday=day==='Fri',isOpen=!isFriday&&currentMinutes>=openMinutes&&currentMinutes<closeMinutes,label=node.querySelector('[data-clinic-open-status-label]'),detail=node.querySelector('[data-clinic-open-status-detail]');node.dataset.state=isOpen?'open':'closed';if(label)label.textContent=isOpen?'اکنون باز است':'اکنون بسته است';if(!detail)continue;if(isOpen)detail.textContent=`تا ساعت ${closeFa}`;else if(isFriday||(day==='Thu'&&currentMinutes>=closeMinutes))detail.textContent=`بازگشایی شنبه ${openFa}`;else if(currentMinutes<openMinutes)detail.textContent=`امروز از ${openFa}`;else detail.textContent=`فردا از ${openFa}`}};
-  if(clinicHoursNodes.length){syncClinicHours();setInterval(syncClinicHours,60000)}
+  const clinicFaDigits='۰۱۲۳۴۵۶۷۸۹',clinicAscii=(value)=>String(value||'').replace(/[۰-۹]/g,(digit)=>String(clinicFaDigits.indexOf(digit))),clinicWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',weekday:'short'}),clinicClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),syncClinicHours=()=>{const now=new Date(),day=clinicWeekday.format(now),[hour,minute]=clinicClock.format(now).split(':').map(Number),currentMinutes=hour*60+minute;for(const node of d.querySelectorAll('[data-clinic-open-status]')){const openFa=node.dataset.open||'',closeFa=node.dataset.close||'',openMinutes=Number(clinicAscii(openFa))*60,closeMinutes=Number(clinicAscii(closeFa))*60;if(!Number.isFinite(openMinutes)||!Number.isFinite(closeMinutes))continue;const isFriday=day==='Fri',isOpen=!isFriday&&currentMinutes>=openMinutes&&currentMinutes<closeMinutes,label=node.querySelector('[data-clinic-open-status-label]'),detail=node.querySelector('[data-clinic-open-status-detail]');node.dataset.state=isOpen?'open':'closed';if(label)label.textContent=isOpen?'اکنون باز است':'اکنون بسته است';if(!detail)continue;if(isOpen)detail.textContent=`تا ساعت ${closeFa}`;else if(isFriday||(day==='Thu'&&currentMinutes>=closeMinutes))detail.textContent=`بازگشایی شنبه ${openFa}`;else if(currentMinutes<openMinutes)detail.textContent=`امروز از ${openFa}`;else detail.textContent=`فردا از ${openFa}`}};
+  syncClinicHours();setInterval(syncClinicHours,60000);
   const norm=createGuideSearch().normalize,
     search=d.getElementById("guide-search"),input=d.getElementById("guide-search-input"),results=d.getElementById("guide-search-results"),status=d.getElementById("guide-search-status"),launcher=d.querySelector("[data-guide-search-open]"),top=d.querySelector("[data-quick-actions-top]"),
     contentRouteAliases=JSON.parse(search?.dataset.contentRouteAliases||"{}"),
     plainClick=(e)=>e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.shiftKey,
     targetFromPath=(pathname)=>{let decoded;try{decoded=decodeURI(pathname)}catch{return null}const key=Object.hasOwn(contentRouteAliases,decoded)?decoded:decoded.replace(/\/$/,""),route=contentRouteAliases[key]||decoded;if(route==="/")return d.getElementById("main-content");if(!/^\/[A-Za-z0-9][A-Za-z0-9._-]*\/?$/.test(route))return null;return d.getElementById(route.replace(/^\/|\/$/g,""))};
-  const searchReady=Boolean(search&&input&&results&&status&&launcher);
-  if(searchReady){launcher.replaceWith(search);search.dataset.mounted="true"}
+  const searchReady=Boolean(search&&input&&results&&status&&(launcher||s.dataset?.routeView==="focused"));
+  if(searchReady){if(launcher)launcher.replaceWith(search);else d.querySelector("article.medical-guide")?.before(search);search.dataset.mounted="true"}
 
   const intentTargets=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentTargets||"{}")).map(([intent,url])=>[intent,new URL(url).pathname.slice(1)])),
     intentAnswers=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentHeadings||"{}")).map(([intent,heading])=>[heading,intentTargets[intent]])),
@@ -141,26 +141,34 @@
     } else scrollTo({top:0,left:0});
   };
   const revealPoster = (video) => {
-      if (!video.poster && video.dataset.poster)
-        video.poster = video.dataset.poster;
-    },
-    posterVideos = [...d.querySelectorAll("video[data-poster]")];
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries)
-          if (entry.isIntersecting) {
-            revealPoster(entry.target);
-            observer.unobserve(entry.target);
-          }
-      },
-      { rootMargin: "600px 0px" },
-    );
-    for (const video of posterVideos) observer.observe(video);
-  } else {
-    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
-    idle(() => posterVideos.forEach(revealPoster));
-  }
+    if (!video.poster && video.dataset.poster) video.poster = video.dataset.poster;
+  };
+  const posterObserver = "IntersectionObserver" in window ? new IntersectionObserver((entries) => {
+    for (const entry of entries) if (entry.isIntersecting) {
+      revealPoster(entry.target);
+      posterObserver.unobserve(entry.target);
+    }
+  }, { rootMargin: "600px 0px" }) : null;
+  const refreshPosters = () => {
+    const videos = [...d.querySelectorAll("video[data-poster]")];
+    if (posterObserver) for (const video of videos) posterObserver.observe(video);
+    else (window.requestIdleCallback || ((fn) => setTimeout(fn, 1)))(() => videos.forEach(revealPoster));
+  };
+  refreshPosters();
+  d.addEventListener("guide:expanded", () => {
+    index = undefined;
+    tocLinks = undefined;
+    if (searchReady) d.querySelector("[data-guide-search-open]")?.remove();
+    syncClinicHours();
+    refreshPosters();
+    if (searchReady && norm(input.value).length >= 2) render();
+    if (d.activeElement !== input) moveTo(targetFromPath(location.pathname));
+    else syncTarget();
+  });
+  const targetFromHash = (hash) => {
+    try { return hash ? d.getElementById(decodeURIComponent(hash.slice(1))) : null; }
+    catch { return null; }
+  };
 
   const videoFromUrl = (url) => {
     const slug=url.searchParams.get("video"),rawTime=url.searchParams.get("t");
@@ -200,12 +208,12 @@
     const link = event.target.closest?.("a[href]");
     if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
     const url = new URL(link.href);
-    if (![location.origin,search?.dataset.canonicalOrigin].includes(url.origin) || url.hash) return;
-    const selection=videoFromUrl(url),target=targetFromPath(url.pathname);
+    if (![location.origin,search?.dataset.canonicalOrigin].includes(url.origin)) return;
+    const selection=url.hash?null:videoFromUrl(url),target=url.hash?targetFromHash(url.hash):targetFromPath(url.pathname);
     if(!target||(url.search&&!selection))return;
     event.preventDefault();
-    const destination=url.pathname+url.search;
-    if(destination!==location.pathname+location.search||location.hash)history.pushState(null,"",destination);
+    const destination=url.pathname+url.search+url.hash;
+    if(destination!==location.pathname+location.search+location.hash)history.pushState(null,"",destination);
     window.syncGuidePageState?.(url.pathname);
     if(searchReady)closeResults();
     syncTarget();
@@ -215,9 +223,10 @@
   addEventListener("popstate", () => {
     window.syncGuidePageState?.(location.pathname);
     const selection=videoFromUrl(new URL(location.href));
-    syncTarget(selection?.video||targetFromPath(location.pathname));
+    const target=selection?.video||targetFromHash(location.hash)||targetFromPath(location.pathname);
+    syncTarget(target);
     selectVideo(selection);
-    focusTarget(selection?.video||targetFromPath(location.pathname));
+    focusTarget(target);
     // Preserve the browser's native saved scroll position on Back and Forward.
   });
   const initialSelection=videoFromUrl(new URL(location.href)),
