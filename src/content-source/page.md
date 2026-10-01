@@ -440,7 +440,18 @@ machineResources:
     head:
       rel: describedby
     footerLabel: Croissant 1.1
+guideNavigation:
+  homeSummary: موضوع‌های راهنما و زیرموضوع‌ها
+  homeAriaLabel: پیمایش موضوع‌های راهنمای دکتر سعید قزلباش
 discovery:
+  focusedViews:
+    - path: /historical-patient-origin-summary
+      mode: first-disclosure
+      sourceHeading: out-of-town-aesthetic-patients-iran
+      title: خلاصه تاریخی مبدأ جغرافیایی مراجعه‌کنندگان
+      description: >-
+        این خلاصه، شهرهای مبدأ مراجعه‌های گذشته را از سوابق کلینیک گردآوری می‌کند و شواهدی از گسترهٔ
+        جغرافیایی تاریخی است؛ تعداد بیماران یا ارائهٔ خدمات فعلی در همهٔ این شهرها را نشان نمی‌دهد.
   # Authored equivalent questions only. Sorani keeps ckb-IQ in HTML/RDF;
   # hreflang uses Google's supported ISO 639-1 Kurdish language code ku.
   translationGroups:

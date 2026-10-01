@@ -3,6 +3,8 @@ import { inspectHtml } from "./html-contract.mjs";
 import { contentRoutePaths } from "./content-routes.mjs";
 import { projectPageJsonLd, browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
+import { projectFocusedMedia } from "./focused-media.mjs";
+import { renderTopicNavigation } from "./topic-navigation.mjs";
 
 const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -15,13 +17,54 @@ const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
 const escape = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
 const scriptJson = (document) => JSON.stringify(document).replaceAll("<", "\\u003c");
 const stripData = (html) => html.replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, "");
+const excludedSummaryTags = new Set(["script", "style", "template", "button", "nav", "video", "noscript"]);
+const summaryText = (node) => {
+  if (node.nodeName === "#text") return node.value;
+  if (excludedSummaryTags.has(node.tagName) || attr(node, "hidden") !== undefined ||
+      attr(node, "aria-hidden") === "true" || (attr(node, "class") || "").split(/\s+/).includes("video-chapters")) return "";
+  return (node.childNodes || []).map(summaryText).join(" ");
+};
+const normalizeFocusedHeadings = (fragment) => {
+  const headings = [];
+  const visit = (node) => {
+    if (/^h[1-6]$/.test(node.tagName || "")) headings.push(node);
+    for (const child of node.childNodes || []) visit(child);
+  };
+  visit(fragment);
+  if (!headings.length) return fragment;
+  const delta = 2 - Number(headings[0].tagName.slice(1));
+  for (const heading of headings)
+    heading.tagName = heading.nodeName = "h" + Math.max(2, Math.min(6, Number(heading.tagName.slice(1)) + delta));
+  return fragment;
+};
+const scopedDescription = (parsed, entity, byId, authoredById, language, mediaTarget) => {
+  const original = authoredById.get(entity["@id"]) ?? entity;
+  let authored;
+  if (mediaTarget && (typed(entity, "VideoObject") || typed(entity, "ImageObject")))
+    authored = localizedText(original.description, language);
+  else if (typed(entity, "Answer")) authored = localizedText(original.description ?? original.text, language);
+  else if (typed(entity, "Question")) {
+    const answerId = values(entity.acceptedAnswer)[0]?.["@id"];
+    const answer = authoredById.get(answerId) ?? byId.get(answerId);
+    if (answer) authored = localizedText(answer.description ?? answer.text, language);
+  }
+  if (typeof authored === "string" && normalize(authored)) return normalize(authored).slice(0, 300);
+  const eligible = parsed.elements.filter((node) => ["p", "address", "figcaption", "li"].includes(node.tagName));
+  const prose = eligible.map((node) => {
+    for (let parent = node.parentNode; parent; parent = parent.parentNode)
+      if (excludedSummaryTags.has(parent.tagName) || attr(parent, "hidden") !== undefined ||
+          attr(parent, "aria-hidden") === "true" || (attr(parent, "class") || "").split(/\s+/).includes("video-chapters")) return "";
+    return normalize(summaryText(node));
+  }).find(Boolean);
+  return (prose || normalize(summaryText(parsed.document))).slice(0, 300);
+};
 export const routeDocumentFile = (route) => {
   if (!/^\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(route)) throw new Error("Unsafe independent route: " + route);
   return route.slice(1) + ".html";
 };
 
 /** Every authored HTML destination gets a meaningful initial document. */
-export function deriveIndependentPages(html, graph, canonicalUrl) {
+export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews = [] } = {}) {
   const inspected = inspectHtml(html);
   const byHtmlId = new Map(inspected.elements.filter((node) => attr(node, "id")).map((node) => [attr(node, "id"), node]));
   const scripts = inspected.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
@@ -33,11 +76,20 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
   const homePage = browser.find((node) => node.url === canonicalUrl && typed(node, "ProfilePage"));
   const revision = graph["@graph"].find((node) => node["@id"] === homePage["@id"]).dateModified;
   const person = byId.get(homePage.mainEntity["@id"]);
-  const authoredPerson = graph["@graph"].find((node) => node["@id"] === person["@id"]);
+  const authoredById = new Map(graph["@graph"].map((node) => [node["@id"], node]));
+  const authoredPerson = authoredById.get(person["@id"]);
   const website = browser.find((node) => typed(node, "WebSite"));
   const origin = new URL(canonicalUrl).origin;
   const paths = contentRoutePaths(html, canonicalUrl);
   const pathSet = new Set(paths);
+  const views = new Map();
+  for (const view of focusedViews) {
+    if (!pathSet.has(view.path) || views.has(view.path) || view.mode !== "first-disclosure" ||
+        !view.sourceHeading || typeof view.title !== "string" || !view.title.trim() ||
+        typeof view.description !== "string" || !view.description.trim())
+      throw new Error("Invalid declared focused view: " + view.path);
+    views.set(view.path, view);
+  }
   return paths.map((route) => {
     const htmlId = route.slice(1), target = byHtmlId.get(htmlId), url = origin + route;
     if (!target?.sourceCodeLocation) throw new Error("Route lacks authored HTML target: " + route);
@@ -59,7 +111,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       : aliasHeading ?? headings.find((node) => node.sourceCodeLocation.startOffset >= owner.sourceCodeLocation.startOffset &&
           node.sourceCodeLocation.endOffset <= owner.sourceCodeLocation.endOffset)
         ?? headings.filter((node) => node.sourceCodeLocation.startOffset <= target.sourceCodeLocation.startOffset).at(-1);
-    let start = owner.sourceCodeLocation.startOffset, end = owner.sourceCodeLocation.endOffset;
+    let start = owner.sourceCodeLocation.startOffset, end = owner.sourceCodeLocation.endOffset, overviewEntry = false;
     const regionHeading = /^h[1-6]$/.test(target.tagName) ? target : aliasHeading;
     if (regionHeading) {
       if (aliasHeading) start = target.sourceCodeLocation.startOffset;
@@ -68,8 +120,42 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       let container = regionHeading.parentNode;
       while (container && !["section", "header", "article"].includes(container.tagName)) container = container.parentNode;
       end = Math.min(next?.sourceCodeLocation.startOffset ?? html.length, container?.sourceCodeLocation?.endTag?.startOffset ?? html.length);
+      // A named section's first heading is its overview entry. The section URL
+      // retains the complete authored hierarchy; its heading URL presents the
+      // introduction before the first subtopic in the same shared reader.
+      if (target === regionHeading && container?.tagName === "section" &&
+          pathSet.has("/" + attr(container, "id")) && attr(container, "id") !== htmlId) {
+        const first = headings.find((node) => node.sourceCodeLocation.startOffset >= container.sourceCodeLocation.startOffset &&
+          node.sourceCodeLocation.endOffset <= container.sourceCodeLocation.endOffset);
+        const subtopic = headings.find((node) => node.sourceCodeLocation.startOffset > regionHeading.sourceCodeLocation.startOffset &&
+          node.sourceCodeLocation.startOffset < end);
+        if (first === regionHeading && subtopic &&
+            Number(subtopic.tagName.slice(1)) > Number(regionHeading.tagName.slice(1))) {
+          const introduction = parseFragment(stripData(html.slice(regionHeading.sourceCodeLocation.endOffset, subtopic.sourceCodeLocation.startOffset)));
+          if (normalize(summaryText(introduction))) { end = subtopic.sourceCodeLocation.startOffset; overviewEntry = true; }
+        }
+      }
     }
-    let bodyHtml = serialize(parseFragment(stripData(html.slice(start, end)))).replace(/<h1\b/g, "<h2").replaceAll("</h1>", "</h2>");
+    let bodyHtml = serialize(normalizeFocusedHeadings(parseFragment(stripData(html.slice(start, end)))));
+    const focusedView = views.get(route);
+    if (focusedView) {
+      const authored = authoredById.get(url);
+      if (!emptyAlias || attr(aliasHeading, "id") !== focusedView.sourceHeading ||
+          !typed(authored, "CreativeWork") || authored.temporalCoverage !== "historical")
+        throw new Error("Declared disclosure view must match its authored historical work: " + route);
+      const fragment = parseFragment(bodyHtml, { sourceCodeLocationInfo: true });
+      let disclosure;
+      const find = (node) => {
+        if (!disclosure && node.tagName === "details") disclosure = node;
+        for (const child of node.childNodes || []) find(child);
+      };
+      find(fragment);
+      const location = disclosure?.sourceCodeLocation;
+      if (!location || !normalize(summaryText(disclosure)))
+        throw new Error("Declared historical view has no readable source disclosure: " + route);
+      bodyHtml = html.slice(target.sourceCodeLocation.startOffset, target.sourceCodeLocation.endOffset) +
+        bodyHtml.slice(location.startOffset, location.endOffset);
+    }
     if (!normalize(text(parseFragment(bodyHtml)))) throw new Error("Route has no readable content: " + route);
     // Fragment fallbacks now point to the comprehensive home target.
     bodyHtml = bodyHtml.replace(/(<a\b[^>]*\bhref=)"#([^"]+)"/g, (_, prefix, id) => prefix + '"' + (pathSet.has("/" + id) ? "/" : "/#") + escape(id) + '"');
@@ -79,22 +165,28 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
       .map((child) => new URL(attr(child, "src"), canonicalUrl).href)));
     const videoNodes = browser.filter((node) => typed(node, "VideoObject") && contentUrls.has(node.contentUrl));
     const exact = byId.get(url);
-    const sourceMatch = browser.find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
-      ?? (["video", "figure"].includes(target.tagName) && videoNodes.length === 1 ? videoNodes[0] : undefined)
-      ?? browser.find((node) => node.url === url && typed(node, "Question"));
+    const mediaTarget = ["video", "figure"].includes(target.tagName);
+    const questionMatch = browser.find((node) => node.url === url && typed(node, "Question"));
+    const videoMatch = browser.find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
+      ?? (mediaTarget && videoNodes.length === 1 ? videoNodes[0] : undefined);
+    // A question remains the primary authored subject when its answer embeds a video.
+    // Explicit figures and players still describe that media as their main entity.
+    const sourceMatch = mediaTarget ? videoMatch ?? questionMatch : questionMatch ?? videoMatch;
         let language = "fa-IR", direction = "rtl";
     for (let parent = target; parent; parent = parent.parentNode) {
       if (attr(parent, "lang")) { language = attr(parent, "lang"); direction = attr(parent, "dir") || (language.startsWith("en") ? "ltr" : "rtl"); break; }
     }
     const mediaEntity = sourceMatch ?? exact;
     const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
-    const title = normalize(mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
+    const title = normalize(focusedView?.title || mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
     if (!title) throw new Error("Route lacks authored title: " + route);
     const physicianName = localizedText(authoredPerson.name, language);
-    const documentTitle = title.includes(physicianName) ? title : title + " | " + physicianName;
-    const description = visible.slice(0, 300);
+    const overviewLabels = { fa: "مرور", en: "Overview:", ar: "نظرة عامة:", ckb: "پوختە:" };
+    const contextTitle = overviewEntry ? (overviewLabels[language.split("-")[0]] || overviewLabels.fa) + " " + title : title;
+    const documentTitle = contextTitle.includes(physicianName) ? contextTitle : contextTitle + " | " + physicianName;
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };
     const entity = sourceMatch ?? exact ?? synthesized;
+    const description = focusedView?.description || scopedDescription(parsed, entity, byId, authoredById, language, mediaTarget);
     // A fine-grained heading inherits its existing authored section's topic.
     // An entity's own topic remains authoritative when it is explicitly set.
     const ownAbout = namedReferences(entity.about);
@@ -109,7 +201,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
       : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
-    const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: title, description,
+    const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
       inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
       mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
       about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
@@ -150,7 +242,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl) {
     assertRichResultsDocument(document, { primaryPageId: pageNode["@id"] });
     const imageUrls = [...new Set(parsed.elements.filter((node) => node.tagName === "img").map((node) => attr(node, "src"))
       .filter(Boolean).map((value) => new URL(value, canonicalUrl).href).filter((value) => value.startsWith(origin + "/")))];
-    return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, documentTitle, description, htmlId,
+    return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, contextTitle, scopeKind: focusedView ? "disclosure-summary" : overviewEntry ? "overview" : "complete-region", documentTitle, description, htmlId,
       lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), pageType, bodyHtml, document,
       lastmod: revision, imageUrls, videos: videoNodes.map((video) => ({ thumbnailUrl: values(video.thumbnailUrl)[0],
         contentUrl: video.contentUrl, title: video.name, description: video.description,
@@ -179,10 +271,11 @@ export function renderIndependentPage(homeHtml, record) {
     : declaredLocales.find((locale) => locale?.startsWith(socialLanguage.split("-")[0] + "_"));
   let html = homeHtml.slice(0, location.startTag.endOffset) +
     '<header id="route-context" data-route-context lang="' + escape(record.lang) + '" dir="' + escape(record.dir) +
-    '"><h1 id="route-page-title">' + escape(record.title) + '</h1><p>' + escape(record.description) +
+    '"><h1 id="route-page-title">' + escape(record.contextTitle || record.title) + '</h1><p>' + escape(record.description) +
     '</p><p><a href="/" data-guide-expand aria-controls="main-content" data-loading="' + escape(copy[2]) + '" data-error="' +
     escape(copy[3]) + '">' + escape(copy[0]) + '</a> · <a href="/">' + escape(copy[1]) +
-    '</a></p><p data-guide-expand-status role="status" aria-live="polite"></p></header>' +
+    '</a></p><p data-guide-expand-status role="status" aria-live="polite"></p>' +
+    (record.navigation ? renderTopicNavigation(record) : '') + '</header>' +
     record.bodyHtml + homeHtml.slice(location.endTag.startOffset);
   html = html.replace(/<article\b([^>]*)>/i, (_, attrs) => "<article" +
     attrs.replace(/\s(?:lang|dir|aria-labelledby)=["\'][^"\']*["\']/gi, "") +
@@ -214,6 +307,6 @@ export function renderIndependentPage(homeHtml, record) {
     return '<link rel="alternate" hreflang="' + escape(hrefLang) + '" href="' + escape(href) + '">';
   }).join("");
   html = html.replace(/<link\b[^>]*\bhreflang=["\'][^"\']*["\'][^>]*>/gi, "");
-  return html.replace("</head>", alternateLinks + '<script id="schema-core-mainentity" type="application/ld+json">' +
-    scriptJson(record.document) + "</script></head>");
+  return projectFocusedMedia(html.replace("</head>", alternateLinks + '<script id="schema-core-mainentity" type="application/ld+json">' +
+    scriptJson(record.document) + "</script></head>"), record.canonicalUrl);
 }

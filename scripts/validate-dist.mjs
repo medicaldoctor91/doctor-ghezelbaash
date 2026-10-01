@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { deriveTopicBreadcrumbItems } from "./lib/topic-navigation.mjs";
 import { assertRichResultsDocument } from "../src/lib/rich-results-contract.mjs";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
@@ -209,6 +210,15 @@ const sharedStyles = new Set([...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style
 const records = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
 assert.deepEqual(records.map((record) => record.path), paths);
 const pageIds = new Set();
+const knownPaths = new Set(records.map((record) => record.path));
+const nativeTargets = (nodes) => [...new Set(nodes.filter((node) => node.tagName === "a").map((node) => {
+  const href = attr(node, "href"); if (!href) return undefined;
+  const url = new URL(href, lifecycle.canonicalUrl);
+  return url.origin === localOrigin && !url.hash && knownPaths.has(url.pathname) ? url.pathname : undefined;
+}).filter(Boolean))];
+const linkGraph = new Map([["/", nativeTargets(elements)]]);
+let overviewPages = 0, contextualTitles = 0, nativePosters = 0;
+const scopeTexts = new Map();
 let translatedPages = 0, topicalPages = 0;
 const homeArticle = elements.find((node) => node.tagName === "article" && (attr(node, "class") || "").split(/\s+/).includes("medical-guide"));
 assert.equal(attr(homeArticle, "lang"), page.lang, "Complete guide needs its own language");
@@ -239,6 +249,14 @@ for (const record of records) {
   assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
+  assert(record.navigation, "Every route needs authored navigation");
+  linkGraph.set(record.path, nativeTargets(scoped.elements));
+  if (record.scopeKind === "overview") overviewPages++;
+  if (record.metadataContext) contextualTitles++;
+  nativePosters += scoped.elements.filter((node) => node.tagName === "video" && attr(node, "poster")).length;
+  const scopeText = record.bodyHtml.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!scopeTexts.has(scopeText)) scopeTexts.set(scopeText, []);
+  scopeTexts.get(scopeText).push(record.path);
   assert(scoped.elements.some((node) => attr(node, "data-guide-expand") !== undefined), "Direct entry needs an explicit complete-guide control");
   const documents = scoped.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
     .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
@@ -249,6 +267,9 @@ for (const record of records) {
   const pageGraph = new Map(documents[0]["@graph"].map((node) => [node["@id"], node]));
   const pageEntity = pageGraph.get(pageId), refs = [pageEntity.mainEntity].flat();
   assert.equal(pageEntity.url, record.canonicalUrl);
+  const breadcrumb = pageGraph.get(pageEntity.breadcrumb["@id"]);
+  assert.deepEqual(breadcrumb.itemListElement, deriveTopicBreadcrumbItems(record, records,
+    { canonicalUrl: lifecycle.canonicalUrl, homeTitle: breadcrumb.itemListElement[0].name }), "Authored topic breadcrumb lineage");
   const aboutIds = [pageEntity.about].flat().map((ref) => ref?.["@id"]).filter(Boolean);
   assert(aboutIds.includes(primaryProfile.mainEntity["@id"]), "Every topic must retain its fixed physician about relation");
   if (aboutIds.some((id) => id !== primaryProfile.mainEntity["@id"])) topicalPages++;
@@ -273,6 +294,19 @@ for (const record of records) {
     assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(), "Broken scoped resource: " + value);
   }
 }
+const reachable = new Set(["/"]), queue = ["/"];
+let maximumDepth = 0;
+const depths = new Map([["/", 0]]);
+while (queue.length) {
+  const current = queue.shift();
+  for (const next of linkGraph.get(current) || []) if (!reachable.has(next)) {
+    reachable.add(next); depths.set(next, depths.get(current) + 1); queue.push(next);
+    maximumDepth = Math.max(maximumDepth, depths.get(next));
+  }
+}
+assert.equal(reachable.size - 1, records.length, "Every sitemap topic must be reachable through actual native HTML links from home");
+const duplicateScopes = [...scopeTexts.values()].filter((paths) => paths.length > 1);
+console.log(JSON.stringify({ topicDiscoveryValidation: "PASS", reachableTopics: reachable.size - 1, maximumDepth, overviewPages, contextualTitles, nativePosters, duplicateScopes }));
 const translationMembers = (page.discovery?.translationGroups || []).flatMap((group) => group.members);
 assert.equal(translatedPages, translationMembers.length, "Every authored translation member must be rendered once");
 assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
