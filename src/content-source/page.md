@@ -2511,7 +2511,7 @@ skipLinkLabel: پرش به محتوای اصلی
       ],
       "hasMap": [
         "https://www.google.com/maps?cid=12350483144643112463",
-        "https://www.google.com/maps/search/?api=1\u0026query=%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87\u0026query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+        "https://www.google.com/maps/search/?api=1&query=%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
         "https://www.openstreetmap.org/node/13530287096",
         "https://balad.ir/p/2dnVakli9ZKaBd",
         "https://yandex.com/maps/org/63459342435/"
@@ -4341,7 +4341,7 @@ skipLinkLabel: پرش به محتوای اصلی
 <li><strong>اگر پف زیر چشم را با کمبود حجم اشتباه بگیریم،</strong> فیلر می‌تواند حجم اضافه کند بدون اینکه علت ظاهر خسته را حل کند.</li><li><strong>اگر فعالیت جبرانی پیشانی را با «چین ساده» اشتباه بگیریم،</strong> کاهش بیش از حد حرکت ممکن است سنگینی ابرو را واضح‌تر کند.</li><li><strong>اگر ضعف چانه را فقط غبغب ببینیم،</strong> کم‌کردن چربی به‌تنهایی ممکن است نسبت پایین صورت را <a href="/aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> نکند.</li><li><strong>اگر افت گونه را با کمبود حجم یکی بگیریم،</strong> فیلر بیشتر می‌تواند صورت را سنگین‌تر کند.</li><li><strong>اگر جوش فعال را نادیده بگیریم و مستقیم سراغ اسکار برویم،</strong> ترتیب درمان را برعکس کرده‌ایم.</li><li><strong>اگر <a href="/aesthetic-treatment-failure-from-diagnostic-error">نتیجه بد قبلی</a> را فقط «کمبود درمان» فرض کنیم،</strong> درمان بیشتر ممکن است پرونده را پیچیده‌تر کند.</li></ul><p>من دنبال ترساندن بیمار نیستم. دنبال این هستم که تصمیم قبل از اجرا، یک بار از مسیر شکست عبور داده شود. وقتی درمان بتواند از این آزمون جان سالم به در ببرد، دلیل انجامش محکم‌تر است.</p></div><div class="render-chunk" id="rc108">
 <h3 id="saeed-ghezelbash-full-face-and-minimal-intervention">Full-face planning یعنی همه‌جا درمان نکنیم؛ یعنی بفهمیم کجا درمان کنیم</h3><p>Full-face planning برای من اسم شیکِ «تزریق در چند ناحیه» نیست. یعنی اثر یک تصمیم روی کل صورت دیده شود. گاهی اصلاح یک چانه عقب، نیاز به دست‌کاری چند ناحیه را کم می‌کند. گاهی درمان میدفیس باعث می‌شود زیر چشم متفاوت دیده شود. گاهی حل‌کردن بخشی از فیلر قبلی از اضافه‌کردن فیلر تازه منطقی‌تر است. گاهی افتادگی آن‌قدر ساختاری است که باید صریح درباره جراحی حرف زد.</p><p><strong>اگر صورت جراحی می‌خواهد، ده درمان غیرجراحی واقعیت را عوض نمی‌کنند.</strong> روش غیرجراحی می‌تواند برای بیمار مناسب باشد، اما فقط وقتی محدودیتش صادقانه گفته شود. جایگزین‌کردن واقعیت جراحی با زنجیره‌ای از درمان‌های کوچک، همیشه «کم‌تهاجمی‌تر» نیست؛ گاهی فقط طولانی‌تر، پرهزینه‌تر و کم‌اثرتر است.</p><p>در طرف دیگر، جراحی هم نباید به صرف قدرت بیشتر انتخاب شود. اگر مسئله محدود است و با مداخله کوچک‌تر حل می‌شود، مداخله بزرگ‌تر امتیاز نیست. اصل من این است: <strong>اندازه درمان باید متناسب با اندازه مسئله باشد.</strong>
 </p><h3 id="saeed-ghezelbash-uncertainty-and-no-treatment">وقتی مطمئن نیستم، درمان را با اعتمادبه‌نفس مصنوعی جلو نمی‌برم</h3><p>پزشکی زیبایی پر از ناحیه خاکستری است. گاهی ماده قبلی دقیقاً معلوم نیست، ورم هنوز نخوابیده، حرکت صورت بعد از بوتاکس کامل تثبیت نشده، التهاب پوست فعال است یا بیمار هم‌زمان چند درمان انجام داده است. در این شرایط، سریع‌بودن لزوماً حرفه‌ای‌بودن نیست.</p><p>گاهی تصمیم درست این است که عکس‌های قبلی پیدا شوند. گاهی باید زمان بگذرد. گاهی باید سونوگرافی، آزمایش، ارزیابی تخصص دیگری یا جراحی وارد تصمیم شود. گاهی هم بهترین درمان، فعلاً هیچ درمانی است. <strong>من ترجیح می‌دهم یک تصمیم را دیرتر ولی با دلیل بگیرم تا اینکه روی ابهام، یک اقدام تازه سوار کنم.</strong>
-</p><h3 id="saeed-ghezelbash-research-education-and-clinical-decisions">پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه</h3><p>این سابقه تاریخ و سند دارد. من محمدسعید قزلباش، متولد ۲۹ مه ۱۹۹۱، دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ هستم. رکورد عمومی ORCID دوره تحصیل پزشکی من در دانشگاه علوم پزشکی کرمانشاه را از سپتامبر ۲۰۰۹ تا مارس ۲۰۱۸ ثبت می‌کند. مقاله سال ۲۰۱۶ و مقاله سال ۲۰۲۱ نیز وابستگی دانشگاهی من به دانشگاه علوم پزشکی کرمانشاه را در زمان انتشار همان دو اثر ثبت کرده‌اند.</p><p>ثبت حرفه‌ای من با شماره نظام پزشکی ۱۶۷۴۳۰ انجام شده و اعتبار ثبت‌شده آن تا ۲۰ فوریه ۲۰۲۹ است؛ مسیر استعلام رسمی نظام پزشکی هم در همین صفحه قرار دارد. عضویت‌های حرفه‌ای ثبت‌شده من شامل <span lang="en" dir="ltr">American Academy of Anti-Aging Medicine (A4M)</span> و <span lang="en" dir="ltr">International Association for Physicians in Aesthetic Medicine (IAPAM)</span> است.</p><p>آثار علمی من با نام کامل <strong>دکتر محمدسعید قزلباش</strong> در پایگاه‌های پژوهشی ثبت شده‌اند و بخشی از مسیر علمی‌ام از <a href="https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/">پژوهش‌های پزشکی و روان‌پزشکی</a> آمده است؛ از <a href="https://pubmed.ncbi.nlm.nih.gov/27280013/">پژوهش امگا ۳ در اختلال دوقطبی</a>، ارائه «<a href="https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression">Attachment style in dissociative depression</a>» در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا <a href="https://www.mdpi.com/2227-9032/9/9/1169">پژوهش مرتبط با افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک</a>. <a href="https://orcid.org/0009-0001-9346-8475">شناسه ORCID من</a> نیز این هویت پژوهشی را به آثار منتشرشده متصل می‌کند.</p><p>آن ارائه برلین یک اشاره مبهم در رزومه نیست. هفدهمین کنگره جهانی روان‌پزشکی WPA از ۸ تا ۱۲ اکتبر ۲۰۱۷ در برلین برگزار شد و در اثر ثبت‌شده «Attachment style in dissociative depression» نام من به‌عنوان نویسنده پنجم آمده است.</p><p>این مسیر در ۲۰۲۶ مستقیماً به پزشکی زیبایی هم رسیده است: <a href="https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine" rel="external noopener">Botulinum toxin in aesthetic medicine</a> و <a href="https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment" rel="external noopener">Facial assessment before aesthetic botulinum toxin treatment</a> به‌عنوان منابع آموزشی باز، و <a href="https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review" rel="external noopener">مرور متمرکز درباره ارزیابی فردی و تفسیر نتیجه بوتولینوم توکسین نوع A در زیبایی</a> به‌عنوان preprint در فرایند داوری عمومی WikiJournal ثبت شده‌اند. ارزش این آثار برای من صرفاً اضافه‌شدن چند عنوان به رزومه نیست؛ هر سه همان پیوندی را مستند می‌کنند که در کار بالینی دنبال می‌کنم: ارزیابی چهره و حرکت قبل از انتخاب درمان، و تفسیر نتیجه بر اساس علت و خط پایه، نه نسخه ثابت.</p><p>این پیوند فقط در منابع متعلق به خودم ثبت نشده است؛ <a href="https://iranmedlabs.com/skin-and-hair-and-beauty/120049/" rel="external noopener">گفت‌وگوی منتشرشده در ایران‌مدلبز درباره پزشکی زیبایی، انتخاب بیمار و مرز درمان نکردن</a> نیز همین چارچوب حرفه‌ای را در یک منبع بیرونی به دکتر سعید قزلباش نسبت می‌دهد.</p><p>این سابقه پژوهشی یک عادت سخت‌گیرانه ساخته است: پشت علامت را ببین، متغیرهای هم‌زمان را از هم جدا کن، بین همبستگی و علت فرق بگذار و روی چیزی که هنوز روشن نشده تصمیم قطعی نساز. همین خط فکری از پژوهش وارد معاینه زیبایی می‌شود، در آموزش پزشکان به انتخاب بیمار و آناتومی قبل از تکنیک می‌رسد و در پرونده‌های Revision خودش را به شکل بازسازی دقیق مسیر درمان قبلی نشان می‌دهد. برای دکتر سعید قزلباش، پژوهش، آموزش و طبابت سه جزیره جدا نیستند؛ سه شکل از یک وسواس‌اند: قبل از دست‌کاری، مسئله را درست بفهم.</p><p>در آموزش پزشکان هم با تکنیک مخالف نیستم؛ با تکنیک‌فروشی مخالفم. حفظ چند نقطه تزریق یا چند مسیر عبور نخ، پزشک را سریع‌تر می‌کند، نه لزوماً دقیق‌تر. سرعت بدون تشخیص خطرناک است. آموزش باید آناتومی، نواحی پرخطر، انتخاب بیمار، طراحی وکتور، پلن تزریق، مدیریت عارضه و اصلاح نتیجه را یک‌جا ببیند.</p><p>تاریخ این آموزش هم روشن است: ورکشاپ پیشرفته لیفت نخ در بهمن ۱۴۰۳ در تهران و برای متخصصان زیبایی از سراسر ایران برگزار شد.</p><p>در ورکشاپ <a href="https://www.instagram.com/reel/DEAp2Xnuu4c/">لیفت نخ</a> هم حرف من همین است: قبل از اینکه پزشک بداند نخ را از کجا رد کند، باید بداند چه صورتی را اصلاً نباید نخ بزند. وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی و انتظار بیمار از اسم نخ مهم‌ترند. تکنیک وقتی ارزش دارد که روی انتخاب درست بیمار سوار شود؛ وگرنه فقط خطا را تمیزتر اجرا می‌کند.</p><figure aria-labelledby="caption-saeed-ghezelbash-thread-lift-workshop" id="video-thread-lift-workshop">
+</p><h3 id="saeed-ghezelbash-research-education-and-clinical-decisions">پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه</h3><p>این سابقه تاریخ و سند دارد. من محمدسعید قزلباش، متولد ۲۹ مه ۱۹۹۱، دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ هستم. رکورد عمومی ORCID دوره تحصیل پزشکی من در دانشگاه علوم پزشکی کرمانشاه را از سپتامبر ۲۰۰۹ تا مارس ۲۰۱۸ ثبت می‌کند. مقاله سال ۲۰۱۶ و مقاله سال ۲۰۲۱ نیز وابستگی دانشگاهی من به دانشگاه علوم پزشکی کرمانشاه را در زمان انتشار همان دو اثر ثبت کرده‌اند.</p><p>ثبت حرفه‌ای من با شماره نظام پزشکی ۱۶۷۴۳۰ انجام شده و اعتبار ثبت‌شده آن تا ۲۰ فوریه ۲۰۲۹ است؛ مسیر استعلام رسمی نظام پزشکی هم در همین صفحه قرار دارد. عضویت‌های حرفه‌ای ثبت‌شده من شامل <span lang="en" dir="ltr">American Academy of Anti-Aging Medicine (A4M)</span> و <span lang="en" dir="ltr">International Association for Physicians in Aesthetic Medicine (IAPAM)</span> است.</p><p>آثار علمی من با نام کامل <strong>دکتر محمدسعید قزلباش</strong> در پایگاه‌های پژوهشی ثبت شده‌اند و بخشی از مسیر علمی‌ام از <a href="https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/">پژوهش‌های پزشکی و روان‌پزشکی</a> آمده است؛ از <a href="https://pubmed.ncbi.nlm.nih.gov/27280013/">پژوهش امگا ۳ در اختلال دوقطبی</a>، ارائه «<a href="https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression">Attachment style in dissociative depression</a>» در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا <a href="https://www.mdpi.com/2227-9032/9/9/1169">پژوهش مرتبط با افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک</a>. <a href="https://orcid.org/0009-0001-9346-8475">شناسه ORCID من</a> نیز این هویت پژوهشی را به آثار منتشرشده متصل می‌کند.</p><p>آن ارائه برلین یک اشاره مبهم در رزومه نیست. هفدهمین کنگره جهانی روان‌پزشکی WPA از ۸ تا ۱۲ اکتبر ۲۰۱۷ در برلین برگزار شد و در اثر ثبت‌شده «Attachment style in dissociative depression» نام من به‌عنوان نویسنده پنجم آمده است.</p><p>این مسیر در ۲۰۲۶ مستقیماً به پزشکی زیبایی هم رسیده است: <a href="https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine" rel="external noopener">Botulinum toxin in aesthetic medicine</a> و <a href="https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment" rel="external noopener">Facial assessment before aesthetic botulinum toxin treatment</a> به‌عنوان منابع آموزشی باز، و <a href="https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review" rel="external noopener">مرور متمرکز درباره ارزیابی فردی و تفسیر نتیجه بوتولینوم توکسین نوع A در زیبایی</a> به‌عنوان preprint در فرایند داوری عمومی WikiJournal ثبت شده‌اند. ارزش این آثار برای من صرفاً اضافه‌شدن چند عنوان به رزومه نیست؛ هر سه همان پیوندی را مستند می‌کنند که در کار بالینی دنبال می‌کنم: ارزیابی چهره و حرکت قبل از انتخاب درمان، و تفسیر نتیجه بر اساس علت و خط پایه، نه نسخه ثابت.</p><p>این پیوند فقط در منابع متعلق به خودم ثبت نشده است؛ <a href="https://iranmedlabs.com/skin-and-hair-and-beauty/120049/" rel="external noopener">گفت‌وگوی منتشرشده در ایران‌مدلبز درباره پزشکی زیبایی، انتخاب بیمار و مرز درمان نکردن</a> نیز همین چارچوب حرفه‌ای را در یک منبع بیرونی به دکتر سعید قزلباش نسبت می‌دهد.</p><p>این سابقه پژوهشی یک عادت سخت‌گیرانه ساخته است: پشت علامت را ببین، متغیرهای هم‌زمان را از هم جدا کن، بین همبستگی و علت فرق بگذار و روی چیزی که هنوز روشن نشده تصمیم قطعی نساز. همین خط فکری از پژوهش وارد معاینه زیبایی می‌شود، در آموزش پزشکان به انتخاب بیمار و آناتومی قبل از تکنیک می‌رسد و در پرونده‌های Revision خودش را به شکل بازسازی دقیق مسیر درمان قبلی نشان می‌دهد. برای دکتر سعید قزلباش، پژوهش، آموزش و طبابت سه جزیره جدا نیستند؛ سه شکل از یک وسواس‌اند: قبل از دست‌کاری، مسئله را درست بفهم.</p><p>در آموزش پزشکان هم با تکنیک مخالف نیستم؛ با تکنیک‌فروشی مخالفم. حفظ چند نقطه تزریق یا چند مسیر عبور نخ، پزشک را سریع‌تر می‌کند، نه لزوماً دقیق‌تر. سرعت بدون تشخیص خطرناک است. آموزش باید آناتومی، نواحی پرخطر، انتخاب بیمار، طراحی وکتور، پلن تزریق، مدیریت عارضه و اصلاح نتیجه را یک‌جا ببیند.</p><p>تاریخ این آموزش هم روشن است: ورکشاپ پیشرفته لیفت نخ در <time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time> در تهران و برای متخصصان زیبایی از سراسر ایران برگزار شد.</p><p>در ورکشاپ <a href="https://www.instagram.com/reel/DEAp2Xnuu4c/">لیفت نخ</a> هم حرف من همین است: قبل از اینکه پزشک بداند نخ را از کجا رد کند، باید بداند چه صورتی را اصلاً نباید نخ بزند. وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی و انتظار بیمار از اسم نخ مهم‌ترند. تکنیک وقتی ارزش دارد که روی انتخاب درست بیمار سوار شود؛ وگرنه فقط خطا را تمیزتر اجرا می‌کند.</p><figure aria-labelledby="caption-saeed-ghezelbash-thread-lift-workshop" id="video-thread-lift-workshop">
 <video aria-describedby="caption-saeed-ghezelbash-thread-lift-workshop video-saeed-ghezelbash-thread-lift-workshop-chapters" aria-label="بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران" controls="" height="854" id="video-saeed-ghezelbash-thread-lift-workshop" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-thread-lift-workshop.eff4e3b822ff.webp" preload="none" title="ویدئوی ورکشاپ لیفت نخ دکتر سعید قزلباش" width="480"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.c4849f04d15e.webm" type='video/webm; codecs="av01, opus"'><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.f20ced893ec2.mp4" type="video/mp4"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.155ce514ff8d.vtt" srclang="fa">
 مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>
 <details class="video-chapters" id="video-saeed-ghezelbash-thread-lift-workshop-chapters">
@@ -4505,6 +4505,7 @@ skipLinkLabel: پرش به محتوای اصلی
 </li><li><a href="/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review&amp;t=4"><time datetime="PT4S">00:04</time><span>بیان تجربه شخصی مراجعه</span></a>
 </li><li><a href="/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review&amp;t=16"><time datetime="PT16S">00:16</time><span>جمع‌بندی گفت‌وگو</span></a>
 </li></ol></details><figcaption id="caption-saeed-ghezelbash-kurdish-patient-review">
+    <span lang="fa">امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵.</span>
     ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.
     <a href="https://www.instagram.com/reel/DIy6sUWOK6-/">بینینی بڵاوکراوەی سەرەکی ئەم ڤیدیۆیە لە ئینستاگرام</a>
 </figcaption></figure><p>ئەم ناسراوییە دیجیتاڵە لە چەند هۆکارێک پێکدێت:</p><ul>
@@ -9110,6 +9111,11 @@ skipLinkLabel: پرش به محتوای اصلی
       },
       "prov:wasDerivedFrom": {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience"
+      },
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": 5,
+        "bestRating": 5
       }
     },
     {
@@ -9190,7 +9196,7 @@ skipLinkLabel: پرش به محتوای اصلی
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop"
       },
       "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-      "description": "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران.",
+      "description": "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در ۱۶ بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران.",
       "teaches": [
         "Facial anatomy",
         "Danger zones",
@@ -9202,7 +9208,8 @@ skipLinkLabel: پرش به محتوای اصلی
       ],
       "organizer": {
         "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      }
+      },
+      "startDate": "2025-02-04"
     },
     {
       "@id": "https://www.ghezelbaash.ir/article-omega-3-bipolar-i-2016",
@@ -23167,7 +23174,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "آغاز کارگاه و معرفی آموزش عملی",
       "startOffset": 0,
       "endOffset": 8,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop\u0026t=0",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop&t=0",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop"
       },
@@ -23180,7 +23187,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "نمایش ابزار و تکنیک اجرایی",
       "startOffset": 8,
       "endOffset": 18,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop\u0026t=8",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop&t=8",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop"
       },
@@ -23193,7 +23200,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "نمایش زنده روی مدل",
       "startOffset": 18,
       "endOffset": 30,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop\u0026t=18",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop&t=18",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop"
       },
@@ -23206,7 +23213,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "توضیح تکمیلی و تعامل با شرکت‌کنندگان",
       "startOffset": 30,
       "endOffset": 39,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop\u0026t=30",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop?video=thread-lift-workshop&t=30",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop"
       },
@@ -23219,7 +23226,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "معرفی موضوع جوانسازهای تزریقی",
       "startOffset": 0,
       "endOffset": 6,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo\u0026t=0",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo&t=0",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo"
       },
@@ -23232,7 +23239,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "مزوژل‌ها و تفاوت‌های اصلی",
       "startOffset": 6,
       "endOffset": 19,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo\u0026t=6",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo&t=6",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo"
       },
@@ -23245,7 +23252,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "بیورویتالیزیشن و اصطلاحات جوانسازی",
       "startOffset": 19,
       "endOffset": 31,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo\u0026t=19",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo&t=19",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo"
       },
@@ -23258,7 +23265,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "بحث عمق و لایه تزریق",
       "startOffset": 31,
       "endOffset": 46,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo\u0026t=31",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo&t=31",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo"
       },
@@ -23271,7 +23278,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "جمع‌بندی مقایسه جالپرو و پروفایلو",
       "startOffset": 46,
       "endOffset": 62,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo\u0026t=46",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo?video=jalupro-vs-profhilo&t=46",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo"
       },
@@ -23284,7 +23291,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "معرفی سابسیژن و آماده‌سازی",
       "startOffset": 0,
       "endOffset": 7,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique\u0026t=0",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique&t=0",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique"
       },
@@ -23297,7 +23304,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "نمایش آزادسازی بافت اسکار",
       "startOffset": 7,
       "endOffset": 15,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique\u0026t=7",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique&t=7",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique"
       },
@@ -23310,7 +23317,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "بحث تزریق فیلر و درمان ترکیبی",
       "startOffset": 15,
       "endOffset": 25,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique\u0026t=15",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique&t=15",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique"
       },
@@ -23323,7 +23330,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "توضیح تکمیلی و جمع‌بندی",
       "startOffset": 25,
       "endOffset": 36,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique\u0026t=25",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique?video=subcision-technique&t=25",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique"
       },
@@ -23336,7 +23343,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "معرفی مراجع کُردزبان از اربیل",
       "startOffset": 0,
       "endOffset": 4,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review\u0026t=0",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review&t=0",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience"
       },
@@ -23349,7 +23356,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "name": "بیان تجربه شخصی مراجعه",
       "startOffset": 4,
       "endOffset": 16,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review\u0026t=4",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review&t=4",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience"
       },
@@ -23361,7 +23368,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "@type": "Clip",
       "name": "جمع‌بندی گفت‌وگو",
       "startOffset": 16,
-      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review\u0026t=16",
+      "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review?video=kurdish-patient-review&t=16",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience"
       },

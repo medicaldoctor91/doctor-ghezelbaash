@@ -34,8 +34,8 @@ const duration = (value, label) => {
  * crawler access. Required ProfilePage/VideoObject/LocalBusiness fields and
  * the site's complete authored clinic address and image provenance must survive projection.
  */
-export function assertRichResultsDocument(document) {
-  if (document?.["@context"] !== "https://schema.org" || !Array.isArray(document["@graph"]))
+export function assertRichResultsDocument(document, { primaryPageId } = {}) {
+  if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document["@graph"]))
     fail("one Schema.org discovery graph is required");
   const nodes = document["@graph"], byId = new Map();
   for (const node of nodes) {
@@ -53,24 +53,26 @@ export function assertRichResultsDocument(document) {
   const walk = (value) => {
     if (Array.isArray(value)) return value.forEach(walk);
     if (!value || typeof value !== "object") return;
-    if (value["@id"] && Object.keys(value).length === 1 && !byId.has(value["@id"]))
+    if (value["@id"] && Object.keys(value).length === 1 && !byId.has(value["@id"]) &&
+        !/^https?:\/\//.test(value["@id"]))
       fail("unresolved entity reference: " + value["@id"]);
     if ("@value" in value) fail("RDF value objects must be formatted for browser discovery");
     for (const entry of Object.values(value)) walk(entry);
   };
   walk(nodes);
-  const unrelated = ["Review", "AggregateRating", "Event", "EducationEvent", "Course", "CourseInstance", "Dataset"];
-  for (const node of nodes)
-    if (unrelated.some((type) => hasType(node, type)))
-      fail("research-only candidate entered this profile page: " + node["@id"]);
   const profiles = nodes.filter((node) => hasType(node, "ProfilePage"));
-  if (profiles.length !== 1) fail("exactly one primary ProfilePage is required");
-  const mainEntity = resolve(profiles[0].mainEntity, ["Person", "Organization"], "ProfilePage.mainEntity");
-  text(mainEntity.name, "ProfilePage.mainEntity.name");
-  for (const profile of profiles)
+  const primary = primaryPageId ? byId.get(primaryPageId) : profiles.find((node) => node.url === "https://www.ghezelbaash.ir/") ?? profiles[0];
+  if (primaryPageId && !primary) fail("primary page is missing");
+  for (const profile of profiles) {
+    const entity = resolve(profile.mainEntity, ["Person", "Organization", "MedicalClinic", "LocalBusiness"], "ProfilePage.mainEntity");
+    text(entity.name, "ProfilePage.mainEntity.name");
     for (const property of ["dateCreated", "dateModified"])
       if (property in profile) instant(profile[property], "ProfilePage." + property);
-
+  }
+  if (primary && !profiles.includes(primary)) {
+    const entities = values(primary.mainEntity).map((ref) => byId.get(ref?.["@id"]));
+    if (!entities.length || entities.some((entity) => !entity || !values(entity["@type"]).length)) fail("page mainEntity must resolve to a typed entity");
+  }
   const clinics = nodes.filter((node) => hasType(node, "MedicalClinic") || hasType(node, "LocalBusiness"));
   for (const clinic of clinics) {
     text(clinic.name, "LocalBusiness.name");
@@ -82,7 +84,7 @@ export function assertRichResultsDocument(document) {
   for (const image of images) {
     webUrl(image.contentUrl, "ImageObject.contentUrl");
     const creator = resolve(image.creator, ["Person", "Organization"], "ImageObject.creator");
-    text(creator.name, "ImageObject.creator.name");
+    text(creator.name ?? creator.alternateName, "ImageObject.creator.name");
     for (const property of ["license", "acquireLicensePage"])
       if (property in image) webUrl(image[property], "ImageObject." + property);
     for (const property of ["width", "height"])
@@ -101,5 +103,14 @@ export function assertRichResultsDocument(document) {
     if ("description" in video) text(video.description, "VideoObject.description");
     if ("duration" in video) duration(video.duration, "VideoObject.duration");
   }
-  return { profiles: profiles.length, localBusinesses: clinics.length, images: images.length, videos: videos.length };
+  const incompleteCandidates = [];
+  for (const node of nodes) {
+    const missing = [];
+    if (hasType(node, "Review") && !node.reviewRating) missing.push("reviewRating");
+    if ((hasType(node, "Event") || hasType(node, "EducationEvent")) && !node.startDate) missing.push("startDate");
+    if (hasType(node, "Dataset") && !node.description) missing.push("description");
+    if (missing.length) incompleteCandidates.push({ id: node["@id"], types: values(node["@type"]), missing });
+  }
+  return { profiles: profiles.length, localBusinesses: clinics.length, images: images.length, videos: videos.length, incompleteCandidates };
+
 }

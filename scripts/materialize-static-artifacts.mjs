@@ -10,6 +10,7 @@ import {
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { canonicalGraph, canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
+import { deriveIndependentPages, renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
 import {
   canonicalHostAliasRows,
   canonicalMetadataAliasRows,
@@ -110,7 +111,11 @@ for (const artifact of STATIC_ARTIFACTS)
   await copyExact(artifact.source, artifact.path);
 const aliasRegistry = await loadAliasRegistry(root);
 const legacyAliases = canonicalHostAliasRows(aliasRegistry);
-const contentPaths = contentRoutePaths(await readFile(path.join(dist, "index.html"), "utf8"), canonicalLifecycle.canonicalUrl);
+const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
+const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
+const independentPages = deriveIndependentPages(homeHtml, canonicalGraph, canonicalLifecycle.canonicalUrl);
+for (const record of independentPages) await writeExact(record.file, renderIndependentPage(homeHtml, record));
+await writeFile(path.join(root, ".generated/independent-pages.json"), JSON.stringify(independentPages.map(({ bodyHtml, document, ...record }) => record)));
 const registeredSources = new Set(legacyAliases.map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
   throw new Error("Authored content path collides with a legacy alias");
@@ -124,8 +129,8 @@ const metadataAliases = canonicalMetadataAliasRows(canonicalGraph, canonicalLife
   .filter(({ source }) => !contentSources.has(source));
 await writeExact("_redirects", renderStaticRewrites([
   ...legacyAliases.filter(({ source }) => source !== "/index.html")
-    .map((row) => ({ ...row, target: row.target === "/" || contentSources.has(row.target) ? "/index.html" : row.target })),
-  ...contentPaths.map((source) => ({ source, target: "/index.html", statusCode: 200 })),
+    .map((row) => ({ ...row, target: row.target === "/" ? "/index.html" : contentSources.has(row.target) ? "/" + routeDocumentFile(row.target) : row.target })),
+  ...contentPaths.map((source) => ({ source, target: "/" + routeDocumentFile(source), statusCode: 200 })),
   ...metadataAliases,
 ]));
 const generatedPublic = path.join(root, ".generated/public");
@@ -211,6 +216,7 @@ console.log(
       stableMediaAliases: stableMedia.aliases.length,
       legacyAliases: legacyAliases.length,
       contentRoutes: contentPaths.length,
+      independentlyRenderedPages: independentPages.length,
       metadataAliases: metadataAliases.length,
       destinations: destinations.size,
       deliveryMode: "static-assets",

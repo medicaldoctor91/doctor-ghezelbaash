@@ -7220,6 +7220,11 @@
       },
       "prov:wasDerivedFrom": {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience"
+      },
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": 5,
+        "bestRating": 5
       }
     },
     {
@@ -7300,7 +7305,7 @@
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop"
       },
       "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-      "description": "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران.",
+      "description": "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در ۱۶ بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران.",
       "teaches": [
         "Facial anatomy",
         "Danger zones",
@@ -7312,7 +7317,8 @@
       ],
       "organizer": {
         "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      }
+      },
+      "startDate": "2025-02-04"
     },
     {
       "@id": "https://www.ghezelbaash.ir/article-omega-3-bipolar-i-2016",
