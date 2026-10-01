@@ -48,7 +48,7 @@ test("video required properties cannot disappear in projection", () => {
 test("video dates must be real instants and known duration must be positive", () => {
   for (const uploadDate of ["2026-02-30", "2026-02-30T10:00:00Z", "2026-09-30T25:00:00Z", "2026-09-30T12:00:00"])
     assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { node.uploadDate = uploadDate; })), /real ISO timestamp/);
-  for (const duration of ["PT", "PT0S", "invalid"])
+  for (const duration of ["PT", "PT0S", "P1DT", "P" + "9".repeat(400) + "D", "invalid"])
     assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { node.duration = duration; })), /positive ISO duration/);
 });
 test("duplicate entities and research candidates cannot enter the published graph", () => {
