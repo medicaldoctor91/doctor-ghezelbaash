@@ -47,10 +47,14 @@ const rewriteRows = redirects.map((line) => {
   return { source, target, statusCode: Number(statusCode) };
 });
 renderStaticRewrites(rewriteRows);
+const cleanRouteFiles = new Map(paths.map((route) => [route, routeDocumentFile(route)]));
+const deployedFileForPath = (pathname) => pathname === "/"
+  ? "index.html"
+  : cleanRouteFiles.get(pathname) ?? pathname.slice(1);
 for (const { source, target, statusCode } of rewriteRows) {
   assert.equal(statusCode, 200, `URL-changing redirect: ${source}`);
-  assert((await stat(path.join(dist, target.slice(1))).catch(() => null))?.isFile(),
-    `Rewrite must serve a physical file directly: ${source} -> ${target}`);
+  assert((await stat(path.join(dist, deployedFileForPath(target))).catch(() => null))?.isFile(),
+    `Rewrite must resolve to a deployed file: ${source} -> ${target}`);
 }
 const legacyAliases = canonicalHostAliasRows(await loadAliasRegistry(root));
 const machinePaths = new Set(MACHINE_RESOURCES.filter((item) => item.materialize).map((item) => "/" + item.path));
@@ -59,9 +63,14 @@ assert.deepEqual(JSON.parse(attr(search, "data-content-route-aliases")), { ...ex
 for (const target of Object.values(expectedAliases))
   assert(target === "/" || ids.includes(target.slice(1)), `Missing legacy content target: ${target}`);
 for (const { source, target } of legacyAliases.filter((row) => row.source !== "/index.html"))
-  assert(redirects.includes(`${source} ${machinePaths.has(target) ? target : target === "/" ? "/index.html" : "/" + routeDocumentFile(target)} 200`),
+  assert(redirects.includes(`${source} ${target === "/" ? "/index.html" : target} 200`),
     `Missing direct legacy alias: ${source}`);
-for (const route of paths) assert(redirects.includes(`${route} /${routeDocumentFile(route)} 200`), `Missing independent content route: ${route}`);
+for (const route of paths) {
+  assert(!rewriteRows.some((row) => row.source === route),
+    `Clean content route must not be rewritten through its .html file: ${route}`);
+  assert((await stat(path.join(dist, routeDocumentFile(route))).catch(() => null))?.isFile(),
+    `Missing independent content document: ${route}`);
+}
 const metadataRoutes = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl);
 for (const { source, target, statusCode } of metadataRoutes)
   assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing metadata description: ${source}`);
@@ -93,7 +102,7 @@ for (const node of elements) {
       continue;
     }
     if (redirectSources.has(url.pathname)) continue;
-    assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(), `Missing published resource: ${value}`);
+    assert((await stat(path.join(dist, deployedFileForPath(url.pathname))).catch(() => null))?.isFile(), `Missing published resource: ${value}`);
   }
 }
 const answerValidation = validateProjectedAnswerHtml(html, deriveCanonicalAnswerProjection(graph, lifecycle));
@@ -291,7 +300,7 @@ for (const record of records) {
     const value = attr(node, name); if (!value) continue;
     const url = new URL(value, lifecycle.canonicalUrl);
     if (url.origin !== localOrigin || url.pathname === "/" || redirectSources.has(url.pathname)) continue;
-    assert((await stat(path.join(dist, url.pathname.slice(1))).catch(() => null))?.isFile(), "Broken scoped resource: " + value);
+    assert((await stat(path.join(dist, deployedFileForPath(url.pathname))).catch(() => null))?.isFile(), "Broken scoped resource: " + value);
   }
 }
 const reachable = new Set(["/"]), queue = ["/"];
