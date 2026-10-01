@@ -1,12 +1,11 @@
 import path from "node:path";
 import { datasetRevisionDate, validRevisionDate } from "../release-graph.mjs";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { parseFragment } from "parse5";
 import {
   sha256,
   valueText,
 } from "../projection-context.mjs";
-import { pageFrontmatter } from "../../../src/lib/canonical-inputs.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
 
 const attribute = (node, name) =>
@@ -214,7 +213,8 @@ const sentenceChunks = (text, max) => {
 export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   const {
     projections,
-    generatedContent,
+    pageBody,
+    pageFrontmatter,
     release,
     retrievalPolicy,
     graph,
@@ -233,16 +233,11 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       "Retrieval compiler requires answerRecords[] from semantic compiler",
     );
 
-  const home = await readFile(path.join(generatedContent, "home.md"), "utf8");
-  const frontmatter = home.match(/^---\r?\n([\s\S]*?)\r?\n---\s*/);
-  if (!frontmatter)
-    throw new Error("Retrieval compiler requires Markdown frontmatter");
   const pageTitle = pageFrontmatter.title;
   const pageLanguage = pageFrontmatter.lang;
   if (![pageTitle, pageLanguage].every((value) => typeof value === "string" && value.trim()))
     throw new Error("Canonical page requires a nonempty title and lang");
-  const body = home.slice(frontmatter[0].length);
-  const blocks = buildRetrievalBlocks(body, {
+  const blocks = buildRetrievalBlocks(pageBody, {
     canonicalUrl: release.canonicalUrl,
     language: pageLanguage,
   });
@@ -526,6 +521,20 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   }
   provenanceGraph.push(...evidenceRegistry.tierNodes, evidenceRegistry.registryNode);
   for (const passage of emitted) {
+    // A passage inherits only explicitly recorded revisions of its bound
+    // canonical sources. The archived release date is not its revision date.
+    const sourceIds = [...new Set([
+      ...passage.graphNodeIds,
+      ...passage.answerIds,
+    ])];
+    const sourceRevisions = sourceIds
+      .map((id) => byId.get(id)?.dateModified)
+      .filter((date) => date !== undefined);
+    if (sourceRevisions.some((date) =>
+      !validRevisionDate(date) || date > currentDatasetDate,
+    ))
+      throw new Error(`Invalid passage source revision: ${passage.anchor}`);
+    const passageModifiedAt = sourceRevisions.sort().at(-1);
     provenanceGraph.push({
       "@id": `${release.canonicalUrl}provenance.jsonld/passage-${passage.hash}`,
       "@type": ["CreativeWork", "prov:Entity"],
@@ -539,9 +548,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         propertyID: "SHA-256",
         value: sha256(Buffer.from(passage.text)),
       },
-      ...(passage.graphNodeIds.length
+      ...(sourceIds.length
         ? {
-            isBasedOn: passage.graphNodeIds.map((id) => ({ "@id": id })),
+            isBasedOn: sourceIds.map((id) => ({ "@id": id })),
           }
         : {}),
       "prov:wasDerivedFrom": [{ "@id": passage.anchor }],
@@ -559,7 +568,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
           value: passage.entityEvidenceIds.join(" | "),
         },
       ],
-      dateModified: release.dateModified,
+      ...(passageModifiedAt ? { dateModified: passageModifiedAt } : {}),
     });
   }
   for (const {

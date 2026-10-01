@@ -4,13 +4,17 @@ import { inspectHtml } from "./html-contract.mjs";
 export function contentRoutePaths(html, canonicalUrl) {
   const { elements, ids } = inspectHtml(html);
   const idSet = new Set(ids);
+  const origin = new URL(canonicalUrl).origin;
   const attr = (node, name) => node.attrs?.find((item) => item.name === name)?.value;
   const paths = new Set(elements.filter((node) =>
-    /^h[1-6]$/.test(node.tagName) || String(attr(node, "class") || "").split(/\s+/).includes("answer-projection"))
+    /^h[1-6]$/.test(node.tagName) || String(attr(node, "class") || "").split(/\s+/)
+      .some((name) => ["answer-projection", "semantic-alias-anchor"].includes(name)))
     .map((node) => attr(node, "id")).filter(Boolean).map((id) => `/${id}`));
   for (const node of elements.filter((node) => node.tagName === "a" && attr(node, "href"))) {
     const url = new URL(attr(node, "href"), canonicalUrl);
-    if (url.origin === new URL(canonicalUrl).origin && !url.hash && !url.search && idSet.has(url.pathname.slice(1)))
+    // Pages matches the path, while video/chapter parameters remain available to
+    // the browser. These authored links need the same finite document alias.
+    if (url.origin === origin && !url.hash && idSet.has(url.pathname.slice(1)))
       paths.add(url.pathname);
   }
   for (const route of paths)

@@ -59,7 +59,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const data = path.join(root, "src/data");
   const semantic = path.join(data, "semantic");
   const generated = generatedWorkspace(root);
-  const { lifecycle: rawRelease, graph, evidenceRegistry, retrievalPolicy } = readCanonicalInputs(root);
+  const { lifecycle: rawRelease, graph, evidenceRegistry, retrievalPolicy, pageBody, pageFrontmatter } = readCanonicalInputs(root);
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
   const release = derivePublicationData(rawRelease, graph);
@@ -120,7 +120,8 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     projections: generated.projections,
     generatedSemantic: generated.semantic,
     generatedPublic: generated.public,
-    generatedContent: generated.content,
+    pageBody,
+    pageFrontmatter,
     generatedAssets: generated.assets,
     release,
     rawRelease,

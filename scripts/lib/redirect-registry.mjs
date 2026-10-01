@@ -99,13 +99,54 @@ export function canonicalHostRedirectRows(registry) {
 }
 
 export function renderCanonicalHostRedirects(registry) {
-  return (
-    canonicalHostRedirectRows(registry)
-      .map(
-        ({ source, target, statusCode }) => `${source} ${target} ${statusCode}`,
-      )
-      .join("\n") + "\n"
-  );
+  return renderStaticRedirects(canonicalHostRedirectRows(registry));
+}
+
+/** Check the final deployed rules, including document aliases. */
+export function renderStaticRedirects(rows) {
+  const sources = new Set();
+  const lines = rows.map(({ source, target, statusCode }) => {
+    if (!source?.startsWith("/") || source.startsWith("//") || /[\s?#\\*:]/u.test(source))
+      throw new Error(`Invalid static redirect source: ${source}`);
+    if (!target?.startsWith("/") || target.startsWith("//") || /[\s\\]/u.test(target))
+      throw new Error(`Invalid static redirect destination: ${target}`);
+    if (![200, 301, 302, 303, 307, 308].includes(statusCode))
+      throw new Error(`Unsupported static redirect status: ${statusCode}`);
+    if (sources.has(source)) throw new Error(`Duplicate static redirect source: ${source}`);
+    sources.add(source);
+    const line = `${source} ${target} ${statusCode}`;
+    if (line.length > 1_000)
+      throw new Error(`Cloudflare _redirects line exceeds 1000 characters: ${source}`);
+    return line;
+  });
+  if (lines.length > 2_000)
+    throw new Error(`Cloudflare _redirects exceeds 2000 static rules: ${lines.length}`);
+  return lines.join("\n") + "\n";
+}
+
+/** Metadata subjects are identifiers; their authoritative description is the graph. */
+export function canonicalMetadataRedirectRows(graph, canonicalUrl) {
+  const origin = new URL(canonicalUrl).origin;
+  // These two graph-only subjects are also advertised by the authored HTML head.
+  const advertisedSubjects = new Set(["/website", "/medical-specialty-aesthetic-medicine"]);
+  const paths = new Set();
+  const collect = (value) => {
+    if (Array.isArray(value)) return value.forEach(collect);
+    if (!value || typeof value !== "object") return;
+    const id = value["@id"];
+    // Include actual named definitions, including nested provenance properties.
+    // A reference consisting only of @id does not establish a new public route.
+    if (typeof id === "string" && id.startsWith(`${origin}/`) &&
+      Object.keys(value).some((key) => key !== "@id")) {
+      const url = new URL(id);
+      if (!url.search && !url.hash && (advertisedSubjects.has(url.pathname) ||
+        /^\/(?:graph|provenance)\.jsonld\/[A-Za-z0-9][A-Za-z0-9._-]*(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/.test(url.pathname)))
+        paths.add(url.pathname);
+    }
+    Object.values(value).forEach(collect);
+  };
+  collect(graph["@graph"]);
+  return [...paths].sort().map((source) => ({ source, target: "/graph.jsonld", statusCode: 303 }));
 }
 
 export function normalizedRedirectPath(

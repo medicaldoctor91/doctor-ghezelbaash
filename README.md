@@ -1,4 +1,4 @@
-# Dr. Saeed Ghezelbash — static source
+# Dr. Saeed Ghezelbash — dist-first static source
 
 Static Astro source for <https://www.ghezelbaash.ir/>.
 
@@ -9,7 +9,9 @@ npm ci
 npm run build
 ```
 
-The build produces the complete static website in `dist/`, serializes the graph to RDF, exports readable and machine formats, and checks the finished files. It does not update external repositories or publish a release.
+Use Node 24.19+ within major 24 and npm 11.9+ within major 11. `scripts/build.mjs` is the single build entry: it produces the complete static website in `dist/`, serializes the graph to RDF, exports the authored readable and machine formats, and checks the finished files. It also verifies that neither canonical file changed during the build.
+
+This is a finite distribution: one principal document, its existing 404 fallback, assets and published data formats. There is no page-generation framework, runtime server, Worker, client router framework or deployment automation. Upload the contents of a validated `dist/` to Cloudflare Pages; the source does not publish them.
 
 ## The two canonical files
 
@@ -26,16 +28,20 @@ Microdata is HTML markup. ImageObject attribution and licensing are stored direc
 
 ## Presentation and generated files
 
-`src/styles/global.css` contains the complete static presentation, including the preserved chunk-size rules. Astro components provide layout and interaction. `public/` contains media and browser assets. Redirects, media aliases, HTTP-header templates and SHACL shapes are technical delivery or validation inputs.
+The canonical body is already HTML. `index.astro` renders it directly through `canonical-page-html.mjs`; there is no generated Markdown copy or second front matter parse. The projection compacts the two JSON-LD scripts and escapes `<` for safe HTML embedding while preserving their decoded values and the medical text's whitespace.
+
+`src/styles/global.css` contains the static presentation and finite chunk-height estimates. Content visibility defers offscreen layout and remembers measured heights; estimates vary with device fonts and viewport. Astro components provide layout. The small progressively enhanced search/navigation runtime lives in `src/scripts/guide-runtime.js` and is minified at build time into one inline script with an exact CSP hash. `public/` contains media and browser assets. Redirects, media aliases, HTTP-header templates and SHACL shapes are technical delivery or validation inputs.
 
 Generated files live in `.generated/` and `dist/`. File hashes, RDF measurements, build identity and Content Security Policy hashes are measured from outputs and do not become canonical authoring requirements. No fixed graph, answer, passage or resource totals are required.
 
-`npm run validate:dist` checks canonical head values, search destinations, image rights, exact graph publication, resource presence, faithful evidence projections and the absence of legacy placeholders. The normal build also checks HTML structure, authored JSON-LD preservation and descriptor integrity.
+`npm run validate:dist` checks canonical head values, search destinations, image rights, exact graph publication, actual internal links and media resources, metadata routes, faithful evidence projections and the absence of legacy placeholders. The normal build also checks HTML structure, authored JSON-LD preservation, descriptor integrity and Cloudflare's static rule limits. Passage provenance records only explicitly known source revisions and includes the actual answer sources; it does not substitute an archived release date for an unknown revision.
 
 ## Content paths
 
-The authored graph uses path IRIs. Page headings, answers and linked elements have matching HTML IDs. The build derives a finite set of content paths from the finished document and emits Cloudflare Pages `200` aliases to the single `index.html`; it does not generate a separate copy of the page for each path or use a catchall. The browser navigates these paths with the History API, reveals the destination and moves keyboard focus. Direct path loads receive the same canonical document. Without JavaScript, its full content remains readable.
+The authored graph uses path IRIs. Page headings, answers and linked elements have matching HTML IDs. The build derives a finite set of content paths from the finished document and emits Cloudflare Pages `200` aliases to the single `index.html`; it does not generate a separate copy of the page for each path or use a catchall. The browser navigates these paths with the History API, reveals the destination and moves keyboard focus. Chapter query parameters seek the video without reloading the document. Direct path loads receive the same canonical document and are positioned before slow media finish loading. Without JavaScript, its full content remains readable; the skip link and native table-of-contents fallback use local HTML fragments, without changing entity identities.
 
-Legacy redirects point directly to the current content paths. HTML keeps the homepage canonical URL. A shared document CSP covers the path aliases and the existing 404 page; individual machine resources retain their own delivery metadata. This source produces a static distribution and does not deploy it.
+Legacy redirects point directly to valid content paths or assets. Defined subjects inside the graph/provenance namespaces, plus semantic subjects advertised by the HTML, use exact `303` redirects to their canonical graph description. Other RDF entity identifiers remain identifiers in the published graph; this distribution does not turn every graph node into a separate web page.
+
+HTML keeps the homepage canonical URL. A shared hash-based CSP covers content aliases and unknown 404 requests; machine resources retain their delivery metadata. Responsive hero preload stays in HTML, without a competing fixed-size HTTP preload. Search supports keyboard navigation, Escape, IME composition and Ctrl/Meta+K; without enhancement its launcher is a native guide link.
 
 Search intent destinations come from `page.md`. Their headings come from each canonical `Answer.url`, without assuming that the answer immediately follows its heading. When the existing detector recognizes an intent, its authored destination is the first result; other results retain the lexical ranking.

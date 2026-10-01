@@ -8,12 +8,13 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
-import { canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
+import { canonicalGraph, canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import {
   canonicalHostRedirectRows,
+  canonicalMetadataRedirectRows,
   loadRedirectRegistry,
-  renderCanonicalHostRedirects,
+  renderStaticRedirects,
 } from "./lib/redirect-registry.mjs";
 
 const root = process.cwd();
@@ -113,10 +114,19 @@ const contentPaths = contentRoutePaths(await readFile(path.join(dist, "index.htm
 const registeredSources = new Set(canonicalRedirects.map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
   throw new Error("Authored content path collides with a legacy redirect");
-if (canonicalRedirects.length + contentPaths.length > 2000)
-  throw new Error("Static document aliases exceed the deployment redirect limit");
-await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry) +
-  contentPaths.map((route) => `${route} /index.html 200`).join("\n") + "\n");
+const contentSources = new Set(contentPaths);
+for (const { source, target } of canonicalRedirects) {
+  const targetPath = new URL(target, canonicalLifecycle.canonicalUrl).pathname;
+  if (targetPath !== "/" && !contentSources.has(targetPath) && !destinations.has(targetPath.slice(1)))
+    throw new Error(`Legacy redirect has no deployed destination: ${source} -> ${target}`);
+}
+const metadataRedirects = canonicalMetadataRedirectRows(canonicalGraph, canonicalLifecycle.canonicalUrl)
+  .filter(({ source }) => !contentSources.has(source));
+await writeExact("_redirects", renderStaticRedirects([
+  ...canonicalRedirects,
+  ...contentPaths.map((source) => ({ source, target: "/index.html", statusCode: 200 })),
+  ...metadataRedirects,
+]));
 const generatedPublic = path.join(root, ".generated/public");
 const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)
   .filter((source) => path.posix.dirname(source) === ".generated/public")
@@ -200,6 +210,7 @@ console.log(
       stableMediaAliases: stableMedia.aliases.length,
       canonicalHostRedirects: canonicalRedirects.length,
       contentRoutes: contentPaths.length,
+      metadataIdentityRedirects: metadataRedirects.length,
       destinations: destinations.size,
       deliveryMode: "static-assets",
     },

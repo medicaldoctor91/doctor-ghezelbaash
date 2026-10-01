@@ -82,6 +82,7 @@ export function readCanonicalInputs(root = defaultRoot) {
 
 const inputs = readCanonicalInputs();
 export const pageFrontmatter = inputs.pageFrontmatter;
+export const pageBody = inputs.pageBody;
 export const canonicalGraph = inputs.graph;
 export const canonicalLifecycle = inputs.lifecycle;
 export const retrievalPolicy = inputs.retrievalPolicy;
