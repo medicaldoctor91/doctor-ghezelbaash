@@ -220,7 +220,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       "openingHoursSpecification", "provider", "image", "logo", "primaryImageOfPage", "hasCourseInstance", "location",
       "instructor", "organizer", "reviewRating", "itemReviewed", "about", "isBasedOn", "citation", "hasPart",
       "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy", "identifier", "hasOccupation", "medicalSpecialty",
-      "dcterms:subject", "category", "inDefinedTermSet"];
+      "dcterms:subject", "category", "inDefinedTermSet", "spatialCoverage", "containedInPlace"];
     while (queue.length) {
       const node = queue.shift();
       if (!node || selected.has(node["@id"])) continue;

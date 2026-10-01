@@ -290,6 +290,27 @@ test("declared historical summary keeps its own geographic evidence distinct fro
   assert(inspectHtml(summary.bodyHtml, { wrapMain: true }).ids.includes("historical-patient-origin-summary"));
   assert.equal(summary.entityId, inputs.lifecycle.canonicalUrl + "historical-patient-origin-summary");
   assert(summary.entityTypes.includes("CreativeWork"));
+  const original = inputs.graph["@graph"].find((node) => node["@id"] === summary.entityId);
+  const originalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  const scopedById = new Map(summary.document["@graph"].map((node) => [node["@id"], node]));
+  assert.deepEqual(scopedById.get(summary.entityId).spatialCoverage, original.spatialCoverage);
+  assert.equal(scopedById.get(summary.entityId).temporalCoverage, "historical");
+  const queue = [...original.spatialCoverage];
+  const visited = new Set();
+  while (queue.length) {
+    const ref = queue.shift();
+    if (visited.has(ref["@id"])) continue;
+    visited.add(ref["@id"]);
+    const authoredPlace = originalById.get(ref["@id"]);
+    assert(authoredPlace, "Geographic evidence must refer to an authored place");
+    assert.deepEqual(scopedById.get(ref["@id"]), authoredPlace,
+      "Historical geography keeps its authored place definition and containment");
+    const parents = Array.isArray(authoredPlace.containedInPlace)
+      ? authoredPlace.containedInPlace : authoredPlace.containedInPlace ? [authoredPlace.containedInPlace] : [];
+    queue.push(...parents);
+  }
+  assert(!scopedById.has(inputs.lifecycle.canonicalUrl + "graph.jsonld/dataset"),
+    "Historical geography must not import the comprehensive homepage Dataset");
 });
 
 test("declared focused views fail rather than selecting missing or unrelated source regions", () => {
