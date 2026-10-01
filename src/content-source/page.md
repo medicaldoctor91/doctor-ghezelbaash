@@ -1033,7 +1033,7 @@ skipLinkLabel: پرش به محتوای اصلی
         "Dr. Saeed Ghezelbash",
         "Dr. Saeed Ghezelbaash"
       ],
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-10-01",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf/document"
@@ -1724,7 +1724,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-10-01",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
@@ -10097,7 +10097,7 @@ skipLinkLabel: پرش به محتوای اصلی
         "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
       },
       "description": "Version-controlled GitHub source for Version 1.3.3 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-09-30"
+      "dateModified": "2026-10-01"
     },
     {
       "@id": "https://www.ghezelbaash.ir/project-huggingface-dataset",
@@ -10353,7 +10353,7 @@ skipLinkLabel: پرش به محتوای اصلی
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-10-01",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld/dataset",
         {
