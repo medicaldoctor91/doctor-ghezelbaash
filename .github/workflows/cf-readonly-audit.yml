@@ -1,0 +1,236 @@
+name: Cloudflare readonly audit
+
+on:
+  push:
+    branches:
+      - cf-readonly-audit-20261002
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Read Cloudflare configuration and probe routes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: python
+        run: |
+          import json, os, urllib.request, urllib.error
+
+          TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
+          if not TOKEN:
+              raise SystemExit("CLOUDFLARE_API_TOKEN is unavailable")
+
+          CF = "https://api.cloudflare.com/client/v4"
+          ACCOUNT = "884d1d90bd1fb6ecca14992c6c60d677"
+          PROJECT = "doctor-ghezelbaash"
+
+          def cf(path):
+              req = urllib.request.Request(
+                  CF + path,
+                  headers={
+                      "Authorization": "Bearer " + TOKEN,
+                      "Accept": "application/json",
+                      "User-Agent": "ghezelbaash-readonly-audit",
+                  },
+                  method="GET",
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      payload = json.loads(r.read() or b"{}")
+                      return {"http": r.status, "payload": payload}
+              except urllib.error.HTTPError as e:
+                  raw = e.read()
+                  try:
+                      payload = json.loads(raw or b"{}")
+                  except Exception:
+                      payload = {}
+                  return {"http": e.code, "payload": payload}
+              except Exception as e:
+                  return {"http": None, "error": type(e).__name__}
+
+          def brief_errors(result):
+              p = result.get("payload") or {}
+              return {
+                  "http": result.get("http"),
+                  "success": p.get("success"),
+                  "errors": [
+                      {"code": x.get("code"), "message": x.get("message")}
+                      for x in (p.get("errors") or [])
+                  ],
+              }
+
+          print("TOKEN_VERIFY", json.dumps(brief_errors(cf("/user/tokens/verify")), sort_keys=True))
+
+          project_r = cf(f"/accounts/{ACCOUNT}/pages/projects/{PROJECT}")
+          p = (project_r.get("payload") or {}).get("result")
+          if isinstance(p, dict):
+              src = p.get("source") or {}
+              cfg = src.get("config") or {}
+              b = p.get("build_config") or {}
+              print("PAGES_PROJECT", json.dumps({
+                  "http": project_r.get("http"),
+                  "name": p.get("name"),
+                  "subdomain": p.get("subdomain"),
+                  "domains": p.get("domains"),
+                  "production_branch": p.get("production_branch"),
+                  "source_type": src.get("type"),
+                  "source_owner": cfg.get("owner"),
+                  "source_repo": cfg.get("repo_name"),
+                  "source_production_branch": cfg.get("production_branch"),
+                  "deployments_enabled": cfg.get("deployments_enabled"),
+                  "production_deployments_enabled": cfg.get("production_deployments_enabled"),
+                  "preview_deployment_setting": cfg.get("preview_deployment_setting"),
+                  "build_command": b.get("build_command"),
+                  "destination_dir": b.get("destination_dir"),
+                  "root_dir": b.get("root_dir"),
+                  "canonical_deployment_id": (p.get("canonical_deployment") or {}).get("id"),
+                  "latest_deployment_id": (p.get("latest_deployment") or {}).get("id"),
+              }, sort_keys=True))
+          else:
+              print("PAGES_PROJECT_ERROR", json.dumps(brief_errors(project_r), sort_keys=True))
+
+          dep_r = cf(f"/accounts/{ACCOUNT}/pages/projects/{PROJECT}/deployments")
+          deps = (dep_r.get("payload") or {}).get("result")
+          if isinstance(deps, list):
+              rows = []
+              for d in deps[:5]:
+                  md = ((d.get("deployment_trigger") or {}).get("metadata") or {})
+                  rows.append({
+                      "id": d.get("id"),
+                      "environment": d.get("environment"),
+                      "url": d.get("url"),
+                      "created_on": d.get("created_on"),
+                      "branch": md.get("branch"),
+                      "commit_hash": md.get("commit_hash"),
+                      "status": (d.get("latest_stage") or {}).get("status"),
+                      "is_skipped": d.get("is_skipped"),
+                  })
+              print("PAGES_DEPLOYMENTS", json.dumps(rows, sort_keys=True))
+          else:
+              print("PAGES_DEPLOYMENTS_ERROR", json.dumps(brief_errors(dep_r), sort_keys=True))
+
+          zones_r = cf("/zones?name=ghezelbaash.ir")
+          zones = (zones_r.get("payload") or {}).get("result")
+          zone_id = None
+          if isinstance(zones, list) and zones:
+              z = zones[0]
+              zone_id = z.get("id")
+              print("ZONE", json.dumps({
+                  "id": zone_id,
+                  "name": z.get("name"),
+                  "status": z.get("status"),
+                  "paused": z.get("paused"),
+                  "type": z.get("type"),
+              }, sort_keys=True))
+          else:
+              print("ZONE_ERROR", json.dumps(brief_errors(zones_r), sort_keys=True))
+
+          if zone_id:
+              rs_r = cf(f"/zones/{zone_id}/rulesets")
+              rs = (rs_r.get("payload") or {}).get("result")
+              print("ZONE_RULESETS_INDEX", json.dumps(
+                  [{"id": x.get("id"), "name": x.get("name"), "kind": x.get("kind"), "phase": x.get("phase"), "version": x.get("version")}
+                   for x in rs] if isinstance(rs, list) else brief_errors(rs_r),
+                  sort_keys=True))
+              if isinstance(rs, list):
+                  for x in rs:
+                      phase = x.get("phase") or ""
+                      if ("redirect" in phase or "transform" in phase or "cache" in phase or "origin" in phase):
+                          detail = cf(f"/zones/{zone_id}/rulesets/{x.get('id')}")
+                          dr = (detail.get("payload") or {}).get("result")
+                          if isinstance(dr, dict):
+                              safe_rules = []
+                              for rule in dr.get("rules") or []:
+                                  safe_rules.append({
+                                      "id": rule.get("id"),
+                                      "action": rule.get("action"),
+                                      "expression": rule.get("expression"),
+                                      "description": rule.get("description"),
+                                      "enabled": rule.get("enabled"),
+                                      "action_parameters": rule.get("action_parameters"),
+                                  })
+                              print("ZONE_RULESET_DETAIL", json.dumps({
+                                  "id": dr.get("id"),
+                                  "name": dr.get("name"),
+                                  "kind": dr.get("kind"),
+                                  "phase": dr.get("phase"),
+                                  "rules": safe_rules,
+                              }, sort_keys=True))
+                          else:
+                              print("ZONE_RULESET_DETAIL_ERROR", x.get("id"), json.dumps(brief_errors(detail), sort_keys=True))
+
+              pr_r = cf(f"/zones/{zone_id}/pagerules?status=active")
+              prs = (pr_r.get("payload") or {}).get("result")
+              if isinstance(prs, list):
+                  print("PAGE_RULES", json.dumps([
+                      {
+                          "id": r.get("id"),
+                          "status": r.get("status"),
+                          "priority": r.get("priority"),
+                          "targets": r.get("targets"),
+                          "actions": r.get("actions"),
+                      } for r in prs
+                  ], sort_keys=True))
+              else:
+                  print("PAGE_RULES_ERROR", json.dumps(brief_errors(pr_r), sort_keys=True))
+
+          ars_r = cf(f"/accounts/{ACCOUNT}/rulesets")
+          ars = (ars_r.get("payload") or {}).get("result")
+          print("ACCOUNT_RULESETS_INDEX", json.dumps(
+              [{"id": x.get("id"), "name": x.get("name"), "kind": x.get("kind"), "phase": x.get("phase"), "version": x.get("version")}
+               for x in ars] if isinstance(ars, list) else brief_errors(ars_r),
+              sort_keys=True))
+          if isinstance(ars, list):
+              for x in ars:
+                  phase = x.get("phase") or ""
+                  if "redirect" in phase:
+                      detail = cf(f"/accounts/{ACCOUNT}/rulesets/{x.get('id')}")
+                      dr = (detail.get("payload") or {}).get("result")
+                      if isinstance(dr, dict):
+                          print("ACCOUNT_REDIRECT_RULESET", json.dumps({
+                              "id": dr.get("id"),
+                              "name": dr.get("name"),
+                              "kind": dr.get("kind"),
+                              "phase": dr.get("phase"),
+                              "rules": [
+                                  {
+                                      "id": rule.get("id"),
+                                      "action": rule.get("action"),
+                                      "expression": rule.get("expression"),
+                                      "description": rule.get("description"),
+                                      "enabled": rule.get("enabled"),
+                                      "action_parameters": rule.get("action_parameters"),
+                                  } for rule in (dr.get("rules") or [])
+                              ],
+                          }, sort_keys=True))
+                      else:
+                          print("ACCOUNT_REDIRECT_RULESET_ERROR", x.get("id"), json.dumps(brief_errors(detail), sort_keys=True))
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          opener = urllib.request.build_opener(NoRedirect)
+
+          def probe(url):
+              req = urllib.request.Request(url, headers={"User-Agent": "ghezelbaash-readonly-audit"})
+              try:
+                  with opener.open(req, timeout=20) as r:
+                      return {"url": url, "status": r.status, "location": r.headers.get("Location"), "server": r.headers.get("Server"), "cf_ray": r.headers.get("CF-Ray")}
+              except urllib.error.HTTPError as e:
+                  return {"url": url, "status": e.code, "location": e.headers.get("Location"), "server": e.headers.get("Server"), "cf_ray": e.headers.get("CF-Ray")}
+              except Exception as e:
+                  return {"url": url, "error": type(e).__name__}
+
+          for url in [
+              "https://www.ghezelbaash.ir/botox",
+              "https://www.ghezelbaash.ir/botox.html",
+              "https://doctor-ghezelbaash.pages.dev/botox",
+              "https://doctor-ghezelbaash.pages.dev/botox.html",
+              "https://www.ghezelbaash.ir/filler",
+              "https://doctor-ghezelbaash.pages.dev/filler",
+          ]:
+              print("PROBE", json.dumps(probe(url), sort_keys=True))
