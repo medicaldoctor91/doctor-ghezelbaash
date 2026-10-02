@@ -60,9 +60,9 @@ const person = facts.person as GraphNode;
 const website = facts.website as GraphNode;
 const page = facts.page as GraphNode;
 const pageTypes = Array.isArray(page['@type']) ? page['@type'] : [page['@type']];
-const openGraphType = pageTypes.includes('ProfilePage') ? 'profile' : '';
-if (isMain && !openGraphType) {
-  throw new Error('Canonical page must project Open Graph profile from graph ProfilePage type');
+const openGraphType = pageTypes.includes('MedicalWebPage') ? 'website' : '';
+if (isMain && openGraphType !== 'website') {
+  throw new Error('Canonical homepage must project Open Graph website from graph MedicalWebPage type');
 }
 const pageLanguages = (Array.isArray(page.inLanguage) ? page.inLanguage : [page.inLanguage])
   .filter((value): value is string => typeof value === 'string' && value.length > 0);
@@ -96,16 +96,6 @@ if (isMain) {
     }
   }
 }
-const profileFirstName = exactLanguageLiteral(
-  person.givenName,
-  'en',
-  'Canonical physician givenName',
-);
-const profileLastName = exactLanguageLiteral(
-  person.familyName,
-  'en',
-  'Canonical physician familyName',
-);
 const authorName = exactLanguageLiteral(
   person.name,
   'fa',
@@ -124,9 +114,6 @@ const websiteDisplayNames = new Set([
 if (isMain && !websiteDisplayNames.has(appleMobileWebAppTitle)) {
   throw new Error('Apple web-app title must select a canonical WebSite name from the graph');
 }
-const profileUsername = new URL(facts.instagramUrl).pathname
-  .split('/')
-  .filter(Boolean)[0];
 const openStreetMapUrl = facts.openStreetMapUrl;
 const socialImage = selectCanonicalSocialImage(release, canonicalGraph);
 const og = Object.freeze({
@@ -285,9 +272,6 @@ const discoveryLinks: DiscoveryLink[] = [
     <>
       {discoveryLinks.map((link) => <link {...link}>)}
       <meta content={og.type} property="og:type">
-      <meta content={profileFirstName} property="profile:first_name">
-      <meta content={profileLastName} property="profile:last_name">
-      <meta content={profileUsername} property="profile:username">
       <meta content={og.locale} property="og:locale">
       {og.alternateLocales.map((locale) => (
         <meta content={locale} property="og:locale:alternate">
