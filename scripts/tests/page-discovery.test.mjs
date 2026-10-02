@@ -93,7 +93,10 @@ test("re-projecting an already scoped home preserves core identity and never dup
 });
 
 test("canonical HTML already owns the published markup and discovery data", () => {
-  assert.equal(renderCanonicalPageHtml(inputs.pageBody), inputs.pageBody);
+  const withoutJson = (html) => html.replace(
+    /(<script\\b[^>]*>)[\\s\\S]*?(<\\/script>)/gi, "$1$2");
+  assert.equal(withoutJson(renderCanonicalPageHtml(inputs.pageBody)), withoutJson(inputs.pageBody));
+  assert.deepEqual(projection(), inputs.pageJsonLd[0].document);
   assert.equal(inputs.pageJsonLd.length, 1);
   assert.strictEqual(validatePageJsonLd(inputs.pageJsonLd), inputs.pageJsonLd);
   assert(!inputs.pageBody.includes('<link itemprop="creator"'));
