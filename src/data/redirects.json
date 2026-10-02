@@ -698,82 +698,82 @@
       {
         "source": "/kg/",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/kg/graph.jsonld",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/kg/entity.jsonld",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/routes.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/dataset.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/seo-aeo-index.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/service-taxonomy.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/page-context.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/regulatory.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/entity-hardening-index.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/research/",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/ai-discovery-index.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/aesthetic_medicine_knowledge_kermanshah_fa.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/services.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/authority-signals.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/research.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/nap.csv",
@@ -783,12 +783,12 @@
       {
         "source": "/brand-kb.ghezelbaash.ai-public.json",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       },
       {
         "source": "/kb/graph-ghezelbaash-final.jsonld",
         "target": "/graph.jsonld",
-        "statusCode": 301
+        "statusCode": 200
       }
     ]
   }
