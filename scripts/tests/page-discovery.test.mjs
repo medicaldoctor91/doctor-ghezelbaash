@@ -2,34 +2,43 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseFragment } from "parse5";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { projectPageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { formatBrowserGraph, projectPageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 
 const inputs = readCanonicalInputs();
 const projection = () => projectPageJsonLd(inputs.pageJsonLd)[0].document;
-test("page discovery resolves Person and creator without changing authored inputs", () => {
+const typed = (node, type) => [node?.["@type"]].flat().includes(type);
+
+test("homepage discovery is identity-first while canonical graph remains complete", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
-  const graph = projection()["@graph"];
-  const byId = new Map(graph.map((node) => [node["@id"], node]));
-  const typed = (node, type) => [node["@type"]].flat().includes(type);
-  const page = graph.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
-  assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 32);
-  assert.equal(page["@id"], inputs.pageFrontmatter.pageMicrodata.itemId);
-  assert(typed(byId.get(page.mainEntity["@id"]), "Person"));
-  assert.equal(typeof byId.get(page.mainEntity["@id"]).name, "string");
-  for (const node of inputs.graph["@graph"]) {
-    assert(byId.has(node["@id"]));
-    assert.deepEqual([byId.get(node["@id"])["@type"]].flat(), [node["@type"]].flat());
-  }
-  assert(graph.some((node) => typed(node, "FAQPage")));
-  for (const image of graph.filter((node) => node["@type"] === "ImageObject")) {
+  const graph = projection()["@graph"], byId = new Map(graph.map((node) => [node["@id"], node]));
+  const page = byId.get(inputs.pageFrontmatter.pageMicrodata.itemId);
+  assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 1);
+  assert(page && typed(page, "ProfilePage"));
+  const person = byId.get(page.mainEntity["@id"]);
+  assert(typed(person, "Person"));
+  assert.equal(typeof person.name, "string");
+  for (const property of ["sameAs", "identifier", "hasCredential", "memberOf", "worksFor", "alumniOf"])
+    assert.deepEqual(person[property], inputs.graph["@graph"].find((node) => node["@id"] === person["@id"])[property]);
+  for (const type of ["FAQPage", "Event", "EducationEvent", "Review", "Dataset"])
+    assert(!graph.some((node) => typed(node, type)), "Google-facing projection must omit " + type);
+  for (const image of graph.filter((node) => typed(node, "ImageObject"))) {
     assert(typed(byId.get(image.creator["@id"]), "Person"));
     assert.equal(typeof image.width, "number");
   }
   assert.equal(JSON.stringify(inputs.pageJsonLd), before);
-  assert(inputs.graph["@graph"].some((node) => [node["@type"]].flat().includes("Review")));
-  assert(inputs.graph["@graph"].some((node) => [node["@type"]].flat().includes("EducationEvent")));
+  assert(inputs.graph["@graph"].some((node) => typed(node, "Review")));
+  assert(inputs.graph["@graph"].some((node) => typed(node, "EducationEvent")));
+  assert(inputs.graph["@graph"].some((node) => typed(node, "Dataset")));
 });
+
+test("internal browser formatting retains the complete authored inventory", () => {
+  const graph = formatBrowserGraph(inputs.graph);
+  assert.equal(graph.length, inputs.graph["@graph"].length);
+  const ids = new Set(graph.map((node) => node["@id"]));
+  for (const node of inputs.graph["@graph"]) assert(ids.has(node["@id"]));
+});
+
 test("calendar revisions do not invent timestamps; known instants survive", () => {
   const source = structuredClone(inputs.pageJsonLd);
   const page = source[0].document["@graph"].find((node) => [node["@type"]].flat().includes("ProfilePage"));
@@ -38,6 +47,7 @@ test("calendar revisions do not invent timestamps; known instants survive", () =
   page.dateModified = "2026-09-30T10:20:30+03:30";
   assert.equal(projectPageJsonLd(source)[0].document["@graph"].find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId).dateModified, page.dateModified);
 });
+
 test("HTML embeds one safe graph and a typed image creator", () => {
   const html = renderCanonicalPageHtml(inputs.pageBody);
   const nodes = [];
@@ -53,6 +63,7 @@ test("HTML embeds one safe graph and a typed image creator", () => {
   assert(creator.attrs.some((entry) => entry.name === "itemscope"));
   assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && attr(node, "content")));
 });
+
 test("text containing an HTML script terminator stays inside JSON data", () => {
   const source = structuredClone(inputs.pageJsonLd);
   const person = source[0].document["@graph"].find((node) => [node["@type"]].flat().includes("Person"));
@@ -64,7 +75,7 @@ test("text containing an HTML script terminator stays inside JSON data", () => {
   assert(html.includes("\\u003c/script>"));
 });
 
-test("formatting an already projected home is idempotent and never duplicates FAQ entities", () => {
+test("projecting an already projected home is idempotent", () => {
   const first = projectPageJsonLd(inputs.pageJsonLd);
   const second = projectPageJsonLd(first);
   assert.deepEqual(second, first);
