@@ -1,0 +1,168 @@
+name: Verified minimal-source migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/minimal-source-migration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+
+      - name: Pin npm
+        run: npm install --global npm@11.9.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build baseline
+        env:
+          ASTRO_TELEMETRY_DISABLED: "1"
+        run: |
+          npm run build
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/baseline.sha256
+
+      - name: Overlay verified minimal production source
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://6e941360-8d76-456a-8561-75779a765ddc.sandbox.floot.app/_cdn/static/doctor-ghezelbaash-minimal.zip" -o /tmp/minimal.zip
+          echo "d2289846e052f1aa80dbcffe9515f0f3a16c52d312c3de594a48df33c08ef2e1  /tmp/minimal.zip" | sha256sum -c -
+          rm -rf /tmp/minimal-source
+          mkdir -p /tmp/minimal-source
+          unzip -q /tmp/minimal.zip -d /tmp/minimal-source
+          MIN_PAGE="$(find /tmp/minimal-source -type f -path '*/src/content-source/page.md' -print -quit)"
+          test -n "$MIN_PAGE"
+          MIN_ROOT="${MIN_PAGE%/src/content-source/page.md}"
+          for file in \
+            src/content-source/page.md \
+            src/lib/page-discovery-jsonld.mjs \
+            src/lib/canonical-inputs.mjs \
+            src/lib/canonical-page-html.mjs \
+            src/pages/index.astro \
+            scripts/lib/projections/contact-discovery.mjs \
+            scripts/lib/assemble-content.mjs
+          do
+            cp "$MIN_ROOT/$file" "$file"
+          done
+
+      - name: Align regression tests and documentation with graph-owned discovery
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const replaceAllRequired = (file, from, to) => {
+            let text = fs.readFileSync(file, 'utf8');
+            if (!text.includes(from)) throw new Error(`Missing expected text in ${file}: ${from.slice(0, 90)}`);
+            text = text.replaceAll(from, to);
+            fs.writeFileSync(file, text);
+          };
+
+          for (const file of [
+            'scripts/tests/focused-media.test.mjs',
+            'scripts/tests/independent-pages.test.mjs',
+            'scripts/tests/route-discovery.test.mjs',
+            'scripts/tests/topic-navigation.test.mjs',
+          ]) {
+            replaceAllRequired(file,
+              'renderCanonicalPageHtml(inputs.pageBody)',
+              'renderCanonicalPageHtml(inputs.pageBody, inputs.graph)');
+          }
+
+          const testFile = 'scripts/tests/page-discovery.test.mjs';
+          let tests = fs.readFileSync(testFile, 'utf8');
+          tests = tests.replaceAll(
+            'renderCanonicalPageHtml(inputs.pageBody)',
+            'renderCanonicalPageHtml(inputs.pageBody, inputs.graph)');
+
+          const oldTerminator = `test("text containing an HTML script terminator stays inside JSON data", () => {\n  const source = structuredClone(inputs.pageJsonLd);\n  const person = source[0].document["@graph"].find((node) => typed(node, "Person"));\n  person.name = "</script><script>alert(1)</script>";\n  const body = '<script id="' + source[0].id + '" type="application/ld+json">' +\n    JSON.stringify(source[0].document).replaceAll("<", "\\\\u003c") + "</script>";\n  const html = renderCanonicalPageHtml(body);\n  assert.equal([...html.matchAll(/<script\\b/g)].length, 1);\n  assert(html.includes("\\\\u003c/script>"));\n});`;
+          const newTerminator = `test("text containing an HTML script terminator stays inside generated JSON data", () => {\n  const graph = structuredClone(inputs.graph);\n  const person = graph["@graph"].find((node) => typed(node, "Person"));\n  person.name = "</script><script>alert(1)</script>";\n  const html = renderCanonicalPageHtml(inputs.pageBody, graph);\n  assert.equal([...html.matchAll(/<script\\b/g)].length, 1);\n  assert(html.includes("\\\\u003c/script>"));\n});`;
+          if (!tests.includes(oldTerminator)) throw new Error('Expected script-terminator regression test not found');
+          tests = tests.replace(oldTerminator, newTerminator);
+          tests = tests.replace(
+            'test("canonical HTML already owns the published markup and discovery data", () => {',
+            'test("canonical HTML owns published markup while canonical graph owns discovery data", () => {');
+          tests = tests.replace(
+            `'<span itemprop="creator"')),\n    /authored as a typed Person/);`,
+            `'<span itemprop="creator"'), inputs.graph),\n    /authored as a typed Person/);`);
+          tests = tests.replace(
+            `'<button class="hero-action hero-search-launch" data-guide-search-open=""')),\n    /native guide link/);`,
+            `'<button class="hero-action hero-search-launch" data-guide-search-open=""'), inputs.graph),\n    /native guide link/);`);
+          fs.writeFileSync(testFile, tests);
+
+          const readmeFile = 'README.md';
+          let readme = fs.readFileSync(readmeFile, 'utf8');
+          const oldCanonical = '- `src/content-source/page.md` owns the page body, its inline JSON-LD and Microdata, head values, discovery links, resource registry, footer and search labels, intent destinations, retrieval settings, and the complete `llms.txt` guide. Its hidden `discovery.translationGroups` registry declares equivalent authored multilingual questions; each member must resolve to its actual self-canonical Question route and language.';
+          const newCanonical = '- `src/content-source/page.md` owns the page body, Microdata, head values, discovery links, resource registry, footer and search labels, intent destinations, retrieval settings, the complete `llms.txt` guide, and the single browser-JSON-LD placeholder. Its hidden `discovery.translationGroups` registry declares equivalent authored multilingual questions; each member must resolve to its actual self-canonical Question route and language. Browser JSON-LD is a deterministic projection of the canonical knowledge graph rather than a second authored semantic copy.';
+          if (!readme.includes(oldCanonical)) throw new Error('README canonical ownership paragraph changed unexpectedly');
+          readme = readme.replace(oldCanonical, newCanonical);
+
+          const oldValues = 'The page contains concrete authored values. There are no contact, release, image-size, or image-Microdata placeholders to inject at build time. When an authored fact changes, update the corresponding graph data and visible page text where applicable. The `llmsGuide` field is authored text and is maintained with the page.';
+          const newValues = 'The page contains concrete authored values. There are no contact, release, image-size, or image-Microdata placeholders to inject at build time; the sole semantic build-time placeholder is the browser JSON-LD script, whose document is projected from `knowledge-graph.jsonld`. When an authored fact changes, update the corresponding graph data and visible page text where applicable. The `llmsGuide` field is authored text and is maintained with the page.';
+          if (!readme.includes(oldValues)) throw new Error('README concrete-values paragraph changed unexpectedly');
+          readme = readme.replace(oldValues, newValues);
+
+          const oldPresentation = 'The canonical body is already HTML. `index.astro` renders it directly through `canonical-page-html.mjs`; there is no generated Markdown copy or second front matter parse. The page directly authors the homepage browser discovery graph, including its selected entities, localized text, numeric image dimensions and visible FAQ relationship. The renderer validates that document and escapes `<` for safe HTML embedding; it does not select or rewrite entities during the build. The full multilingual graph remains the authority for facts and focused route projections, which omit optional ProfilePage timestamps when only a calendar date is known.';
+          const newPresentation = 'The canonical body is already HTML. `index.astro` renders it directly through `canonical-page-html.mjs`; there is no generated Markdown copy or second front matter parse. The page authors one empty browser-discovery script placeholder. `page-discovery-jsonld.mjs` deterministically selects and localizes the browser graph from `knowledge-graph.jsonld`, including numeric image dimensions and the visible FAQ relationship; the renderer injects that projection and escapes `<` for safe HTML embedding. The full multilingual graph remains the authority for facts and focused route projections, which omit optional ProfilePage timestamps when only a calendar date is known.';
+          if (!readme.includes(oldPresentation)) throw new Error('README presentation paragraph changed unexpectedly');
+          readme = readme.replace(oldPresentation, newPresentation);
+          fs.writeFileSync(readmeFile, readme);
+          NODE
+
+      - name: Verify canonical graph is unchanged
+        run: |
+          test "$(sha256sum src/data/semantic/knowledge-graph.jsonld | cut -d' ' -f1)" = "31a010dcfc876b5da9a12e92fa8d34227d597a7b0a6b2c481a154624ac5ddb33"
+          test "$(wc -c < src/content-source/page.md)" = "1838344"
+
+      - name: Build refactor and require byte-identical dist under the same build identity
+        env:
+          ASTRO_TELEMETRY_DISABLED: "1"
+        run: |
+          rm -rf dist .generated
+          npm run build
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/refactor.sha256
+          diff -u /tmp/baseline.sha256 /tmp/refactor.sha256
+          test "$(find dist -type f | wc -l)" = "1229"
+
+      - name: Run full regression suite
+        env:
+          ASTRO_TELEMETRY_DISABLED: "1"
+        run: node --test scripts/tests/*.test.mjs
+
+      - name: Commit verified migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            README.md \
+            src/content-source/page.md \
+            src/lib/page-discovery-jsonld.mjs \
+            src/lib/canonical-inputs.mjs \
+            src/lib/canonical-page-html.mjs \
+            src/pages/index.astro \
+            scripts/lib/projections/contact-discovery.mjs \
+            scripts/lib/assemble-content.mjs \
+            scripts/tests/focused-media.test.mjs \
+            scripts/tests/independent-pages.test.mjs \
+            scripts/tests/page-discovery.test.mjs \
+            scripts/tests/route-discovery.test.mjs \
+            scripts/tests/topic-navigation.test.mjs
+          git diff --cached --check
+          git commit -m "refactor: derive browser JSON-LD from canonical graph"
+          git push origin HEAD:main
