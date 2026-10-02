@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { createGuideSearch } from "../../src/lib/guide-search.mjs";
-import { pageBody, pageFrontmatter, canonicalGraph, canonicalLifecycle } from "../../src/lib/canonical-inputs.mjs";
+import { pageBody, pageFrontmatter, canonicalLifecycle } from "../../src/lib/canonical-inputs.mjs";
 import { inspectHtml } from "../lib/html-contract.mjs";
 
 const source = "const createGuideSearch = (" + createGuideSearch.toString() + ");\n" +
@@ -14,10 +14,8 @@ const headings = inspectHtml(pageBody, { wrapMain: true }).elements
   .filter((node) => /^h[1-6]$/.test(node.tagName) && attr(node, "id"))
   .map((node) => ({ id: attr(node, "id"), textContent: text(node), tagName: node.tagName.toUpperCase(),
     dataset: { retrievalAlias: attr(node, "data-retrieval-alias") ?? "" } }));
-const intentHeadings = Object.fromEntries(Object.entries(pageFrontmatter.intentTargets).map(([intent, id]) => {
-  const answer = canonicalGraph["@graph"].find((node) => node["@id"] === id);
-  return [intent, new URL(answer.url).pathname.slice(1)];
-}));
+const intentHeadings = Object.fromEntries(Object.entries(pageFrontmatter.intentTargets)
+  .map(([intent, url]) => [intent, new URL(url).pathname.slice(1)]));
 function searchFor(query, routeTitle) {
   const indexedHeadings = routeTitle ? [{ id: "route-page-title", textContent: routeTitle, tagName: "H1", dataset: {}, closest: () => ({}) }, ...headings] : headings;
   const listeners = new Map();
