@@ -12,9 +12,12 @@ test("legacy slash aliases retain permanent targets without duplicating an autho
     [redirectRow("/contact/", "/clinic"), redirectRow("/contact", "/clinic"), redirectRow("/botox/", "/botox")]);
   assert.throws(() => canonicalHostAliasRows(registry([redirectRow("/contact/", "/clinic"), redirectRow("/contact", "/other")])), /disagree/);
 });
-test("registry requires 301 while final delivery permits exact rewrites and permanent redirects", () => {
+test("registry requires 301 for content and 200 only for graph-machine aliases", () => {
   for (const statusCode of [200, 302, 303, 307, 308])
     assert.throws(() => canonicalHostAliasRows(registry([{ ...redirectRow("/old", "/new"), statusCode }])), /permanently redirect/);
+  assert.deepEqual(canonicalHostAliasRows(registry([rewriteRow("/kg/", "/graph.jsonld")])),
+    [rewriteRow("/kg/", "/graph.jsonld"), rewriteRow("/kg", "/graph.jsonld")]);
+  assert.throws(() => canonicalHostAliasRows(registry([redirectRow("/kg/", "/graph.jsonld")])), /graph alias/);
   assert.doesNotThrow(() => renderStaticRewrites([redirectRow("/old", "/new"), { ...redirectRow("/older", "/new"), statusCode: 308 }, rewriteRow("/website", "/graph.jsonld")]));
   for (const statusCode of [302, 303, 307])
     assert.throws(() => renderStaticRewrites([{ ...redirectRow("/old", "/new"), statusCode }]), /status/);
