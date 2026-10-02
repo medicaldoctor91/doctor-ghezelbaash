@@ -64,7 +64,7 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   const primary = primaryPageId ? byId.get(primaryPageId) : profiles.find((node) => node.url === "https://www.ghezelbaash.ir/") ?? profiles[0];
   if (primaryPageId && !primary) fail("primary page is missing");
   for (const profile of profiles) {
-    const entity = resolve(profile.mainEntity, ["Person", "Organization", "MedicalClinic", "LocalBusiness"], "ProfilePage.mainEntity");
+    const entity = resolve(profile.mainEntity, ["Person", "Organization"], "ProfilePage.mainEntity");
     text(entity.name, "ProfilePage.mainEntity.name");
     for (const property of ["dateCreated", "dateModified"])
       if (property in profile) instant(profile[property], "ProfilePage." + property);
