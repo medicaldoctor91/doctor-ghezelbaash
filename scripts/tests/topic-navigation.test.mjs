@@ -135,20 +135,26 @@ test("every actual canonical route is reachable through native structural links 
   assert(actualRecords.every((page) => page.navigation === undefined));
 });
 
-test("real Botox topics and all 125 answers bind to their actual authored source heading", () => {
+test("real Botox topics and all 125 questions retain their authored answers on canonical routes", () => {
   const byPath = new Map(actualPages.map((page) => [page.path, page]));
   assert.equal(byPath.get("/forehead-botox-brow-compensation-and-ptosis-risk").navigation.parent.path, "/upper-face-botox");
   assert.equal(byPath.get("/forehead-lines-overactivity-vs-compensation").navigation.parent.path, "/forehead-botox-brow-compensation-and-ptosis-risk");
   assert.equal(byPath.get("/historical-patient-origin-summary").navigation.parent.path, "/out-of-town-aesthetic-patients-iran");
-  const answers = actualPages.filter((page) => page.path.startsWith("/answer-"));
-  assert(answers.length > 0);
+  assert.equal(actualPages.filter((page) => page.path.startsWith("/answer-")).length, 0);
   const questions = inputs.graph["@graph"].filter((node) => [node["@type"]].flat().includes("Question"));
-  assert.equal(answers.length, questions.length);
-  for (const answer of answers) {
-    const question = questions.find((node) => [node.acceptedAnswer].flat().some((ref) => ref?.["@id"] === answer.entityId));
-    assert(question, "Answer must have its authored Question: " + answer.path);
+  assert.equal(questions.length, 125);
+  for (const question of questions) {
     const source = new URL(question.url);
-    assert.equal(answer.navigation.parent.path, source.hash ? "/" + source.hash.slice(1) : source.pathname);
+    const path = source.hash ? "/" + source.hash.slice(1) : source.pathname;
+    const page = byPath.get(path);
+    assert(page, "Question must have its canonical focused route: " + path);
+    assert.equal(page.entityId, question["@id"]);
+    const answerId = [question.acceptedAnswer].flat()[0]?.["@id"];
+    assert(answerId, "Question must retain its accepted Answer: " + path);
+    assert(page.document["@graph"].some((node) => node["@id"] === answerId && [node["@type"]].flat().includes("Answer")),
+      "Question document must carry its accepted Answer: " + path);
+    const answerHtmlId = new URL(answerId).pathname.slice(1);
+    assert(page.bodyHtml.includes('id="' + answerHtmlId + '"'), "Question document must visibly contain its answer: " + path);
   }
   for (const lang of ["en", "ar-IQ", "ckb-IQ"]) {
     const question = byPath.get("/who-is-dr-saeed-ghezelbash-" + (lang === "en" ? "en" : lang.toLowerCase()));
