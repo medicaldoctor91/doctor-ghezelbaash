@@ -134,13 +134,14 @@ const profileNodes = browserNodes.filter((node) => typeHas(node, "ProfilePage"))
 const primaryProfile = browserById.get(page.pageMicrodata.itemId);
 assert(typeHas(primaryProfile, "ProfilePage"));
 assert(typeHas(browserById.get(primaryProfile.mainEntity["@id"]), "Person"));
-for (const authored of graph["@graph"]) {
-  const published = browserById.get(authored["@id"]);
-  assert(published, "Lost authored semantic entity: " + authored["@id"]);
-  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Lost authored entity types");
-}
-assert(browserNodes.some((node) => typeHas(node, "FAQPage")), "Comprehensive home requires its visible FAQ coverage");
-assert.equal(richResultCounts.incompleteCandidates.length, 0, "Known required candidate fields must be completed from authored/user facts");
+assert.equal(profileNodes.length, 1, "Homepage browser projection must expose only the canonical ProfilePage");
+for (const type of ["FAQPage", "Event", "EducationEvent", "Review", "Dataset"])
+  assert(!browserNodes.some((node) => typeHas(node, type)), "Homepage must not expose unsupported/noisy Google candidate: " + type);
+const authoredPerson = graph["@graph"].find((node) => node["@id"] === primaryProfile.mainEntity["@id"]);
+const publishedPerson = browserById.get(authoredPerson["@id"]);
+for (const property of ["sameAs", "identifier", "hasCredential", "memberOf", "worksFor", "alumniOf"])
+  assert.deepEqual(publishedPerson[property], authoredPerson[property], "Primary entity signal drift: " + property);
+assert.equal(richResultCounts.incompleteCandidates.length, 0, "Published Google-facing candidates must be complete");
 assert(!elements.some((node) => (attr(node, "itemtype") || "").includes("ProfilePage")),
   "Do not duplicate the JSON-LD profile with URL-valued Microdata");
 const inspectBrowserValue = (value) => {
@@ -163,7 +164,11 @@ assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && at
 const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 const xmlValue = (value) => value.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => xmlValue(match[1]));
-assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
+const answerPaths = new Set(graph["@graph"].filter((node) => typeHas(node, "Answer"))
+  .map((node) => new URL(node["@id"]).pathname));
+const indexablePaths = paths.filter((route) => !answerPaths.has(route));
+assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...indexablePaths.map((route) => new URL(route, lifecycle.canonicalUrl).href)],
+  "Sitemap must publish only indexable focused paths");
 const pageNode = graph["@graph"].find((node) => node["@id"] === page.pageMicrodata.itemId);
 assert(sitemap.includes("<lastmod>" + pageNode.dateModified + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
@@ -255,7 +260,10 @@ for (const record of records) {
   assert.equal(attr(routeBody, "dir"), page.dir, "Shared UI direction must not inherit route direction");
   const localeMeta = scoped.elements.find((node) => node.tagName === "meta" && attr(node, "property") === "og:locale");
   if (localeMeta) assert(/^[a-z]{2}_[A-Z]{2}$/.test(attr(localeMeta, "content")), "Open Graph locale must use ISO 639-1");
-  assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
+  const robots = scoped.elements.find((node) => attr(node, "name") === "robots");
+  assert(robots, "Every focused page needs an explicit robots policy");
+  if (record.indexable === false) assert(/\bnoindex\b/.test(attr(robots, "content")), "Answer-only route must be noindex");
+  else assert(!/\bnoindex\b/.test(attr(robots, "content")), "Indexable route must not be noindex");
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
   assert(record.navigation, "Every route needs authored navigation");
@@ -320,10 +328,18 @@ while (queue.length) {
 }
 assert.equal(reachable.size - 1, records.length, "Every sitemap topic must be reachable through actual native HTML links from home");
 const duplicateScopes = [...scopeTexts.values()].filter((paths) => paths.length > 1);
-console.log(JSON.stringify({ topicDiscoveryValidation: "PASS", reachableTopics: reachable.size - 1, maximumDepth, overviewPages, contextualTitles, nativePosters, duplicateScopes }));
+const indexableTitleGroups = new Map();
+for (const record of records.filter((entry) => entry.indexable !== false)) {
+  if (!indexableTitleGroups.has(record.documentTitle)) indexableTitleGroups.set(record.documentTitle, []);
+  indexableTitleGroups.get(record.documentTitle).push(record.path);
+}
+const duplicateIndexableTitles = [...indexableTitleGroups.values()].filter((paths) => paths.length > 1);
+assert.deepEqual(duplicateIndexableTitles, [], "Indexable focused pages need distinct document titles");
+console.log(JSON.stringify({ topicDiscoveryValidation: "PASS", reachableTopics: reachable.size - 1, maximumDepth, overviewPages, contextualTitles, nativePosters, duplicateScopes, duplicateIndexableTitles }));
 const translationMembers = (page.discovery?.translationGroups || []).flatMap((group) => group.members);
 assert.equal(translatedPages, translationMembers.length, "Every authored translation member must be rendered once");
-assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
+assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.filter((record) => record.indexable !== false)
+  .reduce((total, record) => total + (record.alternates?.length || 0), 0),
   "Sitemap must publish every reciprocal language alternate");
 console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
 
