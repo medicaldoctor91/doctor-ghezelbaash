@@ -64,10 +64,15 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   const primary = primaryPageId ? byId.get(primaryPageId) : profiles.find((node) => node.url === "https://www.ghezelbaash.ir/") ?? profiles[0];
   if (primaryPageId && !primary) fail("primary page is missing");
   for (const profile of profiles) {
-    const entity = resolve(profile.mainEntity, ["Person", "Organization", "MedicalClinic", "LocalBusiness"], "ProfilePage.mainEntity");
+    const entity = resolve(profile.mainEntity, ["Person", "Organization"], "ProfilePage.mainEntity");
     text(entity.name, "ProfilePage.mainEntity.name");
     for (const property of ["dateCreated", "dateModified"])
       if (property in profile) instant(profile[property], "ProfilePage." + property);
+  }
+  if (primary && hasType(primary, "ProfilePage") && primary.url === "https://www.ghezelbaash.ir/") {
+    if (profiles.length !== 1) fail("homepage browser graph must contain exactly one ProfilePage");
+    for (const type of ["FAQPage", "Event", "EducationEvent", "Review", "Dataset"])
+      if (nodes.some((node) => hasType(node, type))) fail("homepage browser graph must not publish " + type + " rich-result candidates");
   }
   if (primary && !profiles.includes(primary)) {
     const entities = values(primary.mainEntity).map((ref) => byId.get(ref?.["@id"]));
