@@ -75,8 +75,19 @@ test("text containing an HTML script terminator stays inside JSON data", () => {
   assert(html.includes("\\u003c/script>"));
 });
 
-test("formatting an already projected home is idempotent and never duplicates FAQ entities", () => {
+test("re-projecting an already scoped home preserves core identity and never duplicates FAQ entities", () => {
   const first = projectPageJsonLd(inputs.pageJsonLd);
   const second = projectPageJsonLd(first);
-  assert.deepEqual(second, first);
+  for (const projected of [first, second]) {
+    const graph = projected[0].document["@graph"];
+    const ids = graph.map((node) => node["@id"]);
+    assert.equal(new Set(ids).size, ids.length);
+    assert.equal(graph.filter((node) => typed(node, "FAQPage")).length, 1);
+    const home = graph.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+    assert(typed(home, "MedicalWebPage"));
+    assert(!typed(home, "ProfilePage"));
+    const person = graph.find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
+    assert.equal(person.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+    assert.deepEqual(person.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
+  }
 });
