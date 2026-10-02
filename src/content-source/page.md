@@ -8,7 +8,7 @@ author: دکتر سعید قزلباش
 authorId: https://www.ghezelbaash.ir/saeed-ghezelbash
 publisher: دکتر سعید قزلباش
 publisherId: https://www.ghezelbaash.ir/saeed-ghezelbash
-dateModified: '2026-10-01'
+dateModified: '2026-10-02'
 lastReviewed: '2026-09-30'
 schemaVersion: https://schema.org/version/30.1/
 socialImage: https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg
@@ -16,7 +16,7 @@ knowledgeGraph:
   url: https://www.ghezelbaash.ir/graph.jsonld
   datasetId: https://www.ghezelbaash.ir/graph.jsonld/dataset
   version: 1.3.3
-  dateModified: '2026-10-01'
+  dateModified: '2026-10-02'
   license: https://creativecommons.org/licenses/by/4.0/
 lang: fa-IR
 dir: rtl
@@ -46,13 +46,13 @@ headValues:
   format-detection: telephone=no
   color-scheme: light
 intentTargets:
-  botox: https://www.ghezelbaash.ir/answer-botox-doctor-selection-criteria-kermanshah
-  filler: https://www.ghezelbaash.ir/answer-filler-doctor-selection-criteria-kermanshah
-  aesthetic-physician: https://www.ghezelbaash.ir/answer-choosing-an-aesthetic-doctor-in-kermanshah-and-iran
-  migraine-botox: https://www.ghezelbaash.ir/answer-therapeutic-botox-specialty-boundaries
-  revision: https://www.ghezelbaash.ir/answer-revision-decision-wait-correct-dissolve-refer
-  second-opinion: https://www.ghezelbaash.ir/answer-revision-intake-information
-  complex-correction: https://www.ghezelbaash.ir/answer-why-aesthetic-treatment-fails-despite-correct-technique
+  botox: https://www.ghezelbaash.ir/botox-doctor-selection-criteria-kermanshah
+  filler: https://www.ghezelbaash.ir/filler-doctor-selection-criteria-kermanshah
+  aesthetic-physician: https://www.ghezelbaash.ir/choosing-an-aesthetic-doctor-in-kermanshah-and-iran
+  migraine-botox: https://www.ghezelbaash.ir/therapeutic-botox-specialty-boundaries
+  revision: https://www.ghezelbaash.ir/revision-decision-wait-correct-dissolve-refer
+  second-opinion: https://www.ghezelbaash.ir/revision-intake-information
+  complex-correction: https://www.ghezelbaash.ir/why-aesthetic-treatment-fails-despite-correct-technique
 footerLabels:
   machineResourcesSummary: داده‌های ساختاریافته و منابع ماشینی
   machineResourcesAriaLabel: نسخه‌های ماشینی رسمی
@@ -605,7 +605,7 @@ guideSearch:
     ترمیم: اصلاح
 pageMicrodata:
   itemId: https://www.ghezelbaash.ir/webpage
-  itemType: https://schema.org/MedicalWebPage https://schema.org/ProfilePage
+  itemType: https://schema.org/MedicalWebPage
   links:
     - href: https://www.ghezelbaash.ir/
       itemprop: url
@@ -627,7 +627,7 @@ pageMicrodata:
     - itemprop: lastReviewed
       content: '2026-09-30'
     - itemprop: dateModified
-      content: '2026-09-30'
+      content: '2026-10-02'
 heroPreload:
   href: /media/images/physician/saeed-ghezelbash-portrait-768.e9ff8624723d.avif
   srcset: >-
@@ -734,9 +734,10 @@ llmsGuide: >
 
 
   - [Canonical fact hierarchy](https://www.ghezelbaash.ir/fact-map.json): Resolve the graph node
-  `https://www.ghezelbaash.ir/answer-*` first; its `Answer.text` is authoritative. The visible HTML atom,
-  fact map, `answers.txt`, `index.md` and `llms-full.txt` are deterministic projections joined to the source
-  question, graph nodes, retrieval record and evidence IDs, not competing answer authorities.
+  source Question document first; its `acceptedAnswer` points to the graph entity
+  `https://www.ghezelbaash.ir/answer-*`, whose `Answer.text` is authoritative. The visible HTML atom, fact map,
+  `answers.txt`, `index.md` and `llms-full.txt` are deterministic projections joined to that canonical Question,
+  graph nodes, retrieval record and evidence IDs, not competing answer authorities.
 
 
   ## Physician identity
@@ -1134,7 +1135,7 @@ skipLinkLabel: پرش به محتوای اصلی
         "Dr. Saeed Ghezelbash",
         "Dr. Saeed Ghezelbaash"
       ],
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf/document"
@@ -1150,10 +1151,7 @@ skipLinkLabel: پرش به محتوای اصلی
     },
     {
       "@id": "https://www.ghezelbaash.ir/webpage",
-      "@type": [
-        "MedicalWebPage",
-        "ProfilePage"
-      ],
+      "@type": "MedicalWebPage",
       "url": "https://www.ghezelbaash.ir/",
       "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
       "description": "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای تشخیص‌محور انتخاب بوتاکس، فیلر، ژل لب، لیفت نخ، کانتورینگ، PRP و مزوتراپی، عوارض و اصلاح نتایج درمان‌های قبلی.",
@@ -1825,7 +1823,7 @@ skipLinkLabel: پرش به محتوای اصلی
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
@@ -1922,6 +1920,41 @@ skipLinkLabel: پرش به محتوای اصلی
         "@id": "https://www.ghezelbaash.ir/image-saeed-ghezelbash-clinical-office-master"
       },
       "headline": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage",
+      "@type": "ProfilePage",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash",
+      "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+      "description": "دکتر سعید قزلباش، پزشک دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ در کرمانشاه؛ صاحب و پزشک کلینیک زیبایی دکتر سعید قزلباش.",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/website"
+      },
+      "inLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "primaryImageOfPage": {
+        "@id": "https://www.ghezelbaash.ir/image-saeed-ghezelbash-portrait-master"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "dateModified": "2026-10-02"
     },
     {
       "@id": "https://www.ghezelbaash.ir/irimc-credential-167430",
@@ -2735,9 +2768,9 @@ skipLinkLabel: پرش به محتوای اصلی
           "@language": "en"
         }
       ],
-      "url": "https://www.ghezelbaash.ir/",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash",
       "mainEntityOfPage": {
-        "@id": "https://www.ghezelbaash.ir/webpage"
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage"
       },
       "hasCredential": [
         {
