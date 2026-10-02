@@ -5,21 +5,23 @@ import { expandMachineAliasHeaders, assertCloudflareHeadersContract } from "../l
 
 const registry = (rules) => ({ schemaVersion: 4, canonicalOrigin: "https://www.ghezelbaash.ir",
   canonicalHostAliases: { host: "www.ghezelbaash.ir", rules } });
-const row = (source, target) => ({ source, target, statusCode: 200 });
-test("legacy slash aliases retain targets without duplicating an authored path", () => {
-  assert.deepEqual(canonicalHostAliasRows(registry([row("/contact/", "/clinic"), row("/botox/", "/botox")])),
-    [row("/contact/", "/clinic"), row("/contact", "/clinic"), row("/botox/", "/botox")]);
-  assert.throws(() => canonicalHostAliasRows(registry([row("/contact/", "/clinic"), row("/contact", "/other")])), /disagree/);
+const redirectRow = (source, target) => ({ source, target, statusCode: 301 });
+const rewriteRow = (source, target) => ({ source, target, statusCode: 200 });
+test("legacy slash aliases retain permanent targets without duplicating an authored path", () => {
+  assert.deepEqual(canonicalHostAliasRows(registry([redirectRow("/contact/", "/clinic"), redirectRow("/botox/", "/botox")])),
+    [redirectRow("/contact/", "/clinic"), redirectRow("/contact", "/clinic"), redirectRow("/botox/", "/botox")]);
+  assert.throws(() => canonicalHostAliasRows(registry([redirectRow("/contact/", "/clinic"), redirectRow("/contact", "/other")])), /disagree/);
 });
-test("registry and final delivery reject URL-changing redirects", () => {
-  for (const statusCode of [301, 302, 303, 307, 308]) {
-    assert.throws(() => canonicalHostAliasRows(registry([{ ...row("/old", "/new"), statusCode }])), /preserve/);
-    assert.throws(() => renderStaticRewrites([{ ...row("/old", "/index.html"), statusCode }]), /status/);
-  }
-  assert.throws(() => renderStaticRewrites([row("/a", "/index.html"), row("/a", "/index.html")]), /Duplicate/);
-  assert.throws(() => renderStaticRewrites([row("/*", "/index.html")]), /source/);
-  assert.throws(() => renderStaticRewrites([row("/a", "//elsewhere.test")]), /destination/);
-  assert.throws(() => renderStaticRewrites(Array.from({length: 2001}, (_, i) => row("/a" + i, "/index.html"))), /2000/);
+test("registry requires 301 while final delivery permits exact rewrites and permanent redirects", () => {
+  for (const statusCode of [200, 302, 303, 307, 308])
+    assert.throws(() => canonicalHostAliasRows(registry([{ ...redirectRow("/old", "/new"), statusCode }])), /permanently redirect/);
+  assert.doesNotThrow(() => renderStaticRewrites([redirectRow("/old", "/new"), { ...redirectRow("/older", "/new"), statusCode: 308 }, rewriteRow("/website", "/graph.jsonld")]));
+  for (const statusCode of [302, 303, 307])
+    assert.throws(() => renderStaticRewrites([{ ...redirectRow("/old", "/new"), statusCode }]), /status/);
+  assert.throws(() => renderStaticRewrites([rewriteRow("/a", "/index.html"), rewriteRow("/a", "/index.html")]), /Duplicate/);
+  assert.throws(() => renderStaticRewrites([rewriteRow("/*", "/index.html")]), /source/);
+  assert.throws(() => renderStaticRewrites([rewriteRow("/a", "//elsewhere.test")]), /destination/);
+  assert.throws(() => renderStaticRewrites(Array.from({length: 2001}, (_, i) => rewriteRow("/a" + i, "/index.html"))), /2000/);
 });
 test("named metadata definitions are served directly without inventing reference routes", () => {
   const origin = "https://www.ghezelbaash.ir";
@@ -32,21 +34,21 @@ test("named metadata definitions are served directly without inventing reference
     { "@id": "https://elsewhere.test/graph.jsonld/dataset", name: "Remote" },
   ]};
   assert.deepEqual(canonicalMetadataAliasRows(graph, origin + "/"), [
-    row("/graph.jsonld/dataset", "/graph.jsonld"),
-    row("/provenance.jsonld/source", "/graph.jsonld"),
-    row("/website", "/graph.jsonld"),
+    rewriteRow("/graph.jsonld/dataset", "/graph.jsonld"),
+    rewriteRow("/provenance.jsonld/source", "/graph.jsonld"),
+    rewriteRow("/website", "/graph.jsonld"),
   ]);
 });
 test("content aliases decode Persian paths and spaces, exclude machine aliases, and reject conflicts", () => {
   const aliases = contentAliasTargets([
-    row("/دکتر%20قزلباش", "/physician"), row("/دکتر قزلباش", "/physician"),
-    row("/kg/", "/graph.jsonld"), row("/services/", "/services"),
+    redirectRow("/دکتر%20قزلباش", "/physician"), redirectRow("/دکتر قزلباش", "/physician"),
+    rewriteRow("/kg/", "/graph.jsonld"), redirectRow("/services/", "/services"),
   ], new Set(["/graph.jsonld"]));
   assert.equal(aliases["/دکتر قزلباش"], "/physician");
   assert(!Object.hasOwn(aliases, "/kg/"));
   assert.equal(aliases["/services/"], "/services");
   assert.throws(() => contentAliasTargets([
-    row("/name%20surname", "/a"), row("/name surname", "/b")
+    redirectRow("/name%20surname", "/a"), redirectRow("/name surname", "/b")
   ], new Set()), /disagree/);
 });
 test("machine aliases receive graph MIME, canonical, CORS, and cache headers within Pages limits", () => {
