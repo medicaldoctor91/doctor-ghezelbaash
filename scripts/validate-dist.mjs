@@ -69,9 +69,9 @@ const expectedAliases = contentAliasTargets(legacyAliases, machinePaths);
 assert.deepEqual(JSON.parse(attr(search, "data-content-route-aliases")), { ...expectedAliases });
 for (const target of Object.values(expectedAliases))
   assert(target === "/" || ids.includes(target.slice(1)), `Missing legacy content target: ${target}`);
-for (const { source, target } of legacyAliases)
-  assert(redirects.includes(`${source} ${target} 301`),
-    `Missing permanent legacy redirect: ${source}`);
+for (const { source, target, statusCode } of legacyAliases)
+  assert(redirects.includes(`${source} ${target} ${statusCode}`),
+    statusCode === 200 ? `Missing machine graph rewrite: ${source}` : `Missing permanent legacy redirect: ${source}`);
 for (const { source, target } of answerAliases)
   assert(redirects.includes(`${source} ${target} 301`),
     `Missing canonical answer redirect: ${source}`);
