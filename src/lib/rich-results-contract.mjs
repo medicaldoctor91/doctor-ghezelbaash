@@ -71,7 +71,11 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   }
   if (primary && !profiles.includes(primary)) {
     const entities = values(primary.mainEntity).map((ref) => byId.get(ref?.["@id"]));
-    if (!entities.length || entities.some((entity) => !entity || !values(entity["@type"]).length)) fail("page mainEntity must resolve to a typed entity");
+    if (!entities.length || entities.some((entity) => !entity || !values(entity["@type"]).length))
+      fail("page mainEntity must resolve to a typed entity");
+    for (const entity of entities)
+      if (hasType(entity, "Person") || hasType(entity, "Organization"))
+        text(entity.name, "page mainEntity.name");
   }
   const clinics = nodes.filter((node) => hasType(node, "MedicalClinic") || hasType(node, "LocalBusiness"));
   for (const clinic of clinics) {
