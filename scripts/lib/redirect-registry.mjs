@@ -56,9 +56,13 @@ export function canonicalHostAliasRows(registry) {
       throw new Error(
         `Canonical-host alias target escaped its scope: ${rule.target}`,
       );
-    if (rule.statusCode !== 301)
+    const machineAlias = rule.target === "/graph.jsonld";
+    const expectedStatus = machineAlias ? 200 : 301;
+    if (rule.statusCode !== expectedStatus)
       throw new Error(
-        `Canonical-host legacy alias must permanently redirect: ${rule.source}`,
+        machineAlias
+          ? `Canonical graph alias must preserve its machine URL with a 200 rewrite: ${rule.source}`
+          : `Canonical-host legacy alias must permanently redirect: ${rule.source}`,
       );
     return {
       source: rule.source,
