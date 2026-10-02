@@ -89,14 +89,35 @@ const personNode = coreDocument["@graph"].find(
 );
 if (
   !pageNode ||
-  !nodeTypes(pageNode).includes("ProfilePage") ||
+  !nodeTypes(pageNode).includes("MedicalWebPage") ||
+  nodeTypes(pageNode).includes("ProfilePage") ||
   pageNode.mainEntity?.["@id"] !== release.primaryEntity.id ||
   !personNode ||
-  !nodeTypes(personNode).includes("Person")
+  !nodeTypes(personNode).includes("Person") ||
+  personNode.url !== release.canonicalUrl + "saeed-ghezelbash" ||
+  personNode.mainEntityOfPage?.["@id"] !== release.canonicalUrl + "saeed-ghezelbash#webpage"
 )
   throw new Error(
-    "Google profile-page contract requires ProfilePage mainEntity -> canonical Person",
+    "Homepage must be a MedicalWebPage whose canonical Person resolves to the dedicated ProfilePage",
   );
+
+const profileHtml = await readFile(path.join(dist, "saeed-ghezelbash.html"), "utf8");
+const profileElements = inspectHtml(profileHtml).elements;
+const profileDocuments = profileElements.filter((node) =>
+  node.tagName === "script" && node.attrs?.some((attr) =>
+    attr.name === "type" && attr.value === "application/ld+json"))
+  .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
+if (profileDocuments.length !== 1)
+  throw new Error("Dedicated physician profile requires one JSON-LD document");
+const profileGraph = profileDocuments[0]["@graph"] || [];
+const profilePage = profileGraph.find((node) =>
+  node?.["@id"] === release.canonicalUrl + "saeed-ghezelbash#webpage");
+if (
+  !profilePage ||
+  !nodeTypes(profilePage).includes("ProfilePage") ||
+  profilePage.mainEntity?.["@id"] !== release.primaryEntity.id
+)
+  throw new Error("Dedicated physician URL must publish ProfilePage mainEntity -> canonical Person");
 
 const execScripts = scriptBlocks.filter(
   (script) => !/type=["']application\/ld\+json["']/i.test(script.attrs),
