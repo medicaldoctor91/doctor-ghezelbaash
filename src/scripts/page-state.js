@@ -2,6 +2,21 @@
   const d = document, cache = new Map(), origin = location.origin;
   const keyFor = (path) => path.replace(/\/$/, "") || "/";
   const focused = () => d.documentElement.dataset.routeView === "focused";
+  // A stalled response must not leave the focused reader and its controls
+  // waiting forever. Keep the limit active until the HTML body is complete.
+  const fetchHtml = async (path) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(path, {
+        credentials: "same-origin", headers: { Accept: "text/html" }, signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Page unavailable");
+      return await response.text();
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
   const snapshot = (doc) => ({
     title: doc.title,
     lang: doc.documentElement.getAttribute("lang"),
@@ -32,9 +47,7 @@
     const key = keyFor(path), current = ++ticket;
     try {
       if (!cache.has(key)) {
-        const response = await fetch(key, { credentials: "same-origin", headers: { Accept: "text/html" } });
-        if (!response.ok) return;
-        const doc = new DOMParser().parseFromString(await response.text(), "text/html");
+        const doc = new DOMParser().parseFromString(await fetchHtml(key), "text/html");
         if (!doc.head.querySelector('link[rel="canonical"]') || !doc.querySelector('article.medical-guide')) return;
         cache.set(key, snapshot(doc));
       }
@@ -73,9 +86,7 @@
     if (status) status.textContent = control?.getAttribute("data-loading") || "در حال بارگذاری راهنمای کامل…";
     expansion = (async () => {
       try {
-        const response = await fetch("/", { credentials: "same-origin", headers: { Accept: "text/html" } });
-        if (!response.ok) throw new Error("Guide unavailable");
-        const home = new DOMParser().parseFromString(await response.text(), "text/html");
+        const home = new DOMParser().parseFromString(await fetchHtml("/"), "text/html");
         const full = home.querySelector("article.medical-guide");
         if (!full || !current || !home.head.querySelector('link[rel="canonical"]')) throw new Error("Guide unavailable");
         cache.set("/", snapshot(home));
