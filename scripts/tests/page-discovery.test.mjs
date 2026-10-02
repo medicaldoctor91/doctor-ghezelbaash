@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseFragment } from "parse5";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { projectPageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 
 const inputs = readCanonicalInputs();
-const projection = () => projectPageJsonLd(inputs.pageJsonLd)[0].document;
+const projection = () => validatePageJsonLd(inputs.pageJsonLd)[0].document;
 const typed = (node, type) => [node?.["@type"]].flat().includes(type);
 
 test("page discovery publishes a route-aware physician graph without changing authored inputs", () => {
@@ -75,9 +75,9 @@ test("text containing an HTML script terminator stays inside JSON data", () => {
   assert(html.includes("\\u003c/script>"));
 });
 
-test("re-projecting an already scoped home preserves core identity and never duplicates FAQ entities", () => {
-  const first = projectPageJsonLd(inputs.pageJsonLd);
-  const second = projectPageJsonLd(first);
+test("validating authored discovery twice preserves core identity and never duplicates FAQ entities", () => {
+  const first = validatePageJsonLd(inputs.pageJsonLd);
+  const second = validatePageJsonLd(first);
   for (const projected of [first, second]) {
     const graph = projected[0].document["@graph"];
     const ids = graph.map((node) => node["@id"]);
@@ -90,4 +90,27 @@ test("re-projecting an already scoped home preserves core identity and never dup
     assert.equal(person.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
     assert.deepEqual(person.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
   }
+});
+
+test("canonical HTML already owns the published markup and discovery data", () => {
+  const withoutJson = (html) => html.replace(
+    /(<script\b[^>]*>)[\s\S]*?(<\/script>)/gi, "$1$2");
+  assert.equal(withoutJson(renderCanonicalPageHtml(inputs.pageBody)), withoutJson(inputs.pageBody));
+  assert.deepEqual(projection(), inputs.pageJsonLd[0].document);
+  assert.equal(inputs.pageJsonLd.length, 1);
+  assert.strictEqual(validatePageJsonLd(inputs.pageJsonLd), inputs.pageJsonLd);
+  assert(!inputs.pageBody.includes('<link itemprop="creator"'));
+  assert(!/<button\b[^>]*data-guide-search-open/.test(inputs.pageBody));
+});
+
+test("legacy markup fails instead of being repaired during rendering", () => {
+  const body = inputs.pageBody;
+  assert.throws(() => renderCanonicalPageHtml(body.replace(
+    '<span itemprop="creator" itemscope itemtype="https://schema.org/Person"',
+    '<span itemprop="creator"')),
+    /authored as a typed Person/);
+  assert.throws(() => renderCanonicalPageHtml(body.replace(
+    '<a class="hero-action hero-search-launch" data-guide-search-open=""',
+    '<button class="hero-action hero-search-launch" data-guide-search-open=""')),
+    /native guide link/);
 });

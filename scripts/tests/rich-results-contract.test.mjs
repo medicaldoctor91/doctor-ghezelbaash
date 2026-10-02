@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { projectPageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 
 const inputs = readCanonicalInputs();
@@ -15,7 +15,7 @@ const mutate = (type, change) => {
 
 test("published homepage discovery satisfies clinic, image and video contracts without unrelated profile candidates", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
-  const document = projectPageJsonLd(inputs.pageJsonLd)[0].document;
+  const document = validatePageJsonLd(inputs.pageJsonLd)[0].document;
   const counts = assertRichResultsDocument(document, { primaryPageId: inputs.pageFrontmatter.pageMicrodata.itemId });
   assert.equal(counts.profiles, 0);
   assert.equal(counts.localBusinesses, 1);
@@ -26,41 +26,41 @@ test("published homepage discovery satisfies clinic, image and video contracts w
 });
 
 test("a missing primary entity name blocks page publication", () => {
-  assert.throws(() => projectPageJsonLd(mutate("Person", (node) => { delete node.name; })), /mainEntity.name/);
+  assert.throws(() => validatePageJsonLd(mutate("Person", (node) => { delete node.name; })), /mainEntity.name/);
 });
 
 test("broken or wrongly typed clinic addresses block publication", () => {
-  assert.throws(() => projectPageJsonLd(mutate("MedicalClinic", (node) => {
+  assert.throws(() => validatePageJsonLd(mutate("MedicalClinic", (node) => {
     node.address = { "@id": "https://www.ghezelbaash.ir/missing-address" };
   })), /LocalBusiness.address/);
-  const document = structuredClone(projectPageJsonLd(inputs.pageJsonLd)[0].document);
+  const document = structuredClone(validatePageJsonLd(inputs.pageJsonLd)[0].document);
   document["@graph"].find((node) => typed(node, "PostalAddress"))["@type"] = "Organization";
   assert.throws(() => assertRichResultsDocument(document), /LocalBusiness.address/);
 });
 
 test("image metadata cannot lose its content URL or typed creator", () => {
-  assert.throws(() => projectPageJsonLd(mutate("ImageObject", (node) => { delete node.contentUrl; })), /ImageObject.contentUrl/);
-  assert.throws(() => projectPageJsonLd(mutate("ImageObject", (node) => {
+  assert.throws(() => validatePageJsonLd(mutate("ImageObject", (node) => { delete node.contentUrl; })), /ImageObject.contentUrl/);
+  assert.throws(() => validatePageJsonLd(mutate("ImageObject", (node) => {
     node.creator = { "@id": "https://www.ghezelbaash.ir/missing-creator" };
   })), /ImageObject.creator/);
-  assert.throws(() => projectPageJsonLd(mutate("ImageObject", (node) => { node.contentUrl = "javascript:alert(1)"; })), /HTTP/);
+  assert.throws(() => validatePageJsonLd(mutate("ImageObject", (node) => { node.contentUrl = "javascript:alert(1)"; })), /HTTP/);
 });
 
 test("video required properties cannot disappear in projection", () => {
   for (const property of ["name", "thumbnailUrl", "uploadDate"])
-    assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { delete node[property]; })), new RegExp("VideoObject." + property));
-  assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { node.thumbnailUrl = "/relative.webp"; })), /absolute URL/);
+    assert.throws(() => validatePageJsonLd(mutate("VideoObject", (node) => { delete node[property]; })), new RegExp("VideoObject." + property));
+  assert.throws(() => validatePageJsonLd(mutate("VideoObject", (node) => { node.thumbnailUrl = "/relative.webp"; })), /absolute URL/);
 });
 
 test("video dates must be real instants and known duration must be positive", () => {
   for (const uploadDate of ["2026-02-30", "2026-02-30T10:00:00Z", "2026-09-30T25:00:00Z", "2026-09-30T12:00:00"])
-    assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { node.uploadDate = uploadDate; })), /real ISO timestamp/);
+    assert.throws(() => validatePageJsonLd(mutate("VideoObject", (node) => { node.uploadDate = uploadDate; })), /real ISO timestamp/);
   for (const duration of ["PT", "PT0S", "P1DT", "P" + "9".repeat(400) + "D", "invalid"])
-    assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { node.duration = duration; })), /positive ISO duration/);
+    assert.throws(() => validatePageJsonLd(mutate("VideoObject", (node) => { node.duration = duration; })), /positive ISO duration/);
 });
 
 test("duplicate entities fail while incomplete research candidates are reported faithfully", () => {
-  const document = structuredClone(projectPageJsonLd(inputs.pageJsonLd)[0].document);
+  const document = structuredClone(validatePageJsonLd(inputs.pageJsonLd)[0].document);
   document["@graph"].push(structuredClone(document["@graph"][0]));
   assert.throws(() => assertRichResultsDocument(document), /duplicate entity/);
   document["@graph"].pop();
@@ -70,7 +70,7 @@ test("duplicate entities fail while incomplete research candidates are reported 
 });
 
 test("ProfilePage modification timestamps reject impossible dates", () => {
-  const person = structuredClone(projectPageJsonLd(inputs.pageJsonLd)[0].document["@graph"].find((node) => typed(node, "Person")));
+  const person = structuredClone(validatePageJsonLd(inputs.pageJsonLd)[0].document["@graph"].find((node) => typed(node, "Person")));
   const profile = {
     "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage",
     "@type": "ProfilePage",
@@ -82,7 +82,7 @@ test("ProfilePage modification timestamps reject impossible dates", () => {
 });
 
 test("a typed clinic address cannot silently lose its authored physical-address fields", () => {
-  const projected = projectPageJsonLd(inputs.pageJsonLd)[0].document;
+  const projected = validatePageJsonLd(inputs.pageJsonLd)[0].document;
   for (const property of ["streetAddress", "addressLocality", "addressRegion", "addressCountry", "postalCode"]) {
     const document = structuredClone(projected);
     const address = document["@graph"].find((node) => typed(node, "PostalAddress"));
@@ -92,7 +92,7 @@ test("a typed clinic address cannot silently lose its authored physical-address 
 });
 
 test("review and historical event facts remain canonical while the homepage does not expose them as rich-result candidates", () => {
-  const projected = projectPageJsonLd(inputs.pageJsonLd)[0].document;
+  const projected = validatePageJsonLd(inputs.pageJsonLd)[0].document;
   const byId = new Map(projected["@graph"].map((node) => [node["@id"], node]));
   assert(!byId.has("https://www.ghezelbaash.ir/review-kurdish-patient-experience"));
   assert(!byId.has("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11"));
