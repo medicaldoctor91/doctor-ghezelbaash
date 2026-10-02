@@ -186,7 +186,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
         return value["@id"];
       return Object.fromEntries(Object.entries(value).map(([property, entry]) => [property, browserize(entry, property)]));
     };
-    // The canonical graph is semantic authority. The homepage discovery graph is a browser-safe fallback only.\n    const browserNode = (id) => authoredById.has(id) ? browserize(authoredById.get(id)) : byId.get(id);
+    // The canonical graph is semantic authority. The homepage discovery graph is a browser-safe fallback only.
+    const browserNode = (id) => authoredById.has(id) ? browserize(authoredById.get(id)) : byId.get(id);
     const contentUrls = new Set(parsed.videos.flatMap((video) => (video.childNodes || []).filter((child) => child.tagName === "source")
       .map((child) => new URL(attr(child, "src"), canonicalUrl).href)));
     const videoNodes = graph["@graph"].filter((node) => typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
@@ -274,13 +275,15 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       const node = queue.shift();
       if (!node || selected.has(node["@id"])) continue;
       const output = structuredClone(node);
-      if (output["@id"] === entity["@id"]) output.mainEntityOfPage = { "@id": pageNode["@id"] };\n      else if (output["@id"] !== person["@id"]) delete output.mainEntityOfPage;
+      if (output["@id"] === entity["@id"]) output.mainEntityOfPage = { "@id": pageNode["@id"] };
+      else if (output["@id"] !== person["@id"]) delete output.mainEntityOfPage;
       delete output.subjectOf; delete output.mentions;
       if (typed(output, "WebSite")) delete output.hasPart;
       if (typed(output, "WebPageElement")) { delete output.isPartOf; delete output.hasPart; }
       if (typed(output, "Person") && output["@id"] !== person["@id"]) { delete output.knowsAbout; delete output.hasCredential; delete output.memberOf; }
       if (!typed(output, "VideoObject") && !typed(output, "Question")) delete output.hasPart;
-      if (["WebPage", "ProfilePage", "MedicalWebPage", "AboutPage", "ContactPage", "CollectionPage", "FAQPage"]\n        .some((type) => typed(output, type))) continue;
+      if (["WebPage", "ProfilePage", "MedicalWebPage", "AboutPage", "ContactPage", "CollectionPage", "FAQPage"]
+        .some((type) => typed(output, type))) continue;
       selected.set(output["@id"], output);
       for (const key of relationKeys) for (const ref of values(output[key])) {
         const id = typeof ref === "string" ? ref : ref?.["@id"];
