@@ -44,7 +44,7 @@ test("finished topic records share truthful breadcrumbs, translation alternative
   const rendered = inspectHtml(renderIndependentPage(home, forehead));
   assert(rendered.elements.some((node) => node.tagName === "a" && attr(node, "href") === forehead.navigation.parent.path));
   const question = records.find((record) => record.path === "/jalupro-vs-profhilo-selection");
-  assert.equal(question.pageType, "FAQPage");
+  assert.equal(question.pageType, "MedicalWebPage");
   assert(question.entityTypes.includes("Question"));
   assert(question.document["@graph"].some((node) => node["@type"] === "VideoObject"));
   const historical = records.find((record) => record.path === "/historical-patient-origin-summary");
