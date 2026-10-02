@@ -75,7 +75,7 @@ test("text containing an HTML script terminator stays inside JSON data", () => {
   assert(html.includes("\\u003c/script>"));
 });
 
-test("re-projecting an already scoped home preserves core identity and never duplicates FAQ entities", () => {
+test("validating authored discovery twice preserves core identity and never duplicates FAQ entities", () => {
   const first = validatePageJsonLd(inputs.pageJsonLd);
   const second = validatePageJsonLd(first);
   for (const projected of [first, second]) {
@@ -100,7 +100,7 @@ test("canonical HTML already owns the published markup and discovery data", () =
   assert.equal(inputs.pageJsonLd.length, 1);
   assert.strictEqual(validatePageJsonLd(inputs.pageJsonLd), inputs.pageJsonLd);
   assert(!inputs.pageBody.includes('<link itemprop="creator"'));
-  assert(!/<button\\b[^>]*data-guide-search-open/.test(inputs.pageBody));
+  assert(!/<button\b[^>]*data-guide-search-open/.test(inputs.pageBody));
 });
 
 test("legacy markup fails instead of being repaired during rendering", () => {
