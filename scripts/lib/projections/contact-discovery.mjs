@@ -296,7 +296,7 @@ export async function compileContactDiscovery(context) {
       publicationDate: video.uploadDate,
       duration: video.duration,
     })),
-  }, ...focusedPages] });
+  }, ...focusedPages.filter((page) => page.indexable !== false)] });
   await writeFile(path.join(projections, "sitemap.xml"), sitemap);
   return { imageCount: imageLocs.length, videoCount: videos.length };
 }
