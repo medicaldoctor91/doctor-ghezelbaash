@@ -1,7 +1,7 @@
 import { parseFragment, serialize } from "parse5";
 import { inspectHtml } from "./html-contract.mjs";
 import { contentRoutePaths } from "./content-routes.mjs";
-import { projectPageJsonLd, browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
+import { formatBrowserGraph, browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 import { projectFocusedMedia } from "./focused-media.mjs";
 import { renderTopicNavigation } from "./topic-navigation.mjs";
@@ -67,10 +67,9 @@ export const routeDocumentFile = (route) => {
 export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews = [] } = {}) {
   const inspected = inspectHtml(html);
   const byHtmlId = new Map(inspected.elements.filter((node) => attr(node, "id")).map((node) => [attr(node, "id"), node]));
-  const scripts = inspected.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
-    .map((node) => ({ id: attr(node, "id"), document: JSON.parse(node.childNodes.map((child) => child.value || "").join("")) }));
-  // The rendered home already contains the browser-formatted complete graph.
-  const browser = scripts.flatMap((script) => script.document["@graph"]);
+  // Route derivation uses the complete canonical graph, not the intentionally
+  // compact Google-facing homepage projection.
+  const browser = formatBrowserGraph(graph);
   const byId = new Map(browser.map((node) => [node["@id"], node]));
   const headings = inspected.headings.filter((node) => node.sourceCodeLocation);
   const homePage = browser.find((node) => node.url === canonicalUrl && typed(node, "ProfilePage"));
@@ -200,7 +199,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const topicalReferences = uniqueReferences(ownAbout.length ? ownAbout : inheritedAbout);
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
-      : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
+      : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
+    const indexable = !typed(entity, "Answer");
     const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
       inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
       mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
@@ -243,7 +243,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const imageUrls = [...new Set(parsed.elements.filter((node) => node.tagName === "img").map((node) => attr(node, "src"))
       .filter(Boolean).map((value) => new URL(value, canonicalUrl).href).filter((value) => value.startsWith(origin + "/")))];
     return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, contextTitle, scopeKind: focusedView ? "disclosure-summary" : overviewEntry ? "overview" : "complete-region", documentTitle, description, htmlId,
-      lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), pageType, bodyHtml, document,
+      lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), pageType, indexable, bodyHtml, document,
       lastmod: revision, imageUrls, videos: videoNodes.map((video) => ({ thumbnailUrl: values(video.thumbnailUrl)[0],
         contentUrl: video.contentUrl, title: video.name, description: video.description,
         publicationDate: video.uploadDate, duration: video.duration })) };
@@ -285,6 +285,12 @@ export function renderIndependentPage(homeHtml, record) {
   html = html.replace(/<title>[\s\S]*?<\/title>/i, "<title>" + escape(record.documentTitle) + "</title>");
   html = html.replace(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi, '<link rel="canonical" href="' + escape(record.canonicalUrl) + '">');
   html = html.replace(/<meta\b[^>]*name=["']description["'][^>]*>/gi, '<meta name="description" content="' + escape(record.description) + '">');
+  if (record.indexable === false) {
+    const robots = '<meta name="robots" content="noindex,follow">';
+    if (/<meta\b[^>]*name=["']robots["'][^>]*>/i.test(html))
+      html = html.replace(/<meta\b[^>]*name=["']robots["'][^>]*>/gi, robots);
+    else html = html.replace("</head>", robots + "</head>");
+  }
   html = html.replace(/<meta\b([^>]*)>/gi, (whole, attrs) => {
     const key = /(?:name|property)=["']([^"']+)["']/i.exec(attrs)?.[1];
     if (key === "og:locale" && !socialLocale) return "";
