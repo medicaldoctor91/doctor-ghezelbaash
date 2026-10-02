@@ -28,13 +28,16 @@ test("every authored destination has its own canonical, page identity and readab
     assert(byId.get(page.entityId)?.["@type"]);
   }
 });
-test("profile, questions, answers and visible videos retain their distinct authored entities", () => {
+test("profile, question documents and visible videos retain their distinct authored entities", () => {
   const person = pages.find((page) => page.path === "/saeed-ghezelbash");
   assert.equal(person.pageType, "ProfilePage");
   assert(person.entityTypes.includes("Person"));
-  const question = pages.find((page) => page.pageType === "FAQPage");
+  assert(person.description.includes("شماره نظام پزشکی"));
+  const question = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
+  assert.equal(question.pageType, "MedicalWebPage");
   assert(question.entityTypes.includes("Question"));
   assert(question.document["@graph"].some((node) => node["@type"] === "Answer"));
+  assert.equal(pages.filter((page) => page.path.startsWith("/answer-")).length, 0);
   const video = pages.find((page) => page.path === "/video-saeed-ghezelbash-jalupro-vs-profhilo");
   assert(video.entityTypes.includes("VideoObject"));
   assert.equal(video.videos.length, 1);
@@ -60,14 +63,15 @@ test("physical route files preserve clean paths and reject traversal", () => {
   assert.throws(() => routeDocumentFile("/../botox"), /Unsafe/);
 });
 
-test("focused paths preserve the doctor's explicit homepage identity without importing the entire home graph", () => {
+test("focused paths preserve the dedicated physician identity without importing the entire home graph", () => {
   const original = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
-  const homePage = inputs.graph["@graph"].find((node) => node.url === inputs.lifecycle.canonicalUrl && [node["@type"]].flat().includes("ProfilePage"));
+  const homePage = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
+  assert([homePage["@type"]].flat().includes("MedicalWebPage"));
   for (const page of pages) {
     const author = page.document["@graph"].find((node) => node["@id"] === original["@id"]);
-    assert.equal(author.url, inputs.lifecycle.canonicalUrl);
+    assert.equal(author.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
     assert.deepEqual(author["@type"], original["@type"]);
-    assert.deepEqual(author.mainEntityOfPage, original.mainEntityOfPage);
+    assert.deepEqual(author.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
     assert.deepEqual(author.sameAs, original.sameAs);
     assert.deepEqual(author.hasCredential, original.hasCredential);
     assert.deepEqual(author.memberOf, original.memberOf);
@@ -80,19 +84,19 @@ test("focused paths preserve the doctor's explicit homepage identity without imp
     assert(!page.document["@graph"].some((node) => node["@id"] === homePage["@id"]));
   }
 });
-test("answer URLs contain their own answer instead of a duplicate of their whole parent section", () => {
-  const answers = pages.filter((page) => page.path.startsWith("/answer-"));
-  assert.equal(answers.length, 125);
-  for (const page of answers) {
-    const parsed = inspectHtml(page.bodyHtml, { wrapMain: true });
-    assert(parsed.ids.includes(page.htmlId));
-    assert.equal(parsed.ids.filter((id) => id.startsWith("answer-")).length, 1);
-    assert(page.entityTypes.includes("Answer"));
-  }
-  const onset = pages.find((page) => page.path === "/answer-botox-onset-of-action");
+test("answers stay inside their canonical question documents and never become independent routes", () => {
+  assert.equal(pages.filter((page) => page.path.startsWith("/answer-")).length, 0);
+  const onset = pages.find((page) => page.path === "/botox-onset-of-action");
+  assert(onset);
+  const parsed = inspectHtml(onset.bodyHtml, { wrapMain: true });
+  assert(parsed.ids.includes("answer-botox-onset-of-action"));
   assert(onset.bodyHtml.includes("حدود دو هفته"));
   assert(!onset.bodyHtml.includes('id="answer-botox-dynamic-facial-examination"'));
   assert.equal(onset.title, "چند روز بعد نتیجه دیده می‌شود؟");
+  const byId = new Map(onset.document["@graph"].map((node) => [node["@id"], node]));
+  const question = byId.get(onset.entityId);
+  const answer = byId.get(question.acceptedAnswer["@id"]);
+  assert.equal(answer["@type"], "Answer");
   assert.notEqual(onset.bodyHtml, pages.find((page) => page.path === "/botox").bodyHtml);
 });
 test("the empty historical alias scopes its following region without unrelated clinic content", () => {
@@ -114,7 +118,7 @@ test("video player and figure entries use their actual video's title instead of 
 });
 
 test("topic document titles keep the authored doctor name while the visible heading stays focused", () => {
-  const page = pages.find((page) => page.path === "/answer-botox-onset-of-action");
+  const page = pages.find((page) => page.path === "/botox-onset-of-action");
   assert.equal(page.title, "چند روز بعد نتیجه دیده می‌شود؟");
   assert(page.documentTitle.includes(page.title));
   assert(page.documentTitle.includes("سعید قزلباش"));
@@ -153,17 +157,19 @@ test("fine-grained Botox headings inherit authored topics and preserve their phy
   assert(byId.has(inputs.lifecycle.canonicalUrl + "biomedical-concept-cosmetic-techniques"));
   assert(!byId.has(inputs.lifecycle.canonicalUrl + "procedure-facial-and-lip-dermal-filler"));
   assert(!byId.has(inputs.lifecycle.canonicalUrl + "biomedical-concept-dermal-fillers"));
-  assert.equal(byId.get(physicianId).mainEntityOfPage["@id"], inputs.lifecycle.canonicalUrl + "webpage");
-  assert.equal(byId.get(physicianId).url, inputs.lifecycle.canonicalUrl);
+  assert.equal(byId.get(physicianId).mainEntityOfPage["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage");
+  assert.equal(byId.get(physicianId).url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
 });
 
-test("an exact answer's authored topic takes precedence over its broader containing section", () => {
-  const page = pages.find((page) => page.path === "/answer-botox-onset-of-action");
+test("a question keeps its exact authored topic instead of inheriting the broader containing section", () => {
+  const page = pages.find((page) => page.path === "/botox-onset-of-action");
   const original = inputs.graph["@graph"].find((node) => node["@id"] === page.entityId);
   assert(original.about);
   const route = page.document["@graph"].find((node) => node["@id"] === page.canonicalUrl + "#webpage");
   assert.deepEqual(route.about, [{ "@id": inputs.lifecycle.primaryEntity.id }, ...[original.about].flat()]);
   assert(!route.about.some((ref) => ref["@id"] === inputs.lifecycle.canonicalUrl + "biomedical-concept-botulinum-toxin-a"));
+  const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+  assert.equal(byId.get(original.acceptedAnswer["@id"])["@type"], "Answer");
 });
 
 test("foreign-language entry articles and route context override inherited homepage language and direction", () => {
@@ -199,9 +205,9 @@ test("focused HTML renders only declared language alternates and rejects ambiguo
   assert.throws(() => renderIndependentPage(home, { ...page, alternates: [{ href: "https://example.com/", hrefLang: "en" }] }), /Invalid authored language alternate/);
 });
 
-test("a question embedding its authored video keeps FAQ identity, answer and supporting media", () => {
+test("a question embedding its authored video keeps MedicalWebPage identity, answer and supporting media", () => {
   const page = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
-  assert.equal(page.pageType, "FAQPage");
+  assert.equal(page.pageType, "MedicalWebPage");
   assert(page.entityTypes.includes("Question"));
   const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
   const questionId = inputs.lifecycle.canonicalUrl + "question-jalupro-vs-profhilo-selection";
@@ -264,10 +270,11 @@ test("named section heading entries show their introduction while section paths 
   }
 });
 
-test("answer summaries retain their authored answer and section summaries begin with medical prose", () => {
-  const answer = pages.find((page) => page.path === "/answer-botox-onset-of-action");
-  const original = inputs.graph["@graph"].find((node) => node["@id"] === answer.entityId);
-  assert.equal(answer.description, original.description || original.text);
+test("question summaries retain their authored answer and section summaries begin with medical prose", () => {
+  const question = pages.find((page) => page.path === "/botox-onset-of-action");
+  const original = inputs.graph["@graph"].find((node) => node["@id"] === question.entityId);
+  const answer = inputs.graph["@graph"].find((node) => node["@id"] === original.acceptedAnswer["@id"]);
+  assert.equal(question.description, answer.description || answer.text);
   const overview = pages.find((page) => page.path === "/botox-heading");
   assert(overview.description.startsWith("قاعده من:"));
   assert(!overview.description.startsWith(overview.title));
