@@ -14,6 +14,7 @@ const focused = (title, slug, lang = "fa-IR", dir = "rtl", alternates = []) => '
   '</h2><video id="patient-video"></video></article></main><input id="guide-search-input"></body></html>';
 // The adapter executes actual page-state code and its delegated user events.
 const matches = (node, selector) => {
+  if (selector === "details") return node.tagName === "details";
   if (selector === "script") return node.tagName === "script";
   if (selector === 'link[rel="alternate"][hreflang]') return node.tagName === "link" && node.getAttribute("rel") === "alternate" && node.hasAttribute("hreflang");
   if (selector === "article.medical-guide") return node.tagName === "article" && (node.getAttribute("class") || "").split(/\s+/).includes("medical-guide");
@@ -54,6 +55,9 @@ class DomNode {
   get textContent() { return this.value ?? this.childNodes.map((node) => node.textContent).join(""); }
   set textContent(value) { this.replaceChildren(new DomNode({ value })); }
   get id() { return this.getAttribute("id"); }
+  get localName() { return this.tagName; }
+  get parentElement() { return this.parentNode?.tagName ? this.parentNode : null; }
+  getBoundingClientRect() { const top = Number(this.getAttribute("data-top") || 0); return { top, bottom: this.hasAttribute("data-top") ? top + 60 : 0 }; }
   get href() { return new URL(this.getAttribute("href"), origin).href; }
   set href(value) { this.setAttribute("href", value); }
   click() {
@@ -75,9 +79,14 @@ function documentFor(html) {
   root.getElementById = (id) => { const nodes = []; const walk = (node) => { nodes.push(node); node.childNodes.forEach(walk); }; walk(root); return nodes.find((node) => node.id === id); };
   return root;
 }
-function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce = false } = {}) {
+function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce = false, homeReady = Promise.resolve(), fullHome = home } = {}) {
   const document = documentFor(initial), location = { origin, pathname: path, assign() { throw new Error("Unexpected document navigation"); } };
-  const window = { document, location, history: {
+  const listeners = new Map(), scrollAdjustments = [];
+  const window = { document, location, innerHeight: 900,
+    scrollBy(options) { scrollAdjustments.push(options.top); },
+    addEventListener(type, listener) { listeners.set(type, listener); },
+    removeEventListener(type, listener) { if (listeners.get(type) === listener) listeners.delete(type); },
+    history: {
     pushState: (_, __, path) => { location.pathname = path; },
     replaceState: (_, __, path) => { location.pathname = path; },
   } };
@@ -88,24 +97,27 @@ function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce
   ];
   const fetch = async (path) => {
     requests.push(path);
+    if (path === "/") await homeReady;
     if (failOnce) { failOnce = false; return { ok: false }; }
-    return { ok: true, text: async () => path === "/" ? home : path === "/english" ? focused("English", "english", "en", "ltr", englishAlternates) : focused("Filler", "filler") };
+    return { ok: true, text: async () => path === "/" ? fullHome : path === "/english" ? focused("English", "english", "en", "ltr", englishAlternates) : focused("Filler", "filler") };
   };
   class DOMParser { parseFromString(html) { return documentFor(html); } }
   class CustomEvent { constructor(type) { this.type = type; } }
   runInNewContext(source, { document, window, location, DOMParser, fetch, URL, CustomEvent });
-  return { window, requests };
+  return { window, requests, scrollAdjustments, interact: (type) => listeners.get(type)?.() };
 }
-test("direct entry stays focused and initializes without fetching or injecting the full home", async () => {
+test("direct entry automatically loads the complete reader without a click and preserves its route", async () => {
   const { window, requests } = reader();
   await window.completeGuideReady;
   assert.equal(window.location.pathname, "/botox");
   assert.equal(window.document.title, "Botox");
-  assert(!window.document.getElementById("filler"));
-  assert.equal(window.document.documentElement.dataset.routeView, "focused");
-  assert.deepEqual(requests, []);
+  assert(window.document.getElementById("filler"));
+  assert.equal(window.document.documentElement.dataset.routeView, undefined);
+  assert(!window.document.querySelector("[data-guide-expand]"));
+  assert.equal(window.document.querySelector('link[rel="canonical"]').href, origin + "/botox");
+  assert.deepEqual(requests, ["/"]);
 });
-test("explicit expansion loads the full guide once in the same document and preserves route metadata", async () => {
+test("automatic loading and concurrent expansion share one request and preserve route metadata", async () => {
   const { window, requests } = reader(), document = window.document;
   let expansions = 0; document.addEventListener("guide:expanded", () => expansions++);
   document.querySelector("[data-guide-expand]").click();
@@ -142,7 +154,7 @@ test("SPA navigation and Back synchronize language, direction and metadata with 
 });
 test("failed expansion retains the readable topic and allows an explicit retry", async () => {
   const { window, requests } = reader({ failOnce: true }), document = window.document;
-  assert.equal(await window.expandCompleteGuide(), false);
+  assert.equal(await window.completeGuideReady, false);
   assert.equal(document.documentElement.dataset.routeView, "focused");
   assert(document.getElementById("botox"));
   assert(!document.getElementById("filler"));
@@ -151,13 +163,69 @@ test("failed expansion retains the readable topic and allows an explicit retry",
   assert(document.getElementById("filler"));
   assert.deepEqual(requests, ["/", "/"]);
 });
-test("search focus is a deliberate expansion and does not change the route", async () => {
+test("search focus during automatic loading reuses the pending request without changing the route", async () => {
   const { window, requests } = reader(), document = window.document;
   document.dispatchEvent({ type: "focusin", target: document.getElementById("guide-search-input") });
   await window.expandCompleteGuide();
   assert(document.getElementById("filler"));
   assert.equal(window.location.pathname, "/botox");
   assert.deepEqual(requests, ["/"]);
+});
+test("interaction during automatic loading is recorded until readiness and listeners are then removed", async () => {
+  let release;
+  const homeReady = new Promise((resolve) => { release = resolve; });
+  const page = reader({ homeReady });
+  assert(!page.window.document.getElementById("filler"));
+  page.interact("wheel");
+  assert.equal(page.window.completeGuideInteraction, true);
+  release();
+  await page.window.completeGuideReady;
+  assert(page.window.document.getElementById("filler"));
+  page.window.completeGuideInteraction = false;
+  page.interact("keydown");
+  assert.equal(page.window.completeGuideInteraction, false);
+});
+test("a topic click during automatic loading is replayed only after navigation initialization", async () => {
+  let release;
+  const homeReady = new Promise((resolve) => { release = resolve; });
+  const { window } = reader({ homeReady }), document = window.document;
+  let navigationReady = false;
+  const replayed = [];
+  window.completeGuideReady.then(() => { navigationReady = true; });
+  document.addEventListener("click", (event) => {
+    if (!event.defaultPrevented) replayed.push(navigationReady);
+  });
+  const link = document.createElement("a");
+  link.href = "/filler";
+  document.body.append(link);
+  link.click();
+  assert.deepEqual(replayed, []);
+  release();
+  await window.completeGuideReady;
+  await new Promise(setImmediate);
+  assert.deepEqual(replayed, [true]);
+});
+test("loading surrounding content preserves the visible topic offset after pending interaction", async () => {
+  let release;
+  const homeReady = new Promise((resolve) => { release = resolve; });
+  const page = reader({ homeReady, fullHome: home.replace('id="botox"', 'id="botox" data-top="3200"') });
+  page.window.document.getElementById("botox").setAttribute("data-top", "85");
+  page.interact("wheel");
+  release();
+  await page.window.completeGuideReady;
+  assert.deepEqual(page.scrollAdjustments, [3115]);
+});
+test("preserving a translated topic reveals its closed full-guide disclosure", async () => {
+  let release;
+  const homeReady = new Promise((resolve) => { release = resolve; });
+  const page = reader({ initial: focused("English", "english", "en", "ltr"), path: "/english", homeReady,
+    fullHome: home.replace('<h2 id="english">English</h2>', '<details><summary>Translations</summary><h2 id="english" data-top="3200">English</h2></details>') });
+  page.window.document.getElementById("english").setAttribute("data-top", "85");
+  page.interact("wheel");
+  release();
+  await page.window.completeGuideReady;
+  assert.equal(page.window.document.getElementById("english").closest("details").open, true);
+  assert.deepEqual(page.scrollAdjustments, [3115]);
 });
 test("expanding a video entry preserves its existing player and playback state", async () => {
   const { window } = reader(), document = window.document, player = document.getElementById("patient-video");

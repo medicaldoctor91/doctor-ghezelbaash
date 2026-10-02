@@ -230,13 +230,13 @@
     // Preserve the browser's native saved scroll position on Back and Forward.
   });
   const initialSelection=videoFromUrl(new URL(location.href)),
-    initialTarget=!location.hash&&(initialSelection?.video||(location.pathname!=="/"&&targetFromPath(location.pathname)));
+    initialTarget=initialSelection?.video||targetFromHash(location.hash)||(location.pathname!=="/"&&targetFromPath(location.pathname));
   // A full-document Back load may not use BFCache. In that case the browser
   // still owns its saved scroll position; do not apply fresh deep-link scrolling.
   const restoringHistory = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
-  let initialInteraction=false;
-  if(initialTarget && !restoringHistory){
-    // All authored content is parsed here: reveal deep links before the first paint.
+  let initialInteraction=Boolean(window.completeGuideInteraction);
+  if(initialTarget && !restoringHistory && !initialInteraction){
+    // The shared guide is ready: position fresh deep links in the full document.
     selectVideo(initialSelection,{scroll:true,focus:Boolean(initialSelection)});
     if(!initialSelection)moveTo(initialTarget);
     for(const type of ["pointerdown","wheel","keydown"])
