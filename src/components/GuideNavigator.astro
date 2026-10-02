@@ -28,10 +28,8 @@ const entityAliases = [
   ...authority.primaryEntity.retrievalVariants,
 ].join('|');
 const intentTargets = pageFrontmatter.intentTargets;
-const intentHeadings = Object.fromEntries(Object.entries(intentTargets).map(([intent, id]) => {
-  const answer = canonicalGraph['@graph'].find((node) => node['@id'] === id);
-  return [intent, canonicalContentHtmlId(answer.url, rawRelease.canonicalUrl)];
-}));
+const intentHeadings = Object.fromEntries(Object.entries(intentTargets)
+  .map(([intent, url]) => [intent, canonicalContentHtmlId(url, rawRelease.canonicalUrl)]));
 ---
 
 <search

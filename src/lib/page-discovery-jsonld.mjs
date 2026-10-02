@@ -1,5 +1,4 @@
 import { assertRichResultsDocument } from "./rich-results-contract.mjs";
-import { canonicalGraph } from "./canonical-inputs.mjs";
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 export const browserContext = ["https://schema.org", {
   prov: "http://www.w3.org/ns/prov#", dcterms: "http://purl.org/dc/terms/", skos: "http://www.w3.org/2004/02/skos/core#",
@@ -17,7 +16,6 @@ export function projectPageJsonLd(scripts) {
   if (!scripts.length) throw new Error("Authored page JSON-LD missing");
   const all = scripts.flatMap((script) => script.document["@graph"]);
   const byId = new Map(all.map((node) => [node["@id"], node]));
-  const canonicalById = new Map(canonicalGraph["@graph"].map((node) => [node["@id"], node]));
   if (byId.size !== all.length) throw new Error("Duplicate authored entity");
 
   const home = byId.get("https://www.ghezelbaash.ir/webpage") ??
@@ -44,7 +42,7 @@ export function projectPageJsonLd(scripts) {
   };
 
   const disallowedCandidateTypes = new Set(["ProfilePage", "Event", "EducationEvent", "Review", "Dataset"]);
-  const excluded = (node) => node !== home &&
+  const excluded = (node) =>
     values(node?.["@type"]).some((type) => disallowedCandidateTypes.has(type));
   const website = all.find((node) => values(node["@type"]).includes("WebSite"));
   const person = byId.get(values(home.mainEntity)[0]?.["@id"]);
@@ -76,16 +74,8 @@ export function projectPageJsonLd(scripts) {
     const source = queue.shift();
     if (!source || selected.has(source["@id"]) || excluded(source)) continue;
     const output = clean(source);
-    if (source["@id"] === home["@id"]) {
-      const canonicalHome = canonicalById.get(home["@id"]);
-      output["@type"] = "MedicalWebPage";
-      if (canonicalHome?.dateModified) output.dateModified = canonicalHome.dateModified;
-      delete output.hasPart;
-    }
+    if (source["@id"] === home["@id"]) delete output.hasPart;
     if (source["@id"] === person["@id"]) {
-      const canonicalPerson = canonicalById.get(person["@id"]);
-      if (canonicalPerson?.url) output.url = canonicalPerson.url;
-      if (canonicalPerson?.mainEntityOfPage) output.mainEntityOfPage = clean(canonicalPerson.mainEntityOfPage);
       delete output.subjectOf;
       delete output.performerIn;
     }
