@@ -1094,7 +1094,7 @@
         "Dr. Saeed Ghezelbash",
         "Dr. Saeed Ghezelbaash"
       ],
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf/document"
@@ -1110,10 +1110,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/webpage",
-      "@type": [
-        "MedicalWebPage",
-        "ProfilePage"
-      ],
+      "@type": "MedicalWebPage",
       "url": "https://www.ghezelbaash.ir/",
       "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
       "description": "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای تشخیص‌محور انتخاب بوتاکس، فیلر، ژل لب، لیفت نخ، کانتورینگ، PRP و مزوتراپی، عوارض و اصلاح نتایج درمان‌های قبلی.",
@@ -1785,7 +1782,7 @@
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
@@ -1882,6 +1879,41 @@
         "@id": "https://www.ghezelbaash.ir/image-saeed-ghezelbash-clinical-office-master"
       },
       "headline": "بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست | دکتر سعید قزلباش"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage",
+      "@type": "ProfilePage",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash",
+      "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+      "description": "دکتر سعید قزلباش، پزشک دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ در کرمانشاه؛ صاحب و پزشک کلینیک زیبایی دکتر سعید قزلباش.",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/website"
+      },
+      "inLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "primaryImageOfPage": {
+        "@id": "https://www.ghezelbaash.ir/image-saeed-ghezelbash-portrait-master"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "dateModified": "2026-10-02"
     },
     {
       "@id": "https://www.ghezelbaash.ir/irimc-credential-167430",
@@ -4449,9 +4481,9 @@
           "@language": "en"
         }
       ],
-      "url": "https://www.ghezelbaash.ir/",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash",
       "mainEntityOfPage": {
-        "@id": "https://www.ghezelbaash.ir/webpage"
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage"
       },
       "hasCredential": [
         {
@@ -4978,6 +5010,9 @@
         "https://www.youtube.com/channel/UCAiLkR6O3k9aDU9CYSeXPWQ"
       ],
       "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage"
+        },
         {
           "@id": "https://www.ghezelbaash.ir/webpage"
         },
@@ -8147,7 +8182,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-30",
+      "dateModified": "2026-10-02",
       "version": "1.3.3",
       "hasPart": [
         {
@@ -8462,7 +8497,7 @@
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-10-01",
+      "dateModified": "2026-10-02",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld/dataset",
         {
