@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
+import { formatBrowserGraph } from "../../src/lib/page-discovery-jsonld.mjs";
 import { deriveIndependentPages, renderIndependentPage, routeDocumentFile } from "../lib/independent-pages.mjs";
 import { contentRoutePaths } from "../lib/content-routes.mjs";
 import { inspectHtml } from "../lib/html-contract.mjs";
@@ -32,8 +33,8 @@ test("profile, questions, answers and visible videos retain their distinct autho
   const person = pages.find((page) => page.path === "/saeed-ghezelbash");
   assert.equal(person.pageType, "ProfilePage");
   assert(person.entityTypes.includes("Person"));
-  const question = pages.find((page) => page.pageType === "FAQPage");
-  assert(question.entityTypes.includes("Question"));
+  const question = pages.find((page) => page.entityTypes.includes("Question"));
+  assert.equal(question.pageType, "MedicalWebPage");
   assert(question.document["@graph"].some((node) => node["@type"] === "Answer"));
   const video = pages.find((page) => page.path === "/video-saeed-ghezelbash-jalupro-vs-profhilo");
   assert(video.entityTypes.includes("VideoObject"));
@@ -84,6 +85,10 @@ test("answer URLs contain their own answer instead of a duplicate of their whole
   const answers = pages.filter((page) => page.path.startsWith("/answer-"));
   assert.equal(answers.length, 125);
   for (const page of answers) {
+    assert.equal(page.indexable, false);
+    const rendered = inspectHtml(renderIndependentPage(home, page));
+    const robots = rendered.elements.find((node) => node.tagName === "meta" && node.attrs?.some((entry) => entry.name === "name" && entry.value === "robots"));
+    assert(/noindex/.test(robots.attrs.find((entry) => entry.name === "content").value));
     const parsed = inspectHtml(page.bodyHtml, { wrapMain: true });
     assert(parsed.ids.includes(page.htmlId));
     assert.equal(parsed.ids.filter((id) => id.startsWith("answer-")).length, 1);
@@ -201,7 +206,7 @@ test("focused HTML renders only declared language alternates and rejects ambiguo
 
 test("a question embedding its authored video keeps FAQ identity, answer and supporting media", () => {
   const page = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
-  assert.equal(page.pageType, "FAQPage");
+  assert.equal(page.pageType, "MedicalWebPage");
   assert(page.entityTypes.includes("Question"));
   const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
   const questionId = inputs.lifecycle.canonicalUrl + "question-jalupro-vs-profhilo-selection";
@@ -293,11 +298,7 @@ test("declared historical summary keeps its own geographic evidence distinct fro
   const original = inputs.graph["@graph"].find((node) => node["@id"] === summary.entityId);
   const originalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
   const scopedById = new Map(summary.document["@graph"].map((node) => [node["@id"], node]));
-  const browserById = new Map(inspectHtml(home).elements
-    .filter((node) => node.tagName === "script" && node.attrs?.some((entry) =>
-      entry.name === "type" && entry.value === "application/ld+json"))
-    .flatMap((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join(""))["@graph"])
-    .map((node) => [node["@id"], node]));
+  const browserById = new Map(formatBrowserGraph(inputs.graph).map((node) => [node["@id"], node]));
   assert.deepEqual(scopedById.get(summary.entityId).spatialCoverage, original.spatialCoverage);
   assert.equal(scopedById.get(summary.entityId).temporalCoverage, "historical");
   const queue = [...original.spatialCoverage];
