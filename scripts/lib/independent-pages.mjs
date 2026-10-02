@@ -1,7 +1,7 @@
 import { parseFragment, serialize } from "parse5";
 import { inspectHtml } from "./html-contract.mjs";
 import { contentRoutePaths } from "./content-routes.mjs";
-import { projectPageJsonLd, browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
+import { browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 import { projectFocusedMedia } from "./focused-media.mjs";
 import { renderTopicNavigation } from "./topic-navigation.mjs";

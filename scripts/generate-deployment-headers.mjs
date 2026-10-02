@@ -5,7 +5,7 @@ import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate, expandMachineAliasHeaders } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
-import { projectPageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
+import { validatePageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
 
 import { canonicalHostAliasRows, loadAliasRegistry } from "./lib/redirect-registry.mjs";
@@ -65,7 +65,7 @@ for (const script of ldScripts) {
     throw new Error("Published JSON-LD must contain @graph");
   ldDocuments.set(id, document);
 }
-const projectedJsonLd = projectPageJsonLd(pageJsonLd);
+const projectedJsonLd = validatePageJsonLd(pageJsonLd);
 const expectedLdIds = projectedJsonLd.map((script) => script.id);
 if (
   ldDocuments.size !== expectedLdIds.length ||
