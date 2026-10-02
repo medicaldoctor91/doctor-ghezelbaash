@@ -31,11 +31,9 @@ assert.deepEqual(JSON.parse(attr(search, "data-copy")), page.guideSearch);
 const targets = JSON.parse(attr(search, "data-intent-targets"));
 const intentHeadings = JSON.parse(attr(search, "data-intent-headings"));
 for (const [intent, url] of Object.entries(page.intentTargets)) {
-  const htmlId = canonicalContentHtmlId(url, lifecycle.canonicalUrl);
+  const headingId = canonicalContentHtmlId(url, lifecycle.canonicalUrl);
   assert.equal(targets[intent], url);
-  assert(ids.includes(htmlId), `Missing search destination: ${intent}`);
-  const answer = graph['@graph'].find((node) => node['@id'] === url);
-  const headingId = canonicalContentHtmlId(answer.url, lifecycle.canonicalUrl);
+  assert(ids.includes(headingId), `Missing search destination: ${intent}`);
   assert.equal(intentHeadings[intent], headingId);
   assert(elements.some((node) => /^h[1-5]$/.test(node.tagName) && attr(node, 'id') === headingId), `Missing canonical intent heading: ${intent}`);
 }
