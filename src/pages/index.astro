@@ -6,7 +6,7 @@ import { addHomeTopicNavigation } from '../../scripts/lib/home-topic-navigation.
 
 // The comprehensive home remains the shared single-page reader. Focused direct
 // entry documents are derived from this rendered content after the Astro build.
-const html = addHomeTopicNavigation(renderCanonicalPageHtml(pageBody), canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
+const html = addHomeTopicNavigation(renderCanonicalPageHtml(pageBody, canonicalGraph), canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
 ---
 
 <BaseLayout frontmatter={pageFrontmatter} isMain={true}>

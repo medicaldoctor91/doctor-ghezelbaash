@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { load } from "js-yaml";
+import { projectPageJsonLd } from "./page-discovery-jsonld.mjs";
 
 const defaultRoot = process.cwd();
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -74,9 +75,7 @@ export function readCanonicalInputs(root = defaultRoot) {
   if (tierNodes.some((entry) => !entry?.name || !entry?.description)) throw new Error("Canonical evidence tier definition is missing");
   const tiers = Object.fromEntries(tierNodes.map((entry) => [entry.name, entry.description]));
   const evidenceRegistry = { verifiedAt: registryNode.dateModified, tiers, evidence, assessmentNodes, tierNodes, registryNode };
-  const pageJsonLd = [...pageBody.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-    .filter((match) => /type=["']application\/ld\+json["']/i.test(match[1]))
-    .map((match) => ({ id: /\bid=["']([^"']+)["']/i.exec(match[1])?.[1], document: JSON.parse(match[2]) }));
+  const pageJsonLd = projectPageJsonLd(graph);
   return { pageSource, pageFrontmatter, pageBody, graph, lifecycle, retrievalPolicy, evidenceRegistry, pageJsonLd };
 }
 

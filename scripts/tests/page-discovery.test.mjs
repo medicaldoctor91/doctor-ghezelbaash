@@ -49,7 +49,7 @@ test("homepage and dedicated profile revisions remain authored on their own cano
 });
 
 test("HTML embeds one safe graph and a typed image creator", () => {
-  const html = renderCanonicalPageHtml(inputs.pageBody);
+  const html = renderCanonicalPageHtml(inputs.pageBody, inputs.graph);
   const nodes = [];
   const walk = (node) => { nodes.push(node); for (const child of node.childNodes || []) walk(child); };
   walk(parseFragment(html));
@@ -64,13 +64,11 @@ test("HTML embeds one safe graph and a typed image creator", () => {
   assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && attr(node, "content")));
 });
 
-test("text containing an HTML script terminator stays inside JSON data", () => {
-  const source = structuredClone(inputs.pageJsonLd);
-  const person = source[0].document["@graph"].find((node) => typed(node, "Person"));
+test("text containing an HTML script terminator stays inside generated JSON data", () => {
+  const graph = structuredClone(inputs.graph);
+  const person = graph["@graph"].find((node) => typed(node, "Person"));
   person.name = "</script><script>alert(1)</script>";
-  const body = '<script id="' + source[0].id + '" type="application/ld+json">' +
-    JSON.stringify(source[0].document).replaceAll("<", "\\u003c") + "</script>";
-  const html = renderCanonicalPageHtml(body);
+  const html = renderCanonicalPageHtml(inputs.pageBody, graph);
   assert.equal([...html.matchAll(/<script\b/g)].length, 1);
   assert(html.includes("\\u003c/script>"));
 });
@@ -92,10 +90,10 @@ test("validating authored discovery twice preserves core identity and never dupl
   }
 });
 
-test("canonical HTML already owns the published markup and discovery data", () => {
+test("canonical HTML owns published markup while canonical graph owns discovery data", () => {
   const withoutJson = (html) => html.replace(
     /(<script\b[^>]*>)[\s\S]*?(<\/script>)/gi, "$1$2");
-  assert.equal(withoutJson(renderCanonicalPageHtml(inputs.pageBody)), withoutJson(inputs.pageBody));
+  assert.equal(withoutJson(renderCanonicalPageHtml(inputs.pageBody, inputs.graph)), withoutJson(inputs.pageBody));
   assert.deepEqual(projection(), inputs.pageJsonLd[0].document);
   assert.equal(inputs.pageJsonLd.length, 1);
   assert.strictEqual(validatePageJsonLd(inputs.pageJsonLd), inputs.pageJsonLd);
@@ -107,10 +105,10 @@ test("legacy markup fails instead of being repaired during rendering", () => {
   const body = inputs.pageBody;
   assert.throws(() => renderCanonicalPageHtml(body.replace(
     '<span itemprop="creator" itemscope itemtype="https://schema.org/Person"',
-    '<span itemprop="creator"')),
+    '<span itemprop="creator"'), inputs.graph),
     /authored as a typed Person/);
   assert.throws(() => renderCanonicalPageHtml(body.replace(
     '<a class="hero-action hero-search-launch" data-guide-search-open=""',
-    '<button class="hero-action hero-search-launch" data-guide-search-open=""')),
+    '<button class="hero-action hero-search-launch" data-guide-search-open=""'), inputs.graph),
     /native guide link/);
 });

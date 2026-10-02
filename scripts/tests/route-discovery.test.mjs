@@ -10,7 +10,7 @@ import { renderIndependentPage } from "../lib/independent-pages.mjs";
 import { inspectHtml } from "../lib/html-contract.mjs";
 
 const inputs = readCanonicalInputs(), canonicalUrl = inputs.lifecycle.canonicalUrl;
-const content = renderCanonicalPageHtml(inputs.pageBody);
+const content = renderCanonicalPageHtml(inputs.pageBody, inputs.graph);
 const document = (body) => '<!doctype html><html lang="fa-IR" dir="rtl"><head><title>Home</title><link rel="canonical" href="' +
   canonicalUrl + '"></head><body lang="fa-IR" dir="rtl"><main id="main-content"><article class="medical-guide">' +
   body + "</article></main></body></html>";

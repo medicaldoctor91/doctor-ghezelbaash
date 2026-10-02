@@ -35,7 +35,7 @@ export async function assembleCanonicalContent({
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
   const { lifecycle, pageBody } = readCanonicalInputs(root);
-  const content = renderCanonicalPageHtml(pageBody);
+  const content = renderCanonicalPageHtml(pageBody, graph);
   const release = derivePublicationData(lifecycle, graph);
   if (/{{[A-Z][A-Z0-9_]*}}/.test(content))
     throw new Error("Canonical page contains an unresolved legacy token");

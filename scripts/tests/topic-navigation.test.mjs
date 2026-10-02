@@ -106,7 +106,7 @@ test("navigation rejects missing authored destinations, duplicate routes and exp
 });
 
 const inputs = readCanonicalInputs();
-const actualHome = homeDocument(renderCanonicalPageHtml(inputs.pageBody));
+const actualHome = homeDocument(renderCanonicalPageHtml(inputs.pageBody, inputs.graph));
 const actualRecords = deriveIndependentPages(actualHome, inputs.graph, canonicalUrl);
 const actualPages = attachTopicNavigation(actualRecords, actualHome, canonicalUrl);
 

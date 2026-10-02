@@ -16,7 +16,7 @@ const home = '<!doctype html><html lang="fa-IR" dir="rtl"><head><title>Home</tit
   '<link rel="preload" as="image" fetchpriority="high" href="' + escape(hero.href) +
   '" imagesrcset="' + escape(hero.srcset) + '" imagesizes="' + escape(hero.sizes) + '">' +
   '</head><body><main id="main-content"><article class="medical-guide">' +
-  renderCanonicalPageHtml(inputs.pageBody) +
+  renderCanonicalPageHtml(inputs.pageBody, inputs.graph) +
   '<nav><a href="/image-saeed-ghezelbash-portrait-master">Portrait</a></nav>' +
   '</article></main></body></html>';
 const pages = deriveIndependentPages(home, inputs.graph, canonicalUrl);

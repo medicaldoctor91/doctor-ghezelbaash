@@ -9,7 +9,7 @@ import { inspectHtml } from "../lib/html-contract.mjs";
 const inputs = readCanonicalInputs();
 const home = '<!doctype html><html lang="fa-IR" dir="rtl"><head><title>Home</title><meta name="description" content="Home"><link rel="canonical" href="' +
   inputs.lifecycle.canonicalUrl + '"></head><body><main id="main-content"><article class="medical-guide">' +
-  renderCanonicalPageHtml(inputs.pageBody) +
+  renderCanonicalPageHtml(inputs.pageBody, inputs.graph) +
   '<nav><a href="/video-thread-lift-workshop">Workshop figure</a><a href="/video-kurdish-patient-experience">Patient figure</a>' +
   '<a href="/video-saeed-ghezelbash-thread-lift-workshop">Workshop player</a><a href="/video-saeed-ghezelbash-kurdish-patient-review">Patient player</a></nav>' +
   '</article></main></body></html>';
