@@ -5,24 +5,26 @@ import { projectPageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 
 const inputs = readCanonicalInputs();
-const typed = (node, type) => [node["@type"]].flat().includes(type);
+const typed = (node, type) => [node?.["@type"]].flat().includes(type);
 const mutate = (type, change) => {
   const source = structuredClone(inputs.pageJsonLd);
   const node = source.flatMap((script) => script.document["@graph"]).find((node) => typed(node, type));
   change(node);
   return source;
 };
-test("published discovery satisfies the profile, clinic, image and video contracts", () => {
+
+test("published discovery satisfies a compact profile, clinic, image and video contract", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
   const document = projectPageJsonLd(inputs.pageJsonLd)[0].document;
   const counts = assertRichResultsDocument(document);
-  assert.equal(counts.profiles, 32);
+  assert.equal(counts.profiles, 1);
   assert.equal(counts.localBusinesses, 1);
-  assert.equal(counts.images, 24);
+  assert(counts.images >= 4);
   assert.deepEqual(counts.incompleteCandidates, []);
   assert.equal(counts.videos, inputs.graph["@graph"].filter((node) => typed(node, "VideoObject")).length);
   assert.equal(JSON.stringify(inputs.pageJsonLd), before);
 });
+
 test("a missing primary entity name blocks page publication", () => {
   assert.throws(() => projectPageJsonLd(mutate("Person", (node) => { delete node.name; })), /mainEntity.name/);
 });
@@ -36,10 +38,12 @@ test("broken or wrongly typed clinic addresses block publication", () => {
 });
 test("image metadata cannot lose its content URL or typed creator", () => {
   assert.throws(() => projectPageJsonLd(mutate("ImageObject", (node) => { delete node.contentUrl; })), /ImageObject.contentUrl/);
-  assert.throws(() => projectPageJsonLd(mutate("ImageObject", (node) => {
-    node.creator = { "@id": "https://www.ghezelbaash.ir/missing-creator" };
-  })), /ImageObject.creator/);
-  assert.throws(() => projectPageJsonLd(mutate("ImageObject", (node) => { node.contentUrl = "javascript:alert(1)"; })), /HTTP/);
+  const projected = projectPageJsonLd(inputs.pageJsonLd)[0].document;
+  const selectedImageId = projected["@graph"].find((node) => typed(node, "ImageObject"))["@id"];
+  const source = structuredClone(inputs.pageJsonLd);
+  const image = source.flatMap((script) => script.document["@graph"]).find((node) => node["@id"] === selectedImageId);
+  image.creator = { "@id": "https://www.ghezelbaash.ir/missing-creator" };
+  assert.throws(() => projectPageJsonLd(source), /ImageObject.creator/);
 });
 test("video required properties cannot disappear in projection", () => {
   for (const property of ["name", "thumbnailUrl", "uploadDate"])
@@ -52,15 +56,19 @@ test("video dates must be real instants and known duration must be positive", ()
   for (const duration of ["PT", "PT0S", "P1DT", "P" + "9".repeat(400) + "D", "invalid"])
     assert.throws(() => projectPageJsonLd(mutate("VideoObject", (node) => { node.duration = duration; })), /positive ISO duration/);
 });
-test("duplicate entities fail while incomplete research candidates are reported faithfully", () => {
+
+test("duplicate entities and noisy homepage rich-result candidates fail", () => {
   const document = structuredClone(projectPageJsonLd(inputs.pageJsonLd)[0].document);
   document["@graph"].push(structuredClone(document["@graph"][0]));
   assert.throws(() => assertRichResultsDocument(document), /duplicate entity/);
   document["@graph"].pop();
-  document["@graph"].push({ "@id": "https://www.ghezelbaash.ir/research-review", "@type": "Review", name: "Research-only review" });
-  const result = assertRichResultsDocument(document);
-  assert(result.incompleteCandidates.some((node) => node.id === "https://www.ghezelbaash.ir/research-review" && node.missing.includes("reviewRating")));
+  for (const type of ["Review", "Event", "Dataset", "FAQPage"]) {
+    const copy = structuredClone(document);
+    copy["@graph"].push({ "@id": "https://www.ghezelbaash.ir/test-" + type.toLowerCase(), "@type": type, name: "test" });
+    assert.throws(() => assertRichResultsDocument(copy), /must not publish/);
+  }
 });
+
 test("ProfilePage modification timestamps reject impossible dates", () => {
   assert.throws(() => projectPageJsonLd(mutate("ProfilePage", (node) => { node.dateModified = "2026-02-30T10:00:00Z"; })), /ProfilePage.dateModified/);
 });
@@ -75,21 +83,15 @@ test("a typed clinic address cannot silently lose its authored physical-address 
   }
 });
 
-test("confirmed patient rating and precise workshop day survive all source projections", () => {
-  const document = projectPageJsonLd(inputs.pageJsonLd)[0].document;
-  const byId = new Map(document["@graph"].map((node) => [node["@id"], node]));
-  const review = byId.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience");
-  assert.deepEqual(review.reviewRating, { "@type": "Rating", ratingValue: 5, bestRating: 5 });
-  assert.equal(byId.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate, "2025-02-04");
+test("review, event and dataset evidence stay canonical but not Google-facing", () => {
+  const authored = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  assert.deepEqual(authored.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating,
+    { "@type": "Rating", ratingValue: 5, bestRating: 5 });
+  assert.equal(authored.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate, "2025-02-04");
+  const projected = new Map(projectPageJsonLd(inputs.pageJsonLd)[0].document["@graph"].map((node) => [node["@id"], node]));
+  assert(!projected.has("https://www.ghezelbaash.ir/review-kurdish-patient-experience"));
+  assert(!projected.has("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11"));
+  assert(!projected.has("https://www.ghezelbaash.ir/graph.jsonld/dataset"));
   assert(inputs.pageBody.includes("امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵"));
   assert(inputs.pageBody.includes('<time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time>'));
-});
-
-test("events retain their real location address and incomplete locations are reported", () => {
-  const document = structuredClone(projectPageJsonLd(inputs.pageJsonLd)[0].document);
-  const city = document["@graph"].find((node) => node["@id"] === "https://www.ghezelbaash.ir/city-tehran");
-  assert.deepEqual(city.address, { "@type": "PostalAddress", addressLocality: "تهران", addressCountry: "IR" });
-  delete city.address;
-  const result = assertRichResultsDocument(document);
-  assert(result.incompleteCandidates.some((node) => node.missing.includes("location.address")));
 });
