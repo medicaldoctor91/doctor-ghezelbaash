@@ -42,7 +42,8 @@ export function projectPageJsonLd(scripts) {
   };
 
   const disallowedCandidateTypes = new Set(["ProfilePage", "Event", "EducationEvent", "Review"]);
-  const excluded = (node) => values(node?.["@type"]).some((type) => disallowedCandidateTypes.has(type));
+  const excluded = (node) => node !== home &&
+    values(node?.["@type"]).some((type) => disallowedCandidateTypes.has(type));
   const website = all.find((node) => values(node["@type"]).includes("WebSite"));
   const person = byId.get(values(home.mainEntity)[0]?.["@id"]);
   if (!person || !values(person["@type"]).includes("Person"))
@@ -73,7 +74,12 @@ export function projectPageJsonLd(scripts) {
     const source = queue.shift();
     if (!source || selected.has(source["@id"]) || excluded(source)) continue;
     const output = clean(source);
-    if (values(output["@type"]).includes("Person")) {
+    if (source["@id"] === home["@id"]) {
+      output["@type"] = "MedicalWebPage";
+    }
+    if (source["@id"] === person["@id"]) {
+      output.url = "https://www.ghezelbaash.ir/saeed-ghezelbash";
+      output.mainEntityOfPage = { "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage" };
       delete output.subjectOf;
       delete output.performerIn;
     }
