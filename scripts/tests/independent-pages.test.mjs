@@ -42,6 +42,39 @@ test("profile, question documents and visible videos retain their distinct autho
   assert(video.entityTypes.includes("VideoObject"));
   assert.equal(video.videos.length, 1);
 });
+test("physician and clinic entity hubs use canonical page roles and reciprocal identity links", () => {
+  const physician = pages.find((page) => page.path === "/saeed-ghezelbash");
+  const physicianById = new Map(physician.document["@graph"].map((node) => [node["@id"], node]));
+  const physicianEntity = physicianById.get(inputs.lifecycle.primaryEntity.id);
+  assert.equal(physician.pageType, "ProfilePage");
+  assert.deepEqual(physicianEntity.mainEntityOfPage, { "@id": physician.canonicalUrl + "#webpage" });
+  assert(physicianEntity.sameAs.includes("https://profile.google.com/@doctor.ghezelbaash"));
+  assert(physicianById.has(inputs.lifecycle.canonicalUrl + "identifier-person-google-profile"));
+  assert(physician.document["@graph"].some((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "wikiversity-botulinum-toxin-aesthetic-medicine"));
+
+  const clinic = pages.find((page) => page.path === "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah");
+  const clinicById = new Map(clinic.document["@graph"].map((node) => [node["@id"], node]));
+  const clinicEntityId = inputs.lifecycle.canonicalUrl + "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah";
+  const clinicEntity = clinicById.get(clinicEntityId);
+  assert.equal(clinic.pageType, "AboutPage");
+  assert(clinic.entityTypes.includes("MedicalClinic"));
+  assert(clinic.entityTypes.includes("LocalBusiness"));
+  assert.deepEqual(clinicEntity.mainEntityOfPage, { "@id": clinic.canonicalUrl + "#webpage" });
+  assert.deepEqual(clinicEntity.owner, { "@id": inputs.lifecycle.primaryEntity.id });
+  assert.deepEqual(clinicEntity.founder, { "@id": inputs.lifecycle.primaryEntity.id });
+  assert(clinicEntity.sameAs.includes("https://www.google.com/maps?cid=12350483144643112463"));
+  assert(clinicEntity.sameAs.includes("https://yandex.com/maps/org/63459342435/"));
+  assert(clinicById.has(inputs.lifecycle.canonicalUrl + "identifier-clinic-google-place-id"));
+
+  const contact = pages.find((page) => page.path === "/saeed-ghezelbash-clinic-contact-and-location");
+  assert.equal(contact.pageType, "ContactPage");
+  assert.equal(contact.entityId, clinicEntityId);
+
+  const research = pages.find((page) => page.path === "/saeed-ghezelbash-research-education-and-clinical-decisions");
+  assert.equal(research.pageType, "CollectionPage");
+  assert.equal(research.entityId, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash-research-education-and-clinical-decisions");
+  assert(!research.entityTypes.includes("VideoObject"));
+});
 test("direct path HTML has one self canonical, scoped data and shared-reader bootstrap marker", () => {
   const page = pages.find((page) => page.path === "/botox");
   const html = renderIndependentPage(home, page);
