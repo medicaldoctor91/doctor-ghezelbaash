@@ -1101,6 +1101,18 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/clinic.vcf/document"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#webpage"
         }
       ],
       "image": {
@@ -1913,7 +1925,27 @@
           "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
         }
       ],
-      "dateModified": "2026-10-02"
+      "mentions": [
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        }
+      ],
+      "relatedLink": [
+        "https://www.google.com/search?kgmid=/g/11nqdfk76c",
+        "https://www.wikidata.org/entity/Q140287622",
+        "https://profile.google.com/@doctor.ghezelbaash"
+      ],
+      "hasPart": [
+        {
+          "@id": "https://www.ghezelbaash.ir/wikiversity-botulinum-toxin-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/wikiversity-individualized-botulinum-toxin-focused-review"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/irimc-credential-167430",
@@ -4204,7 +4236,12 @@
       ],
       "sameAs": [
         "https://www.google.com/maps?cid=12350483144643112463",
-        "https://www.openstreetmap.org/node/13530287096"
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://yandex.com/maps/org/63459342435/",
+        "https://neshan.org/maps/places/adbc544fa9d05332bb6dab86feb58fa8",
+        "https://balad.ir/p/2dnVakli9ZKaBd",
+        "https://app.foursquare.com/share/venue/6987eef061c23b4962a08398",
+        "https://www.facebook.com/doctor.ghezelbaash"
       ],
       "image": [
         {
@@ -4400,7 +4437,13 @@
       },
       "dcterms:relation": {
         "@id": "https://www.ghezelbaash.ir/aesthetic-medical-consultation"
-      }
+      },
+      "mainEntityOfPage": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#webpage"
+      },
+      "email": [
+        "mailto:doctor@ghezelbaash.ir"
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash",
@@ -4979,6 +5022,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/identifier-person-drdr"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/identifier-person-google-profile"
         }
       ],
       "sameAs": [
@@ -26076,6 +26122,146 @@
       "publisher": {
         "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
       }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/identifier-person-google-profile",
+      "@type": "PropertyValue",
+      "propertyID": "Google Profile handle",
+      "value": "doctor.ghezelbaash",
+      "name": "Google Profile",
+      "url": "https://profile.google.com/@doctor.ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#webpage",
+      "@type": "AboutPage",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه | معرفی رسمی",
+      "description": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ کلینیک متعلق به پزشک و محل ارائه مستقیم خدمات پزشکی زیبایی جراحی و غیرجراحی، ارزیابی تشخیصی، درمان‌های تزریقی، پوست و مو، کانتورینگ، اصلاح نتایج قبلی و جراحی‌های زیبایی منتخب. پذیرش حضوری از ایران و عراق و ساعت فعالیت معمول شنبه تا پنجشنبه ۱۶:۰۰ تا ۲۲:۰۰ است و جمعه تعطیل است. این مجموعه مطب شخصی دکتر سعید قزلباش است. ایشان صاحب مطب و تنها پزشک ارائه‌دهندهٔ خدمات آن است. مسئولیت پزشکی و حرفه‌ای مطب بر عهدهٔ ایشان است و تمام خدمات پزشکی و زیبایی ارائه‌شده در این مطب شخصاً توسط خود ایشان انجام می‌شود و به پزشک دیگر یا اپراتور واگذار نمی‌شود.",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/website"
+      },
+      "inLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "primaryImageOfPage": {
+        "@id": "https://www.ghezelbaash.ir/image-ghezelbaash-clinic-interior"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "mentions": [
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+        }
+      ],
+      "hasPart": [
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location#webpage"
+        }
+      ],
+      "relatedLink": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://www.google.com/search?kgmid=/g/11r3rzdtb3",
+        "https://www.openstreetmap.org/node/13530287096"
+      ]
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location#webpage",
+      "@type": "ContactPage",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location",
+      "name": "رزرو نوبت، آدرس و تماس رسمی کلینیک دکتر سعید قزلباش",
+      "description": "اطلاعات رسمی تماس، آدرس، ساعات فعالیت، مسیر دسترسی و کانال‌های ارتباطی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه.",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/website"
+      },
+      "inLanguage": "fa-IR",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+        }
+      ],
+      "relatedLink": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://www.openstreetmap.org/node/13530287096"
+      ]
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#webpage",
+      "@type": "CollectionPage",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
+      "name": "پژوهش، آموزش و تصمیم بالینی دکتر سعید قزلباش",
+      "description": "مجموعه آثار پژوهشی، منابع آموزشی باز، فعالیت‌های آموزشی و شواهد مرتبط با تصمیم‌گیری بالینی دکتر سعید قزلباش.",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+      },
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/website"
+      },
+      "inLanguage": "fa-IR",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+        }
+      ],
+      "hasPart": [
+        {
+          "@id": "https://www.ghezelbaash.ir/wikiversity-botulinum-toxin-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/wikiversity-individualized-botulinum-toxin-focused-review"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/event-wpa-xvii-world-congress-psychiatry-2017"
+        }
+      ]
     }
   ]
 }

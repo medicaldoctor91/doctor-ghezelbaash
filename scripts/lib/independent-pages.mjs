@@ -186,21 +186,27 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
         return value["@id"];
       return Object.fromEntries(Object.entries(value).map(([property, entry]) => [property, browserize(entry, property)]));
     };
-    const browserNode = (id) => byId.get(id) ?? (authoredById.has(id) ? browserize(authoredById.get(id)) : undefined);
+    // The canonical graph is semantic authority. The homepage discovery graph is a browser-safe fallback only.\n    const browserNode = (id) => authoredById.has(id) ? browserize(authoredById.get(id)) : byId.get(id);
     const contentUrls = new Set(parsed.videos.flatMap((video) => (video.childNodes || []).filter((child) => child.tagName === "source")
       .map((child) => new URL(attr(child, "src"), canonicalUrl).href)));
     const videoNodes = graph["@graph"].filter((node) => typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
       .map((node) => browserNode(node["@id"])).filter(Boolean);
     const exact = browserNode(url);
+    const authoredPage = browserNode(url + "#webpage");
+    const explicitMainEntityId = values(authoredPage?.mainEntity)
+      .map((entry) => typeof entry === "string" ? entry : entry?.["@id"]).find(Boolean);
     const mediaTarget = ["video", "figure"].includes(target.tagName);
     const questionSource = graph["@graph"].find((node) => node.url === url && typed(node, "Question"));
     const questionMatch = questionSource ? browserNode(questionSource["@id"]) : undefined;
     const videoSource = graph["@graph"].find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl));
     const videoMatch = (videoSource ? browserNode(videoSource["@id"]) : undefined)
       ?? (mediaTarget && videoNodes.length === 1 ? videoNodes[0] : undefined);
-    // A question remains the primary authored subject when its answer embeds a video.
-    // Explicit figures and players still describe that media as their main entity.
+    // Explicit canonical page identity wins. Heuristics are only fallbacks for
+    // authored routes that do not yet have their own page node.
     const sourceMatch = mediaTarget ? videoMatch ?? questionMatch : questionMatch ?? videoMatch;
+    const explicitEntity = explicitMainEntityId ? browserNode(explicitMainEntityId) : undefined;
+    if (explicitMainEntityId && !explicitEntity)
+      throw new Error("Canonical page mainEntity is unresolved: " + url);
     const mediaEntity = sourceMatch ?? exact;
     const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
     const title = normalize(focusedView?.title || mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
@@ -210,8 +216,12 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const contextTitle = overviewEntry ? (overviewLabels[language.split("-")[0]] || overviewLabels.fa) + " " + title : title;
     const documentTitle = contextTitle.includes(physicianName) ? contextTitle : contextTitle + " | " + physicianName;
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };
-    const entity = sourceMatch ?? exact ?? synthesized;
-    const description = focusedView?.description || scopedDescription(parsed, entity, byId, authoredById, language, mediaTarget);
+    const entity = explicitEntity ?? sourceMatch ?? exact ?? synthesized;
+    const authoredDescription = localizedText(authoredPage?.description, language);
+    const description = focusedView?.description ||
+      (typeof authoredDescription === "string" && normalize(authoredDescription)
+        ? normalize(authoredDescription)
+        : scopedDescription(parsed, entity, byId, authoredById, language, mediaTarget));
     // A fine-grained heading inherits its existing authored section's topic.
     // An entity's own topic remains authoritative when it is explicitly set.
     const ownAbout = namedReferences(entity.about);
@@ -224,21 +234,35 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     }
     const topicalReferences = uniqueReferences(ownAbout.length ? ownAbout : inheritedAbout);
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
-    const pageType = typed(entity, "Person") ? "ProfilePage"
-      : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
-    const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
-      inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
+    const explicitPageType = values(authoredPage?.["@type"]).find((type) =>
+      ["ProfilePage", "AboutPage", "ContactPage", "CollectionPage", "MedicalWebPage", "WebPage"].includes(type));
+    const pageType = explicitPageType ?? (typed(entity, "Person") ? "ProfilePage"
+      : typed(entity, "VideoObject") ? "WebPage"
+      : typed(entity, "MedicalClinic") || typed(entity, "LocalBusiness") || typed(entity, "Organization") ? "AboutPage"
+      : typed(entity, "CreativeWork") && !typed(entity, "WebPageElement") ? "WebPage"
+      : "MedicalWebPage");
+    const explicitAbout = namedReferences(authoredPage?.about);
+    const pageNode = { ...(authoredPage ? structuredClone(authoredPage) : {}),
+      "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
+      inLanguage: language,
+      isPartOf: uniqueReferences([...namedReferences(authoredPage?.isPartOf), { "@id": website["@id"] }, { "@id": homePage["@id"] }]),
+      author: namedReferences(authoredPage?.author)[0] ?? { "@id": person["@id"] },
+      publisher: namedReferences(authoredPage?.publisher)[0] ?? { "@id": person["@id"] },
       mainEntity: { "@id": entity["@id"] },
-      about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
-      dateModified: revision };
+      about: uniqueReferences([...explicitAbout, { "@id": person["@id"] }, ...topicalReferences]),
+      dateModified: authoredPage?.dateModified ?? revision };
     if (pageType === "ProfilePage") delete pageNode.dateModified;
-        const breadcrumb = { "@id": url + "#breadcrumb", "@type": "BreadcrumbList", itemListElement: [
+    if (pageType === "MedicalWebPage" && !pageNode.reviewedBy) pageNode.reviewedBy = { "@id": person["@id"] };
+    const breadcrumb = { "@id": url + "#breadcrumb", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "دکتر سعید قزلباش", item: canonicalUrl },
       { "@type": "ListItem", position: 2, name: title, item: url },
     ] };
     pageNode.breadcrumb = { "@id": breadcrumb["@id"] };
     const selected = new Map([[pageNode["@id"], pageNode], [breadcrumb["@id"], breadcrumb]]);
-    const queue = [entity, person, website, ...videoNodes, ...topicalReferences.map((ref) => browserNode(ref["@id"]))];
+    const pageRelationKeys = ["hasPart", "mentions", "citation", "primaryImageOfPage", "about"];
+    const pageRelated = pageRelationKeys.flatMap((key) => values(pageNode[key]))
+      .map((entry) => browserNode(typeof entry === "string" ? entry : entry?.["@id"])).filter(Boolean);
+    const queue = [entity, person, website, ...videoNodes, ...topicalReferences.map((ref) => browserNode(ref["@id"])), ...pageRelated];
     // Relevant outward relationships only: broad home hasPart/mentions would
     // accidentally turn every scoped page back into the complete graph.
     const relationKeys = ["acceptedAnswer", "suggestedAnswer", "creator", "publisher", "author", "address", "geo",
@@ -250,13 +274,13 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       const node = queue.shift();
       if (!node || selected.has(node["@id"])) continue;
       const output = structuredClone(node);
-      if (output["@id"] !== person["@id"]) delete output.mainEntityOfPage;
+      if (output["@id"] === entity["@id"]) output.mainEntityOfPage = { "@id": pageNode["@id"] };\n      else if (output["@id"] !== person["@id"]) delete output.mainEntityOfPage;
       delete output.subjectOf; delete output.mentions;
       if (typed(output, "WebSite")) delete output.hasPart;
       if (typed(output, "WebPageElement")) { delete output.isPartOf; delete output.hasPart; }
       if (typed(output, "Person") && output["@id"] !== person["@id"]) { delete output.knowsAbout; delete output.hasCredential; delete output.memberOf; }
       if (!typed(output, "VideoObject") && !typed(output, "Question")) delete output.hasPart;
-      if (typed(output, "WebPage") || typed(output, "ProfilePage") || typed(output, "MedicalWebPage")) continue;
+      if (["WebPage", "ProfilePage", "MedicalWebPage", "AboutPage", "ContactPage", "CollectionPage", "FAQPage"]\n        .some((type) => typed(output, type))) continue;
       selected.set(output["@id"], output);
       for (const key of relationKeys) for (const ref of values(output[key])) {
         const id = typeof ref === "string" ? ref : ref?.["@id"];

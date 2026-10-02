@@ -1930,6 +1930,9 @@ skipLinkLabel: پرش به محتوای اصلی
         },
         {
           "@id": "https://www.ghezelbaash.ir/identifier-person-drdr"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/identifier-person-google-profile"
         }
       ],
       "sameAs": [
@@ -2519,7 +2522,12 @@ skipLinkLabel: پرش به محتوای اصلی
       ],
       "sameAs": [
         "https://www.google.com/maps?cid=12350483144643112463",
-        "https://www.openstreetmap.org/node/13530287096"
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://yandex.com/maps/org/63459342435/",
+        "https://neshan.org/maps/places/adbc544fa9d05332bb6dab86feb58fa8",
+        "https://balad.ir/p/2dnVakli9ZKaBd",
+        "https://app.foursquare.com/share/venue/6987eef061c23b4962a08398",
+        "https://www.facebook.com/doctor.ghezelbaash"
       ],
       "image": [
         {
@@ -2701,7 +2709,13 @@ skipLinkLabel: پرش به محتوای اصلی
       },
       "dcterms:relation": {
         "@id": "https://www.ghezelbaash.ir/aesthetic-medical-consultation"
-      }
+      },
+      "mainEntityOfPage": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#webpage"
+      },
+      "email": [
+        "mailto:doctor@ghezelbaash.ir"
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/image-saeed-ghezelbash-portrait-master",
@@ -13685,6 +13699,14 @@ skipLinkLabel: پرش به محتوای اصلی
           "@id": "https://www.ghezelbaash.ir/question-can-surgical-and-non-surgical-treatments-be-combined-ckb-iq"
         }
       ]
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/identifier-person-google-profile",
+      "@type": "PropertyValue",
+      "propertyID": "Google Profile handle",
+      "value": "doctor.ghezelbaash",
+      "name": "Google Profile",
+      "url": "https://profile.google.com/@doctor.ghezelbaash"
     }
   ]
 }
