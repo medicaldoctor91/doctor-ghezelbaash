@@ -7,37 +7,47 @@ import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 
 const inputs = readCanonicalInputs();
 const projection = () => projectPageJsonLd(inputs.pageJsonLd)[0].document;
-test("page discovery resolves Person and creator without changing authored inputs", () => {
+const typed = (node, type) => [node?.["@type"]].flat().includes(type);
+
+test("page discovery publishes a route-aware physician graph without changing authored inputs", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
   const graph = projection()["@graph"];
   const byId = new Map(graph.map((node) => [node["@id"], node]));
-  const typed = (node, type) => [node["@type"]].flat().includes(type);
-  const page = graph.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
-  assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 32);
-  assert.equal(page["@id"], inputs.pageFrontmatter.pageMicrodata.itemId);
-  assert(typed(byId.get(page.mainEntity["@id"]), "Person"));
-  assert.equal(typeof byId.get(page.mainEntity["@id"]).name, "string");
-  for (const node of inputs.graph["@graph"]) {
-    assert(byId.has(node["@id"]));
-    assert.deepEqual([byId.get(node["@id"])["@type"]].flat(), [node["@type"]].flat());
-  }
+  const page = byId.get(inputs.pageFrontmatter.pageMicrodata.itemId);
+  assert(typed(page, "MedicalWebPage"));
+  assert(!typed(page, "ProfilePage"));
+  assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 0);
+  for (const type of ["Event", "EducationEvent", "Review"])
+    assert(!graph.some((node) => typed(node, type)), "Homepage search projection must exclude " + type);
+  const person = byId.get(page.mainEntity["@id"]);
+  assert(typed(person, "Person"));
+  assert.equal(typeof person.name, "string");
+  assert.equal(person.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert.deepEqual(person.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
+  assert(graph.length < inputs.graph["@graph"].length);
   assert(graph.some((node) => typed(node, "FAQPage")));
-  for (const image of graph.filter((node) => node["@type"] === "ImageObject")) {
+  for (const image of graph.filter((node) => typed(node, "ImageObject"))) {
     assert(typed(byId.get(image.creator["@id"]), "Person"));
     assert.equal(typeof image.width, "number");
   }
   assert.equal(JSON.stringify(inputs.pageJsonLd), before);
-  assert(inputs.graph["@graph"].some((node) => [node["@type"]].flat().includes("Review")));
-  assert(inputs.graph["@graph"].some((node) => [node["@type"]].flat().includes("EducationEvent")));
+  assert(inputs.graph["@graph"].some((node) => typed(node, "ProfilePage")));
+  assert(inputs.graph["@graph"].some((node) => typed(node, "Review")));
+  assert(inputs.graph["@graph"].some((node) => typed(node, "EducationEvent")));
 });
-test("calendar revisions do not invent timestamps; known instants survive", () => {
-  const source = structuredClone(inputs.pageJsonLd);
-  const page = source[0].document["@graph"].find((node) => [node["@type"]].flat().includes("ProfilePage"));
-  page.dateModified = "2026-09-30";
-  assert(!("dateModified" in projectPageJsonLd(source)[0].document["@graph"].find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId)));
-  page.dateModified = "2026-09-30T10:20:30+03:30";
-  assert.equal(projectPageJsonLd(source)[0].document["@graph"].find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId).dateModified, page.dateModified);
+
+test("homepage and dedicated profile revisions remain authored on their own canonical nodes", () => {
+  const projected = projection()["@graph"];
+  const home = projected.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+  const authoredHome = inputs.graph["@graph"].find((node) => node["@id"] === home["@id"]);
+  const profileId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage";
+  const authoredProfile = inputs.graph["@graph"].find((node) => node["@id"] === profileId);
+  assert.equal(home.dateModified, authoredHome.dateModified);
+  assert(typed(authoredProfile, "ProfilePage"));
+  assert.equal(authoredProfile.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert(!projected.some((node) => node["@id"] === profileId));
 });
+
 test("HTML embeds one safe graph and a typed image creator", () => {
   const html = renderCanonicalPageHtml(inputs.pageBody);
   const nodes = [];
@@ -53,9 +63,10 @@ test("HTML embeds one safe graph and a typed image creator", () => {
   assert(creator.attrs.some((entry) => entry.name === "itemscope"));
   assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && attr(node, "content")));
 });
+
 test("text containing an HTML script terminator stays inside JSON data", () => {
   const source = structuredClone(inputs.pageJsonLd);
-  const person = source[0].document["@graph"].find((node) => [node["@type"]].flat().includes("Person"));
+  const person = source[0].document["@graph"].find((node) => typed(node, "Person"));
   person.name = "</script><script>alert(1)</script>";
   const body = '<script id="' + source[0].id + '" type="application/ld+json">' +
     JSON.stringify(source[0].document).replaceAll("<", "\\u003c") + "</script>";
