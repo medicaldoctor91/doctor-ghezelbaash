@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "calibrate:layout": "node scripts/calibrate-render-chunks.mjs",
     "validate:dist": "node scripts/validate-dist.mjs"
   },
   "devDependencies": {
@@ -19,6 +20,7 @@
     "js-yaml": "4.3.2",
     "jsonld": "9.0.0",
     "parse5": "8.0.1",
+    "playwright-core": "1.57.0",
     "rdf-canonize": "5.0.0"
   },
   "engines": {

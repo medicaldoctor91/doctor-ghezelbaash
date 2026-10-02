@@ -79,7 +79,7 @@ function documentFor(html) {
   root.getElementById = (id) => { const nodes = []; const walk = (node) => { nodes.push(node); node.childNodes.forEach(walk); }; walk(root); return nodes.find((node) => node.id === id); };
   return root;
 }
-function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce = false, homeReady = Promise.resolve(), fullHome = home } = {}) {
+function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce = false, homeReady = Promise.resolve(), bodyReady = () => Promise.resolve(), fullHome = home } = {}) {
   const document = documentFor(initial), location = { origin, pathname: path, assign() { throw new Error("Unexpected document navigation"); } };
   const listeners = new Map(), scrollAdjustments = [];
   const window = { document, location, innerHeight: 900,
@@ -90,21 +90,49 @@ function reader({ initial = focused("Botox", "botox"), path = "/botox", failOnce
     pushState: (_, __, path) => { location.pathname = path; },
     replaceState: (_, __, path) => { location.pathname = path; },
   } };
-  const requests = [];
+  const requests = [], signals = [], timers = new Map();
+  let clock = 0, nextTimer = 0;
+  const setTimeout = (callback, delay) => {
+    const id = ++nextTimer;
+    timers.set(id, { callback, at: clock + delay });
+    return id;
+  };
+  const clearTimeout = (id) => timers.delete(id);
+  const advanceTime = (duration) => {
+    clock += duration;
+    for (const [id, timer] of timers) if (timer.at <= clock) {
+      timers.delete(id);
+      timer.callback();
+    }
+  };
+  const abortable = (ready, signal) => new Promise((resolve, reject) => {
+    const abort = () => reject(new Error("Aborted HTML request"));
+    if (signal?.aborted) { abort(); return; }
+    signal?.addEventListener("abort", abort, { once: true });
+    const settle = (handler, value) => {
+      signal?.removeEventListener("abort", abort);
+      handler(value);
+    };
+    Promise.resolve(ready).then((value) => settle(resolve, value), (error) => settle(reject, error));
+  });
   const englishAlternates = [
     { href: origin + "/english", hrefLang: "en" },
     { href: origin + "/arabic", hrefLang: "ar-IQ" },
   ];
-  const fetch = async (path) => {
+  const fetch = async (path, { signal } = {}) => {
     requests.push(path);
-    if (path === "/") await homeReady;
+    signals.push({ path, signal });
+    if (path === "/") await abortable(homeReady, signal);
     if (failOnce) { failOnce = false; return { ok: false }; }
-    return { ok: true, text: async () => path === "/" ? fullHome : path === "/english" ? focused("English", "english", "en", "ltr", englishAlternates) : focused("Filler", "filler") };
+    return { ok: true, text: async () => {
+      await abortable(bodyReady(path), signal);
+      return path === "/" ? fullHome : path === "/english" ? focused("English", "english", "en", "ltr", englishAlternates) : focused("Filler", "filler");
+    } };
   };
   class DOMParser { parseFromString(html) { return documentFor(html); } }
   class CustomEvent { constructor(type) { this.type = type; } }
-  runInNewContext(source, { document, window, location, DOMParser, fetch, URL, CustomEvent });
-  return { window, requests, scrollAdjustments, interact: (type) => listeners.get(type)?.() };
+  runInNewContext(source, { document, window, location, DOMParser, fetch, URL, CustomEvent, AbortController, setTimeout, clearTimeout });
+  return { window, requests, signals, timers, advanceTime, scrollAdjustments, interact: (type) => listeners.get(type)?.() };
 }
 test("direct entry automatically loads the complete reader without a click and preserves its route", async () => {
   const { window, requests } = reader();
@@ -162,6 +190,67 @@ test("failed expansion retains the readable topic and allows an explicit retry",
   assert.equal(await window.expandCompleteGuide(), true);
   assert(document.getElementById("filler"));
   assert.deepEqual(requests, ["/", "/"]);
+});
+test("stalled automatic guide loading times out, resolves readiness and keeps the focused topic available for retry", async () => {
+  let release;
+  const homeReady = new Promise((resolve) => { release = resolve; });
+  const page = reader({ homeReady }), document = page.window.document;
+  assert.equal(document.querySelector("article.medical-guide").getAttribute("aria-busy"), "true");
+  page.advanceTime(14999);
+  assert.equal(page.signals[0].signal.aborted, false);
+  page.advanceTime(1);
+  assert.equal(await page.window.completeGuideReady, false);
+  assert.equal(page.signals[0].signal.aborted, true);
+  assert(document.getElementById("botox"));
+  assert(!document.getElementById("filler"));
+  assert.equal(document.documentElement.dataset.routeView, "focused");
+  assert.equal(document.querySelector("article.medical-guide").getAttribute("aria-busy"), null);
+  assert.equal(document.querySelector("[data-guide-expand-status]").textContent, "Retry");
+  assert.equal(page.timers.size, 0);
+  release();
+  assert.equal(await page.window.expandCompleteGuide(), true);
+  assert(document.getElementById("filler"));
+  assert.equal(document.querySelector('link[rel="canonical"]').href, origin + "/botox");
+  assert.deepEqual(page.requests, ["/", "/"]);
+  assert.equal(page.timers.size, 0);
+});
+test("the guide loading limit also covers a stalled HTML body after successful response headers", async () => {
+  let release;
+  const body = new Promise((resolve) => { release = resolve; });
+  const page = reader({ bodyReady: () => body });
+  await new Promise(setImmediate);
+  page.advanceTime(15000);
+  assert.equal(await page.window.completeGuideReady, false);
+  assert.equal(page.signals[0].signal.aborted, true);
+  assert(page.window.document.getElementById("botox"));
+  assert.equal(page.window.document.querySelector("[data-guide-expand-status]").textContent, "Retry");
+  release();
+  assert.equal(await page.window.expandCompleteGuide(), true);
+  assert.equal(page.timers.size, 0);
+});
+test("a timed-out metadata body retains the latest route metadata and can be fetched successfully again", async () => {
+  let release;
+  const body = new Promise((resolve) => { release = resolve; });
+  const page = reader({ initial: home, path: "/", bodyReady: (path) => path === "/english" ? body : Promise.resolve() }), document = page.window.document;
+  page.window.history.pushState(null, "", "/english");
+  const english = page.window.syncGuidePageState("/english");
+  await new Promise(setImmediate);
+  page.window.history.pushState(null, "", "/filler");
+  await page.window.syncGuidePageState("/filler");
+  page.advanceTime(15000);
+  await english;
+  assert.equal(page.signals.find((request) => request.path === "/english").signal.aborted, true);
+  assert.equal(document.title, "Filler");
+  assert.equal(document.documentElement.getAttribute("lang"), "fa-IR");
+  assert.equal(document.querySelector('link[rel="canonical"]').href, origin + "/filler");
+  assert.equal(page.timers.size, 0);
+  release();
+  page.window.history.pushState(null, "", "/english");
+  await page.window.syncGuidePageState("/english");
+  assert.equal(document.title, "English");
+  assert.equal(document.querySelector('link[rel="canonical"]').href, origin + "/english");
+  assert.deepEqual(page.requests, ["/english", "/filler", "/english"]);
+  assert.equal(page.timers.size, 0);
 });
 test("search focus during automatic loading reuses the pending request without changing the route", async () => {
   const { window, requests } = reader(), document = window.document;

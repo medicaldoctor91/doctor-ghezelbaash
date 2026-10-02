@@ -56,6 +56,8 @@ test("HTML embeds one safe graph and a typed image creator", () => {
   const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
   const scripts = nodes.filter((node) => node.tagName === "script");
   assert.equal(scripts.length, 1);
+  assert(html.indexOf("</header>") < html.indexOf('<script id="schema-core-mainentity"'),
+    "The streamed introduction must precede the complete discovery graph");
   assert.deepEqual(JSON.parse(scripts[0].childNodes[0].value), projection());
   const creator = nodes.find((node) => attr(node, "itemprop") === "creator");
   assert.equal(creator.tagName, "span");
