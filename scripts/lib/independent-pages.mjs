@@ -49,6 +49,10 @@ const scopedDescription = (parsed, entity, byId, authoredById, language, mediaTa
     if (answer) authored = localizedText(answer.description ?? answer.text, language);
   }
   if (typeof authored === "string" && normalize(authored)) return normalize(authored).slice(0, 300);
+  if (typed(entity, "Person")) {
+    const profile = localizedText(original.disambiguatingDescription ?? original.description, language);
+    if (typeof profile === "string" && normalize(profile)) return normalize(profile).slice(0, 300);
+  }
   const eligible = parsed.elements.filter((node) => ["p", "address", "figcaption", "li"].includes(node.tagName));
   const prose = eligible.map((node) => {
     for (let parent = node.parentNode; parent; parent = parent.parentNode)
@@ -69,11 +73,13 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
   const byHtmlId = new Map(inspected.elements.filter((node) => attr(node, "id")).map((node) => [attr(node, "id"), node]));
   const scripts = inspected.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
     .map((node) => ({ id: attr(node, "id"), document: JSON.parse(node.childNodes.map((child) => child.value || "").join("")) }));
-  // The rendered home already contains the browser-formatted complete graph.
+  // The rendered home contains the route-aware browser discovery graph.
   const browser = scripts.flatMap((script) => script.document["@graph"]);
   const byId = new Map(browser.map((node) => [node["@id"], node]));
   const headings = inspected.headings.filter((node) => node.sourceCodeLocation);
-  const homePage = browser.find((node) => node.url === canonicalUrl && typed(node, "ProfilePage"));
+  const homePage = browser.find((node) => node["@id"] === canonicalUrl + "webpage" &&
+    typed(node, "MedicalWebPage"));
+  if (!homePage) throw new Error("Independent routes require the canonical MedicalWebPage");
   const revision = graph["@graph"].find((node) => node["@id"] === homePage["@id"]).dateModified;
   const person = byId.get(homePage.mainEntity["@id"]);
   const authoredById = new Map(graph["@graph"].map((node) => [node["@id"], node]));
@@ -200,10 +206,10 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const topicalReferences = uniqueReferences(ownAbout.length ? ownAbout : inheritedAbout);
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
-      : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
+      : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
     const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
       inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
-      mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
+      mainEntity: { "@id": entity["@id"] },
       about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
       dateModified: revision };
     if (pageType === "ProfilePage") delete pageNode.dateModified;
