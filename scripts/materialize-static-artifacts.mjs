@@ -10,6 +10,7 @@ import {
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { canonicalGraph, canonicalLifecycle, pageFrontmatter } from "../src/lib/canonical-inputs.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
+import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs";
 import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
 import { renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
 import {
@@ -112,25 +113,30 @@ for (const artifact of STATIC_ARTIFACTS)
   await copyExact(artifact.source, artifact.path);
 const aliasRegistry = await loadAliasRegistry(root);
 const legacyAliases = canonicalHostAliasRows(aliasRegistry);
+const answerAliases = deriveCanonicalAnswerTopology(canonicalGraph, canonicalLifecycle).answers.map((record) => ({
+  source: "/" + record.htmlId,
+  target: new URL(record.sourceUrl, canonicalLifecycle.canonicalUrl).pathname,
+  statusCode: 301,
+}));
 const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
 const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
 const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
 for (const record of independentPages) await writeExact(record.file, renderIndependentPage(homeHtml, record));
 await writeFile(path.join(root, ".generated/independent-pages.json"), JSON.stringify(independentPages.map(({ bodyHtml, document, ...record }) => record)));
-const registeredSources = new Set(legacyAliases.map((row) => row.source));
+const registeredSources = new Set([...legacyAliases, ...answerAliases].map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
-  throw new Error("Authored content path collides with a legacy alias");
+  throw new Error("Authored content path collides with a redirect alias");
 const contentSources = new Set(contentPaths);
-for (const { source, target } of legacyAliases) {
+for (const { source, target } of [...legacyAliases, ...answerAliases]) {
   const targetPath = new URL(target, canonicalLifecycle.canonicalUrl).pathname;
   if (targetPath !== "/" && !contentSources.has(targetPath) && !destinations.has(targetPath.slice(1)))
-    throw new Error(`Legacy alias has no deployed destination: ${source} -> ${target}`);
+    throw new Error(`Redirect alias has no deployed destination: ${source} -> ${target}`);
 }
 const metadataAliases = canonicalMetadataAliasRows(canonicalGraph, canonicalLifecycle.canonicalUrl)
-  .filter(({ source }) => !contentSources.has(source));
+  .filter(({ source }) => !contentSources.has(source) && !registeredSources.has(source));
 await writeExact("_redirects", renderStaticRewrites([
-  ...legacyAliases.filter(({ source }) => source !== "/index.html")
-    .map((row) => ({ ...row, target: row.target === "/" ? "/index.html" : row.target })),
+  ...legacyAliases,
+  ...answerAliases,
   ...metadataAliases,
 ]));
 const generatedPublic = path.join(root, ".generated/public");
@@ -215,6 +221,7 @@ console.log(
       staleGeneratedAssetsRemoved: staleGeneratedAssets.length,
       stableMediaAliases: stableMedia.aliases.length,
       legacyAliases: legacyAliases.length,
+      answerRedirects: answerAliases.length,
       contentRoutes: contentPaths.length,
       independentlyRenderedPages: independentPages.length,
       metadataAliases: metadataAliases.length,

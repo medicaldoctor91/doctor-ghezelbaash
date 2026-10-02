@@ -60,7 +60,12 @@ export function deriveCanonicalGraphFacts(release, graph) {
   };
   const person = requireNode(release.primaryEntity.id, "physician");
   const clinic = requireNode(release.clinic.id, "clinic");
-  const page = requireNode(exactRef(person.mainEntityOfPage, "physician mainEntityOfPage"), "WebPage");
+  const profile = requireNode(exactRef(person.mainEntityOfPage, "physician mainEntityOfPage"), "ProfilePage");
+  if (!asArray(profile["@type"]).includes("ProfilePage") || profile.mainEntity?.["@id"] !== person["@id"])
+    throw new Error("Canonical physician ProfilePage must describe the physician");
+  const page = requireNode(base + "webpage", "canonical medical WebPage");
+  if (!asArray(page["@type"]).includes("MedicalWebPage") || asArray(page["@type"]).includes("ProfilePage"))
+    throw new Error("Canonical homepage must be a MedicalWebPage, not a ProfilePage");
   const website = requireNode(exactRef(page.isPartOf, "WebPage isPartOf"), "WebSite");
   const address = requireNode(
     exactRef(clinic.address, "clinic address"),
@@ -113,6 +118,7 @@ export function deriveCanonicalGraphFacts(release, graph) {
     byId,
     person,
     clinic,
+    profile,
     page,
     website,
     address,

@@ -15,7 +15,8 @@ export function deriveRouteDiscovery(homeHtml, graph, metadata, canonicalUrl) {
   const output = applyTranslationAlternates(topics, metadata.discovery?.translationGroups || [],
     { canonicalUrl, graph });
   const byId = new Map(graph["@graph"].map((node) => [node["@id"], node]));
-  const home = graph["@graph"].find((node) => node.url === canonicalUrl && values(node["@type"]).includes("ProfilePage"));
+  const home = graph["@graph"].find((node) => node["@id"] === canonicalUrl + "webpage" &&
+    values(node["@type"]).includes("MedicalWebPage"));
   const physician = byId.get(values(home?.mainEntity)[0]?.["@id"]);
   if (!physician) throw new Error("Route discovery requires its canonical physician");
   const groups = new Map(), contextualParents = new Map();

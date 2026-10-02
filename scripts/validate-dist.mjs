@@ -41,6 +41,12 @@ for (const [intent, url] of Object.entries(page.intentTargets)) {
 }
 
 const paths = contentRoutePaths(html, lifecycle.canonicalUrl);
+const answerProjection = deriveCanonicalAnswerProjection(graph, lifecycle);
+const answerAliases = answerProjection.answers.map((record) => ({
+  source: "/" + record.htmlId,
+  target: new URL(record.sourceUrl, lifecycle.canonicalUrl).pathname,
+  statusCode: 301,
+}));
 const redirects = (await readFile(path.join(dist, "_redirects"), "utf8")).trim().split(/\r?\n/);
 const rewriteRows = redirects.map((line) => {
   const [source, target, statusCode] = line.split(/\s+/);
@@ -52,9 +58,10 @@ const deployedFileForPath = (pathname) => pathname === "/"
   ? "index.html"
   : cleanRouteFiles.get(pathname) ?? pathname.slice(1);
 for (const { source, target, statusCode } of rewriteRows) {
-  assert.equal(statusCode, 200, `URL-changing redirect: ${source}`);
+  assert([200, 301, 308].includes(statusCode), `Unsupported delivery rule: ${source} ${statusCode}`);
+  if (statusCode !== 200) assert.notEqual(source, target, `Permanent redirect must change URL: ${source}`);
   assert((await stat(path.join(dist, deployedFileForPath(target))).catch(() => null))?.isFile(),
-    `Rewrite must resolve to a deployed file: ${source} -> ${target}`);
+    `Redirect/rewrite must resolve to a deployed file: ${source} -> ${target}`);
 }
 const legacyAliases = canonicalHostAliasRows(await loadAliasRegistry(root));
 const machinePaths = new Set(MACHINE_RESOURCES.filter((item) => item.materialize).map((item) => "/" + item.path));
@@ -62,9 +69,12 @@ const expectedAliases = contentAliasTargets(legacyAliases, machinePaths);
 assert.deepEqual(JSON.parse(attr(search, "data-content-route-aliases")), { ...expectedAliases });
 for (const target of Object.values(expectedAliases))
   assert(target === "/" || ids.includes(target.slice(1)), `Missing legacy content target: ${target}`);
-for (const { source, target } of legacyAliases.filter((row) => row.source !== "/index.html"))
-  assert(redirects.includes(`${source} ${target === "/" ? "/index.html" : target} 200`),
-    `Missing direct legacy alias: ${source}`);
+for (const { source, target, statusCode } of legacyAliases)
+  assert(redirects.includes(`${source} ${target} ${statusCode}`),
+    statusCode === 200 ? `Missing machine graph rewrite: ${source}` : `Missing permanent legacy redirect: ${source}`);
+for (const { source, target } of answerAliases)
+  assert(redirects.includes(`${source} ${target} 301`),
+    `Missing canonical answer redirect: ${source}`);
 for (const route of paths) {
   assert(!rewriteRows.some((row) => row.source === route),
     `Clean content route must not be rewritten through its .html file: ${route}`);
@@ -105,7 +115,7 @@ for (const node of elements) {
     assert((await stat(path.join(dist, deployedFileForPath(url.pathname))).catch(() => null))?.isFile(), `Missing published resource: ${value}`);
   }
 }
-const answerValidation = validateProjectedAnswerHtml(html, deriveCanonicalAnswerProjection(graph, lifecycle));
+const answerValidation = validateProjectedAnswerHtml(html, answerProjection);
 
 const figure = elements.find((node) => attr(node, "id") === "image-saeed-ghezelbash-portrait-master");
 assert.equal(attr(figure, "itemtype"), "https://schema.org/ImageObject");
@@ -131,14 +141,26 @@ const browserNodes = ldDocuments[0]["@graph"];
 const browserById = new Map(browserNodes.map((node) => [node["@id"], node]));
 const typeHas = (node, type) => [node["@type"]].flat().includes(type);
 const profileNodes = browserNodes.filter((node) => typeHas(node, "ProfilePage"));
-const primaryProfile = browserById.get(page.pageMicrodata.itemId);
-assert(typeHas(primaryProfile, "ProfilePage"));
-assert(typeHas(browserById.get(primaryProfile.mainEntity["@id"]), "Person"));
-for (const authored of graph["@graph"]) {
-  const published = browserById.get(authored["@id"]);
-  assert(published, "Lost authored semantic entity: " + authored["@id"]);
-  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Lost authored entity types");
+const primaryPage = browserById.get(page.pageMicrodata.itemId);
+assert(typeHas(primaryPage, "MedicalWebPage"));
+assert(!typeHas(primaryPage, "ProfilePage"));
+assert.equal(profileNodes.length, 0, "Homepage projection must not expose unrelated ProfilePage candidates");
+const primaryPerson = browserById.get(primaryPage.mainEntity["@id"]);
+assert(typeHas(primaryPerson, "Person"));
+assert.equal(primaryPerson.url, lifecycle.canonicalUrl + "saeed-ghezelbash");
+assert.deepEqual(primaryPerson.mainEntityOfPage, { "@id": lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
+const authoredById = new Map(graph["@graph"].map((node) => [node["@id"], node]));
+assert(browserNodes.length < graph["@graph"].length, "Homepage search projection must be narrower than the canonical graph");
+for (const published of browserNodes) {
+  const authored = authoredById.get(published["@id"]);
+  if (!authored) {
+    assert.equal(published["@id"], lifecycle.canonicalUrl + "#questions", "Unexpected generated browser node");
+    continue;
+  }
+  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Published entity type drift");
 }
+for (const forbidden of ["ProfilePage", "Event", "EducationEvent", "Review"])
+  assert(!browserNodes.some((node) => typeHas(node, forbidden)), "Homepage projection exposes an unrelated rich-result candidate: " + forbidden);
 assert(browserNodes.some((node) => typeHas(node, "FAQPage")), "Comprehensive home requires its visible FAQ coverage");
 assert.equal(richResultCounts.incompleteCandidates.length, 0, "Known required candidate fields must be completed from authored/user facts");
 assert(!elements.some((node) => (attr(node, "itemtype") || "").includes("ProfilePage")),
@@ -164,6 +186,8 @@ const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 const xmlValue = (value) => value.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => xmlValue(match[1]));
 assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
+for (const { source } of answerAliases)
+  assert(!sitemapLocs.includes(new URL(source, lifecycle.canonicalUrl).href), "Answer redirect must not remain in the sitemap: " + source);
 const pageNode = graph["@graph"].find((node) => node["@id"] === page.pageMicrodata.itemId);
 assert(sitemap.includes("<lastmod>" + pageNode.dateModified + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
@@ -285,19 +309,20 @@ for (const record of records) {
   assert.deepEqual(breadcrumb.itemListElement, deriveTopicBreadcrumbItems(record, records,
     { canonicalUrl: lifecycle.canonicalUrl, homeTitle: breadcrumb.itemListElement[0].name }), "Authored topic breadcrumb lineage");
   const aboutIds = [pageEntity.about].flat().map((ref) => ref?.["@id"]).filter(Boolean);
-  assert(aboutIds.includes(primaryProfile.mainEntity["@id"]), "Every topic must retain its fixed physician about relation");
-  if (aboutIds.some((id) => id !== primaryProfile.mainEntity["@id"])) topicalPages++;
+  assert(aboutIds.includes(primaryPage.mainEntity["@id"]), "Every topic must retain its fixed physician about relation");
+  if (aboutIds.some((id) => id !== primaryPage.mainEntity["@id"])) topicalPages++;
   assert(refs.some((ref) => ref["@id"] === record.entityId), "Route mainEntity mismatch");
   assert(pageGraph.get(record.entityId)?.["@type"], "Route mainEntity must retain its type");
-  const scopedAuthor = pageGraph.get(primaryProfile.mainEntity["@id"]);
-  assert.equal(scopedAuthor.url, lifecycle.canonicalUrl, "Doctor homepage URL must remain central");
-  assert.deepEqual(scopedAuthor.mainEntityOfPage, { "@id": primaryProfile["@id"] }, "Doctor main profile must remain the homepage");
-  const homeAuthor = browserById.get(primaryProfile.mainEntity["@id"]);
+  const scopedAuthor = pageGraph.get(primaryPage.mainEntity["@id"]);
+  assert.equal(scopedAuthor.url, lifecycle.canonicalUrl + "saeed-ghezelbash", "Doctor URL must resolve to the dedicated profile");
+  assert.deepEqual(scopedAuthor.mainEntityOfPage, { "@id": lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" },
+    "Doctor mainEntityOfPage must resolve to the dedicated ProfilePage");
+  const homeAuthor = browserById.get(primaryPage.mainEntity["@id"]);
   for (const property of ["sameAs", "hasCredential", "memberOf", "identifier"])
     assert.deepEqual(scopedAuthor[property], homeAuthor[property], "Doctor identity/qualification drift: " + property);
   for (const ref of [...scopedAuthor.hasCredential, ...scopedAuthor.identifier, scopedAuthor.worksFor, scopedAuthor.alumniOf])
     assert(pageGraph.get(ref["@id"])?.["@type"], "Doctor qualification or identity needs its authored typed node");
-  assert([pageEntity.isPartOf].flat().some((ref) => ref["@id"] === primaryProfile["@id"]), "Topic must relate to the comprehensive homepage");
+  assert([pageEntity.isPartOf].flat().some((ref) => ref["@id"] === primaryPage["@id"]), "Topic must relate to the comprehensive homepage");
   for (const body of execBodies(source)) assert(sharedExec.has(body), "New unapproved executable script in scoped page");
   for (const match of source.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi))
     assert(sharedStyles.has(match[1]), "New unapproved style in scoped page");

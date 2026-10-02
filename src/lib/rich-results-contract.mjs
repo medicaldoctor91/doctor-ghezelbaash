@@ -64,14 +64,18 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   const primary = primaryPageId ? byId.get(primaryPageId) : profiles.find((node) => node.url === "https://www.ghezelbaash.ir/") ?? profiles[0];
   if (primaryPageId && !primary) fail("primary page is missing");
   for (const profile of profiles) {
-    const entity = resolve(profile.mainEntity, ["Person", "Organization", "MedicalClinic", "LocalBusiness"], "ProfilePage.mainEntity");
+    const entity = resolve(profile.mainEntity, ["Person", "Organization"], "ProfilePage.mainEntity");
     text(entity.name, "ProfilePage.mainEntity.name");
     for (const property of ["dateCreated", "dateModified"])
       if (property in profile) instant(profile[property], "ProfilePage." + property);
   }
   if (primary && !profiles.includes(primary)) {
     const entities = values(primary.mainEntity).map((ref) => byId.get(ref?.["@id"]));
-    if (!entities.length || entities.some((entity) => !entity || !values(entity["@type"]).length)) fail("page mainEntity must resolve to a typed entity");
+    if (!entities.length || entities.some((entity) => !entity || !values(entity["@type"]).length))
+      fail("page mainEntity must resolve to a typed entity");
+    for (const entity of entities)
+      if (hasType(entity, "Person") || hasType(entity, "Organization"))
+        text(entity.name, "page mainEntity.name");
   }
   const clinics = nodes.filter((node) => hasType(node, "MedicalClinic") || hasType(node, "LocalBusiness"));
   for (const clinic of clinics) {

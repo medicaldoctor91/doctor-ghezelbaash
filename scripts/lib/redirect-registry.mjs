@@ -56,9 +56,13 @@ export function canonicalHostAliasRows(registry) {
       throw new Error(
         `Canonical-host alias target escaped its scope: ${rule.target}`,
       );
-    if (rule.statusCode !== 200)
+    const machineAlias = rule.target === "/graph.jsonld";
+    const expectedStatus = machineAlias ? 200 : 301;
+    if (rule.statusCode !== expectedStatus)
       throw new Error(
-        `Canonical-host alias must preserve the URL: ${rule.source}`,
+        machineAlias
+          ? `Canonical graph alias must preserve its machine URL with a 200 rewrite: ${rule.source}`
+          : `Canonical-host legacy alias must permanently redirect: ${rule.source}`,
       );
     return {
       source: rule.source,
@@ -98,7 +102,7 @@ export function canonicalHostAliasRows(registry) {
   });
 }
 
-/** Check the final deployed rules, including document aliases. */
+/** Render final Cloudflare rules: permanent content redirects plus exact machine rewrites. */
 export function renderStaticRewrites(rows) {
   const sources = new Set();
   const lines = rows.map(({ source, target, statusCode }) => {
@@ -106,8 +110,8 @@ export function renderStaticRewrites(rows) {
       throw new Error(`Invalid static alias source: ${source}`);
     if (!target?.startsWith("/") || target.startsWith("//") || /[\s\\]/u.test(target))
       throw new Error(`Invalid static rewrite destination: ${target}`);
-    if (statusCode !== 200)
-      throw new Error(`Unsupported static rewrite status: ${statusCode}`);
+    if (![200, 301, 308].includes(statusCode))
+      throw new Error(`Unsupported static redirect/rewrite status: ${statusCode}`);
     if (sources.has(source)) throw new Error(`Duplicate static alias source: ${source}`);
     sources.add(source);
     const line = `${source} ${target} ${statusCode}`;

@@ -235,7 +235,7 @@ export async function compileContactDiscovery(context) {
       ...doctorTitles.map((title) => `TITLE:${title}`),
       `TEL;VALUE=uri;TYPE=work,voice:tel:${telephone}`,
       `ADR;TYPE=work:;;${vEsc(streetAddress)};${vEsc(addressLocality)};${vEsc(addressRegion)};${vEsc(postalCode)};${vEsc(addressCountry)}`,
-      `URL:${release.canonicalUrl}`,
+      `URL:${requiredText(person.url, "physician URL")}`,
       `SOURCE:${release.canonicalUrl}doctor.vcf`,
       `PHOTO;MEDIATYPE=image/jpeg:${personPortraitUrl}`,
       `X-GOOGLE-KG-ID:${release.primaryEntity.googleKnowledgeGraphId}`,
@@ -259,7 +259,7 @@ export async function compileContactDiscovery(context) {
       `ORG:${clinicName}`,
       `TEL;VALUE=uri;TYPE=work,voice:tel:${telephone}`,
       `ADR;TYPE=work:;;${vEsc(streetAddress)};${vEsc(addressLocality)};${vEsc(addressRegion)};${vEsc(postalCode)};${vEsc(addressCountry)}`,
-      `URL:${release.canonicalUrl}`,
+      `URL:${requiredText(clinic.url, "clinic URL")}`,
       `SOURCE:${release.canonicalUrl}clinic.vcf`,
       `PHOTO;MEDIATYPE=image/webp:${clinicPhotoUrl}`,
       `X-GOOGLE-KG-ID:${release.clinic.googleLocalKgmid}`,
@@ -286,7 +286,7 @@ export async function compileContactDiscovery(context) {
   const focusedPages = deriveRouteDiscovery('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content) + '</article></main></body></html>', graph, context.pageFrontmatter, release.canonicalUrl);
   const sitemap = renderDiscoverySitemap({ pages: [{
     canonicalUrl: release.canonicalUrl,
-    lastmod: requiredNode(byId, person.mainEntityOfPage["@id"], "canonical WebPage").dateModified,
+    lastmod: requiredNode(byId, release.canonicalUrl + "webpage", "canonical homepage").dateModified,
     imageUrls: imageLocs,
     videos: videos.map((video) => ({
       thumbnailUrl: video.thumbnailUrl,

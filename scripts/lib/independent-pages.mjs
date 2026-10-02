@@ -49,6 +49,10 @@ const scopedDescription = (parsed, entity, byId, authoredById, language, mediaTa
     if (answer) authored = localizedText(answer.description ?? answer.text, language);
   }
   if (typeof authored === "string" && normalize(authored)) return normalize(authored).slice(0, 300);
+  if (typed(entity, "Person")) {
+    const profile = localizedText(original.disambiguatingDescription ?? original.description, language);
+    if (typeof profile === "string" && normalize(profile)) return normalize(profile).slice(0, 300);
+  }
   const eligible = parsed.elements.filter((node) => ["p", "address", "figcaption", "li"].includes(node.tagName));
   const prose = eligible.map((node) => {
     for (let parent = node.parentNode; parent; parent = parent.parentNode)
@@ -69,11 +73,13 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
   const byHtmlId = new Map(inspected.elements.filter((node) => attr(node, "id")).map((node) => [attr(node, "id"), node]));
   const scripts = inspected.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
     .map((node) => ({ id: attr(node, "id"), document: JSON.parse(node.childNodes.map((child) => child.value || "").join("")) }));
-  // The rendered home already contains the browser-formatted complete graph.
+  // The rendered home contains the route-aware browser discovery graph.
   const browser = scripts.flatMap((script) => script.document["@graph"]);
   const byId = new Map(browser.map((node) => [node["@id"], node]));
   const headings = inspected.headings.filter((node) => node.sourceCodeLocation);
-  const homePage = browser.find((node) => node.url === canonicalUrl && typed(node, "ProfilePage"));
+  const homePage = browser.find((node) => node["@id"] === canonicalUrl + "webpage" &&
+    typed(node, "MedicalWebPage"));
+  if (!homePage) throw new Error("Independent routes require the canonical MedicalWebPage");
   const revision = graph["@graph"].find((node) => node["@id"] === homePage["@id"]).dateModified;
   const person = byId.get(homePage.mainEntity["@id"]);
   const authoredById = new Map(graph["@graph"].map((node) => [node["@id"], node]));
@@ -161,21 +167,40 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     bodyHtml = bodyHtml.replace(/(<a\b[^>]*\bhref=)"#([^"]+)"/g, (_, prefix, id) => prefix + '"' + (pathSet.has("/" + id) ? "/" : "/#") + escape(id) + '"');
     const parsed = inspectHtml(bodyHtml, { wrapMain: true });
     const visible = normalize(text(parseFragment(bodyHtml)));
+    let language = "fa-IR", direction = "rtl";
+    for (let parent = target; parent; parent = parent.parentNode) {
+      if (attr(parent, "lang")) { language = attr(parent, "lang"); direction = attr(parent, "dir") || (language.startsWith("en") ? "ltr" : "rtl"); break; }
+    }
+    const browserize = (value, key) => {
+      const localized = localizedText(value, language);
+      if (localized !== value) return browserize(localized, key);
+      if (Array.isArray(value)) return value.map((entry) => browserize(entry, key));
+      if (!value || typeof value !== "object") return value;
+      if (["width", "height"].includes(key)) {
+        const quantity = authoredById.get(value["@id"]) ?? byId.get(value["@id"]) ?? value;
+        if (typed(quantity, "QuantitativeValue")) return quantity.value;
+      }
+      if (Object.keys(value).length === 1 && value["@id"] &&
+          !authoredById.has(value["@id"]) && !byId.has(value["@id"]) &&
+          ["image", "sameAs", "gender", "credentialCategory", "knowsAbout"].includes(key))
+        return value["@id"];
+      return Object.fromEntries(Object.entries(value).map(([property, entry]) => [property, browserize(entry, property)]));
+    };
+    const browserNode = (id) => byId.get(id) ?? (authoredById.has(id) ? browserize(authoredById.get(id)) : undefined);
     const contentUrls = new Set(parsed.videos.flatMap((video) => (video.childNodes || []).filter((child) => child.tagName === "source")
       .map((child) => new URL(attr(child, "src"), canonicalUrl).href)));
-    const videoNodes = browser.filter((node) => typed(node, "VideoObject") && contentUrls.has(node.contentUrl));
-    const exact = byId.get(url);
+    const videoNodes = graph["@graph"].filter((node) => typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
+      .map((node) => browserNode(node["@id"])).filter(Boolean);
+    const exact = browserNode(url);
     const mediaTarget = ["video", "figure"].includes(target.tagName);
-    const questionMatch = browser.find((node) => node.url === url && typed(node, "Question"));
-    const videoMatch = browser.find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl))
+    const questionSource = graph["@graph"].find((node) => node.url === url && typed(node, "Question"));
+    const questionMatch = questionSource ? browserNode(questionSource["@id"]) : undefined;
+    const videoSource = graph["@graph"].find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl));
+    const videoMatch = (videoSource ? browserNode(videoSource["@id"]) : undefined)
       ?? (mediaTarget && videoNodes.length === 1 ? videoNodes[0] : undefined);
     // A question remains the primary authored subject when its answer embeds a video.
     // Explicit figures and players still describe that media as their main entity.
     const sourceMatch = mediaTarget ? videoMatch ?? questionMatch : questionMatch ?? videoMatch;
-        let language = "fa-IR", direction = "rtl";
-    for (let parent = target; parent; parent = parent.parentNode) {
-      if (attr(parent, "lang")) { language = attr(parent, "lang"); direction = attr(parent, "dir") || (language.startsWith("en") ? "ltr" : "rtl"); break; }
-    }
     const mediaEntity = sourceMatch ?? exact;
     const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
     const title = normalize(focusedView?.title || mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
@@ -193,17 +218,17 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     let inheritedAbout = [];
     if (!ownAbout.length) for (let parent = target.parentNode; parent; parent = parent.parentNode) {
       const id = attr(parent, "id");
-      const authored = id ? byId.get(origin + "/" + id) : undefined;
+      const authored = id ? (authoredById.get(origin + "/" + id) ?? byId.get(origin + "/" + id)) : undefined;
       const references = namedReferences(authored?.about);
       if (references.length) { inheritedAbout = references; break; }
     }
     const topicalReferences = uniqueReferences(ownAbout.length ? ownAbout : inheritedAbout);
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
-      : typed(entity, "Question") ? "FAQPage" : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
+      : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
     const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
       inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
-      mainEntity: typed(entity, "Question") ? [{ "@id": entity["@id"] }] : { "@id": entity["@id"] },
+      mainEntity: { "@id": entity["@id"] },
       about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
       dateModified: revision };
     if (pageType === "ProfilePage") delete pageNode.dateModified;
@@ -213,7 +238,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     ] };
     pageNode.breadcrumb = { "@id": breadcrumb["@id"] };
     const selected = new Map([[pageNode["@id"], pageNode], [breadcrumb["@id"], breadcrumb]]);
-    const queue = [entity, person, website, ...videoNodes, ...topicalReferences.map((ref) => byId.get(ref["@id"]))];
+    const queue = [entity, person, website, ...videoNodes, ...topicalReferences.map((ref) => browserNode(ref["@id"]))];
     // Relevant outward relationships only: broad home hasPart/mentions would
     // accidentally turn every scoped page back into the complete graph.
     const relationKeys = ["acceptedAnswer", "suggestedAnswer", "creator", "publisher", "author", "address", "geo",
@@ -235,7 +260,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       selected.set(output["@id"], output);
       for (const key of relationKeys) for (const ref of values(output[key])) {
         const id = typeof ref === "string" ? ref : ref?.["@id"];
-        if (byId.has(id)) queue.push(byId.get(id));
+        const related = browserNode(id);
+        if (related) queue.push(related);
       }
     }
     const document = { "@context": browserContext, "@graph": [...selected.values()] };
