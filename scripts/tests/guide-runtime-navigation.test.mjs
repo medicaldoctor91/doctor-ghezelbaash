@@ -6,11 +6,11 @@ import { createGuideSearch } from "../../src/lib/guide-search.mjs";
 
 const runtime = "const createGuideSearch = (" + createGuideSearch.toString() + ");\n" +
   readFileSync(new URL("../../src/scripts/guide-runtime.js", import.meta.url), "utf8");
-function reader() {
+function reader({ pathname = "/section", hash = "", completeGuideReady } = {}) {
   const origin = "https://www.ghezelbaash.ir", listeners = new Map(), visited = [], pushed = [], metadata = [];
   const target = (id) => ({ id, closest: () => null, hasAttribute: () => true, focus() {}, scrollIntoView: () => visited.push(id) });
   const nodes = { section: target("section"), fragment: target("fragment"), "main-content": target("main-content") };
-  const location = { origin, pathname: "/section", hash: "", search: "", href: origin + "/section" };
+  const location = { origin, pathname, hash, search: "", href: origin + pathname + hash };
   const document = {
     documentElement: { classList: { add() {} } },
     getElementById: (id) => nodes[id] || null,
@@ -22,13 +22,14 @@ function reader() {
     const next = new URL(path, origin);
     Object.assign(location, { pathname: next.pathname, hash: next.hash, search: next.search, href: next.href });
   } };
-  runInNewContext(runtime, {
-    document, window: { syncGuidePageState: (path) => metadata.push(path) }, location, history,
+  const ready = runInNewContext(runtime, {
+    document, window: { completeGuideReady, syncGuidePageState: (path) => metadata.push(path) }, location, history,
     navigator: { userAgent: "" }, Intl, Date, URL, performance: { getEntriesByType: () => [] },
     addEventListener() {}, requestAnimationFrame: () => 1, setTimeout: () => 1, clearTimeout() {}, setInterval() {},
     scrollTo() {}, scrollY: 0, innerHeight: 800,
   });
-  return { visited, pushed, metadata, location,
+  return { visited, pushed, metadata, location, ready,
+    addTarget: (id) => { nodes[id] = target(id); },
     emit: (type, event = {}) => { for (const listener of listeners.get(type) || []) listener(event); } };
 }
 test("home fragment links navigate and synchronize within the existing reader", () => {
@@ -46,5 +47,35 @@ test("guide expansion respects the reader's latest fragment target", () => {
   page.location.hash = "#fragment";
   page.emit("guide:expanded");
   assert.equal(page.visited.at(-1), "fragment");
+  assert.deepEqual(page.pushed, []);
+});
+test("direct path positioning waits for its target in the complete guide", async () => {
+  let finish;
+  const completeGuideReady = new Promise((resolve) => { finish = resolve; });
+  const page = reader({ pathname: "/complete-section", completeGuideReady });
+  assert.deepEqual(page.visited, []);
+  page.addTarget("complete-section");
+  finish(true);
+  await page.ready;
+  assert.deepEqual(page.visited, ["complete-section"]);
+  assert.deepEqual(page.pushed, []);
+  assert.equal(page.location.pathname, "/complete-section");
+});
+test("a fresh hash takes precedence after the complete guide becomes available", async () => {
+  let finish;
+  const completeGuideReady = new Promise((resolve) => { finish = resolve; });
+  const page = reader({ hash: "#complete-fragment", completeGuideReady });
+  assert.deepEqual(page.visited, []);
+  page.addTarget("complete-fragment");
+  finish(true);
+  await page.ready;
+  assert.deepEqual(page.visited, ["complete-fragment"]);
+  assert.deepEqual(page.pushed, []);
+  assert.equal(page.location.hash, "#complete-fragment");
+});
+test("a fresh homepage fragment positions within the complete document", async () => {
+  const page = reader({ pathname: "/", hash: "#fragment", completeGuideReady: Promise.resolve(true) });
+  await page.ready;
+  assert.deepEqual(page.visited, ["fragment"]);
   assert.deepEqual(page.pushed, []);
 });

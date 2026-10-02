@@ -62,9 +62,6 @@
       removeExpandControls();
     } catch { /* Keep readable content when a metadata request fails. */ }
   };
-  // The scoped reader initializes immediately. The complete guide is loaded
-  // only after an explicit expansion, topic navigation, or search interaction.
-  window.completeGuideReady = Promise.resolve();
   let expansion;
   window.expandCompleteGuide = () => {
     if (!focused()) return Promise.resolve(true);
@@ -83,6 +80,11 @@
         if (!full || !current || !home.head.querySelector('link[rel="canonical"]')) throw new Error("Guide unavailable");
         cache.set("/", snapshot(home));
         for (const script of full.querySelectorAll("script")) script.remove();
+        const readingPosition = window.completeGuideInteraction && [...current.querySelectorAll("[id]")]
+          .filter((node) => home.getElementById(node.id))
+          .map((node) => ({ id: node.id, rect: node.getBoundingClientRect() }))
+          .filter(({ rect }) => rect.bottom > 0 && rect.top < window.innerHeight)
+          .sort((a, b) => Math.abs(a.rect.top) - Math.abs(b.rect.top))[0];
         // Reuse existing players, preserving a patient's active playback.
         const fullVideos = [...full.querySelectorAll("video[id]")];
         for (const video of current.querySelectorAll("video[id]"))
@@ -97,6 +99,13 @@
         current.replaceChildren(...[context, ...full.childNodes].filter(Boolean));
         delete d.documentElement.dataset.routeView;
         removeExpandControls();
+        if (readingPosition) {
+          const anchor = d.getElementById(readingPosition.id);
+          anchor.closest(".render-chunk")?.classList.add("is-target-chunk");
+          for (let parent = anchor.parentElement; parent; parent = parent.parentElement)
+            if (parent.localName === "details") parent.open = true;
+          window.scrollBy({ top: anchor.getBoundingClientRect().top - readingPosition.rect.top, behavior: "instant" });
+        }
         d.dispatchEvent(new CustomEvent("guide:expanded"));
         return true;
       } catch {
@@ -134,12 +143,26 @@
       try { if (d.getElementById(decodeURIComponent(url.hash.slice(1)))) return; } catch { return; }
     }
     event.preventDefault();
-    window.expandCompleteGuide().then((ready) => {
-      if (ready) replay(url);
+    window.expandCompleteGuide().then(async (ready) => {
+      if (ready) {
+        // Initial loading also gates the delegated same-document navigator.
+        await window.completeGuideReady;
+        replay(url);
+      }
       else location.assign(url.href);
     });
   }, true);
   d.addEventListener("focusin", (event) => {
     if (event.target.id === "guide-search-input") window.expandCompleteGuide();
+  });
+  // Direct URLs enter the same complete reader as home. Wait for its content
+  // before resolving the destination, including fragments outside the topic.
+  // A reader who starts interacting during the request keeps their position.
+  const interactionTypes = ["pointerdown", "wheel", "keydown"];
+  const recordInteraction = () => { window.completeGuideInteraction = true; };
+  if (focused()) for (const type of interactionTypes)
+    window.addEventListener(type, recordInteraction, { once: true, passive: true });
+  window.completeGuideReady = window.expandCompleteGuide().finally(() => {
+    for (const type of interactionTypes) window.removeEventListener(type, recordInteraction);
   });
 })();

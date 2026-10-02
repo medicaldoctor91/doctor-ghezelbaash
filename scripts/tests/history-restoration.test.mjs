@@ -5,7 +5,7 @@ import { createGuideSearch } from "../../src/lib/guide-search.mjs";
 import { runInNewContext } from "node:vm";
 
 const runtime = readFileSync(new URL("../../src/scripts/guide-runtime.js", import.meta.url), "utf8");
-function loadPage(type, pathname = "/section", aliases = {}) {
+function loadPage(type, pathname = "/section", aliases = {}, { hash = "", completeGuideReady, completeGuideInteraction = false } = {}) {
   let scrolls = 0;
   const listeners = new Map();
   const target = { id: "section", closest: () => null,
@@ -17,9 +17,10 @@ function loadPage(type, pathname = "/section", aliases = {}) {
     querySelector: () => null, querySelectorAll: () => [],
     addEventListener() {},
   };
-  const context = { document, window: {}, Intl, Date, URL, URLSearchParams, Set, Map,
+  const window = { completeGuideReady, completeGuideInteraction };
+  const context = { document, window, Intl, Date, URL, URLSearchParams, Set, Map,
     navigator: { userAgent: "" },
-    location: { pathname, search: "", hash: "", href: "https://www.ghezelbaash.ir" + pathname },
+    location: { pathname, search: "", hash, href: "https://www.ghezelbaash.ir" + pathname + hash },
     performance: { getEntriesByType: () => [{ type }] },
     addEventListener: (name, fn) => {
       const callbacks = listeners.get(name) || [];
@@ -29,8 +30,9 @@ function loadPage(type, pathname = "/section", aliases = {}) {
     setTimeout: () => 1, clearTimeout() {}, setInterval() {},
     scrollTo: () => scrolls++, scrollY: 0, innerHeight: 800,
   };
-  runInNewContext("const createGuideSearch = (" + createGuideSearch.toString() + ");\n" + runtime, context);
+  const ready = runInNewContext("const createGuideSearch = (" + createGuideSearch.toString() + ");\n" + runtime, context);
   return {
+    ready, window,
     scrolls: () => scrolls,
     pageshow: (persisted) => listeners.get("pageshow").forEach((fn) => fn({ persisted })),
   };
@@ -65,4 +67,27 @@ test("encoded Persian legacy paths resolve their decoded mapping", () => {
 });
 test("malformed encoded paths do not break the navigation runtime", () => {
   assert.equal(loadPage("navigate", "/%invalid").scrolls(), 0);
+});
+test("Back does not reposition after the complete guide finishes loading", async () => {
+  let finish;
+  const completeGuideReady = new Promise((resolve) => { finish = resolve; });
+  const page = loadPage("back_forward", "/section", {}, { hash: "#section", completeGuideReady });
+  assert.equal(page.scrolls(), 0);
+  finish(true);
+  await page.ready;
+  assert.equal(page.scrolls(), 0);
+  page.pageshow(false);
+  assert.equal(page.scrolls(), 0);
+});
+test("interaction during automatic loading prevents initial and pageshow repositioning", async () => {
+  let finish;
+  const completeGuideReady = new Promise((resolve) => { finish = resolve; });
+  const page = loadPage("navigate", "/section", {}, { completeGuideReady });
+  assert.equal(page.scrolls(), 0);
+  page.window.completeGuideInteraction = true;
+  finish(true);
+  await page.ready;
+  assert.equal(page.scrolls(), 0);
+  page.pageshow(false);
+  assert.equal(page.scrolls(), 0);
 });
