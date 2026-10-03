@@ -1,6 +1,6 @@
 import { parseFragment } from "parse5";
 import { projectPageJsonLd } from "./page-discovery-jsonld.mjs";
-import { resolveContentUrl, urlForHtmlId } from "./url-architecture.mjs";
+import { sourceNavigationUrl, urlForHtmlId } from "./url-architecture.mjs";
 
 const attr = (node, name) => node.attrs?.find((attribute) => attribute.name === name)?.value;
 const escapeAttribute = (value) => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;");
@@ -26,21 +26,21 @@ export function renderCanonicalPageHtml(body, graph) {
 
     if (node.tagName === "a" && attr(node, "href")) {
       const authoredHref = attr(node, "href");
-      const canonicalHref = resolveContentUrl(authoredHref);
-      if (canonicalHref !== authoredHref) {
+      const navigationHref = sourceNavigationUrl(authoredHref);
+      if (navigationHref !== authoredHref) {
         const location = node.sourceCodeLocation?.attrs?.href;
         if (!location) throw new Error("Canonical content link lacks a source location");
         replacements.push({
           start: location.startOffset,
           end: location.endOffset,
-          text: 'href="' + escapeAttribute(canonicalHref) + '"',
+          text: 'href="' + escapeAttribute(navigationHref) + '"',
         });
       }
     }
 
     if (attr(node, "data-guide-search-open") !== undefined &&
         (node.tagName !== "a" ||
-         resolveContentUrl(attr(node, "href")) !== urlForHtmlId("aesthetic-medicine-table-of-contents")))
+         sourceNavigationUrl(attr(node, "href")) !== "/#aesthetic-medicine-table-of-contents"))
       throw new Error("Canonical guide launcher must be authored as its native guide link");
 
     if (attr(node, "itemprop") === "creator" &&
