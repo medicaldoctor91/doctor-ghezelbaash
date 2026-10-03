@@ -26,7 +26,7 @@ test("finite decisions cover the full actual anchor inventory and only explicitl
   assert.throws(() => assertHtmlTargets([...inspected.ids, "unreviewed-new-heading"]), /inventory drift/);
 });
 
-test("authored noncanonical paths are fragments while only explicitly retired paths redirect", () => {
+test("authored noncanonical paths use root fragments while only explicitly retired paths redirect", () => {
   const kept = new Set(canonicalPaths());
   const fragments = fragmentRows();
   const redirects = redirectRows();
@@ -37,7 +37,7 @@ test("authored noncanonical paths are fragments while only explicitly retired pa
     assert(!kept.has(row.source));
     assert(!URL_ARCHITECTURE.retiredPaths.includes(row.source));
     const target = new URL(row.target, URL_ARCHITECTURE.canonicalOrigin);
-    assert(kept.has(target.pathname));
+    assert.equal(target.pathname, "/");
     assert.equal(decodeURIComponent(target.hash.slice(1)), row.source.slice(1));
     assert.equal(resolveContentUrl(row.source), row.target);
     assert.equal(resolveContentUrl(row.target), row.target);
@@ -52,16 +52,17 @@ test("authored noncanonical paths are fragments while only explicitly retired pa
     assert.equal(resolveContentUrl(row.source), row.target);
   }
 
-  assert.equal(resolveContentUrl("/botox-heading"), "/botox#botox-heading");
+  assert.equal(resolveContentUrl("/botox-heading"), "/#botox-heading");
   assert.equal(resolveContentUrl("/medical-content-governance"),
     "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#media-license");
   assert.equal(resolveContentUrl("/medical-content-governance#medical-content-governance-title"),
     "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#media-license");
   assert.equal(resolveContentUrl("/jalupro-vs-profhilo-selection"),
-    "/jalupro-and-profhilo#jalupro-vs-profhilo-selection");
+    "/#jalupro-vs-profhilo-selection");
+  assert.equal(resolveContentUrl("/botox"), "/botox");
 });
 
-test("rendered authored links expose canonical paths or fragments, never noncanonical content pathnames", () => {
+test("rendered authored links keep canonical routes and use root fragments for subordinate targets", () => {
   const drift = [];
   for (const node of inspected.elements.filter((element) => element.tagName === "a")) {
     const href = node.attrs.find((item) => item.name === "href")?.value;
@@ -70,9 +71,11 @@ test("rendered authored links expose canonical paths or fragments, never noncano
     if (normalized !== href) drift.push(href + " -> " + normalized);
   }
   assert.deepEqual(drift, []);
+  assert(inspected.elements.some((node) => node.tagName === "a" &&
+    node.attrs.find((item) => item.name === "href")?.value === "/#botox-heading"));
 });
 
-test("language canonicals own full original sections while former headings remain fragments", () => {
+test("language canonicals own full original sections while former headings remain root fragments", () => {
   for (const [language, htmlId] of [["en", "english-facial-aesthetic-doctor-section"],
     ["ar-iq", "iraqi-arabic-facial-aesthetic-doctor-section"],
     ["ckb-iq", "sorani-kurdish-facial-aesthetic-doctor-section"]]) {
@@ -83,7 +86,7 @@ test("language canonicals own full original sections while former headings remai
     assert.equal(urlForHtmlId(htmlId), route);
     const old = "best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-" + language;
     assert.equal(urlForHtmlId(old), route + "#" + old);
-    assert.equal(resolveContentUrl("/" + old), route + "#" + old);
+    assert.equal(resolveContentUrl("/" + old), "/#" + old);
     assert(!resource.title.includes("Best"));
   }
 });
@@ -102,15 +105,17 @@ test("the homepage owns physician authority while the stable identity remains an
   assert.deepEqual(page.mainEntity, { "@id": doctor["@id"] });
 });
 
-test("fragment resolution preserves queries and leaves external, machine and unknown URLs unchanged", () => {
-  assert.equal(resolveContentUrl("/botox-heading?t=14"), "/botox?t=14#botox-heading");
+test("fragment resolution preserves root hashes, queries and canonical resources", () => {
+  assert.equal(resolveContentUrl("/botox-heading?t=14"), "/?t=14#botox-heading");
   assert.equal(resolveContentUrl("/botox#upper-face-botox"), "/upper-face-botox");
   assert.equal(resolveContentUrl("#answer-jalupro-vs-profhilo-selection"),
-    "/jalupro-and-profhilo#answer-jalupro-vs-profhilo-selection");
+    "/#answer-jalupro-vs-profhilo-selection");
+  assert.equal(resolveContentUrl("/#answer-jalupro-vs-profhilo-selection"),
+    "/#answer-jalupro-vs-profhilo-selection");
   assert.equal(resolveContentUrl("/video-saeed-ghezelbash-jalupro-vs-profhilo?video=video-saeed-ghezelbash-jalupro-vs-profhilo&t=42"),
     "/video-saeed-ghezelbash-jalupro-vs-profhilo?video=video-saeed-ghezelbash-jalupro-vs-profhilo&t=42");
   assert.equal(resolveContentUrl("/botox-heading", { absolute: true }),
-    URL_ARCHITECTURE.canonicalOrigin + "/botox#botox-heading");
+    URL_ARCHITECTURE.canonicalOrigin + "/#botox-heading");
   for (const value of ["https://example.org/botox-heading", "mailto:hello@example.org", "/graph.jsonld#main-content", "/unknown-page#main-content"])
     assert.equal(resolveContentUrl(value), value);
   assert.equal(urlForHtmlId("unclassified-future-heading"), "/#unclassified-future-heading");
@@ -137,7 +142,7 @@ test("policy rejects redirect chains, lost fragments, stale resources and undecl
   assert(Object.isFrozen(URL_ARCHITECTURE.htmlIdTargets));
 });
 
-test("every fragment owner exposes the exact target in its initial readable document", () => {
+test("every canonical owner still exposes the exact target in its initial readable document", () => {
   const records = deriveIndependentPages(home, inputs.graph, inputs.lifecycle.canonicalUrl,
     { focusedViews: discoveryPolicy.focusedViews });
   const idsByOwner = new Map(records.map((record) => [record.path, new Set(inspectHtml(record.bodyHtml, { wrapMain: true }).ids)]));
@@ -147,7 +152,7 @@ test("every fragment owner exposes the exact target in its initial readable docu
     const target = new URL(value, URL_ARCHITECTURE.canonicalOrigin);
     if (!idsByOwner.get(target.pathname)?.has(id)) missing.push(id + " -> " + value);
   }
-  assert.deepEqual(missing, [], "Fragment mapping must follow actual retained scopes, including answers, chapters and cross-topic content");
+  assert.deepEqual(missing, [], "Canonical owner mapping must follow actual retained scopes, including answers, chapters and cross-topic content");
 });
 
 test("authored homepage anchors physically link every navigation root, including all three language guides", () => {
