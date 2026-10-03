@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
+import { heroPreload } from "../../src/config/site-policy.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveIndependentPages, renderIndependentPage } from "../lib/independent-pages.mjs";
 import { inspectHtml, assertDocumentContract } from "../lib/html-contract.mjs";
@@ -10,7 +11,7 @@ const inputs = readCanonicalInputs();
 const canonicalUrl = inputs.lifecycle.canonicalUrl;
 const attr = (node, name) => node.attrs?.find((entry) => entry.name === name)?.value;
 const escape = (value) => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
-const hero = inputs.pageFrontmatter.heroPreload;
+const hero = heroPreload;
 const home = '<!doctype html><html lang="fa-IR" dir="rtl"><head><title>Home</title><meta name="description" content="Home">' +
   '<link rel="canonical" href="' + canonicalUrl + '">' +
   '<link rel="preload" as="image" fetchpriority="high" href="' + escape(hero.href) +

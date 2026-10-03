@@ -30,8 +30,8 @@ jobs:
       - name: Test browser discovery and history restoration
         run: node --test scripts/tests/*.test.mjs
 
-      # Canonical-normalization branches must prove that moving decisions into
-      # authored inputs preserves every output byte, with one shared CI identity.
+      # Source-normalization branches preserve authored content and every output
+      # byte while separating canonical content, graph facts and build policy.
       - name: Checkout the distribution baseline
         if: startsWith(github.head_ref, 'codex/normalize-canonical-')
         uses: actions/checkout@v4
@@ -54,6 +54,10 @@ jobs:
         if: startsWith(github.head_ref, 'codex/normalize-canonical-')
         run: node scripts/compare-dist.mjs .baseline/dist dist
 
+      - name: Compare canonical content and editorial guide with the baseline
+        if: startsWith(github.head_ref, 'codex/normalize-canonical-')
+        run: node scripts/compare-canonical-content.mjs .baseline .
+
       - name: Verify deployment fingerprint artifact
         run: |
           test -f dist/build-info.json
@@ -67,6 +71,7 @@ jobs:
             dist/
             .generated/dist-manifest.json
             .generated/dist-equivalence.json
+            .generated/authored-content-equivalence.json
             .generated/schema-inventory.json
             .generated/schema-inventory.csv
           include-hidden-files: true

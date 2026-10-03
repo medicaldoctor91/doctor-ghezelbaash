@@ -6,10 +6,11 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { nodeTypes, valueText } from "../projection-context.mjs";
 import { assembleCanonicalContent, physicianImageUrls } from "../assemble-content.mjs";
 import { inspectHtml } from "../html-contract.mjs";
+import { discoveryPolicy } from "../../../src/config/site-policy.mjs";
 import {
   directLanguageLiterals,
   exactLanguageLiteral,
-} from "../../../src/lib/semantic-projection.mjs";
+} from "../../../src/lib/graph-core.mjs";
 
 const vEsc = (value) =>
   String(value ?? "")
@@ -283,7 +284,7 @@ export async function compileContactDiscovery(context) {
   );
   if (!videos.length)
     throw new Error("Contact discovery: canonical video facts are required");
-  const focusedPages = deriveRouteDiscovery('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content, graph) + '</article></main></body></html>', graph, context.pageFrontmatter, release.canonicalUrl);
+  const focusedPages = deriveRouteDiscovery('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content, graph) + '</article></main></body></html>', graph, discoveryPolicy, release.canonicalUrl);
   const sitemap = renderDiscoverySitemap({ pages: [{
     canonicalUrl: release.canonicalUrl,
     lastmod: requiredNode(byId, release.canonicalUrl + "webpage", "canonical homepage").dateModified,

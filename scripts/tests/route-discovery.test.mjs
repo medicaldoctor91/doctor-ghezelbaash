@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
+import { discoveryPolicy, guideNavigation } from "../../src/config/site-policy.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveRouteDiscovery } from "../lib/route-discovery.mjs";
 import { addHomeTopicNavigation } from "../lib/home-topic-navigation.mjs";
@@ -14,9 +15,9 @@ const content = renderCanonicalPageHtml(inputs.pageBody, inputs.graph);
 const document = (body) => '<!doctype html><html lang="fa-IR" dir="rtl"><head><title>Home</title><link rel="canonical" href="' +
   canonicalUrl + '"></head><body lang="fa-IR" dir="rtl"><main id="main-content"><article class="medical-guide">' +
   body + "</article></main></body></html>";
-const augmented = addHomeTopicNavigation(content, inputs.graph, inputs.pageFrontmatter, canonicalUrl);
+const augmented = addHomeTopicNavigation(content, inputs.graph, guideNavigation, discoveryPolicy, canonicalUrl);
 const home = document(augmented);
-const records = deriveRouteDiscovery(home, inputs.graph, inputs.pageFrontmatter, canonicalUrl);
+const records = deriveRouteDiscovery(home, inputs.graph, discoveryPolicy, canonicalUrl);
 const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
 
 test("home topic directory exposes the real roots without changing authored data or route inventory", () => {
@@ -31,7 +32,7 @@ test("home topic directory exposes the real roots without changing authored data
   const scripts = (html) => [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
   assert.deepEqual(scripts(augmented), scripts(content));
   assert(augmented.includes("قبل از اسم روش، باید علت را درست تشخیص داد"));
-  assert.throws(() => addHomeTopicNavigation(augmented, inputs.graph, inputs.pageFrontmatter, canonicalUrl), /already exists/);
+  assert.throws(() => addHomeTopicNavigation(augmented, inputs.graph, guideNavigation, discoveryPolicy, canonicalUrl), /already exists/);
 });
 
 test("finished topic records share truthful breadcrumbs, translation alternatives and distinct summary subjects", () => {
@@ -53,7 +54,7 @@ test("finished topic records share truthful breadcrumbs, translation alternative
   assert.notEqual(historical.bodyHtml, travel.bodyHtml);
   assert.equal(historical.navigation.parent.path, travel.path);
   const translated = records.filter((record) => record.alternates.length);
-  assert.equal(translated.length, inputs.pageFrontmatter.discovery.translationGroups.flatMap((group) => group.members).length);
+  assert.equal(translated.length, discoveryPolicy.translationGroups.flatMap((group) => group.members).length);
   for (const record of records) {
     const person = record.document["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
     assert.equal(person.url, canonicalUrl + "saeed-ghezelbash");

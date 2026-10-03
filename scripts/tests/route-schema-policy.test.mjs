@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { applyRouteSchemaPolicy, reviewedRoutePurposes } from "../lib/route-schema-policy.mjs";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
+import { discoveryPolicy } from "../../src/config/site-policy.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveIndependentPages } from "../lib/independent-pages.mjs";
 import { attachTopicNavigation } from "../lib/topic-navigation.mjs";
@@ -113,9 +114,9 @@ test("stale, duplicate or unbounded reviewed purpose declarations stop classific
 const inputs = readCanonicalInputs();
 const home = '<!doctype html><html lang="fa-IR"><head><title>Home</title></head><body><main id="main-content"><article class="medical-guide">' +
   renderCanonicalPageHtml(inputs.pageBody, inputs.graph) + '</article></main></body></html>';
-const raw = deriveIndependentPages(home, inputs.graph, canonicalUrl, { focusedViews: inputs.pageFrontmatter.discovery.focusedViews });
+const raw = deriveIndependentPages(home, inputs.graph, canonicalUrl, { focusedViews: discoveryPolicy.focusedViews });
 const topics = attachTopicNavigation(raw, home, canonicalUrl);
-const translated = applyTranslationAlternates(topics, inputs.pageFrontmatter.discovery.translationGroups, { canonicalUrl, graph: inputs.graph });
+const translated = applyTranslationAlternates(topics, discoveryPolicy.translationGroups, { canonicalUrl, graph: inputs.graph });
 freeze(translated);
 freeze(inputs.graph);
 const actual = applyRouteSchemaPolicy(translated, inputs.graph, { canonicalUrl });

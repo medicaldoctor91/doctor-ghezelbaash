@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { load } from "js-yaml";
 import { projectPageJsonLd } from "./page-discovery-jsonld.mjs";
+import { datasetId } from "../config/site-policy.mjs";
 
 const defaultRoot = process.cwd();
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -9,17 +9,15 @@ const id = (value) => typeof value === "string" ? value : value?.["@id"];
 const text = (value) => value?.["@value"] ?? value;
 const types = (node) => values(node?.["@type"]);
 
-/** Read the two authored inputs. All other files are projections or assets. */
+/** Load canonical content and semantic truth; UI/delivery/retrieval policy is separate. */
 export function readCanonicalInputs(root = defaultRoot) {
-  const pageSource = readFileSync(path.join(root, "src/content-source/page.md"), "utf8");
-  const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(pageSource);
-  if (!match) throw new Error("Canonical page requires YAML frontmatter");
-  const pageFrontmatter = load(match[1]);
-  const pageBody = pageSource.slice(match[0].length);
+  const pageBody = readFileSync(path.join(root, "src/content-source/page.md"), "utf8");
+  if (pageBody.startsWith("---\n") || pageBody.startsWith("---\r\n"))
+    throw new Error("Canonical page must contain only authored HTML, without frontmatter");
   const graph = JSON.parse(readFileSync(path.join(root, "src/data/semantic/knowledge-graph.jsonld"), "utf8"));
   if (!Array.isArray(graph["@graph"])) throw new Error("Canonical graph requires @graph");
   const byId = new Map(graph["@graph"].map((node) => [node["@id"], node]));
-  const dataset = byId.get(pageFrontmatter.knowledgeGraph.datasetId);
+  const dataset = byId.get(datasetId);
   if (!dataset || !types(dataset).includes("Dataset")) throw new Error("Canonical Dataset pointer is missing");
   const canonicalUrl = dataset.url;
   const related = (references) => values(references).map((ref) => byId.get(id(ref))).filter(Boolean);
@@ -54,12 +52,6 @@ export function readCanonicalInputs(root = defaultRoot) {
     datasetRevisionDate: dataset.dateModified,
     currentSource: { dateModified: github.dateModified ?? dataset.dateModified },
   };
-  const retrievalPolicy = {
-    ...pageFrontmatter.retrieval,
-    languages: values(dataset.inLanguage),
-    intentFamilies: Object.keys(pageFrontmatter.intentTargets),
-    intentAnswerIds: pageFrontmatter.intentTargets,
-  };
   const registryNode = one(graph["@graph"].filter((entry) => values(entry.hasPart).some((ref) => byId.get(id(ref))?.["prov:hadMember"])), "evidence assessment collection");
   const assessmentNodes = values(registryNode.hasPart).map((ref) => byId.get(id(ref))).filter((entry) => entry?.["prov:hadMember"]);
   const evidence = assessmentNodes.map((assessment) => {
@@ -76,14 +68,12 @@ export function readCanonicalInputs(root = defaultRoot) {
   const tiers = Object.fromEntries(tierNodes.map((entry) => [entry.name, entry.description]));
   const evidenceRegistry = { verifiedAt: registryNode.dateModified, tiers, evidence, assessmentNodes, tierNodes, registryNode };
   const pageJsonLd = projectPageJsonLd(graph);
-  return { pageSource, pageFrontmatter, pageBody, graph, lifecycle, retrievalPolicy, evidenceRegistry, pageJsonLd };
+  return { pageBody, graph, lifecycle, evidenceRegistry, pageJsonLd };
 }
 
 const inputs = readCanonicalInputs();
-export const pageFrontmatter = inputs.pageFrontmatter;
 export const pageBody = inputs.pageBody;
 export const canonicalGraph = inputs.graph;
 export const canonicalLifecycle = inputs.lifecycle;
-export const retrievalPolicy = inputs.retrievalPolicy;
 export const canonicalEvidenceRegistry = inputs.evidenceRegistry;
 export const pageJsonLd = inputs.pageJsonLd;

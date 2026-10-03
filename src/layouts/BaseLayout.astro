@@ -1,14 +1,15 @@
 ---
 import { canonicalContentHtmlId } from '../lib/graph-core.mjs';
 import globalCss from '../styles/global.css?raw';
-import { canonicalLifecycle as release, pageFrontmatter } from '../lib/canonical-inputs.mjs';
+import { canonicalLifecycle as release } from '../lib/canonical-inputs.mjs';
+import { footerGovernance, skipLinkLabel } from '../config/site-policy.mjs';
 import { deriveCssDelivery } from '../lib/css-delivery.mjs';
 import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 import GuideNavigator from '../components/GuideNavigator.astro';
 
-interface Frontmatter {
+interface Props {
   title: string;
   description: string;
   lang: string;
@@ -16,32 +17,19 @@ interface Frontmatter {
   robots: string;
   socialImageAlt?: string;
   socialAlternateLocales?: string[];
-  footerGovernance?: {
-    summary: string;
-    reputationLead: string;
-    mapsTerms: { href: string; label: string };
-    privacyPolicy: { href: string; label: string };
-    tail: string;
-  };
-}
-
-interface Props {
-  frontmatter: Frontmatter;
   isMain: boolean;
 }
 
-const { frontmatter, isMain } = Astro.props;
-const { lang, dir, robots } = frontmatter;
+const { title, description, lang, dir, robots, socialImageAlt, socialAlternateLocales, isMain } = Astro.props;
 if (!lang || !robots) {
-  throw new Error('Document frontmatter requires lang and robots');
+  throw new Error('Document presentation requires lang and robots');
 }
 if (!['ltr', 'rtl', 'auto'].includes(dir)) {
   throw new Error(`Invalid document direction: ${dir}`);
 }
 const noindex = /(?:^|,)\s*noindex\b/i.test(robots);
-const footerGovernance = frontmatter.footerGovernance;
 if (!noindex && !footerGovernance) {
-  throw new Error('Indexable document frontmatter requires footer governance');
+  throw new Error('Indexable document requires footer governance');
 }
 if (!Astro.site) {
   throw new Error('Astro site URL is required for canonical resolution');
@@ -66,12 +54,12 @@ const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(globalCss)
   <head>
     <meta charset="utf-8">
     <DocumentHead
-      title={frontmatter.title}
-      description={frontmatter.description}
+      title={title}
+      description={description}
       lang={lang}
       robots={robots}
-      socialImageAlt={frontmatter.socialImageAlt}
-      socialAlternateLocales={frontmatter.socialAlternateLocales}
+      socialImageAlt={socialImageAlt}
+      socialAlternateLocales={socialAlternateLocales}
       canonicalURL={canonicalURL}
       isMain={isMain}
     >
@@ -107,7 +95,7 @@ const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(globalCss)
     </DocumentHead>
   </head>
   <body lang={lang} dir={dir}>
-    <a class="skip-link" href="#main-content">{pageFrontmatter.skipLinkLabel}</a>
+    <a class="skip-link" href="#main-content">{skipLinkLabel}</a>
     <main
       id="main-content"
       tabindex="-1"

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { createGuideSearch } from "../../src/lib/guide-search.mjs";
-import { pageBody, pageFrontmatter, canonicalLifecycle } from "../../src/lib/canonical-inputs.mjs";
+import { pageBody, canonicalLifecycle } from "../../src/lib/canonical-inputs.mjs";
+import { intentTargets, guideSearch } from "../../src/config/site-policy.mjs";
 import { inspectHtml } from "../lib/html-contract.mjs";
 
 const source = "const createGuideSearch = (" + createGuideSearch.toString() + ");\n" +
@@ -14,7 +15,7 @@ const headings = inspectHtml(pageBody, { wrapMain: true }).elements
   .filter((node) => /^h[1-6]$/.test(node.tagName) && attr(node, "id"))
   .map((node) => ({ id: attr(node, "id"), textContent: text(node), tagName: node.tagName.toUpperCase(),
     dataset: { retrievalAlias: attr(node, "data-retrieval-alias") ?? "" } }));
-const intentHeadings = Object.fromEntries(Object.entries(pageFrontmatter.intentTargets)
+const intentHeadings = Object.fromEntries(Object.entries(intentTargets)
   .map(([intent, url]) => [intent, new URL(url).pathname.slice(1)]));
 function searchFor(query, routeTitle) {
   const indexedHeadings = routeTitle ? [{ id: "route-page-title", textContent: routeTitle, tagName: "H1", dataset: {}, closest: () => ({}) }, ...headings] : headings;
@@ -27,9 +28,9 @@ function searchFor(query, routeTitle) {
   });
   const search = element("search"), input = element("input"), results = element("ol"), status = element("p");
   search.dataset = {
-    intentTargets: JSON.stringify(pageFrontmatter.intentTargets),
+    intentTargets: JSON.stringify(intentTargets),
     intentHeadings: JSON.stringify(intentHeadings),
-    copy: JSON.stringify(pageFrontmatter.guideSearch),
+    copy: JSON.stringify(guideSearch),
     canonicalOrigin: new URL(canonicalLifecycle.canonicalUrl).origin,
   };
   input.value = "";
@@ -65,11 +66,11 @@ const queries = {
 };
 for (const [intent, query] of Object.entries(queries)) {
   test("runtime ranks the authored " + intent + " destination first", () => {
-    assert.equal(searchFor(query)[0], new URL(pageFrontmatter.intentTargets[intent]).pathname);
+    assert.equal(searchFor(query)[0], new URL(intentTargets[intent]).pathname);
   });
   test("runtime preserves " + intent + " for Arabic letters and vocalization", () => {
     const variant = query.replaceAll("ک", "ك").replaceAll("ی", "ي").replace("بوتاكس", "بُوتَاكِس");
-    assert.equal(searchFor(variant)[0], new URL(pageFrontmatter.intentTargets[intent]).pathname);
+    assert.equal(searchFor(variant)[0], new URL(intentTargets[intent]).pathname);
   });
 }
 

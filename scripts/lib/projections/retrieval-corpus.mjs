@@ -7,7 +7,8 @@ import {
   sha256,
   valueText,
 } from "../projection-context.mjs";
-import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
+import { exactLanguageLiteral } from "../../../src/lib/graph-core.mjs";
+import { documentPolicy } from "../../../src/config/site-policy.mjs";
 
 const attribute = (node, name) =>
   node.attrs?.find((candidate) => candidate.name === name)?.value;
@@ -374,7 +375,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   const {
     projections,
     pageBody,
-    pageFrontmatter,
+    llmsGuide,
     release,
     retrievalPolicy,
     graph,
@@ -393,8 +394,8 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       "Retrieval compiler requires answerRecords[] from semantic compiler",
     );
 
-  const pageTitle = pageFrontmatter.title;
-  const pageLanguage = pageFrontmatter.lang;
+  const pageTitle = documentPolicy.title;
+  const pageLanguage = documentPolicy.lang;
   if (![pageTitle, pageLanguage].every((value) => typeof value === "string" && value.trim()))
     throw new Error("Canonical page requires a nonempty title and lang");
   const blocks = buildRetrievalBlocks(pageBody, {
@@ -762,7 +763,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     `${JSON.stringify(evidenceSnapshot, null, 2)}\n`,
   );
 
-  await writeFile(path.join(projections, "llms.txt"), pageFrontmatter.llmsGuide);
+  await writeFile(path.join(projections, "llms.txt"), llmsGuide);
 
   return {
     markdownBytes: Buffer.byteLength(markdown),

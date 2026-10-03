@@ -1,5 +1,5 @@
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../../src/lib/answer-projection.mjs";
-import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
+import { indexCanonicalGraph } from "../../src/lib/graph-core.mjs";
 import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";

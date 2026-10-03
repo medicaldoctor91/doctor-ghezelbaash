@@ -1,6 +1,5 @@
 import { loadPublicationData } from "./lib/publication-context.mjs";
 import path from "node:path";
-import { retrievalPolicy } from "../src/lib/canonical-inputs.mjs";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { generatedWorkspace } from "./generated-workspace.mjs";
@@ -9,7 +8,7 @@ import { entityFactsTableSchema, entityFactsTableDialect, entityFactsRecordSet }
 import {
   exactLanguageLiteral,
   indexCanonicalGraph,
-} from "../src/lib/semantic-projection.mjs";
+} from "../src/lib/graph-core.mjs";
 
 const root = process.cwd(),
   generated = generatedWorkspace(root),
@@ -408,7 +407,7 @@ const croissant = {
     name: personName,
   },
   keywords: dataset.keywords,
-  inLanguage: retrievalPolicy.languages,
+  inLanguage: arr(dataset.inLanguage),
   isLiveDataset: true,
   recordSet: [entityFactsRecordSet(release.canonicalUrl, resourceByPath.get("entity-facts.csv").distributionIri)],
   distribution: resourcesForDescriptor("croissant")

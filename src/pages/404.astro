@@ -1,11 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { canonicalLifecycle as release, pageFrontmatter } from '../lib/canonical-inputs.mjs';
-import { canonicalGraph } from '../lib/knowledge-graph';
+import { canonicalLifecycle as release, canonicalGraph } from '../lib/canonical-inputs.mjs';
 import { deriveSiteContactData } from '../lib/site-data.mjs';
 
 const site = deriveSiteContactData(release, canonicalGraph);
-const frontmatter = {
+const presentation = {
   title: 'صفحه پیدا نشد | دکتر سعید قزلباش',
   description:
     'صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش استفاده کنید.',
@@ -15,7 +14,7 @@ const frontmatter = {
 } as const;
 ---
 
-<BaseLayout frontmatter={frontmatter} isMain={false}>
+<BaseLayout {...presentation} isMain={false}>
   <div class="not-found-page">
     <p class="not-found-page__code" aria-hidden="true">404</p>
     <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>

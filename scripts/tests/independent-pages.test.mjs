@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
+import { discoveryPolicy } from "../../src/config/site-policy.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveIndependentPages, renderIndependentPage, routeDocumentFile } from "../lib/independent-pages.mjs";
 import { contentRoutePaths } from "../lib/content-routes.mjs";
@@ -420,7 +421,7 @@ test("question summaries retain their authored answer and section summaries begi
 
 test("declared historical summary keeps its own geographic evidence distinct from travel guidance", () => {
   const withViews = deriveIndependentPages(home, inputs.graph, inputs.lifecycle.canonicalUrl,
-    { focusedViews: inputs.pageFrontmatter.discovery.focusedViews });
+    { focusedViews: discoveryPolicy.focusedViews });
   const summary = withViews.find((page) => page.path === "/historical-patient-origin-summary");
   const travel = withViews.find((page) => page.path === "/out-of-town-aesthetic-patients-iran");
   assert.equal(summary.scopeKind, "disclosure-summary");
@@ -428,7 +429,7 @@ test("declared historical summary keeps its own geographic evidence distinct fro
   assert(summary.bodyHtml.includes("عراق و اقلیم کردستان"));
   assert(!summary.bodyHtml.includes("نوع مراجعه"));
   assert(summary.description.includes("تعداد بیماران یا ارائهٔ خدمات فعلی"));
-  assert.equal(summary.title, inputs.pageFrontmatter.discovery.focusedViews[0].title);
+  assert.equal(summary.title, discoveryPolicy.focusedViews[0].title);
   assert.notEqual(summary.bodyHtml, travel.bodyHtml);
   assert(summary.bodyHtml.length < travel.bodyHtml.length);
   assert(inspectHtml(summary.bodyHtml, { wrapMain: true }).ids.includes("historical-patient-origin-summary"));
@@ -463,7 +464,7 @@ test("declared historical summary keeps its own geographic evidence distinct fro
 });
 
 test("declared focused views fail rather than selecting missing or unrelated source regions", () => {
-  const valid = inputs.pageFrontmatter.discovery.focusedViews[0];
+  const valid = discoveryPolicy.focusedViews[0];
   for (const patch of [{ path: "/missing" }, { sourceHeading: "unrelated" }, { mode: "random" }])
     assert.throws(() => deriveIndependentPages(home, inputs.graph, inputs.lifecycle.canonicalUrl,
       { focusedViews: [{ ...valid, ...patch }] }), /declared|Declared/);

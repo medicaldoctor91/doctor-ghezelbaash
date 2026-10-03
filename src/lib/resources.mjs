@@ -1,8 +1,10 @@
-import { pageFrontmatter, canonicalGraph } from "./canonical-inputs.mjs";
+import { canonicalGraph } from "./canonical-inputs.mjs";
+import { machineResourcePolicy } from "../config/machine-resources.mjs";
 const byId = new Map(canonicalGraph["@graph"].map((node) => [node["@id"], node]));
-const registry = { resources: pageFrontmatter.machineResources.map((resource) => {
+const registry = { resources: machineResourcePolicy.map((resource) => {
   const node = byId.get(resource.distributionIri);
   return { ...resource,
+    mediaType: resource.mediaType ?? node?.encodingFormat,
     descriptorTitle: node?.["dcterms:title"]?.["@value"] ?? node?.["dcterms:title"] ?? node?.name,
     profileIri: node?.["dcterms:conformsTo"]?.["@id"] ?? node?.["dcterms:conformsTo"],
   };
