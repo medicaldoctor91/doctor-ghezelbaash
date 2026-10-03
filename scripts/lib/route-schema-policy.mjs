@@ -30,7 +30,6 @@ export const reviewedRoutePurposes = Object.freeze([
   { path: "/saeed-ghezelbash-research-education-and-clinical-decisions", purpose: "professional-biography", pageType: "WebPage" },
   { path: "/medical-content-governance", purpose: "editorial-governance", pageType: "WebPage" },
   { path: "/medical-content-governance-title", purpose: "editorial-governance", pageType: "WebPage" },
-  { path: "/media-license-title", purpose: "media-licensing", pageType: "WebPage" },
   { path: "/historical-patient-origin-summary", purpose: "historical-evidence", pageType: "WebPage" },
   { path: "/international-and-iraqi-patient-information", purpose: "visit-access", pageType: "WebPage" },
   // Contact and profile specialization belong only to these dedicated scopes.
