@@ -273,9 +273,8 @@ const discoveryLinks: DiscoveryLink[] = [
       {discoveryLinks.map((link) => <link {...link}>)}
       <meta content={og.type} property="og:type">
       <meta content={og.locale} property="og:locale">
-      {og.alternateLocales.map((locale) => (
-        <meta content={locale} property="og:locale:alternate">
-      ))}
+      {/* The comprehensive home has multilingual sections, but no translated
+          equivalents. Reviewed topic equivalents are emitted by the route renderer. */}
       <meta content={title} property="og:title">
       <meta content={description} property="og:description">
       <meta content={canonicalUrl} property="og:url">

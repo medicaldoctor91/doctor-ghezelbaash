@@ -77,6 +77,18 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
       if (hasType(entity, "Person") || hasType(entity, "Organization"))
         text(entity.name, "page mainEntity.name");
   }
+  for (const faq of nodes.filter((node) => hasType(node, "FAQPage"))) {
+    const questions = values(faq.mainEntity);
+    if (!questions.length) fail("FAQPage.mainEntity must include a Question");
+    for (const ref of questions) {
+      const question = resolve(ref, ["Question"], "FAQPage.mainEntity");
+      text(question.name, "FAQPage.Question.name");
+      const answers = values(question.acceptedAnswer);
+      if (answers.length !== 1) fail("FAQPage.Question.acceptedAnswer must include one Answer");
+      const answer = resolve(answers[0], ["Answer"], "FAQPage.Question.acceptedAnswer");
+      text(answer.text, "FAQPage.Answer.text");
+    }
+  }
   const clinics = nodes.filter((node) => hasType(node, "MedicalClinic") || hasType(node, "LocalBusiness"));
   for (const clinic of clinics) {
     text(clinic.name, "LocalBusiness.name");

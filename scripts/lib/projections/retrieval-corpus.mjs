@@ -1,5 +1,6 @@
 import path from "node:path";
 import { datasetRevisionDate, validRevisionDate } from "../release-graph.mjs";
+import { contentRoutePaths } from "../content-routes.mjs";
 import { writeFile } from "node:fs/promises";
 import { parseFragment } from "parse5";
 import {
@@ -39,11 +40,71 @@ const blockText = (node, canonicalUrl) =>
     .replace(/ *\n */g, "\n")
     .trim();
 
+const hasNestedLanguage = (node, language) => {
+  if (["script", "style", "template"].includes(node.tagName)) return false;
+  const ownLanguage = attribute(node, "lang");
+  return (ownLanguage !== undefined && ownLanguage !== language) ||
+    (node.childNodes ?? []).some((child) => hasNestedLanguage(child, language));
+};
+
+// A caption or paragraph can contain a separately authored language group.
+// Render each contiguous group under its actual language and source ID while
+// retaining inline links and formatting, including wrappers around the group.
+const languageRuns = (node, base, canonicalUrl, blockTags) => {
+  const append = (runs, run) => {
+    if (!run.text) return;
+    const previous = runs.at(-1);
+    if (previous && previous.lang === run.lang && previous.id === run.id)
+      previous.text += run.text;
+    else runs.push({ ...run });
+  };
+  const render = (current, inheritedLanguage, inheritedId) => {
+    const tag = current.tagName;
+    if (["script", "style", "template"].includes(tag)) return [];
+    const ownLanguage = attribute(current, "lang");
+    const lang = ownLanguage === undefined ? inheritedLanguage : ownLanguage;
+    const ownId = attribute(current, "id");
+    const id = ownId !== undefined &&
+      ((ownLanguage !== undefined && lang !== inheritedLanguage) || blockTags.has(tag))
+      ? ownId : inheritedId;
+    if (current.nodeName === "#text") return [{ lang, id, text: current.value }];
+    if (tag === "br") return [{ lang, id, text: "\n" }];
+    const runs = [];
+    for (const child of current.childNodes ?? [])
+      for (const run of render(child, lang, id)) append(runs, run);
+    return runs.map((run) => {
+      let text = run.text;
+      if (tag === "a" && attribute(current, "href") && text.trim())
+        text = `[${text.trim()}](${absoluteLink(attribute(current, "href"), canonicalUrl)})`;
+      else if (["strong", "b"].includes(tag) && text.trim()) text = `**${text}**`;
+      else if (["em", "i"].includes(tag) && text.trim()) text = `*${text}*`;
+      else if (tag === "code" && text.trim()) text = `\`${text}\``;
+      else if (tag === "li") text = `\n- ${text}\n`;
+      else if (["p", "div"].includes(tag)) text = `\n${text}\n`;
+      return { ...run, text };
+    });
+  };
+  return render(node, base.lang, base.id).map((run) => {
+    let text = run.text.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").trim();
+    if (base.tag === "li") text = text.replace(/^- /, "");
+    return { ...base, ...run, text, languageGroup: true };
+  }).filter((run) => run.text);
+};
+
 const headingTag = (tag) => /^h[1-6]$/.test(tag ?? "");
 const containsHeading = (node) =>
   headingTag(node.tagName) ||
   (!["script", "style", "template"].includes(node.tagName) &&
     (node.childNodes ?? []).some(containsHeading));
+
+const inlineProseTags = new Set([
+  "a", "b", "br", "code", "em", "i", "small", "span", "strong", "sub", "sup", "time",
+]);
+const proseContainer = (node) =>
+  node.nodeName === "#document-fragment" ||
+  ["article", "main", "section"].includes(node.tagName) ||
+  (node.tagName === "div" && String(attribute(node, "class") ?? "")
+    .split(/\s+/u).some((name) => ["render-chunk", "content-section", "medical-guide"].includes(name)));
 
 // Both text distributions consume this single structural representation of HTML.
 // Unsupported structural shapes fail here instead of silently losing content.
@@ -155,9 +216,35 @@ export function buildRetrievalBlocks(html, { canonicalUrl, language }) {
       return;
     }
     if (blockTags.has(tag)) {
+      // Heading ancestry and canonical answer atoms retain their authored
+      // document language. Ordinary prose/captions can carry language islands.
+      if (!headingTag(tag) && !base.answerId && hasNestedLanguage(node, lang)) {
+        blocks.push(...languageRuns(node, base, canonicalUrl, blockTags));
+        return;
+      }
       let text = blockText(node, canonicalUrl);
       if (tag === "li") text = text.replace(/^- /, "");
       if (text) blocks.push({ ...base, text });
+      return;
+    }
+    if (proseContainer(node)) {
+      // HTML also permits meaningful text between paragraph elements. Keep
+      // those inline runs under the nearest real heading, without exporting
+      // unrelated button labels, trust controls or video fallback messages.
+      let inline = [];
+      const flushInline = () => {
+        if (inline.length) visit({ tagName: "p", attrs: [], childNodes: inline }, lang);
+        inline = [];
+      };
+      for (const child of node.childNodes ?? []) {
+        if (child.nodeName === "#text" ||
+          (inlineProseTags.has(child.tagName) && !containsHeading(child))) inline.push(child);
+        else {
+          flushInline();
+          visit(child, lang);
+        }
+      }
+      flushInline();
       return;
     }
     for (const child of node.childNodes ?? []) visit(child, lang);
@@ -254,11 +341,14 @@ export function buildRetrievalSections(blocks) {
         throw new Error(`Retrieval content precedes its heading: ${block.tag}`);
       if (block.lang !== current.lang) {
         const previous = current;
+        const languageHeading = previous.headingPath.findLast(
+          (heading) => heading.lang === block.lang,
+        );
         flush();
         current = {
           level: previous.level,
           title: block.tag === "summary" ? block.text : previous.title,
-          id: block.id === undefined ? previous.id : block.id,
+          id: block.id === undefined ? languageHeading?.id ?? previous.id : block.id,
           retrievalAlias:
             block.retrievalAlias === undefined
               ? previous.retrievalAlias
@@ -311,6 +401,11 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     canonicalUrl: release.canonicalUrl,
     language: pageLanguage,
   });
+  const sourcePaths = new Set(contentRoutePaths(pageBody, release.canonicalUrl));
+  const sourceUrlForId = (id) => new URL(
+    sourcePaths.has(`/${id}`) ? id : `#${id}`,
+    release.canonicalUrl,
+  ).href;
 
   let markdown = [
     `# ${pageTitle}`,
@@ -323,9 +418,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   ].join("\n");
   for (const block of blocks) {
     markdown += `${renderRetrievalBlock(block)}\n`;
-    if (/^h[1-6]$/.test(block.tag)) {
+    if (headingTag(block.tag) || block.languageGroup) {
       if (block.id)
-        markdown += `<!-- anchor: ${new URL(block.id, release.canonicalUrl).href} -->\n`;
+        markdown += `<!-- anchor: ${sourceUrlForId(block.id)} -->\n`;
       if (block.retrievalAlias)
         markdown += `<!-- retrieval-alias: ${block.retrievalAlias} -->\n`;
     }
@@ -379,7 +474,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     }
     flushPending();
     chunks.forEach(({ text, answerIds }, index) => {
-      const anchor = `${new URL(section.id, release.canonicalUrl).href}`;
+      const anchor = sourceUrlForId(section.id);
       for (const answerId of answerIds) {
         const answer = byId.get(answerId);
         if (!answer || answer.url !== anchor)

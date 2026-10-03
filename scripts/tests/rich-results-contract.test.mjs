@@ -29,6 +29,33 @@ test("a missing primary entity name blocks page publication", () => {
   assert.throws(() => validatePageJsonLd(mutate("Person", (node) => { delete node.name; })), /mainEntity.name/);
 });
 
+test("FAQ pages require a named question and a typed accepted answer with published text", () => {
+  const pageId = inputs.lifecycle.canonicalUrl + "botox-onset-of-action#webpage";
+  const questionId = inputs.lifecycle.canonicalUrl + "question-botox-onset-of-action";
+  const answerId = inputs.lifecycle.canonicalUrl + "answer-botox-onset-of-action";
+  const projected = validatePageJsonLd(inputs.pageJsonLd)[0].document["@graph"];
+  const question = projected.find((node) => node["@id"] === questionId);
+  const answer = projected.find((node) => node["@id"] === answerId);
+  const valid = { "@context": "https://schema.org", "@graph": [
+    { "@id": pageId, "@type": ["MedicalWebPage", "FAQPage"], mainEntity: { "@id": questionId } },
+    question, answer,
+  ] };
+  assert.doesNotThrow(() => assertRichResultsDocument(valid, { primaryPageId: pageId }));
+  for (const [change, expected] of [
+    [(nodes) => { nodes[0].mainEntity = []; }, /FAQPage.mainEntity/],
+    [(nodes) => { nodes[1]["@type"] = "WebPageElement"; }, /FAQPage.mainEntity/],
+    [(nodes) => { delete nodes[1].name; }, /Question.name/],
+    [(nodes) => { delete nodes[1].acceptedAnswer; }, /Question.acceptedAnswer/],
+    [(nodes) => { nodes[1].acceptedAnswer = { "@id": inputs.lifecycle.canonicalUrl + "missing-answer" }; }, /Question.acceptedAnswer/],
+    [(nodes) => { nodes[2]["@type"] = "CreativeWork"; }, /Question.acceptedAnswer/],
+    [(nodes) => { nodes[2].text = " "; }, /Answer.text/],
+  ]) {
+    const broken = structuredClone(valid);
+    change(broken["@graph"]);
+    assert.throws(() => assertRichResultsDocument(broken), expected);
+  }
+});
+
 test("broken or wrongly typed clinic addresses block publication", () => {
   assert.throws(() => validatePageJsonLd(mutate("MedicalClinic", (node) => {
     node.address = { "@id": "https://www.ghezelbaash.ir/missing-address" };

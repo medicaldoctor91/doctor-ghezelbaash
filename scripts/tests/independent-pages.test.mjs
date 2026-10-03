@@ -42,6 +42,28 @@ test("profile, question documents and visible videos retain their distinct autho
   assert(video.entityTypes.includes("VideoObject"));
   assert.equal(video.videos.length, 1);
 });
+test("authored question routes publish medical FAQ identity with their original question and accepted answer", () => {
+  const canonicalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  const questionPages = pages.filter((page) => page.entityTypes.includes("Question"));
+  assert(questionPages.length > 0);
+  for (const page of questionPages) {
+    const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+    const document = byId.get(page.canonicalUrl + "#webpage");
+    const question = byId.get(page.entityId);
+    assert.equal(page.pageType, "MedicalWebPage");
+    assert.deepEqual(document["@type"], ["MedicalWebPage", "FAQPage"]);
+    assert.deepEqual(document.mainEntity, { "@id": question["@id"] });
+    assert.deepEqual(question.acceptedAnswer, canonicalById.get(question["@id"]).acceptedAnswer);
+    const answer = byId.get(question.acceptedAnswer["@id"]);
+    assert.equal(answer["@type"], "Answer");
+    assert.equal(typeof answer.text, "string");
+    assert(answer.text.trim());
+  }
+  for (const page of pages.filter((page) => !page.entityTypes.includes("Question"))) {
+    const document = page.document["@graph"].find((node) => node["@id"] === page.canonicalUrl + "#webpage");
+    assert(![document["@type"]].flat().includes("FAQPage"));
+  }
+});
 test("direct path HTML has one self canonical, scoped data and shared-reader bootstrap marker", () => {
   const page = pages.find((page) => page.path === "/botox");
   const html = renderIndependentPage(home, page);
@@ -83,6 +105,42 @@ test("focused paths preserve the dedicated physician identity without importing 
     assert.deepEqual(route.publisher, { "@id": original["@id"] });
     assert(!page.document["@graph"].some((node) => node["@id"] === homePage["@id"]));
   }
+});
+test("the dedicated profile retains its authored primary image without expanding its graph", () => {
+  const page = pages.find((page) => page.path === "/saeed-ghezelbash");
+  const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+  const profile = byId.get(page.canonicalUrl + "#webpage");
+  const authored = inputs.graph["@graph"].find((node) => node["@id"] === profile["@id"]);
+  assert.deepEqual(profile.primaryImageOfPage, authored.primaryImageOfPage);
+  assert.equal(byId.get(profile.primaryImageOfPage["@id"])["@type"], "ImageObject");
+  const botox = pages.find((entry) => entry.path === "/botox");
+  const medicalPage = botox.document["@graph"].find((node) => node["@id"] === botox.canonicalUrl + "#webpage");
+  assert(!medicalPage.primaryImageOfPage);
+  const graph = structuredClone(inputs.graph);
+  graph["@graph"].find((node) => node["@id"] === profile["@id"]).primaryImageOfPage = {
+    "@id": inputs.lifecycle.canonicalUrl + "unpublished-profile-image",
+  };
+  const withoutPublishedImage = deriveIndependentPages(home, graph, inputs.lifecycle.canonicalUrl)
+    .find((entry) => entry.path === page.path);
+  assert(!withoutPublishedImage.document["@graph"].find((node) => node["@id"] === profile["@id"]).primaryImageOfPage);
+});
+test("scoped physician discovery defines authored contact actions and service areas without importing unrelated service catalogs", () => {
+  const canonicalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  const discoveryById = new Map(inputs.pageJsonLd[0].document["@graph"].map((node) => [node["@id"], node]));
+  const suffixes = ["action-contact-clinic", "action-online-initial-consultation", "action-view-clinic-map",
+    "action-follow-instagram", "online-consultation-contact-point", "country-iraq"];
+  for (const page of pages) {
+    const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+    for (const suffix of suffixes) {
+      const id = inputs.lifecycle.canonicalUrl + suffix;
+      assert.deepEqual(byId.get(id), discoveryById.get(id) || canonicalById.get(id));
+    }
+    assert.equal(byId.size, page.document["@graph"].length);
+  }
+  const botox = pages.find((page) => page.path === "/botox-clinical-assessment-checklist");
+  const byId = new Map(botox.document["@graph"].map((node) => [node["@id"], node]));
+  assert(!byId.has(inputs.lifecycle.canonicalUrl + "procedure-facial-and-lip-dermal-filler"));
+  assert(!byId.has(inputs.lifecycle.canonicalUrl + "free-online-aesthetic-initial-consultation"));
 });
 test("answers stay inside their canonical question documents and never become independent routes", () => {
   assert.equal(pages.filter((page) => page.path.startsWith("/answer-")).length, 0);
@@ -137,6 +195,32 @@ test("social locales use supported regional ISO 639-1 codes while HTML retains p
     assert(!metas.some((node) => attr(node, "property") === "og:locale:alternate" && attr(node, "content") === locale));
     assert.equal(attr(inspected.elements.find((node) => node.tagName === "html"), "lang"), language);
   }
+});
+
+test("topic social locale alternates follow only reviewed translations and their declared regions", () => {
+  const template = home.replace("</head>", '<meta property="og:locale" content="fa_IR">' +
+    '<meta property="og:locale:alternate" content="en_US"><meta property="og:locale:alternate" content="ar_IQ">' +
+    '<meta property="og:locale:alternate" content="ku_IR"></head>');
+  const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
+  const locales = (html) => inspectHtml(html).elements.filter((node) =>
+    node.tagName === "meta" && attr(node, "property") === "og:locale:alternate").map((node) => attr(node, "content"));
+  const ordinary = pages.find((page) => page.path === "/botox");
+  assert.deepEqual(locales(renderIndependentPage(template, ordinary)), []);
+  const translated = ["/who-is-dr-saeed-ghezelbash-en", "/who-is-dr-saeed-ghezelbash-ar-iq", "/who-is-dr-saeed-ghezelbash-ckb-iq"]
+    .map((path) => pages.find((page) => page.path === path));
+  const alternates = translated.map((page) => ({ href: page.canonicalUrl, hrefLang: page.lang.replace("ckb", "ku") }));
+  for (const [page, expected] of [[translated[0], ["ar_IQ", "ku_IQ"]], [translated[1], ["en_US", "ku_IQ"]],
+      [translated[2], ["en_US", "ar_IQ"]]]) {
+    assert.deepEqual(locales(renderIndependentPage(template, { ...page, alternates })), expected);
+  }
+  const withoutEnglishRegion = template.replace('<meta property="og:locale:alternate" content="en_US">', "");
+  assert.deepEqual(locales(renderIndependentPage(withoutEnglishRegion, { ...translated[1], alternates })), ["ku_IQ"]);
+  const options = { declaredSocialLocales: ["en_US", "ar_IQ", "ku_IR"] };
+  assert.deepEqual(locales(renderIndependentPage(withoutEnglishRegion, { ...translated[1], alternates }, options)),
+    ["en_US", "ku_IQ"]);
+  assert.deepEqual(locales(renderIndependentPage(withoutEnglishRegion, ordinary, options)), []);
+  const englishWithSourceLocale = inspectHtml(renderIndependentPage(withoutEnglishRegion, { ...translated[0], alternates }, options));
+  assert.equal(attr(englishWithSourceLocale.elements.find((node) => node.tagName === "meta" && attr(node, "property") === "og:locale"), "content"), "en_US");
 });
 
 test("fine-grained Botox headings inherit authored topics and preserve their physician provider without unrelated procedures", () => {
@@ -208,6 +292,8 @@ test("focused HTML renders only declared language alternates and rejects ambiguo
 test("a question embedding its authored video keeps MedicalWebPage identity, answer and supporting media", () => {
   const page = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
   assert.equal(page.pageType, "MedicalWebPage");
+  assert.deepEqual(page.document["@graph"].find((node) => node["@id"] === page.canonicalUrl + "#webpage")["@type"],
+    ["MedicalWebPage", "FAQPage"]);
   assert(page.entityTypes.includes("Question"));
   const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
   const questionId = inputs.lifecycle.canonicalUrl + "question-jalupro-vs-profhilo-selection";
@@ -221,6 +307,8 @@ test("a question embedding its authored video keeps MedicalWebPage identity, ans
   const player = pages.find((entry) => entry.path === "/video-saeed-ghezelbash-jalupro-vs-profhilo");
   assert(player.entityTypes.includes("VideoObject"));
   assert.equal(player.entityId, videoId);
+  const template = home.replace("</head>", '<meta property="og:type" content="article"></head>');
+  assert(renderIndependentPage(template, page).includes('<meta property="og:type" content="article">'));
 });
 
 test("media summaries describe their authored subject without browser fallback or chapter controls", () => {

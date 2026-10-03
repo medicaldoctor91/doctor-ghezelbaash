@@ -63,7 +63,7 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
   const relationKeys = [
     "mainEntity", "author", "publisher", "about", "mentions", "hasPart",
     "acceptedAnswer", "suggestedAnswer", "creator", "provider", "image", "logo",
-    "primaryImageOfPage", "address", "geo", "location", "openingHoursSpecification",
+    "primaryImageOfPage", "address", "geo", "location", "openingHoursSpecification", "contactPoint", "areaServed",
     "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy",
     "identifier", "hasOccupation", "medicalSpecialty", "knowsAbout", "potentialAction",
     "object", "agent", "target", "inDefinedTermSet", "containedInPlace", "spatialCoverage",
