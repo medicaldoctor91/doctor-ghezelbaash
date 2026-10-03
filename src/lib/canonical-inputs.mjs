@@ -38,10 +38,10 @@ export function readCanonicalInputs(root = defaultRoot) {
     ?? new URL(release.url).pathname.slice(1);
   const releaseHistory = values(dataset.citation).map((ref) => byId.get(id(ref)))
     .filter((entry) => types(entry).includes("Dataset") && entry.version && entry.url?.startsWith("https://doi.org/10.5281/zenodo."))
-    .map((entry) => ({ release: entry.version, recordId: doi(entry).split(".").at(-1), versionDoi: doi(entry), publicationDate: entry.datePublished }));
+    .map((entry) => ({ release: entry.version, recordId: doi(entry).split(".").at(-1), versionDoi: doi(entry), publicationDate: text(entry.datePublished) }));
   const lifecycle = {
     release: dataset.version,
-    dateModified: zenodo.datePublished,
+    dateModified: text(zenodo.datePublished),
     canonicalUrl,
     primaryEntity: { id: id(dataset.mainEntity ?? dataset.creator) },
     clinic: { id: clinic["@id"] },
@@ -51,8 +51,8 @@ export function readCanonicalInputs(root = defaultRoot) {
       zenodo: { role: "preservation", versionDoi: doi(zenodo), recordId: doi(zenodo).split(".").at(-1), releaseHistory },
       huggingFace: { role: "ai-distribution", dataset: huggingFace.url, distributionMode: "ai-retrieval" },
     },
-    datasetRevisionDate: dataset.dateModified,
-    currentSource: { dateModified: github.dateModified ?? dataset.dateModified },
+    datasetRevisionDate: text(dataset.dateModified),
+    currentSource: { dateModified: text(github.dateModified ?? dataset.dateModified) },
   };
   const registryNode = byId.get(evidenceRegistryId);
   if (!registryNode || !types(registryNode).includes(evidenceRegistryType))
