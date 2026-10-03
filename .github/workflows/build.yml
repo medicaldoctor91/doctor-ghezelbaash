@@ -96,6 +96,8 @@ jobs:
             .generated/shacl-validation.json
             .generated/shacl-validation.txt
             .generated/reader-validation.json
+            src/content-source/page.md
+            src/data/semantic/knowledge-graph.jsonld
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
