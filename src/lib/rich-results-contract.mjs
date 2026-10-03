@@ -21,12 +21,20 @@ const rdfScalar = (value) => {
   }
   return raw;
 };
-const formatBrowserValue = (value) => {
-  if (Array.isArray(value)) return value.map(formatBrowserValue);
+const browserTypes = (value) => {
+  const authored = values(value);
+  const schemaTypes = authored.filter((type) => typeof type === "string" &&
+    !type.includes(":") && !/^https?:\/\//.test(type));
+  const selected = schemaTypes.length ? schemaTypes : authored;
+  return selected.length === 1 ? selected[0] : selected;
+};
+const formatBrowserValue = (value, key) => {
+  if (key === "@type") return browserTypes(value);
+  if (Array.isArray(value)) return value.map((entry) => formatBrowserValue(entry));
   if (!value || typeof value !== "object") return value;
   if ("@value" in value) return rdfScalar(value);
   return Object.fromEntries(Object.entries(value)
-    .map(([key, entry]) => [key, formatBrowserValue(entry)]));
+    .map(([property, entry]) => [property, formatBrowserValue(entry, property)]));
 };
 const text = (value, label) => {
   if (typeof value !== "string" || !value.trim()) fail(label + " must be nonempty Text");
@@ -59,7 +67,8 @@ const duration = (value, label) => {
 /**
  * Checks this site's published discovery graph, not Google's ranking or live
  * crawler access. Canonical RDF literals are compacted to browser-safe JSON
- * scalars here; the authoritative graph itself remains unchanged.
+ * scalars and supplemental RDF ontology types are omitted when a Schema.org
+ * type is already present. The authoritative graph itself remains unchanged.
  */
 export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document?.["@graph"]))
