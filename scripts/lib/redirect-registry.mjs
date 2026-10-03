@@ -119,7 +119,7 @@ export function consolidateContentRedirectTargets(rows, records, canonicalUrl) {
     throw new Error("Redirect consolidation requires uniquely classified authored routes");
 
   let retargeted = 0;
-  const output = rows.map((row) => {
+  const consolidatedRows = rows.map((row) => {
     if (![301, 308].includes(row.statusCode)) return { ...row };
     const targetUrl = new URL(row.target, canonical);
     if (targetUrl.origin !== canonical.origin || targetUrl.search || targetUrl.hash)
@@ -134,7 +134,7 @@ export function consolidateContentRedirectTargets(rows, records, canonicalUrl) {
     retargeted++;
     return { ...row, target: ancestor.path };
   });
-  return Object.assign(output, { retargeted });
+  return { rows: consolidatedRows, retargeted };
 }
 
 /** Render final Cloudflare rules: permanent content redirects plus exact machine rewrites. */
