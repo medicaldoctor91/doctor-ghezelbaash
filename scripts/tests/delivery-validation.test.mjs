@@ -20,13 +20,16 @@ test("delivery validation checks final pathnames rather than fragment-bearing fi
   ], base), /Delivery chain/);
 });
 
-test("native links reject aliases and preserve a valid final URL with its fragment", () => {
+test("native links reject delivery aliases, preserve canonical owners and allow final reader root fragments", () => {
   const options = { canonicalOrigin: origin, rows: [{ source: "/old-answer", target: "/botox#answer-onset", statusCode: 301 }], resolveContentUrl: (value) => value };
   assert.throws(() => assertFinalNativeUrl("/old-answer", base, options), /final URL/);
   const url = assertFinalNativeUrl("/botox#answer-onset", base, options);
   assert.equal(url.pathname, "/botox");
   assert.equal(url.hash, "#answer-onset");
   assert.throws(() => assertFinalNativeUrl("/botox#old-heading", base, { ...options, resolveContentUrl: () => origin + "/botox#answer-onset" }), /canonical content owner/);
+  const reader = assertFinalNativeUrl("/#old-heading", base, { ...options, resolveContentUrl: () => origin + "/botox#old-heading" });
+  assert.equal(reader.pathname, "/");
+  assert.equal(reader.hash, "#old-heading");
 });
 
 test("a fragment must exist in the actual initial focused target, not merely somewhere on home", () => {

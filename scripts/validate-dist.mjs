@@ -5,7 +5,7 @@ import { canonicalContentHtmlId, exactLanguageLiteral } from "../src/lib/graph-c
 import { routeDocumentFile } from "./lib/independent-pages.mjs";
 import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, machineNamespaceAliasRows, renderStaticRewrites } from "./lib/redirect-registry.mjs";
 import { readerRouteAliases } from "./lib/reader-route-aliases.mjs";
-import { URL_ARCHITECTURE, canonicalPaths, assertHtmlTargets, redirectRows, resolveContentUrl, urlForHtmlId } from "../src/lib/url-architecture.mjs";
+import { URL_ARCHITECTURE, canonicalPaths, assertHtmlTargets, fragmentRows, redirectRows, resolveContentUrl, urlForHtmlId } from "../src/lib/url-architecture.mjs";
 import { dateValue, temporalValue } from "../src/lib/graph-dates.mjs";
 import { browserContextFor } from "../src/lib/page-discovery-jsonld.mjs";
 import { assertSingleHopDelivery, assertFinalNativeUrl, assertPublishedFragment, assertPhysicalHtmlSurface } from "./lib/delivery-validation.mjs";
@@ -135,9 +135,19 @@ for (const route of paths) {
     `Missing independent content document: ${route}`);
 }
 const corpusAliases = redirectRows();
-assert.equal(corpusAliases.length, 1057, "Reviewed legacy corpus redirect count drift");
+assert.equal(corpusAliases.length, URL_ARCHITECTURE.retiredPaths.length,
+  "Only explicitly retired corpus paths may be emitted as HTTP redirects");
 for (const { source, target, statusCode } of corpusAliases)
   assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing consolidated corpus redirect: ${source}`);
+const fragmentAliases = fragmentRows();
+for (const { source, target } of fragmentAliases) {
+  assert(!rewriteRows.some((row) => row.source === source),
+    `Authored fragment path must not be emitted as an HTTP redirect: ${source}`);
+  const destination = new URL(target, lifecycle.canonicalUrl);
+  assert(canonicalSurface.includes(destination.pathname), `Missing canonical fragment owner: ${target}`);
+  assertPublishedFragment(destination, (await publishedDocument(destination.pathname)).ids,
+    `Authored fragment alias ${source} -> ${target}`);
+}
 const registeredSources = new Set([...legacyAliases, ...answerAliases, ...corpusAliases].map((row) => row.source));
 const metadataRoutes = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl)
   .filter(({ source }) => !paths.includes(source) && !registeredSources.has(source));

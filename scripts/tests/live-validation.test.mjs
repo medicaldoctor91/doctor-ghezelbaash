@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { liveOptions, livePlan, validateLive } from "../validate-live.mjs";
 import { machineNamespaceAliasRows } from "../lib/redirect-registry.mjs";
+import { fragmentRows } from "../../src/lib/url-architecture.mjs";
 
 const origin = "https://www.ghezelbaash.ir";
 const doctor = { "@id": origin + "/saeed-ghezelbash", "@type": "Person", name: "Physician", url: origin + "/", mainEntityOfPage: { "@id": origin + "/webpage" } };
@@ -45,12 +46,19 @@ test("live options reject credentials, unbounded concurrency and abbreviated dep
   assert.throws(() => liveOptions(["--expected-commit", "abc123"]), /full commit SHA/);
 });
 
-test("live plan covers the shared finite corpus and exact legacy answer fragments", async () => {
+test("live plan keeps authored section paths as root fragments and probes only real redirect surfaces", async () => {
   const actual = await livePlan();
+  const fragments = fragmentRows();
   assert.equal(actual.paths.length, 72);
-  assert.equal(actual.counts.corpusRedirects, 1057);
+  assert.equal(actual.counts.corpusRedirects, 2);
+  assert(fragments.length > 1000);
+  assert(fragments.every((fragment) => !actual.rows.some((row) => row.source === fragment.source)));
   assert.equal(actual.namespaces.length, 5);
-  assert.deepEqual(actual.rows.find((row) => row.source === "/saeed-ghezelbash"), { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 });
+  assert.equal(actual.rows.find((row) => row.source === "/saeed-ghezelbash"), undefined);
+  assert.deepEqual(fragments.find((row) => row.source === "/saeed-ghezelbash"),
+    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash" });
+  assert.deepEqual(fragments.find((row) => row.source === "/botox-heading"),
+    { source: "/botox-heading", target: "/#botox-heading" });
   assert(actual.counts.answerRedirects > 0);
   assert(actual.rows.some((row) => row.statusCode === 301 && /#answer-/.test(row.target)));
 });
