@@ -173,9 +173,11 @@ export function resolveContentUrl(value, { absolute = false, policy = URL_ARCHIT
 }
 
 /**
- * Normalize authored browser links. The 72 canonical resources retain their
- * real paths, while subordinate authored path aliases behave like the original
- * page.md hash links and navigate to the comprehensive reader as /#id.
+ * Normalize authored browser links without changing semantic ownership. The 72
+ * canonical resources retain their real paths. Subordinate authored path aliases
+ * behave like the earlier one-page page.md links: they navigate to /#id in the
+ * comprehensive reader. Canonical/discovery consumers continue to use
+ * resolveContentUrl() and htmlIdTargets for the true owning document.
  */
 export function sourceNavigationUrl(value, { absolute = false, policy = URL_ARCHITECTURE } = {}) {
   if (typeof value !== "string" || !value) return value;
