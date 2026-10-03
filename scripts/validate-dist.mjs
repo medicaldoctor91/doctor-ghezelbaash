@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { deriveTopicBreadcrumbItems } from "./lib/topic-navigation.mjs";
-import { assertRichResultsDocument } from "../src/lib/rich-results-contract.mjs";
+import { assertRichResultsDocument, browserTypes } from "../src/lib/rich-results-contract.mjs";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import { routeDocumentFile } from "./lib/independent-pages.mjs";
@@ -157,7 +157,7 @@ for (const published of browserNodes) {
     assert.equal(published["@id"], lifecycle.canonicalUrl + "#questions", "Unexpected generated browser node");
     continue;
   }
-  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Published entity type drift");
+  assert.deepEqual([published["@type"]].flat(), [browserTypes(authored["@type"])].flat(), "Published entity type drift");
 }
 for (const forbidden of ["ProfilePage", "Review"])
   assert(!browserNodes.some((node) => typeHas(node, forbidden)), "Homepage projection exposes an unrelated rich-result candidate: " + forbidden);
