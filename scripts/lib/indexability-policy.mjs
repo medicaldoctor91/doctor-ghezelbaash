@@ -3,7 +3,6 @@ import { reviewedRoutePurposes } from "./route-schema-policy.mjs";
 
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const reviewedPaths = new Set(reviewedRoutePurposes.map(({ path }) => path));
-const lowValuePaths = new Set(["/media-license", "/media-license-title"]);
 const INDEX_ROBOTS = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 const NOINDEX_ROBOTS = "noindex, follow";
 
@@ -45,9 +44,7 @@ export function applyIndexabilityPolicy(records) {
     const metrics = inspectScope(record.bodyHtml);
     let indexable = false, reason = "derived-fragment-route";
 
-    if (lowValuePaths.has(record.path)) {
-      reason = "low-value-machine-disclosure";
-    } else if (record.navigation?.equivalentTo && paths.has(record.navigation.equivalentTo)) {
+    if (record.navigation?.equivalentTo && paths.has(record.navigation.equivalentTo)) {
       reason = "equivalent-heading-route";
     } else if (record.pageType === "ProfilePage" || entityTypes.has("Person")) {
       indexable = true; reason = "physician-profile";
