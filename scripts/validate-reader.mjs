@@ -220,7 +220,41 @@ export async function validateReader({ root = process.cwd(), distDirectory = pat
         return { topic, child, back, home: summary(restored) };
       } finally { await page.close(); }
     });
-    for (const width of [390, 1280]) await run("same-document Back preserves reading position " + width, async () => {
+    const savedReadingPosition = async (page) => {
+      await page.waitForFunction(() => {
+        const saved = history.state?.__completeGuideScroll, anchor = saved?.anchor;
+        const node = anchor && document.getElementById(anchor.id);
+        return node && Number.isFinite(saved.y) && Math.abs(scrollY - saved.y) < 8 &&
+          Math.abs(node.getBoundingClientRect().top - anchor.top) < 8;
+      }, null, { timeout: 5_000 });
+      return page.evaluate(() => {
+        const saved = history.state.__completeGuideScroll, anchor = saved.anchor;
+        const node = document.getElementById(anchor.id);
+        return { y: scrollY, anchor: { id: anchor.id, top: node.getBoundingClientRect().top },
+          text: node.textContent.replace(/\s+/gu, " ").trim().slice(0, 100) };
+      });
+    };
+    const restoredReadingPosition = async (page, expected, sameDocument = true) => {
+      await page.waitForFunction((anchor) => {
+        const node = document.getElementById(anchor.id);
+        return node && Math.abs(node.getBoundingClientRect().top - anchor.top) < 8;
+      }, expected.anchor, { timeout: 5_000 });
+      await page.waitForTimeout(150);
+      const actual = await page.evaluate((anchor) => {
+        const node = document.getElementById(anchor.id);
+        return { y: scrollY, anchor: { id: anchor.id, top: node.getBoundingClientRect().top },
+          text: node.textContent.replace(/\s+/gu, " ").trim().slice(0, 100), token: window.__readerDocumentToken ?? null,
+          saved: history.state?.__completeGuideScroll };
+      }, expected.anchor);
+      assert.equal(actual.token, sameDocument ? "same-document" : null,
+        sameDocument ? "History navigation unexpectedly replaced the document" : "Back reused the document despite disabled BFCache");
+      assert.equal(actual.text, expected.text, "History restored a different source anchor");
+      assert(Math.abs(actual.anchor.top - expected.anchor.top) < 8,
+        "History shifted the visible reading anchor: " + JSON.stringify({ expected, actual }));
+      assert(Number.isFinite(actual.saved?.y), "The departure did not preserve a real history position");
+      return actual;
+    };
+    for (const width of [390, 1280]) await run("same-document Back and Forward preserve reading position " + width, async () => {
       const { page, errors } = await fresh(width);
       try {
         await page.goto(server.origin + "/botox", { waitUntil: "domcontentloaded" }); await ready(page);
@@ -231,20 +265,17 @@ export async function validateReader({ root = process.cwd(), distDirectory = pat
           window.__readerDocumentToken = "same-document";
           window.scrollBy(0, 700);
         });
-        await page.waitForTimeout(150);
-        const before = await page.evaluate(() => ({ y: scrollY, top: document.getElementById("botox").getBoundingClientRect().top }));
+        const before = await savedReadingPosition(page);
         await clickLink(page, "/aesthetic-guide-en"); await inspect(page, "/aesthetic-guide-en");
+        await page.evaluate(() => window.scrollBy(0, 450));
+        const forwardBefore = await savedReadingPosition(page);
         await page.goBack(); await page.waitForURL((url) => url.pathname === "/botox");
         await inspect(page, "/botox");
-        await page.waitForFunction((position) => Math.abs(scrollY - position) < 8, before.y, { timeout: 5_000 });
-        await page.waitForTimeout(150);
-        const after = await page.evaluate(() => ({ y: scrollY, top: document.getElementById("botox").getBoundingClientRect().top,
-          token: window.__readerDocumentToken, saved: history.state?.__completeGuideScroll }));
-        assert.equal(after.token, "same-document", "Back unexpectedly replaced the document");
-        assert(Math.abs(after.y - before.y) < 8, "Back shifted the saved reading position");
-        assert(Math.abs(after.top - before.top) < 8, "Back shifted the visible primary content");
-        assert.equal(after.saved?.y, before.y, "The departure did not preserve its real history position");
-        assert.deepEqual(errors, []); return { before, after };
+        const after = await restoredReadingPosition(page, before);
+        await page.goForward(); await page.waitForURL((url) => url.pathname === "/aesthetic-guide-en");
+        await inspect(page, "/aesthetic-guide-en");
+        const forwardAfter = await restoredReadingPosition(page, forwardBefore);
+        assert.deepEqual(errors, []); return { before, after, forwardBefore, forwardAfter };
       } finally { await page.close(); }
     });
     for (const route of ["/botox", "/aesthetic-guide-en"]) await run("full-document Back without BFCache " + route, async () => {
@@ -252,15 +283,15 @@ export async function validateReader({ root = process.cwd(), distDirectory = pat
       try {
         await page.goto(server.origin + route, { waitUntil: "domcontentloaded" }); await ready(page);
         await page.evaluate(() => { window.__readerDocumentToken = "departed"; window.scrollBy(0, 700); });
-        await page.waitForTimeout(150); const before = await page.evaluate(() => scrollY);
+        const before = await savedReadingPosition(page);
         await page.goto(server.origin + "/filler", { waitUntil: "domcontentloaded" }); await ready(page);
         await page.goBack({ waitUntil: "domcontentloaded" }); await ready(page);
-        await page.waitForFunction((position) => Math.abs(scrollY - position) < 8, before, { timeout: 5_000 });
+        const position = await restoredReadingPosition(page, before, false);
         const restored = await inspect(page, route);
         const navigation = await page.evaluate(() => ({ type: performance.getEntriesByType("navigation")[0].type,
           scrollY, token: window.__readerDocumentToken ?? null }));
         assert.equal(navigation.type, "back_forward"); assert.equal(navigation.token, null, "Back used the old document despite disabled BFCache");
-        assert.deepEqual(errors, []); return { before, navigation, restored };
+        assert.deepEqual(errors, []); return { before, position, navigation, restored };
       } finally { await page.close(); }
     });
     assert.equal(checks.filter((check) => check.name.startsWith("direct ")).length, resources.length, "Reader validation did not cover every focused route");

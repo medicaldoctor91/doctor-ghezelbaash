@@ -62,6 +62,7 @@ function loadPage(type, pathname = "/section", aliases = {}, { hash = "", comple
     interact: (type) => emit(type),
     primaryChanged: () => {for(const listener of documentListeners.get("guide:primary-changed")||[])listener();},
     listenerCount: (type) => (listeners.get(type)||[]).length,
+    setScrollY: (value) => { context.scrollY = value; },
   };
 }
 test("Back without BFCache does not reposition the saved scroll on load or pageshow", () => {
@@ -409,4 +410,44 @@ test("same-document saved restoration also has a bounded font readiness wait",as
   let page;page=loadPage("navigate","/",{}, {historyState:{__completeGuideScroll:{x:0,y:11511}},fontsReady:new Promise(()=>{}),syncRoute:async()=>{page.primaryChanged();return true;}});
   await page.ready;const completion=page.popstate();await settle();page.advanceTime(349);await settle();assert.deepEqual(page.restoredPositions,[]);
   page.advanceTime(1);await completion;assert.deepEqual(page.restoredPositions,[{x:0,y:11511}]);
+});
+
+test("same-document restoration preserves an authored reading anchor when preceding geometry changes", async () => {
+  let page;
+  const position = { x: 3, y: 11511, anchor: { id: "reading-answer", top: 112 } };
+  page = loadPage("navigate", "/", {}, { historyState: { __completeGuideScroll: position }, syncRoute: async () => { page.primaryChanged(); return true; } });
+  const anchor = page.addTarget("reading-answer");
+  anchor.closest = (selector) => selector === ".medical-guide" ? {} : null;
+  anchor.getBoundingClientRect = () => ({ top: 282, bottom: 382 });
+  page.setScrollY(11511);
+  await page.ready; await page.popstate();
+  assert.deepEqual(page.restoredPositions[0], { x: 3, y: 11511 });
+  assert.deepEqual(page.restoredPositions.at(-1), { x: 3, y: 11681 });
+});
+test("a missing or invalid reading anchor retains the old coordinate fallback", async () => {
+  for (const anchor of [{ id: "missing", top: 12 }, { id: "reading-answer", top: Infinity }, { id: "", top: 12 }, { id: "reading-answer", top: "12" }]) {
+    let page;page=loadPage("navigate","/",{}, {historyState:{__completeGuideScroll:{x:0,y:11511,anchor}},syncRoute:async()=>{page.primaryChanged();return true;}});
+    await page.ready;await page.popstate();assert.deepEqual(page.restoredPositions,[{x:0,y:11511}]);
+  }
+});
+test("same-document history uses its most recent settled entry snapshot before the background write deadline", async () => {
+  let page;page=loadPage("navigate","/",{}, {historyState:{__completeGuideScroll:{x:0,y:100}},syncRoute:async()=>{page.primaryChanged();return true;}});
+  page.window.readGuideScrollState=()=>({x:0,y:650});
+  await page.ready;await page.popstate();assert.deepEqual(page.restoredPositions,[{x:0,y:650}]);
+});
+test("new input during anchor materialization cancels the second position correction", async () => {
+  let page,reads=0;page=loadPage("navigate","/",{}, {historyState:{__completeGuideScroll:{x:0,y:11511,anchor:{id:"reading-answer",top:112}}},syncRoute:async()=>{page.primaryChanged();return true;}});
+  const anchor=page.addTarget("reading-answer");anchor.closest=(selector)=>selector===".medical-guide"?{}:null;
+  anchor.getBoundingClientRect=()=>{if(++reads===1)page.interact("wheel");return{top:282,bottom:382};};
+  page.setScrollY(11511);await page.ready;await page.popstate();assert.equal(page.restoredPositions.length,1);
+  assert.equal(reads,1);
+});
+
+test("full-document Back without BFCache preserves its authored anchor through initial guide reflow",async()=>{
+  let finishGuide;const completeGuideReady=new Promise(resolve=>{finishGuide=resolve});
+  const page=loadPage("back_forward","/section",{}, {completeGuideReady,historyState:{__completeGuideScroll:{x:0,y:4000,anchor:{id:"reading-answer",top:75}}}});
+  const anchor=page.addTarget("reading-answer");anchor.closest=selector=>selector===".medical-guide"?{}:null;
+  anchor.getBoundingClientRect=()=>({top:246,bottom:346});page.setScrollY(4000);finishGuide(true);await page.ready;
+  assert.deepEqual(page.restoredPositions[0],{x:0,y:4000});assert.deepEqual(page.restoredPositions.at(-1),{x:0,y:4171});
+  assert.deepEqual(page.visited,[]);
 });

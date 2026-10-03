@@ -6,15 +6,91 @@
   let homeSource, homeState, readerLoaded = false, expansion, ticket = 0;
   let committedPath = keyFor(location.pathname);
 
+  // Read the current visible region without measuring every deferred source ID.
+  // Headings keep their authored IDs when primary/context nodes are rebuilt.
+  const captureReadingAnchor = () => {
+    const root = d.querySelector("[data-guide-reader]") || primaryArticle();
+    if (!root || !d.elementFromPoint) return null;
+    const y = Math.min(240, window.innerHeight * .25);
+    let visible;
+    for (const fraction of [.5, .35, .65]) {
+      const x = window.innerWidth * fraction, hit = d.elementFromPoint(x, y);
+      if (!hit || !root.contains(hit) || hit.closest("[data-route-context],#guide-search")) continue;
+      const caret = d.caretRangeFromPoint?.(x, y)?.startContainer;
+      const parent = caret?.nodeType === 3 ? caret.parentElement : null;
+      const candidate = parent && root.contains(parent) ? parent : hit;
+      if (candidate && root.contains(candidate)) { visible = candidate; break; }
+    }
+    if (!visible) return null;
+    let anchor = visible.closest("[id]");
+    if (!anchor || !root.contains(anchor) || !anchor.matches("h1,h2,h3,h4,h5,h6,p,li,figcaption,video,table,td,th")) {
+      const headings = root.querySelectorAll("h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]");
+      anchor = [...headings].reverse().find((node) => !node.closest("[data-route-context]") &&
+        (node.contains(visible) || Boolean(node.compareDocumentPosition(visible) & 4)));
+    }
+    if (!anchor || !root.contains(anchor) || anchor.closest("[data-route-context],#guide-search") || /^rc\d+$/.test(anchor.id)) return null;
+    const top = anchor.getBoundingClientRect().top;
+    return Number.isFinite(top) ? { id: anchor.id, top } : null;
+  };
+  let scrollPaused = true, scrollGeneration = 0, scrollTimer, lastScrollWrite = -Infinity, entrySequence = 0;
+  const settledPositions = new Map();
+  const rememberPosition = () => {
+    const previous = window.history.state?.__completeGuideScroll;
+    const position = { x: window.scrollX, y: window.scrollY,
+      entry: typeof previous?.entry === "string" ? previous.entry : `${performance.timeOrigin}-${++entrySequence}` };
+    const anchor = captureReadingAnchor();
+    if (anchor) position.anchor = anchor;
+    settledPositions.set(position.entry, position);
+    if (settledPositions.size > 100) settledPositions.delete(settledPositions.keys().next().value);
+    return position;
+  };
+  window.readGuideScrollState = () => {
+    const saved = window.history.state?.__completeGuideScroll;
+    return settledPositions.get(saved?.entry) || saved;
+  };
   // A focused entry can be shorter than its saved complete-reader position.
   window.saveGuideScrollState = () => {
+    if (!readerLoaded || keyFor(location.pathname) !== committedPath) return;
     const previous = window.history.state;
-    window.history.replaceState({
-      ...(previous && typeof previous === "object" ? previous : {}),
-      __completeGuideScroll: { x: window.scrollX, y: window.scrollY },
-    }, "");
+    const position = rememberPosition(), anchor = position.anchor;
+    const saved = previous?.__completeGuideScroll;
+    if (saved?.entry === position.entry && saved?.x === position.x && saved?.y === position.y &&
+      saved?.anchor?.id === anchor?.id && saved?.anchor?.top === anchor?.top) return;
+    try {
+      window.history.replaceState({
+        ...(previous && typeof previous === "object" ? previous : {}),
+        __completeGuideScroll: position,
+      }, "");
+      lastScrollWrite = performance.now();
+    } catch { /* Native history remains usable if the browser refuses a write. */ }
   };
-  window.addEventListener("pagehide", window.saveGuideScrollState);
+  const scheduleScrollState = () => {
+    clearTimeout(scrollTimer);
+    if (scrollPaused) return;
+    const generation = scrollGeneration;
+    scrollTimer = setTimeout(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (scrollPaused || generation !== scrollGeneration || !readerLoaded || keyFor(location.pathname) !== committedPath) return;
+        rememberPosition();
+        const delay = 500 - (performance.now() - lastScrollWrite);
+        if (delay <= 0) window.saveGuideScrollState();
+        else scrollTimer = setTimeout(() => {
+          if (!scrollPaused && generation === scrollGeneration) window.saveGuideScrollState();
+        }, delay);
+      }));
+    }, 120);
+  };
+  window.pauseGuideScrollState = () => {
+    clearTimeout(scrollTimer); scrollPaused = true;
+    return ++scrollGeneration;
+  };
+  window.resumeGuideScrollState = (generation) => {
+    if (generation !== scrollGeneration) return;
+    scrollPaused = false; window.saveGuideScrollState();
+  };
+  window.addEventListener("scroll", scheduleScrollState, { passive: true });
+  window.addEventListener("popstate", window.pauseGuideScrollState);
+  window.addEventListener("pagehide", () => { if (!scrollPaused) window.saveGuideScrollState(); });
   const fetchHtml = async (path) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);

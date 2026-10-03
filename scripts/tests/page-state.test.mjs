@@ -413,11 +413,14 @@ test("pagehide saves current scroll coordinates while preserving existing histor
   const readerPage = await reader(t, { historyState });
   await readerPage.ready();
   const result = await readerPage.page.evaluate(() => {
+    window.resumeGuideScrollState(window.pauseGuideScrollState());
+    window.__readerTest.historyReplacements.length = 0;
     document.body.style.minHeight = "5000px"; window.scrollTo(0, 1800);
     window.dispatchEvent(new PageTransitionEvent("pagehide"));
     return { state: history.state, path: location.pathname, x: window.scrollX, y: window.scrollY, replacements: window.__readerTest.historyReplacements };
   });
-  assert.deepEqual(result.state, { routeKey: "botox", reader: { appointment: "draft" }, __completeGuideScroll: { x: result.x, y: result.y } });
+  assert.deepEqual(result.state, { routeKey: "botox", reader: { appointment: "draft" }, __completeGuideScroll: { x: result.x, y: result.y, entry: result.state.__completeGuideScroll.entry } });
+  assert.equal(typeof result.state.__completeGuideScroll.entry, "string");
   assert.equal(result.y, 1800);
   assert.equal(result.path, "/botox");
   assert.equal(result.replacements.length, 1);
@@ -431,7 +434,7 @@ test("explicit scroll snapshots merge the latest state supplied by other integra
     document.body.style.minHeight = "5000px"; window.scrollTo(0, 1800); window.saveGuideScrollState();
     return { state: history.state, x: window.scrollX, y: window.scrollY, path: location.pathname };
   });
-  assert.deepEqual(result.state, { initial: true, externalWidget: { selected: "clinic" }, __completeGuideScroll: { x: result.x, y: result.y } });
+  assert.deepEqual(result.state, { initial: true, externalWidget: { selected: "clinic" }, __completeGuideScroll: { x: result.x, y: result.y, entry: result.state.__completeGuideScroll.entry } });
   assert.equal(result.path, "/");
   assert.deepEqual(await readerPage.requests(), []);
 });
@@ -599,4 +602,67 @@ test("loopback reader requests accept the declared production canonical origin",
   assert.equal(await readerPage.navigate("/filler"), true);
   assertLandmarks(await stateFor(readerPage.page), { title: "Filler", path: "/filler" });
   assert.deepEqual(await readerPage.requests(), ["/", "/filler"]);
+});
+
+async function scrollFixture(page) {
+  await page.evaluate(() => {
+    const article=document.querySelector("main article.medical-guide");
+    article.innerHTML='<h1 id="reading-title">Clinical guidance</h1><p style="height:600px">Opening context</p><h2 id="reading-section">Assessment</h2><p id="reading-answer" style="height:1200px">An authored answer remains the reader’s stable position.</p><p style="height:1600px">Further guidance</p>';
+    document.body.style.margin="0";
+    window.scrollTo(0,700);
+    Object.defineProperty(performance,"now",{value:()=>window.__readerTest.clock});
+    window.resumeGuideScrollState(window.pauseGuideScrollState());
+    window.__readerTest.historyReplacements.length=0;
+  });
+}
+async function layoutFrames(page) {
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+}
+test("scroll snapshots measure only the visible authored anchor and preserve external history state",async(t)=>{
+  const readerPage=await reader(t,{initial:home,path:"/",historyState:{externalWidget:{selected:"clinic"}}});await readerPage.ready();await scrollFixture(readerPage.page);
+  const result=await readerPage.page.evaluate(()=>{
+    const measured=[],getRect=Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect=function(){measured.push(this.id);return getRect.call(this)};
+    window.saveGuideScrollState();Element.prototype.getBoundingClientRect=getRect;
+    return{snapshot:history.state.__completeGuideScroll,measured,top:document.getElementById("reading-answer").getBoundingClientRect().top,externalWidget:history.state.externalWidget};
+  });
+  assert.equal(result.snapshot.anchor.id,"reading-answer");assert.equal(result.snapshot.anchor.top,result.top);
+  assert.deepEqual(result.measured,["reading-answer"]);assert.deepEqual(result.externalWidget,{selected:"clinic"});
+});
+test("anonymous visible paragraphs bind to their preceding authored heading inside the reader",async(t)=>{
+  const readerPage=await reader(t,{initial:home,path:"/"});await readerPage.ready();await scrollFixture(readerPage.page);
+  const result=await readerPage.page.evaluate(()=>{document.getElementById("reading-answer").removeAttribute("id");window.saveGuideScrollState();return history.state.__completeGuideScroll;});
+  assert.equal(result.anchor.id,"reading-section");assert.notEqual(result.anchor.id,"main-content");
+});
+test("background snapshots retain the latest quick-Forward position while history writes remain throttled",async(t)=>{
+  const readerPage=await reader(t,{initial:home,path:"/"});await readerPage.ready();await scrollFixture(readerPage.page);
+  await readerPage.page.evaluate(()=>{history.pushState(null,"","/#second-entry");window.resumeGuideScrollState(window.pauseGuideScrollState());window.__readerTest.historyReplacements.length=0;window.scrollTo(0,800);window.dispatchEvent(new Event("scroll"));});
+  await readerPage.advance(120);await layoutFrames(readerPage.page);
+  const pending=await readerPage.page.evaluate(()=>({stored:history.state.__completeGuideScroll,latest:window.readGuideScrollState(),writes:window.__readerTest.historyReplacements.length}));
+  assert.equal(pending.stored.y,700);assert.equal(pending.latest.y,800);assert.equal(pending.writes,0);assert.equal(pending.latest.entry,pending.stored.entry);
+  await readerPage.page.goBack();await readerPage.page.waitForURL((url)=>!url.hash);
+  const first=await readerPage.page.evaluate(()=>window.readGuideScrollState());assert.equal(first.y,700);assert.notEqual(first.entry,pending.latest.entry);
+  await readerPage.page.goForward();await readerPage.page.waitForURL((url)=>url.hash==="#second-entry");
+  const forward=await readerPage.page.evaluate(()=>window.readGuideScrollState());assert.equal(forward.y,800);assert.deepEqual(forward.anchor,pending.latest.anchor);
+});
+test("background writes are debounced, deduplicated, and separated by at least500ms",async(t)=>{
+  const readerPage=await reader(t,{initial:home,path:"/"});await readerPage.ready();await scrollFixture(readerPage.page);
+  await readerPage.page.evaluate(()=>{window.scrollTo(0,800);for(let i=0;i<30;i++)window.dispatchEvent(new Event("scroll"));});
+  await readerPage.advance(120);await layoutFrames(readerPage.page);
+  assert.equal(await readerPage.page.evaluate(()=>window.__readerTest.historyReplacements.length),0);
+  await readerPage.advance(379);assert.equal(await readerPage.page.evaluate(()=>window.__readerTest.historyReplacements.length),0);
+  await readerPage.advance(1);assert.equal(await readerPage.page.evaluate(()=>window.__readerTest.historyReplacements.length),1);
+  await readerPage.page.evaluate(()=>{window.dispatchEvent(new Event("scroll"));});await readerPage.advance(500);await layoutFrames(readerPage.page);
+  assert.equal(await readerPage.page.evaluate(()=>window.__readerTest.historyReplacements.length),1);
+});
+test("paused or superseded scroll tracking cannot overwrite a destination entry during reconstruction",async(t)=>{
+  const readerPage=await reader(t,{initial:home,path:"/"});await readerPage.ready();await scrollFixture(readerPage.page);
+  await readerPage.page.evaluate(()=>{const stale=window.pauseGuideScrollState();window.pauseGuideScrollState();history.pushState({destination:true},"","/english");window.resumeGuideScrollState(stale);window.dispatchEvent(new Event("scroll"));});
+  await readerPage.advance(1000);await layoutFrames(readerPage.page);
+  assert.deepEqual(await readerPage.page.evaluate(()=>history.state),{destination:true});
+});
+test("browser history write refusal does not break scrolling or explicit route departure",async(t)=>{
+  const readerPage=await reader(t,{initial:home,path:"/"});await readerPage.ready();await scrollFixture(readerPage.page);
+  const result=await readerPage.page.evaluate(()=>{history.replaceState=()=>{throw new DOMException("History quota","SecurityError")};window.scrollTo(0,800);window.saveGuideScrollState();return window.readGuideScrollState();});
+  assert.equal(result.y,800);assert.equal(result.anchor.id,"reading-answer");assert.deepEqual(readerPage.errors,[]);
 });

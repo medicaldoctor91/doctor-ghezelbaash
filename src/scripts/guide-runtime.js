@@ -1,7 +1,13 @@
 (async () => {
-  const knownScroll = (value) => value && Number.isFinite(value.x) && Number.isFinite(value.y) && value.y >= 0 ? { x: value.x, y: value.y } : null;
+  const knownScroll = (value) => {
+    if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y) || value.y < 0) return null;
+    const position = { x: value.x, y: value.y }, anchor = value.anchor;
+    if (anchor && typeof anchor.id === "string" && anchor.id.length > 0 && anchor.id.length <= 512 && Number.isFinite(anchor.top))
+      position.anchor = { id: anchor.id, top: anchor.top };
+    return position;
+  };
   const restoringHistory = performance.getEntriesByType("navigation")[0]?.type === "back_forward",
-    snapshot = window.history?.state?.__completeGuideScroll,
+    snapshot = window.readGuideScrollState?.() || window.history?.state?.__completeGuideScroll,
     savedScroll = knownScroll(snapshot);
   let restoredFromBFCache = false, restorationInteraction = false;
   if (restoringHistory && savedScroll) {
@@ -10,6 +16,7 @@
       addEventListener(type, () => { restorationInteraction = true; }, { once: true, passive: true });
   }
   if (window.completeGuideReady) await window.completeGuideReady;
+  const initialScrollGeneration = window.pauseGuideScrollState?.();
   const d=document,s=d.documentElement;
   s.classList.add("js");
   const clinicFaDigits='۰۱۲۳۴۵۶۷۸۹',clinicAscii=(value)=>String(value||'').replace(/[۰-۹]/g,(digit)=>String(clinicFaDigits.indexOf(digit))),clinicWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',weekday:'short'}),clinicClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),syncClinicHours=()=>{const now=new Date(),day=clinicWeekday.format(now),[hour,minute]=clinicClock.format(now).split(':').map(Number),currentMinutes=hour*60+minute;for(const node of d.querySelectorAll('[data-clinic-open-status]')){const openFa=node.dataset.open||'',closeFa=node.dataset.close||'',openMinutes=Number(clinicAscii(openFa))*60,closeMinutes=Number(clinicAscii(closeFa))*60;if(!Number.isFinite(openMinutes)||!Number.isFinite(closeMinutes))continue;const isFriday=day==='Fri',isOpen=!isFriday&&currentMinutes>=openMinutes&&currentMinutes<closeMinutes,label=node.querySelector('[data-clinic-open-status-label]'),detail=node.querySelector('[data-clinic-open-status-detail]');node.dataset.state=isOpen?'open':'closed';if(label)label.textContent=isOpen?'اکنون باز است':'اکنون بسته است';if(!detail)continue;if(isOpen)detail.textContent=`تا ساعت ${closeFa}`;else if(isFriday||(day==='Thu'&&currentMinutes>=closeMinutes))detail.textContent=`بازگشایی شنبه ${openFa}`;else if(currentMinutes<openMinutes)detail.textContent=`امروز از ${openFa}`;else detail.textContent=`فردا از ${openFa}`}};
@@ -251,6 +258,24 @@
     clearTimeout(layoutTimeout);
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   };
+  const restorePosition = async (position, current) => {
+    if (!current()) return;
+    scrollTo({left:position.x,top:position.y,behavior:"instant"});
+    const anchor = position.anchor && d.getElementById(position.anchor.id);
+    if (!anchor || !anchor.closest(".medical-guide") || anchor.closest("[data-route-context],#guide-search")) return;
+    syncTarget(anchor);
+    for(let parent=anchor;parent;parent=parent.parentElement)if(parent.tagName==="DETAILS")parent.open=true;
+    // The approximate saved coordinates materialize the surrounding chunk.
+    // Its authored anchor then preserves the reading point across reflow.
+    await afterLayout();
+    for(let pass=0;pass<2;pass++){
+      if(!current()||d.getElementById(position.anchor.id)!==anchor)return;
+      const delta=anchor.getBoundingClientRect().top-position.anchor.top;
+      if(!current())return;
+      if(Math.abs(delta)>1)scrollTo({left:position.x,top:scrollY+delta,behavior:"instant"});
+      if(pass===0)await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    }
+  };
   d.addEventListener("click", async (event) => {
     if (!plainClick(event) || event.defaultPrevented) return;
     const link = event.target.closest?.("a[href]");
@@ -262,7 +287,9 @@
     event.preventDefault();
     const ticket = ++navigationTicket;
     const destination=url.pathname+url.search+url.hash;
-    if(destination!==location.pathname+location.search+location.hash){window.saveGuideScrollState?.();history.pushState(null,"",destination)}
+    if(destination!==location.pathname+location.search+location.hash)window.saveGuideScrollState?.();
+    const scrollGeneration=window.pauseGuideScrollState?.();
+    if(destination!==location.pathname+location.search+location.hash)history.pushState(null,"",destination);
     if(searchReady)closeResults();
     const committed = window.syncGuidePageState ? await window.syncGuidePageState(url.pathname) : undefined;
     if(ticket!==navigationTicket||destination!==location.pathname+location.search+location.hash)return;
@@ -274,10 +301,12 @@
     syncTarget(currentSelection?.video||currentTarget);
     selectVideo(currentSelection,{scroll:true,focus:true});
     if(!currentSelection)moveTo(currentTarget,true);
+    window.resumeGuideScrollState?.(scrollGeneration);
   });
   addEventListener("popstate", async () => {
     const ticket = ++navigationTicket,url = new URL(location.href), revision = readerRevision,
-      position = knownScroll(window.history?.state?.__completeGuideScroll), interactionTypes = ["pointerdown", "wheel", "keydown", "touchstart"];
+      position = knownScroll(window.readGuideScrollState?.() || window.history?.state?.__completeGuideScroll), interactionTypes = ["pointerdown", "wheel", "keydown", "touchstart"];
+    const scrollGeneration=window.pauseGuideScrollState?.();
     let interacted = false, persisted = false;
     const recordInteraction = () => { interacted = true; }, recordPageShow = (event) => { if(event.persisted)persisted=true; };
     if(position){
@@ -299,9 +328,9 @@
       if(position&&readerRevision!==revision){
         const committedRevision=readerRevision;
         await afterLayout();
-        if(!interacted&&!persisted&&ticket===navigationTicket&&url.href===location.href&&readerRevision===committedRevision)
-          scrollTo({left:position.x,top:position.y,behavior:"instant"});
+        await restorePosition(position,()=>!interacted&&!persisted&&ticket===navigationTicket&&url.href===location.href&&readerRevision===committedRevision);
       }
+      window.resumeGuideScrollState?.(scrollGeneration);
     }finally{
       if(position){for(const type of interactionTypes)removeEventListener(type,recordInteraction);removeEventListener("pageshow",recordPageShow)}
     }
@@ -330,6 +359,7 @@
   if (restoringHistory && savedScroll && !initialInteraction) {
     await afterLayout();
     if (!restoredFromBFCache && !restorationInteraction && !window.completeGuideInteraction)
-      scrollTo({ left: savedScroll.x, top: savedScroll.y, behavior: "instant" });
+      await restorePosition(savedScroll,()=>!restoredFromBFCache&&!restorationInteraction&&!window.completeGuideInteraction);
   }
+  window.resumeGuideScrollState?.(initialScrollGeneration);
 })();
