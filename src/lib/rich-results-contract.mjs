@@ -1,6 +1,33 @@
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const hasType = (node, type) => values(node?.["@type"]).includes(type);
 const fail = (message) => { throw new Error("Page rich-result contract: " + message); };
+const rdfScalar = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value) || !("@value" in value)) return value;
+  const raw = value["@value"], datatype = value["@type"];
+  if (datatype === "http://www.w3.org/2001/XMLSchema#boolean") {
+    if (raw === true || raw === "true" || raw === "1") return true;
+    if (raw === false || raw === "false" || raw === "0") return false;
+  }
+  if ([
+    "http://www.w3.org/2001/XMLSchema#decimal",
+    "http://www.w3.org/2001/XMLSchema#double",
+    "http://www.w3.org/2001/XMLSchema#float",
+    "http://www.w3.org/2001/XMLSchema#integer",
+    "http://www.w3.org/2001/XMLSchema#nonNegativeInteger",
+    "http://www.w3.org/2001/XMLSchema#positiveInteger",
+  ].includes(datatype)) {
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric)) return numeric;
+  }
+  return raw;
+};
+const formatBrowserValue = (value) => {
+  if (Array.isArray(value)) return value.map(formatBrowserValue);
+  if (!value || typeof value !== "object") return value;
+  if ("@value" in value) return rdfScalar(value);
+  for (const [key, entry] of Object.entries(value)) value[key] = formatBrowserValue(entry);
+  return value;
+};
 const text = (value, label) => {
   if (typeof value !== "string" || !value.trim()) fail(label + " must be nonempty Text");
   return value;
@@ -31,12 +58,13 @@ const duration = (value, label) => {
 
 /**
  * Checks this site's published discovery graph, not Google's ranking or live
- * crawler access. Required ProfilePage/VideoObject/LocalBusiness fields and
- * the site's complete authored clinic address and image provenance must survive projection.
+ * crawler access. Canonical RDF literals are compacted to browser-safe JSON
+ * scalars here; the authoritative graph itself remains unchanged.
  */
 export function assertRichResultsDocument(document, { primaryPageId } = {}) {
-  if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document["@graph"]))
+  if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document?.["@graph"]))
     fail("one Schema.org discovery graph is required");
+  document["@graph"] = formatBrowserValue(document["@graph"]);
   const nodes = document["@graph"], byId = new Map();
   for (const node of nodes) {
     webUrl(node?.["@id"], "entity @id");
@@ -134,5 +162,4 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
     if (missing.length) incompleteCandidates.push({ id: node["@id"], types: values(node["@type"]), missing });
   }
   return { profiles: profiles.length, localBusinesses: clinics.length, images: images.length, videos: videos.length, incompleteCandidates };
-
 }
