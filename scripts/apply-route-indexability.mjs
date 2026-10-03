@@ -10,13 +10,46 @@ const records = JSON.parse(await readFile(path.join(root, ".generated/independen
 if (!Array.isArray(records) || !records.length)
   throw new Error("Route indexability requires generated route records");
 
+const escape = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
+const direction = (lang) => /^en(?:-|$)/i.test(lang || "") ? "ltr" : "rtl";
+const navigationCopies = {
+  fa: ["پیمایش موضوع‌های راهنما", "موضوع مادر", "موضوع‌های این بخش"],
+  en: ["Guide topic navigation", "Parent topic", "Topics in this section"],
+  ar: ["التنقل بين مواضيع الدليل", "الموضوع الرئيسي", "مواضيع هذا القسم"],
+  ckb: ["گەڕان لە بابەتەکانی ڕێبەر", "بابەتی سەرەکی", "بابەتەکانی ئەم بەشە"],
+};
+const renderLink = (link) => '<a href="' + escape(link.path) + '" lang="' + escape(link.lang) +
+  '" dir="' + direction(link.lang) + '">' + escape(link.title) + '</a>';
+const renderPromotedNavigation = (record) => {
+  const navigation = record.indexNavigation;
+  if (!record.indexable || !navigation) return null;
+  if (!navigation.parent && !navigation.children.length) return "";
+  const copy = navigationCopies[record.lang?.split("-")[0]] || navigationCopies.fa;
+  const parent = navigation.parent ? '<p>' + copy[1] + ': ' + renderLink(navigation.parent) + '</p>' : '';
+  const children = navigation.children.length
+    ? '<details><summary>' + copy[2] + '</summary><ul>' + navigation.children.map((link) => '<li>' + renderLink(link) + '</li>').join('') + '</ul></details>'
+    : '';
+  return '<nav data-topic-navigation aria-label="' + escape(copy[0]) + '">' + parent + children + '</nav>';
+};
+const applyPromotedNavigation = (html, record) => {
+  const replacement = renderPromotedNavigation(record);
+  if (replacement == null) return html;
+  const pattern = /<nav\b[^>]*\bdata-topic-navigation\b[^>]*>[\s\S]*?<\/nav>/i;
+  const hasAuthored = pattern.test(html);
+  if (!hasAuthored) {
+    if (!replacement) return html;
+    throw new Error("Promoted navigation requires the rendered topic navigation slot: " + record.path);
+  }
+  return html.replace(pattern, replacement);
+};
+
 let indexable = 0, noindex = 0;
 const reasons = new Map();
 const rendered = new Map();
 for (const record of records) {
   const file = path.join(dist, record.file);
   const source = await readFile(file, "utf8");
-  const output = applyIndexabilityMeta(source, record);
+  const output = applyPromotedNavigation(applyIndexabilityMeta(source, record), record);
   await writeFile(file, output, "utf8");
   if (record.indexable) {
     indexable++;
