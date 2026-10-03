@@ -129,8 +129,9 @@ test("reviewed source roles classify actual mixed purposes and preserve authored
     "/diagnosis-before-aesthetic-treatment-selection", "/clinic-consultation-treatment-and-follow-up-path"])
     assert.equal(byPath.get(path).pageType, "MedicalWebPage", path);
   for (const path of ["/saeed-ghezelbash-research-education-and-clinical-decisions", "/medical-content-governance",
-    "/media-license-title", "/historical-patient-origin-summary", "/aesthetic-physician-ratings-patient-satisfaction-ckb-iq"])
+    "/historical-patient-origin-summary", "/aesthetic-physician-ratings-patient-satisfaction-ckb-iq"])
     assert.equal(byPath.get(path).pageType, "WebPage", path);
+  assert(!byPath.has("/media-license-title"));
   const contact = byPath.get("/saeed-ghezelbash-clinic-contact-and-location");
   assert.equal(contact.pageType, "ContactPage");
   const profile = byPath.get("/saeed-ghezelbash");
