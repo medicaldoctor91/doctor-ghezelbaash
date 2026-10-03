@@ -9,7 +9,7 @@ const record = (path, indexable, ancestors = []) => ({
   navigation: { ancestors: ancestors.map((ancestor) => ({ path: ancestor })) },
 });
 
-test("permanent redirects bypass NOINDEX descendants and preserve machine rewrites", () => {
+test("permanent redirects bypass NOINDEX descendants while preserving their deep target as a fragment", () => {
   const records = [
     record("/topic", true),
     record("/detail", false, ["/topic"]),
@@ -26,8 +26,8 @@ test("permanent redirects bypass NOINDEX descendants and preserve machine rewrit
   const result = consolidateContentRedirectTargets(rows, records, canonicalUrl);
   assert.equal(result.retargeted, 2);
   assert.deepEqual(result.rows, [
-    { source: "/old-detail", target: "/topic", statusCode: 301 },
-    { source: "/old-deep", target: "/topic", statusCode: 308 },
+    { source: "/old-detail", target: "/topic#detail", statusCode: 301 },
+    { source: "/old-deep", target: "/topic#deep", statusCode: 308 },
     { source: "/old-translated", target: "/translated", statusCode: 301 },
     { source: "/graph", target: "/graph.jsonld", statusCode: 200 },
     { source: "/legacy-home", target: "/", statusCode: 301 },
