@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { URL_ARCHITECTURE, assertUrlArchitecture, assertCoverage, assertHtmlTargets,
-  canonicalPaths, urlForHtmlId, resolveContentUrl, redirectRows } from "../../src/lib/url-architecture.mjs";
+  canonicalPaths, urlForHtmlId, resolveContentUrl, fragmentRows, redirectRows } from "../../src/lib/url-architecture.mjs";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { discoveryPolicy } from "../../src/config/site-policy.mjs";
@@ -26,20 +26,32 @@ test("finite decisions cover the full actual anchor inventory and only explicitl
   assert.throws(() => assertHtmlTargets([...inspected.ids, "unreviewed-new-heading"]), /inventory drift/);
 });
 
-test("every legacy merge reaches a retained resource in one hop and preserves its original reading destination", () => {
+test("authored noncanonical paths are fragments while only explicitly retired paths redirect", () => {
   const kept = new Set(canonicalPaths());
-  const rows = redirectRows();
-  assert(rows.length > kept.size);
-  for (const row of rows) {
+  const fragments = fragmentRows();
+  const redirects = redirectRows();
+  assert(fragments.length > kept.size);
+  assert.deepEqual(redirects.map((row) => row.source).sort(), [...URL_ARCHITECTURE.retiredPaths].sort());
+
+  for (const row of fragments) {
+    assert(!kept.has(row.source));
+    assert(!URL_ARCHITECTURE.retiredPaths.includes(row.source));
+    const target = new URL(row.target, URL_ARCHITECTURE.canonicalOrigin);
+    assert(kept.has(target.pathname));
+    assert.equal(decodeURIComponent(target.hash.slice(1)), row.source.slice(1));
+    assert.equal(resolveContentUrl(row.source), row.target);
+    assert.equal(resolveContentUrl(row.target), row.target);
+  }
+
+  for (const row of redirects) {
     assert.equal(row.statusCode, 301);
+    assert(URL_ARCHITECTURE.retiredPaths.includes(row.source));
     assert(!kept.has(row.source));
     const target = new URL(row.target, URL_ARCHITECTURE.canonicalOrigin);
     assert(kept.has(target.pathname));
     assert.equal(resolveContentUrl(row.source), row.target);
-    assert.equal(resolveContentUrl(row.target), row.target);
-    if (!URL_ARCHITECTURE.retiredPaths.includes(row.source))
-      assert.equal(decodeURIComponent(target.hash.slice(1)), row.source.slice(1));
   }
+
   assert.equal(resolveContentUrl("/botox-heading"), "/botox#botox-heading");
   assert.equal(resolveContentUrl("/medical-content-governance"),
     "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#media-license");
@@ -47,6 +59,17 @@ test("every legacy merge reaches a retained resource in one hop and preserves it
     "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#media-license");
   assert.equal(resolveContentUrl("/jalupro-vs-profhilo-selection"),
     "/jalupro-and-profhilo#jalupro-vs-profhilo-selection");
+});
+
+test("rendered authored links expose canonical paths or fragments, never noncanonical content pathnames", () => {
+  const drift = [];
+  for (const node of inspected.elements.filter((element) => element.tagName === "a")) {
+    const href = node.attrs.find((item) => item.name === "href")?.value;
+    if (!href) continue;
+    const normalized = resolveContentUrl(href);
+    if (normalized !== href) drift.push(href + " -> " + normalized);
+  }
+  assert.deepEqual(drift, []);
 });
 
 test("language canonicals own full original sections while former headings remain fragments", () => {
@@ -101,6 +124,9 @@ test("policy rejects redirect chains, lost fragments, stale resources and undecl
     (policy) => { policy.htmlIdTargets["botox-heading"] = "/botox#different-heading"; },
     (policy) => { policy.decisions = policy.decisions.filter((row) => row.path !== "/botox"); },
     (policy) => { policy.retiredPaths.push("/never-authored"); },
+    (policy) => {
+      policy.decisions.find((row) => row.path === "/botox-heading").target = "/botox";
+    },
   ]) {
     const policy = structuredClone(URL_ARCHITECTURE);
     mutate(policy);
