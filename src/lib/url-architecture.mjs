@@ -81,7 +81,7 @@ export function assertUrlArchitecture(policy) {
     if (decision.decision !== "301_REDIRECT" || retired.has(decision.path)) continue;
     const id = decision.path.slice(1);
     if (policy.htmlIdTargets[id] !== decision.target)
-      throw new Error("Noncanonical authored path must resolve as a fragment: " + decision.path);
+      throw new Error("Noncanonical authored path lacks its canonical owner mapping: " + decision.path);
   }
   return true;
 }
@@ -119,7 +119,7 @@ export function assertHtmlTargets(ids, policy = URL_ARCHITECTURE) {
   const missing = [...actual].filter((id) => !mapped.has(id));
   const stale = [...mapped].filter((id) => !actual.has(id));
   if (missing.length || stale.length)
-    throw new Error("Authored HTML target inventory drift; missing: " + missing.join(", ") + "; stale: " + stale.join(", ") );
+    throw new Error("Authored HTML target inventory drift; missing: " + missing.join(", ") + "; stale: " + stale.join(", "));
   const resources = new Set(canonicalPaths(policy));
   const retired = new Set(policy.retiredPaths);
   for (const resource of policy.resources)
@@ -134,7 +134,7 @@ export function assertHtmlTargets(ids, policy = URL_ARCHITECTURE) {
   return true;
 }
 
-/** Resolve an authored target to its retained document and original fragment. */
+/** Resolve an authored target to its retained canonical document and original fragment. */
 export function urlForHtmlId(htmlId, policy = URL_ARCHITECTURE) {
   const id = String(htmlId ?? "").replace(/^#/, "");
   if (!id) return "/";
@@ -143,8 +143,10 @@ export function urlForHtmlId(htmlId, policy = URL_ARCHITECTURE) {
 }
 
 /**
- * Resolve only known content URLs. External and machine-resource URLs survive
- * unchanged; content queries survive a one-hop path/fragment migration.
+ * Normalize known browser-navigation URLs. Canonical resources keep their real
+ * paths; authored subordinate paths use the complete reader's root fragment,
+ * matching the original page.md hash-link model. Retired paths still migrate to
+ * their reviewed permanent target.
  */
 export function resolveContentUrl(value, { absolute = false, policy = URL_ARCHITECTURE } = {}) {
   if (typeof value !== "string" || !value) return value;
@@ -154,16 +156,36 @@ export function resolveContentUrl(value, { absolute = false, policy = URL_ARCHIT
   if (url.origin !== policy.canonicalOrigin) return value;
   const normalizedPath = url.pathname === "/" ? "/" : url.pathname.replace(/\/+$/, "");
   const decision = policy.decisions.find((item) => item.path === normalizedPath);
+
+  // A root fragment is already the final same-reader navigation URL. Do not
+  // expand it back into the canonical owner route.
+  if (normalizedPath === "/" && url.hash) {
+    const resolved = new URL("/", policy.canonicalOrigin);
+    resolved.search = url.search;
+    resolved.hash = url.hash;
+    return absolute ? resolved.href : resolved.pathname + resolved.search + resolved.hash;
+  }
   if (!decision) return value;
+
+  const retired = policy.retiredPaths?.includes(normalizedPath);
   let target;
-  if (url.hash) {
+  if (decision.decision === "301_REDIRECT" && !retired) {
+    let id = normalizedPath.slice(1);
+    if (url.hash) {
+      try {
+        const candidate = decodeURIComponent(url.hash.slice(1));
+        if (Object.hasOwn(policy.htmlIdTargets, candidate)) id = candidate;
+      } catch { /* Preserve the path-derived authored ID. */ }
+    }
+    target = "/#" + encodeURIComponent(id);
+  } else if (url.hash) {
     let id;
     try { id = decodeURIComponent(url.hash.slice(1)); }
     catch { id = url.hash.slice(1); }
     target = Object.hasOwn(policy.htmlIdTargets, id) ? policy.htmlIdTargets[id] : undefined;
     if (!target && decision) {
       const destination = new URL(decision.target, policy.canonicalOrigin);
-      target = policy.retiredPaths?.includes(normalizedPath) ? decision.target : destination.pathname + url.hash;
+      target = retired ? decision.target : destination.pathname + url.hash;
     }
   } else if (decision) target = decision.target;
   if (!target) return value;
@@ -172,12 +194,12 @@ export function resolveContentUrl(value, { absolute = false, policy = URL_ARCHIT
   return absolute ? resolved.href : resolved.pathname + resolved.search + resolved.hash;
 }
 
-/** Authored noncanonical paths are navigation aliases, not HTTP resources. */
+/** Authored noncanonical paths are root-fragment navigation aliases, not HTTP resources. */
 export function fragmentRows(policy = URL_ARCHITECTURE) {
   const retired = new Set(policy.retiredPaths);
   return policy.decisions
     .filter((decision) => decision.decision === "301_REDIRECT" && !retired.has(decision.path))
-    .map((decision) => ({ source: decision.path, target: decision.target }));
+    .map((decision) => ({ source: decision.path, target: "/#" + encodeURIComponent(decision.path.slice(1)) }));
 }
 
 /** Only explicitly retired canonical-source paths are emitted as HTTP redirects. */
