@@ -67,6 +67,8 @@ jobs:
             dist/
             .generated/dist-manifest.json
             .generated/dist-equivalence.json
+            .generated/schema-inventory.json
+            .generated/schema-inventory.csv
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14

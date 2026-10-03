@@ -304,11 +304,60 @@ test("a question embedding its authored video keeps MedicalWebPage identity, ans
   assert.equal(byId.get(answerId)["@type"], "Answer");
   assert.equal(byId.get(videoId)["@type"], "VideoObject");
   assert.equal(page.videos.length, 1);
+  assert.deepEqual(byId.get(page.canonicalUrl + "#webpage").hasPart, [{ "@id": videoId }]);
   const player = pages.find((entry) => entry.path === "/video-saeed-ghezelbash-jalupro-vs-profhilo");
   assert(player.entityTypes.includes("VideoObject"));
   assert.equal(player.entityId, videoId);
   const template = home.replace("</head>", '<meta property="og:type" content="article"></head>');
   assert(renderIndependentPage(template, page).includes('<meta property="og:type" content="article">'));
+});
+
+test("text headings keep their complete subject and authored topics while visible videos remain supporting parts", () => {
+  const authoredById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  for (const path of ["/saeed-ghezelbash-research-education-and-clinical-decisions", "/subcision-for-tethered-acne-scars",
+      "/aesthetic-physician-ratings-patient-satisfaction-ckb-iq"]) {
+    const page = pages.find((page) => page.path === path);
+    const byId = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+    const route = byId.get(page.canonicalUrl + "#webpage");
+    const authored = authoredById.get(page.canonicalUrl);
+    assert.deepEqual(page.entityTypes, ["WebPageElement"]);
+    assert.equal(page.entityId, authored?.["@id"] ?? page.canonicalUrl + "#content");
+    assert.equal(page.entitySelection.basis, authored ? "authored-entity-id" : "synthesized-heading-scope");
+    assert.equal(page.entitySelection.authoredSourceId, authored?.["@id"] ?? null);
+    assert.deepEqual(page.entitySelection.authoredSourceTypes, authored?.["@type"] ? [authored["@type"]].flat() : []);
+    assert.equal(page.videos.length, 1);
+    const video = page.document["@graph"].find((node) => node["@type"] === "VideoObject" &&
+      node.contentUrl === page.videos[0].contentUrl);
+    assert.deepEqual(route.hasPart, [{ "@id": video["@id"] }]);
+    assert.notEqual(route.mainEntity["@id"], video["@id"]);
+    assert(page.bodyHtml.includes(new URL(video.contentUrl).pathname));
+    if (authored) {
+      assert.deepEqual(byId.get(page.entityId).citation, authored.citation);
+      assert.deepEqual(page.topicSelection, { basis: "own-about", authoredSourceId: authored["@id"], references: authored.about });
+      const topicIds = [...new Set([inputs.lifecycle.primaryEntity.id, ...authored.about.map((ref) => ref["@id"])])];
+      assert.deepEqual(route.about, topicIds.map((id) => ({ "@id": id })));
+    }
+  }
+  for (const page of pages.filter((page) => page.entityTypes.includes("VideoObject"))) {
+    const target = inspectHtml(home).elements.find((node) => node.attrs?.some((attr) => attr.name === "id" && attr.value === page.htmlId));
+    assert(["figure", "video"].includes(target.tagName));
+    assert.equal(page.entitySelection.basis, "explicit-media-target");
+    const route = page.document["@graph"].find((node) => node["@id"] === page.canonicalUrl + "#webpage");
+    assert(!route.hasPart);
+  }
+});
+
+test("classification inventory records the actual authored entity and nearest DOM topic source", () => {
+  const question = pages.find((page) => page.path === "/botox-onset-of-action");
+  assert.deepEqual(question.entitySelection, { basis: "explicit-question-url", authoredSourceId: question.entityId,
+    authoredSourceTypes: ["Question"] });
+  assert.equal(question.topicSelection.basis, "own-about");
+  assert.equal(question.topicSelection.authoredSourceId, question.entityId);
+  const heading = pages.find((page) => page.path === "/botox-clinical-assessment-checklist");
+  assert.deepEqual(heading.entitySelection, { basis: "synthesized-heading-scope", authoredSourceId: null, authoredSourceTypes: [] });
+  assert.equal(heading.topicSelection.basis, "nearest-authored-dom-about");
+  assert.equal(heading.topicSelection.authoredSourceId, inputs.lifecycle.canonicalUrl + "botox");
+  assert.deepEqual(heading.topicSelection.references, heading.document["@graph"].find((node) => node["@id"] === heading.entityId).about);
 });
 
 test("media summaries describe their authored subject without browser fallback or chapter controls", () => {

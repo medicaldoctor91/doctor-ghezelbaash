@@ -118,11 +118,17 @@ test("a typed clinic address cannot silently lose its authored physical-address 
   }
 });
 
-test("review and historical event facts remain canonical while the homepage does not expose them as rich-result candidates", () => {
+test("homepage preserves its Course-bound authored historical instance while excluding clinic reviews and unrelated events", () => {
   const projected = validatePageJsonLd(inputs.pageJsonLd)[0].document;
   const byId = new Map(projected["@graph"].map((node) => [node["@id"], node]));
   assert(!byId.has("https://www.ghezelbaash.ir/review-kurdish-patient-experience"));
-  assert(!byId.has("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11"));
+  const instanceId = "https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11";
+  const instance = byId.get(instanceId);
+  const authoredInstance = inputs.graph["@graph"].find((node) => node["@id"] === instanceId);
+  assert.deepEqual(instance["@type"], authoredInstance["@type"]);
+  assert.equal(instance.startDate, authoredInstance.startDate);
+  assert.deepEqual(instance.location, authoredInstance.location);
+  assert(projected["@graph"].some((node) => typed(node, "Course") && node.hasCourseInstance?.["@id"] === instanceId));
   const canonicalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
   assert.deepEqual(canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating,
     { "@type": "Rating", ratingValue: 5, bestRating: 5 });

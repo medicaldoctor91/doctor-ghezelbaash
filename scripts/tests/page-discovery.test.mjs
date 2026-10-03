@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseFragment } from "parse5";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { localizedText, validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { localizedText, projectPageJsonLd, validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 
 const inputs = readCanonicalInputs();
@@ -17,8 +17,12 @@ test("page discovery publishes a route-aware physician graph without changing au
   assert(typed(page, "MedicalWebPage"));
   assert(!typed(page, "ProfilePage"));
   assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 0);
-  for (const type of ["Event", "EducationEvent", "Review"])
+  for (const type of ["Event", "Review"])
     assert(!graph.some((node) => typed(node, type)), "Homepage search projection must exclude " + type);
+  const courseInstanceIds = new Set(graph.filter((node) => typed(node, "Course"))
+    .flatMap((node) => [node.hasCourseInstance].flat()).map((ref) => ref["@id"]));
+  for (const instance of graph.filter((node) => typed(node, "EducationEvent")))
+    assert(typed(instance, "CourseInstance") && courseInstanceIds.has(instance["@id"]));
   const person = byId.get(page.mainEntity["@id"]);
   assert(typed(person, "Person"));
   assert.equal(typeof person.name, "string");
@@ -34,6 +38,55 @@ test("page discovery publishes a route-aware physician graph without changing au
   assert(inputs.graph["@graph"].some((node) => typed(node, "ProfilePage")));
   assert(inputs.graph["@graph"].some((node) => typed(node, "Review")));
   assert(inputs.graph["@graph"].some((node) => typed(node, "EducationEvent")));
+});
+
+test("the selected Course resolves only its authored historical instance and location without inferring event facts", () => {
+  const before = JSON.stringify(inputs.graph);
+  const projected = projection()["@graph"];
+  const byId = new Map(projected.map((node) => [node["@id"], node]));
+  const authoredById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
+  const course = projected.find((node) => typed(node, "Course"));
+  const instance = byId.get(course.hasCourseInstance["@id"]);
+  const authored = authoredById.get(instance["@id"]);
+  assert.deepEqual(instance["@type"], authored["@type"]);
+  assert(typed(instance, "CourseInstance") && typed(instance, "EducationEvent"));
+  for (const key of ["startDate", "location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "dcterms:temporal", "eventAttendanceMode"])
+    assert.deepEqual(instance[key], authored[key]);
+  assert.equal(instance.name, localizedText(authored.name));
+  assert.equal(instance.description, authored.description);
+  assert.equal("endDate" in instance, "endDate" in authored);
+  assert(inputs.pageBody.includes('<time datetime="' + instance.startDate + '">'));
+  const place = byId.get(instance.location["@id"]);
+  assert.deepEqual(place.address, authoredById.get(place["@id"]).address);
+  assert.equal(place.address["@type"], "PostalAddress");
+  assert.equal(place.address.addressLocality, "تهران");
+  assert(!place.address.streetAddress && !place.address.postalCode);
+  assert.equal(byId.get(instance.audience["@id"])["@type"], "EducationalAudience");
+  assert.equal(JSON.stringify(inputs.graph), before);
+});
+
+test("an unrelated EducationEvent stays excluded even when homepage mentions it", () => {
+  const graph = structuredClone(inputs.graph);
+  const unrelatedId = inputs.lifecycle.canonicalUrl + "unrelated-course-instance";
+  graph["@graph"].push({ "@id": unrelatedId, "@type": ["CourseInstance", "EducationEvent"],
+    name: "Unrelated historic event", startDate: "2025-01-01",
+    location: { "@id": inputs.lifecycle.canonicalUrl + "city-tehran" } });
+  const home = graph["@graph"].find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+  home.mentions = [...[home.mentions].flat(), { "@id": unrelatedId }];
+  const projected = projectPageJsonLd(graph)[0].document["@graph"];
+  assert(!projected.some((node) => node["@id"] === unrelatedId));
+  assert(!projected.some((node) => typed(node, "Event") || typed(node, "Review")));
+  const instance = projected.find((node) => typed(node, "EducationEvent"));
+  assert(typed(instance, "CourseInstance"));
+});
+
+test("homepage speakable resolves its exact authored selector specification", () => {
+  const projected = projection()["@graph"];
+  const home = projected.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+  const specification = projected.find((node) => node["@id"] === home.speakable["@id"]);
+  assert.equal(specification["@type"], "SpeakableSpecification");
+  assert.deepEqual(specification, inputs.graph["@graph"].find((node) => node["@id"] === specification["@id"]));
+  assert.equal(projected.filter((node) => typed(node, "SpeakableSpecification")).length, 1);
 });
 
 test("homepage and dedicated profile revisions remain authored on their own canonical nodes", () => {

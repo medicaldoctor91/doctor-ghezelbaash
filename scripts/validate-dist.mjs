@@ -12,6 +12,7 @@ import { readCanonicalInputs } from "../src/lib/canonical-inputs.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
 import { assertCloudflareHeadersContract } from "./lib/headers-template.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
+import { serializeSchemaInventoryCsv, validateSchemaInventoryCoverage, validateSchemaInventoryRow } from "./lib/schema-inventory.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] ?? "dist");
@@ -157,8 +158,18 @@ for (const published of browserNodes) {
   }
   assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Published entity type drift");
 }
-for (const forbidden of ["ProfilePage", "Event", "EducationEvent", "Review"])
+for (const forbidden of ["ProfilePage", "Review"])
   assert(!browserNodes.some((node) => typeHas(node, forbidden)), "Homepage projection exposes an unrelated rich-result candidate: " + forbidden);
+const courseInstanceIds = new Set(browserNodes.filter((node) => typeHas(node, "Course"))
+  .flatMap((course) => [course.hasCourseInstance].flat().filter(Boolean))
+  .map((ref) => typeof ref === "string" ? ref : ref["@id"]));
+for (const event of browserNodes.filter((node) => typeHas(node, "Event") || typeHas(node, "EducationEvent")))
+  assert(courseInstanceIds.has(event["@id"]) && typeHas(event, "CourseInstance") && typeHas(event, "EducationEvent"),
+    "Homepage projection exposes an Event outside its authored Course instance: " + event["@id"]);
+for (const id of courseInstanceIds) {
+  const instance = browserById.get(id);
+  assert(typeHas(instance, "CourseInstance") && typeHas(instance, "EducationEvent"), "Published Course instance must resolve: " + id);
+}
 assert(browserNodes.some((node) => typeHas(node, "FAQPage")), "Comprehensive home requires its visible FAQ coverage");
 assert.equal(richResultCounts.incompleteCandidates.length, 0, "Known required candidate fields must be completed from authored/user facts");
 assert(!elements.some((node) => (attr(node, "itemtype") || "").includes("ProfilePage")),
@@ -240,6 +251,16 @@ const sharedExec = new Set(execBodies(html));
 const sharedStyles = new Set([...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]));
 const records = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
 assert.deepEqual(records.map((record) => record.path), paths);
+const schemaInventory = JSON.parse(await readFile(path.join(root, ".generated/schema-inventory.json"), "utf8"));
+const schemaInventoryCoverage = validateSchemaInventoryCoverage(schemaInventory, {
+  records, canonicalUrl: lifecycle.canonicalUrl,
+});
+assert.equal(await readFile(path.join(root, ".generated/schema-inventory.csv"), "utf8"),
+  serializeSchemaInventoryCsv(schemaInventory), "Schema CSV must match the validated JSON inventory");
+const schemaRowsByPath = new Map(schemaInventory.rows.map((row) => [row.path, row]));
+validateSchemaInventoryRow(schemaRowsByPath.get("/"), {
+  html, scoped: { elements, ids }, canonicalGraph: graph, canonicalUrl: lifecycle.canonicalUrl,
+});
 const pageIds = new Set();
 const knownPaths = new Set(records.map((record) => record.path));
 const nativeTargets = (nodes) => [...new Set(nodes.filter((node) => node.tagName === "a").map((node) => {
@@ -270,6 +291,9 @@ const sitemapHtml = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 for (const record of records) {
   const source = await readFile(path.join(dist, record.file), "utf8");
   const scoped = assertDocumentContract(source), scopedIds = new Set(scoped.ids);
+  validateSchemaInventoryRow(schemaRowsByPath.get(record.path), {
+    record, html: source, scoped, canonicalGraph: graph, canonicalUrl: lifecycle.canonicalUrl,
+  });
   const canonicals = scoped.elements.filter((node) => node.tagName === "link" && attr(node, "rel") === "canonical");
   assert.equal(canonicals.length, 1);
   assert.equal(attr(canonicals[0], "href"), record.canonicalUrl, "Independent self canonical");
@@ -319,7 +343,7 @@ for (const record of records) {
   assert.equal(pageEntity.url, record.canonicalUrl);
   const mainEntity = pageGraph.get(record.entityId);
   assert.equal(typeHas(pageEntity, "FAQPage"), typeHas(mainEntity, "Question") && Boolean(mainEntity.acceptedAnswer),
-    "Medical question pages must preserve their authored FAQ semantics");
+    "Question pages must preserve their authored FAQ semantics");
   if (typeHas(pageEntity, "ProfilePage")) {
     const authoredProfile = authoredById.get(pageId);
     assert.deepEqual(pageEntity.primaryImageOfPage, authoredProfile.primaryImageOfPage,
@@ -371,5 +395,6 @@ assert.equal(translatedPages, translationMembers.length, "Every authored transla
 assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
   "Sitemap must publish every reciprocal language alternate");
 console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
+console.log(JSON.stringify({ schemaInventoryValidation: schemaInventoryCoverage }));
 
 console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, metadataRoutes: metadataRoutes.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));
