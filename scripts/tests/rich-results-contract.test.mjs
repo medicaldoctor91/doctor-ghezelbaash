@@ -131,8 +131,11 @@ test("homepage preserves its Course-bound authored historical instance while exc
   assert.deepEqual(instance.location, authoredInstance.location);
   assert(projected["@graph"].some((node) => typed(node, "Course") && node.hasCourseInstance?.["@id"] === instanceId));
   const canonicalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
-  assert.deepEqual(canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating,
-    { "@type": "Rating", ratingValue: 5, bestRating: 5 });
+  const rating = canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating;
+  assert(typed(rating, "Rating"));
+  assert.match(rating["@id"], /^https:\/\/www\.ghezelbaash\.ir\/\.well-known\/genid\//);
+  assert.equal(rating.ratingValue, 5);
+  assert.equal(rating.bestRating, 5);
   assert.equal(literal(canonicalById.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate), "2025-02-04");
   assert(inputs.pageBody.includes("امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵"));
   assert(inputs.pageBody.includes('<time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time>'));
