@@ -25,8 +25,8 @@ const formatBrowserValue = (value) => {
   if (Array.isArray(value)) return value.map(formatBrowserValue);
   if (!value || typeof value !== "object") return value;
   if ("@value" in value) return rdfScalar(value);
-  for (const [key, entry] of Object.entries(value)) value[key] = formatBrowserValue(entry);
-  return value;
+  return Object.fromEntries(Object.entries(value)
+    .map(([key, entry]) => [key, formatBrowserValue(entry)]));
 };
 const text = (value, label) => {
   if (typeof value !== "string" || !value.trim()) fail(label + " must be nonempty Text");
@@ -64,8 +64,11 @@ const duration = (value, label) => {
 export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document?.["@graph"]))
     fail("one Schema.org discovery graph is required");
-  document["@graph"] = formatBrowserValue(document["@graph"]);
-  const nodes = document["@graph"], byId = new Map();
+  const nodes = formatBrowserValue(document["@graph"]), byId = new Map();
+  // Publication projections are mutable and should retain the normalized browser
+  // representation. Validation fixtures may intentionally be frozen; validate a
+  // detached normalized copy instead of mutating authored/frozen source objects.
+  if (!Object.isFrozen(document) && !Object.isFrozen(document["@graph"])) document["@graph"] = nodes;
   for (const node of nodes) {
     webUrl(node?.["@id"], "entity @id");
     if (byId.has(node["@id"])) fail("duplicate entity @id: " + node["@id"]);
