@@ -1,5 +1,22 @@
 (async () => {
+  const knownScroll = (value) => {
+    if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y) || value.y < 0) return null;
+    const position = { x: value.x, y: value.y }, anchor = value.anchor;
+    if (anchor && typeof anchor.id === "string" && anchor.id.length > 0 && anchor.id.length <= 512 && Number.isFinite(anchor.top))
+      position.anchor = { id: anchor.id, top: anchor.top };
+    return position;
+  };
+  const restoringHistory = performance.getEntriesByType("navigation")[0]?.type === "back_forward",
+    snapshot = window.readGuideScrollState?.() || window.history?.state?.__completeGuideScroll,
+    savedScroll = knownScroll(snapshot);
+  let restoredFromBFCache = false, restorationInteraction = false;
+  if (restoringHistory && savedScroll) {
+    addEventListener("pageshow", (event) => { if (event.persisted) restoredFromBFCache = true; });
+    for (const type of ["pointerdown", "wheel", "keydown", "touchstart"])
+      addEventListener(type, () => { restorationInteraction = true; }, { once: true, passive: true });
+  }
   if (window.completeGuideReady) await window.completeGuideReady;
+  const initialScrollGeneration = window.pauseGuideScrollState?.();
   const d=document,s=d.documentElement;
   s.classList.add("js");
   const clinicFaDigits='۰۱۲۳۴۵۶۷۸۹',clinicAscii=(value)=>String(value||'').replace(/[۰-۹]/g,(digit)=>String(clinicFaDigits.indexOf(digit))),clinicWeekday=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tehran',weekday:'short'}),clinicClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tehran',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),syncClinicHours=()=>{const now=new Date(),day=clinicWeekday.format(now),[hour,minute]=clinicClock.format(now).split(':').map(Number),currentMinutes=hour*60+minute;for(const node of d.querySelectorAll('[data-clinic-open-status]')){const openFa=node.dataset.open||'',closeFa=node.dataset.close||'',openMinutes=Number(clinicAscii(openFa))*60,closeMinutes=Number(clinicAscii(closeFa))*60;if(!Number.isFinite(openMinutes)||!Number.isFinite(closeMinutes))continue;const isFriday=day==='Fri',isOpen=!isFriday&&currentMinutes>=openMinutes&&currentMinutes<closeMinutes,label=node.querySelector('[data-clinic-open-status-label]'),detail=node.querySelector('[data-clinic-open-status-detail]');node.dataset.state=isOpen?'open':'closed';if(label)label.textContent=isOpen?'اکنون باز است':'اکنون بسته است';if(!detail)continue;if(isOpen)detail.textContent=`تا ساعت ${closeFa}`;else if(isFriday||(day==='Thu'&&currentMinutes>=closeMinutes))detail.textContent=`بازگشایی شنبه ${openFa}`;else if(currentMinutes<openMinutes)detail.textContent=`امروز از ${openFa}`;else detail.textContent=`فردا از ${openFa}`}};
@@ -8,11 +25,28 @@
     search=d.getElementById("guide-search"),input=d.getElementById("guide-search-input"),results=d.getElementById("guide-search-results"),status=d.getElementById("guide-search-status"),launcher=d.querySelector("[data-guide-search-open]"),top=d.querySelector("[data-quick-actions-top]"),
     contentRouteAliases=JSON.parse(search?.dataset.contentRouteAliases||"{}"),
     plainClick=(e)=>e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.shiftKey,
-    targetFromPath=(pathname)=>{let decoded;try{decoded=decodeURI(pathname)}catch{return null}const key=Object.hasOwn(contentRouteAliases,decoded)?decoded:decoded.replace(/\/$/,""),route=contentRouteAliases[key]||decoded;if(route==="/")return d.getElementById("main-content");if(!/^\/[A-Za-z0-9][A-Za-z0-9._-]*\/?$/.test(route))return null;return d.getElementById(route.replace(/^\/|\/$/g,""))};
-  const searchReady=Boolean(search&&input&&results&&status&&(launcher||s.dataset?.routeView==="focused"));
-  if(searchReady){if(launcher)launcher.replaceWith(search);else d.querySelector("article.medical-guide")?.before(search);search.dataset.mounted="true"}
+    targetFromPath=(pathname)=>{
+      let decoded;try{decoded=decodeURI(pathname)}catch{return null}
+      const base=new URL(location.href).origin,key=Object.hasOwn(contentRouteAliases,decoded)?decoded:decoded.replace(/\/$/,"");
+      let route=contentRouteAliases[key]||decoded;
+      // A host alias may resolve to a language URL whose DOM ID is unchanged.
+      for(let depth=0;depth<3;depth++){
+        let url,path;try{url=new URL(route,base);path=decodeURI(url.pathname)}catch{return null}
+        if(![base,search?.dataset.canonicalOrigin].includes(url.origin)||url.search)return null;
+        if(url.hash){try{return d.getElementById(decodeURIComponent(url.hash.slice(1)))}catch{return null}}
+        if(path==="/")return d.getElementById("main-content");
+        const next=contentRouteAliases[path]||contentRouteAliases[path.replace(/\/$/,"")];
+        if(next&&next!==route){route=next;continue}
+        if(!/^\/[A-Za-z0-9][A-Za-z0-9._-]*\/?$/.test(path))return null;
+        return d.getElementById(path.replace(/^\/|\/$/g,""));
+      }
+      return null;
+    };
+  const searchPlaced=search?.closest?.("[data-guide-reader]"),
+    searchReady=Boolean(search&&input&&results&&status&&(launcher||searchPlaced||s.dataset?.routeView==="focused"));
+  if(searchReady){if(launcher)launcher.replaceWith(search);else if(!searchPlaced)d.querySelector("article.medical-guide")?.before(search);search.dataset.mounted="true"}
 
-  const intentTargets=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentTargets||"{}")).map(([intent,url])=>[intent,new URL(url).pathname.slice(1)])),
+  const intentTargets=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentTargets||"{}")).map(([intent,url])=>{const target=new URL(url);return[intent,decodeURIComponent(target.hash?target.hash.slice(1):target.pathname.slice(1))]})),
     intentAnswers=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentHeadings||"{}")).map(([intent,heading])=>[heading,intentTargets[intent]])),
     copy=JSON.parse(search?.dataset.copy||"{}"),
     detectIntent=(text,entity)=>{const has=(x)=>text.includes(x),select=entity||/(بهترین|دکتر|پزشک|متخصص|کلینیک)/u.test(text);if((has("میگرن")||has("سردرد"))&&has("بوتاکس"))return"migraine-botox";if(has("نظر دوم")||has("نظر پزشکی دوم"))return"second-opinion";if(/اورفیل|بیش از حد فیلر|صورت پر شده|پرونده پیچیده/u.test(text))return"complex-correction";if(/اصلاح|ترمیم|نتیجه نامطلوب/u.test(text))return"revision";if(!select)return null;if(/فیلر|ژل/u.test(text))return"filler";if(/بوتاکس|بوتولینوم/u.test(text))return"botox";if(/زیبایی|جوانسازی|جوان سازی/u.test(text))return"aesthetic-physician";return null},
@@ -20,10 +54,10 @@
     queryInfo=searchEngine.queryInfo;
 
   let index;
-  const build=()=>{if(index)return index;const stack=[];return(index=searchEngine.build([...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id],main h6[id]")].filter((h)=>!h.closest?.("[data-route-context]")).map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;return{id:h.id,text,level,parents,answer:intentAnswers[h.id]||"",retrievalAlias:h.dataset.retrievalAlias||""}})))},
+  const build=()=>{if(index)return index;const stack=[];return(index=searchEngine.build([...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id],main h6[id],.guide-reader h1[id],.guide-reader h2[id],.guide-reader h3[id],.guide-reader h4[id],.guide-reader h5[id],.guide-reader h6[id]")].filter((h)=>!h.closest?.("[data-route-context]")).map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;return{id:h.id,href:h.dataset.canonicalHref||"/#"+encodeURIComponent(h.id),text,level,parents,answer:intentAnswers[h.id]||"",retrievalAlias:h.dataset.retrievalAlias||""}})))},
     score=searchEngine.score,
     closeResults=()=>{results.hidden=true},
-    render=()=>{const q=queryInfo(input.value);results.replaceChildren();if(q.original.length<2){closeResults();status.textContent=copy.minimumQuery;return}const target=q.intent&&intentTargets[q.intent],hits=build().map((x)=>({...x,rank:score(x,q)})).filter((x)=>x.rank<99||(target&&x.answer===target)).sort((a,b)=>(b.answer===target)-(a.answer===target)||a.rank-b.rank||a.level-b.level||a.text.length-b.text.length).slice(0,16);if(!hits.length){const li=d.createElement("li");li.className="guide-search__empty";li.textContent=copy.empty;results.append(li)}else for(const hit of hits){const li=d.createElement("li"),a=d.createElement("a"),title=d.createElement("span"),context=d.createElement("span");a.href="/"+(target&&hit.answer===target?target:hit.id);title.className="guide-search__result-title";title.textContent=hit.text;a.append(title);const path=hit.parents.slice(-2).join(" ← ");if(path){context.className="guide-search__result-context";context.textContent=path;a.append(context)}li.append(a);results.append(li)}results.hidden=false;status.textContent=hits.length?copy.resultCount.replace("{count}",String(hits.length)):copy.noResultsStatus};
+    render=()=>{const q=queryInfo(input.value);results.replaceChildren();if(q.original.length<2){closeResults();status.textContent=copy.minimumQuery;return}const target=q.intent&&intentTargets[q.intent],hits=build().map((x)=>({...x,rank:score(x,q)})).filter((x)=>x.rank<99||(target&&x.answer===target)).sort((a,b)=>(b.answer===target)-(a.answer===target)||a.rank-b.rank||a.level-b.level||a.text.length-b.text.length).slice(0,16);if(!hits.length){const li=d.createElement("li");li.className="guide-search__empty";li.textContent=copy.empty;results.append(li)}else for(const hit of hits){const li=d.createElement("li"),a=d.createElement("a"),title=d.createElement("span"),context=d.createElement("span");a.href=hit.href;title.className="guide-search__result-title";title.textContent=hit.text;a.append(title);const path=hit.parents.slice(-2).join(" ← ");if(path){context.className="guide-search__result-context";context.textContent=path;a.append(context)}li.append(a);results.append(li)}results.hidden=false;status.textContent=hits.length?copy.resultCount.replace("{count}",String(hits.length)):copy.noResultsStatus};
 
   if(searchReady){
     if(/Mac|iPhone|iPad/.test(navigator.userAgent))search.querySelector("kbd").textContent="⌘ K";
@@ -105,7 +139,7 @@
       chunk?.classList.add("is-target-chunk");
       targetChunk = chunk;
     }
-    const section = target?.closest(".content-section"),
+    const section = target?.closest(".content-section") || target?.closest(".multilingual-collapsible-section"),
       current =
         target &&
         (tocLinks ??= [
@@ -113,7 +147,10 @@
             '#aesthetic-medicine-table-of-contents a[href]',
           ),
         ]).find(
-          (link) => link.pathname.replace(/\/$/, "") === "/" + (section?.id || target?.id),
+          (link) => {
+            const linked = link.hash ? targetFromHash(link.hash) : targetFromPath(link.pathname);
+            return linked === target || Boolean(section && (linked === section || linked?.closest(".content-section") === section));
+          },
         );
     if (currentTocLink !== current) {
       currentTocLink?.removeAttribute("aria-current");
@@ -131,6 +168,7 @@
   const moveTo = (target, focus = false) => {
     // Reveal a deferred chunk before measuring or scrolling its descendant.
     syncTarget(target);
+    if (target?.tagName === "DETAILS") target.open = true;
     if (target?.closest("details")) {
       for (let parent = target.parentElement; parent; parent = parent.parentElement)
         if (parent.tagName === "DETAILS") parent.open = true;
@@ -151,17 +189,27 @@
   }, { rootMargin: "600px 0px" }) : null;
   const refreshPosters = () => {
     const videos = [...d.querySelectorAll("video[data-poster]")];
-    if (posterObserver) for (const video of videos) posterObserver.observe(video);
+    if (posterObserver) { posterObserver.disconnect(); for (const video of videos) posterObserver.observe(video); }
     else (window.requestIdleCallback || ((fn) => setTimeout(fn, 1)))(() => videos.forEach(revealPoster));
   };
   refreshPosters();
-  d.addEventListener("guide:expanded", () => {
+  let readerRevision = 0;
+  const refreshReader = () => {
+    readerRevision++;
     index = undefined;
     tocLinks = undefined;
+    targetChunk?.classList.remove("is-target-chunk");
+    targetChunk = undefined;
+    currentTocLink?.removeAttribute("aria-current");
+    currentTocLink = undefined;
     if (searchReady) d.querySelector("[data-guide-search-open]")?.remove();
     syncClinicHours();
     refreshPosters();
     if (searchReady && norm(input.value).length >= 2) render();
+  };
+  d.addEventListener("guide:primary-changed", refreshReader);
+  d.addEventListener("guide:expanded", () => {
+    refreshReader();
     if (d.activeElement !== input) moveTo(targetFromHash(location.hash) || targetFromPath(location.pathname));
     else syncTarget();
   });
@@ -203,7 +251,32 @@
       video.preload="metadata";
     }
   };
-  d.addEventListener("click", (event) => {
+  let navigationTicket = 0;
+  const afterLayout = async () => {
+    let layoutTimeout;
+    await Promise.race([d.fonts?.ready || Promise.resolve(), new Promise((resolve) => { layoutTimeout = setTimeout(resolve, 350); })]);
+    clearTimeout(layoutTimeout);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  };
+  const restorePosition = async (position, current) => {
+    if (!current()) return;
+    scrollTo({left:position.x,top:position.y,behavior:"instant"});
+    const anchor = position.anchor && d.getElementById(position.anchor.id);
+    if (!anchor || !anchor.closest(".medical-guide") || anchor.closest("[data-route-context],#guide-search")) return;
+    syncTarget(anchor);
+    for(let parent=anchor;parent;parent=parent.parentElement)if(parent.tagName==="DETAILS")parent.open=true;
+    // The approximate saved coordinates materialize the surrounding chunk.
+    // Its authored anchor then preserves the reading point across reflow.
+    await afterLayout();
+    for(let pass=0;pass<2;pass++){
+      if(!current()||d.getElementById(position.anchor.id)!==anchor)return;
+      const delta=anchor.getBoundingClientRect().top-position.anchor.top;
+      if(!current())return;
+      if(Math.abs(delta)>1)scrollTo({left:position.x,top:scrollY+delta,behavior:"instant"});
+      if(pass===0)await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    }
+  };
+  d.addEventListener("click", async (event) => {
     if (!plainClick(event) || event.defaultPrevented) return;
     const link = event.target.closest?.("a[href]");
     if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
@@ -212,28 +285,60 @@
     const selection=url.hash?null:videoFromUrl(url),target=url.hash?targetFromHash(url.hash):targetFromPath(url.pathname);
     if(!target||(url.search&&!selection))return;
     event.preventDefault();
+    const ticket = ++navigationTicket;
     const destination=url.pathname+url.search+url.hash;
+    if(destination!==location.pathname+location.search+location.hash)window.saveGuideScrollState?.();
+    const scrollGeneration=window.pauseGuideScrollState?.();
     if(destination!==location.pathname+location.search+location.hash)history.pushState(null,"",destination);
-    window.syncGuidePageState?.(url.pathname);
     if(searchReady)closeResults();
-    syncTarget();
-    selectVideo(selection,{scroll:true,focus:true});
-    if(!selection)moveTo(target,true);
+    const committed = window.syncGuidePageState ? await window.syncGuidePageState(url.pathname) : undefined;
+    if(ticket!==navigationTicket||destination!==location.pathname+location.search+location.hash)return;
+    if(committed===false){location.assign(destination);return}
+    if(searchReady)closeResults();
+    // The primary article is reconstructed from its focused HTML; resolve its
+    // live nodes only after that partition is ready, including reused players.
+    const currentSelection=url.hash?null:videoFromUrl(url),currentTarget=url.hash?targetFromHash(url.hash):targetFromPath(url.pathname);
+    syncTarget(currentSelection?.video||currentTarget);
+    selectVideo(currentSelection,{scroll:true,focus:true});
+    if(!currentSelection)moveTo(currentTarget,true);
+    window.resumeGuideScrollState?.(scrollGeneration);
   });
-  addEventListener("popstate", () => {
-    window.syncGuidePageState?.(location.pathname);
-    const selection=videoFromUrl(new URL(location.href));
-    const target=selection?.video||targetFromHash(location.hash)||targetFromPath(location.pathname);
-    syncTarget(target);
-    selectVideo(selection);
-    focusTarget(target);
-    // Preserve the browser's native saved scroll position on Back and Forward.
+  addEventListener("popstate", async () => {
+    const ticket = ++navigationTicket,url = new URL(location.href), revision = readerRevision,
+      position = knownScroll(window.readGuideScrollState?.() || window.history?.state?.__completeGuideScroll), interactionTypes = ["pointerdown", "wheel", "keydown", "touchstart"];
+    const scrollGeneration=window.pauseGuideScrollState?.();
+    let interacted = false, persisted = false;
+    const recordInteraction = () => { interacted = true; }, recordPageShow = (event) => { if(event.persisted)persisted=true; };
+    if(position){
+      for(const type of interactionTypes)addEventListener(type,recordInteraction,{passive:true});
+      addEventListener("pageshow",recordPageShow);
+    }
+    try{
+      const committed = window.syncGuidePageState ? await window.syncGuidePageState(url.pathname) : undefined;
+      if(ticket!==navigationTicket||url.href!==location.href)return;
+      if(committed===false){location.assign(url.pathname+url.search+url.hash);return}
+      const selection=videoFromUrl(new URL(location.href));
+      const target=selection?.video||targetFromHash(location.hash)||targetFromPath(location.pathname);
+      syncTarget(target);
+      selectVideo(selection);
+      if(!interacted)focusTarget(target);
+      // Replacing primary/context nodes can shift native scroll anchoring.
+      // Correct only a known entry after a real body commit; unchanged
+      // fragments and entries without a snapshot retain native restoration.
+      if(position&&readerRevision!==revision){
+        const committedRevision=readerRevision;
+        await afterLayout();
+        await restorePosition(position,()=>!interacted&&!persisted&&ticket===navigationTicket&&url.href===location.href&&readerRevision===committedRevision);
+      }
+      window.resumeGuideScrollState?.(scrollGeneration);
+    }finally{
+      if(position){for(const type of interactionTypes)removeEventListener(type,recordInteraction);removeEventListener("pageshow",recordPageShow)}
+    }
   });
   const initialSelection=videoFromUrl(new URL(location.href)),
     initialTarget=initialSelection?.video||targetFromHash(location.hash)||(location.pathname!=="/"&&targetFromPath(location.pathname));
   // A full-document Back load may not use BFCache. In that case the browser
   // still owns its saved scroll position; do not apply fresh deep-link scrolling.
-  const restoringHistory = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
   let initialInteraction=Boolean(window.completeGuideInteraction);
   if(initialTarget && !restoringHistory && !initialInteraction){
     // The shared guide is ready: position fresh deep links in the full document.
@@ -251,4 +356,10 @@
     const rect=initialTarget.getBoundingClientRect();
     if(rect.bottom<=0||rect.top>=innerHeight)moveTo(initialTarget);
   });
+  if (restoringHistory && savedScroll && !initialInteraction) {
+    await afterLayout();
+    if (!restoredFromBFCache && !restorationInteraction && !window.completeGuideInteraction)
+      await restorePosition(savedScroll,()=>!restoredFromBFCache&&!restorationInteraction&&!window.completeGuideInteraction);
+  }
+  window.resumeGuideScrollState?.(initialScrollGeneration);
 })();

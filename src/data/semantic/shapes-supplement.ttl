@@ -8,10 +8,15 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix spdx: <http://spdx.org/rdf/terms#> .
 
+# Supplemental contracts for the published data union. Canonical graph-authored
+# SHACL definitions are compiled alongside these constraints into shapes.ttl.
+
 ex:PhysicianEntityShape a sh:NodeShape ;
   sh:targetNode ex:saeed-ghezelbash ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:Person ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:IndividualPhysician ] ;
+  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:mainEntityOfPage ; sh:hasValue ex:webpage ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:name ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:owns ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:practicesAt ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;
@@ -42,9 +47,17 @@ ex:ClinicAssetShape a sh:NodeShape ;
 
 ex:WebPageDominanceShape a sh:NodeShape ;
   sh:targetNode ex:webpage ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalWebPage ] ;
+  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:dateModified ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:author ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] .
+
+ex:PrimaryHomeProfileShape a sh:NodeShape ;
+  sh:targetClass schema:ProfilePage ;
+  sh:in ( ex:webpage ) .
 
 ex:CanonicalDatasetRoleShape a sh:NodeShape ;
   sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;
@@ -53,6 +66,8 @@ ex:CanonicalDatasetRoleShape a sh:NodeShape ;
   sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:distribution ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:dateModified ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path <https://www.ghezelbaash.ir/ontology/evidenceAssessmentRegistry> ; sh:nodeKind sh:IRI ; sh:class prov:Collection ; sh:minCount 1 ; sh:maxCount 1 ] ;
   # Each serialization may encode the same destination as an IRI or anyURI.
   # This exact value set permits one semantic target, without accepting a
   # language-tagged URL or forcing unlike RDF terms to share maxCount 1.
@@ -79,8 +94,8 @@ ex:MedicalConditionTreatmentShape a sh:NodeShape ;
 
 ex:FridayClosedShape a sh:NodeShape ;
   sh:targetNode ex:clinic-friday-closed ;
-  sh:property [ sh:path schema:opens ; sh:hasValue "00:00:00"^^xsd:time ] ;
-  sh:property [ sh:path schema:closes ; sh:hasValue "00:00:00"^^xsd:time ] .
+  sh:property [ sh:path schema:opens ; sh:in ( "00:00:00" "00:00:00"^^xsd:time ) ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:closes ; sh:in ( "00:00:00" "00:00:00"^^xsd:time ) ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:AvailableServiceProviderShape a sh:NodeShape ;
   sh:targetObjectsOf schema:availableService ;
@@ -108,9 +123,10 @@ ex:UploadTimestampShape a sh:NodeShape ;
 
 ex:ServiceCategoryShape a sh:NodeShape ;
   sh:targetSubjectsOf schema:category ;
-  sh:class schema:Service ;
+  # Educational/referral-only procedures retain their clinical category without
+  # asserting that the physician provides them as a practice service.
+  sh:or ( [ sh:class schema:Service ] [ sh:class schema:MedicalProcedure ] ) ;
   sh:property [ sh:path schema:category ; sh:nodeKind sh:IRI ; sh:class schema:DefinedTerm ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:provider ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:sparql [
     sh:message "A curated service category must also be a documented subject of that service." ;
     sh:select """
@@ -123,15 +139,23 @@ ex:ServiceCategoryShape a sh:NodeShape ;
     """
   ] .
 
+ex:PublishedServiceProviderShape a sh:NodeShape ;
+  sh:targetClass schema:Service ;
+  sh:property [ sh:path schema:provider ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+
 # This pair has one specific subject; pairwise equality alone would also pass
 # when both questions and answers point to the same unrelated procedure.
 ex:MelasmaAnswerSubjectShape a sh:NodeShape ;
-  sh:targetNode ex:question-melasma-recurrence-and-multimodal-treatment,
-    ex:answer-melasma-recurrence-and-multimodal-treatment ;
+  sh:targetNode <https://www.ghezelbaash.ir/acne-pigmentation-and-scars#question-melasma-recurrence-and-multimodal-treatment>,
+    <https://www.ghezelbaash.ir/acne-pigmentation-and-scars#answer-melasma-recurrence-and-multimodal-treatment> ;
   sh:property [ sh:path schema:about ; sh:hasValue ex:procedure-melasma-treatment ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:DcatDistributionShape a sh:NodeShape ;
-  sh:targetClass dcat:Distribution ;
+  # The compiler supplies every locally measured registry distribution as an
+  # explicit target. Unlike remote landing pages, these files have actual byte
+  # sizes and checksums. Additional measured distributions remain constrained.
+  sh:targetSubjectsOf dcat:byteSize ;
+  sh:class dcat:Distribution ;
   sh:nodeKind sh:IRI ;
   sh:property [ sh:path dcat:downloadURL ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path dcat:mediaType ; sh:nodeKind sh:IRI ; sh:pattern "^https://www[.]iana[.]org/assignments/media-types/[^/]+/[^/]+$" ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -190,18 +214,21 @@ ex:IranMedicalCouncilIdentityShape a sh:NodeShape ;
 
 ex:PersonalFacebookProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-ghezelbaash ;
-  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
   sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:ClinicFacebookProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-doctor-ghezelbaash ;
-  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
   sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:ClinicInstagramProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-instagram-doctor-ghezelbaash ;
-  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
   sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 # Only these shared professional pages describe both existing entities. The
@@ -210,7 +237,8 @@ ex:ClinicInstagramProfileShape a sh:NodeShape ;
 ex:ProfessionalSocialSubjectShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-doctor-ghezelbaash,
     ex:profile-instagram-doctor-ghezelbaash, ex:evidence-instagram ;
-  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
   sh:property [ sh:path schema:mainEntity ; sh:minCount 2 ; sh:maxCount 2 ;
     sh:in ( ex:saeed-ghezelbash ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ] ;

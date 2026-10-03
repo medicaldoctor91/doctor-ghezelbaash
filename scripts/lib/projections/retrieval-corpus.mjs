@@ -1,6 +1,5 @@
 import path from "node:path";
-import { datasetRevisionDate, validRevisionDate } from "../release-graph.mjs";
-import { contentRoutePaths } from "../content-routes.mjs";
+import { datasetRevisionDate } from "../release-graph.mjs";
 import { writeFile } from "node:fs/promises";
 import { parseFragment } from "parse5";
 import {
@@ -9,6 +8,8 @@ import {
 } from "../projection-context.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/graph-core.mjs";
 import { documentPolicy } from "../../../src/config/site-policy.mjs";
+import { temporalValue, rdfTemporalLiteral } from "../../../src/lib/graph-dates.mjs";
+import { urlForHtmlId, resolveContentUrl } from "../../../src/lib/url-architecture.mjs";
 
 const attribute = (node, name) =>
   node.attrs?.find((candidate) => candidate.name === name)?.value;
@@ -16,7 +17,7 @@ const absoluteLink = (href, canonicalUrl) => {
   const url = new URL(href, canonicalUrl);
   if (!["https:", "http:", "mailto:", "tel:"].includes(url.protocol))
     throw new Error(`Retrieval link has an unsupported scheme: ${href}`);
-  return url.href.replaceAll("(", "%28").replaceAll(")", "%29");
+  return resolveContentUrl(url.href, { absolute: true }).replaceAll("(", "%28").replaceAll(")", "%29");
 };
 const inlineText = (node, canonicalUrl) => {
   if (node.nodeName === "#text") return node.value;
@@ -402,11 +403,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     canonicalUrl: release.canonicalUrl,
     language: pageLanguage,
   });
-  const sourcePaths = new Set(contentRoutePaths(pageBody, release.canonicalUrl));
-  const sourceUrlForId = (id) => new URL(
-    sourcePaths.has(`/${id}`) ? id : `#${id}`,
-    release.canonicalUrl,
-  ).href;
+  const sourceUrlForId = (id) => new URL(urlForHtmlId(id), release.canonicalUrl).href;
 
   let markdown = [
     `# ${pageTitle}`,
@@ -426,7 +423,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         markdown += `<!-- retrieval-alias: ${block.retrievalAlias} -->\n`;
     }
     if (block.answerId)
-      markdown += `<!-- answer-id: ${new URL(block.answerId, release.canonicalUrl).href} -->\n`;
+      markdown += `<!-- answer-id: ${sourceUrlForId(block.answerId)} -->\n`;
     markdown += "\n";
   }
   markdown = markdown.replace(/\n{3,}/g, "\n\n");
@@ -457,7 +454,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         for (const text of units)
           chunks.push({
             text,
-            answerIds: [`${new URL(part.answerId, release.canonicalUrl).href}`],
+            answerIds: [sourceUrlForId(part.answerId)],
           });
         continue;
       }
@@ -575,7 +572,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       `LEVEL: H${passage.level}`,
       `TITLE: ${passage.title}`,
       `HEADING_PATH: ${passage.headingPath.map((heading) => `H${heading.level} ${heading.title}`).join(" | ")}`,
-      `HEADING_IDS: ${passage.headingPath.map((heading) => new URL(heading.id, release.canonicalUrl).href).join(" | ")}`,
+      `HEADING_IDS: ${passage.headingPath.map((heading) => sourceUrlForId(heading.id)).join(" | ")}`,
       `ANCHOR: ${passage.anchor}`,
       ...(passage.graphNodeIds.length
         ? [`GRAPH_NODE_IDS: ${passage.graphNodeIds.join(" | ")}`]
@@ -619,7 +616,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         { "@id": release.clinic.id },
       ],
       version: release.release,
-      dateModified: currentDatasetDate,
+      dateModified: rdfTemporalLiteral(byId.get(release.dataset.id).dateModified, "Provenance Dataset revision"),
       isBasedOn: { "@id": release.dataset.id },
       identifier: {
         "@type": "PropertyValue",
@@ -659,11 +656,14 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     const sourceRevisions = sourceIds
       .map((id) => byId.get(id)?.dateModified)
       .filter((date) => date !== undefined);
-    if (sourceRevisions.some((date) =>
-      !validRevisionDate(date) || date > currentDatasetDate,
-    ))
-      throw new Error(`Invalid passage source revision: ${passage.anchor}`);
-    const passageModifiedAt = sourceRevisions.sort().at(-1);
+    const typedSourceRevisions = sourceRevisions.map((date) => {
+      const literal = rdfTemporalLiteral(date, `Invalid passage source revision: ${passage.anchor}`);
+      if (literal["@value"].slice(0, 10) > currentDatasetDate)
+        throw new Error(`Invalid passage source revision: ${passage.anchor}`);
+      return literal;
+    });
+    const passageModifiedAt = typedSourceRevisions.sort((left, right) =>
+      Date.parse(temporalValue(left)) - Date.parse(temporalValue(right))).at(-1);
     provenanceGraph.push({
       "@id": `${release.canonicalUrl}provenance.jsonld/passage-${passage.hash}`,
       "@type": ["CreativeWork", "prov:Entity"],
@@ -711,8 +711,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   } of answerRecords) {
     // A recorded Q/A metadata revision is distinct from both medical review and
     // the revision of the entire Dataset. Unchanged records keep their date.
-    const answerModifiedAt = q.dateModified ?? release.dateModified;
-    if (!validRevisionDate(answerModifiedAt) || answerModifiedAt > currentDatasetDate)
+    const answerModifiedAt = rdfTemporalLiteral(q.dateModified ?? release.dateModified,
+      `Invalid answer provenance revision date: ${q["@id"]}`);
+    if (answerModifiedAt["@value"].slice(0, 10) > currentDatasetDate)
       throw new Error(`Invalid answer provenance revision date: ${q["@id"]}`);
     provenanceGraph.push({
       "@id": `${release.canonicalUrl}provenance.jsonld/answer-${sourceHash.slice(0, 16)}`,
@@ -763,7 +764,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     `${JSON.stringify(evidenceSnapshot, null, 2)}\n`,
   );
 
-  await writeFile(path.join(projections, "llms.txt"), llmsGuide);
+  const publishedGuide = llmsGuide.replace(/(\]\()([^\s)]+)(\))/g,
+    (_match, before, url, after) => before + resolveContentUrl(url, { absolute: true }) + after);
+  await writeFile(path.join(projections, "llms.txt"), publishedGuide);
 
   return {
     markdownBytes: Buffer.byteLength(markdown),

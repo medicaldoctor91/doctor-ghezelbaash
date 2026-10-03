@@ -15,8 +15,8 @@ test("page discovery publishes a route-aware physician graph without changing au
   const byId = new Map(graph.map((node) => [node["@id"], node]));
   const page = byId.get(inputs.lifecycle.canonicalUrl + "webpage");
   assert(typed(page, "MedicalWebPage"));
-  assert(!typed(page, "ProfilePage"));
-  assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 0);
+  assert(typed(page, "ProfilePage"));
+  assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 1);
   for (const type of ["Event", "Review"])
     assert(!graph.some((node) => typed(node, type)), "Homepage search projection must exclude " + type);
   const courseInstanceIds = new Set(graph.filter((node) => typed(node, "Course"))
@@ -26,8 +26,9 @@ test("page discovery publishes a route-aware physician graph without changing au
   const person = byId.get(page.mainEntity["@id"]);
   assert(typed(person, "Person"));
   assert.equal(typeof person.name, "string");
-  assert.equal(person.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
-  assert.deepEqual(person.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
+  assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert.equal(person.url, inputs.lifecycle.canonicalUrl);
+  assert.deepEqual(person.mainEntityOfPage, { "@id": page["@id"] });
   assert(graph.length < inputs.graph["@graph"].length);
   assert(graph.some((node) => typed(node, "FAQPage")));
   for (const image of graph.filter((node) => typed(node, "ImageObject"))) {
@@ -50,7 +51,8 @@ test("the selected Course resolves only its authored historical instance and loc
   const authored = authoredById.get(instance["@id"]);
   assert.deepEqual(instance["@type"], authored["@type"]);
   assert(typed(instance, "CourseInstance") && typed(instance, "EducationEvent"));
-  for (const key of ["startDate", "location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "dcterms:temporal", "eventAttendanceMode"])
+  assert.equal(instance.startDate, localizedText(authored.startDate));
+  for (const key of ["location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "dcterms:temporal", "eventAttendanceMode"])
     assert.deepEqual(instance[key], authored[key]);
   assert.equal(instance.name, localizedText(authored.name));
   assert.equal(instance.description, authored.description);
@@ -89,15 +91,15 @@ test("homepage speakable resolves its exact authored selector specification", ()
   assert.equal(projected.filter((node) => typed(node, "SpeakableSpecification")).length, 1);
 });
 
-test("homepage and dedicated profile revisions remain authored on their own canonical nodes", () => {
+test("homepage owns the authored physician profile and preserves its known revision precision", () => {
   const projected = projection()["@graph"];
   const home = projected.find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
   const authoredHome = inputs.graph["@graph"].find((node) => node["@id"] === home["@id"]);
   const profileId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage";
-  const authoredProfile = inputs.graph["@graph"].find((node) => node["@id"] === profileId);
-  assert.equal(home.dateModified, authoredHome.dateModified);
-  assert(typed(authoredProfile, "ProfilePage"));
-  assert.equal(authoredProfile.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert.equal(home.dateModified, localizedText(authoredHome.dateModified));
+  assert(typed(authoredHome, "ProfilePage"));
+  assert.equal(authoredHome.url, inputs.lifecycle.canonicalUrl);
+  assert(!inputs.graph["@graph"].some((node) => node["@id"] === profileId));
   assert(!projected.some((node) => node["@id"] === profileId));
 });
 
@@ -156,17 +158,22 @@ test("validating authored discovery twice preserves core identity and never dupl
     assert.equal(graph.filter((node) => typed(node, "FAQPage")).length, 1);
     const home = graph.find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
     assert(typed(home, "MedicalWebPage"));
-    assert(!typed(home, "ProfilePage"));
+    assert(typed(home, "ProfilePage"));
     const person = graph.find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
-    assert.equal(person.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
-    assert.deepEqual(person.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage" });
+    assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+    assert.equal(person.url, inputs.lifecycle.canonicalUrl);
+    assert.deepEqual(person.mainEntityOfPage, { "@id": home["@id"] });
   }
 });
 
 test("canonical HTML owns published markup while canonical graph owns discovery data", () => {
-  const withoutJson = (html) => html.replace(
-    /(<script\b[^>]*>)[\s\S]*?(<\/script>)/gi, "$1$2");
-  assert.equal(withoutJson(renderCanonicalPageHtml(inputs.pageBody, inputs.graph)), withoutJson(inputs.pageBody));
+  const withoutGeneratedDiscovery = (html) => html.replace(
+    /(<script\b[^>]*>)[\s\S]*?(<\/script>)/gi, "$1$2")
+    .replace(/ data-canonical-href="[^"]*"/g, "");
+  const rendered = renderCanonicalPageHtml(inputs.pageBody, inputs.graph);
+  assert.equal([...rendered.matchAll(/ data-canonical-href=/g)].length,
+    [...inputs.pageBody.matchAll(/<h[1-6]\b[^>]*\bid=/g)].length, "Every authored heading owns one generated canonical reader destination");
+  assert.equal(withoutGeneratedDiscovery(rendered), withoutGeneratedDiscovery(inputs.pageBody));
   assert.deepEqual(projection(), inputs.pageJsonLd[0].document);
   assert.equal(inputs.pageJsonLd.length, 1);
   assert.strictEqual(validatePageJsonLd(inputs.pageJsonLd), inputs.pageJsonLd);

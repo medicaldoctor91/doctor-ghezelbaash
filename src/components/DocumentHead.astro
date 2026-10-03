@@ -59,10 +59,12 @@ const person = facts.person as GraphNode;
 const website = facts.website as GraphNode;
 const page = facts.page as GraphNode;
 const pageTypes = Array.isArray(page['@type']) ? page['@type'] : [page['@type']];
-const openGraphType = pageTypes.includes('MedicalWebPage') ? 'website' : '';
-if (isMain && openGraphType !== 'website') {
-  throw new Error('Canonical homepage must project Open Graph website from graph MedicalWebPage type');
+const openGraphType = pageTypes.includes('ProfilePage') ? 'profile' : pageTypes.includes('MedicalWebPage') ? 'website' : '';
+if (isMain && openGraphType !== 'profile') {
+  throw new Error('Canonical homepage must project its primary physician ProfilePage to Open Graph profile');
 }
+const profileFirstName = exactLanguageLiteral(person.givenName, 'fa', 'Canonical physician given name');
+const profileLastName = exactLanguageLiteral(person.familyName, 'fa', 'Canonical physician family name');
 const pageLanguages = (Array.isArray(page.inLanguage) ? page.inLanguage : [page.inLanguage])
   .filter((value): value is string => typeof value === 'string' && value.length > 0);
 if (isMain && !pageLanguages.includes(lang)) {
@@ -271,6 +273,8 @@ const discoveryLinks: DiscoveryLink[] = [
     <>
       {discoveryLinks.map((link) => <link {...link}>)}
       <meta content={og.type} property="og:type">
+      <meta content={profileFirstName} property="profile:first_name">
+      <meta content={profileLastName} property="profile:last_name">
       <meta content={og.locale} property="og:locale">
       {/* The comprehensive home has multilingual sections, but no translated
           equivalents. Reviewed topic equivalents are emitted by the route renderer. */}

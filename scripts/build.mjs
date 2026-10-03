@@ -5,9 +5,11 @@ import { readFile } from "node:fs/promises";
 const authoredPaths = [
   "src/content-source/page.md",
   "src/data/semantic/knowledge-graph.jsonld",
+  "src/data/semantic/shapes-supplement.ttl",
   "src/content-source/llms-guide.md",
   "src/config/site-policy.mjs",
   "src/config/machine-resources.mjs",
+  "src/data/url-architecture.json",
 ];
 const authoredHashes = () => Promise.all(authoredPaths.map(async (file) =>
   createHash("sha256").update(await readFile(file)).digest("hex")));
@@ -15,6 +17,7 @@ const before = await authoredHashes();
 const steps = [
   ["scripts/generated-workspace.mjs", "reset"],
   ["scripts/generate-rdf.mjs"],
+  ["scripts/generate-shapes.mjs"],
   ["scripts/generate-projections.mjs"],
   ["scripts/generate-descriptors.mjs"],
   ["node_modules/astro/bin/astro.mjs", "build"],

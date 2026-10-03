@@ -7,6 +7,7 @@ import { nodeTypes, valueText } from "../projection-context.mjs";
 import { assembleCanonicalContent, physicianImageUrls } from "../assemble-content.mjs";
 import { inspectHtml } from "../html-contract.mjs";
 import { discoveryPolicy } from "../../../src/config/site-policy.mjs";
+import { requireCalendarDate, temporalValue } from "../../../src/lib/graph-dates.mjs";
 import {
   directLanguageLiterals,
   exactLanguageLiteral,
@@ -206,12 +207,10 @@ export async function compileContactDiscovery(context) {
     "owned clinic contact photo contentUrl",
   );
   const vCardRev = (documentId, label) => {
-    const dateModified = requiredText(
+    const dateModified = requireCalendarDate(
       requiredNode(byId, documentId, label).dateModified,
       `${label} dateModified`,
     );
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateModified))
-      throw new Error(`Contact discovery: ${label} dateModified is invalid`);
     return `${dateModified.replaceAll("-", "")}T000000Z`;
   };
   const doctorRev = vCardRev(
@@ -287,14 +286,14 @@ export async function compileContactDiscovery(context) {
   const focusedPages = deriveRouteDiscovery('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content, graph) + '</article></main></body></html>', graph, discoveryPolicy, release.canonicalUrl);
   const sitemap = renderDiscoverySitemap({ pages: [{
     canonicalUrl: release.canonicalUrl,
-    lastmod: requiredNode(byId, release.canonicalUrl + "webpage", "canonical homepage").dateModified,
+    lastmod: requireCalendarDate(requiredNode(byId, release.canonicalUrl + "webpage", "canonical homepage").dateModified, "Contact discovery: canonical homepage dateModified"),
     imageUrls: imageLocs,
     videos: videos.map((video) => ({
       thumbnailUrl: video.thumbnailUrl,
       contentUrl: video.contentUrl,
       title: valueText(video.name),
       description: valueText(video.description),
-      publicationDate: video.uploadDate,
+      publicationDate: temporalValue(video.uploadDate),
       duration: video.duration,
     })),
   }, ...focusedPages] });

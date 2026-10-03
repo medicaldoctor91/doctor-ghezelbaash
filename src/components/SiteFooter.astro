@@ -5,26 +5,6 @@ import { indexCanonicalGraph, nodeTypes } from '../lib/graph-core.mjs';
 import { deriveSiteContactData } from '../lib/site-data.mjs';
 import { FOOTER_RESOURCES } from '../lib/resources.mjs';
 
-interface GovernanceLink {
-  href: string;
-  label: string;
-}
-interface GovernanceCopy {
-  summary: string;
-  reputationLead: string;
-  mapsTerms: GovernanceLink;
-  privacyPolicy: GovernanceLink;
-  tail: string;
-}
-interface Props {
-  governance: GovernanceCopy;
-}
-
-const { governance } = Astro.props;
-if (!governance?.summary || !governance?.reputationLead || !governance?.mapsTerms?.href || !governance?.mapsTerms?.label || !governance?.privacyPolicy?.href || !governance?.privacyPolicy?.label || !governance?.tail) {
-  throw new Error('Site footer requires governance copy');
-}
-
 const site = deriveSiteContactData(release, canonicalGraph);
 const { byId } = indexCanonicalGraph(canonicalGraph);
 const dataset = byId.get(release.dataset.id);
@@ -60,24 +40,15 @@ const kaggleResources = [
 });
 ---
 
-<footer aria-label={labels.footerAriaLabel} class="site-footer">
+<footer aria-label={labels.footerAriaLabel} class="site-footer" lang="fa-IR" dir="rtl">
   <address>
     <strong>{site.clinicName}</strong>، {site.locality} — <a href={site.telHref}
       >{site.phoneDisplay}</a
-    > — <a href={site.mapsUrl} rel="external">Google Maps</a>
+    >
   </address>
-  <details class="editorial-governance" id="privacy-and-terms">
-    <summary>{governance.summary}</summary>
-    <p>
-      {governance.reputationLead}
-      <a href={governance.mapsTerms.href} rel="external noopener">{governance.mapsTerms.label}</a>
-      و <a href={governance.privacyPolicy.href} rel="external noopener">{governance.privacyPolicy.label}</a>
-      {governance.tail}
-    </p>
-  </details>
   <details class="footer-machine-resources">
     <summary>{labels.machineResourcesSummary}</summary>
-    <p class="footer-dataset-disclosure">
+    <p class="footer-dataset-disclosure" lang="en" dir="ltr">
       <strong>{datasetDisclosure.name}</strong> — {datasetDisclosure.description}
     </p>
     <nav aria-label={labels.machineResourcesAriaLabel}>

@@ -1,4 +1,5 @@
 import { indexCanonicalGraph, identifierFor } from "./graph-core.mjs";
+import { requireCalendarDate } from "./graph-dates.mjs";
 
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
@@ -64,8 +65,9 @@ export function deriveCanonicalGraphFacts(release, graph) {
   if (!asArray(profile["@type"]).includes("ProfilePage") || profile.mainEntity?.["@id"] !== person["@id"])
     throw new Error("Canonical physician ProfilePage must describe the physician");
   const page = requireNode(base + "webpage", "canonical medical WebPage");
-  if (!asArray(page["@type"]).includes("MedicalWebPage") || asArray(page["@type"]).includes("ProfilePage"))
-    throw new Error("Canonical homepage must be a MedicalWebPage, not a ProfilePage");
+  if (!asArray(page["@type"]).includes("MedicalWebPage") || !asArray(page["@type"]).includes("ProfilePage") ||
+      profile["@id"] !== page["@id"] || page.url !== base || person.url !== base)
+    throw new Error("Canonical homepage must be the physician ProfilePage and MedicalWebPage");
   const website = requireNode(exactRef(page.isPartOf, "WebPage isPartOf"), "WebSite");
   const address = requireNode(
     exactRef(clinic.address, "clinic address"),
@@ -124,7 +126,7 @@ export function deriveCanonicalGraphFacts(release, graph) {
     address,
     reviewedBy,
     schemaVersion: nonempty(page.schemaVersion, "WebPage schemaVersion"),
-    medicalReviewedAt: nonempty(page.lastReviewed, "WebPage lastReviewed"),
+    medicalReviewedAt: requireCalendarDate(page.lastReviewed, "Canonical authority WebPage lastReviewed"),
     instagramUrl,
     openStreetMapUrl,
     clinicHours: Object.freeze({
@@ -167,7 +169,7 @@ export function deriveClinicOwnerConfirmation(facts) {
   if (claims.length !== 1) throw new Error("Canonical clinic requires one owner-confirmed operating-facts claim");
   const [ownerConfirmation] = claims;
   const confirmationAbout = asArray(ownerConfirmation.about).map(refId);
-  const ownerConfirmationDate = nonempty(
+  const ownerConfirmationDate = requireCalendarDate(
     ownerConfirmation.dateCreated,
     "owner-confirmed clinic claim dateCreated",
   );

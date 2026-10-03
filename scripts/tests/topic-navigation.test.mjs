@@ -5,6 +5,8 @@ import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveIndependentPages } from "../lib/independent-pages.mjs";
 import { inspectHtml } from "../lib/html-contract.mjs";
 import { attachTopicNavigation, navigationRoots, renderTopicNavigation, deriveTopicBreadcrumbItems } from "../lib/topic-navigation.mjs";
+import { discoveryPolicy } from "../../src/config/site-policy.mjs";
+import { canonicalPaths, urlForHtmlId, resolveContentUrl } from "../../src/lib/url-architecture.mjs";
 
 const canonicalUrl = "https://www.ghezelbaash.ir/";
 const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
@@ -107,7 +109,8 @@ test("navigation rejects missing authored destinations, duplicate routes and exp
 
 const inputs = readCanonicalInputs();
 const actualHome = homeDocument(renderCanonicalPageHtml(inputs.pageBody, inputs.graph));
-const actualRecords = deriveIndependentPages(actualHome, inputs.graph, canonicalUrl);
+const actualRecords = deriveIndependentPages(actualHome, inputs.graph, canonicalUrl,
+  { focusedViews: discoveryPolicy.focusedViews });
 const actualPages = attachTopicNavigation(actualRecords, actualHome, canonicalUrl);
 
 test("every actual canonical route is reachable through native structural links from the homepage roots", () => {
@@ -135,30 +138,71 @@ test("every actual canonical route is reachable through native structural links 
   assert(actualRecords.every((page) => page.navigation === undefined));
 });
 
-test("real Botox topics and all 125 questions retain their authored answers on canonical routes", () => {
+test("retained Botox topics express actual semantic parents while all authored questions remain readable in their owner", () => {
   const byPath = new Map(actualPages.map((page) => [page.path, page]));
-  assert.equal(byPath.get("/forehead-botox-brow-compensation-and-ptosis-risk").navigation.parent.path, "/upper-face-botox");
-  assert.equal(byPath.get("/forehead-lines-overactivity-vs-compensation").navigation.parent.path, "/forehead-botox-brow-compensation-and-ptosis-risk");
+  assert.deepEqual(actualPages.map((page) => page.path), canonicalPaths().filter((path) => path !== "/"));
+  assert.equal(byPath.get("/upper-face-botox").navigation.parent.path, "/botox");
+  assert.equal(byPath.get("/blepharoplasty-for-excess-eyelid-skin-and-fat").navigation.parent.path, "/upper-face-botox");
+  assert(!byPath.has("/forehead-botox-brow-compensation-and-ptosis-risk"));
+  assert.equal(resolveContentUrl("/forehead-botox-brow-compensation-and-ptosis-risk"),
+    "/upper-face-botox#forehead-botox-brow-compensation-and-ptosis-risk");
+  assert.equal(urlForHtmlId("forehead-lines-overactivity-vs-compensation"),
+    "/upper-face-botox#forehead-lines-overactivity-vs-compensation");
   assert.equal(byPath.get("/historical-patient-origin-summary").navigation.parent.path, "/out-of-town-aesthetic-patients-iran");
   assert.equal(actualPages.filter((page) => page.path.startsWith("/answer-")).length, 0);
+  const typed = (node, type) => [node?.["@type"]].flat().includes(type);
+  const sourceById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
   const questions = inputs.graph["@graph"].filter((node) => [node["@type"]].flat().includes("Question"));
   assert.equal(questions.length, 125);
+  const idsByOwner = new Map(actualPages.map((page) => [page.path,
+    new Set(inspectHtml(page.bodyHtml, { wrapMain: true }).ids)]));
   for (const question of questions) {
     const source = new URL(question.url);
-    const path = source.hash ? "/" + source.hash.slice(1) : source.pathname;
+    const path = source.pathname;
     const page = byPath.get(path);
-    assert(page, "Question must have its canonical focused route: " + path);
-    assert.equal(page.entityId, question["@id"]);
+    assert(page, "Question must belong to a retained source document: " + question.url);
+    const questionHtmlId = decodeURIComponent(source.hash.slice(1)) || page.htmlId;
+    assert(idsByOwner.get(path).has(questionHtmlId), "The original question heading must remain readable: " + question.url);
+    assert.equal(urlForHtmlId(questionHtmlId), source.pathname + source.hash);
+    const nodes = new Map(page.document["@graph"].map((node) => [node["@id"], node]));
+    assert(typed(nodes.get(question["@id"]), "Question"));
+    assert(page.document["@graph"].some((node) => typed(node, "FAQPage") && [node.mainEntity].flat()
+      .some((ref) => ref?.["@id"] === question["@id"])), "The scoped FAQ must include its visible authored question: " + question.url);
     const answerId = [question.acceptedAnswer].flat()[0]?.["@id"];
-    assert(answerId, "Question must retain its accepted Answer: " + path);
-    assert(page.document["@graph"].some((node) => node["@id"] === answerId && [node["@type"]].flat().includes("Answer")),
-      "Question document must carry its accepted Answer: " + path);
-    const answerHtmlId = new URL(answerId).pathname.slice(1);
-    assert(page.bodyHtml.includes('id="' + answerHtmlId + '"'), "Question document must visibly contain its answer: " + path);
+    assert(answerId, "Question must retain its accepted Answer: " + question.url);
+    assert(typed(nodes.get(answerId), "Answer"), "Owner graph must carry its accepted Answer: " + question.url);
+    assert.deepEqual(nodes.get(question["@id"]).acceptedAnswer, question.acceptedAnswer);
+    const answer = sourceById.get(answerId);
+    assert(answer, "Accepted Answer identity must remain in the canonical graph");
+    const answerSource = new URL(answerId);
+    const answerHtmlId = decodeURIComponent(answerSource.hash.slice(1));
+    assert(answerHtmlId.startsWith("answer-"), "Answer URLs must use the original answer fragment");
+    assert.equal(answerSource.pathname, path);
+    assert(idsByOwner.get(path).has(answerHtmlId), "Owner document must visibly contain its answer: " + answerId);
   }
-  for (const lang of ["en", "ar-IQ", "ckb-IQ"]) {
-    const question = byPath.get("/who-is-dr-saeed-ghezelbash-" + (lang === "en" ? "en" : lang.toLowerCase()));
-    assert.equal(question.navigation.parent.path, "/frequently-asked-questions-dr-saeed-ghezelbash-" + (lang === "en" ? "en" : lang.toLowerCase()));
-    assert(question.navigation.ancestors.every((link) => link.lang === lang));
+});
+
+test("all three complete language guides are native roots and own their question fragments without borrowing another language", () => {
+  const byPath = new Map(actualPages.map((page) => [page.path, page]));
+  const roots = new Set(navigationRoots(actualPages).map((link) => link.path));
+  for (const [lang, suffix, htmlId] of [["en", "en", "english-facial-aesthetic-doctor-section"],
+    ["ar-IQ", "ar-iq", "iraqi-arabic-facial-aesthetic-doctor-section"],
+    ["ckb-IQ", "ckb-iq", "sorani-kurdish-facial-aesthetic-doctor-section"]]) {
+    const guidePath = "/aesthetic-guide-" + suffix;
+    const guide = byPath.get(guidePath);
+    assert(roots.has(guidePath));
+    assert.equal(guide.lang, lang);
+    assert.equal(guide.htmlId, htmlId);
+    assert.equal(guide.navigation.parent, undefined);
+    assert.deepEqual(guide.navigation.ancestors, []);
+    assert.equal(urlForHtmlId("who-is-dr-saeed-ghezelbash-" + suffix),
+      guidePath + "#who-is-dr-saeed-ghezelbash-" + suffix);
+    assert(!byPath.has("/who-is-dr-saeed-ghezelbash-" + suffix));
+    for (const child of guide.navigation.children) {
+      assert.equal(child.lang, lang);
+      assert.equal(byPath.get(child.path).navigation.parent.path, guidePath);
+    }
   }
+  const review = byPath.get("/video-saeed-ghezelbash-kurdish-patient-review");
+  assert.equal(review.navigation.parent.path, "/aesthetic-guide-ckb-iq");
 });

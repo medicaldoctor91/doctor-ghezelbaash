@@ -52,11 +52,11 @@ export function canonicalHostAliasRows(registry) {
     )
       throw new Error(`Invalid canonical-host alias target: ${rule.target}`);
     const target = new URL(rule.target, registry.canonicalOrigin);
-    if (target.origin !== registry.canonicalOrigin || target.search || target.hash)
+    const machineAlias = target.pathname === "/graph.jsonld";
+    if (target.origin !== registry.canonicalOrigin || target.search || (machineAlias && target.hash))
       throw new Error(
         `Canonical-host alias target escaped its scope: ${rule.target}`,
       );
-    const machineAlias = rule.target === "/graph.jsonld";
     const expectedStatus = machineAlias ? 200 : 301;
     if (rule.statusCode !== expectedStatus)
       throw new Error(
@@ -105,23 +105,63 @@ export function canonicalHostAliasRows(registry) {
 /** Render final Cloudflare rules: permanent content redirects plus exact machine rewrites. */
 export function renderStaticRewrites(rows) {
   const sources = new Set();
+  const namespaces = new Map(machineNamespaceAliasRows().map((row) => [row.source, row.target]));
+  let staticRules = 0, dynamicRules = 0;
   const lines = rows.map(({ source, target, statusCode }) => {
-    if (!source?.startsWith("/") || source.startsWith("//") || /[\s?#\\*:]/u.test(source))
+    const namespace = namespaces.get(source);
+    if (!source?.startsWith("/") || source.startsWith("//") || /[\s?#\\:]/u.test(source) ||
+        (source.includes("*") && !namespace))
       throw new Error(`Invalid static alias source: ${source}`);
     if (!target?.startsWith("/") || target.startsWith("//") || /[\s\\]/u.test(target))
       throw new Error(`Invalid static rewrite destination: ${target}`);
     if (![200, 301, 308].includes(statusCode))
       throw new Error(`Unsupported static redirect/rewrite status: ${statusCode}`);
+    if (namespace && (target !== namespace || statusCode !== 200))
+      throw new Error(`Machine namespace must rewrite to its final representation: ${source}`);
+    const parsedTarget = new URL(target, "https://www.ghezelbaash.ir");
+    if (parsedTarget.origin !== "https://www.ghezelbaash.ir" || parsedTarget.search ||
+        (statusCode === 200 && parsedTarget.hash))
+      throw new Error(`Invalid static redirect/rewrite destination: ${target}`);
     if (sources.has(source)) throw new Error(`Duplicate static alias source: ${source}`);
     sources.add(source);
+    if (namespace) dynamicRules += 1;
+    else staticRules += 1;
     const line = `${source} ${target} ${statusCode}`;
     if (line.length > 1_000)
       throw new Error(`Cloudflare _redirects line exceeds 1000 characters: ${source}`);
     return line;
   });
-  if (lines.length > 2_000)
-    throw new Error(`Cloudflare _redirects exceeds 2000 static rules: ${lines.length}`);
+  if (staticRules > 2_000)
+    throw new Error(`Cloudflare _redirects exceeds 2000 static rules: ${staticRules}`);
+  if (dynamicRules > 100)
+    throw new Error(`Cloudflare _redirects exceeds 100 dynamic rules: ${dynamicRules}`);
+  for (const [index, row] of rows.entries()) if (!row.source.includes("*"))
+    if (rows.slice(0, index).some((earlier) => earlier.source.endsWith("/*") &&
+        row.source.startsWith(earlier.source.slice(0, -1))))
+      throw new Error(`Exact machine aliases must precede namespace rewrites: ${row.source}`);
+  const exactTargets = new Map(rows.filter((row) => !row.source.includes("*"))
+    .map((row) => [normalizedAliasPath(row.source), normalizedAliasPath(row.target)]));
+  for (const source of exactTargets.keys()) {
+    const visited = new Set();
+    let current = source;
+    while (exactTargets.has(current)) {
+      if (visited.has(current)) throw new Error(`Static redirect/rewrite cycle: ${source}`);
+      visited.add(current);
+      current = exactTargets.get(current);
+    }
+  }
   return lines.join("\n") + "\n";
+}
+
+/** Only these bounded machine namespaces may use a Pages wildcard rewrite. */
+export function machineNamespaceAliasRows() {
+  return [
+    { source: "/graph.jsonld/*", target: "/graph.jsonld", statusCode: 200 },
+    { source: "/provenance.jsonld/*", target: "/provenance.jsonld", statusCode: 200 },
+    ...["ontology", "shapes", "annotation"].map((namespace) => ({
+      source: `/${namespace}/*`, target: "/graph.jsonld", statusCode: 200,
+    })),
+  ];
 }
 
 /** Metadata subjects are identifiers; their authoritative description is the graph. */
@@ -146,7 +186,8 @@ export function canonicalMetadataAliasRows(graph, canonicalUrl) {
     Object.values(value).forEach(collect);
   };
   collect(graph["@graph"]);
-  return [...paths].sort().map((source) => ({ source, target: "/graph.jsonld", statusCode: 200 }));
+  return [...paths].sort().map((source) => ({ source,
+    target: source.startsWith("/provenance.jsonld/") ? "/provenance.jsonld" : "/graph.jsonld", statusCode: 200 }));
 }
 
 export function normalizedAliasPath(

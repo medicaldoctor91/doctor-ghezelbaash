@@ -9,7 +9,8 @@ const classes = (node) => String(attr(node, "class") || "").split(/\s+/);
 const escape = (value) => String(value).replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;").replaceAll('"', "&quot;");
 const direction = (lang) => /^en(?:-|$)/i.test(lang || "") ? "ltr" : "rtl";
-const linkFor = (record) => ({ path: record.path, title: record.title, lang: record.lang });
+const linkFor = (record) => ({ path: record.path, title: record.title, lang: record.lang,
+  ...(record.description ? { description: record.description } : {}) });
 const closestScope = (node) => {
   for (let parent = node.parentNode; parent; parent = parent.parentNode)
     if (scopeTags.has(parent.tagName)) return parent;
@@ -27,20 +28,21 @@ export function attachTopicNavigation(records, homeHtml, canonicalUrl) {
     throw new Error("Topic navigation requires the comprehensive homepage URL");
   const inspected = inspectHtml(homeHtml);
   const byPath = new Map();
+  const byTargetId = new Map();
   const byHtmlId = new Map(inspected.elements.filter((node) => attr(node, "id"))
     .map((node) => [attr(node, "id"), node]));
   const targets = new Map();
-  const recordForNode = (node) => byPath.get("/" + attr(node, "id"));
+  const recordForNode = (node) => byTargetId.get(attr(node, "id"));
   for (const record of records) {
     if (!/^\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(record.path) ||
         byPath.has(record.path) || !record.title || !record.lang)
       throw new Error("Invalid or duplicate topic navigation record: " + record.path);
     const id = record.htmlId || record.path.slice(1);
-    if (id !== record.path.slice(1)) throw new Error("Topic route and authored target differ: " + record.path);
     const target = byHtmlId.get(id);
     if (!target?.sourceCodeLocation)
       throw new Error("Topic navigation lacks its authored target: " + record.path);
     byPath.set(record.path, record);
+    byTargetId.set(id, record);
     targets.set(record.path, target);
   }
   const scopeHeadings = new Map();
@@ -67,7 +69,7 @@ export function attachTopicNavigation(records, homeHtml, canonicalUrl) {
       const own = recordForNode(current);
       if (own && own.path !== excludePath) return own.path;
       for (const id of String(attr(current, "aria-labelledby") || "").split(/\s+/)) {
-        const label = byPath.get("/" + id);
+        const label = byTargetId.get(id);
         if (label && label.path !== excludePath) return label.path;
       }
     }
@@ -162,7 +164,9 @@ export function renderTopicNavigation(record) {
     ? '<p>' + copy[1] + ": " + renderLink(navigation.parent) + "</p>" : "";
   const children = navigation.children.length
     ? "<details><summary>" + copy[2] + '</summary><ul>' +
-      navigation.children.map((link) => "<li>" + renderLink(link) + "</li>").join("") + "</ul></details>"
+      navigation.children.map((link) => "<li>" + renderLink(link) +
+        (link.description ? '<p lang="' + escape(link.lang) + '" dir="' + direction(link.lang) + '">' +
+          escape(link.description) + '</p>' : "") + "</li>").join("") + "</ul></details>"
     : "";
   return '<nav data-topic-navigation aria-label="' + escape(copy[0]) + '">' + parent + children + "</nav>";
 }

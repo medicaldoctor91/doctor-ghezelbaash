@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { localizedText, validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 
 const inputs = readCanonicalInputs();
@@ -13,11 +13,18 @@ const mutate = (type, change) => {
   return source;
 };
 
-test("published homepage discovery satisfies clinic, image and video contracts without unrelated profile candidates", () => {
+test("published homepage discovery owns the physician profile and satisfies clinic, image and video contracts", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
   const document = validatePageJsonLd(inputs.pageJsonLd)[0].document;
   const counts = assertRichResultsDocument(document, { primaryPageId: inputs.lifecycle.canonicalUrl + "webpage" });
-  assert.equal(counts.profiles, 0);
+  assert.equal(counts.profiles, 1);
+  const profile = document["@graph"].find((node) => typed(node, "ProfilePage"));
+  assert.equal(profile["@id"], inputs.lifecycle.canonicalUrl + "webpage");
+  assert(typed(profile, "MedicalWebPage"));
+  const physician = document["@graph"].find((node) => node["@id"] === profile.mainEntity["@id"]);
+  assert.equal(physician["@id"], inputs.lifecycle.primaryEntity.id);
+  assert.equal(physician.url, inputs.lifecycle.canonicalUrl);
+  assert.deepEqual(physician.mainEntityOfPage, { "@id": profile["@id"] });
   assert.equal(counts.localBusinesses, 1);
   assert.equal(counts.images, 24);
   assert.deepEqual(counts.incompleteCandidates, []);
@@ -31,10 +38,10 @@ test("a missing primary entity name blocks page publication", () => {
 
 test("FAQ pages require a named question and a typed accepted answer with published text", () => {
   const pageId = inputs.lifecycle.canonicalUrl + "botox-onset-of-action#webpage";
-  const questionId = inputs.lifecycle.canonicalUrl + "question-botox-onset-of-action";
-  const answerId = inputs.lifecycle.canonicalUrl + "answer-botox-onset-of-action";
   const projected = validatePageJsonLd(inputs.pageJsonLd)[0].document["@graph"];
-  const question = projected.find((node) => node["@id"] === questionId);
+  const question = projected.find((node) => typed(node, "Question") && node.url.includes("botox-onset-of-action"));
+  assert(question);
+  const questionId = question["@id"], answerId = question.acceptedAnswer["@id"];
   const answer = projected.find((node) => node["@id"] === answerId);
   const valid = { "@context": "https://schema.org", "@graph": [
     { "@id": pageId, "@type": ["MedicalWebPage", "FAQPage"], mainEntity: { "@id": questionId } },
@@ -108,6 +115,16 @@ test("ProfilePage modification timestamps reject impossible dates", () => {
   assert.throws(() => assertRichResultsDocument({ "@context": "https://schema.org", "@graph": [profile, person] }), /ProfilePage.dateModified/);
 });
 
+test("ProfilePage calendar dates retain their known precision without requiring an invented time", () => {
+  const document = structuredClone(validatePageJsonLd(inputs.pageJsonLd)[0].document);
+  const profile = document["@graph"].find((node) => typed(node, "ProfilePage"));
+  profile.dateModified = "2026-10-03";
+  assert.doesNotThrow(() => assertRichResultsDocument(document, { primaryPageId: profile["@id"] }));
+  assert.equal(profile.dateModified, "2026-10-03");
+  profile.dateModified = "2026-02-30";
+  assert.throws(() => assertRichResultsDocument(document), /ProfilePage.dateModified/);
+});
+
 test("a typed clinic address cannot silently lose its authored physical-address fields", () => {
   const projected = validatePageJsonLd(inputs.pageJsonLd)[0].document;
   for (const property of ["streetAddress", "addressLocality", "addressRegion", "addressCountry", "postalCode"]) {
@@ -126,13 +143,15 @@ test("homepage preserves its Course-bound authored historical instance while exc
   const instance = byId.get(instanceId);
   const authoredInstance = inputs.graph["@graph"].find((node) => node["@id"] === instanceId);
   assert.deepEqual(instance["@type"], authoredInstance["@type"]);
-  assert.equal(instance.startDate, authoredInstance.startDate);
+  assert.equal(instance.startDate, localizedText(authoredInstance.startDate));
   assert.deepEqual(instance.location, authoredInstance.location);
   assert(projected["@graph"].some((node) => typed(node, "Course") && node.hasCourseInstance?.["@id"] === instanceId));
   const canonicalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
-  assert.deepEqual(canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating,
-    { "@type": "Rating", ratingValue: 5, bestRating: 5 });
-  assert.equal(canonicalById.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate, "2025-02-04");
+  const rating = canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating;
+  assert(typed(rating, "Rating"));
+  assert.equal(rating.ratingValue, 5);
+  assert.equal(rating.bestRating, 5);
+  assert.equal(localizedText(canonicalById.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate), "2025-02-04");
   assert(inputs.pageBody.includes("امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵"));
   assert(inputs.pageBody.includes('<time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time>'));
 });
