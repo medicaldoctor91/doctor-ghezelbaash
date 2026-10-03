@@ -21,7 +21,7 @@ const rows = source.split(/\r?\n/u).filter(Boolean).map((line, index) => {
 assert.equal(renderStaticRewrites(rows), source.endsWith("\n") ? source : source + "\n",
   "Final _redirects must be canonical and duplicate-free");
 
-let permanent = 0, promotedContentTargets = 0;
+let permanent = 0, promotedContentTargets = 0, preservedFragments = 0;
 for (const row of rows) {
   const targetUrl = new URL(row.target, canonicalLifecycle.canonicalUrl);
   if ([301, 308].includes(row.statusCode)) {
@@ -36,8 +36,18 @@ for (const row of rows) {
   const file = targetUrl.pathname === "/" ? "index.html"
     : byPath.has(targetUrl.pathname) ? routeDocumentFile(targetUrl.pathname)
     : targetUrl.pathname.slice(1);
-  assert((await stat(path.join(dist, file)).catch(() => null))?.isFile(),
+  const deployed = path.join(dist, file);
+  assert((await stat(deployed).catch(() => null))?.isFile(),
     `Final redirect target must be deployed: ${row.source} -> ${row.target}`);
+  if (targetUrl.hash) {
+    const fragment = decodeURIComponent(targetUrl.hash.slice(1));
+    assert(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(fragment),
+      `Redirect fragment must be a stable authored ID: ${row.target}`);
+    const html = await readFile(deployed, "utf8");
+    assert(html.includes(`id="${fragment}"`) || html.includes(`id='${fragment}'`),
+      `Redirect fragment must exist in its promoted target document: ${row.source} -> ${row.target}`);
+    preservedFragments++;
+  }
 }
 console.log(JSON.stringify({
   finalRedirectValidation: "PASS",
@@ -45,4 +55,5 @@ console.log(JSON.stringify({
   permanent,
   promotedContentTargets,
   noindexPermanentTargets: 0,
+  preservedFragments,
 }, null, 2));
