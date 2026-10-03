@@ -286,7 +286,8 @@ export async function compileContactDiscovery(context) {
   );
   if (!videos.length)
     throw new Error("Contact discovery: canonical video facts are required");
-  const focusedPages = deriveRouteDiscovery('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content, graph) + '</article></main></body></html>', graph, discoveryPolicy, release.canonicalUrl);
+  const focusedPages = deriveRouteDiscovery('<!doctype html><html><body><main id="main-content"><article class="medical-guide">' + renderCanonicalPageHtml(content, graph) + '</article></main></body></html>', graph, discoveryPolicy, release.canonicalUrl)
+    .filter((record) => record.indexable);
   const sitemap = renderDiscoverySitemap({ pages: [{
     canonicalUrl: release.canonicalUrl,
     lastmod: requiredNode(byId, release.canonicalUrl + "webpage", "canonical homepage").dateModified,
