@@ -1,12 +1,23 @@
 import { canonicalGraph } from "./canonical-inputs.mjs";
 import { machineResourcePolicy } from "../config/machine-resources.mjs";
 const byId = new Map(canonicalGraph["@graph"].map((node) => [node["@id"], node]));
+const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
+const refId = (value) => typeof value === "string" ? value : value?.["@id"];
+const literalText = (value) => {
+  for (const candidate of values(value)) {
+    const resolved = candidate && typeof candidate === "object" && !Array.isArray(candidate) &&
+      candidate["@value"] !== undefined ? candidate["@value"] : candidate;
+    if (typeof resolved === "string" && resolved.trim()) return resolved;
+  }
+  return undefined;
+};
 const registry = { resources: machineResourcePolicy.map((resource) => {
   const node = byId.get(resource.distributionIri);
+  const profileIris = values(node?.["dcterms:conformsTo"]).map(refId).filter(Boolean);
   return { ...resource,
-    mediaType: resource.mediaType ?? node?.encodingFormat,
-    descriptorTitle: node?.["dcterms:title"]?.["@value"] ?? node?.["dcterms:title"] ?? node?.name,
-    profileIri: node?.["dcterms:conformsTo"]?.["@id"] ?? node?.["dcterms:conformsTo"],
+    mediaType: resource.mediaType ?? literalText(node?.encodingFormat),
+    descriptorTitle: literalText(node?.["dcterms:title"]) ?? literalText(node?.name),
+    profileIri: profileIris.length ? profileIris.join(" ") : undefined,
   };
 }) };
 
@@ -39,9 +50,10 @@ export const resourceContentType = (resource) => {
     serialized.push(`${name}=${serializeMediaTypeParameter(value)}`);
   }
   if (resource.profileIri) {
-    if (!/^https?:\/\/[^\s"<>]+$/.test(resource.profileIri))
+    const profileIris = resource.profileIri.split(/\s+/).filter(Boolean);
+    if (!profileIris.length || profileIris.some((iri) => !/^https?:\/\/[^\s"<>]+$/.test(iri)))
       throw new Error(`Invalid machine resource profile IRI: ${resource.path}`);
-    serialized.push(`profile=${quoteHttpParameter(resource.profileIri)}`);
+    serialized.push(`profile=${quoteHttpParameter(profileIris.join(" "))}`);
   }
   return [resource.mediaType, ...serialized].join("; ");
 };

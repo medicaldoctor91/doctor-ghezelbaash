@@ -41,9 +41,11 @@ export const vCardEntityKind = (node) => {
   return individual ? "individual" : "org";
 };
 const requiredText = (value, label) => {
-  if (typeof value !== "string" || !value.trim())
+  const resolved = value && typeof value === "object" && !Array.isArray(value) &&
+    value["@value"] !== undefined ? value["@value"] : value;
+  if (typeof resolved !== "string" || !resolved.trim())
     throw new Error(`Contact discovery: ${label} is required`);
-  return value;
+  return resolved;
 };
 const requiredNode = (byId, id, label) => {
   requiredText(id, `${label} @id`);

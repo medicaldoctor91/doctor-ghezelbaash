@@ -8,6 +8,7 @@ import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 const inputs = readCanonicalInputs();
 const projection = () => validatePageJsonLd(inputs.pageJsonLd)[0].document;
 const typed = (node, type) => [node?.["@type"]].flat().includes(type);
+const literal = (value) => value?.["@value"] ?? value;
 
 test("page discovery publishes a route-aware physician graph without changing authored inputs", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
@@ -51,7 +52,7 @@ test("the selected Course resolves only its authored historical instance and loc
   assert.deepEqual(instance["@type"], authored["@type"]);
   assert(typed(instance, "CourseInstance") && typed(instance, "EducationEvent"));
   for (const key of ["startDate", "location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "dcterms:temporal", "eventAttendanceMode"])
-    assert.deepEqual(instance[key], authored[key]);
+    assert.deepEqual(instance[key], literal(authored[key]));
   assert.equal(instance.name, localizedText(authored.name));
   assert.equal(instance.description, authored.description);
   assert.equal("endDate" in instance, "endDate" in authored);
@@ -95,7 +96,7 @@ test("homepage and dedicated profile revisions remain authored on their own cano
   const authoredHome = inputs.graph["@graph"].find((node) => node["@id"] === home["@id"]);
   const profileId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage";
   const authoredProfile = inputs.graph["@graph"].find((node) => node["@id"] === profileId);
-  assert.equal(home.dateModified, authoredHome.dateModified);
+  assert.equal(home.dateModified, literal(authoredHome.dateModified));
   assert(typed(authoredProfile, "ProfilePage"));
   assert.equal(authoredProfile.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
   assert(!projected.some((node) => node["@id"] === profileId));

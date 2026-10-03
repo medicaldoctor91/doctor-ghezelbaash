@@ -6,6 +6,7 @@ import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.m
 
 const inputs = readCanonicalInputs();
 const typed = (node, type) => [node?.["@type"]].flat().includes(type);
+const literal = (value) => value?.["@value"] ?? value;
 const mutate = (type, change) => {
   const source = structuredClone(inputs.pageJsonLd);
   const node = source.flatMap((script) => script.document["@graph"]).find((node) => typed(node, type));
@@ -126,13 +127,16 @@ test("homepage preserves its Course-bound authored historical instance while exc
   const instance = byId.get(instanceId);
   const authoredInstance = inputs.graph["@graph"].find((node) => node["@id"] === instanceId);
   assert.deepEqual(instance["@type"], authoredInstance["@type"]);
-  assert.equal(instance.startDate, authoredInstance.startDate);
+  assert.equal(instance.startDate, literal(authoredInstance.startDate));
   assert.deepEqual(instance.location, authoredInstance.location);
   assert(projected["@graph"].some((node) => typed(node, "Course") && node.hasCourseInstance?.["@id"] === instanceId));
   const canonicalById = new Map(inputs.graph["@graph"].map((node) => [node["@id"], node]));
-  assert.deepEqual(canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating,
-    { "@type": "Rating", ratingValue: 5, bestRating: 5 });
-  assert.equal(canonicalById.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate, "2025-02-04");
+  const rating = canonicalById.get("https://www.ghezelbaash.ir/review-kurdish-patient-experience").reviewRating;
+  assert(typed(rating, "Rating"));
+  assert.match(rating["@id"], /^https:\/\/www\.ghezelbaash\.ir\/\.well-known\/genid\//);
+  assert.equal(rating.ratingValue, 5);
+  assert.equal(rating.bestRating, 5);
+  assert.equal(literal(canonicalById.get("https://www.ghezelbaash.ir/advanced-thread-lift-workshop-tehran-1403-11").startDate), "2025-02-04");
   assert(inputs.pageBody.includes("امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵"));
   assert(inputs.pageBody.includes('<time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time>'));
 });

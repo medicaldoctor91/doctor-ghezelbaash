@@ -4,6 +4,8 @@ import { projectPageJsonLd } from "./page-discovery-jsonld.mjs";
 import { datasetId } from "../config/site-policy.mjs";
 
 const defaultRoot = process.cwd();
+const evidenceRegistryId = "https://www.ghezelbaash.ir/external-identity-evidence-registry";
+const evidenceRegistryType = "https://www.ghezelbaash.ir/ontology/EvidenceAssessmentRegistry";
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const id = (value) => typeof value === "string" ? value : value?.["@id"];
 const text = (value) => value?.["@value"] ?? value;
@@ -36,10 +38,10 @@ export function readCanonicalInputs(root = defaultRoot) {
     ?? new URL(release.url).pathname.slice(1);
   const releaseHistory = values(dataset.citation).map((ref) => byId.get(id(ref)))
     .filter((entry) => types(entry).includes("Dataset") && entry.version && entry.url?.startsWith("https://doi.org/10.5281/zenodo."))
-    .map((entry) => ({ release: entry.version, recordId: doi(entry).split(".").at(-1), versionDoi: doi(entry), publicationDate: entry.datePublished }));
+    .map((entry) => ({ release: entry.version, recordId: doi(entry).split(".").at(-1), versionDoi: doi(entry), publicationDate: text(entry.datePublished) }));
   const lifecycle = {
     release: dataset.version,
-    dateModified: zenodo.datePublished,
+    dateModified: text(zenodo.datePublished),
     canonicalUrl,
     primaryEntity: { id: id(dataset.mainEntity ?? dataset.creator) },
     clinic: { id: clinic["@id"] },
@@ -49,11 +51,14 @@ export function readCanonicalInputs(root = defaultRoot) {
       zenodo: { role: "preservation", versionDoi: doi(zenodo), recordId: doi(zenodo).split(".").at(-1), releaseHistory },
       huggingFace: { role: "ai-distribution", dataset: huggingFace.url, distributionMode: "ai-retrieval" },
     },
-    datasetRevisionDate: dataset.dateModified,
-    currentSource: { dateModified: github.dateModified ?? dataset.dateModified },
+    datasetRevisionDate: text(dataset.dateModified),
+    currentSource: { dateModified: text(github.dateModified ?? dataset.dateModified) },
   };
-  const registryNode = one(graph["@graph"].filter((entry) => values(entry.hasPart).some((ref) => byId.get(id(ref))?.["prov:hadMember"])), "evidence assessment collection");
+  const registryNode = byId.get(evidenceRegistryId);
+  if (!registryNode || !types(registryNode).includes(evidenceRegistryType))
+    throw new Error("Canonical evidence assessment registry is missing or has the wrong type");
   const assessmentNodes = values(registryNode.hasPart).map((ref) => byId.get(id(ref))).filter((entry) => entry?.["prov:hadMember"]);
+  if (!assessmentNodes.length) throw new Error("Canonical evidence assessment registry has no assessments");
   const evidence = assessmentNodes.map((assessment) => {
     if (!assessment) throw new Error("Canonical evidence assessment reference is missing");
     const properties = Object.fromEntries(values(assessment["prov:hadMember"]).map((property) => [property.propertyID, text(property.value)]));
@@ -66,7 +71,7 @@ export function readCanonicalInputs(root = defaultRoot) {
   const tierNodes = [...new Set(assessmentNodes.flatMap((entry) => values(entry.mentions).map(id)))].map((iri) => byId.get(iri));
   if (tierNodes.some((entry) => !entry?.name || !entry?.description)) throw new Error("Canonical evidence tier definition is missing");
   const tiers = Object.fromEntries(tierNodes.map((entry) => [entry.name, entry.description]));
-  const evidenceRegistry = { verifiedAt: registryNode.dateModified, tiers, evidence, assessmentNodes, tierNodes, registryNode };
+  const evidenceRegistry = { verifiedAt: text(registryNode.dateModified), tiers, evidence, assessmentNodes, tierNodes, registryNode };
   const pageJsonLd = projectPageJsonLd(graph);
   return { pageBody, graph, lifecycle, evidenceRegistry, pageJsonLd };
 }
