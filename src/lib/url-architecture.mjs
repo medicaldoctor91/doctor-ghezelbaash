@@ -33,6 +33,7 @@ export function assertUrlArchitecture(policy) {
   if (!Array.isArray(policy.retiredPaths) || new Set(policy.retiredPaths).size !== policy.retiredPaths.length ||
       policy.retiredPaths.some((path) => !pathPattern.test(path) || resources.has(path)))
     throw new Error("Invalid retired content paths");
+  const retired = new Set(policy.retiredPaths);
   const decisions = new Map();
   const validateTarget = (target) => {
     if (typeof target !== "string" || !target.startsWith("/") ||
@@ -76,6 +77,12 @@ export function assertUrlArchitecture(policy) {
   for (const resource of policy.resources)
     if (policy.htmlIdTargets[resource.htmlId] !== resource.path)
       throw new Error("Canonical resource lacks its authored target: " + resource.path);
+  for (const decision of policy.decisions) {
+    if (decision.decision !== "301_REDIRECT" || retired.has(decision.path)) continue;
+    const id = decision.path.slice(1);
+    if (policy.htmlIdTargets[id] !== decision.target)
+      throw new Error("Noncanonical authored path must resolve as a fragment: " + decision.path);
+  }
   return true;
 }
 
@@ -86,7 +93,7 @@ export function canonicalPaths(policy = URL_ARCHITECTURE) {
   return policy.resources.map((resource) => resource.path);
 }
 
-/** Every legacy path has one decision; added canonical paths are the only extras. */
+/** Every authored target and explicitly retired path has one finite decision. */
 export function assertCoverage(paths, policy = URL_ARCHITECTURE) {
   assertUrlArchitecture(policy);
   const values = [...paths].map((value) => typeof value === "string" ? value : value.path);
@@ -112,7 +119,7 @@ export function assertHtmlTargets(ids, policy = URL_ARCHITECTURE) {
   const missing = [...actual].filter((id) => !mapped.has(id));
   const stale = [...mapped].filter((id) => !actual.has(id));
   if (missing.length || stale.length)
-    throw new Error("Authored HTML target inventory drift; missing: " + missing.join(", ") + "; stale: " + stale.join(", "));
+    throw new Error("Authored HTML target inventory drift; missing: " + missing.join(", ") + "; stale: " + stale.join(", ") );
   const resources = new Set(canonicalPaths(policy));
   const retired = new Set(policy.retiredPaths);
   for (const resource of policy.resources)
@@ -165,7 +172,18 @@ export function resolveContentUrl(value, { absolute = false, policy = URL_ARCHIT
   return absolute ? resolved.href : resolved.pathname + resolved.search + resolved.hash;
 }
 
+/** Authored noncanonical paths are navigation aliases, not HTTP resources. */
+export function fragmentRows(policy = URL_ARCHITECTURE) {
+  const retired = new Set(policy.retiredPaths);
+  return policy.decisions
+    .filter((decision) => decision.decision === "301_REDIRECT" && !retired.has(decision.path))
+    .map((decision) => ({ source: decision.path, target: decision.target }));
+}
+
+/** Only explicitly retired canonical-source paths are emitted as HTTP redirects. */
 export function redirectRows(policy = URL_ARCHITECTURE) {
-  return policy.decisions.filter((decision) => decision.decision === "301_REDIRECT")
+  const retired = new Set(policy.retiredPaths);
+  return policy.decisions
+    .filter((decision) => decision.decision === "301_REDIRECT" && retired.has(decision.path))
     .map((decision) => ({ source: decision.path, target: decision.target, statusCode: 301 }));
 }
