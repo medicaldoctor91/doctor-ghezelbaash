@@ -196,11 +196,12 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const questionSource = graph["@graph"].find((node) => node.url === url && typed(node, "Question"));
     const questionMatch = questionSource ? browserNode(questionSource["@id"]) : undefined;
     const videoSource = graph["@graph"].find((node) => node.url === url && typed(node, "VideoObject") && contentUrls.has(node.contentUrl));
-    const videoMatch = (videoSource ? browserNode(videoSource["@id"]) : undefined)
-      ?? (mediaTarget && videoNodes.length === 1 ? videoNodes[0] : undefined);
+    const videoMatch = mediaTarget ? (videoSource ? browserNode(videoSource["@id"]) : undefined)
+      ?? (videoNodes.length === 1 ? videoNodes[0] : undefined) : undefined;
     // A question remains the primary authored subject when its answer embeds a video.
     // Explicit figures and players still describe that media as their main entity.
-    const sourceMatch = mediaTarget ? videoMatch ?? questionMatch : questionMatch ?? videoMatch;
+    const sourceMatch = mediaTarget ? videoMatch ?? questionMatch : questionMatch;
+    const exactSubject = !mediaTarget && typed(exact, "VideoObject") ? undefined : exact;
     const mediaEntity = sourceMatch ?? exact;
     const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
     const title = normalize(focusedView?.title || mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
@@ -210,19 +211,32 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const contextTitle = overviewEntry ? (overviewLabels[language.split("-")[0]] || overviewLabels.fa) + " " + title : title;
     const documentTitle = contextTitle.includes(physicianName) ? contextTitle : contextTitle + " | " + physicianName;
     const synthesized = { "@id": url + "#content", "@type": "WebPageElement", url, name: title, text: visible, inLanguage: language };
-    const entity = sourceMatch ?? exact ?? synthesized;
+    const entity = sourceMatch ?? exactSubject ?? synthesized;
+    const authoredEntity = authoredById.get(entity["@id"]);
+    const entitySelection = {
+      basis: entity === questionMatch ? "explicit-question-url"
+        : mediaTarget && typed(entity, "VideoObject") ? "explicit-media-target"
+          : entity === exactSubject ? "authored-entity-id" : "synthesized-heading-scope",
+      authoredSourceId: authoredEntity?.["@id"] ?? null,
+      authoredSourceTypes: values(authoredEntity?.["@type"]),
+    };
     const description = focusedView?.description || scopedDescription(parsed, entity, byId, authoredById, language, mediaTarget);
     // A fine-grained heading inherits its existing authored section's topic.
     // An entity's own topic remains authoritative when it is explicitly set.
     const ownAbout = namedReferences(entity.about);
-    let inheritedAbout = [];
+    let inheritedAbout = [], inheritedAboutSource;
     if (!ownAbout.length) for (let parent = target.parentNode; parent; parent = parent.parentNode) {
       const id = attr(parent, "id");
       const authored = id ? (authoredById.get(origin + "/" + id) ?? byId.get(origin + "/" + id)) : undefined;
       const references = namedReferences(authored?.about);
-      if (references.length) { inheritedAbout = references; break; }
+      if (references.length) { inheritedAbout = references; inheritedAboutSource = authored; break; }
     }
     const topicalReferences = uniqueReferences(ownAbout.length ? ownAbout : inheritedAbout);
+    const topicSelection = {
+      basis: ownAbout.length ? "own-about" : inheritedAbout.length ? "nearest-authored-dom-about" : "none",
+      authoredSourceId: ownAbout.length ? authoredEntity?.["@id"] ?? null : inheritedAboutSource?.["@id"] ?? null,
+      references: topicalReferences,
+    };
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
       : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
@@ -232,6 +246,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       mainEntity: { "@id": entity["@id"] },
       about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
       dateModified: revision };
+    if (!typed(entity, "VideoObject") && videoNodes.length)
+      pageNode.hasPart = uniqueReferences(videoNodes.map((video) => ({ "@id": video["@id"] })));
     if (pageType === "ProfilePage") delete pageNode.dateModified;
         const breadcrumb = { "@id": url + "#breadcrumb", "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "دکتر سعید قزلباش", item: canonicalUrl },
@@ -277,7 +293,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const imageUrls = [...new Set(parsed.elements.filter((node) => node.tagName === "img").map((node) => attr(node, "src"))
       .filter(Boolean).map((value) => new URL(value, canonicalUrl).href).filter((value) => value.startsWith(origin + "/")))];
     return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, contextTitle, scopeKind: focusedView ? "disclosure-summary" : overviewEntry ? "overview" : "complete-region", documentTitle, description, htmlId,
-      lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), pageType, bodyHtml, document,
+      lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), entitySelection, topicSelection, pageType, bodyHtml, document,
       lastmod: revision, imageUrls, videos: videoNodes.map((video) => ({ thumbnailUrl: values(video.thumbnailUrl)[0],
         contentUrl: video.contentUrl, title: video.name, description: video.description,
         publicationDate: video.uploadDate, duration: video.duration })) };

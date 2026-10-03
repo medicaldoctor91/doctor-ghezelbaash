@@ -14,6 +14,7 @@ import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs"
 import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
 import { renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
 import { externalizeNotFoundCss } from "./lib/not-found-css.mjs";
+import { createSchemaInventory, inspectSchemaInventoryScope, serializeSchemaInventoryCsv } from "./lib/schema-inventory.mjs";
 import {
   canonicalHostAliasRows,
   canonicalMetadataAliasRows,
@@ -122,10 +123,21 @@ const answerAliases = deriveCanonicalAnswerTopology(canonicalGraph, canonicalLif
 const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
 const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
 const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
-for (const record of independentPages) await writeExact(record.file, renderIndependentPage(homeHtml, record, {
-  declaredSocialLocales: pageFrontmatter.socialAlternateLocales,
-}));
+const schemaInventoryScopes = new Map();
+for (const record of independentPages) {
+  const html = renderIndependentPage(homeHtml, record, {
+    declaredSocialLocales: pageFrontmatter.socialAlternateLocales,
+  });
+  await writeExact(record.file, html);
+  schemaInventoryScopes.set(record.path, inspectSchemaInventoryScope(html, { focused: true }));
+}
 await writeFile(path.join(root, ".generated/independent-pages.json"), JSON.stringify(independentPages.map(({ bodyHtml, document, ...record }) => record)));
+const schemaInventory = createSchemaInventory({
+  homeHtml, records: independentPages, canonicalGraph,
+  canonicalUrl: canonicalLifecycle.canonicalUrl, scopeByPath: schemaInventoryScopes,
+});
+await writeFile(path.join(root, ".generated/schema-inventory.json"), JSON.stringify(schemaInventory, null, 2) + "\n");
+await writeFile(path.join(root, ".generated/schema-inventory.csv"), serializeSchemaInventoryCsv(schemaInventory));
 const registeredSources = new Set([...legacyAliases, ...answerAliases].map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
   throw new Error("Authored content path collides with a redirect alias");

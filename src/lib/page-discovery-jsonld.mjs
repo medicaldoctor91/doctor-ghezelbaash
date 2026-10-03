@@ -42,8 +42,13 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
   };
 
   const disallowedCandidateTypes = new Set(["ProfilePage", "Event", "EducationEvent", "Review", "Dataset"]);
-  const excluded = (node) =>
-    values(node?.["@type"]).some((type) => disallowedCandidateTypes.has(type));
+  const courseInstanceIds = new Set();
+  const excluded = (node) => {
+    const types = values(node?.["@type"]);
+    const courseInstance = courseInstanceIds.has(node?.["@id"]) && types.includes("CourseInstance") && types.includes("EducationEvent");
+    return types.some((type) => disallowedCandidateTypes.has(type) &&
+      !(courseInstance && ["Event", "EducationEvent"].includes(type)));
+  };
   const website = all.find((node) => values(node["@type"]).includes("WebSite"));
   const person = byId.get(values(home.mainEntity)[0]?.["@id"]);
   if (!person || !values(person["@type"]).includes("Person"))
@@ -67,7 +72,8 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
     "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy",
     "identifier", "hasOccupation", "medicalSpecialty", "knowsAbout", "potentialAction",
     "object", "agent", "target", "inDefinedTermSet", "containedInPlace", "spatialCoverage",
-    "category", "dcterms:subject", "isBasedOn", "citation",
+    "category", "dcterms:subject", "isBasedOn", "citation", "speakable",
+    "hasCourseInstance", "instructor", "performer", "organizer", "audience", "recordedIn",
   ];
 
   const selected = new Map();
@@ -86,7 +92,13 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
       delete output.aggregateRating;
     }
     selected.set(output["@id"], output);
+    if (values(source["@type"]).includes("Course")) for (const ref of values(source.hasCourseInstance)) {
+      const id = typeof ref === "string" ? ref : ref?.["@id"];
+      const types = values(byId.get(id)?.["@type"]);
+      if (types.includes("CourseInstance") && types.includes("EducationEvent")) courseInstanceIds.add(id);
+    }
     for (const key of relationKeys) for (const ref of values(source[key])) {
+      if (key === "hasCourseInstance" && !values(source["@type"]).includes("Course")) continue;
       const id = typeof ref === "string" ? ref : ref?.["@id"];
       const target = byId.get(id);
       if (target && !excluded(target)) queue.push(target);
