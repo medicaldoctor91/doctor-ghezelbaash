@@ -106,7 +106,9 @@ export function canonicalHostAliasRows(registry) {
  * Permanent legacy URLs must consolidate onto the promoted canonical surface,
  * not terminate at a focused route that is intentionally NOINDEX. Only actual
  * deployed content targets are changed. The nearest promoted authored ancestor
- * is used; absence of one is an architecture error rather than a home fallback.
+ * is used, with the original focused target preserved as a browser fragment so
+ * direct-entry UX still lands on the same authored section or answer. Absence
+ * of a promoted ancestor is an architecture error rather than a home fallback.
  */
 export function consolidateContentRedirectTargets(rows, records, canonicalUrl) {
   if (!Array.isArray(rows) || !Array.isArray(records) || !records.length)
@@ -132,7 +134,7 @@ export function consolidateContentRedirectTargets(rows, records, canonicalUrl) {
     if (!ancestor)
       throw new Error(`NOINDEX redirect target has no promoted authored ancestor: ${row.source} -> ${row.target}`);
     retargeted++;
-    return { ...row, target: ancestor.path };
+    return { ...row, target: `${ancestor.path}#${target.path.slice(1)}` };
   });
   return { rows: consolidatedRows, retargeted };
 }
