@@ -54,7 +54,9 @@ test("live plan keeps authored section paths as fragments and probes only real r
   assert(fragments.length > 1000);
   assert(fragments.every((fragment) => !actual.rows.some((row) => row.source === fragment.source)));
   assert.equal(actual.namespaces.length, 5);
-  assert.deepEqual(actual.rows.find((row) => row.source === "/saeed-ghezelbash"), { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 });
+  assert.equal(actual.rows.find((row) => row.source === "/saeed-ghezelbash"), undefined);
+  assert.deepEqual(fragments.find((row) => row.source === "/saeed-ghezelbash"),
+    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash" });
   assert(actual.counts.answerRedirects > 0);
   assert(actual.rows.some((row) => row.statusCode === 301 && /#answer-/.test(row.target)));
 });
