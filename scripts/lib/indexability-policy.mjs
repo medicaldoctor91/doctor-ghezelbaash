@@ -88,11 +88,9 @@ export function applyIndexabilityPolicy(records) {
 const navigationLink = (record) => ({ path: record.path, title: record.title, lang: record.lang });
 
 /**
- * Give promoted routes their own coherent native-link tree. A KEEP route must
- * not depend on a NOINDEX intermediary for discovery: its effective parent is
- * the nearest KEEP ancestor and its effective children are the KEEP descendants
- * for which it is that nearest ancestor. NOINDEX routes retain their authored
- * structural navigation for reader continuity and stable direct entry.
+ * Give promoted routes a second, crawl-focused native-link tree without
+ * rewriting authored navigation. `navigation` remains the DOM/breadcrumb truth;
+ * `indexNavigation` bypasses NOINDEX intermediaries only for promoted links.
  */
 export function promoteIndexableNavigation(records) {
   if (!Array.isArray(records) || records.some((record) => !record.navigation || typeof record.indexable !== "boolean"))
@@ -116,14 +114,13 @@ export function promoteIndexableNavigation(records) {
     if (!record.indexable) return record;
     const parentPath = parentByPath.get(record.path);
     const ancestors = record.navigation.ancestors.filter((entry) => promoted.has(entry.path));
-    const navigation = {
-      ...record.navigation,
-      ...(parentPath ? { parent: navigationLink(byPath.get(parentPath)) } : { parent: undefined }),
+    const indexNavigation = {
+      ...(parentPath ? { parent: navigationLink(byPath.get(parentPath)) } : {}),
       children: childrenByPath.get(record.path).map(navigationLink),
       ancestors,
+      sourceOrder: record.navigation.sourceOrder,
     };
-    if (!parentPath) delete navigation.parent;
-    return { ...record, navigation };
+    return { ...record, indexNavigation };
   });
 }
 
