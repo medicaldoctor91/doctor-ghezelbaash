@@ -192,10 +192,13 @@ assert.equal(attr(creator, "itemid"), image.creator["@id"]);
 assert(creator.attrs.some((attribute) => attribute.name === "itemscope"));
 assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && attr(node, "content")),
   "Microdata image creator needs its authored name");
+const routeRecordsForPublication = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
+const indexableRouteRecords = routeRecordsForPublication.filter((record) => record.indexable);
 const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 const xmlValue = (value) => value.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => xmlValue(match[1]));
-assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
+assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...indexableRouteRecords.map((record) => record.canonicalUrl)],
+  "Sitemap must contain the promoted index surface only");
 for (const { source } of answerAliases)
   assert(!sitemapLocs.includes(new URL(source, lifecycle.canonicalUrl).href), "Answer redirect must not remain in the sitemap: " + source);
 const pageNode = graph["@graph"].find((node) => node["@id"] === lifecycle.canonicalUrl + "webpage");
@@ -250,7 +253,7 @@ const execBodies = (source) => [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<
   .filter((match) => !/type=["']application\/ld\+json/.test(match[1])).map((match) => match[2]);
 const sharedExec = new Set(execBodies(html));
 const sharedStyles = new Set([...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]));
-const records = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
+const records = routeRecordsForPublication;
 assert.deepEqual(records.map((record) => record.path), paths);
 const schemaInventory = JSON.parse(await readFile(path.join(root, ".generated/schema-inventory.json"), "utf8"));
 const schemaInventoryCoverage = validateSchemaInventoryCoverage(schemaInventory, {
@@ -316,7 +319,10 @@ for (const record of records) {
     .filter((locale) => locale && locale !== attr(localeMeta, "content")))];
   assert.deepEqual(socialAlternates, reviewedSocialAlternates,
     "Social locale alternates must describe only reviewed translations of this page");
-  assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
+  const robotsMeta = scoped.elements.find((node) => attr(node, "name") === "robots");
+  assert(robotsMeta, "Focused route requires robots metadata");
+  assert.equal(/\bnoindex\b/.test(attr(robotsMeta, "content")), !record.indexable,
+    "Robots metadata must match route indexability: " + record.path);
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
   assert(record.navigation, "Every route needs authored navigation");
@@ -388,14 +394,18 @@ while (queue.length) {
     maximumDepth = Math.max(maximumDepth, depths.get(next));
   }
 }
-assert.equal(reachable.size - 1, records.length, "Every sitemap topic must be reachable through actual native HTML links from home");
+assert.equal(reachable.size - 1, records.length, "Every routable topic must be reachable through actual native HTML links from home");
 const duplicateScopes = [...scopeTexts.values()].filter((paths) => paths.length > 1);
 console.log(JSON.stringify({ topicDiscoveryValidation: "PASS", reachableTopics: reachable.size - 1, maximumDepth, overviewPages, contextualTitles, nativePosters, duplicateScopes }));
 const translationMembers = (discoveryPolicy.translationGroups || []).flatMap((group) => group.members);
 assert.equal(translatedPages, translationMembers.length, "Every authored translation member must be rendered once");
-assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
-  "Sitemap must publish every reciprocal language alternate");
-console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
+assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length,
+  indexableRouteRecords.reduce((total, record) => total + (record.alternates?.length || 0), 0),
+  "Sitemap must publish reciprocal language alternates only for indexable routes");
+console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, indexablePages: indexableRouteRecords.length,
+  noindexPages: records.length - indexableRouteRecords.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
 console.log(JSON.stringify({ schemaInventoryValidation: schemaInventoryCoverage }));
 
-console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, metadataRoutes: metadataRoutes.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));
+console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers,
+  contentRoutes: paths.length, indexableRoutes: indexableRouteRecords.length, metadataRoutes: metadataRoutes.length,
+  resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));
