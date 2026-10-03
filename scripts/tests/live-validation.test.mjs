@@ -46,7 +46,7 @@ test("live options reject credentials, unbounded concurrency and abbreviated dep
   assert.throws(() => liveOptions(["--expected-commit", "abc123"]), /full commit SHA/);
 });
 
-test("live plan keeps authored section paths as fragments and probes only real redirect surfaces", async () => {
+test("live plan keeps authored section paths as root fragments and probes only real redirect surfaces", async () => {
   const actual = await livePlan();
   const fragments = fragmentRows();
   assert.equal(actual.paths.length, 72);
@@ -57,6 +57,8 @@ test("live plan keeps authored section paths as fragments and probes only real r
   assert.equal(actual.rows.find((row) => row.source === "/saeed-ghezelbash"), undefined);
   assert.deepEqual(fragments.find((row) => row.source === "/saeed-ghezelbash"),
     { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash" });
+  assert.deepEqual(fragments.find((row) => row.source === "/botox-heading"),
+    { source: "/botox-heading", target: "/#botox-heading" });
   assert(actual.counts.answerRedirects > 0);
   assert(actual.rows.some((row) => row.statusCode === 301 && /#answer-/.test(row.target)));
 });
