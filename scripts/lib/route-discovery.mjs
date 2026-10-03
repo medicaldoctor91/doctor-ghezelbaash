@@ -2,6 +2,7 @@ import { deriveIndependentPages } from "./independent-pages.mjs";
 import { attachTopicNavigation, deriveTopicBreadcrumbItems } from "./topic-navigation.mjs";
 import { applyTranslationAlternates } from "./translation-alternates.mjs";
 import { applyRouteSchemaPolicy } from "./route-schema-policy.mjs";
+import { applyIndexabilityPolicy, promoteIndexableNavigation } from "./indexability-policy.mjs";
 import { localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 
@@ -15,7 +16,8 @@ export function deriveRouteDiscovery(homeHtml, graph, discoveryPolicy, canonical
   const topics = attachTopicNavigation(records, homeHtml, canonicalUrl);
   const translated = applyTranslationAlternates(topics, discoveryPolicy.translationGroups || [],
     { canonicalUrl, graph });
-  const output = applyRouteSchemaPolicy(translated, graph, { canonicalUrl });
+  const classified = applyIndexabilityPolicy(applyRouteSchemaPolicy(translated, graph, { canonicalUrl }));
+  const output = promoteIndexableNavigation(classified);
   const byId = new Map(graph["@graph"].map((node) => [node["@id"], node]));
   const home = graph["@graph"].find((node) => node["@id"] === canonicalUrl + "webpage" &&
     values(node["@type"]).includes("MedicalWebPage"));

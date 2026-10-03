@@ -8,6 +8,7 @@ import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 const inputs = readCanonicalInputs();
 const projection = () => validatePageJsonLd(inputs.pageJsonLd)[0].document;
 const typed = (node, type) => [node?.["@type"]].flat().includes(type);
+const literal = (value) => value?.["@value"] ?? value;
 
 test("page discovery publishes a route-aware physician graph without changing authored inputs", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
@@ -51,7 +52,7 @@ test("the selected Course resolves only its authored historical instance and loc
   assert.deepEqual(instance["@type"], authored["@type"]);
   assert(typed(instance, "CourseInstance") && typed(instance, "EducationEvent"));
   for (const key of ["startDate", "location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "dcterms:temporal", "eventAttendanceMode"])
-    assert.deepEqual(instance[key], authored[key]);
+    assert.deepEqual(instance[key], literal(authored[key]));
   assert.equal(instance.name, localizedText(authored.name));
   assert.equal(instance.description, authored.description);
   assert.equal("endDate" in instance, "endDate" in authored);
@@ -95,7 +96,7 @@ test("homepage and dedicated profile revisions remain authored on their own cano
   const authoredHome = inputs.graph["@graph"].find((node) => node["@id"] === home["@id"]);
   const profileId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage";
   const authoredProfile = inputs.graph["@graph"].find((node) => node["@id"] === profileId);
-  assert.equal(home.dateModified, authoredHome.dateModified);
+  assert.equal(home.dateModified, literal(authoredHome.dateModified));
   assert(typed(authoredProfile, "ProfilePage"));
   assert.equal(authoredProfile.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
   assert(!projected.some((node) => node["@id"] === profileId));
@@ -163,10 +164,29 @@ test("validating authored discovery twice preserves core identity and never dupl
   }
 });
 
-test("canonical HTML owns published markup while canonical graph owns discovery data", () => {
+test("canonical HTML removes only the redundant visible media-license box while canonical graph owns discovery data", () => {
   const withoutJson = (html) => html.replace(
     /(<script\b[^>]*>)[\s\S]*?(<\/script>)/gi, "$1$2");
-  assert.equal(withoutJson(renderCanonicalPageHtml(inputs.pageBody, inputs.graph)), withoutJson(inputs.pageBody));
+  const withoutMediaLicense = (html) => {
+    const document = parseFragment(String(html), { sourceCodeLocationInfo: true });
+    const matches = [];
+    const walk = (node) => {
+      if (node.attrs?.some((entry) => entry.name === "id" && entry.value === "media-license")) matches.push(node);
+      for (const child of node.childNodes || []) walk(child);
+      if (node.content) walk(node.content);
+    };
+    walk(document);
+    assert.equal(matches.length, 1);
+    const node = matches[0];
+    assert.equal(node.tagName, "aside");
+    assert(node.sourceCodeLocation?.startOffset >= 0 && node.sourceCodeLocation?.endOffset > node.sourceCodeLocation.startOffset);
+    return String(html).slice(0, node.sourceCodeLocation.startOffset) + String(html).slice(node.sourceCodeLocation.endOffset);
+  };
+  const rendered = renderCanonicalPageHtml(inputs.pageBody, inputs.graph);
+  assert(inputs.pageBody.includes('id="media-license"'));
+  assert(!rendered.includes('id="media-license"'));
+  assert.equal(withoutJson(rendered), withoutJson(withoutMediaLicense(inputs.pageBody)));
+  assert(projection()["@graph"].some((node) => typed(node, "ImageObject") && (node.license || node.acquireLicensePage)));
   assert.deepEqual(projection(), inputs.pageJsonLd[0].document);
   assert.equal(inputs.pageJsonLd.length, 1);
   assert.strictEqual(validatePageJsonLd(inputs.pageJsonLd), inputs.pageJsonLd);

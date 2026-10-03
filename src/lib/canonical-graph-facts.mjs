@@ -2,6 +2,7 @@ import { indexCanonicalGraph, identifierFor } from "./graph-core.mjs";
 
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
+const literal = (value) => value?.["@value"] ?? value;
 const refId = (value) =>
   value && typeof value === "object" && typeof value["@id"] === "string"
     ? value["@id"]
@@ -9,9 +10,10 @@ const refId = (value) =>
       ? value
       : null;
 const nonempty = (value, label) => {
-  if (typeof value !== "string" || !value.trim())
+  const resolved = literal(value);
+  if (typeof resolved !== "string" || !resolved.trim())
     throw new Error(`Canonical authority requires ${label}`);
-  return value;
+  return resolved;
 };
 const exactRef = (value, label) => {
   const refs = asArray(value).map(refId);
@@ -20,7 +22,7 @@ const exactRef = (value, label) => {
   return refs[0];
 };
 const exactUrl = (value, pattern, label) => {
-  const matches = asArray(value).filter(
+  const matches = asArray(value).map(literal).filter(
     (item) => typeof item === "string" && pattern.test(item),
   );
   if (matches.length !== 1)
@@ -28,7 +30,7 @@ const exactUrl = (value, pattern, label) => {
   return matches[0];
 };
 const quantityValue = (value, label) => {
-  const numeric = Number(value?.value);
+  const numeric = Number(literal(value?.value));
   if (!Number.isInteger(numeric) || numeric < 1)
     throw new Error(`Canonical graph must define one positive ${label}`);
   return numeric;
@@ -79,9 +81,10 @@ export function deriveCanonicalGraphFacts(release, graph) {
   const [weekdayHours] = weekdaySpecs;
   const [friday] = fridaySpecs;
   const clock = (value) => {
-    const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
+    const resolved = literal(value);
+    const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(resolved);
     if (!match || Number(match[1]) > 23 || Number(match[2]) > 59 || Number(match[3] || 0) > 59)
-      throw new Error(`Invalid canonical opening time: ${value}`);
+      throw new Error(`Invalid canonical opening time: ${resolved}`);
     return { text: `${match[1]}:${match[2]}`, seconds: Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3] || 0) };
   };
   const open = clock(weekdayHours.opens), close = clock(weekdayHours.closes);
@@ -106,6 +109,7 @@ export function deriveCanonicalGraphFacts(release, graph) {
     .map(refId)
     .filter(Boolean)
     .map((id) => byId.get(id)?.url)
+    .map(literal)
     .filter((url) => typeof url === "string");
   const openStreetMapUrl = exactUrl(
     clinicIdentifierUrls,
@@ -142,7 +146,6 @@ export function deriveCanonicalGraphFacts(release, graph) {
     }),
   });
 }
-
 
 /**
  * Resolve provenance that is intentionally absent from compact head projections.
@@ -203,10 +206,10 @@ export function selectCanonicalSocialImage(release, graph) {
     const types = asArray(node?.["@type"]);
     return (
       types.includes("ImageObject") &&
-      Number(node?.width?.value) === 1200 &&
-      Number(node?.height?.value) === 630 &&
-      typeof node?.contentUrl === "string" &&
-      new URL(node.contentUrl).origin === canonicalOrigin
+      Number(literal(node?.width?.value)) === 1200 &&
+      Number(literal(node?.height?.value)) === 630 &&
+      typeof literal(node?.contentUrl) === "string" &&
+      new URL(literal(node.contentUrl)).origin === canonicalOrigin
     );
   });
   if (candidates.length !== 1)

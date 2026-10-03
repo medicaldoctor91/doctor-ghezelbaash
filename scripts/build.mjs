@@ -19,8 +19,11 @@ const steps = [
   ["scripts/generate-descriptors.mjs"],
   ["node_modules/astro/bin/astro.mjs", "build"],
   ["scripts/materialize-static-artifacts.mjs"],
+  ["scripts/apply-route-indexability.mjs"],
   ["scripts/generate-deployment-headers.mjs"],
   ["scripts/validate-dist.mjs"],
+  ["scripts/consolidate-redirect-targets.mjs"],
+  ["scripts/validate-redirect-indexability.mjs"],
   ["scripts/write-dist-manifest.mjs"],
 ];
 

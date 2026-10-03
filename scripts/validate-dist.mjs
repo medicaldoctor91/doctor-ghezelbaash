@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { deriveTopicBreadcrumbItems } from "./lib/topic-navigation.mjs";
-import { assertRichResultsDocument } from "../src/lib/rich-results-contract.mjs";
+import { assertRichResultsDocument, browserTypes } from "../src/lib/rich-results-contract.mjs";
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import { routeDocumentFile } from "./lib/independent-pages.mjs";
+import { revisionLiteral } from "./lib/release-graph.mjs";
 import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, contentAliasTargets, renderStaticRewrites } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 import { readFile, stat } from "node:fs/promises";
@@ -157,7 +158,7 @@ for (const published of browserNodes) {
     assert.equal(published["@id"], lifecycle.canonicalUrl + "#questions", "Unexpected generated browser node");
     continue;
   }
-  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Published entity type drift");
+  assert.deepEqual([published["@type"]].flat(), [browserTypes(authored["@type"])].flat(), "Published entity type drift");
 }
 for (const forbidden of ["ProfilePage", "Review"])
   assert(!browserNodes.some((node) => typeHas(node, forbidden)), "Homepage projection exposes an unrelated rich-result candidate: " + forbidden);
@@ -192,14 +193,18 @@ assert.equal(attr(creator, "itemid"), image.creator["@id"]);
 assert(creator.attrs.some((attribute) => attribute.name === "itemscope"));
 assert(creator.childNodes.some((node) => attr(node, "itemprop") === "name" && attr(node, "content")),
   "Microdata image creator needs its authored name");
+const routeRecordsForPublication = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
+const indexableRouteRecords = routeRecordsForPublication.filter((record) => record.indexable);
 const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 const xmlValue = (value) => value.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => xmlValue(match[1]));
-assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
+assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...indexableRouteRecords.map((record) => record.canonicalUrl)],
+  "Sitemap must contain the promoted index surface only");
 for (const { source } of answerAliases)
   assert(!sitemapLocs.includes(new URL(source, lifecycle.canonicalUrl).href), "Answer redirect must not remain in the sitemap: " + source);
 const pageNode = graph["@graph"].find((node) => node["@id"] === lifecycle.canonicalUrl + "webpage");
-assert(sitemap.includes("<lastmod>" + pageNode.dateModified + "</lastmod>"), "Sitemap revision must be authored");
+const homepageRevision = revisionLiteral(pageNode.dateModified);
+assert(sitemap.includes("<lastmod>" + homepageRevision + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
   const url = new URL(xmlValue(match[1]));
   assert.equal(url.origin, localOrigin, "Sitemap media must use the canonical origin");
@@ -250,7 +255,7 @@ const execBodies = (source) => [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<
   .filter((match) => !/type=["']application\/ld\+json/.test(match[1])).map((match) => match[2]);
 const sharedExec = new Set(execBodies(html));
 const sharedStyles = new Set([...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]));
-const records = JSON.parse(await readFile(path.join(root, ".generated/independent-pages.json"), "utf8"));
+const records = routeRecordsForPublication;
 assert.deepEqual(records.map((record) => record.path), paths);
 const schemaInventory = JSON.parse(await readFile(path.join(root, ".generated/schema-inventory.json"), "utf8"));
 const schemaInventoryCoverage = validateSchemaInventoryCoverage(schemaInventory, {
@@ -316,7 +321,10 @@ for (const record of records) {
     .filter((locale) => locale && locale !== attr(localeMeta, "content")))];
   assert.deepEqual(socialAlternates, reviewedSocialAlternates,
     "Social locale alternates must describe only reviewed translations of this page");
-  assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
+  const robotsMeta = scoped.elements.find((node) => attr(node, "name") === "robots");
+  assert(robotsMeta, "Focused route requires robots metadata");
+  assert.equal(/\bnoindex\b/.test(attr(robotsMeta, "content")), !record.indexable,
+    "Robots metadata must match route indexability: " + record.path);
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
   assert(record.navigation, "Every route needs authored navigation");
@@ -388,14 +396,18 @@ while (queue.length) {
     maximumDepth = Math.max(maximumDepth, depths.get(next));
   }
 }
-assert.equal(reachable.size - 1, records.length, "Every sitemap topic must be reachable through actual native HTML links from home");
+assert.equal(reachable.size - 1, records.length, "Every routable topic must be reachable through actual native HTML links from home");
 const duplicateScopes = [...scopeTexts.values()].filter((paths) => paths.length > 1);
 console.log(JSON.stringify({ topicDiscoveryValidation: "PASS", reachableTopics: reachable.size - 1, maximumDepth, overviewPages, contextualTitles, nativePosters, duplicateScopes }));
 const translationMembers = (discoveryPolicy.translationGroups || []).flatMap((group) => group.members);
 assert.equal(translatedPages, translationMembers.length, "Every authored translation member must be rendered once");
-assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
-  "Sitemap must publish every reciprocal language alternate");
-console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
+assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length,
+  indexableRouteRecords.reduce((total, record) => total + (record.alternates?.length || 0), 0),
+  "Sitemap must publish reciprocal language alternates only for indexable routes");
+console.log(JSON.stringify({ independentPageValidation: "PASS", pages: records.length, indexablePages: indexableRouteRecords.length,
+  noindexPages: records.length - indexableRouteRecords.length, sharedSinglePageRuntime: true, translatedPages, topicalPages }));
 console.log(JSON.stringify({ schemaInventoryValidation: schemaInventoryCoverage }));
 
-console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers, contentRoutes: paths.length, metadataRoutes: metadataRoutes.length, resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));
+console.log(JSON.stringify({ canonicalOutputValidation: "PASS", release: lifecycle.release, answers: answerValidation.answers,
+  contentRoutes: paths.length, indexableRoutes: indexableRouteRecords.length, metadataRoutes: metadataRoutes.length,
+  resources: MACHINE_RESOURCES.length, assessments: evidenceRegistry.evidence.length }));

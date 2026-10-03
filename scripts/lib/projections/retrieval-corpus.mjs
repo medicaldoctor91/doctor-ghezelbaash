@@ -1,5 +1,5 @@
 import path from "node:path";
-import { datasetRevisionDate, validRevisionDate } from "../release-graph.mjs";
+import { datasetRevisionDate, revisionLiteral, validRevisionDate } from "../release-graph.mjs";
 import { contentRoutePaths } from "../content-routes.mjs";
 import { writeFile } from "node:fs/promises";
 import { parseFragment } from "parse5";
@@ -657,7 +657,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       ...passage.answerIds,
     ])];
     const sourceRevisions = sourceIds
-      .map((id) => byId.get(id)?.dateModified)
+      .map((id) => revisionLiteral(byId.get(id)?.dateModified))
       .filter((date) => date !== undefined);
     if (sourceRevisions.some((date) =>
       !validRevisionDate(date) || date > currentDatasetDate,
@@ -711,7 +711,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   } of answerRecords) {
     // A recorded Q/A metadata revision is distinct from both medical review and
     // the revision of the entire Dataset. Unchanged records keep their date.
-    const answerModifiedAt = q.dateModified ?? release.dateModified;
+    const answerModifiedAt = revisionLiteral(q.dateModified ?? release.dateModified);
     if (!validRevisionDate(answerModifiedAt) || answerModifiedAt > currentDatasetDate)
       throw new Error(`Invalid answer provenance revision date: ${q["@id"]}`);
     provenanceGraph.push({

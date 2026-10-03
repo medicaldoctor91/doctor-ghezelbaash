@@ -1,13 +1,15 @@
 /** Render the canonical document and its media using sitemap protocol bounds. */
 function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos, alternates = [] }, allowEmptyMedia = false) {
   const required = (value, label) => {
-    if (typeof value !== "string" || !value.trim() || value !== value.trim())
+    const resolved = value && typeof value === "object" && !Array.isArray(value) &&
+      value["@value"] !== undefined ? value["@value"] : value;
+    if (typeof resolved !== "string" || !resolved.trim() || resolved !== resolved.trim())
       throw new Error("Sitemap requires normalized " + label);
-    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/u.test(value))
+    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/u.test(resolved))
       throw new Error("Sitemap contains an invalid XML character: " + label);
-    if (typeof value.isWellFormed === "function" && !value.isWellFormed())
+    if (typeof resolved.isWellFormed === "function" && !resolved.isWellFormed())
       throw new Error("Sitemap contains an invalid Unicode sequence: " + label);
-    return value;
+    return resolved;
   };
   const escape = (value) => String(value).replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
@@ -39,12 +41,12 @@ function renderDocumentSitemap({ canonicalUrl, lastmod, imageUrls, videos, alter
     return url.href;
   };
   const date = (value, label) => {
-    required(value, label);
-    if (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))?$/.test(value)
-      || !Number.isFinite(Date.parse(value))
-      || new Date(value.slice(0, 10) + "T00:00:00Z").toISOString().slice(0, 10) !== value.slice(0, 10))
+    const resolved = required(value, label);
+    if (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))?$/.test(resolved)
+      || !Number.isFinite(Date.parse(resolved))
+      || new Date(resolved.slice(0, 10) + "T00:00:00Z").toISOString().slice(0, 10) !== resolved.slice(0, 10))
       throw new Error("Sitemap date is invalid: " + label);
-    return value;
+    return resolved;
   };
   const duration = (value) => {
     const match = typeof value === "string" && value.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);

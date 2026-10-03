@@ -102,6 +102,43 @@ export function canonicalHostAliasRows(registry) {
   });
 }
 
+/**
+ * Permanent legacy URLs must consolidate onto the promoted canonical surface,
+ * not terminate at a focused route that is intentionally NOINDEX. Only actual
+ * deployed content targets are changed. The nearest promoted authored ancestor
+ * is used, with the original focused target preserved as a browser fragment so
+ * direct-entry UX still lands on the same authored section or answer. Absence
+ * of a promoted ancestor is an architecture error rather than a home fallback.
+ */
+export function consolidateContentRedirectTargets(rows, records, canonicalUrl) {
+  if (!Array.isArray(rows) || !Array.isArray(records) || !records.length)
+    throw new Error("Redirect consolidation requires rows and route records");
+  const canonical = new URL(canonicalUrl);
+  if (canonical.pathname !== "/" || canonical.search || canonical.hash)
+    throw new Error("Redirect consolidation requires the canonical homepage URL");
+  const byPath = new Map(records.map((record) => [record.path, record]));
+  if (byPath.size !== records.length || records.some((record) => typeof record.indexable !== "boolean" || !record.navigation?.ancestors))
+    throw new Error("Redirect consolidation requires uniquely classified authored routes");
+
+  let retargeted = 0;
+  const consolidatedRows = rows.map((row) => {
+    if (![301, 308].includes(row.statusCode)) return { ...row };
+    const targetUrl = new URL(row.target, canonical);
+    if (targetUrl.origin !== canonical.origin || targetUrl.search || targetUrl.hash)
+      throw new Error(`Permanent redirect target escaped canonical content scope: ${row.target}`);
+    const target = byPath.get(targetUrl.pathname);
+    if (!target || target.indexable) return { ...row };
+    const ancestor = [...target.navigation.ancestors].reverse()
+      .map((entry) => byPath.get(entry.path))
+      .find((entry) => entry?.indexable);
+    if (!ancestor)
+      throw new Error(`NOINDEX redirect target has no promoted authored ancestor: ${row.source} -> ${row.target}`);
+    retargeted++;
+    return { ...row, target: `${ancestor.path}#${target.path.slice(1)}` };
+  });
+  return { rows: consolidatedRows, retargeted };
+}
+
 /** Render final Cloudflare rules: permanent content redirects plus exact machine rewrites. */
 export function renderStaticRewrites(rows) {
   const sources = new Set();
