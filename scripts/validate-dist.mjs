@@ -4,6 +4,7 @@ import { assertRichResultsDocument, browserTypes } from "../src/lib/rich-results
 import { canonicalContentHtmlId } from "../src/lib/graph-core.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import { routeDocumentFile } from "./lib/independent-pages.mjs";
+import { revisionLiteral } from "./lib/release-graph.mjs";
 import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, contentAliasTargets, renderStaticRewrites } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "../src/lib/answer-projection.mjs";
 import { readFile, stat } from "node:fs/promises";
@@ -202,7 +203,8 @@ assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...indexableRouteRecords.
 for (const { source } of answerAliases)
   assert(!sitemapLocs.includes(new URL(source, lifecycle.canonicalUrl).href), "Answer redirect must not remain in the sitemap: " + source);
 const pageNode = graph["@graph"].find((node) => node["@id"] === lifecycle.canonicalUrl + "webpage");
-assert(sitemap.includes("<lastmod>" + pageNode.dateModified + "</lastmod>"), "Sitemap revision must be authored");
+const homepageRevision = revisionLiteral(pageNode.dateModified);
+assert(sitemap.includes("<lastmod>" + homepageRevision + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
   const url = new URL(xmlValue(match[1]));
   assert.equal(url.origin, localOrigin, "Sitemap media must use the canonical origin");
