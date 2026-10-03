@@ -22,9 +22,11 @@ export const identifierFor = (owner, byId, propertyID) => {
 export const canonicalContentHtmlId = (url, canonicalUrl) => {
   const parsed = new URL(url);
   const base = new URL(canonicalUrl);
-  if (parsed.origin !== base.origin || parsed.hash || parsed.search || !/^\/[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(parsed.pathname))
+  if (parsed.origin !== base.origin || parsed.search ||
+      !/^\/(?:[A-Za-z0-9][A-Za-z0-9._:-]*)?$/.test(parsed.pathname) ||
+      parsed.hash && !/^#[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(parsed.hash))
     throw new Error(`Not a canonical content path: ${url}`);
-  return decodeURIComponent(parsed.pathname.slice(1));
+  return decodeURIComponent(parsed.hash ? parsed.hash.slice(1) : parsed.pathname.slice(1));
 };
 
 export const directLanguageLiterals = (value, language, label) => {

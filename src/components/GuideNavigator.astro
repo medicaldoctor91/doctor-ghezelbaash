@@ -8,7 +8,8 @@ import runtimeSource from '../scripts/guide-runtime.js?raw';
 import pageStateSource from '../scripts/page-state.js?raw';
 import { transformSync } from 'esbuild';
 import { STATIC_ARTIFACTS } from '../lib/resources.mjs';
-import { loadAliasRegistry, canonicalHostAliasRows, contentAliasTargets } from '../../scripts/lib/redirect-registry.mjs';
+import { loadAliasRegistry, canonicalHostAliasRows } from '../../scripts/lib/redirect-registry.mjs';
+import { readerRouteAliases } from '../../scripts/lib/reader-route-aliases.mjs';
 
 const runtime = transformSync(`const createGuideSearch = (${createGuideSearch.toString()});\n${pageStateSource}\n${runtimeSource}`, {
   minify: true,
@@ -17,7 +18,7 @@ const runtime = transformSync(`const createGuideSearch = (${createGuideSearch.to
 }).code;
 if (/<\/script|<!--/i.test(runtime))
   throw new Error('Runtime is unsafe for an inline HTML script');
-const contentRouteAliases = contentAliasTargets(canonicalHostAliasRows(await loadAliasRegistry()),
+const contentRouteAliases = readerRouteAliases(canonicalHostAliasRows(await loadAliasRegistry()),
   new Set(STATIC_ARTIFACTS.map((resource) => '/' + resource.path)));
 
 const authority = deriveCanonicalAuthority(rawRelease, canonicalGraph);
@@ -33,6 +34,8 @@ const intentHeadings = Object.fromEntries(Object.entries(intentTargets)
 <search
   aria-label={copy.ariaLabel}
   class="guide-search"
+  lang="fa-IR"
+  dir="rtl"
   data-canonical-origin={new URL(rawRelease.canonicalUrl).origin}
   data-content-route-aliases={JSON.stringify(contentRouteAliases)}
   data-entity-aliases={entityAliases}

@@ -80,7 +80,7 @@ export const machineResourcePolicy = [
       "data-package",
       "croissant"
     ],
-    "source": "src/data/semantic/shapes.ttl",
+    "source": ".generated/semantic/shapes.ttl",
     "targets": [
       "website",
       "huggingFace",

@@ -82,9 +82,12 @@ export function compileHeadersTemplate(
 }
 
 /** Rewrites keep the request path, so machine aliases need delivery headers there. */
-export function expandMachineAliasHeaders(headers, machineAliasPaths) {
-  const block = /^\/graph\.jsonld\r?\n((?:[ \t]+[^\n]*(?:\n|$))*)/m.exec(headers)?.[1];
-  if (!block) throw new Error("Canonical graph delivery headers are missing");
+export function expandMachineAliasHeaders(headers, machineAliasPaths, { representationPath = "/graph.jsonld" } = {}) {
+  if (!["/graph.jsonld", "/provenance.jsonld"].includes(representationPath))
+    throw new Error("Unsupported machine header representation");
+  const escapedPath = representationPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const block = new RegExp("^" + escapedPath + "\\r?\\n((?:[ \\t]+[^\\n]*(?:\\n|$))*)", "m").exec(headers)?.[1];
+  if (!block) throw new Error(`Machine delivery headers are missing: ${representationPath}`);
   const existing = new Set(String(headers).split(/\r?\n/).filter((line) =>
     line && !/^\s|^#/.test(line)));
   const aliases = [...new Set(machineAliasPaths)].filter((source) => !existing.has(source));

@@ -3,6 +3,12 @@ const values = (value) => Array.isArray(value) ? value : value == null ? [] : [v
 export const browserContext = ["https://schema.org", {
   prov: "http://www.w3.org/ns/prov#", dcterms: "http://purl.org/dc/terms/", skos: "http://www.w3.org/2004/02/skos/core#",
 }];
+/** Keep retained source terms and prefixes in their authored RDF namespaces. */
+export function browserContextFor(graph) {
+  if (!graph?.["@context"]) throw new Error("Canonical graph requires @context");
+  return ["https://schema.org", ...values(structuredClone(graph["@context"]))
+    .filter((context) => context !== "https://schema.org")];
+}
 export function localizedText(value, language = "fa-IR") {
   const literals = values(value).filter((entry) => entry && typeof entry === "object" && "@value" in entry);
   if (!literals.length) return value;
@@ -21,8 +27,8 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
   const home = byId.get("https://www.ghezelbaash.ir/webpage") ??
     all.find((node) => node.url === "https://www.ghezelbaash.ir/" &&
       values(node["@type"]).includes("MedicalWebPage"));
-  if (!home || !values(home["@type"]).includes("MedicalWebPage"))
-    throw new Error("Primary MedicalWebPage missing");
+  if (!home || !values(home["@type"]).includes("ProfilePage") || !values(home["@type"]).includes("MedicalWebPage"))
+    throw new Error("Primary physician ProfilePage with its medical portfolio is missing");
   const language = values(home.inLanguage)[0] || "fa-IR";
 
   const clean = (value, key) => {
@@ -34,9 +40,6 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
       const quantity = byId.get(value["@id"]) ?? value;
       if (values(quantity["@type"]).includes("QuantitativeValue")) return quantity.value;
     }
-    if (Object.keys(value).length === 1 && value["@id"] && !byId.has(value["@id"]) &&
-        ["image", "sameAs", "gender", "credentialCategory", "knowsAbout"].includes(key))
-      return value["@id"];
     return Object.fromEntries(Object.entries(value)
       .map(([property, entry]) => [property, clean(entry, property)]));
   };
@@ -44,6 +47,7 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
   const disallowedCandidateTypes = new Set(["ProfilePage", "Event", "EducationEvent", "Review", "Dataset"]);
   const courseInstanceIds = new Set();
   const excluded = (node) => {
+    if (node?.["@id"] === home["@id"]) return false;
     const types = values(node?.["@type"]);
     const courseInstance = courseInstanceIds.has(node?.["@id"]) && types.includes("CourseInstance") && types.includes("EducationEvent");
     return types.some((type) => disallowedCandidateTypes.has(type) &&
@@ -82,7 +86,6 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
     const source = queue.shift();
     if (!source || selected.has(source["@id"]) || excluded(source)) continue;
     const output = clean(source);
-    if (source["@id"] === home["@id"]) delete output.hasPart;
     if (source["@id"] === person["@id"]) {
       delete output.subjectOf;
       delete output.performerIn;
@@ -98,6 +101,7 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
       if (types.includes("CourseInstance") && types.includes("EducationEvent")) courseInstanceIds.add(id);
     }
     for (const key of relationKeys) for (const ref of values(source[key])) {
+      if (source["@id"] === home["@id"] && key === "hasPart") continue;
       if (key === "hasCourseInstance" && !values(source["@type"]).includes("Course")) continue;
       const id = typeof ref === "string" ? ref : ref?.["@id"];
       const target = byId.get(id);
@@ -117,7 +121,7 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
     mainEntity: questions.map((node) => ({ "@id": node["@id"] })),
   });
 
-  const document = { "@context": browserContext, "@graph": projected };
+  const document = { "@context": browserContextFor(graph), "@graph": projected };
   assertRichResultsDocument(document, { primaryPageId: home["@id"] });
   return [{ id: scriptId, document }];
 }
@@ -126,7 +130,8 @@ export function validatePageJsonLd(scripts) {
   if (scripts.length !== 1) throw new Error("Canonical page requires one discovery graph");
   const document = scripts[0].document;
   const home = document?.["@graph"]?.find((node) => node["@id"] === "https://www.ghezelbaash.ir/webpage");
-  if (!home || !values(home["@type"]).includes("MedicalWebPage")) throw new Error("Primary MedicalWebPage missing");
+  if (!home || !values(home["@type"]).includes("ProfilePage") || !values(home["@type"]).includes("MedicalWebPage"))
+    throw new Error("Primary physician ProfilePage with its medical portfolio is missing");
   assertRichResultsDocument(document, { primaryPageId: home["@id"] });
   return scripts;
 }

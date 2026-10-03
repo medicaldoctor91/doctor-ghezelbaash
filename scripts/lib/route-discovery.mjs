@@ -45,6 +45,10 @@ export function deriveRouteDiscovery(homeHtml, graph, discoveryPolicy, canonical
     const breadcrumb = record.document["@graph"].find((node) => node["@id"] === page?.breadcrumb?.["@id"]);
     if (!breadcrumb) throw new Error("Route discovery lost its breadcrumb: " + record.path);
     page.name = record.contextTitle || record.title;
+    if (record.navigation.parent) page.isPartOf = [...values(page.isPartOf),
+      { "@id": new URL(record.navigation.parent.path, canonicalUrl).href + "#webpage" }];
+    if (record.navigation.children.length) page.hasPart = [...values(page.hasPart),
+      ...record.navigation.children.map((child) => ({ "@id": new URL(child.path, canonicalUrl).href + "#webpage" }))];
     breadcrumb.itemListElement = deriveTopicBreadcrumbItems(record, output, { canonicalUrl, homeTitle: doctorName });
     assertRichResultsDocument(record.document, { primaryPageId: page["@id"] });
   }

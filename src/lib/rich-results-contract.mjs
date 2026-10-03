@@ -1,3 +1,5 @@
+import { validCalendarDate } from "./graph-dates.mjs";
+
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const hasType = (node, type) => values(node?.["@type"]).includes(type);
 const fail = (message) => { throw new Error("Page rich-result contract: " + message); };
@@ -67,7 +69,8 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
     const entity = resolve(profile.mainEntity, ["Person", "Organization"], "ProfilePage.mainEntity");
     text(entity.name, "ProfilePage.mainEntity.name");
     for (const property of ["dateCreated", "dateModified"])
-      if (property in profile) instant(profile[property], "ProfilePage." + property);
+      if (property in profile && !validCalendarDate(profile[property]))
+        instant(profile[property], "ProfilePage." + property);
   }
   if (primary && !profiles.includes(primary)) {
     const entities = values(primary.mainEntity).map((ref) => byId.get(ref?.["@id"]));

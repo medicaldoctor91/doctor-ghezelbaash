@@ -1,4 +1,6 @@
 import { canonicalContentHtmlId, indexCanonicalGraph } from "../../src/lib/graph-core.mjs";
+import { requireCalendarDate } from "../../src/lib/graph-dates.mjs";
+import { resolveContentUrl } from "../../src/lib/url-architecture.mjs";
 
 const types = (node) =>
   Array.isArray(node?.["@type"])
@@ -67,7 +69,10 @@ function canonicalIntentClusters(intentSource, canonicalUrl) {
     ...section.matchAll(
       /^- \[([^\]]+)\]\((https:\/\/www\.ghezelbaash\.ir\/[^)]+)\)\s*$/gm,
     ),
-  ].map((match) => ({ label: match[1], url: match[2], anchor: canonicalContentHtmlId(match[2], canonicalUrl) }));
+  ].map((match) => {
+    const url = resolveContentUrl(match[2], { absolute: true });
+    return { label: match[1], url, anchor: canonicalContentHtmlId(url, canonicalUrl) };
+  });
   if (!intents.length)
     throw new Error("knowledge.xml: no canonical intent clusters were parsed");
   return `  <intentClusters count="${intents.length}">${intents.map((item) => `<intent id="${xml(item.anchor)}" url="${xml(item.url)}"><label>${xml(item.label)}</label></intent>`).join("")}</intentClusters>`;
@@ -309,7 +314,7 @@ export function compileKnowledgeXml({
   ].join("");
   const document = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<knowledge release="${xml(release.release)}" modified="${xml(dataset.dateModified)}" canonical="${xml(release.canonicalUrl)}">`,
+    `<knowledge release="${xml(release.release)}" modified="${xml(requireCalendarDate(dataset.dateModified, "knowledge.xml Dataset dateModified"))}" canonical="${xml(release.canonicalUrl)}">`,
     `  <primaryEntity id="${xml(person["@id"])}" googleKg="${xml(release.primaryEntity.googleKnowledgeGraphId)}" wikidata="${xml(release.primaryEntity.wikidata)}"><name>${xml(release.primaryEntity.name)}</name>${aliasXml}</primaryEntity>`,
     ownedClinicXml,
     `  <dataset id="${xml(dataset["@id"])}" version="${xml(release.release)}" creator="${xml(release.primaryEntity.id)}" publisher="${xml(release.primaryEntity.id)}">${distributionXml}</dataset>`,

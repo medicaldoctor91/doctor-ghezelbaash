@@ -10,17 +10,20 @@ import {
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { canonicalGraph, canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
 import { discoveryPolicy, socialAlternateLocales } from "../src/config/site-policy.mjs";
-import { contentRoutePaths } from "./lib/content-routes.mjs";
+import { canonicalPaths, assertHtmlTargets, redirectRows, urlForHtmlId } from "../src/lib/url-architecture.mjs";
+import { inspectHtml } from "./lib/html-contract.mjs";
 import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs";
 import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
 import { renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
 import { externalizeNotFoundCss } from "./lib/not-found-css.mjs";
 import { createSchemaInventory, inspectSchemaInventoryScope, serializeSchemaInventoryCsv } from "./lib/schema-inventory.mjs";
+import { stampGuideSource } from "./lib/reader-scope.mjs";
 import {
   canonicalHostAliasRows,
   canonicalMetadataAliasRows,
   loadAliasRegistry,
   renderStaticRewrites,
+  machineNamespaceAliasRows,
 } from "./lib/redirect-registry.mjs";
 
 const root = process.cwd();
@@ -118,11 +121,16 @@ const aliasRegistry = await loadAliasRegistry(root);
 const legacyAliases = canonicalHostAliasRows(aliasRegistry);
 const answerAliases = deriveCanonicalAnswerTopology(canonicalGraph, canonicalLifecycle).answers.map((record) => ({
   source: "/" + record.htmlId,
-  target: new URL(record.sourceUrl, canonicalLifecycle.canonicalUrl).pathname,
+  target: urlForHtmlId(record.htmlId),
   statusCode: 301,
 }));
-const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
-const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
+const homeHtml = stampGuideSource(await readFile(path.join(dist, "index.html"), "utf8"));
+await writeFile(path.join(dist, "index.html"), homeHtml, "utf8");
+const contentPaths = canonicalPaths().filter((route) => route !== "/");
+const article = inspectHtml(homeHtml).guideArticles[0];
+const articleHtml = homeHtml.slice(article.sourceCodeLocation.startTag.endOffset, article.sourceCodeLocation.endTag.startOffset);
+assertHtmlTargets(inspectHtml(articleHtml, { wrapMain: true }).ids);
+const corpusAliases = redirectRows();
 const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, discoveryPolicy, canonicalLifecycle.canonicalUrl);
 const schemaInventoryScopes = new Map();
 for (const record of independentPages) {
@@ -139,11 +147,11 @@ const schemaInventory = createSchemaInventory({
 });
 await writeFile(path.join(root, ".generated/schema-inventory.json"), JSON.stringify(schemaInventory, null, 2) + "\n");
 await writeFile(path.join(root, ".generated/schema-inventory.csv"), serializeSchemaInventoryCsv(schemaInventory));
-const registeredSources = new Set([...legacyAliases, ...answerAliases].map((row) => row.source));
+const registeredSources = new Set([...legacyAliases, ...answerAliases, ...corpusAliases].map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
   throw new Error("Authored content path collides with a redirect alias");
 const contentSources = new Set(contentPaths);
-for (const { source, target } of [...legacyAliases, ...answerAliases]) {
+for (const { source, target } of [...legacyAliases, ...answerAliases, ...corpusAliases]) {
   const targetPath = new URL(target, canonicalLifecycle.canonicalUrl).pathname;
   if (targetPath !== "/" && !contentSources.has(targetPath) && !destinations.has(targetPath.slice(1)))
     throw new Error(`Redirect alias has no deployed destination: ${source} -> ${target}`);
@@ -153,7 +161,9 @@ const metadataAliases = canonicalMetadataAliasRows(canonicalGraph, canonicalLife
 await writeExact("_redirects", renderStaticRewrites([
   ...legacyAliases,
   ...answerAliases,
+  ...corpusAliases,
   ...metadataAliases,
+  ...machineNamespaceAliasRows(),
 ]));
 const generatedPublic = path.join(root, ".generated/public");
 const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)

@@ -62,3 +62,43 @@ test("source Question identity and authored accepted Answers are required, witho
   const input = fixture();
   assert(apply({ ...input, groups: [] }).every((record) => record.alternates.length === 0));
 });
+
+function guideFixture() {
+  const input = fixture();
+  input.groups[0].kind = "equivalent-guide";
+  input.records = input.records.map((record, index) => index < members.length ? {
+    ...record, entityId: canonicalUrl + "guide-content-" + index,
+    htmlId: ["english-complete-section", "arabic-complete-section", "sorani-complete-section"][index],
+    bodyHtml: '<section><h2>Reviewed complete guide</h2><p>Authored assessment, identity and practical information.</p></section>',
+  } : record);
+  input.graph = { "@graph": input.records.slice(0, members.length).map((record, index) => ({
+    "@id": record.entityId, "@type": "WebPageElement", url: record.canonicalUrl,
+    inLanguage: members[index].lang,
+  })) };
+  return input;
+}
+
+test("explicitly reviewed complete guide equivalents retain full language scopes without needing Question-primary pages", () => {
+  const input = guideFixture(), before = structuredClone(input), records = apply(input);
+  assert.deepEqual(input, before);
+  for (let index = 0; index < members.length; index++) {
+    assert.equal(records[index].bodyHtml, input.records[index].bodyHtml);
+    assert.equal(records[index].htmlId, input.records[index].htmlId);
+    assert.deepEqual(records[index].alternates, members.map((member) => ({
+      href: new URL(member.path, canonicalUrl).href, hrefLang: member.hreflang,
+    })));
+  }
+  assert.deepEqual(records.at(-1).alternates, []);
+  const undeclared = guideFixture();
+  undeclared.groups = [];
+  assert(apply(undeclared).every((record) => record.alternates.length === 0));
+});
+
+test("equivalent guide declarations reject missing authored identities, wrong source languages and empty initial content", () => {
+  for (const change of [
+    (input) => { input.records[0].entityId = canonicalUrl + "unpublished-guide"; },
+    (input) => { input.graph["@graph"][0].inLanguage = "fa-IR"; },
+    (input) => { input.records[0].bodyHtml = ""; },
+    (input) => { delete input.groups[0].kind; },
+  ]) { const input = guideFixture(); change(input); assert.throws(() => apply(input), /Translation/); }
+});

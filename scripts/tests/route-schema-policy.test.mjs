@@ -124,30 +124,42 @@ const byPath = new Map(actual.map((record) => [record.path, record]));
 
 test("reviewed source roles classify actual mixed purposes and preserve authored medical questions", () => {
   for (const declaration of reviewedRoutePurposes) assert(byPath.has(declaration.path));
-  for (const path of ["/forehead-lines-overactivity-vs-compensation", "/subcision-for-tethered-acne-scars",
-    "/can-iraqi-patients-send-photos-before-travel-en", "/clinic-follow-up-after-returning-home",
-    "/diagnosis-before-aesthetic-treatment-selection", "/clinic-consultation-treatment-and-follow-up-path"])
+  for (const path of ["/upper-face-botox", "/subcision-for-tethered-acne-scars",
+    "/aesthetic-guide-en", "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "/diagnosis-before-aesthetic-treatment-selection", "/botox-mechanism-indications-and-limitations"])
     assert.equal(byPath.get(path).pageType, "MedicalWebPage", path);
-  for (const path of ["/saeed-ghezelbash-research-education-and-clinical-decisions", "/medical-content-governance",
-    "/media-license-title", "/historical-patient-origin-summary", "/aesthetic-physician-ratings-patient-satisfaction-ckb-iq"])
+  for (const path of ["/saeed-ghezelbash-research-education-and-clinical-decisions",
+    "/out-of-town-aesthetic-patients-iran", "/historical-patient-origin-summary"])
     assert.equal(byPath.get(path).pageType, "WebPage", path);
   const contact = byPath.get("/saeed-ghezelbash-clinic-contact-and-location");
   assert.equal(contact.pageType, "ContactPage");
-  const profile = byPath.get("/saeed-ghezelbash");
-  assert.equal(profile.pageType, "ProfilePage");
-  assert.deepEqual(profile.entityTypes, ["Person", "IndividualPhysician"]);
+  assert(!byPath.has("/saeed-ghezelbash"));
+  const homePage = inputs.graph["@graph"].find((node) => node["@id"] === canonicalUrl + "webpage");
+  assert.deepEqual(new Set([homePage["@type"]].flat()), new Set(["ProfilePage", "MedicalWebPage"]));
+  const doctor = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
+  assert.deepEqual(doctor["@type"], ["Person", "IndividualPhysician"]);
+  assert.equal(doctor.url, canonicalUrl);
+  assert.deepEqual(doctor.mainEntityOfPage, { "@id": homePage["@id"] });
   for (const language of ["en", "ar-iq", "ckb-iq"]) {
-    const identity = byPath.get("/who-is-dr-saeed-ghezelbash-" + language);
-    assert.deepEqual(pageFor(identity)["@type"], ["WebPage", "FAQPage"]);
-    assert.deepEqual(identity.entityTypes, ["Question"]);
-    assert.equal(byPath.get("/dr-saeed-ghezelbash-aesthetic-clinic-information-" + language).pageType, "WebPage");
-    for (const slug of ["can-iraqi-patients-send-photos-before-travel",
-      "which-facial-cosmetic-surgery-procedures-are-assessed", "can-surgical-and-non-surgical-treatments-be-combined"]) {
-      const clinical = byPath.get("/" + slug + "-" + language);
-      assert.equal(clinical.pageType, "MedicalWebPage", clinical.path);
-      assert.deepEqual(pageFor(clinical)["@type"], ["MedicalWebPage", "FAQPage"]);
-      assert.deepEqual(clinical.entityTypes, ["Question"]);
+    const guide = byPath.get("/aesthetic-guide-" + language);
+    assert.equal(pageFor(guide)["@type"], "MedicalWebPage");
+    assert.deepEqual(guide.entityTypes, ["WebPageElement"]);
+    const faq = guide.document["@graph"].find((node) => node["@id"] === guide.canonicalUrl + "#questions");
+    assert.equal(faq["@type"], "FAQPage");
+    assert.deepEqual(faq.isPartOf, { "@id": pageFor(guide)["@id"] });
+    const nodes = new Map(guide.document["@graph"].map((node) => [node["@id"], node]));
+    for (const ref of faq.mainEntity) {
+      const question = nodes.get(ref["@id"]);
+      assert.equal(question["@type"], "Question");
+      assert.equal(nodes.get(question.acceptedAnswer["@id"])["@type"], "Answer");
     }
+    assert(!byPath.has("/who-is-dr-saeed-ghezelbash-" + language));
+  }
+  for (const path of ["/botox-mechanism-indications-and-limitations", "/filler-volume-shadow-and-proportion-assessment",
+    "/choosing-an-aesthetic-doctor-in-kermanshah-and-iran"]) {
+    const clinical = byPath.get(path);
+    assert.deepEqual(pageFor(clinical)["@type"], ["MedicalWebPage", "FAQPage"]);
+    assert.deepEqual(clinical.entityTypes, ["Question"]);
   }
   for (const record of actual.filter((record) => record.entityTypes.includes("VideoObject"))) {
     assert.equal(record.pageType, "WebPage");
@@ -177,5 +189,5 @@ test("policy changes only copied page types and internal annotations, preserving
     assertRichResultsDocument(after.document, { primaryPageId: after.canonicalUrl + "#webpage" });
   }
   const authoredHome = inputs.graph["@graph"].find((node) => node["@id"] === canonicalUrl + "webpage");
-  assert.equal(authoredHome["@type"], "MedicalWebPage");
+  assert.deepEqual(new Set([authoredHome["@type"]].flat()), new Set(["ProfilePage", "MedicalWebPage"]));
 });

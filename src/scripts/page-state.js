@@ -2,8 +2,19 @@
   const d = document, cache = new Map(), origin = location.origin;
   const keyFor = (path) => path.replace(/\/$/, "") || "/";
   const focused = () => d.documentElement.dataset.routeView === "focused";
-  // A stalled response must not leave the focused reader and its controls
-  // waiting forever. Keep the limit active until the HTML body is complete.
+  const primaryArticle = () => d.querySelector("main article.medical-guide");
+  let homeSource, homeState, readerLoaded = false, expansion, ticket = 0;
+  let committedPath = keyFor(location.pathname);
+
+  // A focused entry can be shorter than its saved complete-reader position.
+  window.saveGuideScrollState = () => {
+    const previous = window.history.state;
+    window.history.replaceState({
+      ...(previous && typeof previous === "object" ? previous : {}),
+      __completeGuideScroll: { x: window.scrollX, y: window.scrollY },
+    }, "");
+  };
+  window.addEventListener("pagehide", window.saveGuideScrollState);
   const fetchHtml = async (path) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -13,74 +24,233 @@
       });
       if (!response.ok) throw new Error("Page unavailable");
       return await response.text();
-    } finally {
-      clearTimeout(timeout);
-    }
+    } finally { clearTimeout(timeout); }
   };
-  const snapshot = (doc) => ({
-    title: doc.title,
-    lang: doc.documentElement.getAttribute("lang"),
-    dir: doc.documentElement.getAttribute("dir"),
-    articleLabel: doc.querySelector("article.medical-guide")?.getAttribute("aria-labelledby"),
-    articleLang: doc.querySelector("article.medical-guide")?.getAttribute("lang"),
-    articleDir: doc.querySelector("article.medical-guide")?.getAttribute("dir"),
-    metas: [...doc.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map((node) => node.cloneNode(true)),
-    canonical: doc.head.querySelector('link[rel="canonical"]')?.cloneNode(true),
-    alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map((node) => node.cloneNode(true)),
-    scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map((node) => node.cloneNode(true)),
-    context: doc.querySelector("[data-route-context]")?.cloneNode(true),
-  });
-  // The complete guide retains its authored language even when the current
-  // route's metadata and context use another language.
-  const initialArticle = d.querySelector("article.medical-guide");
-  if (!focused() && initialArticle) for (const attr of ["lang", "dir"]) {
+  const snapshot = (doc) => {
+    const article = doc.querySelector("article.medical-guide");
+    const scope = doc.getElementById("guide-reader-scope");
+    return {
+      title: doc.title,
+      lang: doc.documentElement.getAttribute("lang"),
+      dir: doc.documentElement.getAttribute("dir"),
+      article: article?.cloneNode(true),
+      sourceSignature: doc.head.querySelector('meta[name="guide-source-signature"]')?.getAttribute("content"),
+      scope: scope ? JSON.parse(scope.textContent) : null,
+      sourceMarker: doc.head.querySelector('meta[name="guide-source-signature"]')?.cloneNode(true),
+      scopeScript: scope?.cloneNode(true),
+      metas: [...doc.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map((node) => node.cloneNode(true)),
+      canonical: doc.head.querySelector('link[rel="canonical"]')?.cloneNode(true),
+      alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map((node) => node.cloneNode(true)),
+      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map((node) => node.cloneNode(true)),
+    };
+  };
+  const initialArticle = primaryArticle();
+  initialArticle?.setAttribute("data-guide-primary", "");
+  if (initialArticle) for (const attr of ["lang", "dir"]) {
     const value = initialArticle.getAttribute(attr) || d.documentElement.getAttribute(attr);
     if (value) initialArticle.setAttribute(attr, value);
   }
-  cache.set(keyFor(location.pathname), snapshot(d));
-  const removeExpandControls = () => {
-    if (focused()) return;
+  const initialState = snapshot(d);
+  const canonicalOrigin = new URL(initialState.canonical?.getAttribute("href") || location.href, origin).origin;
+  const isPageDocument = (doc, path) => {
+    const canonical = doc.head.querySelector('link[rel="canonical"]');
+    if (!canonical || !doc.querySelector("article.medical-guide")) return false;
+    try {
+      const url = new URL(canonical.getAttribute("href"), canonicalOrigin);
+      return url.origin === canonicalOrigin && keyFor(url.pathname) === path && !url.search && !url.hash;
+    } catch { return false; }
+  };
+  cache.set(keyFor(location.pathname), initialState);
+  if (!focused() && initialArticle) {
+    homeState = initialState;
+    homeSource = homeState.article;
+    readerLoaded = true;
+  }
+
+  const point = (root, value) => {
+    if (!value || !Array.isArray(value.path) || value.path.length > 64 ||
+      !Number.isInteger(value.offset) || value.offset < 0) throw new Error("Invalid guide boundary");
+    let node = root;
+    for (const index of value.path) {
+      if (!Number.isInteger(index) || index < 0 || !node.childNodes[index])
+        throw new Error("Missing guide boundary");
+      node = node.childNodes[index];
+    }
+    const length = node.nodeType === 3 || node.nodeType === 8 ? node.data.length : node.childNodes.length;
+    if (value.offset > length) throw new Error("Invalid guide boundary offset");
+    return { node, offset: value.offset };
+  };
+  const partition = (primary, state) => {
+    const scope = state.scope;
+    if (!homeSource || !scope || scope.schemaVersion !== 1 || !scope.sourceSignature ||
+      scope.sourceSignature !== homeState.sourceSignature || state.sourceSignature !== homeState.sourceSignature ||
+      !Array.isArray(scope.ranges) || !scope.ranges.length)
+      throw new Error("Guide source changed");
+    const full = homeSource.cloneNode(true);
+    // Resolve every path against the intact source, including inert scripts,
+    // whitespace and comments, before any live Range deletes adjust its tree.
+    const ranges = scope.ranges.map(({ start, end }) => {
+      const first = point(full, start), last = point(full, end), range = d.createRange();
+      range.setStart(first.node, first.offset);
+      range.setEnd(last.node, last.offset);
+      if (range.collapsed) throw new Error("Empty guide boundary");
+      return range;
+    });
+    for (let index = 1; index < ranges.length; index++) {
+      const previous = ranges[index - 1].cloneRange(), next = ranges[index].cloneRange();
+      previous.collapse(false); next.collapse(true);
+      if (previous.compareBoundaryPoints(0, next) > 0) throw new Error("Overlapping guide boundaries");
+    }
+    const insertion = point(full, scope.insertion), anchor = d.createRange();
+    anchor.setStart(insertion.node, insertion.offset); anchor.collapse(true);
+    for (const range of [...ranges].reverse()) range.deleteContents();
+    const prefix = d.createRange();
+    prefix.setStart(full, 0); prefix.setEnd(anchor.startContainer, anchor.startOffset);
+    const before = prefix.extractContents(), after = d.createDocumentFragment();
+    after.append(...full.childNodes);
+    const seen = new Set([...primary.querySelectorAll("[id]")].map((node) => node.id));
+    if (primary.id) seen.add(primary.id);
+    for (const fragment of [before, after]) {
+      // Context is visible source content, never another page's discovery graph.
+      for (const script of fragment.querySelectorAll("script")) script.remove();
+      for (const image of fragment.querySelectorAll("img")) {
+        image.setAttribute("loading", "lazy");
+        if (image.getAttribute("fetchpriority") === "high") image.setAttribute("fetchpriority", "auto");
+      }
+      for (const node of fragment.querySelectorAll("[id]")) {
+        if (seen.has(node.id)) node.removeAttribute("id");
+        else seen.add(node.id);
+      }
+      // The focused resource owns the reader's sole H1.
+      for (const heading of fragment.querySelectorAll("h1")) {
+        const replacement = d.createElement("h2");
+        for (const attr of heading.attributes) replacement.setAttribute(attr.name, attr.value);
+        replacement.append(...heading.childNodes); heading.replaceWith(replacement);
+      }
+    }
+    return { before, after };
+  };
+  const readingAnchor = () => [...(d.querySelector("[data-guide-reader]") || primaryArticle()).querySelectorAll("[id]")]
+    .map((node) => ({ id: node.id, rect: node.getBoundingClientRect() }))
+    .filter(({ rect }) => rect.bottom > 0 && rect.top < window.innerHeight)
+    .sort((a, b) => Math.abs(a.rect.top) - Math.abs(b.rect.top))[0];
+  const restoreAnchor = (position) => {
+    const anchor = d.getElementById(position.id);
+    if (!anchor) return;
+    anchor.closest(".render-chunk")?.classList.add("is-target-chunk");
+    for (let parent = anchor; parent; parent = parent.parentElement)
+      if (parent.localName === "details") parent.open = true;
+    window.scrollBy({ top: anchor.getBoundingClientRect().top - position.rect.top, behavior: "instant" });
+  };
+  const reusePlayers = (roots, players) => {
+    for (const root of roots) for (const video of root.querySelectorAll("video[id]")) {
+      const existing = players.get(video.id);
+      if (existing) { video.replaceWith(existing); players.delete(video.id); }
+    }
+  };
+  const prepareReader = (state, path, preservePrimary) => {
+    if (!state.article || !primaryArticle() || !d.getElementById("main-content"))
+      throw new Error("Reader unavailable");
+    const candidate = preservePrimary ? primaryArticle() : state.article.cloneNode(true);
+    return { candidate, context: path === "/" ? null : partition(candidate, state) };
+  };
+  const commitReader = ({ candidate, context }, path, preservePrimary = false) => {
+    const article = primaryArticle(), main = d.getElementById("main-content");
+    const oldWrapper = d.querySelector("[data-guide-reader]");
+    const players = new Map([...d.querySelectorAll("video[id]")].map((video) => [video.id, video]));
+    const playing = [...players.values()].filter((video) => !video.paused);
+    const search = d.getElementById("guide-search");
+    const searchFocus = search?.contains(d.activeElement) ? d.activeElement : null;
+    const openDetails = new Set([...d.querySelectorAll("details[id][open]")].map((node) => node.id));
+    if (!preservePrimary) {
+      reusePlayers([candidate], players);
+      for (const script of candidate.querySelectorAll("script")) script.remove();
+      for (const attr of [...article.attributes]) article.removeAttribute(attr.name);
+      for (const attr of candidate.attributes) article.setAttribute(attr.name, attr.value);
+      article.replaceChildren(...candidate.childNodes);
+    } else {
+      for (const video of article.querySelectorAll("video[id]")) players.delete(video.id);
+    }
+    article.setAttribute("data-guide-primary", "");
+    if (path === "/") {
+      if (oldWrapper) { oldWrapper.before(main); oldWrapper.remove(); }
+    } else {
+      reusePlayers([context.before, context.after], players);
+      const wrapper = d.createElement("div");
+      wrapper.className = "guide-reader"; wrapper.setAttribute("data-guide-reader", "");
+      for (const attr of ["lang", "dir"]) {
+        const value = homeState.article.getAttribute(attr) || homeState[attr];
+        if (value) wrapper.setAttribute(attr, value);
+      }
+      const aside = (fragment, side) => {
+        const node = d.createElement("aside");
+        node.className = "medical-guide guide-context";
+        node.setAttribute("data-guide-context", side);
+        node.setAttribute("aria-label", side === "before" ? "بخش‌های پیشین راهنمای کامل" : "بخش‌های بعدی راهنمای کامل");
+        for (const attr of ["lang", "dir"]) {
+          const value = wrapper.getAttribute(attr);
+          if (value) node.setAttribute(attr, value);
+        }
+        node.append(fragment); return node;
+      };
+      if (oldWrapper) oldWrapper.before(wrapper); else main.before(wrapper);
+      wrapper.append(aside(context.before, "before"), main, aside(context.after, "after"));
+      oldWrapper?.remove();
+    }
+    // Search owns event listeners and an active query. Move that live subtree
+    // to its source launcher instead of replacing it with an inert clone.
+    if (search) {
+      for (const clone of d.querySelectorAll("#guide-search")) if (clone !== search) clone.remove();
+      const launcher = d.querySelector("[data-guide-search-open]");
+      if (launcher) launcher.replaceWith(search);
+      else if (!search.isConnected) main.insertBefore(search, article);
+      if (searchFocus && d.activeElement !== searchFocus) searchFocus.focus({ preventScroll: true });
+    }
+    for (const video of playing) if (video.isConnected && video.paused) video.play().catch(() => {});
+    for (const node of d.querySelectorAll("details[id]")) if (openDetails.has(node.id)) node.open = true;
+    readerLoaded = true;
+    delete d.documentElement.dataset.routeView;
     for (const node of d.querySelectorAll("[data-guide-expand],[data-guide-expand-status]")) node.remove();
   };
-  let ticket = 0;
+  const commitMetadata = (state) => {
+    d.title = state.title;
+    for (const attr of ["lang", "dir"]) if (state[attr]) {
+      d.documentElement.setAttribute(attr, state[attr]);
+      d.body.setAttribute(attr, state[attr]);
+    }
+    for (const node of d.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],meta[name="guide-source-signature"],#guide-reader-scope,link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
+    for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
+    for (const node of [...state.metas, state.sourceMarker, state.scopeScript, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean))
+      d.head.append(node.cloneNode(true));
+  };
   window.syncGuidePageState = async (path) => {
     const key = keyFor(path), current = ++ticket;
     try {
+      if (keyFor(location.pathname) !== key) return false;
+      if (readerLoaded && key === committedPath) return true;
       if (!cache.has(key)) {
         const doc = new DOMParser().parseFromString(await fetchHtml(key), "text/html");
-        if (!doc.head.querySelector('link[rel="canonical"]') || !doc.querySelector('article.medical-guide')) return;
+        if (!isPageDocument(doc, key)) return false;
         cache.set(key, snapshot(doc));
       }
-      if (current !== ticket || keyFor(location.pathname) !== key) return;
-      const state = cache.get(key);
-      d.title = state.title;
-      if (state.lang) d.documentElement.setAttribute("lang", state.lang);
-      if (state.dir) d.documentElement.setAttribute("dir", state.dir);
-      for (const node of d.head.querySelectorAll('meta[name="description"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
-      for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
-      for (const node of [...state.metas, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean)) d.head.append(node.cloneNode(true));
-      const article = d.querySelector("article.medical-guide");
-      d.querySelector("[data-route-context]")?.remove();
-      if (state.context) {
-        const context = state.context.cloneNode(true);
-        if (state.lang && !context.getAttribute("lang")) context.setAttribute("lang", state.lang);
-        if (state.dir && !context.getAttribute("dir")) context.setAttribute("dir", state.dir);
-        article?.prepend(context);
-      }
-      if (state.articleLabel) article?.setAttribute("aria-labelledby", state.articleLabel);
-      if (focused()) {
-        if (state.articleLang || state.lang) article?.setAttribute("lang", state.articleLang || state.lang);
-        if (state.articleDir || state.dir) article?.setAttribute("dir", state.articleDir || state.dir);
-      }
-      removeExpandControls();
-    } catch { /* Keep readable content when a metadata request fails. */ }
+      if (current !== ticket || keyFor(location.pathname) !== key) return false;
+      if (!readerLoaded && !await window.expandCompleteGuide()) return false;
+      if (current !== ticket || keyFor(location.pathname) !== key) return false;
+      // Fragment and video-time history entries share the same primary body.
+      // Preserve its live disclosures, focus and native restoration geometry.
+      if (key === committedPath) return true;
+      const state = cache.get(key), prepared = prepareReader(state, key, false);
+      commitReader(prepared, key);
+      commitMetadata(state);
+      committedPath = key;
+      d.dispatchEvent(new CustomEvent("guide:primary-changed"));
+      return true;
+    } catch { return false; }
   };
-  let expansion;
   window.expandCompleteGuide = () => {
-    if (!focused()) return Promise.resolve(true);
+    if (readerLoaded) return Promise.resolve(true);
     if (expansion) return expansion;
-    const current = d.querySelector("article.medical-guide");
-    const control = d.querySelector("[data-guide-expand]");
+    const current = primaryArticle(), control = d.querySelector("[data-guide-expand]");
     const status = d.querySelector("[data-guide-expand-status]");
     current?.setAttribute("aria-busy", "true");
     if (status) status.textContent = control?.getAttribute("data-loading") || "در حال بارگذاری راهنمای کامل…";
@@ -88,35 +258,15 @@
       try {
         const home = new DOMParser().parseFromString(await fetchHtml("/"), "text/html");
         const full = home.querySelector("article.medical-guide");
-        if (!full || !current || !home.head.querySelector('link[rel="canonical"]')) throw new Error("Guide unavailable");
-        cache.set("/", snapshot(home));
-        for (const script of full.querySelectorAll("script")) script.remove();
-        const readingPosition = window.completeGuideInteraction && [...current.querySelectorAll("[id]")]
-          .filter((node) => home.getElementById(node.id))
-          .map((node) => ({ id: node.id, rect: node.getBoundingClientRect() }))
-          .filter(({ rect }) => rect.bottom > 0 && rect.top < window.innerHeight)
-          .sort((a, b) => Math.abs(a.rect.top) - Math.abs(b.rect.top))[0];
-        // Reuse existing players, preserving a patient's active playback.
-        const fullVideos = [...full.querySelectorAll("video[id]")];
-        for (const video of current.querySelectorAll("video[id]"))
-          fullVideos.find((node) => node.id === video.id)?.replaceWith(video);
-        const context = current.querySelector("[data-route-context]");
-        for (const attr of ["lang", "dir"]) {
-          const contextValue = context?.getAttribute(attr) || d.documentElement.getAttribute(attr);
-          if (context && contextValue) context.setAttribute(attr, contextValue);
-          const guideValue = full.getAttribute(attr) || home.documentElement.getAttribute(attr);
-          if (guideValue) current.setAttribute(attr, guideValue);
-        }
-        current.replaceChildren(...[context, ...full.childNodes].filter(Boolean));
-        delete d.documentElement.dataset.routeView;
-        removeExpandControls();
-        if (readingPosition) {
-          const anchor = d.getElementById(readingPosition.id);
-          anchor.closest(".render-chunk")?.classList.add("is-target-chunk");
-          for (let parent = anchor.parentElement; parent; parent = parent.parentElement)
-            if (parent.localName === "details") parent.open = true;
-          window.scrollBy({ top: anchor.getBoundingClientRect().top - readingPosition.rect.top, behavior: "instant" });
-        }
+        if (!full || !current || !isPageDocument(home, "/")) throw new Error("Guide unavailable");
+        homeState = snapshot(home); homeSource = homeState.article;
+        cache.set("/", homeState);
+        const path = committedPath, state = cache.get(path);
+        const prepared = prepareReader(state, path, true);
+        const position = window.completeGuideInteraction && readingAnchor();
+        commitReader(prepared, path, true);
+        if (position) restoreAnchor(position);
+        d.dispatchEvent(new CustomEvent("guide:primary-changed"));
         d.dispatchEvent(new CustomEvent("guide:expanded"));
         return true;
       } catch {
@@ -132,43 +282,31 @@
   const replay = (url) => {
     const link = d.createElement("a");
     link.href = url.pathname + url.search + url.hash;
-    d.body.append(link);
-    link.click();
-    link.remove();
+    d.body.append(link); link.click(); link.remove();
   };
   d.addEventListener("click", (event) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
     const link = event.target.closest?.("a[href]");
     if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
     if (link.hasAttribute("data-guide-expand")) {
-      event.preventDefault();
-      window.expandCompleteGuide();
-      return;
+      event.preventDefault(); window.expandCompleteGuide(); return;
     }
-    if (!focused()) return;
+    if (readerLoaded) return;
     const url = new URL(link.href);
     if (![origin, d.querySelector("#guide-search")?.dataset.canonicalOrigin].includes(url.origin)) return;
-    // File/download links keep their native behavior.
     if (/\.[A-Za-z0-9]+\/?$/.test(url.pathname)) return;
     if (url.hash && keyFor(url.pathname) === keyFor(location.pathname)) {
       try { if (d.getElementById(decodeURIComponent(url.hash.slice(1)))) return; } catch { return; }
     }
     event.preventDefault();
     window.expandCompleteGuide().then(async (ready) => {
-      if (ready) {
-        // Initial loading also gates the delegated same-document navigator.
-        await window.completeGuideReady;
-        replay(url);
-      }
+      if (ready) { await window.completeGuideReady; replay(url); }
       else location.assign(url.href);
     });
   }, true);
   d.addEventListener("focusin", (event) => {
     if (event.target.id === "guide-search-input") window.expandCompleteGuide();
   });
-  // Direct URLs enter the same complete reader as home. Wait for its content
-  // before resolving the destination, including fragments outside the topic.
-  // A reader who starts interacting during the request keeps their position.
   const interactionTypes = ["pointerdown", "wheel", "keydown"];
   const recordInteraction = () => { window.completeGuideInteraction = true; };
   if (focused()) for (const type of interactionTypes)

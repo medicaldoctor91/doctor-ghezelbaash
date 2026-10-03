@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { heroPreload } from "../../src/config/site-policy.mjs";
+import { heroPreload, discoveryPolicy } from "../../src/config/site-policy.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { deriveIndependentPages, renderIndependentPage } from "../lib/independent-pages.mjs";
 import { inspectHtml, assertDocumentContract } from "../lib/html-contract.mjs";
 import { projectFocusedMedia } from "../lib/focused-media.mjs";
+import { URL_ARCHITECTURE } from "../../src/lib/url-architecture.mjs";
 
 const inputs = readCanonicalInputs();
 const canonicalUrl = inputs.lifecycle.canonicalUrl;
@@ -18,9 +19,9 @@ const home = '<!doctype html><html lang="fa-IR" dir="rtl"><head><title>Home</tit
   '" imagesrcset="' + escape(hero.srcset) + '" imagesizes="' + escape(hero.sizes) + '">' +
   '</head><body><main id="main-content"><article class="medical-guide">' +
   renderCanonicalPageHtml(inputs.pageBody, inputs.graph) +
-  '<nav><a href="/image-saeed-ghezelbash-portrait-master">Portrait</a></nav>' +
   '</article></main></body></html>';
-const pages = deriveIndependentPages(home, inputs.graph, canonicalUrl);
+const pages = deriveIndependentPages(home, inputs.graph, canonicalUrl,
+  { focusedViews: discoveryPolicy.focusedViews });
 const articleHtml = (html) => {
   const location = inspectHtml(html).guideArticles[0].sourceCodeLocation;
   return html.slice(location.startOffset, location.endOffset);
@@ -30,11 +31,10 @@ const imagePreloads = (html) => inspectHtml(html).elements.filter((node) =>
 const focused = (body, head = "") => '<!doctype html><html data-route-view="focused"><head>' + head +
   '</head><body><main><article class="medical-guide">' + body + '</article></main></body></html>';
 
-test("actual text and English topic entries do not download the unrelated homepage portrait", () => {
-  const botox = pages.find((page) => page.path === "/botox");
-  const english = pages.find((page) => page.lang === "en");
-  assert(botox && english);
-  for (const page of [botox, english]) {
+test("retained focused topics exclude the homepage portrait preload and preserve their article", () => {
+  assert(pages.some((page) => page.path === "/botox"));
+  assert(pages.some((page) => page.path === "/aesthetic-guide-en"));
+  for (const page of pages) {
     const rendered = renderIndependentPage(home, page);
     const html = projectFocusedMedia(rendered, page.canonicalUrl);
     assert.equal(imagePreloads(html).length, 0);
@@ -42,28 +42,37 @@ test("actual text and English topic entries do not download the unrelated homepa
   }
 });
 
-test("the actual portrait entry retains the matching responsive preload", () => {
-  const page = pages.find((page) => page.path === "/image-saeed-ghezelbash-portrait-master");
-  assert(page);
-  const rendered = renderIndependentPage(home, page);
-  const html = projectFocusedMedia(rendered, page.canonicalUrl);
+test("the homepage profile retains its actual portrait and matching responsive preload", () => {
+  assert(!pages.some((page) => page.path === "/image-saeed-ghezelbash-portrait-master"));
+  const html = projectFocusedMedia(home, canonicalUrl);
   const preloads = imagePreloads(html);
   assert.equal(preloads.length, 1);
   assert.equal(attr(preloads[0], "href"), hero.href);
   assert.equal(attr(preloads[0], "imagesrcset"), hero.srcset);
-  assert.equal(articleHtml(html), articleHtml(rendered));
+  assert.equal(attr(preloads[0], "imagesizes"), hero.sizes);
+  const portrait = inspectHtml(html).elements.find((node) => node.tagName === "picture" &&
+    attr(node, "id") === "image-saeed-ghezelbash-portrait-master-webp");
+  assert(portrait, "The preload must belong to the actual visible physician portrait");
+  assert(portrait.childNodes.some((node) => node.tagName === "source" && attr(node, "srcset") === hero.srcset));
+  assert(portrait.childNodes.some((node) => node.tagName === "img" && attr(node, "loading") === "eager" &&
+    attr(node, "fetchpriority") === "high"));
+  assert.equal(html, home);
 });
 
 test("real focused video entries expose their authored poster without requiring JavaScript", () => {
-  const page = pages.find((page) => page.path === "/jalupro-vs-profhilo-selection");
-  assert(page && page.videos.length === 1);
-  const html = projectFocusedMedia(renderIndependentPage(home, page), page.canonicalUrl);
-  assert.equal(imagePreloads(html).length, 0);
-  const videos = inspectHtml(html).videos;
-  assert.equal(videos.length, 1);
-  assert.equal(new URL(attr(videos[0], "poster"), canonicalUrl).href, page.videos[0].thumbnailUrl);
-  assert.equal(attr(videos[0], "poster"), attr(videos[0], "data-poster"));
-  assert.equal(attr(videos[0], "preload"), "none");
+  const watchPaths = URL_ARCHITECTURE.resources.filter((resource) => resource.scope === "media").map((resource) => resource.path);
+  assert.equal(watchPaths.length, 4, "Four actual authored players have a distinct watch purpose");
+  for (const path of [...watchPaths, "/jalupro-and-profhilo"]) {
+    const page = pages.find((page) => page.path === path);
+    assert(page && page.videos.length === 1);
+    const html = projectFocusedMedia(renderIndependentPage(home, page), page.canonicalUrl);
+    assert.equal(imagePreloads(html).length, 0);
+    const videos = inspectHtml(html).videos;
+    assert.equal(videos.length, 1);
+    assert.equal(new URL(attr(videos[0], "poster"), canonicalUrl).href, page.videos[0].thumbnailUrl);
+    assert.equal(attr(videos[0], "poster"), attr(videos[0], "data-poster"));
+    assert.equal(attr(videos[0], "preload"), "none");
+  }
 });
 
 test("responsive sources match by URL, while text mentions and unrelated non-image preloads do not", () => {

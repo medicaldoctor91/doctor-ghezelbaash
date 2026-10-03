@@ -1,12 +1,29 @@
 import { canonicalGraph } from "./canonical-inputs.mjs";
 import { machineResourcePolicy } from "../config/machine-resources.mjs";
+
+/** Select an authored title literal for scalar descriptor formats. */
+export function resourceDescriptorTitle(node, language = "en") {
+  const source = node?.["dcterms:title"] ?? node?.name;
+  const titles = (Array.isArray(source) ? source : source == null ? [] : [source])
+    .map((value) => typeof value === "string" ? { text: value } : { text: value?.["@value"], language: value?.["@language"] })
+    .filter((value) => typeof value.text === "string" && value.text.trim());
+  const base = language.split("-")[0];
+  return (titles.find((value) => value.language === language)
+    ?? titles.find((value) => value.language?.split("-")[0] === base)
+    ?? titles.find((value) => !value.language) ?? titles[0])?.text;
+}
+
 const byId = new Map(canonicalGraph["@graph"].map((node) => [node["@id"], node]));
 const registry = { resources: machineResourcePolicy.map((resource) => {
   const node = byId.get(resource.distributionIri);
+  const conformsTo = node?.["dcterms:conformsTo"];
+  const profileIris = (Array.isArray(conformsTo) ? conformsTo : conformsTo == null ? [] : [conformsTo])
+    .map((ref) => typeof ref === "string" ? ref : ref?.["@id"]);
   return { ...resource,
     mediaType: resource.mediaType ?? node?.encodingFormat,
-    descriptorTitle: node?.["dcterms:title"]?.["@value"] ?? node?.["dcterms:title"] ?? node?.name,
-    profileIri: node?.["dcterms:conformsTo"]?.["@id"] ?? node?.["dcterms:conformsTo"],
+    descriptorTitle: resourceDescriptorTitle(node),
+    profileIri: profileIris.length === 1 ? profileIris[0] : undefined,
+    profileIris,
   };
 }) };
 
@@ -38,10 +55,12 @@ export const resourceContentType = (resource) => {
       throw new Error(`Invalid or reserved media type parameter: ${resource.path} ${name}`);
     serialized.push(`${name}=${serializeMediaTypeParameter(value)}`);
   }
-  if (resource.profileIri) {
-    if (!/^https?:\/\/[^\s"<>]+$/.test(resource.profileIri))
+  const profiles = resource.profileIris ?? (resource.profileIri ? [resource.profileIri] : []);
+  if (!Array.isArray(profiles)) throw new Error(`Invalid machine resource profile list: ${resource.path}`);
+  if (profiles.length) {
+    if (profiles.some((profile) => typeof profile !== "string" || !/^https?:\/\/[^\s"<>]+$/.test(profile)))
       throw new Error(`Invalid machine resource profile IRI: ${resource.path}`);
-    serialized.push(`profile=${quoteHttpParameter(resource.profileIri)}`);
+    serialized.push(`profile=${quoteHttpParameter([...new Set(profiles)].join(" "))}`);
   }
   return [resource.mediaType, ...serialized].join("; ");
 };
@@ -49,6 +68,7 @@ export const resourceContentType = (resource) => {
 const resources = registry.resources.map((resource) =>
   Object.freeze({
     ...resource,
+    profileIris: Object.freeze([...resource.profileIris]),
     contentType: resourceContentType(resource),
     ...(resource.mediaTypeParameters
       ? { mediaTypeParameters: Object.freeze({ ...resource.mediaTypeParameters }) }

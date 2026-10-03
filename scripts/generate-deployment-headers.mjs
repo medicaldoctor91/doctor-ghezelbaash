@@ -9,7 +9,7 @@ import { validatePageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
 import { assertNotFoundStylesheet, notFoundStylesheetPath } from "./lib/not-found-css.mjs";
 
-import { canonicalHostAliasRows, loadAliasRegistry } from "./lib/redirect-registry.mjs";
+import { canonicalHostAliasRows, loadAliasRegistry, machineNamespaceAliasRows } from "./lib/redirect-registry.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -97,34 +97,17 @@ const personNode = coreDocument["@graph"].find(
 if (
   !pageNode ||
   !nodeTypes(pageNode).includes("MedicalWebPage") ||
-  nodeTypes(pageNode).includes("ProfilePage") ||
+  !nodeTypes(pageNode).includes("ProfilePage") ||
+  pageNode.url !== release.canonicalUrl ||
   pageNode.mainEntity?.["@id"] !== release.primaryEntity.id ||
   !personNode ||
   !nodeTypes(personNode).includes("Person") ||
-  personNode.url !== release.canonicalUrl + "saeed-ghezelbash" ||
-  personNode.mainEntityOfPage?.["@id"] !== release.canonicalUrl + "saeed-ghezelbash#webpage"
+  personNode.url !== release.canonicalUrl ||
+  personNode.mainEntityOfPage?.["@id"] !== pageId
 )
   throw new Error(
-    "Homepage must be a MedicalWebPage whose canonical Person resolves to the dedicated ProfilePage",
+    "Homepage must be the physician ProfilePage and MedicalWebPage with its stable Person identity",
   );
-
-const profileHtml = await readFile(path.join(dist, "saeed-ghezelbash.html"), "utf8");
-const profileElements = inspectHtml(profileHtml).elements;
-const profileDocuments = profileElements.filter((node) =>
-  node.tagName === "script" && node.attrs?.some((attr) =>
-    attr.name === "type" && attr.value === "application/ld+json"))
-  .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
-if (profileDocuments.length !== 1)
-  throw new Error("Dedicated physician profile requires one JSON-LD document");
-const profileGraph = profileDocuments[0]["@graph"] || [];
-const profilePage = profileGraph.find((node) =>
-  node?.["@id"] === release.canonicalUrl + "saeed-ghezelbash#webpage");
-if (
-  !profilePage ||
-  !nodeTypes(profilePage).includes("ProfilePage") ||
-  profilePage.mainEntity?.["@id"] !== release.primaryEntity.id
-)
-  throw new Error("Dedicated physician URL must publish ProfilePage mainEntity -> canonical Person");
 
 const execScripts = scriptBlocks.filter(
   (script) => !/type=["']application\/ld\+json["']/i.test(script.attrs),
@@ -219,10 +202,15 @@ const compiledHeaders = compileHeadersTemplate(headersTemplate, {
 });
 const machineAliases = canonicalHostAliasRows(await loadAliasRegistry(root))
   .filter((row) => row.target === "/graph.jsonld").map((row) => row.source);
-const headers = expandMachineAliasHeaders(compiledHeaders, [
-  "/graph.jsonld/*", "/provenance.jsonld/*", "/website", "/medical-specialty-aesthetic-medicine",
+const namespaces = machineNamespaceAliasRows();
+const graphHeaders = expandMachineAliasHeaders(compiledHeaders, [
+  ...namespaces.filter((row) => row.target === "/graph.jsonld").map((row) => row.source),
+  "/website", "/medical-specialty-aesthetic-medicine",
   ...machineAliases,
 ]);
+const headers = expandMachineAliasHeaders(graphHeaders,
+  namespaces.filter((row) => row.target === "/provenance.jsonld").map((row) => row.source),
+  { representationPath: "/provenance.jsonld" });
 if (/\btrack-src\b/i.test(headers))
   throw new Error("Invalid CSP directive track-src");
 await writeFile(path.join(dist, "_headers"), headers);

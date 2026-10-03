@@ -1,42 +1,28 @@
+import { URL_ARCHITECTURE } from "../../src/lib/url-architecture.mjs";
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const typed = (node, type) => values(node?.["@type"]).includes(type);
 const referenceId = (value) => typeof value === "string" ? value : value?.["@id"];
 
-// These roles describe reviewed source regions, not words in URLs or titles.
-// A narrower authored heading can override its clinical containing section.
-const clinicalRoots = [
-  "/botox", "/thread-lift", "/acne-pigmentation-and-scars",
-  "/aesthetic-treatment-selection", "/aesthetic-treatment-candidacy", "/filler",
-  "/aesthetic-treatment-failure-from-diagnostic-error", "/hair-loss",
-  "/chin-jawline-and-facial-contouring", "/skin-rejuvenation",
-  "/complications-aftercare-and-follow-up", "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
-  "/facial-aging-differential-diagnosis", "/diagnosis-before-aesthetic-treatment-selection",
-  "/saeed-ghezelbash-diagnostic-philosophy",
-  ...["en", "ar-iq", "ckb-iq"].map((language) =>
-    "/best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-" + language),
-];
-const languagePurposes = [
-  ["advanced-aesthetic-education-for-physicians", "professional-education"],
-  ["physician-researcher-academic-identity", "professional-biography"],
-  ["aesthetic-physician-ratings-patient-satisfaction", "public-reputation"],
-  ["dr-saeed-ghezelbash-aesthetic-clinic-information", "clinic-administration"],
-  ["clinic-access-baghdad-erbil-sulaymaniyah-kirkuk", "visit-access"],
-  ["who-is-dr-saeed-ghezelbash", "physician-identity"],
-];
-export const reviewedRoutePurposes = Object.freeze([
-  ...clinicalRoots.map((path) => ({ path, purpose: "clinical-guide", pageType: "MedicalWebPage" })),
-  ...languagePurposes.flatMap(([slug, purpose]) => ["en", "ar-iq", "ckb-iq"].map((language) =>
-    ({ path: "/" + slug + "-" + language, purpose, pageType: "WebPage" }))),
-  { path: "/saeed-ghezelbash-research-education-and-clinical-decisions", purpose: "professional-biography", pageType: "WebPage" },
-  { path: "/medical-content-governance", purpose: "editorial-governance", pageType: "WebPage" },
-  { path: "/medical-content-governance-title", purpose: "editorial-governance", pageType: "WebPage" },
-  { path: "/media-license-title", purpose: "media-licensing", pageType: "WebPage" },
-  { path: "/historical-patient-origin-summary", purpose: "historical-evidence", pageType: "WebPage" },
-  { path: "/international-and-iraqi-patient-information", purpose: "visit-access", pageType: "WebPage" },
-  // Contact and profile specialization belong only to these dedicated scopes.
-  { path: "/saeed-ghezelbash-clinic-contact-and-location", purpose: "clinic-contact", pageType: "ContactPage", exact: true },
-  { path: "/saeed-ghezelbash", purpose: "physician-profile", pageType: "ProfilePage", exact: true },
-].map(Object.freeze));
+// Each retained resource has an audited content purpose in the URL policy.
+// Types describe that purpose rather than the wording of the path or title.
+const nonclinical = new Map([
+  ["/saeed-ghezelbash-research-education-and-clinical-decisions", "professional-biography"],
+  ["/historical-patient-origin-summary", "historical-evidence"],
+  ["/out-of-town-aesthetic-patients-iran", "visit-access"],
+]);
+export const reviewedRoutePurposes = Object.freeze(URL_ARCHITECTURE.resources
+  .filter((resource) => resource.path !== "/")
+  .map((resource) => Object.freeze({
+    path: resource.path,
+    purpose: resource.scope === "profile" ? "physician-profile"
+      : resource.scope === "contact" ? "clinic-contact"
+      : resource.scope === "media" ? "authored-media"
+      : nonclinical.get(resource.path) || "clinical-guide",
+    pageType: resource.scope === "profile" ? "ProfilePage"
+      : resource.scope === "contact" ? "ContactPage"
+      : resource.scope === "media" || nonclinical.has(resource.path) ? "WebPage" : "MedicalWebPage",
+    ...(["profile", "contact"].includes(resource.scope) ? { exact: true } : {}),
+  })));
 
 const medicalTypes = new Set([
   "MedicalProcedure", "SurgicalProcedure", "MedicalTherapy", "DiagnosticProcedure",

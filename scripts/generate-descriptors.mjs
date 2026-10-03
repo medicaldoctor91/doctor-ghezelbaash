@@ -5,6 +5,7 @@ import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { generatedWorkspace } from "./generated-workspace.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
 import { entityFactsTableSchema, entityFactsTableDialect, entityFactsRecordSet } from "./lib/entity-facts.mjs";
+import { requireCalendarDate, temporalValue } from "../src/lib/graph-dates.mjs";
 import {
   exactLanguageLiteral,
   indexCanonicalGraph,
@@ -64,11 +65,9 @@ const practiceCityName = exactLanguageLiteral(
 const datasetLandingPage = dataset.url;
 if (datasetLandingPage !== release.canonicalUrl)
   throw new Error("Canonical Dataset landing page must be the canonical human document");
-const createdAt = dataset.dateCreated;
-const datasetPublishedAt = dataset.datePublished;
-const datasetModifiedAt = dataset.dateModified;
-if (!datasetPublishedAt || !datasetModifiedAt)
-  throw new Error("Canonical Dataset publication and modification dates are missing");
+const createdAt = temporalValue(dataset.dateCreated);
+const datasetPublishedAt = requireCalendarDate(dataset.datePublished, "Canonical Dataset datePublished");
+const datasetModifiedAt = requireCalendarDate(dataset.dateModified, "Canonical Dataset dateModified");
 if (typeof dataset.version !== "string" || dataset.version !== release.release)
   throw new Error("Canonical Dataset version disagrees with the existing release label");
 const datasetLicense = id(dataset.license);

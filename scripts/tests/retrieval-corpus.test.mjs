@@ -12,8 +12,8 @@ import {
 } from "../lib/projections/retrieval-corpus.mjs";
 import { loadProjectionContext } from "../lib/projection-context.mjs";
 import { deriveCanonicalAnswerProjection } from "../../src/lib/answer-projection.mjs";
-import { contentRoutePaths } from "../lib/content-routes.mjs";
 import { documentPolicy } from "../../src/config/site-policy.mjs";
+import { canonicalPaths, urlForHtmlId } from "../../src/lib/url-architecture.mjs";
 
 const canonicalUrl = "https://example.test/";
 const options = { canonicalUrl, language: "fa-IR" };
@@ -190,7 +190,7 @@ test("canonical retrieval preserves all authored headings and exact answer sourc
     for (const part of section.parts)
       if (part.answerId) {
         assert.ok(!bindings.has(part.answerId), "An answer must occur once");
-        bindings.set(part.answerId, new URL(section.id, context.release.canonicalUrl).href);
+        bindings.set(part.answerId, new URL(urlForHtmlId(section.id), context.release.canonicalUrl).href);
       }
   const projection = deriveCanonicalAnswerProjection(context.graph, context.release);
   assert.ok(projection.answers.length > 0);
@@ -222,8 +222,8 @@ test("passage export carries topic ancestry, graph bindings and canonical answer
     const bareClinicalRecords = records.filter((record) => record.includes(bareClinicalText));
     assert.equal(bareClinicalRecords.length, 1);
     assert.ok(bareClinicalRecords[0].includes("LANGUAGE: fa-IR\n"));
-    assert.ok(bareClinicalRecords[0].includes(`ANCHOR: ${context.release.canonicalUrl}acne-pigmentation-scar-treatment-sequence\n`));
-    const cleanPaths = new Set(contentRoutePaths(context.pageBody, context.release.canonicalUrl));
+    assert.ok(bareClinicalRecords[0].includes(`ANCHOR: ${context.release.canonicalUrl}skin-pigmentation#acne-pigmentation-scar-treatment-sequence\n`));
+    const cleanPaths = new Set(canonicalPaths());
     const sourceIds = new Set();
     const collectIds = (node) => {
       const id = node.attrs?.find((attribute) => attribute.name === "id")?.value;
@@ -238,10 +238,10 @@ test("passage export carries topic ancestry, graph bindings and canonical answer
     for (const anchor of anchors) {
       const url = new URL(anchor);
       assert.equal(url.origin, new URL(context.release.canonicalUrl).origin);
+      assert.ok(cleanPaths.has(url.pathname), anchor);
       if (url.hash) {
-        assert.equal(url.pathname, new URL(context.release.canonicalUrl).pathname);
         assert.ok(sourceIds.has(decodeURIComponent(url.hash.slice(1))), anchor);
-      } else assert.ok(cleanPaths.has(url.pathname), anchor);
+      }
     }
     const projection = deriveCanonicalAnswerProjection(context.graph, context.release);
     for (const answer of projection.answers) {
@@ -255,12 +255,16 @@ test("passage export carries topic ancestry, graph bindings and canonical answer
     }
     for (const suffix of ["ar-iq", "en", "ckb-iq"]) {
       const id = `best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-${suffix}`;
-      assert.ok(markdown.includes(`<!-- anchor: ${context.release.canonicalUrl}${id} -->`));
+      assert.ok(markdown.includes(`<!-- anchor: ${new URL(urlForHtmlId(id), context.release.canonicalUrl).href} -->`));
     }
-    const topicUrl = `${context.release.canonicalUrl}botox-clinical-assessment-checklist`;
+    const topicUrl = `${context.release.canonicalUrl}botox-pre-injection-clinical-assessment#botox-clinical-assessment-checklist`;
     assert.ok(records.some((record) => record.includes(`LEVEL: H5\n`) &&
       record.includes(`ANCHOR: ${topicUrl}\n`)));
     const provenance = JSON.parse(await readFile(path.join(workspace, "provenance.jsonld"), "utf8"));
+    // Machine RDF preserves date datatypes; browser-facing DTOs are tested separately.
+    for (const node of provenance["@graph"]) if (Object.hasOwn(node, "dateModified") &&
+        /^https:\/\/www\.ghezelbaash\.ir\/provenance\.jsonld\/(?:dataset|passage-|answer-)/.test(node["@id"]))
+      assert.equal(node.dateModified["@type"], "http://www.w3.org/2001/XMLSchema#date", node["@id"]);
     for (const answer of projection.answers)
       assert.ok(provenance["@graph"].some((node) =>
         node.url === answer.sourceUrl &&
@@ -269,4 +273,33 @@ test("passage export carries topic ancestry, graph bindings and canonical answer
   } finally {
     await rm(workspace, { recursive: true, force: true });
   }
+});
+
+test("passage provenance preserves a source timestamp's datatype, offset and fractional seconds", async () => {
+  const context = await loadProjectionContext();
+  const workspace = await mkdtemp(path.join(tmpdir(), "retrieval-timestamps-"));
+  try {
+    const question = context.graph["@graph"].find((node) => [node["@type"]].flat().includes("Question"));
+    const date = { "@value": "2026-09-30T17:20:30.125+03:30", "@type": "http://www.w3.org/2001/XMLSchema#dateTime" };
+    question.dateModified = date;
+    await compileRetrievalCorpus({ ...context, projections: workspace }, { answerRecords: [] });
+    const provenance = JSON.parse(await readFile(path.join(workspace, "provenance.jsonld"), "utf8"));
+    const passages = provenance["@graph"].filter((node) => /\/passage-/.test(node["@id"]) &&
+      node.isBasedOn?.some((ref) => ref["@id"] === question["@id"]));
+    assert(passages.length);
+    assert(passages.some((node) => JSON.stringify(node.dateModified) === JSON.stringify(date)));
+    assert.deepEqual(question.dateModified, date);
+  } finally { await rm(workspace, { recursive: true, force: true }); }
+});
+
+test("passage provenance rejects invalid typed revisions rather than silently dropping them", async () => {
+  const context = await loadProjectionContext();
+  const workspace = await mkdtemp(path.join(tmpdir(), "retrieval-revisions-"));
+  try {
+    const question = context.graph["@graph"].find((node) => [node["@type"]].flat().includes("Question"));
+    question.dateModified = { "@value": "2026-09-30", "@type": "http://www.w3.org/2001/XMLSchema#integer" };
+    await assert.rejects(compileRetrievalCorpus({ ...context, projections: workspace }, { answerRecords: [] }), /Invalid passage source revision/);
+    question.dateModified = { "@value": "2026-02-30", "@type": "http://www.w3.org/2001/XMLSchema#date" };
+    await assert.rejects(compileRetrievalCorpus({ ...context, projections: workspace }, { answerRecords: [] }), /Invalid passage source revision/);
+  } finally { await rm(workspace, { recursive: true, force: true }); }
 });

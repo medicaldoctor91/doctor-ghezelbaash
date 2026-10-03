@@ -52,7 +52,8 @@ body {
   font-size: clamp(0.98rem, 0.94rem + 0.18vw, 1.08rem);
   line-height: 1.92;
 }
-main {
+main,
+.guide-reader {
   container: page-shell / inline-size;
   width: min(100% - 2rem, var(--page-measure));
   margin-inline: auto;
@@ -60,6 +61,14 @@ main {
   background: linear-gradient(180deg, rgb(255 255 255 / 0.99), #fff 34rem, #fbfcfb 100%);
   border-inline: 1px solid rgb(217 227 222 / 0.66);
   box-shadow: none;
+}
+.guide-reader > main {
+  container: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
 }
 main
   > :where(
@@ -281,6 +290,16 @@ blockquote {
   justify-self: center;
   margin-block-end: 0.05rem;
   text-align: center;
+}
+.guide-context .hero-title {
+  max-width: 24ch;
+  margin-block-start: 0.2rem;
+  padding-block-start: 0;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.3;
+}
+.guide-context .hero-title::before {
+  display: none;
 }
 .hero-title__descriptor {
   order: -1;
@@ -556,14 +575,16 @@ blockquote {
   html {
     scroll-behavior: auto;
   }
-  main {
+  main,
+  .guide-reader {
     width: min(100% - 0.7rem, var(--page-measure));
     padding: 1rem 0.68rem calc(7.2rem + env(safe-area-inset-bottom));
     border-inline: 0;
     border-radius: 0;
     box-shadow: none;
   }
-  h1 {
+  h1,
+  .guide-context .hero-title {
     font-size: clamp(1.85rem, 8.3vw, 2.65rem);
   }
 }
@@ -1175,6 +1196,9 @@ details[open]:where(:not(.caption-disclosure)) {
   cursor: pointer;
   font-weight: 700;
 }
+.multilingual-collapsible-section > summary > h2 {
+  margin-top: 0;
+}
 hr {
   margin-block: 3rem;
   border: 0;
@@ -1276,7 +1300,8 @@ address {
   html {
     background: #fff;
   }
-  main {
+  main,
+  .guide-reader {
     width: 100%;
     padding: 0;
     border: 0;

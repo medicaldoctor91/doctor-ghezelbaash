@@ -1,10 +1,15 @@
 import { parseFragment, serialize } from "parse5";
 import { inspectHtml } from "./html-contract.mjs";
 import { contentRoutePaths } from "./content-routes.mjs";
-import { browserContext, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
+import { browserContextFor, localizedText } from "../../src/lib/page-discovery-jsonld.mjs";
+import { temporalValue } from "../../src/lib/graph-dates.mjs";
+import { URL_ARCHITECTURE, urlForHtmlId } from "../../src/lib/url-architecture.mjs";
+import { canonicalContentHtmlId } from "../../src/lib/graph-core.mjs";
+import { discoveryPolicy } from "../../src/config/site-policy.mjs";
 import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 import { projectFocusedMedia } from "./focused-media.mjs";
 import { renderTopicNavigation } from "./topic-navigation.mjs";
+import { createReaderScopeCompiler, stampGuideSource } from "./reader-scope.mjs";
 
 const attr = (node, key) => node.attrs?.find((entry) => entry.name === key)?.value;
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -68,8 +73,11 @@ export const routeDocumentFile = (route) => {
 };
 
 /** Every authored HTML destination gets a meaningful initial document. */
-export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews = [] } = {}) {
+export function deriveIndependentPages(html, graph, canonicalUrl, {
+  focusedViews = discoveryPolicy.focusedViews, resources = URL_ARCHITECTURE.resources.filter((entry) => entry.path !== "/"),
+} = {}) {
   const inspected = inspectHtml(html);
+  const compileReaderScope = createReaderScopeCompiler(inspected.guideArticles[0]);
   const byHtmlId = new Map(inspected.elements.filter((node) => attr(node, "id")).map((node) => [attr(node, "id"), node]));
   const scripts = inspected.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
     .map((node) => ({ id: attr(node, "id"), document: JSON.parse(node.childNodes.map((child) => child.value || "").join("")) }));
@@ -80,13 +88,14 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
   const homePage = browser.find((node) => node["@id"] === canonicalUrl + "webpage" &&
     typed(node, "MedicalWebPage"));
   if (!homePage) throw new Error("Independent routes require the canonical MedicalWebPage");
-  const revision = graph["@graph"].find((node) => node["@id"] === homePage["@id"]).dateModified;
+  const revision = temporalValue(graph["@graph"].find((node) => node["@id"] === homePage["@id"]).dateModified);
   const person = byId.get(homePage.mainEntity["@id"]);
   const authoredById = new Map(graph["@graph"].map((node) => [node["@id"], node]));
   const authoredPerson = authoredById.get(person["@id"]);
   const website = browser.find((node) => typed(node, "WebSite"));
   const origin = new URL(canonicalUrl).origin;
-  const paths = contentRoutePaths(html, canonicalUrl);
+  const paths = resources.map((entry) => entry.path);
+  const resourceByPath = new Map(resources.map((entry) => [entry.path, entry]));
   const pathSet = new Set(paths);
   const views = new Map();
   for (const view of focusedViews) {
@@ -97,7 +106,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     views.set(view.path, view);
   }
   return paths.map((route) => {
-    const htmlId = route.slice(1), target = byHtmlId.get(htmlId), url = origin + route;
+    const resource = resourceByPath.get(route);
+    const htmlId = resource.htmlId, target = byHtmlId.get(htmlId), url = origin + route;
     if (!target?.sourceCodeLocation) throw new Error("Route lacks authored HTML target: " + route);
     let owner = target;
     const classes = (attr(target, "class") || "").split(/\s+/);
@@ -113,8 +123,10 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const aliasHeading = emptyAlias ? headings.find((node) =>
       node.sourceCodeLocation.startOffset >= target.sourceCodeLocation.endOffset &&
       node.sourceCodeLocation.endOffset <= owner.sourceCodeLocation.endOffset) : undefined;
+    const labelledHeading = String(attr(target, "aria-labelledby") || "").split(/\s+/)
+      .map((id) => byHtmlId.get(id)).find((node) => /^h[1-6]$/.test(node?.tagName));
     const heading = /^h[1-6]$/.test(target.tagName) ? target
-      : aliasHeading ?? headings.find((node) => node.sourceCodeLocation.startOffset >= owner.sourceCodeLocation.startOffset &&
+      : labelledHeading ?? aliasHeading ?? headings.find((node) => node.sourceCodeLocation.startOffset >= owner.sourceCodeLocation.startOffset &&
           node.sourceCodeLocation.endOffset <= owner.sourceCodeLocation.endOffset)
         ?? headings.filter((node) => node.sourceCodeLocation.startOffset <= target.sourceCodeLocation.startOffset).at(-1);
     let start = owner.sourceCodeLocation.startOffset, end = owner.sourceCodeLocation.endOffset, overviewEntry = false;
@@ -142,8 +154,46 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
         }
       }
     }
-    let bodyHtml = serialize(normalizeFocusedHeadings(parseFragment(stripData(html.slice(start, end)))));
+    // Retained nested topics own their substantive text. Their parent keeps its
+    // original introduction and remaining material, with native child links
+    // added by topic navigation; the comprehensive reader still contains all text.
     const focusedView = views.get(route);
+    const cuts = [];
+    for (const child of resources) {
+      if (focusedView) break;
+      if (child.path === route || child.scope === "media") continue;
+      const node = byHtmlId.get(child.htmlId), location = node?.sourceCodeLocation;
+      if (!location || location.startOffset <= start || location.startOffset >= end) continue;
+      let stop = location.endOffset;
+      if (/^h[1-6]$/.test(node.tagName)) {
+        const level = Number(node.tagName.slice(1));
+        const next = headings.find((entry) => entry.sourceCodeLocation.startOffset > location.startOffset &&
+          Number(entry.tagName.slice(1)) <= level);
+        let container = node.parentNode;
+        while (container && !["section", "header", "article"].includes(container.tagName)) container = container.parentNode;
+        stop = Math.min(next?.sourceCodeLocation.startOffset ?? end,
+          container?.sourceCodeLocation?.endTag?.startOffset ?? end);
+      }
+      if (stop <= end) cuts.push({ start: location.startOffset, end: stop });
+    }
+    const mergedCuts = [];
+    for (const cut of cuts.sort((a, b) => a.start - b.start)) {
+      const previous = mergedCuts.at(-1);
+      if (previous && cut.start <= previous.end) previous.end = Math.max(previous.end, cut.end);
+      else mergedCuts.push({ ...cut });
+    }
+    let intervalStart = start;
+    let primaryIntervals = [];
+    for (const cut of mergedCuts) {
+      if (cut.start > intervalStart) primaryIntervals.push({ start: intervalStart, end: cut.start });
+      intervalStart = cut.end;
+    }
+    if (intervalStart < end) primaryIntervals.push({ start: intervalStart, end });
+    let scopedHtml = html.slice(start, end);
+    for (const cut of mergedCuts.reverse()) scopedHtml = scopedHtml.slice(0, cut.start - start) + scopedHtml.slice(cut.end - start);
+    let bodyHtml = serialize(normalizeFocusedHeadings(parseFragment(stripData(scopedHtml))));
+    if (resource.scope === "language")
+      bodyHtml = bodyHtml.replace(/^<details\b/, "<details open");
     if (focusedView) {
       const authored = authoredById.get(url);
       if (!emptyAlias || attr(aliasHeading, "id") !== focusedView.sourceHeading ||
@@ -161,10 +211,18 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
         throw new Error("Declared historical view has no readable source disclosure: " + route);
       bodyHtml = html.slice(target.sourceCodeLocation.startOffset, target.sourceCodeLocation.endOffset) +
         bodyHtml.slice(location.startOffset, location.endOffset);
+      const originalDisclosure = inspected.elements.find((node) => node.tagName === "details" &&
+        node.sourceCodeLocation?.startOffset >= start && node.sourceCodeLocation.endOffset <= end);
+      if (!originalDisclosure) throw new Error("Historical reader scope has no authored disclosure");
+      primaryIntervals = [
+        { start: target.sourceCodeLocation.startOffset, end: target.sourceCodeLocation.endOffset },
+        { start: originalDisclosure.sourceCodeLocation.startOffset, end: originalDisclosure.sourceCodeLocation.endOffset },
+      ];
     }
     if (!normalize(text(parseFragment(bodyHtml)))) throw new Error("Route has no readable content: " + route);
     // Fragment fallbacks now point to the comprehensive home target.
-    bodyHtml = bodyHtml.replace(/(<a\b[^>]*\bhref=)"#([^"]+)"/g, (_, prefix, id) => prefix + '"' + (pathSet.has("/" + id) ? "/" : "/#") + escape(id) + '"');
+    bodyHtml = bodyHtml.replace(/(<a\b[^>]*\bhref=)"#([^"]+)"/g,
+      (_, prefix, id) => prefix + '"' + escape(urlForHtmlId(id)) + '"');
     const parsed = inspectHtml(bodyHtml, { wrapMain: true });
     const visible = normalize(text(parseFragment(bodyHtml)));
     let language = "fa-IR", direction = "rtl";
@@ -176,6 +234,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       if (localized !== value) return browserize(localized, key);
       if (Array.isArray(value)) return value.map((entry) => browserize(entry, key));
       if (!value || typeof value !== "object") return value;
+      if (Object.hasOwn(value, "@value")) return value["@value"];
       if (["width", "height"].includes(key)) {
         const quantity = authoredById.get(value["@id"]) ?? byId.get(value["@id"]) ?? value;
         if (typed(quantity, "QuantitativeValue")) return quantity.value;
@@ -204,7 +263,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     const exactSubject = !mediaTarget && typed(exact, "VideoObject") ? undefined : exact;
     const mediaEntity = sourceMatch ?? exact;
     const mediaTitle = ["video", "figure"].includes(target.tagName) && (typed(mediaEntity, "VideoObject") || typed(mediaEntity, "ImageObject")) ? mediaEntity.name : "";
-    const title = normalize(focusedView?.title || mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
+    const title = normalize(focusedView?.title || resource.title || mediaTitle || text(heading ?? target) || exact?.name || sourceMatch?.name);
     if (!title) throw new Error("Route lacks authored title: " + route);
     const physicianName = localizedText(authoredPerson.name, language);
     const overviewLabels = { fa: "مرور", en: "Overview:", ar: "نظرة عامة:", ckb: "پوختە:" };
@@ -255,7 +314,12 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     ] };
     pageNode.breadcrumb = { "@id": breadcrumb["@id"] };
     const selected = new Map([[pageNode["@id"], pageNode], [breadcrumb["@id"], breadcrumb]]);
-    const queue = [entity, person, website, ...videoNodes, ...topicalReferences.map((ref) => browserNode(ref["@id"]))];
+    const scopedQuestions = graph["@graph"].filter((node) => typed(node, "Question") &&
+      parsed.ids.includes(canonicalContentHtmlId(node.url, canonicalUrl)) &&
+      values(node.acceptedAnswer).every((ref) => parsed.ids.includes(canonicalContentHtmlId(ref["@id"], canonicalUrl))))
+      .map((node) => browserNode(node["@id"])).filter(Boolean);
+    const queue = [entity, person, website, ...videoNodes, ...scopedQuestions,
+      ...topicalReferences.map((ref) => browserNode(ref["@id"]))];
     // Relevant outward relationships only: broad home hasPart/mentions would
     // accidentally turn every scoped page back into the complete graph.
     const relationKeys = ["acceptedAnswer", "suggestedAnswer", "creator", "publisher", "author", "address", "geo",
@@ -288,22 +352,34 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
       if (typed(authoredProfile, "ProfilePage") && typed(selected.get(primaryImage?.["@id"]), "ImageObject"))
         pageNode.primaryImageOfPage = structuredClone(primaryImage);
     }
-    const document = { "@context": browserContext, "@graph": [...selected.values()] };
+    if (scopedQuestions.length > 1 || scopedQuestions.length === 1 && !questionWithAnswer) {
+      const faqId = url + "#questions";
+      selected.set(faqId, { "@id": faqId, "@type": "FAQPage", url,
+        name: title, inLanguage: language, isPartOf: { "@id": pageNode["@id"] },
+        mainEntity: scopedQuestions.map((node) => ({ "@id": node["@id"] })) });
+      pageNode.hasPart = uniqueReferences([...values(pageNode.hasPart), { "@id": faqId }]);
+    }
+    const document = { "@context": browserContextFor(graph), "@graph": [...selected.values()] };
     assertRichResultsDocument(document, { primaryPageId: pageNode["@id"] });
     const imageUrls = [...new Set(parsed.elements.filter((node) => node.tagName === "img").map((node) => attr(node, "src"))
       .filter(Boolean).map((value) => new URL(value, canonicalUrl).href).filter((value) => value.startsWith(origin + "/")))];
     return { path: route, file: routeDocumentFile(route), canonicalUrl: url, title, contextTitle, scopeKind: focusedView ? "disclosure-summary" : overviewEntry ? "overview" : "complete-region", documentTitle, description, htmlId,
       lang: language, dir: direction, entityId: entity["@id"], entityTypes: values(entity["@type"]), entitySelection, topicSelection, pageType, bodyHtml, document,
+      readerScope: compileReaderScope(primaryIntervals),
       lastmod: revision, imageUrls, videos: videoNodes.map((video) => ({ thumbnailUrl: values(video.thumbnailUrl)[0],
         contentUrl: video.contentUrl, title: video.name, description: video.description,
-        publicationDate: video.uploadDate, duration: video.duration })) };
+        publicationDate: temporalValue(video.uploadDate), duration: video.duration })) };
   });
 }
 
 /** Keep a focused route context visible after loading the shared guide. */
 let homeTemplate;
 export function renderIndependentPage(homeHtml, record, { declaredSocialLocales = [] } = {}) {
-  if (homeTemplate?.source !== homeHtml) homeTemplate = { source: homeHtml, parsed: inspectHtml(homeHtml) };
+  if (homeTemplate?.input !== homeHtml) {
+    const stamped = stampGuideSource(homeHtml);
+    homeTemplate = { input: homeHtml, source: stamped, parsed: inspectHtml(stamped) };
+  }
+  homeHtml = homeTemplate.source;
   const parsed = homeTemplate.parsed;
   const article = parsed.guideArticles[0], location = article.sourceCodeLocation;
   const copies = {
@@ -364,6 +440,8 @@ export function renderIndependentPage(homeHtml, record, { declaredSocialLocales 
     .filter((locale) => locale && locale !== socialLocale))]
     .map((locale) => '<meta property="og:locale:alternate" content="' + escape(locale) + '">').join("");
   html = html.replace(/<link\b[^>]*\bhreflang=["\'][^"\']*["\'][^>]*>/gi, "");
-  return projectFocusedMedia(html.replace("</head>", alternateLinks + socialAlternateMetas + '<script id="schema-core-mainentity" type="application/ld+json">' +
+  return projectFocusedMedia(html.replace("</head>", alternateLinks + socialAlternateMetas +
+    '<script id="guide-reader-scope" type="application/json">' + scriptJson(record.readerScope) + '</script>' +
+    '<script id="schema-core-mainentity" type="application/ld+json">' +
     scriptJson(record.document) + "</script></head>"), record.canonicalUrl);
 }

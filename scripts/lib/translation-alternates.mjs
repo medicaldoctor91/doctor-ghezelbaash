@@ -37,6 +37,13 @@ export function applyTranslationAlternates(records, groups = [], { canonicalUrl,
       const expectedHreflang = languageCodes[base] && languageCodes[base] + (region ? "-" + region : "");
       if (!expectedHreflang || member.hreflang !== expectedHreflang || languages.has(member.hreflang))
         throw new Error("Translation group has an unsupported or repeated hreflang: " + member.path);
+      if (group.kind === "equivalent-guide") {
+        const entity = byId.get(record.entityId);
+        if (!entity || !values(entity.inLanguage).includes(member.lang) || !record.bodyHtml)
+          throw new Error("Translation guide must resolve to its authored language and content: " + member.path);
+        paths.add(member.path); languages.add(member.hreflang);
+        return { record, href: record.canonicalUrl, hrefLang: member.hreflang };
+      }
       const matches = questions.filter((node) => node.url === record.canonicalUrl && values(node.inLanguage).includes(member.lang));
       if (matches.length !== 1 || matches[0]["@id"] !== record.entityId)
         throw new Error("Translation route must describe its authored Question in the declared language: " + member.path);
