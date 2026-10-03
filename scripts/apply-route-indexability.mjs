@@ -20,9 +20,19 @@ const navigationCopies = {
 };
 const renderLink = (link) => '<a href="' + escape(link.path) + '" lang="' + escape(link.lang) +
   '" dir="' + direction(link.lang) + '">' + escape(link.title) + '</a>';
-const renderPromotedNavigation = (record) => {
-  const navigation = record.indexNavigation;
-  if (!record.indexable || !navigation) return null;
+const mergedNavigation = (record) => {
+  if (!record.indexable || !record.indexNavigation) return null;
+  const children = new Map();
+  for (const link of [...record.navigation.children, ...record.indexNavigation.children])
+    if (!children.has(link.path)) children.set(link.path, link);
+  return {
+    parent: record.navigation.parent,
+    children: [...children.values()],
+  };
+};
+const renderMergedNavigation = (record) => {
+  const navigation = mergedNavigation(record);
+  if (!navigation) return null;
   if (!navigation.parent && !navigation.children.length) return "";
   const copy = navigationCopies[record.lang?.split("-")[0]] || navigationCopies.fa;
   const parent = navigation.parent ? '<p>' + copy[1] + ': ' + renderLink(navigation.parent) + '</p>' : '';
@@ -32,7 +42,7 @@ const renderPromotedNavigation = (record) => {
   return '<nav data-topic-navigation aria-label="' + escape(copy[0]) + '">' + parent + children + '</nav>';
 };
 const applyPromotedNavigation = (html, record) => {
-  const replacement = renderPromotedNavigation(record);
+  const replacement = renderMergedNavigation(record);
   if (replacement == null) return html;
   const pattern = /<nav\b[^>]*\bdata-topic-navigation\b[^>]*>[\s\S]*?<\/nav>/i;
   const hasAuthored = pattern.test(html);
