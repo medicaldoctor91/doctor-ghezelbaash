@@ -2,7 +2,7 @@
 import { canonicalContentHtmlId } from '../lib/graph-core.mjs';
 import globalCss from '../styles/global.css?raw';
 import { canonicalLifecycle as release } from '../lib/canonical-inputs.mjs';
-import { footerGovernance, skipLinkLabel } from '../config/site-policy.mjs';
+import { skipLinkLabel } from '../config/site-policy.mjs';
 import { deriveCssDelivery } from '../lib/css-delivery.mjs';
 import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -28,9 +28,6 @@ if (!['ltr', 'rtl', 'auto'].includes(dir)) {
   throw new Error(`Invalid document direction: ${dir}`);
 }
 const noindex = /(?:^|,)\s*noindex\b/i.test(robots);
-if (!noindex && !footerGovernance) {
-  throw new Error('Indexable document requires footer governance');
-}
 if (!Astro.site) {
   throw new Error('Astro site URL is required for canonical resolution');
 }
@@ -109,7 +106,7 @@ const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(globalCss)
         <slot />
       </article>
     </main>
-    {!noindex && footerGovernance && <SiteFooter governance={footerGovernance} />}
+    {!noindex && <SiteFooter />}
     {!noindex && <FloatingActionDock />}
     {isMain && <GuideNavigator />}
   </body>
