@@ -21,9 +21,12 @@ const rdfScalar = (value) => {
   }
   return raw;
 };
-const browserTypes = (value) => {
-  const authored = values(value).filter((type) => typeof type === "string" && type.length > 0);
-  return authored.length === 1 ? authored[0] : authored;
+export const browserTypes = (value) => {
+  const authored = values(value);
+  const schemaTypes = authored.filter((type) => typeof type === "string" &&
+    !type.includes(":") && !/^https?:\/\//.test(type));
+  const selected = schemaTypes.length ? schemaTypes : authored;
+  return selected.length === 1 ? selected[0] : selected;
 };
 const formatBrowserValue = (value, key) => {
   if (key === "@type") return browserTypes(value);
@@ -64,8 +67,8 @@ const duration = (value, label) => {
 /**
  * Checks this site's published discovery graph, not Google's ranking or live
  * crawler access. Canonical RDF literals are compacted to browser-safe JSON
- * scalars while authored semantic types remain intact, including supplemental
- * absolute-IRI types. The authoritative graph itself remains unchanged.
+ * scalars and supplemental RDF ontology types are omitted when a Schema.org
+ * type is already present. The authoritative graph itself remains unchanged.
  */
 export function assertRichResultsDocument(document, { primaryPageId } = {}) {
   if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document?.["@graph"]))
