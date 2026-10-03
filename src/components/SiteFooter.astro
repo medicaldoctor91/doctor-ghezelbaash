@@ -1,6 +1,6 @@
 ---
-import { canonicalLifecycle as release, pageFrontmatter } from '../lib/canonical-inputs.mjs';
-import { canonicalGraph } from '../lib/knowledge-graph';
+import { canonicalLifecycle as release, canonicalGraph } from '../lib/canonical-inputs.mjs';
+import { footerLabels as labels } from '../config/site-policy.mjs';
 import { indexCanonicalGraph, nodeTypes } from '../lib/graph-core.mjs';
 import { deriveSiteContactData } from '../lib/site-data.mjs';
 import { FOOTER_RESOURCES } from '../lib/resources.mjs';
@@ -21,9 +21,8 @@ interface Props {
 }
 
 const { governance } = Astro.props;
-const labels = pageFrontmatter.footerLabels;
 if (!governance?.summary || !governance?.reputationLead || !governance?.mapsTerms?.href || !governance?.mapsTerms?.label || !governance?.privacyPolicy?.href || !governance?.privacyPolicy?.label || !governance?.tail) {
-  throw new Error('Site footer requires page-owned governance copy');
+  throw new Error('Site footer requires governance copy');
 }
 
 const site = deriveSiteContactData(release, canonicalGraph);

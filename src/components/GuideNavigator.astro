@@ -1,7 +1,7 @@
 ---
-import { canonicalLifecycle as rawRelease, pageFrontmatter } from '../lib/canonical-inputs.mjs';
+import { canonicalLifecycle as rawRelease, canonicalGraph } from '../lib/canonical-inputs.mjs';
+import { guideSearch as copy, intentTargets } from '../config/site-policy.mjs';
 import { deriveCanonicalAuthority } from '../lib/canonical-authority.mjs';
-import { canonicalGraph } from '../lib/knowledge-graph';
 import { canonicalContentHtmlId } from '../lib/graph-core.mjs';
 import { createGuideSearch } from '../lib/guide-search.mjs';
 import runtimeSource from '../scripts/guide-runtime.js?raw';
@@ -17,7 +17,6 @@ const runtime = transformSync(`const createGuideSearch = (${createGuideSearch.to
 }).code;
 if (/<\/script|<!--/i.test(runtime))
   throw new Error('Runtime is unsafe for an inline HTML script');
-const copy = pageFrontmatter.guideSearch;
 const contentRouteAliases = contentAliasTargets(canonicalHostAliasRows(await loadAliasRegistry()),
   new Set(STATIC_ARTIFACTS.map((resource) => '/' + resource.path)));
 
@@ -27,7 +26,6 @@ const entityAliases = [
   ...authority.primaryEntity.reconciliationAliases,
   ...authority.primaryEntity.retrievalVariants,
 ].join('|');
-const intentTargets = pageFrontmatter.intentTargets;
 const intentHeadings = Object.fromEntries(Object.entries(intentTargets)
   .map(([intent, url]) => [intent, canonicalContentHtmlId(url, rawRelease.canonicalUrl)]));
 ---

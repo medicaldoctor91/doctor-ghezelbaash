@@ -1,5 +1,4 @@
-import { canonicalContentHtmlId } from "../../src/lib/graph-core.mjs";
-import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
+import { canonicalContentHtmlId, indexCanonicalGraph } from "../../src/lib/graph-core.mjs";
 
 const types = (node) =>
   Array.isArray(node?.["@type"])

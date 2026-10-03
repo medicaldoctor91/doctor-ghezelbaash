@@ -1,9 +1,11 @@
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
+import { deriveRetrievalPolicy } from "../../src/config/site-policy.mjs";
 import { hashIdentityFingerprint } from "./release-identity.mjs";
 import { generatedWorkspace } from "../generated-workspace.mjs";
-import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
+import { indexCanonicalGraph } from "../../src/lib/graph-core.mjs";
 import { derivePublicationData } from "../../src/lib/canonical-authority.mjs";
 
 export const nodeTypes = (node) =>
@@ -59,7 +61,9 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const data = path.join(root, "src/data");
   const semantic = path.join(data, "semantic");
   const generated = generatedWorkspace(root);
-  const { lifecycle: rawRelease, graph, evidenceRegistry, retrievalPolicy, pageBody, pageFrontmatter } = readCanonicalInputs(root);
+  const { lifecycle: rawRelease, graph, evidenceRegistry, pageBody } = readCanonicalInputs(root);
+  const retrievalPolicy = deriveRetrievalPolicy(graph);
+  const llmsGuide = await readFile(path.join(root, "src/content-source/llms-guide.md"), "utf8");
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
   const release = derivePublicationData(rawRelease, graph);
@@ -121,7 +125,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     generatedSemantic: generated.semantic,
     generatedPublic: generated.public,
     pageBody,
-    pageFrontmatter,
+    llmsGuide,
     generatedAssets: generated.assets,
     release,
     rawRelease,

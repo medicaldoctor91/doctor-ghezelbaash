@@ -4,7 +4,7 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate, expandMachineAliasHeaders } from "./lib/headers-template.mjs";
 import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
-import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
+import { canonicalLifecycle as release, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
 import { validatePageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
 import { assertNotFoundStylesheet, notFoundStylesheetPath } from "./lib/not-found-css.mjs";
@@ -89,7 +89,7 @@ for (const script of projectedJsonLd) {
     throw new Error(`Published JSON-LD differs from browser discovery projection: ${script.id}`);
 }
 const coreDocument = ldDocuments.get(projectedJsonLd[0].id);
-const pageId = pageFrontmatter.pageMicrodata.itemId;
+const pageId = release.canonicalUrl + "webpage";
 const pageNode = coreDocument["@graph"].find((node) => node?.["@id"] === pageId);
 const personNode = coreDocument["@graph"].find(
   (node) => node?.["@id"] === release.primaryEntity.id,

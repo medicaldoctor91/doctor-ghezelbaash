@@ -1,5 +1,4 @@
 import path from "node:path";
-import { pageFrontmatter } from "../../../src/lib/canonical-inputs.mjs";
 import { writeFile } from "node:fs/promises";
 import { compileKnowledgeXml } from "../knowledge-xml.mjs";
 import {
@@ -7,7 +6,7 @@ import {
   sha256,
   valueText,
 } from "../projection-context.mjs";
-import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
+import { exactLanguageLiteral } from "../../../src/lib/graph-core.mjs";
 import {
   buildEntityFacts,
   entityFactsCsvwMetadata,
@@ -168,7 +167,7 @@ ${answers.join("\n---\n\n")}`,
     `${JSON.stringify(factMap, null, 2)}\n`,
   );
 
-  const intentSource = pageFrontmatter.llmsGuide;
+  const intentSource = context.llmsGuide;
   const knowledge = compileKnowledgeXml({
     release,
     graph,

@@ -13,6 +13,7 @@ import {
 import { loadProjectionContext } from "../lib/projection-context.mjs";
 import { deriveCanonicalAnswerProjection } from "../../src/lib/answer-projection.mjs";
 import { contentRoutePaths } from "../lib/content-routes.mjs";
+import { documentPolicy } from "../../src/config/site-policy.mjs";
 
 const canonicalUrl = "https://example.test/";
 const options = { canonicalUrl, language: "fa-IR" };
@@ -165,7 +166,7 @@ test("canonical retrieval preserves all authored headings and exact answer sourc
   const context = await loadProjectionContext();
   const blocks = buildRetrievalBlocks(context.pageBody, {
     canonicalUrl: context.release.canonicalUrl,
-    language: context.pageFrontmatter.lang,
+    language: documentPolicy.lang,
   });
   const authoredIds = [], authoredH5Ids = [];
   const walk = (node) => {

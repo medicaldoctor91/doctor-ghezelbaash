@@ -172,25 +172,9 @@ export const deriveCanonicalAnswerProjection = (graph, release) => {
   });
 };
 
-const contentRegion = (content) => {
-  const source = String(content);
-  const frontmatter = source.match(/^---\r?\n[\s\S]*?\r?\n---\s*/u);
-  return frontmatter
-    ? {
-        prefix: frontmatter[0],
-        body: source.slice(frontmatter[0].length),
-        offset: frontmatter[0].length,
-      }
-    : { prefix: "", body: source, offset: 0 };
-};
-
-const parsedContent = (content) => {
-  const region = contentRegion(content);
-  return {
-    ...region,
-    document: parseFragment(region.body, { sourceCodeLocationInfo: true }),
-  };
-};
+const parsedContent = (content) => ({
+  document: parseFragment(String(content), { sourceCodeLocationInfo: true }),
+});
 
 const nextHeadingBoundary = (headings, heading) => {
   const level = headingLevel(heading);

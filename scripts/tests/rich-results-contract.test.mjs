@@ -16,7 +16,7 @@ const mutate = (type, change) => {
 test("published homepage discovery satisfies clinic, image and video contracts without unrelated profile candidates", () => {
   const before = JSON.stringify(inputs.pageJsonLd);
   const document = validatePageJsonLd(inputs.pageJsonLd)[0].document;
-  const counts = assertRichResultsDocument(document, { primaryPageId: inputs.pageFrontmatter.pageMicrodata.itemId });
+  const counts = assertRichResultsDocument(document, { primaryPageId: inputs.lifecycle.canonicalUrl + "webpage" });
   assert.equal(counts.profiles, 0);
   assert.equal(counts.localBusinesses, 1);
   assert.equal(counts.images, 24);

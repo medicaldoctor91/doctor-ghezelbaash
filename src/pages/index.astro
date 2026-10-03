@@ -1,14 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { pageBody, pageFrontmatter, canonicalGraph, canonicalLifecycle } from '../lib/canonical-inputs.mjs';
+import { pageBody, canonicalGraph, canonicalLifecycle } from '../lib/canonical-inputs.mjs';
+import { documentPolicy, socialImageAlt, socialAlternateLocales, guideNavigation, discoveryPolicy } from '../config/site-policy.mjs';
 import { renderCanonicalPageHtml } from '../lib/canonical-page-html.mjs';
+import { deriveCanonicalGraphFacts } from '../lib/canonical-authority.mjs';
+import { localizedText } from '../lib/page-discovery-jsonld.mjs';
 import { addHomeTopicNavigation } from '../../scripts/lib/home-topic-navigation.mjs';
 
 // The comprehensive home remains the shared single-page reader. Focused direct
 // entry documents are derived from this rendered content after the Astro build.
-const html = addHomeTopicNavigation(renderCanonicalPageHtml(pageBody, canonicalGraph), canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
+const description = localizedText(deriveCanonicalGraphFacts(canonicalLifecycle, canonicalGraph).page.description, documentPolicy.lang);
+const html = addHomeTopicNavigation(renderCanonicalPageHtml(pageBody, canonicalGraph), canonicalGraph, guideNavigation, discoveryPolicy, canonicalLifecycle.canonicalUrl);
 ---
 
-<BaseLayout frontmatter={pageFrontmatter} isMain={true}>
+<BaseLayout {...documentPolicy} description={description} socialImageAlt={socialImageAlt} socialAlternateLocales={socialAlternateLocales} isMain={true}>
   <Fragment set:html={html} />
 </BaseLayout>

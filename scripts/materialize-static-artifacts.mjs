@@ -8,7 +8,8 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
-import { canonicalGraph, canonicalLifecycle, pageFrontmatter } from "../src/lib/canonical-inputs.mjs";
+import { canonicalGraph, canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
+import { discoveryPolicy, socialAlternateLocales } from "../src/config/site-policy.mjs";
 import { contentRoutePaths } from "./lib/content-routes.mjs";
 import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs";
 import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
@@ -122,11 +123,11 @@ const answerAliases = deriveCanonicalAnswerTopology(canonicalGraph, canonicalLif
 }));
 const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
 const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
-const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
+const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, discoveryPolicy, canonicalLifecycle.canonicalUrl);
 const schemaInventoryScopes = new Map();
 for (const record of independentPages) {
   const html = renderIndependentPage(homeHtml, record, {
-    declaredSocialLocales: pageFrontmatter.socialAlternateLocales,
+    declaredSocialLocales: socialAlternateLocales,
   });
   await writeExact(record.file, html);
   schemaInventoryScopes.set(record.path, inspectSchemaInventoryScope(html, { focused: true }));

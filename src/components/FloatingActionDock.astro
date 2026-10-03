@@ -1,10 +1,9 @@
 ---
-import { canonicalLifecycle as release, pageFrontmatter } from '../lib/canonical-inputs.mjs';
-import { canonicalGraph } from '../lib/knowledge-graph';
+import { canonicalLifecycle as release, canonicalGraph } from '../lib/canonical-inputs.mjs';
+import { quickActions as copy } from '../config/site-policy.mjs';
 import { deriveSiteData } from '../lib/site-data.mjs';
 
 const site = deriveSiteData(release, canonicalGraph);
-const copy = pageFrontmatter.quickActions;
 ---
 
 <nav

@@ -9,14 +9,9 @@ function walk(node, visit) {
   for (const child of node.childNodes || []) walk(child, visit);
   if (node.content) walk(node.content, visit);
 }
-function stripFrontmatter(source) {
-  if (!source.startsWith("---")) return source;
-  const end = source.indexOf("\n---", 3);
-  return end < 0 ? source : source.slice(end + 4);
-}
 export function inspectHtml(source, { wrapMain = false } = {}) {
   const html = wrapMain
-    ? `<!doctype html><html><body><main id="main-content">${stripFrontmatter(source)}</main></body></html>`
+    ? `<!doctype html><html><body><main id="main-content">${source}</main></body></html>`
     : source;
   const document = parse(html, { sourceCodeLocationInfo: true });
   const nodes = [];

@@ -13,7 +13,7 @@ test("page discovery publishes a route-aware physician graph without changing au
   const before = JSON.stringify(inputs.pageJsonLd);
   const graph = projection()["@graph"];
   const byId = new Map(graph.map((node) => [node["@id"], node]));
-  const page = byId.get(inputs.pageFrontmatter.pageMicrodata.itemId);
+  const page = byId.get(inputs.lifecycle.canonicalUrl + "webpage");
   assert(typed(page, "MedicalWebPage"));
   assert(!typed(page, "ProfilePage"));
   assert.equal(graph.filter((node) => typed(node, "ProfilePage")).length, 0);
@@ -71,7 +71,7 @@ test("an unrelated EducationEvent stays excluded even when homepage mentions it"
   graph["@graph"].push({ "@id": unrelatedId, "@type": ["CourseInstance", "EducationEvent"],
     name: "Unrelated historic event", startDate: "2025-01-01",
     location: { "@id": inputs.lifecycle.canonicalUrl + "city-tehran" } });
-  const home = graph["@graph"].find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+  const home = graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
   home.mentions = [...[home.mentions].flat(), { "@id": unrelatedId }];
   const projected = projectPageJsonLd(graph)[0].document["@graph"];
   assert(!projected.some((node) => node["@id"] === unrelatedId));
@@ -82,7 +82,7 @@ test("an unrelated EducationEvent stays excluded even when homepage mentions it"
 
 test("homepage speakable resolves its exact authored selector specification", () => {
   const projected = projection()["@graph"];
-  const home = projected.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+  const home = projected.find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
   const specification = projected.find((node) => node["@id"] === home.speakable["@id"]);
   assert.equal(specification["@type"], "SpeakableSpecification");
   assert.deepEqual(specification, inputs.graph["@graph"].find((node) => node["@id"] === specification["@id"]));
@@ -91,7 +91,7 @@ test("homepage speakable resolves its exact authored selector specification", ()
 
 test("homepage and dedicated profile revisions remain authored on their own canonical nodes", () => {
   const projected = projection()["@graph"];
-  const home = projected.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+  const home = projected.find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
   const authoredHome = inputs.graph["@graph"].find((node) => node["@id"] === home["@id"]);
   const profileId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage";
   const authoredProfile = inputs.graph["@graph"].find((node) => node["@id"] === profileId);
@@ -154,7 +154,7 @@ test("validating authored discovery twice preserves core identity and never dupl
     const ids = graph.map((node) => node["@id"]);
     assert.equal(new Set(ids).size, ids.length);
     assert.equal(graph.filter((node) => typed(node, "FAQPage")).length, 1);
-    const home = graph.find((node) => node["@id"] === inputs.pageFrontmatter.pageMicrodata.itemId);
+    const home = graph.find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
     assert(typed(home, "MedicalWebPage"));
     assert(!typed(home, "ProfilePage"));
     const person = graph.find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);

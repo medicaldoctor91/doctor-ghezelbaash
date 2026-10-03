@@ -9,11 +9,11 @@ const values = (value) => Array.isArray(value) ? value : value == null ? [] : [v
 const normalized = (value) => String(value).replace(/\s+/g, " ").trim();
 
 /** One source-derived document record shared by HTML, sitemap and breadcrumbs. */
-export function deriveRouteDiscovery(homeHtml, graph, metadata, canonicalUrl) {
+export function deriveRouteDiscovery(homeHtml, graph, discoveryPolicy, canonicalUrl) {
   const records = deriveIndependentPages(homeHtml, graph, canonicalUrl,
-    { focusedViews: metadata.discovery?.focusedViews || [] });
+    { focusedViews: discoveryPolicy.focusedViews || [] });
   const topics = attachTopicNavigation(records, homeHtml, canonicalUrl);
-  const translated = applyTranslationAlternates(topics, metadata.discovery?.translationGroups || [],
+  const translated = applyTranslationAlternates(topics, discoveryPolicy.translationGroups || [],
     { canonicalUrl, graph });
   const output = applyRouteSchemaPolicy(translated, graph, { canonicalUrl });
   const byId = new Map(graph["@graph"].map((node) => [node["@id"], node]));

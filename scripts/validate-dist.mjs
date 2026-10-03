@@ -9,6 +9,7 @@ import { deriveCanonicalAnswerProjection, validateProjectedAnswerHtml } from "..
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { readCanonicalInputs } from "../src/lib/canonical-inputs.mjs";
+import { documentPolicy, headValues, guideSearch, intentTargets, socialAlternateLocales, discoveryPolicy } from "../src/config/site-policy.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
 import { assertCloudflareHeadersContract } from "./lib/headers-template.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
@@ -16,22 +17,22 @@ import { serializeSchemaInventoryCsv, validateSchemaInventoryCoverage, validateS
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] ?? "dist");
-const { graph, lifecycle, pageFrontmatter: page, evidenceRegistry } = readCanonicalInputs(root);
+const { graph, lifecycle, evidenceRegistry } = readCanonicalInputs(root);
 const html = await readFile(path.join(dist, "index.html"), "utf8");
 assert(!/{{[A-Z][A-Z0-9_]*}}/.test(html), "Unresolved authored token in HTML");
 const { elements, ids } = assertDocumentContract(html);
 const attr = (node, name) => node.attrs?.find((item) => item.name === name)?.value;
 const namedMeta = new Map(elements.filter((node) => node.tagName === "meta")
   .map((node) => [attr(node, "name"), attr(node, "content")]));
-for (const [name, value] of Object.entries(page.headValues))
+for (const [name, value] of Object.entries(headValues))
   assert.equal(namedMeta.get(name), value, `Canonical head value: ${name}`);
 assert.equal(namedMeta.get("x-build-release"), lifecycle.release);
 
 const search = elements.find((node) => attr(node, "id") === "guide-search");
-assert.deepEqual(JSON.parse(attr(search, "data-copy")), page.guideSearch);
+assert.deepEqual(JSON.parse(attr(search, "data-copy")), guideSearch);
 const targets = JSON.parse(attr(search, "data-intent-targets"));
 const intentHeadings = JSON.parse(attr(search, "data-intent-headings"));
-for (const [intent, url] of Object.entries(page.intentTargets)) {
+for (const [intent, url] of Object.entries(intentTargets)) {
   const headingId = canonicalContentHtmlId(url, lifecycle.canonicalUrl);
   assert.equal(targets[intent], url);
   assert(ids.includes(headingId), `Missing search destination: ${intent}`);
@@ -140,7 +141,7 @@ const browserNodes = ldDocuments[0]["@graph"];
 const browserById = new Map(browserNodes.map((node) => [node["@id"], node]));
 const typeHas = (node, type) => [node["@type"]].flat().includes(type);
 const profileNodes = browserNodes.filter((node) => typeHas(node, "ProfilePage"));
-const primaryPage = browserById.get(page.pageMicrodata.itemId);
+const primaryPage = browserById.get(lifecycle.canonicalUrl + "webpage");
 assert(typeHas(primaryPage, "MedicalWebPage"));
 assert(!typeHas(primaryPage, "ProfilePage"));
 assert.equal(profileNodes.length, 0, "Homepage projection must not expose unrelated ProfilePage candidates");
@@ -197,7 +198,7 @@ const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) =>
 assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
 for (const { source } of answerAliases)
   assert(!sitemapLocs.includes(new URL(source, lifecycle.canonicalUrl).href), "Answer redirect must not remain in the sitemap: " + source);
-const pageNode = graph["@graph"].find((node) => node["@id"] === page.pageMicrodata.itemId);
+const pageNode = graph["@graph"].find((node) => node["@id"] === lifecycle.canonicalUrl + "webpage");
 assert(sitemap.includes("<lastmod>" + pageNode.dateModified + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
   const url = new URL(xmlValue(match[1]));
@@ -226,7 +227,7 @@ assert.equal(matchedVideos.size, visibleVideos.length, "Duplicate or missing Vid
 
 assert.deepEqual(await readFile(path.join(dist, "graph.jsonld")),
   await readFile(path.join(root, "src/data/semantic/knowledge-graph.jsonld")), "Published graph differs from canonical graph");
-assert.equal(await readFile(path.join(dist, "llms.txt"), "utf8"), page.llmsGuide);
+assert.equal(await readFile(path.join(dist, "llms.txt"), "utf8"), await readFile(path.join(root, "src/content-source/llms-guide.md"), "utf8"));
 for (const resource of MACHINE_RESOURCES.filter((item) => item.materialize))
   assert((await stat(path.join(dist, resource.path))).size > 0, `Missing resource: ${resource.path}`);
 
@@ -273,15 +274,15 @@ let overviewPages = 0, contextualTitles = 0, nativePosters = 0;
 const scopeTexts = new Map();
 let translatedPages = 0, topicalPages = 0;
 const homeArticle = elements.find((node) => node.tagName === "article" && (attr(node, "class") || "").split(/\s+/).includes("medical-guide"));
-assert.equal(attr(homeArticle, "lang"), page.lang, "Complete guide needs its own language");
-assert.equal(attr(homeArticle, "dir"), page.dir, "Complete guide needs its own direction");
+assert.equal(attr(homeArticle, "lang"), documentPolicy.lang, "Complete guide needs its own language");
+assert.equal(attr(homeArticle, "dir"), documentPolicy.dir, "Complete guide needs its own direction");
 const homeBody = elements.find((node) => node.tagName === "body");
-assert.equal(attr(homeBody, "lang"), page.lang, "Shared UI needs its authored language");
-assert.equal(attr(homeBody, "dir"), page.dir, "Shared UI needs its authored direction");
+assert.equal(attr(homeBody, "lang"), documentPolicy.lang, "Shared UI needs its authored language");
+assert.equal(attr(homeBody, "dir"), documentPolicy.dir, "Shared UI needs its authored direction");
 assert(!elements.some((node) => node.tagName === "link" && attr(node, "hreflang")), "Homepage must not claim unrelated translations");
 assert(!elements.some((node) => node.tagName === "meta" && attr(node, "property") === "og:locale:alternate"),
   "Multilingual sections do not make the complete homepage available as translated equivalents");
-const declaredSocialLocales = [page.lang.replace("-", "_"), ...page.socialAlternateLocales];
+const declaredSocialLocales = [documentPolicy.lang.replace("-", "_"), ...socialAlternateLocales];
 const socialLocale = (language) => {
   const normalized = language.replace(/^ckb(?=-|$)/, "ku");
   return /^[a-z]{2}-[A-Z]{2}$/.test(normalized) ? normalized.replace("-", "_")
@@ -305,8 +306,8 @@ for (const record of records) {
   assert.equal(attr(routeArticle, "lang"), record.lang, "Focused article language");
   assert.equal(attr(routeArticle, "dir"), record.dir, "Focused article direction");
   const routeBody = scoped.elements.find((node) => node.tagName === "body");
-  assert.equal(attr(routeBody, "lang"), page.lang, "Shared UI language must not inherit route language");
-  assert.equal(attr(routeBody, "dir"), page.dir, "Shared UI direction must not inherit route direction");
+  assert.equal(attr(routeBody, "lang"), documentPolicy.lang, "Shared UI language must not inherit route language");
+  assert.equal(attr(routeBody, "dir"), documentPolicy.dir, "Shared UI direction must not inherit route direction");
   const localeMeta = scoped.elements.find((node) => node.tagName === "meta" && attr(node, "property") === "og:locale");
   if (localeMeta) assert(/^[a-z]{2}_[A-Z]{2}$/.test(attr(localeMeta, "content")), "Open Graph locale must use ISO 639-1");
   const socialAlternates = scoped.elements.filter((node) => node.tagName === "meta" && attr(node, "property") === "og:locale:alternate")
@@ -390,7 +391,7 @@ while (queue.length) {
 assert.equal(reachable.size - 1, records.length, "Every sitemap topic must be reachable through actual native HTML links from home");
 const duplicateScopes = [...scopeTexts.values()].filter((paths) => paths.length > 1);
 console.log(JSON.stringify({ topicDiscoveryValidation: "PASS", reachableTopics: reachable.size - 1, maximumDepth, overviewPages, contextualTitles, nativePosters, duplicateScopes }));
-const translationMembers = (page.discovery?.translationGroups || []).flatMap((group) => group.members);
+const translationMembers = (discoveryPolicy.translationGroups || []).flatMap((group) => group.members);
 assert.equal(translatedPages, translationMembers.length, "Every authored translation member must be rendered once");
 assert.equal([...sitemapHtml.matchAll(/<xhtml:link\b/g)].length, records.reduce((total, record) => total + (record.alternates?.length || 0), 0),
   "Sitemap must publish every reciprocal language alternate");

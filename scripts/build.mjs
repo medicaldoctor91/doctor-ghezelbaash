@@ -2,13 +2,16 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
-const canonicalPaths = [
+const authoredPaths = [
   "src/content-source/page.md",
   "src/data/semantic/knowledge-graph.jsonld",
+  "src/content-source/llms-guide.md",
+  "src/config/site-policy.mjs",
+  "src/config/machine-resources.mjs",
 ];
-const canonicalHashes = () => Promise.all(canonicalPaths.map(async (file) =>
+const authoredHashes = () => Promise.all(authoredPaths.map(async (file) =>
   createHash("sha256").update(await readFile(file)).digest("hex")));
-const before = await canonicalHashes();
+const before = await authoredHashes();
 const steps = [
   ["scripts/generated-workspace.mjs", "reset"],
   ["scripts/generate-rdf.mjs"],
@@ -31,7 +34,7 @@ for (const args of steps) {
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status || 1);
 }
-const after = await canonicalHashes();
+const after = await authoredHashes();
 if (before.some((hash, index) => hash !== after[index]))
-  throw new Error("Build modified an authored canonical file");
-console.log(JSON.stringify({ dist: "PASS", canonicalFilesUnchanged: true }));
+  throw new Error("Build modified an authored content, graph or policy input");
+console.log(JSON.stringify({ dist: "PASS", canonicalFilesUnchanged: true, authoredInputsUnchanged: true }));
