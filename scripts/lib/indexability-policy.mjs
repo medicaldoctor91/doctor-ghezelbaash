@@ -3,6 +3,7 @@ import { reviewedRoutePurposes } from "./route-schema-policy.mjs";
 
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const reviewedPaths = new Set(reviewedRoutePurposes.map(({ path }) => path));
+const lowValuePaths = new Set(["/media-license", "/media-license-title"]);
 const INDEX_ROBOTS = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 const NOINDEX_ROBOTS = "noindex, follow";
 
@@ -44,12 +45,23 @@ export function applyIndexabilityPolicy(records) {
     const metrics = inspectScope(record.bodyHtml);
     let indexable = false, reason = "fragment-route";
 
-    if (record.pageType === "ProfilePage" || entityTypes.has("Person")) {
+    if (lowValuePaths.has(record.path)) {
+      reason = "low-value-machine-disclosure";
+    } else if (record.navigation?.equivalentTo && paths.has(record.navigation.equivalentTo)) {
+      reason = "equivalent-heading-route";
+    } else if (record.pageType === "ProfilePage" || entityTypes.has("Person")) {
       indexable = true; reason = "physician-profile";
     } else if (record.pageType === "ContactPage" || entityTypes.has("MedicalClinic") || entityTypes.has("PhysiciansOffice")) {
       indexable = true; reason = "clinic-contact";
     } else if (entityTypes.has("Question") && values(entity?.acceptedAnswer).length) {
-      indexable = true; reason = "authored-question-answer";
+      // These routes repeat answers already embedded in the comprehensive guide.
+      // Keep only reviewed reciprocal language equivalents indexable; otherwise
+      // consolidate ranking signals into the containing medical/topic pages.
+      if (values(record.alternates).length) {
+        indexable = true; reason = "reviewed-language-equivalent";
+      } else {
+        reason = "embedded-question-route";
+      }
     } else if (reviewedPaths.has(record.path)) {
       indexable = true; reason = "reviewed-editorial-purpose";
     } else if (values(record.alternates).length) {
