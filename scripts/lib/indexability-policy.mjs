@@ -73,6 +73,48 @@ export function applyIndexabilityPolicy(records) {
   });
 }
 
+const navigationLink = (record) => ({ path: record.path, title: record.title, lang: record.lang });
+
+/**
+ * Give promoted routes their own coherent native-link tree. A KEEP route must
+ * not depend on a NOINDEX intermediary for discovery: its effective parent is
+ * the nearest KEEP ancestor and its effective children are the KEEP descendants
+ * for which it is that nearest ancestor. NOINDEX routes retain their authored
+ * structural navigation for reader continuity and stable direct entry.
+ */
+export function promoteIndexableNavigation(records) {
+  if (!Array.isArray(records) || records.some((record) => !record.navigation || typeof record.indexable !== "boolean"))
+    throw new Error("Promoted navigation requires classified routes with authored navigation");
+  const byPath = new Map(records.map((record) => [record.path, record]));
+  if (byPath.size !== records.length) throw new Error("Promoted navigation requires unique routes");
+  const promoted = new Set(records.filter((record) => record.indexable).map((record) => record.path));
+  const parentByPath = new Map();
+  const childrenByPath = new Map([...promoted].map((path) => [path, []]));
+
+  for (const record of records) {
+    if (!record.indexable) continue;
+    const parent = [...record.navigation.ancestors].reverse().find((entry) => promoted.has(entry.path));
+    parentByPath.set(record.path, parent?.path);
+    if (parent) childrenByPath.get(parent.path).push(record);
+  }
+  for (const children of childrenByPath.values())
+    children.sort((left, right) => left.navigation.sourceOrder - right.navigation.sourceOrder || left.path.localeCompare(right.path));
+
+  return records.map((record) => {
+    if (!record.indexable) return record;
+    const parentPath = parentByPath.get(record.path);
+    const ancestors = record.navigation.ancestors.filter((entry) => promoted.has(entry.path));
+    const navigation = {
+      ...record.navigation,
+      ...(parentPath ? { parent: navigationLink(byPath.get(parentPath)) } : { parent: undefined }),
+      children: childrenByPath.get(record.path).map(navigationLink),
+      ancestors,
+    };
+    if (!parentPath) delete navigation.parent;
+    return { ...record, navigation };
+  });
+}
+
 export function applyIndexabilityMeta(html, record) {
   if (!record?.robots || typeof record.indexable !== "boolean")
     throw new Error("Indexability metadata requires a classified route");
