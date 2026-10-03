@@ -16,12 +16,13 @@ export function assertSingleHopDelivery(rows, canonicalUrl) {
   }
 }
 
-/** Native links must already name final URLs; entity IRIs are checked separately. */
+/** Native links must already name final browser URLs; entity IRIs are checked separately. */
 export function assertFinalNativeUrl(value, pageUrl, { rows, canonicalOrigin, resolveContentUrl, localUiFragment = false }) {
   const url = new URL(value, pageUrl);
   if (url.origin !== canonicalOrigin) return url;
   assert(!deliveryRuleFor(url.pathname, rows), `Native link must use its final URL: ${value}`);
-  if (!localUiFragment) assert.equal(resolveContentUrl(url.href, { absolute: true }), url.href,
+  const readerRootFragment = url.pathname === "/" && Boolean(url.hash);
+  if (!localUiFragment && !readerRootFragment) assert.equal(resolveContentUrl(url.href, { absolute: true }), url.href,
     `Native link must use its canonical content owner: ${value}`);
   return url;
 }
