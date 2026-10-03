@@ -13,6 +13,7 @@ import { contentRoutePaths } from "./lib/content-routes.mjs";
 import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs";
 import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
 import { renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
+import { externalizeNotFoundCss } from "./lib/not-found-css.mjs";
 import {
   canonicalHostAliasRows,
   canonicalMetadataAliasRows,
@@ -121,7 +122,9 @@ const answerAliases = deriveCanonicalAnswerTopology(canonicalGraph, canonicalLif
 const homeHtml = await readFile(path.join(dist, "index.html"), "utf8");
 const contentPaths = contentRoutePaths(homeHtml, canonicalLifecycle.canonicalUrl);
 const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, pageFrontmatter, canonicalLifecycle.canonicalUrl);
-for (const record of independentPages) await writeExact(record.file, renderIndependentPage(homeHtml, record));
+for (const record of independentPages) await writeExact(record.file, renderIndependentPage(homeHtml, record, {
+  declaredSocialLocales: pageFrontmatter.socialAlternateLocales,
+}));
 await writeFile(path.join(root, ".generated/independent-pages.json"), JSON.stringify(independentPages.map(({ bodyHtml, document, ...record }) => record)));
 const registeredSources = new Set([...legacyAliases, ...answerAliases].map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
@@ -174,6 +177,20 @@ await copyExact(
   path.posix.join(".generated/public/assets", activeAssetName),
   path.posix.join("assets", activeAssetName),
 );
+// Actual 404 responses can receive an upstream policy whose inline CSS hashes
+// lag a deployment. Its existing style-src 'self' still permits this exact sheet.
+const notFoundCss = externalizeNotFoundCss(await readFile(path.join(dist, "404.html"), "utf8"));
+for (const entry of await readdir(distAssetDirectory, { withFileTypes: true })) {
+  if (/^not-found\.[0-9a-f]{12}\.css$/.test(entry.name) && entry.name !== path.posix.basename(notFoundCss.assetPath)) {
+    if (!entry.isFile()) throw new Error("404 CSS destination is not a file: " + entry.name);
+    await rm(path.join(distAssetDirectory, entry.name));
+  }
+}
+await writeExact(notFoundCss.assetPath, notFoundCss.css);
+await writeExact("404.html", notFoundCss.html);
+await writeFile(path.join(root, ".generated/not-found-css.json"), JSON.stringify({
+  assetPath: notFoundCss.assetPath, ...notFoundCss.measurement,
+}, null, 2) + "\n");
 const generatedPublicEntries = (
   await readdir(generatedPublic, { withFileTypes: true })
 )
@@ -219,6 +236,7 @@ console.log(
       machineArtifacts: STATIC_ARTIFACTS.length,
       generatedPublicFiles: generatedPublicFiles.length + assetEntries.length,
       staleGeneratedAssetsRemoved: staleGeneratedAssets.length,
+      notFoundStylesheet: { assetPath: notFoundCss.assetPath, ...notFoundCss.measurement },
       stableMediaAliases: stableMedia.aliases.length,
       legacyAliases: legacyAliases.length,
       answerRedirects: answerAliases.length,

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseFragment } from "parse5";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
-import { validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { localizedText, validatePageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 
 const inputs = readCanonicalInputs();
@@ -46,6 +46,24 @@ test("homepage and dedicated profile revisions remain authored on their own cano
   assert(typed(authoredProfile, "ProfilePage"));
   assert.equal(authoredProfile.url, inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
   assert(!projected.some((node) => node["@id"] === profileId));
+});
+
+test("homepage retains authored clinic contact and service-area definitions without changing the source graph", () => {
+  const before = JSON.stringify(inputs.graph);
+  const projected = projection()["@graph"];
+  const byId = new Map(projected.map((node) => [node["@id"], node]));
+  const clinic = projected.find((node) => typed(node, "MedicalClinic"));
+  for (const ref of [clinic.contactPoint, clinic.areaServed].flat(2).filter(Boolean)) {
+    const id = typeof ref === "string" ? ref : ref["@id"];
+    const authored = inputs.graph["@graph"].find((node) => node["@id"] === id);
+    if (authored) {
+      const expected = structuredClone(authored);
+      if (expected.name !== undefined) expected.name = localizedText(expected.name);
+      assert.deepEqual(byId.get(id), expected);
+    }
+  }
+  assert(typed(byId.get(inputs.lifecycle.canonicalUrl + "online-consultation-contact-point"), "ContactPoint"));
+  assert.equal(JSON.stringify(inputs.graph), before);
 });
 
 test("HTML embeds one safe graph and a typed image creator", () => {

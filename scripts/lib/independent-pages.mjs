@@ -226,7 +226,8 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     if (entity === synthesized && topicalReferences.length) synthesized.about = topicalReferences;
     const pageType = typed(entity, "Person") ? "ProfilePage"
       : typed(entity, "VideoObject") ? "WebPage" : "MedicalWebPage";
-    const pageNode = { "@id": url + "#webpage", "@type": pageType, url, name: contextTitle, description,
+    const questionWithAnswer = typed(entity, "Question") && values(entity.acceptedAnswer).length > 0;
+    const pageNode = { "@id": url + "#webpage", "@type": questionWithAnswer ? [pageType, "FAQPage"] : pageType, url, name: contextTitle, description,
       inLanguage: language, isPartOf: [{ "@id": website["@id"] }, { "@id": homePage["@id"] }], author: { "@id": person["@id"] }, publisher: { "@id": person["@id"] },
       mainEntity: { "@id": entity["@id"] },
       about: uniqueReferences([{ "@id": person["@id"] }, ...topicalReferences]),
@@ -242,6 +243,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
     // Relevant outward relationships only: broad home hasPart/mentions would
     // accidentally turn every scoped page back into the complete graph.
     const relationKeys = ["acceptedAnswer", "suggestedAnswer", "creator", "publisher", "author", "address", "geo",
+      "potentialAction", "contactPoint", "areaServed",
       "openingHoursSpecification", "provider", "image", "logo", "primaryImageOfPage", "hasCourseInstance", "location",
       "instructor", "organizer", "reviewRating", "itemReviewed", "about", "isBasedOn", "citation", "hasPart",
       "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf", "recognizedBy", "identifier", "hasOccupation", "medicalSpecialty",
@@ -264,6 +266,12 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
         if (related) queue.push(related);
       }
     }
+    if (pageType === "ProfilePage") {
+      const authoredProfile = authoredById.get(pageNode["@id"]);
+      const primaryImage = authoredProfile?.primaryImageOfPage;
+      if (typed(authoredProfile, "ProfilePage") && typed(selected.get(primaryImage?.["@id"]), "ImageObject"))
+        pageNode.primaryImageOfPage = structuredClone(primaryImage);
+    }
     const document = { "@context": browserContext, "@graph": [...selected.values()] };
     assertRichResultsDocument(document, { primaryPageId: pageNode["@id"] });
     const imageUrls = [...new Set(parsed.elements.filter((node) => node.tagName === "img").map((node) => attr(node, "src"))
@@ -278,7 +286,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, { focusedViews
 
 /** Keep a focused route context visible after loading the shared guide. */
 let homeTemplate;
-export function renderIndependentPage(homeHtml, record) {
+export function renderIndependentPage(homeHtml, record, { declaredSocialLocales = [] } = {}) {
   if (homeTemplate?.source !== homeHtml) homeTemplate = { source: homeHtml, parsed: inspectHtml(homeHtml) };
   const parsed = homeTemplate.parsed;
   const article = parsed.guideArticles[0], location = article.sourceCodeLocation;
@@ -289,12 +297,16 @@ export function renderIndependentPage(homeHtml, record) {
     ckb: ["پیشاندانی ڕێبەری تەواو", "پەڕەی سەرەکی دکتۆر سەعید قزڵباش", "ڕێبەری تەواو بار دەکرێت…", "بارکردن سەرکەوتوو نەبوو؛ دووبارە هەوڵ بدەوە."],
   };
   const copy = copies[record.lang.split("-")[0]] || copies.fa;
-  const declaredLocales = parsed.elements.filter((node) => node.tagName === "meta" &&
-    ["og:locale", "og:locale:alternate"].includes(attr(node, "property"))).map((node) => attr(node, "content"));
-  const socialLanguage = record.lang.replace(/^ckb(?=-|$)/, "ku");
-  const regionalLocale = socialLanguage.replace("-", "_");
-  const socialLocale = /^[a-z]{2}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
-    : declaredLocales.find((locale) => locale?.startsWith(socialLanguage.split("-")[0] + "_"));
+  const declaredLocales = [...declaredSocialLocales, ...parsed.elements.filter((node) => node.tagName === "meta" &&
+    ["og:locale", "og:locale:alternate"].includes(attr(node, "property"))).map((node) => attr(node, "content"))]
+    .filter((locale) => typeof locale === "string" && /^[a-z]{2}_[A-Z]{2}$/.test(locale));
+  const socialLocaleForLanguage = (language) => {
+    const socialLanguage = language.replace(/^ckb(?=-|$)/, "ku");
+    const regionalLocale = socialLanguage.replace("-", "_");
+    return /^[a-z]{2}_[A-Z]{2}$/.test(regionalLocale) ? regionalLocale
+      : declaredLocales.find((locale) => locale?.startsWith(socialLanguage.split("-")[0] + "_"));
+  };
+  const socialLocale = socialLocaleForLanguage(record.lang);
   let html = homeHtml.slice(0, location.startTag.endOffset) +
     '<header id="route-context" data-route-context lang="' + escape(record.lang) + '" dir="' + escape(record.dir) +
     '"><h1 id="route-page-title">' + escape(record.contextTitle || record.title) + '</h1><p>' + escape(record.description) +
@@ -314,7 +326,7 @@ export function renderIndependentPage(homeHtml, record) {
   html = html.replace(/<meta\b([^>]*)>/gi, (whole, attrs) => {
     const key = /(?:name|property)=["']([^"']+)["']/i.exec(attrs)?.[1];
     if (key === "og:locale" && !socialLocale) return "";
-    if (key === "og:locale:alternate" && /content=["\']([^"\']+)["\']/i.exec(attrs)?.[1] === socialLocale) return "";
+    if (key === "og:locale:alternate") return "";
     const changed = { "og:title": record.documentTitle, "twitter:title": record.documentTitle, "og:description": record.description,
       "twitter:description": record.description, "og:url": record.canonicalUrl, "twitter:url": record.canonicalUrl,
       "og:type": record.pageType === "ProfilePage" ? "profile" : "article", "og:locale": socialLocale };
@@ -332,7 +344,10 @@ export function renderIndependentPage(homeHtml, record) {
     locales.add(hrefLang.toLowerCase());
     return '<link rel="alternate" hreflang="' + escape(hrefLang) + '" href="' + escape(href) + '">';
   }).join("");
+  const socialAlternateMetas = [...new Set(declaredAlternates.map(({ hrefLang }) => socialLocaleForLanguage(hrefLang))
+    .filter((locale) => locale && locale !== socialLocale))]
+    .map((locale) => '<meta property="og:locale:alternate" content="' + escape(locale) + '">').join("");
   html = html.replace(/<link\b[^>]*\bhreflang=["\'][^"\']*["\'][^>]*>/gi, "");
-  return projectFocusedMedia(html.replace("</head>", alternateLinks + '<script id="schema-core-mainentity" type="application/ld+json">' +
+  return projectFocusedMedia(html.replace("</head>", alternateLinks + socialAlternateMetas + '<script id="schema-core-mainentity" type="application/ld+json">' +
     scriptJson(record.document) + "</script></head>"), record.canonicalUrl);
 }

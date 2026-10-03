@@ -258,6 +258,14 @@ const homeBody = elements.find((node) => node.tagName === "body");
 assert.equal(attr(homeBody, "lang"), page.lang, "Shared UI needs its authored language");
 assert.equal(attr(homeBody, "dir"), page.dir, "Shared UI needs its authored direction");
 assert(!elements.some((node) => node.tagName === "link" && attr(node, "hreflang")), "Homepage must not claim unrelated translations");
+assert(!elements.some((node) => node.tagName === "meta" && attr(node, "property") === "og:locale:alternate"),
+  "Multilingual sections do not make the complete homepage available as translated equivalents");
+const declaredSocialLocales = [page.lang.replace("-", "_"), ...page.socialAlternateLocales];
+const socialLocale = (language) => {
+  const normalized = language.replace(/^ckb(?=-|$)/, "ku");
+  return /^[a-z]{2}-[A-Z]{2}$/.test(normalized) ? normalized.replace("-", "_")
+    : declaredSocialLocales.find((locale) => locale.startsWith(normalized.split("-")[0] + "_"));
+};
 const sitemapHtml = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 for (const record of records) {
   const source = await readFile(path.join(dist, record.file), "utf8");
@@ -277,6 +285,12 @@ for (const record of records) {
   assert.equal(attr(routeBody, "dir"), page.dir, "Shared UI direction must not inherit route direction");
   const localeMeta = scoped.elements.find((node) => node.tagName === "meta" && attr(node, "property") === "og:locale");
   if (localeMeta) assert(/^[a-z]{2}_[A-Z]{2}$/.test(attr(localeMeta, "content")), "Open Graph locale must use ISO 639-1");
+  const socialAlternates = scoped.elements.filter((node) => node.tagName === "meta" && attr(node, "property") === "og:locale:alternate")
+    .map((node) => attr(node, "content"));
+  const reviewedSocialAlternates = [...new Set(actualAlternates.map(({ hrefLang }) => socialLocale(hrefLang))
+    .filter((locale) => locale && locale !== attr(localeMeta, "content")))];
+  assert.deepEqual(socialAlternates, reviewedSocialAlternates,
+    "Social locale alternates must describe only reviewed translations of this page");
   assert(scoped.elements.some((node) => attr(node, "name") === "robots" && !/\bnoindex\b/.test(attr(node, "content"))));
   assert(scopedIds.has(record.htmlId), "Focused initial content lost destination: " + record.path);
   assert(source.includes('data-route-view="focused"'), "Direct entry must retain its focused view");
@@ -303,6 +317,14 @@ for (const record of records) {
   const pageGraph = new Map(documents[0]["@graph"].map((node) => [node["@id"], node]));
   const pageEntity = pageGraph.get(pageId), refs = [pageEntity.mainEntity].flat();
   assert.equal(pageEntity.url, record.canonicalUrl);
+  const mainEntity = pageGraph.get(record.entityId);
+  assert.equal(typeHas(pageEntity, "FAQPage"), typeHas(mainEntity, "Question") && Boolean(mainEntity.acceptedAnswer),
+    "Medical question pages must preserve their authored FAQ semantics");
+  if (typeHas(pageEntity, "ProfilePage")) {
+    const authoredProfile = authoredById.get(pageId);
+    assert.deepEqual(pageEntity.primaryImageOfPage, authoredProfile.primaryImageOfPage,
+      "Physician profile must retain its existing canonical portrait relation");
+  }
   const breadcrumb = pageGraph.get(pageEntity.breadcrumb["@id"]);
   assert.deepEqual(breadcrumb.itemListElement, deriveTopicBreadcrumbItems(record, records,
     { canonicalUrl: lifecycle.canonicalUrl, homeTitle: breadcrumb.itemListElement[0].name }), "Authored topic breadcrumb lineage");

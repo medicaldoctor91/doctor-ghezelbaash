@@ -7,6 +7,7 @@ import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src
 import { canonicalLifecycle as release, pageFrontmatter, pageJsonLd } from "../src/lib/canonical-inputs.mjs";
 import { validatePageJsonLd } from "../src/lib/page-discovery-jsonld.mjs";
 import { resolveBuildIdentity } from "../src/lib/build-identity.mjs";
+import { assertNotFoundStylesheet, notFoundStylesheetPath } from "./lib/not-found-css.mjs";
 
 import { canonicalHostAliasRows, loadAliasRegistry } from "./lib/redirect-registry.mjs";
 
@@ -24,6 +25,12 @@ const html = await readFile(path.join(dist, "index.html"), "utf8");
 const notFound = await readFile(path.join(dist, "404.html"), "utf8");
 assertDocumentContract(html);
 inspectHtml(notFound);
+const notFoundCssPath = notFoundStylesheetPath(notFound);
+assertNotFoundStylesheet(notFound, await readFile(path.join(dist, notFoundCssPath)));
+const notFoundCssAssets = (await readdir(path.join(dist, "assets")))
+  .filter((name) => /^not-found\.[0-9a-f]{12}\.css$/.test(name));
+if (notFoundCssAssets.length !== 1 || notFoundCssAssets[0] !== path.basename(notFoundCssPath))
+  throw new Error("404 fingerprint stylesheet inventory drift");
 
 const activeCss = (html.match(/\/assets\/site\.[0-9a-f]{12}\.css/) ||
   [])[0]?.slice(1);
@@ -172,7 +179,7 @@ if (
   notFoundScripts.length !== 1 ||
   !/id=["']deferred-stylesheet-loader["']/i.test(notFoundScripts[0].attrs) ||
   styleBlocks.length < 1 ||
-  notFoundStyles.length < 1
+  notFoundStyles.length !== 0
 )
   throw new Error(
     `Unexpected inline assets: styles=${styleBlocks.length}, ld=${ldScripts.length}, exec=${execScripts.length}, exec404=${notFoundScripts.length}`,
