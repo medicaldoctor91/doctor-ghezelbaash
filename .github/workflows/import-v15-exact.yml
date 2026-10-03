@@ -1,0 +1,43 @@
+name: Import exact canonical graph v15
+
+on:
+  push:
+    branches:
+      - chatgpt/v15-exact-import-20261003
+    paths:
+      - .v15-import/READY
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout import branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct and verify exact v15 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .v15-import/chunk-* | base64 --decode | bunzip2 > /tmp/v15.jsonld
+          test "$(sha256sum /tmp/v15.jsonld | awk '{print $1}')" = "134b852f000324277aa5410cb95e21bb571a2ed81b9a39cb9687693dd4225698"
+          test "$(git hash-object /tmp/v15.jsonld)" = "6083d37c19b86792de3cb8337acfe2d6ac490f63"
+          test "$(wc -c < /tmp/v15.jsonld | tr -d ' ')" = "1801557"
+          cp /tmp/v15.jsonld src/data/semantic/knowledge-graph.jsonld
+
+      - name: Commit exact replacement and remove import scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r .v15-import
+          git rm .github/workflows/import-v15-exact.yml
+          git add src/data/semantic/knowledge-graph.jsonld
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Replace canonical graph with exact v15 source"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
