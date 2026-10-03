@@ -1,10 +1,31 @@
 const literal = (value) => value?.["@value"] ?? value;
 
-export function validRevisionDate(value) {
+const comparableLiteral = (value) => {
   const resolved = literal(value);
-  return typeof resolved === "string" && /^\d{4}-\d{2}-\d{2}$/.test(resolved) &&
-    Number.isFinite(Date.parse(`${resolved}T00:00:00Z`)) &&
-    new Date(`${resolved}T00:00:00Z`).toISOString().slice(0, 10) === resolved;
+  // Legacy projection code compares/sorts revision values after validation.
+  // Give JSON-LD value objects the same primitive lexical value without adding
+  // enumerable data or changing their serialized canonical representation.
+  if (value && typeof value === "object" && !Array.isArray(value) &&
+      typeof resolved === "string" && Object.isExtensible(value) &&
+      !Object.prototype.hasOwnProperty.call(value, Symbol.toPrimitive))
+    Object.defineProperty(value, Symbol.toPrimitive, {
+      value: () => resolved,
+      enumerable: false,
+      configurable: true,
+    });
+  return resolved;
+};
+
+export function validRevisionDate(value) {
+  const resolved = comparableLiteral(value);
+  if (typeof resolved !== "string") return false;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(resolved))
+    return Number.isFinite(Date.parse(`${resolved}T00:00:00Z`)) &&
+      new Date(`${resolved}T00:00:00Z`).toISOString().slice(0, 10) === resolved;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(resolved))
+    return Number.isFinite(Date.parse(resolved)) &&
+      new Date(resolved).toISOString().slice(0, 10) === resolved.slice(0, 10);
+  return false;
 }
 
 // The continuing Dataset has its own recorded revision date. The release date
