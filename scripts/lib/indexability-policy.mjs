@@ -26,11 +26,11 @@ const inspectScope = (html) => {
 };
 
 /**
- * Separate routability from indexability. The fixed corpus can keep stable,
- * directly addressable fragments without asking search engines to index every
- * heading-derived document. Decisions are based on authored entity role,
- * reviewed editorial purpose, genuine translation relationships and corpus
- * substance—not URL shape alone.
+ * Separate routability from indexability. The fixed corpus keeps stable direct
+ * entries, while search discovery is intentionally limited to explicit entity
+ * pages, reviewed editorial purposes and reviewed reciprocal translations.
+ * Heading depth or arbitrary word-count thresholds never create new indexable
+ * pages: derived excerpts remain crawlable NOINDEX views of stronger parents.
  */
 export function applyIndexabilityPolicy(records) {
   if (!Array.isArray(records) || !records.length)
@@ -43,7 +43,7 @@ export function applyIndexabilityPolicy(records) {
     const entity = nodes.find((node) => node?.["@id"] === record.entityId);
     const entityTypes = new Set(values(entity?.["@type"]));
     const metrics = inspectScope(record.bodyHtml);
-    let indexable = false, reason = "fragment-route";
+    let indexable = false, reason = "derived-fragment-route";
 
     if (lowValuePaths.has(record.path)) {
       reason = "low-value-machine-disclosure";
@@ -54,9 +54,9 @@ export function applyIndexabilityPolicy(records) {
     } else if (record.pageType === "ContactPage" || entityTypes.has("MedicalClinic") || entityTypes.has("PhysiciansOffice")) {
       indexable = true; reason = "clinic-contact";
     } else if (entityTypes.has("Question") && values(entity?.acceptedAnswer).length) {
-      // These routes repeat answers already embedded in the comprehensive guide.
-      // Keep only reviewed reciprocal language equivalents indexable; otherwise
-      // consolidate ranking signals into the containing medical/topic pages.
+      // Answers already live inside the comprehensive authored guide. Only the
+      // explicitly reviewed reciprocal translations receive their own search
+      // surface; all other question routes consolidate into their topic page.
       if (values(record.alternates).length) {
         indexable = true; reason = "reviewed-language-equivalent";
       } else {
@@ -66,14 +66,6 @@ export function applyIndexabilityPolicy(records) {
       indexable = true; reason = "reviewed-editorial-purpose";
     } else if (values(record.alternates).length) {
       indexable = true; reason = "reviewed-language-equivalent";
-    } else if (
-      record.pageType === "MedicalWebPage" &&
-      record.scopeKind === "complete-region" &&
-      metrics.textChars >= 3000 &&
-      metrics.wordCount >= 500 &&
-      metrics.headingCount >= 2
-    ) {
-      indexable = true; reason = "substantive-medical-region";
     }
 
     return {
