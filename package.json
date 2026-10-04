@@ -11,7 +11,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "calibrate:layout": "node scripts/calibrate-render-chunks.mjs",
-    "validate:dist": "node scripts/validate-dist.mjs"
+    "validate:dist": "node scripts/validate-final-dist.mjs",
+    "validate:live": "node scripts/validate-live-public.mjs"
   },
   "devDependencies": {
     "astro": "7.2.8",
