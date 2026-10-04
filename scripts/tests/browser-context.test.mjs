@@ -17,13 +17,12 @@ test("browser contexts preserve and independently clone source term definitions"
   assert.throws(() => browserContextFor({}), /requires @context/);
 });
 
-test("retained browser relations expand in their source ontology and OWL namespaces", async () => {
+test("retained canonical relations expand in their source ontology and OWL namespaces", async () => {
   const sourceId = "https://example.org/physician";
   const evidenceId = "https://example.org/source";
   const equivalentId = "https://example.org/equivalent-physician";
   const context = browserContextFor(inputs.graph);
-  // The authoritative inline source context is self-contained. Test its actual
-  // definitions without fetching the accompanying Schema.org discovery URL.
+  // Canonical semantics stay self-contained outside the Google-facing page projection.
   const expanded = await jsonld.expand({
     "@context": context.slice(1),
     "@id": sourceId,
@@ -35,11 +34,16 @@ test("retained browser relations expand in their source ontology and OWL namespa
   assert(!("https://schema.org/evidencedBy" in expanded[0]));
 });
 
-test("browser projection formats source RDF literals without mutating canonical facts", () => {
+test("published discovery uses the simple Schema.org context without mutating canonical facts", () => {
   const before = JSON.stringify(inputs.graph);
   const projected = projectPageJsonLd(inputs.graph)[0].document;
-  assert.deepEqual(projected["@context"], browserContextFor(inputs.graph));
-  assert(!JSON.stringify(projected["@graph"]).includes('"@value"'));
+  assert.equal(projected["@context"], "https://schema.org");
+  const raw = JSON.stringify(projected["@graph"]);
+  assert(!raw.includes('"@value"'));
+  for (const prefix of ["prov:", "dcterms:", "skos:", "owl:"])
+    assert(!raw.includes('"' + prefix), "Published discovery must not expose canonical prefix " + prefix);
+  for (const property of ["evidencedBy", "evidenceBundle", "supportedBy", "contributesToAuthorityHub"])
+    assert(!raw.includes('"' + property + '":'), "Published discovery must not expose custom ontology property " + property);
   assert.equal(JSON.stringify(inputs.graph), before);
 });
 
