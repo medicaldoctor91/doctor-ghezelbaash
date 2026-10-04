@@ -4,6 +4,7 @@ const values = (value) => Array.isArray(value) ? value : value == null ? [] : [v
 const hasType = (node, type) => values(node?.["@type"]).includes(type);
 const fail = (message) => { throw new Error("Page rich-result contract: " + message); };
 const GOOGLE_SCHEMA_CONTEXT = "https://schema.org";
+const GENERATION_CONTEXT_MARKER = Symbol.for("ghezelbaash.google-discovery-generation-context");
 const text = (value, label) => {
   if (typeof value !== "string" || !value.trim()) fail(label + " must be nonempty Text");
   return value;
@@ -83,21 +84,26 @@ const googleValue = (value, kinds) => {
   return output;
 };
 
+/** Mark a rich canonical context as generation-only without serializing the marker. */
+export function markGoogleDiscoveryGenerationContext(context) {
+  if (!Array.isArray(context)) fail("generation context must be an array");
+  Object.defineProperty(context, GENERATION_CONTEXT_MARKER, { value: true, enumerable: false });
+  return context;
+}
+
 /**
- * Normalize the page-only discovery document at the publication boundary.
- * Canonical RDF keeps its authored namespaces; HTML exposes one compact
+ * Normalize only an in-memory generation document at the publication boundary.
+ * Canonical RDF keeps its authored namespaces; serialized HTML exposes one compact
  * Schema.org context and removes canonical-only ontology terms/types.
- * The operation is idempotent and intentionally mutates the publication
- * document so every existing caller serializes the normalized form.
  */
 export function normalizeGoogleDiscoveryDocument(document) {
   const context = document?.["@context"];
   if (!(context === GOOGLE_SCHEMA_CONTEXT || Array.isArray(context) && context.includes(GOOGLE_SCHEMA_CONTEXT)) ||
       !Array.isArray(document?.["@graph"]))
     fail("one Schema.org discovery graph is required");
-  // A document that already crossed the publication boundary must retain the
-  // same node objects so subsequent validation cannot hide caller mutations.
   if (context === GOOGLE_SCHEMA_CONTEXT) return document;
+  if (!context[GENERATION_CONTEXT_MARKER])
+    fail("published JSON-LD must use the public Schema.org context");
   const kinds = contextKinds(context);
   const graph = document["@graph"].map((node) => googleValue(node, kinds))
     .filter((node) => node && values(node["@type"]).length);
@@ -108,12 +114,14 @@ export function normalizeGoogleDiscoveryDocument(document) {
 
 /**
  * Checks this site's published discovery graph, not Google's ranking or live
- * crawler access. Required ProfilePage/VideoObject/LocalBusiness fields and
- * the site's complete authored clinic address and image provenance must survive projection.
+ * crawler access. Generation-only marked contexts are normalized before serialization;
+ * unmarked parsed/published array contexts are rejected rather than repaired.
  */
 export function assertRichResultsDocument(document, { primaryPageId } = {}) {
-  normalizeGoogleDiscoveryDocument(document);
-  if (document["@context"] !== GOOGLE_SCHEMA_CONTEXT || !Array.isArray(document["@graph"]))
+  const incomingContext = document?.["@context"];
+  if (Array.isArray(incomingContext) && incomingContext[GENERATION_CONTEXT_MARKER])
+    normalizeGoogleDiscoveryDocument(document);
+  if (document?.["@context"] !== GOOGLE_SCHEMA_CONTEXT || !Array.isArray(document?.["@graph"]))
     fail("published JSON-LD must use the public Schema.org context");
   const nodes = document["@graph"], byId = new Map();
   for (const node of nodes) {
