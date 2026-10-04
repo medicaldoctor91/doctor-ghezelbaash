@@ -24,11 +24,13 @@ const steps = [
   ["scripts/materialize-static-artifacts.mjs"],
   ["scripts/generate-deployment-headers.mjs"],
   ["scripts/validate-dist.mjs"],
+  ["scripts/prune-development-redirects.mjs"],
   ["scripts/write-dist-manifest.mjs"],
 ];
 
 // One finite static distribution: derive its published formats, compile the
-// document, materialize assets and validate the actual output in that order.
+// document, materialize assets, validate the complete source projection, then
+// remove development-only path aliases before fingerprinting the final dist.
 for (const args of steps) {
   const result = spawnSync(process.execPath, args, {
     stdio: "inherit",
