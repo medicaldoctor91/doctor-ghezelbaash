@@ -5555,12 +5555,6 @@
       "reason": "Subordinate heading, question or alias belongs to its nearest retained authored source scope; preserve the original reading fragment."
     },
     {
-      "path": "/saeed-ghezelbash",
-      "decision": "301_REDIRECT",
-      "target": "/#saeed-ghezelbash",
-      "reason": "Consolidate the duplicate physician profile into the primary homepage while preserving the persistent physician entity IRI."
-    },
-    {
       "path": "/saeed-ghezelbash-clinic-contact-and-location",
       "decision": "KEEP",
       "target": "/saeed-ghezelbash-clinic-contact-and-location",

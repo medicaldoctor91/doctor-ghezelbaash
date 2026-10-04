@@ -24,7 +24,7 @@ https://:version.:project.pages.dev/*
   Cloudflare-CDN-Cache-Control: public, max-age=300, stale-if-error=86400
   Content-Security-Policy: {{MAIN_CSP}}
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", {{HTTP_RESOURCE_LINKS}}
-  Link: <https://www.ghezelbaash.ir/>; rel="author", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", <https://www.ghezelbaash.ir/graph.jsonld/dataset>; rel="about"
+  Link: <https://www.ghezelbaash.ir/>; rel="author", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", <https://www.ghezelbaash.ir/graph.jsonld/dataset>; rel="about"
 
 /404.html
   Content-Type: text/html; charset=utf-8
@@ -56,7 +56,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -68,7 +68,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/graph.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/graph.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -80,7 +80,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/entity-facts.csv>; rel="canonical", <https://www.ghezelbaash.ir/entity-facts.csv-metadata.json>; rel="describedby"; type="application/csvm+json", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/entity-facts.csv>; rel="canonical", <https://www.ghezelbaash.ir/entity-facts.csv-metadata.json>; rel="describedby"; type="application/csvm+json", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -92,7 +92,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/entity-facts.csv-metadata.json>; rel="canonical", <https://www.ghezelbaash.ir/entity-facts.csv>; rel="describes"; type="text/csv", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/entity-facts.csv-metadata.json>; rel="canonical", <https://www.ghezelbaash.ir/entity-facts.csv>; rel="describes"; type="text/csv", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -104,7 +104,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/answers.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/answers.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -116,7 +116,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/fact-map.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/fact-map.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -128,7 +128,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/knowledge.xml>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/knowledge.xml>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -140,7 +140,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/llms.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/llms.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -152,7 +152,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -164,7 +164,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -176,7 +176,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/datapackage.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/datapackage.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -188,7 +188,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/linkset.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/linkset.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -200,7 +200,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/void.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/void.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -212,7 +212,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/dcat.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/dcat.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -224,7 +224,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/croissant.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/croissant.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -237,7 +237,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/provenance.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/provenance.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -249,7 +249,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/evidence-snapshot.json>; rel="canonical", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/evidence-snapshot.json>; rel="canonical", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -261,7 +261,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/shapes.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.ttl>; rel="describedby"; type="text/turtle", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/shapes.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.ttl>; rel="describedby"; type="text/turtle", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -272,7 +272,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
-  Link: <https://www.ghezelbaash.ir/doctor.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about"
+  Link: <https://www.ghezelbaash.ir/doctor.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
   Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
@@ -323,7 +323,7 @@ https://:version.:project.pages.dev/*
 /media/images/physician/master/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800, stale-if-error=2592000
-  Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/saeed-ghezelbash>; rel="about", <https://www.wikidata.org/entity/Q140287622>; rel="related", <https://www.google.com/search?kgmid=/g/11nqdfk76c>; rel="related", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
+  Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.wikidata.org/entity/Q140287622>; rel="related", <https://www.google.com/search?kgmid=/g/11nqdfk76c>; rel="related", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 

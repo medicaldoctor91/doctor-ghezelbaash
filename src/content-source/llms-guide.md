@@ -2,7 +2,7 @@
 
 > Official website of Mohammad Saeed Ghezelbash (دکتر سعید قزلباش), an aesthetic physician in Kermanshah, Iran. This guide links his identity, clinical content, authored works and physician-owned clinic through a comprehensive homepage, independently canonical topic entry URLs and first-party machine-readable projections. All topic URLs share the same single-page reader and the same physician entity.
 
-Canonical page: https://www.ghezelbaash.ir/ Primary entity: https://www.ghezelbaash.ir/saeed-ghezelbash. The physician is the author, creator, publisher and owner of this first-party Dataset; the clinic and structured-data project are distinct supporting entities. Clinic identifiers, location and reputation describe the clinic, not the person.
+Canonical page: https://www.ghezelbaash.ir/ Primary entity: https://www.ghezelbaash.ir/#saeed-ghezelbash. The physician is the author, creator, publisher and owner of this first-party Dataset; the clinic and structured-data project are distinct supporting entities. Clinic identifiers, location and reputation describe the clinic, not the person.
 
 Dataset: Dr. Saeed Ghezelbash Public Knowledge Graph, release base 1.3.3, https://www.ghezelbaash.ir/graph.jsonld/dataset. License: https://creativecommons.org/licenses/by/4.0/. The website serves the current build; Zenodo preserves an immutable release snapshot and its concept DOI identifies the version lineage. A shared release label alone does not establish byte equality between a current build and an archive. GitHub and Hugging Face provide first-party source and distribution access, not independent corroboration.
 
