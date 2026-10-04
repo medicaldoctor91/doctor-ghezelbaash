@@ -213,7 +213,7 @@ export function sourceNavigationUrl(value, { absolute = false, policy = URL_ARCH
   return resolveContentUrl(value, { absolute, policy });
 }
 
-/** Authored noncanonical paths are root-fragment navigation aliases, not HTTP resources. */
+/** Internal authored navigation keeps the comprehensive reader's root fragments. */
 export function fragmentRows(policy = URL_ARCHITECTURE) {
   const retired = new Set(policy.retiredPaths);
   return policy.decisions
@@ -221,10 +221,9 @@ export function fragmentRows(policy = URL_ARCHITECTURE) {
     .map((decision) => ({ source: decision.path, target: sourceNavigationUrl(decision.path, { policy }) }));
 }
 
-/** Only explicitly retired canonical-source paths are emitted as HTTP redirects. */
+/** Historical path requests resolve to their final canonical owner in one hop. */
 export function redirectRows(policy = URL_ARCHITECTURE) {
-  const retired = new Set(policy.retiredPaths);
   return policy.decisions
-    .filter((decision) => decision.decision === "301_REDIRECT" && retired.has(decision.path))
+    .filter((decision) => decision.decision === "301_REDIRECT")
     .map((decision) => ({ source: decision.path, target: decision.target, statusCode: 301 }));
 }

@@ -105,6 +105,23 @@ export function deriveIndependentPages(html, graph, canonicalUrl, {
       throw new Error("Invalid declared focused view: " + view.path);
     views.set(view.path, view);
   }
+  const disclosureForView = (view) => {
+    const sourceHeading = byHtmlId.get(view.sourceHeading);
+    if (!/^h[1-6]$/.test(sourceHeading?.tagName || "") || !sourceHeading.sourceCodeLocation)
+      throw new Error("Declared disclosure view lacks its source heading: " + view.path);
+    const level = Number(sourceHeading.tagName.slice(1));
+    const next = headings.find((node) => node.sourceCodeLocation.startOffset > sourceHeading.sourceCodeLocation.startOffset &&
+      Number(node.tagName.slice(1)) <= level);
+    let container = sourceHeading.parentNode;
+    while (container && !["section", "header", "article"].includes(container.tagName)) container = container.parentNode;
+    const boundary = Math.min(next?.sourceCodeLocation.startOffset ?? html.length,
+      container?.sourceCodeLocation?.endTag?.startOffset ?? html.length);
+    const disclosure = inspected.elements.find((node) => node.tagName === "details" &&
+      node.sourceCodeLocation?.startOffset >= sourceHeading.sourceCodeLocation.endOffset &&
+      node.sourceCodeLocation.endOffset <= boundary);
+    if (!disclosure) throw new Error("Declared disclosure view lacks its authored disclosure: " + view.path);
+    return disclosure;
+  };
   return paths.map((route) => {
     const resource = resourceByPath.get(route);
     const htmlId = resource.htmlId, target = byHtmlId.get(htmlId), url = origin + route;
@@ -163,6 +180,16 @@ export function deriveIndependentPages(html, graph, canonicalUrl, {
       if (focusedView) break;
       if (child.path === route || child.scope === "media") continue;
       const node = byHtmlId.get(child.htmlId), location = node?.sourceCodeLocation;
+      const childView = views.get(child.path);
+      if (childView) {
+        // An empty alias names a bounded disclosure, not just the alias span.
+        // Its disclosure can be inside this parent while the alias precedes
+        // the parent's heading; subtract both owned intervals independently.
+        for (const owned of [location, disclosureForView(childView).sourceCodeLocation])
+          if (owned && owned.startOffset > start && owned.endOffset <= end)
+            cuts.push({ start: owned.startOffset, end: owned.endOffset });
+        continue;
+      }
       if (!location || location.startOffset <= start || location.startOffset >= end) continue;
       let stop = location.endOffset;
       if (/^h[1-6]$/.test(node.tagName)) {
@@ -211,9 +238,7 @@ export function deriveIndependentPages(html, graph, canonicalUrl, {
         throw new Error("Declared historical view has no readable source disclosure: " + route);
       bodyHtml = html.slice(target.sourceCodeLocation.startOffset, target.sourceCodeLocation.endOffset) +
         bodyHtml.slice(location.startOffset, location.endOffset);
-      const originalDisclosure = inspected.elements.find((node) => node.tagName === "details" &&
-        node.sourceCodeLocation?.startOffset >= start && node.sourceCodeLocation.endOffset <= end);
-      if (!originalDisclosure) throw new Error("Historical reader scope has no authored disclosure");
+      const originalDisclosure = disclosureForView(focusedView);
       primaryIntervals = [
         { start: target.sourceCodeLocation.startOffset, end: target.sourceCodeLocation.endOffset },
         { start: originalDisclosure.sourceCodeLocation.startOffset, end: originalDisclosure.sourceCodeLocation.endOffset },
@@ -401,8 +426,7 @@ export function renderIndependentPage(homeHtml, record, { declaredSocialLocales 
   const socialLocale = socialLocaleForLanguage(record.lang);
   let html = homeHtml.slice(0, location.startTag.endOffset) +
     '<header id="route-context" data-route-context lang="' + escape(record.lang) + '" dir="' + escape(record.dir) +
-    '"><h1 id="route-page-title">' + escape(record.contextTitle || record.title) + '</h1><p>' + escape(record.description) +
-    '</p><p><a href="/" data-guide-expand aria-controls="main-content" data-loading="' + escape(copy[2]) + '" data-error="' +
+    '"><h1 id="route-page-title">' + escape(record.contextTitle || record.title) + '</h1><p><a href="/" data-guide-expand aria-controls="main-content" data-loading="' + escape(copy[2]) + '" data-error="' +
     escape(copy[3]) + '">' + escape(copy[0]) + '</a> · <a href="/">' + escape(copy[1]) +
     '</a></p><p data-guide-expand-status role="status" aria-live="polite"></p>' +
     (record.navigation ? renderTopicNavigation(record) : '') + '</header>' +

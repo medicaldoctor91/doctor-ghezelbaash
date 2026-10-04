@@ -168,6 +168,24 @@ test("direct path HTML has one self canonical, scoped data and shared-reader boo
   assert.equal(scripts.length, 1);
   assert.deepEqual(JSON.parse(scripts[0].childNodes[0].value), page.document);
 });
+test("direct entry presents authored opening prose once while preserving its machine description", () => {
+  const page = pageFor("/hyaluronidase-filler-dissolution-limitations");
+  const authored = inspectHtml(page.bodyHtml, { wrapMain: true }).elements.find((node) => node.tagName === "p");
+  const opening = normalizedText(inlineText(authored));
+  assert(opening.startsWith(page.description), "The fixture must exercise a description taken from its authored introduction");
+  const rendered = inspectHtml(renderIndependentPage(home, page));
+  const context = rendered.elements.find((node) => attr(node, "data-route-context") !== undefined);
+  assert(!normalizedText(inlineText(context)).includes(page.description),
+    "Route chrome must not repeat a metadata excerpt above the authored introduction");
+  assert.equal(rendered.elements.filter((node) => node.tagName === "p" &&
+    normalizedText(inlineText(node)) === opening).length, 1,
+  "The authored opening paragraph must remain visible exactly once");
+  const description = rendered.elements.find((node) => node.tagName === "meta" && attr(node, "name") === "description");
+  assert.equal(attr(description, "content"), page.description);
+  const schema = rendered.elements.find((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json");
+  const pageNode = JSON.parse(inlineText(schema))["@graph"].find((node) => node["@id"] === page.canonicalUrl + "#webpage");
+  assert.equal(pageNode.description, page.description);
+});
 test("physical route files preserve clean paths and reject traversal", () => {
   assert.equal(routeDocumentFile("/botox"), "botox.html");
   assert.throws(() => routeDocumentFile("/../botox"), /Unsafe/);
@@ -571,6 +589,11 @@ test("declared historical summary keeps its own geographic evidence distinct fro
   assert.equal(summary.scopeKind, "disclosure-summary");
   assert(summary.bodyHtml.includes("کرمانشاه و استان کرمانشاه"));
   assert(summary.bodyHtml.includes("عراق و اقلیم کردستان"));
+  assert(!travel.bodyHtml.includes("کرمانشاه و استان کرمانشاه"),
+    "The historical resource must own its detailed geographic evidence instead of repeating it in the travel article");
+  assert(!travel.bodyHtml.includes("عراق و اقلیم کردستان"));
+  assert(travel.bodyHtml.includes("نوع مراجعه"), "Travel planning must retain its distinct practical guidance");
+  assert(home.includes("کرمانشاه و استان کرمانشاه"), "The comprehensive authored reader must keep the historical evidence");
   assert(!summary.bodyHtml.includes("نوع مراجعه"));
   assert.equal(summary.description, discoveryPolicy.focusedViews[0].description);
   assert.equal(summary.title, discoveryPolicy.focusedViews[0].title);

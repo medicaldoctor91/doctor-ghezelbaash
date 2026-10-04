@@ -6,7 +6,7 @@ import { chromium } from "playwright-core";
 
 const source = readFileSync(new URL("../../src/scripts/page-state.js", import.meta.url), "utf8");
 const origin = "https://www.ghezelbaash.ir";
-const botoxBody = '<section id="botox-source-wrapper"><h2 id="botox">Botox</h2><p id="botox-summary">Botox requires a clinical assessment before treatment.</p><div id="diagnostic-group"><h3 id="botox-assessment">Assessment and contraindications</h3><p id="botox-assessment-body">Review muscle function, prior treatment and the patient’s goals.</p><details id="botox-faq"><summary>Can everyone have treatment?</summary><p id="botox-faq-answer">Treatment can be deferred after an individual assessment.</p></details></div></section>';
+const botoxBody = '<section id="botox-source-wrapper" aria-labelledby="botox"><h2 id="botox">Botox</h2><p id="botox-summary">Botox requires a clinical assessment before treatment.</p><div id="diagnostic-group"><h3 id="botox-assessment">Assessment and contraindications</h3><p id="botox-assessment-body">Review muscle function, prior treatment and the patient’s goals.</p><details id="botox-faq"><summary>Can everyone have treatment?</summary><p id="botox-faq-answer">Treatment can be deferred after an individual assessment.</p></details></div></section>';
 const fillerBody = '<section id="filler-source-wrapper"><h2 id="filler">Filler</h2><p id="filler-summary">Volume, structural support and treatment risks require assessment.</p></section>';
 const englishBody = '<section id="english-source-wrapper" lang="en" dir="ltr"><h2 id="english">English</h2><p id="english-summary">This English guide explains assessment and clinical boundaries.</p></section>';
 const videoBody = '<section id="watch-source-wrapper"><h2 id="patient-review">Patient review</h2><video id="patient-video" controls></video><p id="video-transcript">A patient describes their experience.</p></section>';
@@ -160,6 +160,19 @@ test("fresh direct entry keeps the bounded native topic as primary and adds surr
   assert.equal(await readerPage.page.evaluate(() => document.querySelector("main article") === window.__readerTest.initialArticle && window.__readerTest.initialNodes.every((node) => node.isConnected)), true);
   assert.deepEqual(await readerPage.requests(), ["/"]);
   assert.deepEqual(readerPage.errors, []);
+});
+test("split contextual regions keep distinct accessible names and the primary keeps its authored heading relationship", async (t) => {
+  const readerPage = await reader(t);
+  await readerPage.ready();
+  const result = await readerPage.page.evaluate(() => ({
+    primaryLabel: document.querySelector("main #botox-source-wrapper").getAttribute("aria-labelledby"),
+    contextualLabels: [...document.querySelectorAll("[data-guide-context] section[aria-label]")]
+      .map((node) => ({ label: node.getAttribute("aria-label"), headingReference: node.getAttribute("aria-labelledby") })),
+  }));
+  assert.equal(result.primaryLabel, "botox");
+  assert.equal(result.contextualLabels.length, 2);
+  assert.equal(new Set(result.contextualLabels.map(({ label }) => label)).size, 2);
+  assert(result.contextualLabels.every(({ label, headingReference }) => label.startsWith("Botox — ") && headingReference === null));
 });
 test("automatic loading and concurrent expansion share one request and dispatch one expansion", async (t) => {
   const readerPage = await reader(t, { blockedHeaders: ["/"] });
@@ -388,14 +401,21 @@ test("surrounding content compensates the retained native anchor offset after pe
     window.__readerTest.anchor = document.getElementById("botox");
     window.scrollTo(0, Math.max(0, window.__readerTest.anchor.getBoundingClientRect().top - 20));
     window.__readerTest.anchorTop = window.__readerTest.anchor.getBoundingClientRect().top;
+    window.__readerTest.expansionMeasurements = [];
+    const measure = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function () {
+      window.__readerTest.expansionMeasurements.push(this.id);
+      return measure.call(this);
+    };
     window.dispatchEvent(new WheelEvent("wheel"));
   });
   await readerPage.release();
   await readerPage.ready();
-  const result = await readerPage.page.evaluate(() => ({ same: document.getElementById("botox") === window.__readerTest.anchor, before: window.__readerTest.anchorTop, after: window.__readerTest.anchor.getBoundingClientRect().top, shifts: window.__readerTest.scrollAdjustments }));
+  const result = await readerPage.page.evaluate(() => ({ same: document.getElementById("botox") === window.__readerTest.anchor, before: window.__readerTest.anchorTop, after: window.__readerTest.anchor.getBoundingClientRect().top, shifts: window.__readerTest.scrollAdjustments, measured: window.__readerTest.expansionMeasurements }));
   assert.equal(result.same, true);
   assert.equal(result.shifts.length, 1);
   assert(Math.abs(result.after - result.before) < 1, JSON.stringify(result));
+  assert(result.measured.length <= 3, "Expansion measured deferred source nodes: " + result.measured.join(", "));
 });
 test("SPA navigation removes stale language alternates and restores them from cache", async (t) => {
   const readerPage = await reader(t, { initial: home, path: "/" });

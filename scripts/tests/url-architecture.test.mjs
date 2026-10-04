@@ -31,7 +31,8 @@ test("authored noncanonical paths use root fragments for browser navigation whil
   const fragments = fragmentRows();
   const redirects = redirectRows();
   assert(fragments.length > kept.size);
-  assert.deepEqual(redirects.map((row) => row.source).sort(), [...URL_ARCHITECTURE.retiredPaths].sort());
+  assert.deepEqual(redirects.map((row) => row.source).sort(),
+    URL_ARCHITECTURE.decisions.filter((row) => row.decision === "301_REDIRECT").map((row) => row.path).sort());
 
   for (const row of fragments) {
     assert(!kept.has(row.source));
@@ -47,12 +48,12 @@ test("authored noncanonical paths use root fragments for browser navigation whil
 
   for (const row of redirects) {
     assert.equal(row.statusCode, 301);
-    assert(URL_ARCHITECTURE.retiredPaths.includes(row.source));
     assert(!kept.has(row.source));
     const target = new URL(row.target, URL_ARCHITECTURE.canonicalOrigin);
     assert(kept.has(target.pathname));
     assert.equal(resolveContentUrl(row.source), row.target);
-    assert.equal(sourceNavigationUrl(row.source), row.target);
+    assert.equal(sourceNavigationUrl(row.source), URL_ARCHITECTURE.retiredPaths.includes(row.source)
+      ? row.target : "/#" + row.source.slice(1));
   }
 
   assert.equal(resolveContentUrl("/botox-heading"), "/botox#botox-heading");
@@ -107,6 +108,8 @@ test("the homepage owns physician authority while the stable identity remains an
   assert.equal(urlForHtmlId("saeed-ghezelbash"), "/#saeed-ghezelbash");
   assert.equal(resolveContentUrl("/saeed-ghezelbash"), "/#saeed-ghezelbash");
   assert.equal(sourceNavigationUrl("/saeed-ghezelbash"), "/#saeed-ghezelbash");
+  assert.deepEqual(redirectRows().find((row) => row.source === "/saeed-ghezelbash"),
+    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 });
   assert.equal(resolveContentUrl("/saeed-ghezelbash?from=profile"), "/?from=profile#saeed-ghezelbash");
   assert.equal(sourceNavigationUrl("/saeed-ghezelbash?from=profile"), "/?from=profile#saeed-ghezelbash");
   const doctor = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);

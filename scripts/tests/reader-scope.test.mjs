@@ -223,4 +223,10 @@ test("historical patient origin selects its empty alias and precisely its first 
   assert(disclosure, "The historical source must have an authored disclosure following its alias");
   assert.deepEqual(originalIntervals(record), [span(alias), span(disclosure)]);
   assert.equal(prose(record.bodyHtml), prose(corpusHtml.slice(span(disclosure).start, span(disclosure).end)));
+  const travel = records.find((record) => record.path === "/out-of-town-aesthetic-patients-iran");
+  assert(travel);
+  const evidence = span(disclosure);
+  assert(originalIntervals(travel).every((interval) => interval.end <= evidence.start || interval.start >= evidence.end),
+    "The historical evidence must remain in complementary reader context outside the travel article's primary ranges");
+  assert(originalIntervals(travel).length > 1, "Travel planning must preserve both authored regions around the evidence disclosure");
 });

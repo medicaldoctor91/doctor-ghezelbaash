@@ -49,6 +49,12 @@ export function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
   const excluded = (node) => {
     if (node?.["@id"] === home["@id"]) return false;
     const types = values(node?.["@type"]);
+    // Canonical documents remain linked through the homepage portfolio. Their
+    // own page/FAQ graphs belong to their route, while the full downloadable
+    // graph retains all definitions. Do not recursively import a clinic
+    // document's child pages into the homepage discovery projection.
+    if (typeof node?.url === "string" && node.url.startsWith(home.url) &&
+        types.some((type) => ["WebPage", "MedicalWebPage", "ContactPage", "FAQPage"].includes(type))) return true;
     const courseInstance = courseInstanceIds.has(node?.["@id"]) && types.includes("CourseInstance") && types.includes("EducationEvent");
     return types.some((type) => disallowedCandidateTypes.has(type) &&
       !(courseInstance && ["Event", "EducationEvent"].includes(type)));

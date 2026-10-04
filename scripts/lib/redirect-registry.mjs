@@ -167,8 +167,9 @@ export function machineNamespaceAliasRows() {
 /** Metadata subjects are identifiers; their authoritative description is the graph. */
 export function canonicalMetadataAliasRows(graph, canonicalUrl) {
   const origin = new URL(canonicalUrl).origin;
-  // These two graph-only subjects are also advertised by the authored HTML head.
-  const advertisedSubjects = new Set(["/website", "/medical-specialty-aesthetic-medicine"]);
+  // Core document/site subjects advertised by HTML or its inline graph have
+  // machine representations without becoming additional indexable HTML pages.
+  const advertisedSubjects = new Set(["/webpage", "/website", "/medical-specialty-aesthetic-medicine"]);
   const paths = new Set();
   const collect = (value) => {
     if (Array.isArray(value)) return value.forEach(collect);
