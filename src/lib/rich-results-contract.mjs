@@ -95,6 +95,9 @@ export function normalizeGoogleDiscoveryDocument(document) {
   if (!(context === GOOGLE_SCHEMA_CONTEXT || Array.isArray(context) && context.includes(GOOGLE_SCHEMA_CONTEXT)) ||
       !Array.isArray(document?.["@graph"]))
     fail("one Schema.org discovery graph is required");
+  // A document that already crossed the publication boundary must retain the
+  // same node objects so subsequent validation cannot hide caller mutations.
+  if (context === GOOGLE_SCHEMA_CONTEXT) return document;
   const kinds = contextKinds(context);
   const graph = document["@graph"].map((node) => googleValue(node, kinds))
     .filter((node) => node && values(node["@type"]).length);
