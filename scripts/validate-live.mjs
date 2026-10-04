@@ -71,6 +71,10 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     try {
       const response = await fetchImpl(new URL(source, options.origin), { method, redirect: "manual", signal: AbortSignal.timeout(options.timeoutMs), headers: { "User-Agent": "ghezelbaash-live-validation/1.0", Accept: method === "HEAD" ? "*/*" : "text/html, application/ld+json, application/json" } });
       record.status = response.status;
+      for (const [header, field] of [["cf-cache-status", "cacheStatus"], ["age", "cacheAge"], ["x-robots-tag", "httpRobots"]]) {
+        const value = response.headers.get(header);
+        if (value != null) record[field] = value;
+      }
       await inspect(response, record);
       record.ok = true;
     } catch (error) { record.error = error.message; }
@@ -101,6 +105,21 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     assert(!noindex(response.headers.get("x-robots-tag")), "Canonical page has a noindex HTTP directive");
     const source = await response.text();
     const inspected = inspectHtml(source);
+    // A fresh build-info endpoint does not prove that cached HTML belongs to
+    // that deployment. Check each document before trusting its semantic data.
+    for (const [name, expected] of [
+      ["x-build-commit", options.expectedCommit ?? build?.commit],
+      ["x-build-release", plan.release],
+      ["x-build-branch", build?.branch],
+      ["x-build-provider", build?.provider],
+    ]) {
+      const nodes = inspected.elements.filter((node) => node.tagName === "meta" && attr(node, "name") === name);
+      assert.equal(nodes.length, 1, "Canonical page must advertise exactly one " + name);
+      const actual = attr(nodes[0], "content");
+      if (name === "x-build-commit") record.commit = actual;
+      assert(expected, "Deployment identity is unavailable for " + name);
+      assert.equal(actual, expected, "Canonical page deployment differs for " + name);
+    }
     const links = inspected.elements.filter((node) => node.tagName === "link" && values((attr(node, "rel") || "").split(/\s+/)).includes("canonical"));
     assert.equal(links.length, 1, "Canonical page must advertise exactly one canonical");
     const expected = new URL(pathname, plan.canonicalOrigin).href;

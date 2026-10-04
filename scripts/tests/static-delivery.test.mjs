@@ -29,7 +29,9 @@ test("registry requires 301 for content and 200 only for graph-machine aliases",
 test("named metadata definitions are served directly without inventing reference routes", () => {
   const origin = "https://www.ghezelbaash.ir";
   const graph = { "@graph": [
+    { "@id": origin + "/webpage", "@type": ["ProfilePage", "MedicalWebPage"], url: origin + "/" },
     { "@id": origin + "/website", "@type": "WebSite" },
+    { "@id": origin + "/unrelated-local-concept", "@type": "DefinedTerm" },
     { "@id": origin + "/graph.jsonld/dataset", "@type": "Dataset",
       nested: { "@id": origin + "/provenance.jsonld/source", name: "Source" } },
     { "@id": origin + "/graph.jsonld/reference" },
@@ -39,8 +41,11 @@ test("named metadata definitions are served directly without inventing reference
   assert.deepEqual(canonicalMetadataAliasRows(graph, origin + "/"), [
     rewriteRow("/graph.jsonld/dataset", "/graph.jsonld"),
     rewriteRow("/provenance.jsonld/source", "/provenance.jsonld"),
+    rewriteRow("/webpage", "/graph.jsonld"),
     rewriteRow("/website", "/graph.jsonld"),
   ]);
+  assert(!canonicalMetadataAliasRows({ "@graph": [{ "@id": origin + "/webpage" }] }, origin + "/").length,
+    "An unresolved reference must not establish a new public representation");
 });
 test("only bounded machine namespace wildcards are allowed and do not consume static-rule capacity", () => {
   const namespaces = machineNamespaceAliasRows();
@@ -93,13 +98,15 @@ test("content aliases decode Persian paths and spaces, exclude machine aliases, 
 });
 test("machine aliases receive graph MIME, canonical, CORS, and cache headers within Pages limits", () => {
   const headers = "/*\n  X-Content-Type-Options: nosniff\n\n/graph.jsonld\n  Content-Type: application/ld+json; charset=utf-8\n  Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel=\"canonical\"\n  Access-Control-Allow-Origin: *\n  Cache-Control: public, max-age=3600\n";
-  const expanded = expandMachineAliasHeaders(headers, ["/graph.jsonld/*", "/website", "/website"]);
-  assert.equal(assertCloudflareHeadersContract(expanded).rules, 4);
-  for (const source of ["/graph.jsonld/*", "/website"]) {
+  const expanded = expandMachineAliasHeaders(headers, ["/graph.jsonld/*", "/webpage", "/website", "/website"]);
+  assert.equal(assertCloudflareHeadersContract(expanded).rules, 5);
+  for (const source of ["/graph.jsonld/*", "/webpage", "/website"]) {
     const body = expanded.slice(expanded.indexOf(source + "\n")).split("\n\n")[0];
     assert(body.includes("Content-Type: application/ld+json"));
     assert(body.includes("Access-Control-Allow-Origin: *"));
     assert(body.includes('rel="canonical"'));
+    assert(body.includes('<https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical"'));
+    assert(body.includes("Cache-Control: public, max-age=3600"));
   }
   assert.throws(() => expandMachineAliasHeaders(headers, Array.from({length: 99}, (_, i) => "/id" + i)), /100 rules/);
 });

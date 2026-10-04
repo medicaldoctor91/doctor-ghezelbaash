@@ -4,10 +4,28 @@ const attr = (node, name) =>
   node.attrs?.find((item) => item.name === name)?.value;
 const classes = (node) =>
   new Set((attr(node, "class") || "").split(/\s+/).filter(Boolean));
-function walk(node, visit) {
+function walk(node, visit, includeTemplateContent = true) {
   visit(node);
-  for (const child of node.childNodes || []) walk(child, visit);
-  if (node.content) walk(node.content, visit);
+  for (const child of node.childNodes || []) walk(child, visit, includeTemplateContent);
+  if (includeTemplateContent && node.content) walk(node.content, visit, includeTemplateContent);
+}
+
+const ariaIdReferences = [
+  "aria-labelledby", "aria-describedby", "aria-controls", "aria-owns",
+  "aria-activedescendant", "aria-details", "aria-errormessage",
+];
+// HTML accepts BCP 47 private-use and grandfathered tags that Intl.Locale does
+// not accept. An empty lang is also meaningful: it declares unknown language.
+const grandfatheredLanguages = new Set((
+  "art-lojban cel-gaulish en-GB-oed i-ami i-bnn i-default i-enochian i-hak " +
+  "i-klingon i-lux i-mingo i-navajo i-pwn i-tao i-tay i-tsu no-bok no-nyn " +
+  "sgn-BE-FR sgn-BE-NL sgn-CH-DE zh-guoyu zh-hakka zh-min zh-min-nan zh-xiang"
+).toLowerCase().split(" "));
+function validLanguage(value) {
+  if (value === "" || grandfatheredLanguages.has(value.toLowerCase()) ||
+      /^x(?:-[a-z0-9]{1,8})+$/i.test(value)) return true;
+  try { new Intl.Locale(value); return true; }
+  catch { return false; }
 }
 export function inspectHtml(source, { wrapMain = false } = {}) {
   const html = wrapMain
@@ -18,6 +36,33 @@ export function inspectHtml(source, { wrapMain = false } = {}) {
   walk(document, (node) => nodes.push(node));
   const elements = nodes.filter((node) => node.tagName);
   const ids = elements.map((node) => attr(node, "id")).filter(Boolean);
+  const languageErrors = [];
+  for (const node of elements) {
+    const name = attr(node, "id") || node.tagName;
+    for (const key of ["lang", "xml:lang"]) {
+      const value = attr(node, key);
+      if (value !== undefined && !validLanguage(value))
+        languageErrors.push(`${name} has invalid ${key}=${JSON.stringify(value)}`);
+    }
+    const direction = attr(node, "dir");
+    if (direction !== undefined && !/^(?:ltr|rtl|auto)$/i.test(direction))
+      languageErrors.push(`${name} has invalid dir=${JSON.stringify(direction)}`);
+  }
+  const referenceErrors = [];
+  if (!wrapMain) {
+    // Template contents are inert until inserted. Only the actual document can
+    // supply accessible names and relationships for its rendered controls.
+    const liveElements = [];
+    walk(document, (node) => { if (node.tagName) liveElements.push(node); }, false);
+    const liveIds = new Set(liveElements.map((node) => attr(node, "id")).filter(Boolean));
+    for (const node of liveElements) {
+      for (const key of ariaIdReferences) {
+        const missing = (attr(node, key) || "").split(/\s+/).filter((id) => id && !liveIds.has(id));
+        if (missing.length)
+          referenceErrors.push(`${attr(node, "id") || node.tagName} ${key} targets absent IDs: ${missing.join(",")}`);
+      }
+    }
+  }
   const fragments = elements
     .filter((node) => node.tagName === "a")
     .map((node) => attr(node, "href"))
@@ -97,6 +142,8 @@ export function inspectHtml(source, { wrapMain = false } = {}) {
     document,
     elements,
     ids,
+    languageErrors,
+    referenceErrors,
     fragments,
     sections,
     contentSections,
@@ -130,6 +177,10 @@ export function assertDocumentContract(
     ];
   if (missing.length)
     throw new Error(`Broken actual HTML fragments: ${missing.join(",")}`);
+  if (result.referenceErrors.length)
+    throw new Error(`Broken document ARIA references: ${result.referenceErrors.join("; ")}`);
+  if (result.languageErrors.length)
+    throw new Error(`Invalid document language/direction: ${result.languageErrors.join("; ")}`);
   if (result.unclosedSections.length)
     throw new Error(
       `Sections without explicit end tags: ${result.unclosedSections.map((node) => attr(node, "id") || "(section)").join(",")}`,

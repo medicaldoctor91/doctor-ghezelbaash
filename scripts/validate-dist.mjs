@@ -19,6 +19,7 @@ import { assertCloudflareHeadersContract } from "./lib/headers-template.mjs";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { inspectSchemaInventoryScope, serializeSchemaInventoryCsv, validateSchemaInventoryCoverage, validateSchemaInventoryRow } from "./lib/schema-inventory.mjs";
 import { guideSourceSignature } from "./lib/reader-scope.mjs";
+import { assertCanonicalDocumentCoverage, assertCanonicalDocumentProjection } from "../src/lib/canonical-document-contract.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] ?? "dist");
@@ -67,6 +68,8 @@ for (const [intent, url] of Object.entries(intentTargets)) {
 const canonicalSurface = canonicalPaths();
 const paths = canonicalSurface.filter((route) => route !== "/");
 assert.equal(canonicalSurface.length, 72, "Reviewed canonical corpus size drift");
+assert.equal(assertCanonicalDocumentCoverage(graph).length, canonicalSurface.length,
+  "Canonical source graph must define every published document");
 const htmlFiles = [];
 const collectHtmlFiles = async (directory, prefix = "") => {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -135,15 +138,16 @@ for (const route of paths) {
     `Missing independent content document: ${route}`);
 }
 const corpusAliases = redirectRows();
-assert.equal(corpusAliases.length, URL_ARCHITECTURE.retiredPaths.length,
-  "Only explicitly retired corpus paths may be emitted as HTTP redirects");
+assert.equal(corpusAliases.length, URL_ARCHITECTURE.decisions.filter((row) => row.decision === "301_REDIRECT").length,
+  "Every historical corpus path must redirect to its final canonical owner");
 for (const { source, target, statusCode } of corpusAliases)
   assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing consolidated corpus redirect: ${source}`);
 const fragmentAliases = fragmentRows();
 for (const { source, target } of fragmentAliases) {
-  assert(!rewriteRows.some((row) => row.source === source),
-    `Authored fragment path must not be emitted as an HTTP redirect: ${source}`);
+  assert(rewriteRows.some((row) => row.source === source && row.statusCode === 301),
+    `Historical authored path must have its permanent HTTP redirect: ${source}`);
   const destination = new URL(target, lifecycle.canonicalUrl);
+  assert.equal(destination.pathname, "/", `Authored browser navigation must retain its root fragment: ${source}`);
   assert(canonicalSurface.includes(destination.pathname), `Missing canonical fragment owner: ${target}`);
   assertPublishedFragment(destination, (await publishedDocument(destination.pathname)).ids,
     `Authored fragment alias ${source} -> ${target}`);
@@ -504,6 +508,7 @@ for (const record of records) {
   assert(!pageIds.has(pageId)); pageIds.add(pageId);
   const pageGraph = new Map(documents[0]["@graph"].map((node) => [node["@id"], node]));
   const pageEntity = pageGraph.get(pageId), refs = [pageEntity.mainEntity].flat();
+  assertCanonicalDocumentProjection(graph, pageEntity);
   assert(!typeHas(pageEntity, "ProfilePage"), "Physician ProfilePage belongs only to the homepage");
   assert.equal(pageEntity.url, record.canonicalUrl);
   const mainEntity = pageGraph.get(record.entityId);

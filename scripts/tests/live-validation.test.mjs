@@ -15,7 +15,7 @@ const documentFor = (pathname) => ({ "@context": "https://schema.org", "@graph":
     : { "@id": origin + pathname + "#webpage", "@type": "MedicalWebPage", url: origin + pathname, mainEntity: { "@id": origin + "/topic-entity" } },
   { "@id": origin + "/topic-entity", "@type": "WebPageElement" },
 ] });
-function fixtureFetch({ badLocation = false, badNamespace = false, noindex = false } = {}) {
+function fixtureFetch({ badLocation = false, badNamespace = false, noindex = false, httpNoindex = false, stalePage = false } = {}) {
   let active = 0, maximum = 0;
   const requests = [];
   const fetchImpl = async (url, init) => {
@@ -27,8 +27,11 @@ function fixtureFetch({ badLocation = false, badNamespace = false, noindex = fal
     if (url.pathname === "/build-info.json") return new Response(JSON.stringify({ release: plan.release, commit: "a".repeat(40), branch: "test", provider: "local" }), { headers: { "Content-Type": "application/json" } });
     if (plan.paths.includes(url.pathname)) {
       const canonical = new URL(url.pathname, origin).href;
-      const html = '<!doctype html><html><head><link rel="canonical" href="' + canonical + '"><meta name="robots" content="' + (noindex ? "noindex" : "index, follow") + '"><script type="application/ld+json">' + JSON.stringify(documentFor(url.pathname)) + '</script></head><body><div id="saeed-ghezelbash"></div><div id="answer"></div></body></html>';
-      return new Response(html, { headers: { "Content-Type": "text/html" } });
+      const commit = stalePage && url.pathname === "/topic" ? "b".repeat(40) : "a".repeat(40);
+      const buildMeta = Object.entries({ "x-build-commit": commit, "x-build-release": plan.release, "x-build-branch": "test", "x-build-provider": "local" })
+        .map(([name, value]) => '<meta name="' + name + '" content="' + value + '">').join("");
+      const html = '<!doctype html><html><head><link rel="canonical" href="' + canonical + '"><meta name="robots" content="' + (noindex ? "noindex" : "index, follow") + '">' + buildMeta + '<script type="application/ld+json">' + JSON.stringify(documentFor(url.pathname)) + '</script></head><body><div id="saeed-ghezelbash"></div><div id="answer"></div></body></html>';
+      return new Response(html, { headers: { "Content-Type": "text/html", "X-Robots-Tag": httpNoindex ? "index, follow, googlebot: noindex" : "index, follow" } });
     }
     const row = plan.rows.find((row) => row.source === url.pathname);
     if (row?.statusCode === 301) return new Response(null, { status: 301, headers: { Location: badLocation ? "/topic#wrong-answer" : row.target } });
@@ -46,15 +49,16 @@ test("live options reject credentials, unbounded concurrency and abbreviated dep
   assert.throws(() => liveOptions(["--expected-commit", "abc123"]), /full commit SHA/);
 });
 
-test("live plan keeps authored section paths as root fragments and probes only real redirect surfaces", async () => {
+test("live plan probes historical paths while authored navigation preserves root fragments", async () => {
   const actual = await livePlan();
   const fragments = fragmentRows();
   assert.equal(actual.paths.length, 72);
-  assert.equal(actual.counts.corpusRedirects, 2);
+  assert.equal(actual.counts.corpusRedirects, fragments.length + 2);
   assert(fragments.length > 1000);
-  assert(fragments.every((fragment) => !actual.rows.some((row) => row.source === fragment.source)));
+  assert(fragments.every((fragment) => actual.rows.some((row) => row.source === fragment.source && row.statusCode === 301)));
   assert.equal(actual.namespaces.length, 5);
-  assert.equal(actual.rows.find((row) => row.source === "/saeed-ghezelbash"), undefined);
+  assert.deepEqual(actual.rows.find((row) => row.source === "/saeed-ghezelbash"),
+    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 });
   assert.deepEqual(fragments.find((row) => row.source === "/saeed-ghezelbash"),
     { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash" });
   assert.deepEqual(fragments.find((row) => row.source === "/botox-heading"),
@@ -80,5 +84,26 @@ test("live report rejects wrong redirect fragments, noindex pages and namespace 
     assert.equal(report.ok, false, problem);
     assert(report.totals.failed > 0);
     assert.equal(report.totals.checked, 13, "Failures must still produce the complete bounded report");
+  }
+});
+
+test("live validation rejects cached stale HTML even when build-info and the homepage are current", async () => {
+  const report = await validateLive(plan, options, fixtureFetch({ stalePage: true }));
+  assert.equal(report.ok, false);
+  assert.equal(report.build.commit, "a".repeat(40));
+  assert.equal(report.checks.find((row) => row.path === "/").ok, true);
+  const stale = report.checks.find((row) => row.path === "/topic");
+  assert.equal(stale.commit, "b".repeat(40));
+  assert.match(stale.error, /deployment differs for x-build-commit/);
+  assert.equal(report.totals.failed, 2, "The stale topic and its redirect target must fail");
+});
+
+test("an index meta and index HTTP directive cannot cancel a restrictive Googlebot HTTP directive", async () => {
+  const report = await validateLive(plan, options, fixtureFetch({ httpNoindex: true }));
+  assert.equal(report.ok, false);
+  for (const pathname of plan.paths) {
+    const page = report.checks.find((row) => row.path === pathname);
+    assert.match(page.error, /noindex HTTP directive/);
+    assert.equal(page.httpRobots, "index, follow, googlebot: noindex");
   }
 });

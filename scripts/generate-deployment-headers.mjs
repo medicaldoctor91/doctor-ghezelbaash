@@ -205,7 +205,7 @@ const machineAliases = canonicalHostAliasRows(await loadAliasRegistry(root))
 const namespaces = machineNamespaceAliasRows();
 const graphHeaders = expandMachineAliasHeaders(compiledHeaders, [
   ...namespaces.filter((row) => row.target === "/graph.jsonld").map((row) => row.source),
-  "/website", "/medical-specialty-aesthetic-medicine",
+  "/webpage", "/website", "/medical-specialty-aesthetic-medicine",
   ...machineAliases,
 ]);
 const headers = expandMachineAliasHeaders(graphHeaders,

@@ -11,15 +11,17 @@
   const captureReadingAnchor = () => {
     const root = d.querySelector("[data-guide-reader]") || primaryArticle();
     if (!root || !d.elementFromPoint) return null;
-    const y = Math.min(240, window.innerHeight * .25);
     let visible;
-    for (const fraction of [.5, .35, .65]) {
-      const x = window.innerWidth * fraction, hit = d.elementFromPoint(x, y);
-      if (!hit || !root.contains(hit) || hit.closest("[data-route-context],#guide-search")) continue;
-      const caret = d.caretRangeFromPoint?.(x, y)?.startContainer;
-      const parent = caret?.nodeType === 3 ? caret.parentElement : null;
-      const candidate = parent && root.contains(parent) ? parent : hit;
-      if (candidate && root.contains(candidate)) { visible = candidate; break; }
+    for (const y of [Math.min(240, window.innerHeight * .25), Math.min(80, window.innerHeight * .1), 24]) {
+      for (const fraction of [.5, .35, .65]) {
+        const x = window.innerWidth * fraction, hit = d.elementFromPoint(x, y);
+        if (!hit || !root.contains(hit) || hit.closest("[data-route-context],#guide-search")) continue;
+        const caret = d.caretRangeFromPoint?.(x, y)?.startContainer;
+        const parent = caret?.nodeType === 3 ? caret.parentElement : null;
+        const candidate = parent && root.contains(parent) ? parent : hit;
+        if (candidate && root.contains(candidate)) { visible = candidate; break; }
+      }
+      if (visible) break;
     }
     if (!visible) return null;
     let anchor = visible.closest("[id]");
@@ -206,10 +208,10 @@
     }
     return { before, after };
   };
-  const readingAnchor = () => [...(d.querySelector("[data-guide-reader]") || primaryArticle()).querySelectorAll("[id]")]
-    .map((node) => ({ id: node.id, rect: node.getBoundingClientRect() }))
-    .filter(({ rect }) => rect.bottom > 0 && rect.top < window.innerHeight)
-    .sort((a, b) => Math.abs(a.rect.top) - Math.abs(b.rect.top))[0];
+  const readingAnchor = () => {
+    const anchor = captureReadingAnchor();
+    return anchor ? { id: anchor.id, rect: { top: anchor.top } } : null;
+  };
   const restoreAnchor = (position) => {
     const anchor = d.getElementById(position.id);
     if (!anchor) return;
@@ -263,6 +265,19 @@
         node.className = "medical-guide guide-context";
         node.setAttribute("data-guide-context", side);
         node.setAttribute("aria-label", side === "before" ? "بخش‌های پیشین راهنمای کامل" : "بخش‌های بعدی راهنمای کامل");
+        // A split section may retain a label whose heading is now in main.
+        // Name that partial region with its context, rather than announcing
+        // several different landmarks as the same complete clinical section.
+        for (const section of fragment.querySelectorAll("section[aria-labelledby]")) {
+          const ids = section.getAttribute("aria-labelledby").split(/\s+/).filter(Boolean);
+          if (ids.some((id) => section.querySelector('[id="' + CSS.escape(id) + '"]'))) continue;
+          const label = ids.map((id) => homeSource.querySelector('[id="' + CSS.escape(id) + '"]')?.textContent?.trim())
+            .filter(Boolean).join(" ");
+          if (label) {
+            section.setAttribute("aria-label", label + " — " + node.getAttribute("aria-label"));
+            section.removeAttribute("aria-labelledby");
+          }
+        }
         for (const attr of ["lang", "dir"]) {
           const value = wrapper.getAttribute(attr);
           if (value) node.setAttribute(attr, value);

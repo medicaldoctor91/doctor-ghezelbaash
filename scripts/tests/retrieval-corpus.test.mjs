@@ -280,7 +280,9 @@ test("passage provenance preserves a source timestamp's datatype, offset and fra
   const workspace = await mkdtemp(path.join(tmpdir(), "retrieval-timestamps-"));
   try {
     const question = context.graph["@graph"].find((node) => [node["@type"]].flat().includes("Question"));
-    const date = { "@value": "2026-09-30T17:20:30.125+03:30", "@type": "http://www.w3.org/2001/XMLSchema#dateTime" };
+    // The passage also binds its newly defined canonical document. A timestamp
+    // later on that actual revision date must remain the latest source revision.
+    const date = { "@value": `${context.release.datasetRevisionDate}T17:20:30.125+03:30`, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" };
     question.dateModified = date;
     await compileRetrievalCorpus({ ...context, projections: workspace }, { answerRecords: [] });
     const provenance = JSON.parse(await readFile(path.join(workspace, "provenance.jsonld"), "utf8"));
