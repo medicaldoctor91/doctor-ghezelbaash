@@ -52,8 +52,11 @@ test("the selected Course resolves only its authored historical instance and loc
   assert.deepEqual(instance["@type"], authored["@type"]);
   assert(typed(instance, "CourseInstance") && typed(instance, "EducationEvent"));
   assert.equal(instance.startDate, localizedText(authored.startDate));
-  for (const key of ["location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "dcterms:temporal", "eventAttendanceMode"])
+  for (const key of ["location", "instructor", "performer", "organizer", "audience", "recordedIn", "teaches", "eventAttendanceMode"])
     assert.deepEqual(instance[key], authored[key]);
+  assert.equal(instance["dcterms:temporal"], undefined,
+    "Canonical DCTERMS metadata must stay out of the Google-facing Schema.org document");
+  assert.equal(authored["dcterms:temporal"], "2025-01-20/2025-02-18");
   assert.equal(instance.name, localizedText(authored.name));
   assert.equal(instance.description, authored.description);
   assert.equal("endDate" in instance, "endDate" in authored);

@@ -3,6 +3,8 @@ import { validCalendarDate } from "./graph-dates.mjs";
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 const hasType = (node, type) => values(node?.["@type"]).includes(type);
 const fail = (message) => { throw new Error("Page rich-result contract: " + message); };
+const GOOGLE_SCHEMA_CONTEXT = "https://schema.org";
+const GENERATION_CONTEXT_MARKER = Symbol.for("ghezelbaash.google-discovery-generation-context");
 const text = (value, label) => {
   if (typeof value !== "string" || !value.trim()) fail(label + " must be nonempty Text");
   return value;
@@ -31,14 +33,96 @@ const duration = (value, label) => {
     fail(label + " must be a positive ISO duration");
 };
 
+const schemaIri = (value) => typeof value === "string" &&
+  (value === GOOGLE_SCHEMA_CONTEXT || value === GOOGLE_SCHEMA_CONTEXT + "/" || value.startsWith(GOOGLE_SCHEMA_CONTEXT + "/"));
+const contextKinds = (context) => {
+  const kinds = new Map();
+  for (const entry of values(context)) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    for (const [term, definition] of Object.entries(entry)) {
+      if (term.startsWith("@")) continue;
+      const iri = typeof definition === "string" ? definition : definition?.["@id"];
+      if (typeof iri === "string") kinds.set(term, schemaIri(iri) ? "schema" : "custom");
+    }
+  }
+  return kinds;
+};
+const googleType = (value, kinds) => {
+  if (typeof value !== "string") return undefined;
+  if (value.startsWith(GOOGLE_SCHEMA_CONTEXT + "/")) return value.slice((GOOGLE_SCHEMA_CONTEXT + "/").length);
+  if (/^https?:\/\//.test(value)) return undefined;
+  const colon = value.indexOf(":");
+  if (colon > 0)
+    return kinds.get(value.slice(0, colon)) === "schema" ? value.slice(colon + 1) : undefined;
+  if (kinds.get(value) === "custom") return undefined;
+  return value;
+};
+const googleValue = (value, kinds) => {
+  if (Array.isArray(value)) return value.map((entry) => googleValue(entry, kinds)).filter((entry) => entry !== undefined);
+  if (!value || typeof value !== "object") return value;
+  const output = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (key === "@context") continue;
+    if (key === "@type") {
+      const types = values(entry).map((type) => googleType(type, kinds)).filter(Boolean);
+      if (types.length) output[key] = Array.isArray(entry) ? types : types[0];
+      continue;
+    }
+    if (key.startsWith("@")) {
+      output[key] = googleValue(entry, kinds);
+      continue;
+    }
+    const colon = key.indexOf(":");
+    if (colon > 0) {
+      if (kinds.get(key.slice(0, colon)) === "schema")
+        output[key.slice(colon + 1)] = googleValue(entry, kinds);
+      continue;
+    }
+    if (kinds.get(key) === "custom") continue;
+    output[key] = googleValue(entry, kinds);
+  }
+  return output;
+};
+
+/** Mark a rich canonical context as generation-only without serializing the marker. */
+export function markGoogleDiscoveryGenerationContext(context) {
+  if (!Array.isArray(context)) fail("generation context must be an array");
+  Object.defineProperty(context, GENERATION_CONTEXT_MARKER, { value: true, enumerable: false });
+  return context;
+}
+
+/**
+ * Normalize only an in-memory generation document at the publication boundary.
+ * Canonical RDF keeps its authored namespaces; serialized HTML exposes one compact
+ * Schema.org context and removes canonical-only ontology terms/types.
+ */
+export function normalizeGoogleDiscoveryDocument(document) {
+  const context = document?.["@context"];
+  if (!(context === GOOGLE_SCHEMA_CONTEXT || Array.isArray(context) && context.includes(GOOGLE_SCHEMA_CONTEXT)) ||
+      !Array.isArray(document?.["@graph"]))
+    fail("one Schema.org discovery graph is required");
+  if (context === GOOGLE_SCHEMA_CONTEXT) return document;
+  if (!context[GENERATION_CONTEXT_MARKER])
+    fail("published JSON-LD must use the public Schema.org context");
+  const kinds = contextKinds(context);
+  const graph = document["@graph"].map((node) => googleValue(node, kinds))
+    .filter((node) => node && values(node["@type"]).length);
+  document["@context"] = GOOGLE_SCHEMA_CONTEXT;
+  document["@graph"] = graph;
+  return document;
+}
+
 /**
  * Checks this site's published discovery graph, not Google's ranking or live
- * crawler access. Required ProfilePage/VideoObject/LocalBusiness fields and
- * the site's complete authored clinic address and image provenance must survive projection.
+ * crawler access. Generation-only marked contexts are normalized before serialization;
+ * unmarked parsed/published array contexts are rejected rather than repaired.
  */
 export function assertRichResultsDocument(document, { primaryPageId } = {}) {
-  if (!(document?.["@context"] === "https://schema.org" || Array.isArray(document?.["@context"]) && document["@context"].includes("https://schema.org")) || !Array.isArray(document["@graph"]))
-    fail("one Schema.org discovery graph is required");
+  const incomingContext = document?.["@context"];
+  if (Array.isArray(incomingContext) && incomingContext[GENERATION_CONTEXT_MARKER])
+    normalizeGoogleDiscoveryDocument(document);
+  if (document?.["@context"] !== GOOGLE_SCHEMA_CONTEXT || !Array.isArray(document?.["@graph"]))
+    fail("published JSON-LD must use the public Schema.org context");
   const nodes = document["@graph"], byId = new Map();
   for (const node of nodes) {
     webUrl(node?.["@id"], "entity @id");
@@ -59,7 +143,14 @@ export function assertRichResultsDocument(document, { primaryPageId } = {}) {
         !/^https?:\/\//.test(value["@id"]))
       fail("unresolved entity reference: " + value["@id"]);
     if ("@value" in value) fail("RDF value objects must be formatted for browser discovery");
-    for (const entry of Object.values(value)) walk(entry);
+    for (const [key, entry] of Object.entries(value)) {
+      if (!key.startsWith("@") && key.includes(":"))
+        fail("published JSON-LD contains a non-Schema prefixed property: " + key);
+      if (key === "@type") for (const type of values(entry))
+        if (typeof type === "string" && (type.includes(":") || /^https?:\/\//.test(type)))
+          fail("published JSON-LD contains a non-Schema type: " + type);
+      walk(entry);
+    }
   };
   walk(nodes);
   const profiles = nodes.filter((node) => hasType(node, "ProfilePage"));

@@ -1,4 +1,4 @@
-import { assertRichResultsDocument } from "./rich-results-contract.mjs";
+import { assertRichResultsDocument, markGoogleDiscoveryGenerationContext } from "./rich-results-contract.mjs";
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
 export const browserContext = ["https://schema.org", {
   prov: "http://www.w3.org/ns/prov#", dcterms: "http://purl.org/dc/terms/", skos: "http://www.w3.org/2004/02/skos/core#",
@@ -6,8 +6,8 @@ export const browserContext = ["https://schema.org", {
 /** Keep retained source terms and prefixes in their authored RDF namespaces. */
 export function browserContextFor(graph) {
   if (!graph?.["@context"]) throw new Error("Canonical graph requires @context");
-  return ["https://schema.org", ...values(structuredClone(graph["@context"]))
-    .filter((context) => context !== "https://schema.org")];
+  return markGoogleDiscoveryGenerationContext(["https://schema.org", ...values(structuredClone(graph["@context"]))
+    .filter((context) => context !== "https://schema.org")]);
 }
 export function localizedText(value, language = "fa-IR") {
   const literals = values(value).filter((entry) => entry && typeof entry === "object" && "@value" in entry);

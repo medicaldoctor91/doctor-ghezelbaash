@@ -245,14 +245,38 @@ for (const key of ["contentUrl", "license", "acquireLicensePage", "creditText", 
   assert.equal(attr(property, "href") ?? attr(property, "content"), image[key], `Image property: ${key}`);
 }
 
-
 const ldDocuments = elements.filter((node) => node.tagName === "script" &&
   attr(node, "type") === "application/ld+json")
   .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
 assert.equal(ldDocuments.length, 1, "One browser discovery graph is required");
 const richResultCounts = assertRichResultsDocument(ldDocuments[0]);
 console.log(JSON.stringify({ pageStructuredDataValidation: "PASS", ...richResultCounts }));
-assert(ldDocuments[0]["@context"].includes("https://schema.org"));
+assert.equal(ldDocuments[0]["@context"], "https://schema.org", "Published JSON-LD must use the public Schema.org context");
+const schemaIri = (value) => typeof value === "string" &&
+  (value === "https://schema.org" || value === "https://schema.org/" || value.startsWith("https://schema.org/"));
+const canonicalOnlyTerms = new Set(values(browserContextFor(graph))
+  .filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry))
+  .flatMap((entry) => Object.entries(entry))
+  .filter(([term, definition]) => {
+    if (term.startsWith("@")) return false;
+    const iri = typeof definition === "string" ? definition : definition?.["@id"];
+    return typeof iri === "string" && !schemaIri(iri);
+  }).map(([term]) => term));
+const assertNoCanonicalOnlyTerms = (value) => {
+  if (Array.isArray(value)) return value.forEach(assertNoCanonicalOnlyTerms);
+  if (!value || typeof value !== "object") return;
+  for (const [key, entry] of Object.entries(value)) {
+    if (!key.startsWith("@")) {
+      assert(!key.includes(":"), "Published discovery contains a non-Schema prefixed property: " + key);
+      assert(!canonicalOnlyTerms.has(key), "Published discovery contains a canonical-only property: " + key);
+    }
+    if (key === "@type") for (const type of values(entry))
+      assert(typeof type !== "string" || (!type.includes(":") && !/^https?:\/\//.test(type)),
+        "Published discovery contains a non-Schema type: " + type);
+    assertNoCanonicalOnlyTerms(entry);
+  }
+};
+assertNoCanonicalOnlyTerms(ldDocuments[0]["@graph"]);
 const browserNodes = ldDocuments[0]["@graph"];
 const browserById = new Map(browserNodes.map((node) => [node["@id"], node]));
 const typeHas = (node, type) => [node?.["@type"]].flat().includes(type);
@@ -268,7 +292,6 @@ assert.equal(primaryPerson["@id"], lifecycle.primaryEntity.id, "Physician entity
 assert.equal(primaryPerson["@id"], lifecycle.canonicalUrl + "saeed-ghezelbash");
 assert.equal(primaryPerson.url, lifecycle.canonicalUrl);
 assert.deepEqual(primaryPerson.mainEntityOfPage, { "@id": primaryPage["@id"] });
-assert.deepEqual(ldDocuments[0]["@context"], browserContextFor(graph), "Browser context must retain canonical source term namespaces");
 assert(browserNodes.length < graph["@graph"].length, "Homepage search projection must be narrower than the canonical graph");
 for (const published of browserNodes) {
   const authored = authoredById.get(published["@id"]);
@@ -276,7 +299,8 @@ for (const published of browserNodes) {
     assert.equal(published["@id"], lifecycle.canonicalUrl + "#questions", "Unexpected generated browser node");
     continue;
   }
-  assert.deepEqual([published["@type"]].flat(), [authored["@type"]].flat(), "Published entity type drift");
+  for (const type of values(published["@type"]))
+    assert(values(authored["@type"]).includes(type), "Published entity type drift: " + published["@id"] + " -> " + type);
 }
 assert(!browserNodes.some((node) => typeHas(node, "ProfilePage") && node["@id"] !== primaryPage["@id"]), "Homepage projection exposes an unrelated ProfilePage");
 assert(!browserNodes.some((node) => typeHas(node, "Review")), "Homepage projection exposes an unrelated Review candidate");
@@ -502,9 +526,10 @@ for (const record of records) {
   const documents = scoped.elements.filter((node) => node.tagName === "script" && attr(node, "type") === "application/ld+json")
     .map((node) => JSON.parse(node.childNodes.map((child) => child.value || "").join("")));
   assert.equal(documents.length, 1);
-  assert.deepEqual(documents[0]["@context"], browserContextFor(graph), "Focused context must retain canonical source term namespaces");
+  assert.equal(documents[0]["@context"], "https://schema.org", "Focused JSON-LD must use the public Schema.org context");
   const pageId = record.canonicalUrl + "#webpage";
   assertRichResultsDocument(documents[0], { primaryPageId: pageId });
+  assertNoCanonicalOnlyTerms(documents[0]["@graph"]);
   assert(!pageIds.has(pageId)); pageIds.add(pageId);
   const pageGraph = new Map(documents[0]["@graph"].map((node) => [node["@id"], node]));
   const pageEntity = pageGraph.get(pageId), refs = [pageEntity.mainEntity].flat();
