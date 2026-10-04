@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import jsonld from "jsonld";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { browserContextFor, projectPageJsonLd } from "../../src/lib/page-discovery-jsonld.mjs";
+import { assertRichResultsDocument } from "../../src/lib/rich-results-contract.mjs";
 
 const inputs = readCanonicalInputs();
 
@@ -45,6 +46,18 @@ test("published discovery uses the simple Schema.org context without mutating ca
   for (const property of ["evidencedBy", "evidenceBundle", "supportedBy", "contributesToAuthorityHub"])
     assert(!raw.includes('"' + property + '":'), "Published discovery must not expose custom ontology property " + property);
   assert.equal(JSON.stringify(inputs.graph), before);
+});
+
+test("published validation rejects a serialized rich canonical context instead of repairing it", () => {
+  const homeId = inputs.lifecycle.canonicalUrl + "webpage";
+  const projected = projectPageJsonLd(inputs.graph)[0].document;
+  const regressed = structuredClone(projected);
+  // Serialization deliberately strips the non-enumerable generation-only marker.
+  regressed["@context"] = JSON.parse(JSON.stringify(browserContextFor(inputs.graph)));
+  assert.throws(
+    () => assertRichResultsDocument(regressed, { primaryPageId: homeId }),
+    /published JSON-LD must use the public Schema.org context/,
+  );
 });
 
 test("home profile preserves compact portfolio references without admitting unrelated profile pages", () => {
