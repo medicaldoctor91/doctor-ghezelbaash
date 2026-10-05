@@ -1,7 +1,7 @@
 import { URL_ARCHITECTURE, resolveContentUrl } from "../../src/lib/url-architecture.mjs";
 import { contentAliasTargets } from "./redirect-registry.mjs";
 
-/** Keep the reader's DOM lookup map small; HTTP handles the retired route set. */
+/** Keep the reader's DOM lookup map small; HTTP handles only explicit public aliases. */
 export function readerRouteAliases(legacyRows, machinePaths, { policy = URL_ARCHITECTURE } = {}) {
   const aliases = contentAliasTargets(legacyRows.map((row) => ({
     ...row, target: resolveContentUrl(row.target, { policy }),

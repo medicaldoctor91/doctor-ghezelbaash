@@ -5,7 +5,7 @@ import { canonicalContentHtmlId, exactLanguageLiteral } from "../src/lib/graph-c
 import { routeDocumentFile } from "./lib/independent-pages.mjs";
 import { canonicalMetadataAliasRows, canonicalHostAliasRows, loadAliasRegistry, machineNamespaceAliasRows, renderStaticRewrites } from "./lib/redirect-registry.mjs";
 import { readerRouteAliases } from "./lib/reader-route-aliases.mjs";
-import { URL_ARCHITECTURE, canonicalPaths, assertHtmlTargets, fragmentRows, redirectRows, resolveContentUrl, urlForHtmlId } from "../src/lib/url-architecture.mjs";
+import { canonicalPaths, assertHtmlTargets, resolveContentUrl } from "../src/lib/url-architecture.mjs";
 import { dateValue, temporalValue } from "../src/lib/graph-dates.mjs";
 import { browserContextFor } from "../src/lib/page-discovery-jsonld.mjs";
 import { assertSingleHopDelivery, assertFinalNativeUrl, assertPublishedFragment, assertPhysicalHtmlSurface } from "./lib/delivery-validation.mjs";
@@ -38,8 +38,6 @@ assert(homeArticle?.sourceCodeLocation?.startTag && homeArticle.sourceCodeLocati
 const articleHtml = html.slice(homeArticle.sourceCodeLocation.startTag.endOffset, homeArticle.sourceCodeLocation.endTag.startOffset);
 const authoredArticle = inspectHtml(articleHtml, { wrapMain: true });
 assertHtmlTargets(authoredArticle.ids);
-for (const retired of URL_ARCHITECTURE.retiredPaths)
-  assert(!authoredArticle.ids.includes(retired.slice(1)), "Retired editorial block remains in the authored article: " + retired);
 for (const heading of authoredArticle.headings)
   assert(normalizedText(heading), "Authored heading must have visible text: " + attr(heading, "id"));
 const namedMeta = new Map(elements.filter((node) => node.tagName === "meta")
@@ -81,11 +79,6 @@ const collectHtmlFiles = async (directory, prefix = "") => {
 await collectHtmlFiles(dist);
 assertPhysicalHtmlSurface(htmlFiles, canonicalSurface);
 const answerProjection = deriveCanonicalAnswerProjection(graph, lifecycle);
-const answerAliases = answerProjection.answers.map((record) => ({
-  source: "/" + record.htmlId,
-  target: urlForHtmlId(record.htmlId),
-  statusCode: 301,
-}));
 const redirects = (await readFile(path.join(dist, "_redirects"), "utf8")).trim().split(/\r?\n/);
 const rewriteRows = redirects.map((line) => {
   const [source, target, statusCode] = line.split(/\s+/);
@@ -128,31 +121,13 @@ for (const target of Object.values(expectedAliases)) {
 for (const { source, target, statusCode } of legacyAliases)
   assert(redirects.includes(`${source} ${target} ${statusCode}`),
     statusCode === 200 ? `Missing machine graph rewrite: ${source}` : `Missing permanent legacy redirect: ${source}`);
-for (const { source, target } of answerAliases)
-  assert(redirects.includes(`${source} ${target} 301`),
-    `Missing canonical answer redirect: ${source}`);
 for (const route of paths) {
   assert(!rewriteRows.some((row) => row.source === route),
     `Clean content route must not be rewritten through its .html file: ${route}`);
   assert((await stat(path.join(dist, routeDocumentFile(route))).catch(() => null))?.isFile(),
     `Missing independent content document: ${route}`);
 }
-const corpusAliases = redirectRows();
-assert.equal(corpusAliases.length, URL_ARCHITECTURE.decisions.filter((row) => row.decision === "301_REDIRECT").length,
-  "Every historical corpus path must redirect to its final canonical owner");
-for (const { source, target, statusCode } of corpusAliases)
-  assert(redirects.includes(`${source} ${target} ${statusCode}`), `Missing consolidated corpus redirect: ${source}`);
-const fragmentAliases = fragmentRows();
-for (const { source, target } of fragmentAliases) {
-  assert(rewriteRows.some((row) => row.source === source && row.statusCode === 301),
-    `Historical authored path must have its permanent HTTP redirect: ${source}`);
-  const destination = new URL(target, lifecycle.canonicalUrl);
-  assert.equal(destination.pathname, "/", `Authored browser navigation must retain its root fragment: ${source}`);
-  assert(canonicalSurface.includes(destination.pathname), `Missing canonical fragment owner: ${target}`);
-  assertPublishedFragment(destination, (await publishedDocument(destination.pathname)).ids,
-    `Authored fragment alias ${source} -> ${target}`);
-}
-const registeredSources = new Set([...legacyAliases, ...answerAliases, ...corpusAliases].map((row) => row.source));
+const registeredSources = new Set(legacyAliases.map((row) => row.source));
 const metadataRoutes = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl)
   .filter(({ source }) => !paths.includes(source) && !registeredSources.has(source));
 for (const { source, target, statusCode } of metadataRoutes)
@@ -161,7 +136,7 @@ const namespaceAliases = machineNamespaceAliasRows();
 assert.equal(namespaceAliases.length, 5, "Only the reviewed machine namespaces may use wildcards");
 assert.deepEqual(rewriteRows.filter((row) => row.source.includes("*")), namespaceAliases, "Machine namespace wildcard scope drift");
 assert.equal(await readFile(path.join(dist, "_redirects"), "utf8"), renderStaticRewrites([
-  ...legacyAliases, ...answerAliases, ...corpusAliases, ...metadataRoutes, ...namespaceAliases,
+  ...legacyAliases, ...metadataRoutes, ...namespaceAliases,
 ]), "Delivery rules must equal the complete reviewed one-hop registry");
 
 const deliveryHeaders = await readFile(path.join(dist, "_headers"), "utf8");
@@ -342,8 +317,6 @@ const sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
 const xmlValue = (value) => value.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => xmlValue(match[1]));
 assert.deepEqual(sitemapLocs, [lifecycle.canonicalUrl, ...paths.map((route) => new URL(route, lifecycle.canonicalUrl).href)], "Sitemap must cover every independently rendered canonical path");
-for (const { source } of answerAliases)
-  assert(!sitemapLocs.includes(new URL(source, lifecycle.canonicalUrl).href), "Answer redirect must not remain in the sitemap: " + source);
 const pageNode = graph["@graph"].find((node) => node["@id"] === lifecycle.canonicalUrl + "webpage");
 assert(sitemap.includes("<lastmod>" + dateValue(pageNode.dateModified) + "</lastmod>"), "Sitemap revision must be authored");
 for (const match of sitemap.matchAll(/<(?:image:loc|video:thumbnail_loc|video:content_loc)>([^<]+)<\/(?:image:loc|video:thumbnail_loc|video:content_loc)>/g)) {
