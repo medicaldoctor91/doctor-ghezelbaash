@@ -2,13 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { liveOptions, livePlan, validateLive } from "../validate-live.mjs";
 import { machineNamespaceAliasRows } from "../lib/redirect-registry.mjs";
-import { fragmentRows } from "../../src/lib/url-architecture.mjs";
 
 const origin = "https://www.ghezelbaash.ir";
 const doctor = { "@id": origin + "/#saeed-ghezelbash", "@type": "Person", name: "Physician", url: origin + "/", mainEntityOfPage: { "@id": origin + "/webpage" } };
-const plan = { canonicalOrigin: origin, paths: ["/", "/topic"], release: "test-release", namespaces: machineNamespaceAliasRows(),
-  rows: [{ source: "/old-answer", target: "/topic#answer", statusCode: 301 }, { source: "/old-profile", target: "/#saeed-ghezelbash", statusCode: 301 }, { source: "/entity", target: "/graph.jsonld", statusCode: 200 }],
-  counts: { canonical: 2, corpusRedirects: 2, answerRedirects: 1, legacyRules: 1, metadataRules: 0, namespaces: 5 } };
+const plan = {
+  canonicalOrigin: origin,
+  paths: ["/", "/topic"],
+  release: "test-release",
+  namespaces: machineNamespaceAliasRows(),
+  rows: [
+    { source: "/legacy-topic", target: "/topic#answer", statusCode: 301 },
+    { source: "/legacy-profile", target: "/#saeed-ghezelbash", statusCode: 301 },
+    { source: "/entity", target: "/graph.jsonld", statusCode: 200 },
+  ],
+  counts: { canonical: 2, legacyRules: 2, metadataRules: 1, namespaces: 5 },
+};
 const options = liveOptions(["--origin", "http://localhost:8788", "--expected-commit", "a".repeat(40)]);
 const documentFor = (pathname) => ({ "@context": "https://schema.org", "@graph": [doctor,
   pathname === "/" ? { "@id": origin + "/webpage", "@type": ["ProfilePage", "MedicalWebPage"], url: origin + "/", mainEntity: { "@id": doctor["@id"] }, dateModified: "2026-10-03" }
@@ -49,20 +57,16 @@ test("live options reject credentials, unbounded concurrency and abbreviated dep
   assert.throws(() => liveOptions(["--expected-commit", "abc123"]), /full commit SHA/);
 });
 
-test("live plan probes historical paths while authored navigation preserves root fragments", async () => {
+test("live plan publishes only canonical pages and explicit public alias registries", async () => {
   const actual = await livePlan();
-  const fragments = fragmentRows();
   assert.equal(actual.paths.length, 72);
-  assert.equal(actual.counts.corpusRedirects, fragments.length + 2);
-  assert(fragments.length > 1000);
-  assert(fragments.every((fragment) => actual.rows.some((row) => row.source === fragment.source && row.statusCode === 301)));
   assert.equal(actual.namespaces.length, 5);
+  assert(!Object.hasOwn(actual.counts, "corpusRedirects"));
+  assert(!Object.hasOwn(actual.counts, "answerRedirects"));
   assert(!actual.rows.some((row) => row.source === "/saeed-ghezelbash"));
-  assert(!fragments.some((row) => row.source === "/saeed-ghezelbash"));
-  assert.deepEqual(fragments.find((row) => row.source === "/botox-heading"),
-    { source: "/botox-heading", target: "/#botox-heading" });
-  assert(actual.counts.answerRedirects > 0);
-  assert(actual.rows.some((row) => row.statusCode === 301 && /#answer-/.test(row.target)));
+  assert(!actual.rows.some((row) => row.source === "/botox-heading"));
+  assert(!actual.rows.some((row) => /^\/answer-/.test(row.source)));
+  assert(actual.rows.length < 1000, "development-only HTML IDs must not inflate the public HTTP alias surface");
 });
 
 test("live validation checks each canonical once, preserves exact redirect fragments and caps concurrency", async () => {
