@@ -20,6 +20,9 @@ jobs:
           ref: cleanup/remove-development-url-aliases
           fetch-depth: 0
 
+      - name: Correct helper expectations
+        run: node scripts/fix-pr451-helper.mjs
+
       - name: Apply final identity, URL and validation decisions
         run: node scripts/one-time-finalize-pr451.mjs
 
