@@ -12,7 +12,7 @@
 # SHACL definitions are compiled alongside these constraints into shapes.ttl.
 
 ex:PhysicianEntityShape a sh:NodeShape ;
-  sh:targetNode ex:saeed-ghezelbash ;
+  sh:targetNode <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:Person ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:IndividualPhysician ] ;
   sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -34,9 +34,9 @@ ex:ClinicAssetShape a sh:NodeShape ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalClinic ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:PhysiciansOffice ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:LocalBusiness ] ;
-  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:founder ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:employee ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:founder ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:employee ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:medicalSpecialty ; sh:hasValue ex:medical-specialty-aesthetic-medicine ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;
@@ -51,9 +51,9 @@ ex:WebPageDominanceShape a sh:NodeShape ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalWebPage ] ;
   sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:dateModified ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:author ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] .
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:author ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:publisher ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] .
 
 ex:PrimaryHomeProfileShape a sh:NodeShape ;
   sh:targetClass schema:ProfilePage ;
@@ -62,8 +62,8 @@ ex:PrimaryHomeProfileShape a sh:NodeShape ;
 ex:CanonicalDatasetRoleShape a sh:NodeShape ;
   sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;
-  sh:property [ sh:path schema:creator ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:creator ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:publisher ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:distribution ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:dateModified ; sh:minCount 1 ; sh:maxCount 1 ] ;
@@ -100,7 +100,7 @@ ex:FridayClosedShape a sh:NodeShape ;
 ex:AvailableServiceProviderShape a sh:NodeShape ;
   sh:targetObjectsOf schema:availableService ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:Service ] ;
-  sh:property [ sh:path schema:provider ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:ImageLicenseShape a sh:NodeShape ;
   sh:targetClass schema:ImageObject ;
@@ -141,7 +141,7 @@ ex:ServiceCategoryShape a sh:NodeShape ;
 
 ex:PublishedServiceProviderShape a sh:NodeShape ;
   sh:targetClass schema:Service ;
-  sh:property [ sh:path schema:provider ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 # This pair has one specific subject; pairwise equality alone would also pass
 # when both questions and answers point to the same unrelated procedure.
@@ -176,7 +176,7 @@ ex:EvidenceAssessmentShape a sh:NodeShape ;
     [ sh:not [ sh:pattern "^https://www[.]ghezelbaash[.]ir/provenance[.]jsonld/assessment-" ] ]
     [
       sh:class schema:CreativeWork ;
-      sh:property [ sh:path schema:creator ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+      sh:property [ sh:path schema:creator ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;
       sh:property [ sh:path schema:isBasedOn ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
       sh:property [ sh:path schema:about ; sh:equals schema:isBasedOn ; sh:minCount 1 ; sh:maxCount 1 ] ;
       sh:property [ sh:path schema:dateModified ; sh:maxCount 0 ] ;
@@ -216,20 +216,20 @@ ex:PersonalFacebookProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-ghezelbaash ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
-  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:ClinicFacebookProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-facebook-doctor-ghezelbaash ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
-  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 ex:ClinicInstagramProfileShape a sh:NodeShape ;
   sh:targetNode ex:profile-instagram-doctor-ghezelbaash ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
-  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .
 
 # Only these shared professional pages describe both existing entities. The
 # canonical homepage and personal Facebook retain their single-person contracts.
@@ -240,8 +240,8 @@ ex:ProfessionalSocialSubjectShape a sh:NodeShape ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;
   sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;
   sh:property [ sh:path schema:mainEntity ; sh:minCount 2 ; sh:maxCount 2 ;
-    sh:in ( ex:saeed-ghezelbash ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;
-  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ] ;
+    sh:in ( <https://www.ghezelbaash.ir/#saeed-ghezelbash> ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ] ;
   sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] .
 
 # Validate current identity ownership without republishing retired identifiers.
@@ -254,11 +254,11 @@ ex:CoreEntityWikidataOwnershipShape a sh:NodeShape ;
       PREFIX ex: <https://www.ghezelbaash.ir/>
       SELECT $this WHERE {
         {
-          ex:saeed-ghezelbash schema:sameAs ?value .
+          <https://www.ghezelbaash.ir/#saeed-ghezelbash> schema:sameAs ?value .
           FILTER(CONTAINS(STR(?value), "wikidata.org/") &&
                  STR(?value) != "https://www.wikidata.org/entity/Q140287622")
         } UNION {
-          ex:saeed-ghezelbash schema:identifier ?identifier .
+          <https://www.ghezelbaash.ir/#saeed-ghezelbash> schema:identifier ?identifier .
           ?identifier schema:propertyID "Wikidata item ID" ; schema:value ?value .
           FILTER(STR(?value) != "Q140287622")
         } UNION {
