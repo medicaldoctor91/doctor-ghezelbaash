@@ -16,8 +16,8 @@ test("reader aliases retain the bounded host map and add only canonical DOM path
   const expectedKeys = new Set([...Object.keys(legacy), ...languageResources.map((resource) => resource.path)]);
   assert.deepEqual(new Set(Object.keys(aliases)), expectedKeys);
   assert.equal(languageResources.length, 3);
-  assert(Object.keys(aliases).length < URL_ARCHITECTURE.decisions.length / 2,
-    "the reader must not embed the HTTP-only retired path inventory");
+  assert(Object.keys(aliases).length < Object.keys(URL_ARCHITECTURE.htmlIdTargets).length,
+    "the reader must not embed the complete authored fragment inventory as HTTP aliases");
   for (const [source, target] of Object.entries(legacy))
     assert.equal(aliases[source], resolveContentUrl(target));
   for (const resource of languageResources)
