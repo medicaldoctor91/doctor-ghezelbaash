@@ -1,0 +1,34 @@
+name: One-time finalize PR451
+
+on:
+  push:
+    branches:
+      - cleanup/remove-development-url-aliases
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: ${{ !contains(github.event.head_commit.message, '[pr451-finalized]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: cleanup/remove-development-url-aliases
+          fetch-depth: 0
+
+      - name: Apply final identity, URL and validation decisions
+        run: node scripts/one-time-finalize-pr451.mjs
+
+      - name: Commit finalization
+        run: |
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 1
+          git commit -m "Finalize physician fragment identity and URL cleanup [pr451-finalized]"
+          git push origin HEAD:cleanup/remove-development-url-aliases
