@@ -68,7 +68,7 @@ test("homepage authority owns the stable physician identity while questions and 
   assert(typed(profile, "MedicalWebPage"));
   assert.deepEqual(profile.mainEntity, { "@id": person["@id"] });
   assert.equal(profile.url, inputs.lifecycle.canonicalUrl);
-  assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash");
   assert(typed(person, "Person"));
   assert(typed(person, "IndividualPhysician"));
   assert.equal(person.url, inputs.lifecycle.canonicalUrl);
@@ -198,7 +198,7 @@ test("focused paths preserve the physician identity and homepage authority witho
   assert([homePage["@type"]].flat().includes("ProfilePage"));
   for (const page of pages) {
     const author = page.document["@graph"].find((node) => node["@id"] === original["@id"]);
-    assert.equal(author["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+    assert.equal(author["@id"], inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash");
     assert.equal(author.url, inputs.lifecycle.canonicalUrl);
     assert.deepEqual(author["@type"], original["@type"]);
     assert.deepEqual(author.mainEntityOfPage, { "@id": homePage["@id"] });

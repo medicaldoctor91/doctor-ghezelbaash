@@ -5,9 +5,9 @@ import { machineNamespaceAliasRows } from "../lib/redirect-registry.mjs";
 import { fragmentRows } from "../../src/lib/url-architecture.mjs";
 
 const origin = "https://www.ghezelbaash.ir";
-const doctor = { "@id": origin + "/saeed-ghezelbash", "@type": "Person", name: "Physician", url: origin + "/", mainEntityOfPage: { "@id": origin + "/webpage" } };
+const doctor = { "@id": origin + "/#saeed-ghezelbash", "@type": "Person", name: "Physician", url: origin + "/", mainEntityOfPage: { "@id": origin + "/webpage" } };
 const plan = { canonicalOrigin: origin, paths: ["/", "/topic"], release: "test-release", namespaces: machineNamespaceAliasRows(),
-  rows: [{ source: "/old-answer", target: "/topic#answer", statusCode: 301 }, { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 }, { source: "/entity", target: "/graph.jsonld", statusCode: 200 }],
+  rows: [{ source: "/old-answer", target: "/topic#answer", statusCode: 301 }, { source: "/old-profile", target: "/#saeed-ghezelbash", statusCode: 301 }, { source: "/entity", target: "/graph.jsonld", statusCode: 200 }],
   counts: { canonical: 2, corpusRedirects: 2, answerRedirects: 1, legacyRules: 1, metadataRules: 0, namespaces: 5 } };
 const options = liveOptions(["--origin", "http://localhost:8788", "--expected-commit", "a".repeat(40)]);
 const documentFor = (pathname) => ({ "@context": "https://schema.org", "@graph": [doctor,
@@ -57,10 +57,8 @@ test("live plan probes historical paths while authored navigation preserves root
   assert(fragments.length > 1000);
   assert(fragments.every((fragment) => actual.rows.some((row) => row.source === fragment.source && row.statusCode === 301)));
   assert.equal(actual.namespaces.length, 5);
-  assert.deepEqual(actual.rows.find((row) => row.source === "/saeed-ghezelbash"),
-    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 });
-  assert.deepEqual(fragments.find((row) => row.source === "/saeed-ghezelbash"),
-    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash" });
+  assert(!actual.rows.some((row) => row.source === "/saeed-ghezelbash"));
+  assert(!fragments.some((row) => row.source === "/saeed-ghezelbash"));
   assert.deepEqual(fragments.find((row) => row.source === "/botox-heading"),
     { source: "/botox-heading", target: "/#botox-heading" });
   assert(actual.counts.answerRedirects > 0);

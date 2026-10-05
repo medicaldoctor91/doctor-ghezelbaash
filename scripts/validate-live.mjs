@@ -15,7 +15,7 @@ const values = (value) => Array.isArray(value) ? value : value == null ? [] : [v
 const typed = (node, type) => values(node?.["@type"]).includes(type);
 const noindex = (value) => /\b(?:noindex|none)\b/i.test(value || "");
 const canonicalOrigin = URL_ARCHITECTURE.canonicalOrigin;
-const physicianId = canonicalOrigin + "/saeed-ghezelbash";
+const physicianId = canonicalOrigin + "/#saeed-ghezelbash";
 
 export function liveOptions(args) {
   const options = { origin: canonicalOrigin, concurrency: 8, timeoutMs: 20_000, redirects: "all", report: ".generated/live-validation.json" };
@@ -146,7 +146,7 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     documents.set(pathname, new Set(inspected.ids));
   })));
   const redirects = plan.rows.filter((row) => row.statusCode !== 200);
-  const sampled = options.redirects === "sample" ? redirects.filter((row, index) => index % Math.max(1, Math.floor(redirects.length / 25)) === 0 || row.source === "/saeed-ghezelbash").slice(0, 30) : redirects;
+  const sampled = options.redirects === "sample" ? redirects.filter((row, index) => index % Math.max(1, Math.floor(redirects.length / 25)) === 0).slice(0, 30) : redirects;
   await pooled(sampled.map((row) => () => request(row.source, "HEAD", async (response, record) => {
     assert.equal(response.status, row.statusCode, "Legacy URL has the wrong permanent redirect status");
     const location = response.headers.get("location");

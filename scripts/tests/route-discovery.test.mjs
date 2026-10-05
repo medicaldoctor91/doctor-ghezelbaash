@@ -60,7 +60,7 @@ test("finished topic records share truthful breadcrumbs, translation alternative
   assert.equal(translated.length, discoveryPolicy.translationGroups.flatMap((group) => group.members).length);
   for (const record of records) {
     const person = record.document["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
-    assert.equal(person["@id"], canonicalUrl + "saeed-ghezelbash");
+    assert.equal(person["@id"], canonicalUrl + "#saeed-ghezelbash");
     assert.equal(person.url, canonicalUrl);
     assert.equal(person.mainEntityOfPage["@id"], canonicalUrl + "webpage");
     if (record.metadataContext) {

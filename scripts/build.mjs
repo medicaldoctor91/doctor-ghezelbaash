@@ -23,12 +23,14 @@ const steps = [
   ["node_modules/astro/bin/astro.mjs", "build"],
   ["scripts/materialize-static-artifacts.mjs"],
   ["scripts/generate-deployment-headers.mjs"],
-  ["scripts/validate-dist.mjs"],
+  ["scripts/prune-development-redirects.mjs"],
+  ["scripts/validate-final-dist.mjs"],
   ["scripts/write-dist-manifest.mjs"],
 ];
 
 // One finite static distribution: derive its published formats, compile the
-// document, materialize assets and validate the actual output in that order.
+// document, materialize assets, remove development-only HTTP aliases, then
+// validate the exact deployable output before fingerprinting its final dist.
 for (const args of steps) {
   const result = spawnSync(process.execPath, args, {
     stdio: "inherit",
