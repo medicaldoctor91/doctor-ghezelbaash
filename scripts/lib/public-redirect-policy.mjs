@@ -14,6 +14,10 @@ import {
   renderStaticRewrites,
 } from "./redirect-registry.mjs";
 
+const neverPublishedDevelopmentPaths = Object.freeze([
+  "/saeed-ghezelbash",
+]);
+
 export async function derivePublicRedirectPolicy(root = process.cwd()) {
   const { graph, lifecycle } = readCanonicalInputs(root);
   const canonical = canonicalPaths();
@@ -36,24 +40,39 @@ export async function derivePublicRedirectPolicy(root = process.cwd()) {
     developmentAliases.length,
     "Development-only URL inventory contains duplicate paths",
   );
+  for (const source of neverPublishedDevelopmentPaths) {
+    assert(!developmentSources.has(source), `Never-published path returned to source URL topology: ${source}`);
+    assert(!canonicalSources.has(source), `Never-published path became canonical: ${source}`);
+  }
+
+  const removedDevelopmentPaths = [
+    ...developmentSources,
+    ...neverPublishedDevelopmentPaths,
+  ];
+  assert.equal(
+    new Set(removedDevelopmentPaths).size,
+    removedDevelopmentPaths.length,
+    "Removed development URL inventory contains duplicate paths",
+  );
 
   const legacySources = new Set(legacyAliases.map((row) => row.source));
   assert.deepEqual(
-    [...developmentSources].filter((source) => legacySources.has(source)),
+    removedDevelopmentPaths.filter((source) => legacySources.has(source)),
     [],
     "A development-only path collides with an explicit legacy alias",
   );
   assert.deepEqual(
-    [...developmentSources].filter((source) => canonicalSources.has(source)),
+    removedDevelopmentPaths.filter((source) => canonicalSources.has(source)),
     [],
     "A development-only path collides with a canonical page",
   );
 
-  // Reserve development-only paths while deriving metadata aliases so removing
-  // them cannot accidentally expose a different representation on the same URL.
-  const reservedSources = new Set(
-    [...legacyAliases, ...developmentAliases].map((row) => row.source),
-  );
+  // Reserve every removed development path while deriving metadata aliases so
+  // cleanup cannot accidentally expose a different representation on that URL.
+  const reservedSources = new Set([
+    ...legacyAliases.map((row) => row.source),
+    ...removedDevelopmentPaths,
+  ]);
   const metadataAliases = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl).filter(
     ({ source }) => !canonicalSources.has(source) && !reservedSources.has(source),
   );
@@ -74,6 +93,10 @@ export async function derivePublicRedirectPolicy(root = process.cwd()) {
 
   renderStaticRewrites(finalRows);
   renderStaticRewrites(prePruneRows);
+  for (const source of neverPublishedDevelopmentPaths) {
+    assert(!prePruneRows.some((row) => row.source === source), `Never-published path was materialized: ${source}`);
+    assert(!finalRows.some((row) => row.source === source), `Never-published path leaked into public policy: ${source}`);
+  }
 
   return {
     graph,
@@ -83,6 +106,8 @@ export async function derivePublicRedirectPolicy(root = process.cwd()) {
     answerAliases,
     corpusAliases,
     developmentAliases,
+    neverPublishedDevelopmentPaths,
+    removedDevelopmentPaths,
     metadataAliases,
     namespaceAliases,
     finalRows,
