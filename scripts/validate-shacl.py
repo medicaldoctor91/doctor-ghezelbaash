@@ -54,10 +54,11 @@ def main():
         SC = Namespace("https://schema.org/")
         EX = Namespace("https://www.ghezelbaash.ir/")
         SPDX = Namespace("http://spdx.org/rdf/terms#")
+        PHYSICIAN = URIRef("https://www.ghezelbaash.ir/#saeed-ghezelbash")
         mutations = [
             ("home must own ProfilePage", (EX.webpage, RDF.type, SC.ProfilePage), None),
-            ("persistent physician URL must be home", (EX["saeed-ghezelbash"], SC.url, None), (EX["saeed-ghezelbash"], SC.url, EX["saeed-ghezelbash"])),
-            ("authored skill evidence must remain present", (EX["saeed-ghezelbash"], SC.skills, None), None),
+            ("persistent physician URL must be home", (PHYSICIAN, SC.url, None), (PHYSICIAN, SC.url, PHYSICIAN)),
+            ("authored skill evidence must remain present", (PHYSICIAN, SC.skills, None), None),
             ("calendar dates require RDF datatype", (EX.webpage, SC.dateModified, None), (EX.webpage, SC.dateModified, Literal("2026-10-03"))),
             ("melasma answer must keep its actual subject", (EX["acne-pigmentation-and-scars#answer-melasma-recurrence-and-multimodal-treatment"], SC.about, None), (EX["acne-pigmentation-and-scars#answer-melasma-recurrence-and-multimodal-treatment"], SC.about, EX["procedure-thread-lift"])),
             ("measured graph distribution requires checksum", (EX["graph.jsonld/download"], SPDX.checksum, None), None),
