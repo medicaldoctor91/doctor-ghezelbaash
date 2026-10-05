@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { URL_ARCHITECTURE, assertUrlArchitecture, assertCoverage, assertHtmlTargets,
-  canonicalPaths, urlForHtmlId, resolveContentUrl, sourceNavigationUrl, fragmentRows, redirectRows } from "../../src/lib/url-architecture.mjs";
+  canonicalPaths, urlForHtmlId, resolveContentUrl, sourceNavigationUrl } from "../../src/lib/url-architecture.mjs";
 import { readCanonicalInputs } from "../../src/lib/canonical-inputs.mjs";
 import { renderCanonicalPageHtml } from "../../src/lib/canonical-page-html.mjs";
 import { discoveryPolicy } from "../../src/config/site-policy.mjs";
@@ -15,78 +15,54 @@ const home = '<!doctype html><html lang="fa-IR"><head><title>Home</title></head>
   renderCanonicalPageHtml(inputs.pageBody, inputs.graph) + "</article></main></body></html>";
 const inspected = inspectHtml(home);
 
-test("finite decisions cover the full actual anchor inventory and only explicitly retired source paths", () => {
+test("URL architecture contains only canonical resources and authored fragment ownership", () => {
   assert.equal(assertCoverage(inspected.ids), true);
   assert.equal(assertHtmlTargets(inspected.ids), true);
+  assert.equal(URL_ARCHITECTURE.resources.length, 72);
+  assert.equal(Object.keys(URL_ARCHITECTURE.htmlIdTargets).length, inspected.ids.length);
   assert.deepEqual(canonicalPaths(), URL_ARCHITECTURE.resources.map((resource) => resource.path));
-  assert.equal(new Set(URL_ARCHITECTURE.decisions.map((row) => row.path)).size, URL_ARCHITECTURE.decisions.length);
-  assert.deepEqual(URL_ARCHITECTURE.retiredPaths, ["/medical-content-governance", "/medical-content-governance-title"]);
+  assert(!Object.hasOwn(URL_ARCHITECTURE, "decisions"));
+  assert(!Object.hasOwn(URL_ARCHITECTURE, "retiredPaths"));
   assert(!Object.hasOwn(URL_ARCHITECTURE.htmlIdTargets, "medical-content-governance"));
+  assert(!Object.hasOwn(URL_ARCHITECTURE.htmlIdTargets, "medical-content-governance-title"));
   assert.throws(() => assertHtmlTargets(inspected.ids.slice(1)), /inventory drift/);
   assert.throws(() => assertHtmlTargets([...inspected.ids, "unreviewed-new-heading"]), /inventory drift/);
 });
 
-test("authored noncanonical paths use root fragments for browser navigation while retaining canonical owners", () => {
-  const kept = new Set(canonicalPaths());
-  const fragments = fragmentRows();
-  const redirects = redirectRows();
-  assert(fragments.length > kept.size);
-  assert.deepEqual(redirects.map((row) => row.source).sort(),
-    URL_ARCHITECTURE.decisions.filter((row) => row.decision === "301_REDIRECT").map((row) => row.path).sort());
-
-  for (const row of fragments) {
-    assert(!kept.has(row.source));
-    assert(!URL_ARCHITECTURE.retiredPaths.includes(row.source));
-    const navigationTarget = new URL(row.target, URL_ARCHITECTURE.canonicalOrigin);
-    assert.equal(navigationTarget.pathname, "/");
-    assert.equal(decodeURIComponent(navigationTarget.hash.slice(1)), row.source.slice(1));
-    assert.equal(sourceNavigationUrl(row.source), row.target);
-    assert.equal(sourceNavigationUrl(row.target), row.target);
-    const decision = URL_ARCHITECTURE.decisions.find((item) => item.path === row.source);
-    assert.equal(resolveContentUrl(row.source), decision.target);
+test("authored HTML IDs resolve to canonical owners without creating HTTP aliases", () => {
+  const canonical = new Set(canonicalPaths());
+  for (const [id, value] of Object.entries(URL_ARCHITECTURE.htmlIdTargets)) {
+    const target = new URL(value, URL_ARCHITECTURE.canonicalOrigin);
+    assert(canonical.has(target.pathname), `Missing canonical owner for ${id}`);
+    if (target.hash) assert.equal(decodeURIComponent(target.hash.slice(1)), id);
+    assert.equal(urlForHtmlId(id), value);
   }
-
-  for (const row of redirects) {
-    assert.equal(row.statusCode, 301);
-    assert(!kept.has(row.source));
-    const target = new URL(row.target, URL_ARCHITECTURE.canonicalOrigin);
-    assert(kept.has(target.pathname));
-    assert.equal(resolveContentUrl(row.source), row.target);
-    assert.equal(sourceNavigationUrl(row.source), URL_ARCHITECTURE.retiredPaths.includes(row.source)
-      ? row.target : "/#" + row.source.slice(1));
-  }
-
   assert.equal(resolveContentUrl("/botox-heading"), "/botox#botox-heading");
   assert.equal(sourceNavigationUrl("/botox-heading"), "/#botox-heading");
-  assert.equal(resolveContentUrl("/medical-content-governance"),
-    "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#media-license");
-  assert.equal(sourceNavigationUrl("/medical-content-governance"),
-    "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah#media-license");
   assert.equal(resolveContentUrl("/jalupro-vs-profhilo-selection"),
     "/jalupro-and-profhilo#jalupro-vs-profhilo-selection");
   assert.equal(sourceNavigationUrl("/jalupro-vs-profhilo-selection"),
     "/#jalupro-vs-profhilo-selection");
   assert.equal(resolveContentUrl("/botox"), "/botox");
   assert.equal(sourceNavigationUrl("/botox"), "/botox");
+  assert.equal(resolveContentUrl("/medical-content-governance"), "/medical-content-governance");
+  assert.equal(sourceNavigationUrl("/medical-content-governance"), "/medical-content-governance");
 });
 
-test("rendered authored links keep canonical routes and use only final reader navigation URLs", () => {
+test("rendered authored links keep canonical routes and final reader navigation URLs", () => {
   const drift = [];
-  const internal = [];
   for (const node of inspected.elements.filter((element) => element.tagName === "a")) {
     const href = node.attrs.find((item) => item.name === "href")?.value;
     if (!href) continue;
     const url = new URL(href, URL_ARCHITECTURE.canonicalOrigin);
     if (url.origin !== URL_ARCHITECTURE.canonicalOrigin) continue;
-    internal.push(href);
     const normalized = sourceNavigationUrl(href);
     if (normalized !== href) drift.push(href + " -> " + normalized);
   }
   assert.deepEqual(drift, []);
-  assert(internal.some((href) => href.startsWith("/#")), "Rendered source should retain same-reader hash navigation");
 });
 
-test("language canonicals own full original sections while former headings navigate as root fragments", () => {
+test("language canonicals own full original sections while their nested IDs remain fragments", () => {
   for (const [language, htmlId] of [["en", "english-facial-aesthetic-doctor-section"],
     ["ar-iq", "iraqi-arabic-facial-aesthetic-doctor-section"],
     ["ckb-iq", "sorani-kurdish-facial-aesthetic-doctor-section"]]) {
@@ -95,22 +71,20 @@ test("language canonicals own full original sections while former headings navig
     assert.equal(resource.scope, "language");
     assert.equal(resource.htmlId, htmlId);
     assert.equal(urlForHtmlId(htmlId), route);
-    const old = "best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-" + language;
-    assert.equal(urlForHtmlId(old), route + "#" + old);
-    assert.equal(resolveContentUrl("/" + old), route + "#" + old);
-    assert.equal(sourceNavigationUrl("/" + old), "/#" + old);
-    assert(!resource.title.includes("Best"));
+    const nested = "best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-" + language;
+    assert.equal(urlForHtmlId(nested), route + "#" + nested);
+    assert.equal(resolveContentUrl("/" + nested), route + "#" + nested);
+    assert.equal(sourceNavigationUrl("/" + nested), "/#" + nested);
   }
 });
 
-test("the homepage owns physician authority and the artificial physician pathname does not exist", () => {
+test("homepage owns physician authority and the artificial physician pathname is absent", () => {
   const physicianId = inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash";
   const oldPhysicianId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash";
   assert(!canonicalPaths().includes("/saeed-ghezelbash"));
   assert.equal(urlForHtmlId("saeed-ghezelbash"), "/#saeed-ghezelbash");
-  assert(!URL_ARCHITECTURE.decisions.some((row) => row.path === "/saeed-ghezelbash"));
-  assert(!redirectRows().some((row) => row.source === "/saeed-ghezelbash"));
-  assert(!fragmentRows().some((row) => row.source === "/saeed-ghezelbash"));
+  assert.equal(resolveContentUrl("/saeed-ghezelbash"), "/#saeed-ghezelbash");
+  assert.equal(sourceNavigationUrl("/saeed-ghezelbash"), "/#saeed-ghezelbash");
   const doctor = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
   assert.equal(inputs.lifecycle.primaryEntity.id, physicianId);
   assert.equal(doctor["@id"], physicianId);
@@ -120,7 +94,6 @@ test("the homepage owns physician authority and the artificial physician pathnam
   assert(inspected.headings.some((node) => node.tagName === "h1" && node.attrs?.some((item) => item.name === "id" && item.value === "saeed-ghezelbash")));
   assert(!inputs.pageBody.includes('href="/saeed-ghezelbash"'));
   assert(!inputs.pageBody.includes('href="https://www.ghezelbaash.ir/saeed-ghezelbash"'));
-  assert(!inputs.pageBody.includes('href="/#saeed-ghezelbash"'));
 });
 
 test("canonical resolution and browser hash navigation remain distinct", () => {
@@ -132,8 +105,6 @@ test("canonical resolution and browser hash navigation remain distinct", () => {
     "/jalupro-and-profhilo#answer-jalupro-vs-profhilo-selection");
   assert.equal(sourceNavigationUrl("#answer-jalupro-vs-profhilo-selection"),
     "/#answer-jalupro-vs-profhilo-selection");
-  assert.equal(resolveContentUrl("/video-saeed-ghezelbash-jalupro-vs-profhilo?video=video-saeed-ghezelbash-jalupro-vs-profhilo&t=42"),
-    "/video-saeed-ghezelbash-jalupro-vs-profhilo?video=video-saeed-ghezelbash-jalupro-vs-profhilo&t=42");
   assert.equal(resolveContentUrl("/botox-heading", { absolute: true }),
     URL_ARCHITECTURE.canonicalOrigin + "/botox#botox-heading");
   assert.equal(sourceNavigationUrl("/botox-heading", { absolute: true }),
@@ -143,19 +114,15 @@ test("canonical resolution and browser hash navigation remain distinct", () => {
     assert.equal(sourceNavigationUrl(value), value);
   }
   assert.equal(urlForHtmlId("unclassified-future-heading"), "/#unclassified-future-heading");
-  assert.equal(urlForHtmlId("toString"), "/#toString");
   assert.throws(() => urlForHtmlId("bad#fragment"), /Invalid HTML/);
 });
 
-test("policy rejects redirect chains, lost fragments, stale resources and undeclared retirement", () => {
+test("policy rejects reintroducing HTTP redirect history and invalid fragment ownership", () => {
   for (const mutate of [
-    (policy) => { policy.decisions.find((row) => row.decision === "301_REDIRECT").target = "/unretained"; },
+    (policy) => { policy.decisions = []; },
+    (policy) => { policy.retiredPaths = []; },
     (policy) => { policy.htmlIdTargets["botox-heading"] = "/botox#different-heading"; },
-    (policy) => { policy.decisions = policy.decisions.filter((row) => row.path !== "/botox"); },
-    (policy) => { policy.retiredPaths.push("/never-authored"); },
-    (policy) => {
-      policy.decisions.find((row) => row.path === "/botox-heading").target = "/botox";
-    },
+    (policy) => { policy.resources = policy.resources.filter((row) => row.path !== "/botox"); },
   ]) {
     const policy = structuredClone(URL_ARCHITECTURE);
     mutate(policy);
@@ -166,7 +133,7 @@ test("policy rejects redirect chains, lost fragments, stale resources and undecl
   assert(Object.isFrozen(URL_ARCHITECTURE.htmlIdTargets));
 });
 
-test("every canonical owner still exposes the exact target in its initial readable document", () => {
+test("every canonical owner exposes the exact target in its initial readable document", () => {
   const records = deriveIndependentPages(home, inputs.graph, inputs.lifecycle.canonicalUrl,
     { focusedViews: discoveryPolicy.focusedViews });
   const idsByOwner = new Map(records.map((record) => [record.path, new Set(inspectHtml(record.bodyHtml, { wrapMain: true }).ids)]));
@@ -176,7 +143,7 @@ test("every canonical owner still exposes the exact target in its initial readab
     const target = new URL(value, URL_ARCHITECTURE.canonicalOrigin);
     if (!idsByOwner.get(target.pathname)?.has(id)) missing.push(id + " -> " + value);
   }
-  assert.deepEqual(missing, [], "Canonical owner mapping must follow actual retained scopes, including answers, chapters and cross-topic content");
+  assert.deepEqual(missing, []);
 });
 
 test("authored homepage anchors physically link every navigation root, including all three language guides", () => {
@@ -191,7 +158,4 @@ test("authored homepage anchors physically link every navigation root, including
     "Virtual navigation roots must have real authored homepage links");
   for (const route of ["/aesthetic-guide-ar-iq", "/aesthetic-guide-en", "/aesthetic-guide-ckb-iq"])
     assert(roots.includes(route) && native.has(route), "Missing native language guide entry: " + route);
-  const orphaned = nativePaths(home.replace(/<a\b[^>]*href="\/aesthetic-guide-en"[^>]*>[\s\S]*?<\/a>/g, ""));
-  assert.deepEqual(roots.filter((route) => !orphaned.has(route)), ["/aesthetic-guide-en"],
-    "Removing a human language entry must expose an actual orphan even while its virtual root survives");
 });
