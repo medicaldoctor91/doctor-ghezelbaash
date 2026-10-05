@@ -1,0 +1,10 @@
+import { readFile, writeFile, unlink } from "node:fs/promises";
+const path = "scripts/one-time-finalize-pr451.mjs";
+let source = await readFile(path, "utf8");
+const oldBlock = `for (const [path, expected] of [\n  ["scripts/tests/independent-pages.test.mjs", 2],\n  ["scripts/tests/page-discovery.test.mjs", 2],\n  ["scripts/tests/rich-results-contract.test.mjs", 1],\n  ["scripts/tests/route-discovery.test.mjs", 1],\n]) {\n  await edit(path, (source) => replaceAllCount(source,\n    'inputs.lifecycle.canonicalUrl + "saeed-ghezelbash"',\n    'inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash"', expected));\n}\n`;
+const newBlock = `for (const [path, expected] of [\n  ["scripts/tests/independent-pages.test.mjs", 2],\n  ["scripts/tests/page-discovery.test.mjs", 2],\n]) {\n  await edit(path, (source) => replaceAllCount(source,\n    'inputs.lifecycle.canonicalUrl + "saeed-ghezelbash"',\n    'inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash"', expected));\n}\nawait edit("scripts/tests/route-discovery.test.mjs", (source) => replaceAllCount(source,\n  'canonicalUrl + "saeed-ghezelbash"', 'canonicalUrl + "#saeed-ghezelbash"', 1));\nawait edit("scripts/tests/rich-results-contract.test.mjs", (source) => {\n  let next = replaceAllCount(source,\n    'inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage"',\n    'inputs.lifecycle.canonicalUrl + "test-profile#webpage"', 1);\n  next = replaceAllCount(next,\n    'inputs.lifecycle.canonicalUrl + "saeed-ghezelbash"',\n    'inputs.lifecycle.canonicalUrl + "test-profile"', 1);\n  return next;\n});\n`;
+const count = source.split(oldBlock).length - 1;
+if (count !== 1) throw new Error(`Expected one faulty helper block, found ${count}`);
+source = source.replace(oldBlock, newBlock);
+await writeFile(path, source, "utf8");
+await unlink("scripts/fix-pr451-helper.mjs");
