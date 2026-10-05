@@ -10,9 +10,8 @@ import {
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { canonicalGraph, canonicalLifecycle } from "../src/lib/canonical-inputs.mjs";
 import { discoveryPolicy, socialAlternateLocales } from "../src/config/site-policy.mjs";
-import { canonicalPaths, assertHtmlTargets, redirectRows, urlForHtmlId } from "../src/lib/url-architecture.mjs";
+import { canonicalPaths, assertHtmlTargets } from "../src/lib/url-architecture.mjs";
 import { inspectHtml } from "./lib/html-contract.mjs";
-import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs";
 import { deriveRouteDiscovery } from "./lib/route-discovery.mjs";
 import { renderIndependentPage, routeDocumentFile } from "./lib/independent-pages.mjs";
 import { externalizeNotFoundCss } from "./lib/not-found-css.mjs";
@@ -119,18 +118,12 @@ for (const artifact of STATIC_ARTIFACTS)
   await copyExact(artifact.source, artifact.path);
 const aliasRegistry = await loadAliasRegistry(root);
 const legacyAliases = canonicalHostAliasRows(aliasRegistry);
-const answerAliases = deriveCanonicalAnswerTopology(canonicalGraph, canonicalLifecycle).answers.map((record) => ({
-  source: "/" + record.htmlId,
-  target: urlForHtmlId(record.htmlId),
-  statusCode: 301,
-}));
 const homeHtml = stampGuideSource(await readFile(path.join(dist, "index.html"), "utf8"));
 await writeFile(path.join(dist, "index.html"), homeHtml, "utf8");
 const contentPaths = canonicalPaths().filter((route) => route !== "/");
 const article = inspectHtml(homeHtml).guideArticles[0];
 const articleHtml = homeHtml.slice(article.sourceCodeLocation.startTag.endOffset, article.sourceCodeLocation.endTag.startOffset);
 assertHtmlTargets(inspectHtml(articleHtml, { wrapMain: true }).ids);
-const corpusAliases = redirectRows();
 const independentPages = deriveRouteDiscovery(homeHtml, canonicalGraph, discoveryPolicy, canonicalLifecycle.canonicalUrl);
 const schemaInventoryScopes = new Map();
 for (const record of independentPages) {
@@ -147,11 +140,11 @@ const schemaInventory = createSchemaInventory({
 });
 await writeFile(path.join(root, ".generated/schema-inventory.json"), JSON.stringify(schemaInventory, null, 2) + "\n");
 await writeFile(path.join(root, ".generated/schema-inventory.csv"), serializeSchemaInventoryCsv(schemaInventory));
-const registeredSources = new Set([...legacyAliases, ...answerAliases, ...corpusAliases].map((row) => row.source));
+const registeredSources = new Set(legacyAliases.map((row) => row.source));
 if (contentPaths.some((route) => registeredSources.has(route)))
   throw new Error("Authored content path collides with a redirect alias");
 const contentSources = new Set(contentPaths);
-for (const { source, target } of [...legacyAliases, ...answerAliases, ...corpusAliases]) {
+for (const { source, target } of legacyAliases) {
   const targetPath = new URL(target, canonicalLifecycle.canonicalUrl).pathname;
   if (targetPath !== "/" && !contentSources.has(targetPath) && !destinations.has(targetPath.slice(1)))
     throw new Error(`Redirect alias has no deployed destination: ${source} -> ${target}`);
@@ -160,8 +153,6 @@ const metadataAliases = canonicalMetadataAliasRows(canonicalGraph, canonicalLife
   .filter(({ source }) => !contentSources.has(source) && !registeredSources.has(source));
 await writeExact("_redirects", renderStaticRewrites([
   ...legacyAliases,
-  ...answerAliases,
-  ...corpusAliases,
   ...metadataAliases,
   ...machineNamespaceAliasRows(),
 ]));
@@ -262,7 +253,6 @@ console.log(
       notFoundStylesheet: { assetPath: notFoundCss.assetPath, ...notFoundCss.measurement },
       stableMediaAliases: stableMedia.aliases.length,
       legacyAliases: legacyAliases.length,
-      answerRedirects: answerAliases.length,
       contentRoutes: contentPaths.length,
       independentlyRenderedPages: independentPages.length,
       metadataAliases: metadataAliases.length,
