@@ -29,6 +29,12 @@ for (const alias of policy.developmentAliases) {
     `Expected generated development alias is missing before pruning: ${alias.source}`,
   );
 }
+for (const sourcePath of policy.neverPublishedDevelopmentPaths) {
+  assert(
+    !sourceRows.some((row) => row.source === sourcePath),
+    `Never-published development path was generated before pruning: ${sourcePath}`,
+  );
+}
 
 const expectedFinal = renderStaticRewrites(policy.finalRows);
 const prunedRows = sourceRows.filter((row) => !developmentSources.has(row.source));
@@ -45,7 +51,9 @@ console.log(
   JSON.stringify(
     {
       redirectPruning: "PASS",
-      removedDevelopmentAliases: policy.developmentAliases.length,
+      removedDevelopmentPaths: policy.removedDevelopmentPaths.length,
+      prunedGeneratedDevelopmentAliases: policy.developmentAliases.length,
+      neverPublishedDevelopmentPaths: policy.neverPublishedDevelopmentPaths.length,
       removedAnswerAliases: policy.answerAliases.length,
       removedCorpusAliases: policy.corpusAliases.length,
       retainedLegacyAliases: policy.legacyAliases.length,
