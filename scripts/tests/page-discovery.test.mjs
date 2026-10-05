@@ -26,7 +26,7 @@ test("page discovery publishes a route-aware physician graph without changing au
   const person = byId.get(page.mainEntity["@id"]);
   assert(typed(person, "Person"));
   assert.equal(typeof person.name, "string");
-  assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash");
   assert.equal(person.url, inputs.lifecycle.canonicalUrl);
   assert.deepEqual(person.mainEntityOfPage, { "@id": page["@id"] });
   assert(graph.length < inputs.graph["@graph"].length);
@@ -163,7 +163,7 @@ test("validating authored discovery twice preserves core identity and never dupl
     assert(typed(home, "MedicalWebPage"));
     assert(typed(home, "ProfilePage"));
     const person = graph.find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
-    assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+    assert.equal(person["@id"], inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash");
     assert.equal(person.url, inputs.lifecycle.canonicalUrl);
     assert.deepEqual(person.mainEntityOfPage, { "@id": home["@id"] });
   }

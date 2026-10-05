@@ -25,7 +25,7 @@ const plan = {
     legacyRules: policy.legacyAliases.length,
     metadataRules: policy.metadataAliases.length,
     namespaces: policy.namespaceAliases.length,
-    removedDevelopmentAliases: policy.developmentAliases.length,
+    removedDevelopmentPaths: policy.removedDevelopmentPaths.length,
   },
 };
 
@@ -46,16 +46,17 @@ const report = await validateLive(plan, options, {
 });
 
 const removedChecks = [];
+const removedPaths = policy.removedDevelopmentPaths;
 let next = 0;
 await Promise.all(
   Array.from(
-    { length: Math.min(options.concurrency, policy.developmentAliases.length) },
+    { length: Math.min(options.concurrency, removedPaths.length) },
     async () => {
-      while (next < policy.developmentAliases.length) {
-        const alias = policy.developmentAliases[next++];
-        const record = { path: alias.source, ok: false };
+      while (next < removedPaths.length) {
+        const source = removedPaths[next++];
+        const record = { path: source, ok: false };
         try {
-          const response = await fetch(new URL(alias.source, options.origin), {
+          const response = await fetch(new URL(source, options.origin), {
             method: "HEAD",
             redirect: "manual",
             signal: AbortSignal.timeout(options.timeoutMs),
@@ -64,9 +65,9 @@ await Promise.all(
           record.status = response.status;
           assert(
             [404, 410].includes(response.status),
-            `Removed development URL is still publicly routable: ${alias.source} -> ${response.status}`,
+            `Removed development URL is still publicly routable: ${source} -> ${response.status}`,
           );
-          assert(!response.headers.get("location"), `Removed development URL still redirects: ${alias.source}`);
+          assert(!response.headers.get("location"), `Removed development URL still redirects: ${source}`);
           record.ok = true;
         } catch (error) {
           record.error = error.message;
@@ -79,7 +80,7 @@ await Promise.all(
 removedChecks.sort((a, b) => a.path.localeCompare(b.path));
 const removedFailures = removedChecks.filter((record) => !record.ok);
 report.removedDevelopmentUrls = {
-  expectedAbsent: policy.developmentAliases.length,
+  expectedAbsent: removedPaths.length,
   checked: removedChecks.length,
   passed: removedChecks.length - removedFailures.length,
   failed: removedFailures.length,

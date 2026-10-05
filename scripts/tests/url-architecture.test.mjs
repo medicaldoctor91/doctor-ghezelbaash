@@ -103,22 +103,24 @@ test("language canonicals own full original sections while former headings navig
   }
 });
 
-test("the homepage owns physician authority while the stable identity remains an addressable reading fragment", () => {
+test("the homepage owns physician authority and the artificial physician pathname does not exist", () => {
+  const physicianId = inputs.lifecycle.canonicalUrl + "#saeed-ghezelbash";
+  const oldPhysicianId = inputs.lifecycle.canonicalUrl + "saeed-ghezelbash";
   assert(!canonicalPaths().includes("/saeed-ghezelbash"));
   assert.equal(urlForHtmlId("saeed-ghezelbash"), "/#saeed-ghezelbash");
-  assert.equal(resolveContentUrl("/saeed-ghezelbash"), "/#saeed-ghezelbash");
-  assert.equal(sourceNavigationUrl("/saeed-ghezelbash"), "/#saeed-ghezelbash");
-  assert.deepEqual(redirectRows().find((row) => row.source === "/saeed-ghezelbash"),
-    { source: "/saeed-ghezelbash", target: "/#saeed-ghezelbash", statusCode: 301 });
-  assert.equal(resolveContentUrl("/saeed-ghezelbash?from=profile"), "/?from=profile#saeed-ghezelbash");
-  assert.equal(sourceNavigationUrl("/saeed-ghezelbash?from=profile"), "/?from=profile#saeed-ghezelbash");
+  assert(!URL_ARCHITECTURE.decisions.some((row) => row.path === "/saeed-ghezelbash"));
+  assert(!redirectRows().some((row) => row.source === "/saeed-ghezelbash"));
+  assert(!fragmentRows().some((row) => row.source === "/saeed-ghezelbash"));
   const doctor = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.primaryEntity.id);
-  assert.equal(doctor["@id"], inputs.lifecycle.canonicalUrl + "saeed-ghezelbash");
+  assert.equal(inputs.lifecycle.primaryEntity.id, physicianId);
+  assert.equal(doctor["@id"], physicianId);
   assert.equal(doctor.url, inputs.lifecycle.canonicalUrl);
-  assert.deepEqual(doctor.mainEntityOfPage, { "@id": inputs.lifecycle.canonicalUrl + "webpage" });
-  const page = inputs.graph["@graph"].find((node) => node["@id"] === inputs.lifecycle.canonicalUrl + "webpage");
-  assert.deepEqual(new Set([page["@type"]].flat()), new Set(["ProfilePage", "MedicalWebPage"]));
-  assert.deepEqual(page.mainEntity, { "@id": doctor["@id"] });
+  assert.equal(doctor.mainEntityOfPage?.["@id"], inputs.lifecycle.canonicalUrl + "webpage");
+  assert(!JSON.stringify(inputs.graph).includes(JSON.stringify(oldPhysicianId)));
+  assert(inspected.headings.some((node) => node.tagName === "h1" && node.attrs?.some((item) => item.name === "id" && item.value === "saeed-ghezelbash")));
+  assert(!inputs.pageBody.includes('href="/saeed-ghezelbash"'));
+  assert(!inputs.pageBody.includes('href="https://www.ghezelbaash.ir/saeed-ghezelbash"'));
+  assert(!inputs.pageBody.includes('href="/#saeed-ghezelbash"'));
 });
 
 test("canonical resolution and browser hash navigation remain distinct", () => {

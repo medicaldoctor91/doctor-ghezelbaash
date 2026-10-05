@@ -106,9 +106,9 @@ test("duplicate entities fail while incomplete research candidates are reported 
 test("ProfilePage modification timestamps reject impossible dates", () => {
   const person = structuredClone(validatePageJsonLd(inputs.pageJsonLd)[0].document["@graph"].find((node) => typed(node, "Person")));
   const profile = {
-    "@id": inputs.lifecycle.canonicalUrl + "saeed-ghezelbash#webpage",
+    "@id": inputs.lifecycle.canonicalUrl + "test-profile#webpage",
     "@type": "ProfilePage",
-    url: inputs.lifecycle.canonicalUrl + "saeed-ghezelbash",
+    url: inputs.lifecycle.canonicalUrl + "test-profile",
     mainEntity: { "@id": person["@id"] },
     dateModified: "2026-02-30T10:00:00Z",
   };

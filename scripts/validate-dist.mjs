@@ -289,7 +289,7 @@ assert.equal(profileNodes[0]["@id"], primaryPage["@id"]);
 const primaryPerson = browserById.get(primaryPage.mainEntity["@id"]);
 assert(typeHas(primaryPerson, "Person"));
 assert.equal(primaryPerson["@id"], lifecycle.primaryEntity.id, "Physician entity IRI must remain stable");
-assert.equal(primaryPerson["@id"], lifecycle.canonicalUrl + "saeed-ghezelbash");
+assert.equal(primaryPerson["@id"], lifecycle.canonicalUrl + "#saeed-ghezelbash");
 assert.equal(primaryPerson.url, lifecycle.canonicalUrl);
 assert.deepEqual(primaryPerson.mainEntityOfPage, { "@id": primaryPage["@id"] });
 assert(browserNodes.length < graph["@graph"].length, "Homepage search projection must be narrower than the canonical graph");
