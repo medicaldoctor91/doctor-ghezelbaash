@@ -18,7 +18,7 @@ assert.equal(
   expectedFinal,
   "Final deployable _redirects differs from the reviewed public redirect policy",
 );
-for (const { source } of policy.developmentAliases) {
+for (const source of policy.removedDevelopmentPaths) {
   assert(
     !actual.split(/\r?\n/).some((line) => line.startsWith(source + " ")),
     `Development-only URL survived final distribution validation: ${source}`,
@@ -26,10 +26,10 @@ for (const { source } of policy.developmentAliases) {
 }
 
 // validate-dist.mjs is the comprehensive source/distribution contract and was
-// authored while the development aliases were still materialized. Rehydrate
-// only _redirects in a temporary copy, run that complete validator unchanged,
-// and keep the actual deployable dist pruned. This proves both contracts:
-// source topology remains intact, while the published HTTP surface stays clean.
+// authored while generated development aliases were still materialized. Rehydrate
+// only those generated aliases in a temporary copy, run that complete validator
+// unchanged, and keep the actual deployable dist pruned. Never-published paths
+// such as /saeed-ghezelbash are intentionally absent from both forms.
 const tempRoot = await mkdtemp(path.join(os.tmpdir(), "ghezelbaash-final-dist-"));
 const validationDist = path.join(tempRoot, "dist");
 try {
@@ -64,7 +64,9 @@ console.log(
     {
       finalDistributionValidation: "PASS",
       canonicalPages: policy.canonical.length,
-      removedDevelopmentAliases: policy.developmentAliases.length,
+      removedDevelopmentPaths: policy.removedDevelopmentPaths.length,
+      prunedGeneratedDevelopmentAliases: policy.developmentAliases.length,
+      neverPublishedDevelopmentPaths: policy.neverPublishedDevelopmentPaths.length,
       retainedLegacyAliases: policy.legacyAliases.length,
       retainedMetadataAliases: policy.metadataAliases.length,
       retainedMachineNamespaces: policy.namespaceAliases.length,
