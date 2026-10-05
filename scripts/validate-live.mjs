@@ -3,8 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { readCanonicalInputs } from "../src/lib/canonical-inputs.mjs";
-import { URL_ARCHITECTURE, canonicalPaths, redirectRows, urlForHtmlId } from "../src/lib/url-architecture.mjs";
-import { deriveCanonicalAnswerTopology } from "../src/lib/answer-projection.mjs";
+import { URL_ARCHITECTURE, canonicalPaths } from "../src/lib/url-architecture.mjs";
 import { assertRichResultsDocument } from "../src/lib/rich-results-contract.mjs";
 import { inspectHtml } from "./lib/html-contract.mjs";
 import { assertPublishedFragment, assertSingleHopDelivery } from "./lib/delivery-validation.mjs";
@@ -43,16 +42,26 @@ export async function livePlan(root = process.cwd()) {
   const { graph, lifecycle } = readCanonicalInputs(root);
   const paths = canonicalPaths();
   const legacy = canonicalHostAliasRows(await loadAliasRegistry(root));
-  const answers = deriveCanonicalAnswerTopology(graph, lifecycle).answers.map((record) => ({ source: "/" + record.htmlId, target: urlForHtmlId(record.htmlId), statusCode: 301 }));
-  const corpus = redirectRows();
-  const registered = new Set([...legacy, ...answers, ...corpus].map((row) => row.source));
-  const metadata = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl).filter(({ source }) => !paths.includes(source) && !registered.has(source));
+  const registered = new Set(legacy.map((row) => row.source));
+  const metadata = canonicalMetadataAliasRows(graph, lifecycle.canonicalUrl)
+    .filter(({ source }) => !paths.includes(source) && !registered.has(source));
   const namespaces = machineNamespaceAliasRows();
-  const rows = [...legacy, ...answers, ...corpus, ...metadata, ...namespaces];
+  const rows = [...legacy, ...metadata, ...namespaces];
   renderStaticRewrites(rows);
   assertSingleHopDelivery(rows, lifecycle.canonicalUrl);
-  return { canonicalOrigin, paths, rows, namespaces, release: lifecycle.release,
-    counts: { canonical: paths.length, corpusRedirects: corpus.length, answerRedirects: answers.length, legacyRules: legacy.length, metadataRules: metadata.length, namespaces: namespaces.length } };
+  return {
+    canonicalOrigin,
+    paths,
+    rows,
+    namespaces,
+    release: lifecycle.release,
+    counts: {
+      canonical: paths.length,
+      legacyRules: legacy.length,
+      metadataRules: metadata.length,
+      namespaces: namespaces.length,
+    },
+  };
 }
 
 /** No retries: each requested URL is checked once, with a bounded total worker pool. */
@@ -69,7 +78,15 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     const record = { path: source, method, ok: false };
     const start = performance.now();
     try {
-      const response = await fetchImpl(new URL(source, options.origin), { method, redirect: "manual", signal: AbortSignal.timeout(options.timeoutMs), headers: { "User-Agent": "ghezelbaash-live-validation/1.0", Accept: method === "HEAD" ? "*/*" : "text/html, application/ld+json, application/json" } });
+      const response = await fetchImpl(new URL(source, options.origin), {
+        method,
+        redirect: "manual",
+        signal: AbortSignal.timeout(options.timeoutMs),
+        headers: {
+          "User-Agent": "ghezelbaash-live-validation/1.0",
+          Accept: method === "HEAD" ? "*/*" : "text/html, application/ld+json, application/json",
+        },
+      });
       record.status = response.status;
       for (const [header, field] of [["cf-cache-status", "cacheStatus"], ["age", "cacheAge"], ["x-robots-tag", "httpRobots"]]) {
         const value = response.headers.get(header);
@@ -88,6 +105,7 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
       while (index < tasks.length) await tasks[index++]();
     }));
   };
+
   let build;
   await request("/build-info.json", "GET", async (response, record) => {
     assert.equal(response.status, 200, "Build identity must return 200 without redirection");
@@ -98,6 +116,7 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     if (options.expectedCommit) assert.equal(build.commit, options.expectedCommit, "Deployed commit differs from --expected-commit");
     record.commit = build.commit;
   });
+
   await pooled(plan.paths.map((pathname) => () => request(pathname, "GET", async (response, record) => {
     assert.equal(response.status, 200, "Canonical page must return 200 without redirection");
     assert(/^text\/html\b/i.test(response.headers.get("content-type") || ""), "Canonical page must have HTML MIME");
@@ -105,9 +124,7 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     assert(!noindex(response.headers.get("x-robots-tag")), "Canonical page has a noindex HTTP directive");
     const source = await response.text();
     const inspected = inspectHtml(source);
-    // A fresh build-info endpoint does not prove that cached HTML belongs to
-    // that deployment. Check each document before trusting its semantic data.
-    for (const [name, expected] of [
+    for (const [name, expectedValue] of [
       ["x-build-commit", options.expectedCommit ?? build?.commit],
       ["x-build-release", plan.release],
       ["x-build-branch", build?.branch],
@@ -117,8 +134,8 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
       assert.equal(nodes.length, 1, "Canonical page must advertise exactly one " + name);
       const actual = attr(nodes[0], "content");
       if (name === "x-build-commit") record.commit = actual;
-      assert(expected, "Deployment identity is unavailable for " + name);
-      assert.equal(actual, expected, "Canonical page deployment differs for " + name);
+      assert(expectedValue, "Deployment identity is unavailable for " + name);
+      assert.equal(actual, expectedValue, "Canonical page deployment differs for " + name);
     }
     const links = inspected.elements.filter((node) => node.tagName === "link" && values((attr(node, "rel") || "").split(/\s+/)).includes("canonical"));
     assert.equal(links.length, 1, "Canonical page must advertise exactly one canonical");
@@ -145,10 +162,13 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     } else assert(!document["@graph"].some((node) => typed(node, "ProfilePage")), "A focused route competes with the primary home profile");
     documents.set(pathname, new Set(inspected.ids));
   })));
+
   const redirects = plan.rows.filter((row) => row.statusCode !== 200);
-  const sampled = options.redirects === "sample" ? redirects.filter((row, index) => index % Math.max(1, Math.floor(redirects.length / 25)) === 0).slice(0, 30) : redirects;
+  const sampled = options.redirects === "sample"
+    ? redirects.filter((row, index) => index % Math.max(1, Math.floor(redirects.length / 25)) === 0).slice(0, 30)
+    : redirects;
   await pooled(sampled.map((row) => () => request(row.source, "HEAD", async (response, record) => {
-    assert.equal(response.status, row.statusCode, "Legacy URL has the wrong permanent redirect status");
+    assert.equal(response.status, row.statusCode, "Registered public URL has the wrong permanent redirect status");
     const location = response.headers.get("location");
     assert(location, "Permanent redirect is missing Location");
     const actual = logicalUrl(location, new URL(row.source, options.origin));
@@ -159,6 +179,7 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
     assertPublishedFragment(expected, documents.get(expected.pathname), "Live redirect " + row.source);
     assert(documents.has(expected.pathname), "Redirect target did not pass the canonical 200 page checks");
   })));
+
   const machineCheck = (target, body) => async (response, record) => {
     assert.equal(response.status, 200, "Machine namespace must return its representation with 200");
     assert(!response.headers.get("location"), "Machine representation must not redirect");
@@ -180,10 +201,25 @@ export async function validateLive(plan, options, { fetchImpl = fetch, onProgres
   await pooled(probes.map((row) => () => request(row.source, "GET", machineCheck(row.target, true))));
   checks.sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
   const failed = checks.filter((record) => !record.ok);
-  return { schemaVersion: 1, startedAt, finishedAt: new Date().toISOString(), origin: options.origin, canonicalOrigin: plan.canonicalOrigin,
-    expectedCommit: options.expectedCommit ?? null, build: build ?? null, redirectMode: options.redirects,
-    coverage: { ...plan.counts, redirectsChecked: sampled.length, machineAliasesChecked: machineRows.length, machineRepresentationProbes: probes.length },
-    ok: failed.length === 0, totals: { checked: checks.length, passed: checks.length - failed.length, failed: failed.length }, checks };
+  return {
+    schemaVersion: 1,
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    origin: options.origin,
+    canonicalOrigin: plan.canonicalOrigin,
+    expectedCommit: options.expectedCommit ?? null,
+    build: build ?? null,
+    redirectMode: options.redirects,
+    coverage: {
+      ...plan.counts,
+      redirectsChecked: sampled.length,
+      machineAliasesChecked: machineRows.length,
+      machineRepresentationProbes: probes.length,
+    },
+    ok: failed.length === 0,
+    totals: { checked: checks.length, passed: checks.length - failed.length, failed: failed.length },
+    checks,
+  };
 }
 
 async function main() {
@@ -193,12 +229,14 @@ async function main() {
     return;
   }
   const plan = await livePlan();
-  if (options.redirectsFile) assert.equal(await readFile(options.redirectsFile, "utf8"), renderStaticRewrites(plan.rows), "Local _redirects differs from the shared canonical publication policy");
+  if (options.redirectsFile)
+    assert.equal(await readFile(options.redirectsFile, "utf8"), renderStaticRewrites(plan.rows), "Local _redirects differs from the shared canonical publication policy");
   if (!options.expectedCommit) {
     const localBuild = JSON.parse(await readFile("dist/build-info.json", "utf8").catch(() => "null"));
     if (/^[a-f\d]{40}$/i.test(localBuild?.commit || "")) options.expectedCommit = localBuild.commit;
   }
-  console.log(`Validating ${plan.paths.length} canonical pages and ${plan.counts.corpusRedirects} corpus redirects (${options.redirects}); at most ${options.concurrency} requests in flight.`);
+  const publicAliases = plan.counts.legacyRules + plan.counts.metadataRules;
+  console.log(`Validating ${plan.paths.length} canonical pages and ${publicAliases} explicit public alias rules (${options.redirects}); at most ${options.concurrency} requests in flight.`);
   const report = await validateLive(plan, options, { onProgress: (count) => console.log("Checked " + count + " URLs.") });
   await mkdir(path.dirname(options.report), { recursive: true });
   await writeFile(options.report, JSON.stringify(report, null, 2) + "\n");
@@ -207,4 +245,5 @@ async function main() {
   if (!report.ok) process.exitCode = 1;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main().catch((error) => { console.error(error.message); process.exitCode = 1; });
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href)
+  main().catch((error) => { console.error(error.message); process.exitCode = 1; });
