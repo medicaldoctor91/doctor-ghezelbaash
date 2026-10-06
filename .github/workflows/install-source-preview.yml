@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --no-tags origin main
-          base64 -d .source-upload/textsrc.tar.gz.b64 > /tmp/textsrc.tar.gz
+          cat .source-upload/textsrc.tar.gz.b64.part-* | base64 -d > /tmp/textsrc.tar.gz
           tar -xzf /tmp/textsrc.tar.gz -C .
 
           while IFS=$'\t' read -r target sha; do
