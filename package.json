@@ -1,0 +1,37 @@
+{
+  "name": "ghezelbaash-canonical-source",
+  "version": "1.3.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "astro build && node infrastructure/materialize-machine-resources.mjs dist",
+    "verify": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs && node infrastructure/verify.mjs",
+    "audit": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs",
+    "test:source": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs && node infrastructure/test-discovery.mjs",
+    "test:finalizer": "node infrastructure/test-finalizer.mjs && node infrastructure/test-headers.mjs",
+    "test:v2": "npm run test:source && npm run test:machine && npm run test:copy && npm run test:routing && npm run test:assets && npm run test:finalizer && npm run test:integrity && npm run test:rendering && npm run test:dist && npm run test:release",
+    "finalize": "node infrastructure/finalize-dist.mjs dist",
+    "seal": "node infrastructure/seal-release.mjs dist",
+    "release:v2": "node infrastructure/run-v2-release.mjs",
+    "test:assets": "node infrastructure/test-public-assets.mjs",
+    "test:routing": "node infrastructure/test-routing.mjs",
+    "test:copy": "node infrastructure/test-canonical-copy.mjs",
+    "test:machine": "node infrastructure/test-machine-resources.mjs",
+    "test:integrity": "node infrastructure/test-integrity.mjs",
+    "test:rendering": "node infrastructure/test-rendering-policy.mjs",
+    "test:dist": "node infrastructure/test-dist-verifier.mjs",
+    "test:release": "node infrastructure/test-release-runner.mjs",
+    "verify:dist": "node infrastructure/verify-dist.mjs dist"
+  },
+  "engines": {
+    "node": ">=22.19.0 <25"
+  },
+  "devDependencies": {
+    "astro": "7.2.8",
+    "parse5": "8.0.1",
+    "jsonld": "9.0.0",
+    "rdf-canonize": "5.0.0"
+  },
+  "packageManager": "npm@11.17.0",
+  "license": "CC-BY-4.0"
+}
