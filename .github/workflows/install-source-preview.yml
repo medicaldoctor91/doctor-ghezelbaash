@@ -1,0 +1,70 @@
+name: Install source preview payload
+
+on:
+  push:
+    branches:
+      - experiment/source-preview
+    paths:
+      - SOURCE_UPLOAD_READY
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source-preview
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct exact source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          base64 -d .source-upload/textsrc.tar.gz.b64 > /tmp/textsrc.tar.gz
+          tar -xzf /tmp/textsrc.tar.gz -C .
+
+          while IFS=$'\t' read -r target sha; do
+            [ -n "$target" ] || continue
+            if ! git cat-file -e "${sha}^{blob}" 2>/dev/null; then
+              echo "Missing source blob $sha for $target" >&2
+              exit 1
+            fi
+            mkdir -p "$(dirname "$target")"
+            git cat-file blob "$sha" > "$target"
+            actual="$(git hash-object "$target")"
+            if [ "$actual" != "$sha" ]; then
+              echo "Blob verification failed for $target: $actual != $sha" >&2
+              exit 1
+            fi
+          done < .source-upload/binary-targets.tsv
+
+          rm -rf .source-upload SOURCE_UPLOAD_READY .github/workflows/install-source-preview.yml
+
+          expected=110
+          actual="$(find . -path './.git' -prune -o -type f -print | wc -l | tr -d ' ')"
+          if [ "$actual" != "$expected" ]; then
+            echo "Unexpected source file count: $actual != $expected" >&2
+            find . -path './.git' -prune -o -type f -print | sort
+            exit 1
+          fi
+
+          test -f src/pages/index.astro
+          test -f public/graph.jsonld
+          test -f public/graph.ttl
+          test -f package.json
+
+      - name: Commit reconstructed source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "chore: publish strengthened source preview"
+          git push origin HEAD:experiment/source-preview
