@@ -1,0 +1,50 @@
+name: Bootstrap source preview
+
+on:
+  push:
+    branches:
+      - experiment/source-preview
+
+permissions:
+  contents: write
+
+jobs:
+  restore-source:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout bootstrap commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download approved source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://source-preview-transfer.floot.app/_cdn/static/047fa587-adcd-4b6c-985c-f36aa77d5f06-source-preview-00.bin' \
+            --output /tmp/source-preview.part-00
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://source-preview-transfer.floot.app/_cdn/static/1d68edbd-031d-4eab-96a5-f79a775cb0b4-source-preview-01.bin' \
+            --output /tmp/source-preview.part-01
+          cat /tmp/source-preview.part-00 /tmp/source-preview.part-01 > /tmp/source-preview.zip
+          echo '4cbc5d843adefb2afee92008bf0af7774320494f34107213ed0020683dd9ce09  /tmp/source-preview.zip' | sha256sum -c -
+          rm -rf /tmp/source-preview
+          mkdir -p /tmp/source-preview
+          unzip -q /tmp/source-preview.zip -d /tmp/source-preview
+          test -f /tmp/source-preview/New-source/package.json
+          test -f /tmp/source-preview/New-source/src/pages/index.astro
+
+      - name: Replace branch with approved source
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/source-preview/New-source/. .
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: publish strengthened V2 source preview'
+          git push origin HEAD:experiment/source-preview
