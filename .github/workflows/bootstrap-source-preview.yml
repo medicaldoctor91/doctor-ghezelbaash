@@ -37,12 +37,12 @@ jobs:
           test -f /tmp/source-preview/New-source/package.json
           test -f /tmp/source-preview/New-source/src/pages/index.astro
 
-      - name: Replace branch with approved source
+      - name: Replace branch with approved source except workflows
         shell: bash
         run: |
           set -euo pipefail
-          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -a /tmp/source-preview/New-source/. .
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
+          rsync -a --exclude='.github/' /tmp/source-preview/New-source/ ./
           git add -A
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
