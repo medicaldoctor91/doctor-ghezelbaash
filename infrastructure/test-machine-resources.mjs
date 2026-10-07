@@ -18,12 +18,15 @@ assert.equal(packageJson.scripts['test:machine'], 'node infrastructure/test-mach
 assert.match(packageJson.scripts['test:v2'], /npm run test:machine/, 'V2 suite must include machine resource verification');
 const distDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ghezelbaash-machine-'));
 try {
-  await fs.writeFile(path.join(distDir, 'index.html'), '<!doctype html><title>fixture</title>');
+  await fs.writeFile(path.join(distDir, 'index.html'), '<!doctype html><html><head><link rel="stylesheet" href="/assets/site.fixture.css"></head><body></body></html>');
   await fs.writeFile(path.join(distDir, 'sitemap.xml'), '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
   await fs.writeFile(path.join(distDir, 'robots.txt'), 'User-agent: *\nAllow: /\n');
   await fs.copyFile(path.join(root, 'public/site.webmanifest'), path.join(distDir, 'site.webmanifest'));
-  const result = await materializeMachineResources({ source, authoredBody, distDir });
+  const result = await materializeMachineResources({ source, sourceText, authoredBody, distDir });
   assert.equal(result.paths.length, 20, 'Exactly 20 non-Astro machine artifacts must be materialized');
+  const stylesheet = path.join(distDir, 'assets/site.fixture.css');
+  const stylesheetText = await fs.readFile(stylesheet, 'utf8');
+  assert.match(stylesheetText, /\.render-chunk\s*\{/, 'Build must materialize the canonical DESIGN stylesheet referenced by HTML');
   for (const resource of source.machineResources) {
     const file = path.join(distDir, resource.path.replace(/^\//, ''));
     const stat = await fs.stat(file);
@@ -56,7 +59,7 @@ try {
   assert.match(await fs.readFile(path.join(distDir, 'clinic.vcf'), 'utf8'), /BEGIN:VCARD/);
   assert(Array.isArray(JSON.parse(await fs.readFile(path.join(distDir, 'linkset.json'), 'utf8')).linkset));
   assert.equal(JSON.parse(await fs.readFile(path.join(distDir, 'croissant.json'), 'utf8'))['@context'], 'https://mlcommons.org/croissant/1.1');
-  console.log(JSON.stringify({ machineResources: 'PASS', declared: source.machineResources.length, materialized: result.paths.length, graphNodes: graph['@graph'].length }, null, 2));
+  console.log(JSON.stringify({ machineResources: 'PASS', declared: source.machineResources.length, materialized: result.paths.length, graphNodes: graph['@graph'].length, stylesheetMaterialized: true }, null, 2));
 } finally {
   await fs.rm(distDir, { recursive: true, force: true });
 }
