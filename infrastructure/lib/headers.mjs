@@ -48,8 +48,31 @@ function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}
   }
   return lines.join('\n');
 }
+function aliasPattern(source){const parts=source.split('/').filter(Boolean);return parts.length>1?`/${parts[0]}/*`:source;}
+function representationAliasBlocks({origin,routingRows=[],machineResources=[],delivery}){
+  if(!delivery)return [];
+  const resourceByPath=new Map(machineResources.map(resource=>[resource.path,resource]));
+  const groups=new Map();
+  for(const row of routingRows.filter(row=>row?.statusCode===200)){
+    const source=requirePath(row.source,'representation alias source'),target=requirePath(row.target,'representation alias target'),pattern=aliasPattern(source);
+    const existing=groups.get(pattern);
+    if(existing&&existing!==target)throw new Error(`Representation alias family has conflicting targets: ${pattern}`);
+    groups.set(pattern,target);
+  }
+  const profile=profileFor(delivery,'machine')?.default??'noindex, follow';
+  const cors=delivery.http?.machineCors??{};
+  return [...groups.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([pattern,target])=>{
+    const lines=[pattern,`  Cache-Control: ${delivery.machine.cacheControl}`];
+    const resource=resourceByPath.get(target);if(resource)lines.push(`  Content-Type: ${contentType(resource)}`);
+    lines.push(`  Link: <${origin}${target}>; rel=canonical`,`  X-Robots-Tag: ${profile}`);
+    if(cors.origin)lines.push(`  Access-Control-Allow-Origin: ${cors.origin}`);
+    if(cors.exposeHeaders?.length)lines.push(`  Access-Control-Expose-Headers: ${cors.exposeHeaders.join(', ')}`);
+    if(cors.resourcePolicy)lines.push(`  Cross-Origin-Resource-Policy: ${cors.resourcePolicy}`);
+    return lines.join('\n');
+  });
+}
 function countPotential({routes,machineResources,watchPosters}){return 1+routes.length+machineResources.length+3+2+1+(watchPosters?.size??0);}
-export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),earlyHints=true,delivery=null,machineResources=[]}){
+export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),earlyHints=true,delivery=null,machineResources=[],routingRows=[]}){
   if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');requirePath(cssPath,'cssPath');
   const blocks=[];const global=globalBlock(delivery);if(global)blocks.push(global);
   const compact=delivery&&countPotential({routes,machineResources,watchPosters})>100&&routes.filter(r=>r!=='/').every(r=>/^\/[a-z0-9-]+$/i.test(r));
@@ -61,6 +84,7 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
     for(const route of routes){requirePath(route,'route');const poster=watchPosters.get(route);if(poster)requirePath(poster,'poster');const cache=delivery?.html?.cacheControl??'public, max-age=0, must-revalidate';blocks.push(`${route}\n  Cache-Control: ${cache}\n  Link: ${linkValue(origin,cssPath,poster,{earlyHints})}`);}
   }
   if(delivery&&machineResources.length){const resourceByPath=new Map(machineResources.map(r=>[r.path,r]));for(const resource of machineResources){requirePath(resource.path,'machine resource');blocks.push(machineBlock({origin,resource,resourceByPath,delivery,detachHtml:compact&&/^\/[a-z0-9._-]+$/i.test(resource.path)}));}}
+  blocks.push(...representationAliasBlocks({origin,routingRows,machineResources,delivery}));
   blocks.push(`/assets/*\n  Cache-Control: public, max-age=31536000, immutable`);
   blocks.push(`/media/*\n  Cache-Control: public, max-age=31536000, immutable`);
   blocks.push(`/fonts/*\n  Cache-Control: public, max-age=31536000, immutable`);
