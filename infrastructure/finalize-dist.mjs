@@ -42,7 +42,7 @@ export async function finalizeDist({distDir,routes,routingRows=[],sourceEdition,
   const replaced=replaceHomeStructuredDataWithCanonicalGraph(home,canonicalGraph);
   await fs.writeFile(homeFile,replaced.html);
   const critical=discoverCriticalAssets(replaced.html);if(critical.css.length!==1)throw new Error(`Expected one critical stylesheet, found ${critical.css.length}`);
-  await fs.writeFile(path.join(distDir,'_headers'),generateHeaders({origin,routes,cssPath:critical.css[0],watchPosters,earlyHints:true,delivery,machineResources}));
+  await fs.writeFile(path.join(distDir,'_headers'),generateHeaders({origin,routes,cssPath:critical.css[0],watchPosters,earlyHints:true,delivery,machineResources,routingRows}));
   await fs.writeFile(path.join(distDir,'_redirects'),renderRedirects(routingRows));
   const wellKnown=path.join(distDir,'.well-known');await fs.mkdir(wellKnown,{recursive:true});
   const expiry=new Date(`${sourceEdition}T00:00:00Z`);expiry.setUTCDate(expiry.getUTCDate()+182);
