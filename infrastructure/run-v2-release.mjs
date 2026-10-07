@@ -19,12 +19,12 @@ export async function runV2Release({projectRoot}){
   const byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
   await execute('npm',['run','test:v2'],projectRoot);
   await execute('npm',['run','build'],projectRoot);
-  await execute('npm',['run','verify'],projectRoot);
   const distDir=path.join(projectRoot,'dist');
   const watchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(item=>{const thumb=byId.get(item.videoId)?.thumbnailUrl;if(typeof thumb!=='string')throw new Error(`Missing watch-page thumbnail: ${item.videoId}`);const u=new URL(thumb);assert.equal(u.origin,SOURCE.canonicalOrigin,`Cross-origin watch poster: ${item.videoId}`);return[item.path,u.pathname];}));
   const builtGraph=JSON.parse(await fs.readFile(path.join(distDir,'graph.jsonld'),'utf8'));
   const routingRows=deriveRoutingRows(SOURCE,builtGraph);
   await finalizeDist({distDir,routes,routingRows,sourceEdition:SOURCE.edition,origin:SOURCE.canonicalOrigin,watchPosters,securityEmail:'doctor@ghezelbaash.ir',delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+  await execute('npm',['run','verify'],projectRoot);
   const seal=await sealRelease({distDir,projectRoot,releaseDate:SOURCE.edition});
   const languageRoutes=(SOURCE.discovery.translationGroups??[]).flatMap(group=>(group.members??[]).map(member=>member.path));
   const verification=await verifyDist({distDir,routes,origin:SOURCE.canonicalOrigin,physicianId:SOURCE.canonicalOrigin+'/#saeed-ghezelbash',clinicId:SOURCE.canonicalOrigin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',expectedGraphNodes:SOURCE.graph['@graph'].length,expectedVideos:SOURCE.discovery.sitemapPolicy.videoWatchPages.length,sourceEdition:SOURCE.edition,languageRoutes,requireMedicalSemantics:true,requireSbom:true});
