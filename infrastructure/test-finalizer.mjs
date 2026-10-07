@@ -19,9 +19,10 @@ assert.deepEqual(assets, { css:['/assets/site.abc123.css'], js:['/assets/site.de
 const root = await fs.mkdtemp(path.join(os.tmpdir(),'v2-finalizer-'));
 const dist = path.join(root,'dist'); await fs.mkdir(dist,{recursive:true});
 const routes=['/',...Array.from({length:71},(_,i)=>`/route-${i+1}`)];
+const initialRouteGraph={ '@context':'https://schema.org','@graph':[{'@id':'https://www.ghezelbaash.ir/webpage','@type':'WebPage'}] };
 for (const route of routes) {
   const file=path.join(dist,routeFileForPath(route)); await fs.mkdir(path.dirname(file),{recursive:true});
-  await fs.writeFile(file,'<!doctype html><html lang="fa-IR" dir="rtl"><head><link rel="stylesheet" href="/assets/site.abc123.css"></head><body lang="fa-IR" dir="rtl"><article lang="fa-IR" dir="rtl">ok</article><script src="/assets/site.def456.js"></script></body></html>');
+  await fs.writeFile(file,'<!doctype html><html lang="fa-IR" dir="rtl"><head><link rel="stylesheet" href="/assets/site.abc123.css"><script id="schema-core-mainentity" type="application/ld+json">'+JSON.stringify(initialRouteGraph)+'</script></head><body lang="fa-IR" dir="rtl"><article lang="fa-IR" dir="rtl">ok</article><script src="/assets/site.def456.js"></script></body></html>');
 }
 await fs.mkdir(path.join(dist,'assets')); await fs.writeFile(path.join(dist,'assets/site.abc123.css'),'.render-chunk{content-visibility:auto;contain:layout style paint;contain-intrinsic-size:auto var(--cis,2800px)}'); await fs.writeFile(path.join(dist,'assets/site.def456.js'),'');
 await fs.writeFile(path.join(dist,'sitemap.xml'),'<?xml version="1.0"?><urlset>'+routes.map((r)=>`<url><loc>https://www.ghezelbaash.ir${r==='/'?'/':r}</loc><lastmod>2026-10-04</lastmod></url>`).join('')+'</urlset>');
@@ -38,16 +39,22 @@ const summary=await finalizeDist({distDir:dist,routes,routingRows,sourceEdition:
 assert.equal(summary.htmlDocuments,72);
 assert.equal(summary.distDir,dist);
 assert.equal(summary.canonicalGraphInline,true,'Finalizer must report full canonical graph embedded in Home');
+assert.equal(summary.homeJsonLdScripts,1,'Finalizer must report exactly one JSON-LD script on Home');
 
 const finalizedHome=await fs.readFile(path.join(dist,'index.html'),'utf8');
-const fullGraphScripts=[...finalizedHome.matchAll(/<script\b(?=[^>]*\bid=["']canonical-knowledge-graph["'])[^>]*>([\s\S]*?)<\/script>/gi)];
-assert.equal(fullGraphScripts.length,1,'Home must contain exactly one full canonical knowledge graph script');
-assert.ok(finalizedHome.indexOf('id="canonical-knowledge-graph"')<finalizedHome.indexOf('</head>'),'Full canonical graph must be emitted in Home head');
-assert.deepEqual(JSON.parse(fullGraphScripts[0][1]),canonicalGraph,'Inline Home graph must equal canonical graph.jsonld after parsing');
+const allHomeJsonLd=[...finalizedHome.matchAll(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi)];
+assert.equal(allHomeJsonLd.length,1,'Home must contain exactly one JSON-LD script total');
+const fullGraphScripts=[...finalizedHome.matchAll(/<script\b(?=[^>]*\bid=["']schema-core-mainentity["'])[^>]*>([\s\S]*?)<\/script>/gi)];
+assert.equal(fullGraphScripts.length,1,'Home must retain one schema-core-mainentity JSON-LD script');
+assert.ok(finalizedHome.indexOf('id="schema-core-mainentity"')<finalizedHome.indexOf('</head>'),'Full canonical graph must remain in Home head');
+assert.deepEqual(JSON.parse(fullGraphScripts[0][1]),canonicalGraph,'The single Home JSON-LD must equal canonical graph.jsonld after parsing');
 assert.ok(!fullGraphScripts[0][1].includes('</script>'),'Inline JSON-LD payload must escape HTML script-closing sequences');
 assert.ok(!finalizedHome.includes('<script id="escaped-breakout">'),'Canonical graph literals must not break out of the JSON-LD script');
+assert.ok(!finalizedHome.includes('canonical-knowledge-graph'),'Finalizer must not add a second canonical-knowledge-graph script');
 const focusedHtml=await fs.readFile(path.join(dist,'route-1.html'),'utf8');
-assert.ok(!focusedHtml.includes('canonical-knowledge-graph'),'Full canonical graph must be Home-only; focused pages keep route-specific structured data');
+const focusedJsonLd=[...focusedHtml.matchAll(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi)];
+assert.equal(focusedJsonLd.length,1,'Focused pages must retain exactly one route-specific JSON-LD script');
+assert.deepEqual(JSON.parse(focusedJsonLd[0][1]),initialRouteGraph,'Focused page JSON-LD must remain route-specific and unchanged by finalizer');
 
 const redirects=await fs.readFile(path.join(dist,'_redirects'),'utf8');
 assert.equal(redirects,'/route-1/ /route-1 301\n/graph.jsonld/entity /graph.jsonld 200\n/legacy-old-url /route-1 301\n');
@@ -58,4 +65,4 @@ const security=await fs.readFile(path.join(dist,'.well-known/security.txt'),'utf
 assert.match(security,/Contact: mailto:doctor@ghezelbaash.ir/);
 const sitemap=await fs.readFile(path.join(dist,'sitemap.xml'),'utf8');
 assert.equal([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].every((m)=>m[1]==='2026-10-04'),true);
-console.log(JSON.stringify({finalizerFoundation:'PASS',htmlDocuments:summary.htmlDocuments,canonicalGraphInline:summary.canonicalGraphInline},null,2));
+console.log(JSON.stringify({finalizerFoundation:'PASS',htmlDocuments:summary.htmlDocuments,canonicalGraphInline:summary.canonicalGraphInline,homeJsonLdScripts:summary.homeJsonLdScripts},null,2));
