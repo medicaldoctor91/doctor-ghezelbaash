@@ -7,7 +7,7 @@
     "build": "astro build && node infrastructure/materialize-machine-resources.mjs dist",
     "verify": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs && node infrastructure/verify.mjs",
     "audit": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs",
-    "test:source": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs && node infrastructure/test-discovery.mjs",
+    "test:source": "node infrastructure/test-derived-module-loader.mjs && node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs && node infrastructure/test-discovery.mjs",
     "test:finalizer": "node infrastructure/test-finalizer.mjs && node infrastructure/test-headers.mjs",
     "test:v2": "npm run test:source && npm run test:machine && npm run test:copy && npm run test:routing && npm run test:assets && npm run test:finalizer && npm run test:integrity && npm run test:rendering && npm run test:dist && npm run test:release",
     "finalize": "node infrastructure/finalize-dist.mjs dist",
