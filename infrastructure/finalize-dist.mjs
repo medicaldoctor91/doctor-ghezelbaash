@@ -7,18 +7,42 @@ import { deriveRoutingRows, renderRedirects } from '../src/lib/delivery-output.m
 
 async function pathExists(file){try{await fs.access(file);return true;}catch{return false;}}
 
+export function serializeJsonLdForHtml(value){
+  return JSON.stringify(value)
+    .replaceAll('<','\\u003c')
+    .replaceAll('\u2028','\\u2028')
+    .replaceAll('\u2029','\\u2029');
+}
+
+export function embedCanonicalKnowledgeGraph(homeHtml,graph){
+  if(typeof homeHtml!=='string'||!homeHtml.includes('</head>'))throw new Error('Home HTML must contain a closing head');
+  if(homeHtml.includes('id="canonical-knowledge-graph"')||homeHtml.includes("id='canonical-knowledge-graph'"))throw new Error('Home already contains canonical knowledge graph');
+  if(!graph||typeof graph!=='object'||!Array.isArray(graph['@graph']))throw new Error('Canonical graph.jsonld must contain an @graph array');
+  const payload=serializeJsonLdForHtml(graph);
+  const script=`<script id="canonical-knowledge-graph" type="application/ld+json">${payload}</script>`;
+  const html=homeHtml.replace('</head>',`${script}</head>`);
+  const scriptEnd=html.indexOf('</script>',html.indexOf('id="canonical-knowledge-graph"'))+'</script>'.length;
+  return {html,graphNodes:graph['@graph'].length,graphScriptEndBytes:Buffer.byteLength(html.slice(0,scriptEnd),'utf8')};
+}
+
 export async function finalizeDist({distDir,routes,routingRows=[],sourceEdition,origin='https://www.ghezelbaash.ir',watchPosters=new Map(),securityEmail='doctor@ghezelbaash.ir',delivery=null,machineResources=[]}){
   if(!Array.isArray(routes)||routes.length!==72||new Set(routes).size!==72)throw new Error('Finalizer requires exactly 72 unique canonical routes');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(sourceEdition??''))throw new Error('Finalizer requires canonical source edition');
   for(const route of routes){const file=path.join(distDir,routeFileForPath(route));if(!(await pathExists(file)))throw new Error(`Missing canonical HTML: ${file}`);}
-  const home=await fs.readFile(path.join(distDir,'index.html'),'utf8');
-  const critical=discoverCriticalAssets(home);if(critical.css.length!==1)throw new Error(`Expected one critical stylesheet, found ${critical.css.length}`);
+  const homeFile=path.join(distDir,'index.html');
+  const graphFile=path.join(distDir,'graph.jsonld');
+  if(!(await pathExists(graphFile)))throw new Error(`Missing canonical graph: ${graphFile}`);
+  const home=await fs.readFile(homeFile,'utf8');
+  const canonicalGraph=JSON.parse(await fs.readFile(graphFile,'utf8'));
+  const embedded=embedCanonicalKnowledgeGraph(home,canonicalGraph);
+  await fs.writeFile(homeFile,embedded.html);
+  const critical=discoverCriticalAssets(embedded.html);if(critical.css.length!==1)throw new Error(`Expected one critical stylesheet, found ${critical.css.length}`);
   await fs.writeFile(path.join(distDir,'_headers'),generateHeaders({origin,routes,cssPath:critical.css[0],watchPosters,earlyHints:true,delivery,machineResources}));
   await fs.writeFile(path.join(distDir,'_redirects'),renderRedirects(routingRows));
   const wellKnown=path.join(distDir,'.well-known');await fs.mkdir(wellKnown,{recursive:true});
   const expiry=new Date(`${sourceEdition}T00:00:00Z`);expiry.setUTCDate(expiry.getUTCDate()+182);
   await fs.writeFile(path.join(wellKnown,'security.txt'),generateSecurityTxt({origin,email:securityEmail,expires:expiry.toISOString().replace('.000Z','Z')}));
-  return {htmlDocuments:routes.length,sourceEdition,distDir};
+  return {htmlDocuments:routes.length,sourceEdition,distDir,canonicalGraphInline:true,canonicalGraphNodes:embedded.graphNodes,canonicalGraphScriptEndBytes:embedded.graphScriptEndBytes};
 }
 
 export async function extractSourceObject(sourceFile){
