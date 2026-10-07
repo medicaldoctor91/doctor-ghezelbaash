@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { generateHeaders, generateSecurityTxt } from './lib/headers.mjs';
 import { extractSourceObject } from './finalize-dist.mjs';
+import { deriveRoutingRows } from '../src/lib/delivery-output.mjs';
 
 const origin='https://www.ghezelbaash.ir';
 const routes=['/','/botox','/video-saeed-ghezelbash-subcision-technique'];
@@ -29,12 +30,19 @@ const delivery={
 };
 const machineResources=[
   {path:'/graph.jsonld',mediaType:'application/ld+json',parameters:{},indexing:'machine',canonicalPath:'/graph.jsonld',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[{path:'/graph.ttl',rel:'alternate'}]},
+  {path:'/provenance.jsonld',mediaType:'application/ld+json',parameters:{},indexing:'machine',canonicalPath:'/provenance.jsonld',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[]},
   {path:'/graph.ttl',mediaType:'text/turtle',parameters:{charset:'utf-8'},indexing:'machine',canonicalPath:'/graph.ttl',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[]},
   {path:'/doctor.vcf',mediaType:'text/vcard',parameters:{charset:'utf-8'},indexing:'contact',canonicalPath:'/doctor.vcf',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[]},
   {path:'/robots.txt',mediaType:'text/plain',parameters:{charset:'utf-8'},indexing:'support',canonicalPath:'/robots.txt',about:[],httpRelationships:[]},
 ];
+const routingRows=[
+  {source:'/graph.jsonld/entity',target:'/graph.jsonld',statusCode:200},
+  {source:'/ontology/example',target:'/graph.jsonld',statusCode:200},
+  {source:'/provenance.jsonld/activity',target:'/provenance.jsonld',statusCode:200},
+  {source:'/website',target:'/graph.jsonld',statusCode:200},
+];
 const headers=generateHeaders({
-  origin,routes,cssPath:'/assets/site.0123456789ab.css',delivery,machineResources,
+  origin,routes,cssPath:'/assets/site.0123456789ab.css',delivery,machineResources,routingRows,
   watchPosters:new Map([['/video-saeed-ghezelbash-subcision-technique','/media/posters/subcision.0123456789ab.webp']]),
 });
 assert.match(headers,/Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full/);
@@ -61,6 +69,10 @@ assert.match(headers,/\/graph\.jsonld\n[\s\S]*Content-Type: application\/ld\+jso
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Access-Control-Allow-Origin: \*/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Cross-Origin-Resource-Policy: cross-origin/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*X-Robots-Tag: noindex, follow/);
+assert.match(headers,/\/graph\.jsonld\/\*\n[\s\S]*Link: <https:\/\/www\.ghezelbaash\.ir\/graph\.jsonld>; rel=canonical[\s\S]*X-Robots-Tag: noindex, follow/);
+assert.match(headers,/\/ontology\/\*\n[\s\S]*Link: <https:\/\/www\.ghezelbaash\.ir\/graph\.jsonld>; rel=canonical[\s\S]*X-Robots-Tag: noindex, follow/);
+assert.match(headers,/\/provenance\.jsonld\/\*\n[\s\S]*Link: <https:\/\/www\.ghezelbaash\.ir\/provenance\.jsonld>; rel=canonical[\s\S]*X-Robots-Tag: noindex, follow/);
+assert.match(headers,/\/website\n[\s\S]*Link: <https:\/\/www\.ghezelbaash\.ir\/graph\.jsonld>; rel=canonical[\s\S]*X-Robots-Tag: noindex, follow/);
 assert.doesNotMatch(headers,/X-Robots-Tag: googlebot:/);
 assert.match(headers,/\/doctor\.vcf\n[\s\S]*X-Robots-Tag: noindex, follow/);
 assert.match(headers,/\/robots\.txt\n[\s\S]*X-Robots-Tag: noindex/);
@@ -75,8 +87,17 @@ const SOURCE=await extractSourceObject(new URL('../src/pages/index.astro', impor
 const realRoutes=SOURCE.routes.resources.map(entry=>entry.path);
 const byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
 const realWatchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const thumb=byId.get(entry.videoId)?.thumbnailUrl;assert.equal(typeof thumb,'string',`Missing video poster for ${entry.videoId}`);return [entry.path,new URL(thumb).pathname];}));
-const realHeaders=generateHeaders({origin:SOURCE.canonicalOrigin,routes:realRoutes,cssPath:'/assets/site.0123456789ab.css',watchPosters:realWatchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+const realRoutingRows=deriveRoutingRows(SOURCE,SOURCE.graph);
+const realHeaders=generateHeaders({origin:SOURCE.canonicalOrigin,routes:realRoutes,cssPath:'/assets/site.0123456789ab.css',watchPosters:realWatchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources,routingRows:realRoutingRows});
 const realRules=realHeaders.trim().split(/\n\n+/).filter(Boolean);
 assert.ok(realRules.length<=100,`Real Cloudflare _headers rule limit exceeded: ${realRules.length}`);
 assert.ok(realHeaders.split('\n').every(line=>line.length<=2000),'Real Cloudflare _headers line length limit exceeded');
-console.log(JSON.stringify({headersPolicy:'PASS',securityTxt:'PASS',fixtureRules:rules.length,realRules:realRules.length,realMachineResources:SOURCE.machineResources.length},null,2));
+const parsedRules=realRules.map(block=>{const [pattern,...lines]=block.split('\n');return{pattern,body:lines.join('\n')};});
+const aliasRows=realRoutingRows.filter(row=>row.statusCode===200);
+assert.ok(aliasRows.length>0,'Expected semantic representation aliases');
+for(const row of aliasRows){
+  const candidates=parsedRules.filter(rule=>rule.pattern===row.source||(rule.pattern.endsWith('/*')&&row.source.startsWith(rule.pattern.slice(0,-1))));
+  const rule=candidates.find(rule=>rule.body.includes('X-Robots-Tag: noindex, follow')&&rule.body.includes(`Link: <${SOURCE.canonicalOrigin}${row.target}>; rel=canonical`));
+  assert.ok(rule,`Representation alias lacks noindex/canonical header coverage: ${row.source} -> ${row.target}`);
+}
+console.log(JSON.stringify({headersPolicy:'PASS',securityTxt:'PASS',fixtureRules:rules.length,realRules:realRules.length,realMachineResources:SOURCE.machineResources.length,representationAliasesCovered:aliasRows.length},null,2));
