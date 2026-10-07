@@ -1,3 +1,10 @@
+export function assertValidLinkTypes(headers){
+  for(const line of headers.split('\n').filter(line=>/^\s*Link:/i.test(line))){
+    const attributes=[...line.matchAll(/;\s*type\s*=/gi)];
+    const valid=[...line.matchAll(/;\s*type\s*=\s*"[!#$%&'*+.^_`|~A-Za-z0-9-]+\/[!#$%&'*+.^_`|~A-Za-z0-9-]+"(?=\s*(?:;|,|$))/gi)];
+    if(attributes.length!==valid.length)throw new Error('Invalid Link type hint: expected a quoted bare media type');
+  }
+}
 function requirePath(value,name){if(typeof value!=='string'||!value.startsWith('/')||value.startsWith('//')||/[\r\n]/.test(value))throw new Error(`${name} must be an absolute site path`);return value;}
 function linkValue(origin,cssPath,poster,{earlyHints=true}={}){
   const parts=[`</graph.jsonld>; rel=describedby; type="application/ld+json"`,`</graph.ttl>; rel=describedby; type="text/turtle"`,`<${origin}/#saeed-ghezelbash>; rel=about`];
@@ -10,12 +17,12 @@ function permissionsPolicy(policy={}){return Object.entries(policy).sort(([a],[b
 function contentSecurityPolicy(policy={}){return Object.entries(policy).map(([name,value])=>{const directive=kebab(name);if(value===true)return directive;if(!Array.isArray(value)||!value.length)return '';return `${directive} ${value.join(' ')}`;}).filter(Boolean).join('; ');}
 function contentType(resource){
   const params=Object.entries(resource?.parameters??{}).map(([name,value])=>`${name}=${/^[a-z0-9.+-]+$/i.test(value)?value:'"'+String(value).replaceAll('"','\\"')+'"'}`);
-  if(resource?.profiles?.length)params.push('profile="'+[...new Set(resource.profiles)].join(' ')+'"');
+  if(resource?.mediaType!=='text/turtle'&&resource?.profiles?.length)params.push('profile="'+[...new Set(resource.profiles)].join(' ')+'"');
   return [resource.mediaType,...params].join('; ');
 }
 function resourceLinks(origin,resource,resourceByPath,defaultAbout=[]){
   const links=[`<${origin}${resource.canonicalPath??resource.path}>; rel=canonical`];
-  for(const relation of resource.httpRelationships??[]){const target=resourceByPath.get(relation.path);const type=target?`; type="${contentType(target)}"`:'';links.push(`<${relation.path}>; rel=${relation.rel}${type}`);}
+  for(const relation of resource.httpRelationships??[]){const target=resourceByPath.get(relation.path);const type=target?`; type="${target.mediaType}"`:'';links.push(`<${relation.path}>; rel=${relation.rel}${type}`);}
   for(const id of resource.about??defaultAbout)links.push(`<${id}>; rel=about`);
   return links.join(', ');
 }
@@ -78,6 +85,6 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
   if(delivery?.routing?.notFound?.cacheControl){const p=profileFor(delivery,delivery.routing.notFound.indexing);blocks.push(`/404.html\n  Cache-Control: ${delivery.routing.notFound.cacheControl}${p?.default?`\n  X-Robots-Tag: ${p.default}`:''}`);}
   const preview=delivery?.http?.indexingProfiles?.preview?.default??'noindex';blocks.push(`https://:project.pages.dev/*\n  X-Robots-Tag: ${preview}`);blocks.push(`https://:version.:project.pages.dev/*\n  X-Robots-Tag: ${preview}`);
   if(blocks.length>100)throw new Error(`Cloudflare _headers rule limit exceeded: ${blocks.length}`);
-  const output=blocks.join('\n\n')+'\n';for(const line of output.split('\n'))if(line.length>2000)throw new Error(`Cloudflare _headers line limit exceeded: ${line.length}`);return output;
+  const output=blocks.join('\n\n')+'\n';for(const line of output.split('\n'))if(line.length>2000)throw new Error(`Cloudflare _headers line limit exceeded: ${line.length}`);assertValidLinkTypes(output);return output;
 }
 export function generateSecurityTxt({origin,email,expires}){if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');if(!/^[^@\s]+@[^@\s]+$/.test(email))throw new Error('Invalid security contact email');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(expires))throw new Error('Expires must be an RFC3339 UTC timestamp');return `Contact: mailto:${email}\nExpires: ${expires}\nPreferred-Languages: fa, en\nCanonical: ${origin}/.well-known/security.txt\n`;}

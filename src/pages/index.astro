@@ -4536,6 +4536,14 @@ export function compileCanonicalSource() {
       caption.childNodes=[firstHeading];firstHeading.parentNode=caption;
       set(firstHeading,'id',record.htmlId+'-page-heading');
     }
+    if(path==='/video-saeed-ghezelbash-kurdish-patient-review') {
+      // The established video topic owns H1; the promoted rating remains supporting copy.
+      const parent=firstHeading.parentNode, rating=firstHeading.childNodes;
+      parent.childNodes.splice(parent.childNodes.indexOf(firstHeading)+1,0,...rating);
+      for(const node of rating)node.parentNode=parent;
+      firstHeading.childNodes=parseFragment(escape(record.title)).childNodes;
+      for(const node of firstHeading.childNodes)node.parentNode=firstHeading;
+    }
     firstHeading.tagName=firstHeading.nodeName='h1';
     let headingLevel = 1;
     walk(primary,node => {

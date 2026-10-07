@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { generateHeaders, generateSecurityTxt } from './lib/headers.mjs';
+import * as headerContract from './lib/headers.mjs';
 
 
 const origin='https://www.ghezelbaash.ir';
@@ -91,6 +92,24 @@ for (const resource of [
  assert(block.includes('X-Robots-Tag: noindex, follow'));
  assert(block.includes('Access-Control-Allow-Origin: *'));
 }
+for(const line of realHeaders.split('\n').filter(line=>line.trim().startsWith('Link:'))) {
+ for(const match of line.matchAll(/\btype="([^"]*)"/g))assert.match(match[1],/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i,'Link type is a bare media type: '+match[1]);
+}
+for(const resourcePath of ['/graph.ttl','/shapes.ttl','/dcat.ttl']) {
+ const block=realHeaders.split(/\n\n+/).find(block=>block.startsWith(resourcePath+'\n'));
+ assert.equal(block.split('\n').find(line=>line.trim().startsWith('Content-Type:')).trim(),'Content-Type: text/turtle; charset=utf-8','Turtle has registered Content-Type parameters');
+}
+assert.equal(typeof headerContract.assertValidLinkTypes,'function','Generated and delivered Link hints must have a validator');
+for(const value of ['text/csv; charset=utf-8','application/ld+json; profile="https://example.com"','text/turtle"oops','text/turtle']) {
+ const header='  Link: </graph.ttl>; rel=alternate; type="'+value+'"\n';
+ if(value==='text/turtle')assert.doesNotThrow(()=>headerContract.assertValidLinkTypes(header));
+ else assert.throws(()=>headerContract.assertValidLinkTypes(header),/Link type/);
+}
+assert.throws(()=>headerContract.assertValidLinkTypes('  Link: </graph.ttl>; type="text/turtle\n'),/Link type/);
+const graphBlock=realHeaders.split(/\n\n+/).find(block=>block.startsWith('/graph.jsonld\n'));
+assert.match(graphBlock,/Content-Type: application\/ld\+json; profile="/,'Legitimate JSON-LD response parameters stay intact');
+const csvBlock=realHeaders.split(/\n\n+/).find(block=>block.startsWith('/entity-facts.csv\n'));
+assert.match(csvBlock,/Content-Type: text\/csv; charset=utf-8; header=present/,'Legitimate CSV response parameters stay intact');
 const realRules=realHeaders.trim().split(/\n\n+/).filter(Boolean);
 assert.ok(realRules.length<=100,`Real Cloudflare _headers rule limit exceeded: ${realRules.length}`);
 assert.ok(realHeaders.split('\n').every(line=>line.length<=2000),'Real Cloudflare _headers line length limit exceeded');

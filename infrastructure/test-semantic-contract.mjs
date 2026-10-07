@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {parse} from 'parse5';
 import {semanticFingerprint} from './lib/rdf.mjs';
 const root=new URL('../',import.meta.url);
 const source=await fs.readFile(new URL('src/pages/index.astro',root),'utf8');
@@ -29,4 +30,12 @@ for(const record of CANONICAL.records){
  assert(videos.every(n=>record.visibleMediaIds.includes(n['@id'])),'Only route-relevant videos '+record.path);
  assert(!record.document['@graph'].some(n=>[n['@type']].flat().includes('FAQPage')),'No synthetic FAQ wrapper '+record.path);
 }
+const watchPath='/video-saeed-ghezelbash-kurdish-patient-review';
+const rendered=CANONICAL.render(watchPath),nodes=[];
+function walk(node){nodes.push(node);for(const child of node.childNodes??[])walk(child);}walk(parse(rendered));
+function text(node){return node.nodeName==='#text'?node.value:(node.childNodes??[]).map(text).join('');}
+const headings=nodes.filter(node=>node.tagName==='h1');
+assert.equal(headings.length,1);
+assert.equal(text(headings[0]),'ڕەزامەندیی مراجعێک لە هەولێر | دکتۆر سەعید قزلباش','Kurdish watch H1 describes its established subject');
+assert(text(nodes.find(node=>node.tagName==='article')).includes('امتیاز اعلام‌شدهٔ بیمار: ۵ از ۵.'),'Rating remains in primary page content');
 console.log('Canonical semantic contracts PASS');

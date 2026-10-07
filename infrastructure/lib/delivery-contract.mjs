@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {parse,serialize} from 'parse5';
 import {createHash} from 'node:crypto';
 import {semanticFingerprint,rdfFingerprint} from './rdf.mjs';
+import {assertValidLinkTypes} from './headers.mjs';
+import {graphFactRows} from '../../src/lib/machine-output.mjs';
 import {deriveRoutingRows} from '../../src/lib/delivery-output.mjs';
 import {clinicalCopyFingerprint} from './clinical-copy.mjs';
 import {truthText} from '../../src/lib/search-contract.mjs';
@@ -17,6 +19,27 @@ const value=v=>v?.['@value']??v;
 export function unresolvedReferences(graph,origin,documentUrls=[]){
  const definitions=new Set(documentUrls);function define(v){if(!v||typeof v!=='object')return;if(v['@id']&&Object.keys(v).length>1)definitions.add(v['@id']);Object.values(v).forEach(define);}define(graph);
  const missing=new Set();function visit(v){if(!v||typeof v!=='object')return;if(Object.keys(v).length===1&&v['@id']?.startsWith(origin+'/')&&!definitions.has(v['@id']))missing.add(v['@id']);Object.values(v).forEach(visit);}visit(graph);return [...missing].sort();
+}
+export function assertCanonicalFactCsv(csv,graph){
+ const rows=[];let row=[],cell='',quoted=false;
+ for(let i=0;i<csv.length;i++){
+  const c=csv[i];
+  if(quoted){if(c==='"'){if(csv[i+1]==='"'){cell+='"';i++;}else quoted=false;}else cell+=c;}
+  else if(c==='"'){assert.equal(cell,'','CSV quote starts a field');quoted=true;}
+  else if(c===','){row.push(cell);cell='';}
+  else if(c==='\n'||c==='\r'){if(c==='\r'&&csv[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell='';}
+  else cell+=c;
+ }
+ assert(!quoted,'CSV quoted field closes');if(cell||row.length){row.push(cell);rows.push(row);}
+ const columns=['row_id','subject','predicate','object','object_kind','datatype','language'];
+ assert.deepEqual(rows.shift(),columns,'Canonical CSV columns');
+ assert(rows.every(row=>row.length===columns.length),'Canonical CSV field count');
+ const identities=rows.map(row=>row[0]),facts=rows.map(row=>JSON.stringify(row));
+ assert.equal(new Set(identities).size,rows.length,'Duplicate CSV row_id');
+ assert.equal(new Set(facts).size,rows.length,'Duplicate CSV complete rows');
+ const canonical=new Set(graphFactRows(graph).map(row=>JSON.stringify(columns.map(key=>row[key]==null?'':String(row[key])))));
+ assert.deepEqual(new Set(facts),canonical,'CSV preserves all unique canonical facts');
+ return rows.length;
 }
 export async function distHashes(dir){const files={};async function walk(folder){for(const entry of (await fs.readdir(folder,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){const file=path.join(folder,entry.name);if(entry.isDirectory())await walk(file);else files['/'+path.relative(dir,file)]=hash(await fs.readFile(file));}}await walk(dir);return {files,sha256:hash(JSON.stringify(files))};}
 export async function measureDelivery({distDir,source,verify=false,locked=null,semantic=true}){
@@ -91,6 +114,7 @@ export async function measureDelivery({distDir,source,verify=false,locked=null,s
  const rows=deriveRoutingRows(source,full),aliases=rows.filter(r=>r.statusCode===200);
  const sitemap=await fs.readFile(path.join(distDir,'sitemap.xml'),'utf8').catch(()=>null),robots=await fs.readFile(path.join(distDir,'robots.txt'),'utf8').catch(()=>null),headers=await fs.readFile(path.join(distDir,'_headers'),'utf8').catch(()=>null);
  if(verify){
+  assertCanonicalFactCsv(await fs.readFile(path.join(distDir,'entity-facts.csv'),'utf8'),source.graph);
   const copyLock=(await fs.readFile(new URL('../fixtures/locked-clinical-copy.sha256',import.meta.url),'utf8')).trim();
   assert.equal(clinicalCopyFingerprint(homeHtml),copyLock,'Original unique clinical copy preserved');
   const locations=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1]);assert.deepEqual(locations.sort(),source.routes.resources.map(r=>origin+r.path).sort(),'Only canonical HTML sitemap URLs');
@@ -108,7 +132,12 @@ export async function measureDelivery({distDir,source,verify=false,locked=null,s
   if(manifestText){const manifest=JSON.parse(manifestText);for(const resource of [...source.machineResources,...source.delivery.releaseResources])if(manifest.files[resource.path])assert.equal(manifest.files[resource.path].mediaType,resource.mediaType,'Sealed resource MIME truth '+resource.path);}
   for(const row of rows)assert(!rows.some(next=>next.source===row.target),'No routing chain or loop '+row.source);
   if(headers){
+   assertValidLinkTypes(headers);
    const blocks=headers.trim().split(/\n\s*\n/).map(b=>b.split('\n'));
+   for(const resourcePath of ['/graph.ttl','/shapes.ttl','/dcat.ttl']) {
+    const block=blocks.find(([pattern])=>pattern===resourcePath);
+    assert.equal(block?.find(line=>line.trim().startsWith('Content-Type:'))?.trim(),'Content-Type: text/turtle; charset=utf-8','Turtle Content-Type '+resourcePath);
+   }
    const covers=(pattern,url)=>pattern===url||pattern.endsWith('/*')&&url.startsWith(pattern.slice(0,-1));
    for(const alias of aliases){
     const covered=blocks.filter(([pattern])=>covers(pattern,alias.source)&&pattern!=='/*').flat().join('\n');

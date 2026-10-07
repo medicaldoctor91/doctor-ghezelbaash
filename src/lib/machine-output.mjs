@@ -115,7 +115,9 @@ const csvCell = (value) => {
 
 export function serializeEntityFactsCsv(graph) {
   const headers = ['row_id','subject','predicate','object','object_kind','datatype','language'];
-  return headers.join(',') + '\n' + graphFactRows(graph).map((row) => headers.map((key) => csvCell(row[key])).join(',')).join('\n') + '\n';
+  const seen=new Set();
+  const rows=graphFactRows(graph).filter(row=>{if(seen.has(row.row_id))return false;seen.add(row.row_id);return true;});
+  return headers.join(',') + '\n' + rows.map((row) => headers.map((key) => csvCell(row[key])).join(',')).join('\n') + '\n';
 }
 
 function literal(value, language = 'fa-IR') {

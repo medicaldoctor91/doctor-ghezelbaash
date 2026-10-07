@@ -33,4 +33,11 @@ for(const rel of ['index.html','botox.html','assets/site.0123456789ab.css','asse
 await fs.writeFile(path.join(root,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate:'2026-10-05',files:manifestFiles}));
 const report=await verifyDist({distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true});
 assert.equal(report.canonicalPages,2);assert.equal(report.graphNodes,3);assert.equal(report.videoEntries,4);assert.equal(report.integrityVerified,true);
+const verifyOptions={distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true};
+const validHeaders=await fs.readFile(path.join(root,'_headers'),'utf8');
+const invalidHeaders=validHeaders+'\n/fixture\n  Link: </graph.ttl>; type="text/turtle; charset=utf-8"\n';
+await fs.writeFile(path.join(root,'_headers'),invalidHeaders);
+const bytes=Buffer.from(invalidHeaders);manifestFiles['/_headers']={bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
+await fs.writeFile(path.join(root,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate:'2026-10-05',files:manifestFiles}));
+await assert.rejects(verifyDist(verifyOptions),/Link type/,'Final verification rejects invalid delivered Link types even with matching seal hashes');
 console.log(JSON.stringify({distVerifier:'PASS',...report},null,2));

@@ -22,7 +22,6 @@ export function deriveRoutingRows(source,graph){
   };
   for(const resource of resources.filter(resource=>resource.path!=='/')){
     sitePath(resource.path,'canonical route');
-    for(const sourcePath of [resource.path+'/',resource.path+'.html'])addRoute({source:sourcePath,target:resource.path,statusCode:301});
   }
   for(const sourcePath of ['/index','/index/'])addRoute({source:sourcePath,target:'/',statusCode:301});
   const visitIdentity=(value)=>{

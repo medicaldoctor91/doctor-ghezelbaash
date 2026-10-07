@@ -7,11 +7,27 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { materializeMachineResources } from './materialize-machine-resources.mjs';
-import { serializeGraphAsNTriples,buildCsvMetadata } from '../src/lib/machine-output.mjs';
+import { serializeGraphAsNTriples,buildCsvMetadata,serializeEntityFactsCsv } from '../src/lib/machine-output.mjs';
 
+const fixture={'@context':{'@vocab':'https://schema.org/'},'@graph':[
+ {'@id':'https://example.com/entity',name:['duplicate','duplicate','unique']},
+ {'@id':'https://example.com/entity',name:'duplicate'},
+]};
+const fixtureRows=serializeEntityFactsCsv(fixture).trim().split('\n').slice(1);
+assert.equal(fixtureRows.length,2,'CSV materializer emits one row per unique fact');
+assert.equal(new Set(fixtureRows).size,fixtureRows.length,'No duplicate complete CSV rows');
+assert.equal(new Set(fixtureRows.map(row=>row.split(',')[0])).size,fixtureRows.length,'No duplicate CSV row_id');
+const contract=await import('./lib/delivery-contract.mjs');
+assert.equal(typeof contract.assertCanonicalFactCsv,'function','Final artifact verifies CSV uniqueness and canonical fact coverage');
+assert.equal(contract.assertCanonicalFactCsv(serializeEntityFactsCsv(fixture),fixture),2);
+assert.throws(()=>contract.assertCanonicalFactCsv(serializeEntityFactsCsv(fixture)+fixtureRows[0]+'\n',fixture),/Duplicate CSV/);
+assert.throws(()=>contract.assertCanonicalFactCsv('row_id,subject,predicate,object,object_kind,datatype,language\n',fixture),/canonical facts/);
+const quotedFixture={'@context':{'@vocab':'https://schema.org/'},'@graph':[{'@id':'https://example.com/entity',name:'Comma, quote " and\nnewline'}]};
+assert.equal(contract.assertCanonicalFactCsv(serializeEntityFactsCsv(quotedFixture),quotedFixture),1,'Quoted CSV fields and newlines parse correctly');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = canonicalSource;
 const authoredBody = canonicalBody;
+const assertCanonicalRows=csv=>contract.assertCanonicalFactCsv(csv,source.graph);
 const packageJson = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
 assert.match(packageJson.scripts.build, /materialize-machine-resources\.mjs/, 'Build must materialize declared machine resources after Astro');
 assert.match(packageJson.scripts['test:machine'], /node infrastructure\/test-machine-resources\.mjs/, 'Machine resource contract must have a direct test script');
@@ -44,6 +60,7 @@ try {
 
   const csv = await fs.readFile(path.join(distDir, 'entity-facts.csv'), 'utf8');
   assert.deepEqual(csv.split('\n',1)[0].split(','),buildCsvMetadata(source).tableSchema.columns.map(c=>c.name),'CSVW columns match the real export header');
+  assertCanonicalRows(csv);
   assert.match(csv.split('\n', 1)[0], /row_id,subject,predicate,object,object_kind,datatype,language/);
   assert.match(await fs.readFile(path.join(distDir, 'answers.txt'), 'utf8'), /Question ID:/);
   assert.match(await fs.readFile(path.join(distDir, 'answers.txt'), 'utf8'), /Answer:/);

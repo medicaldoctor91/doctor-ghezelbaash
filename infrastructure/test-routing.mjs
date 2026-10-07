@@ -14,8 +14,6 @@ const routingGraph={'@graph':[
   {'@id':'https://www.ghezelbaash.ir/entity/example','@type':'Thing'},
 ]};
 assert.deepEqual(deriveRoutingRows(routingSource,routingGraph),[
-  {source:'/botox/',target:'/botox',statusCode:301},
-  {source:'/botox.html',target:'/botox',statusCode:301},
   {source:'/index',target:'/',statusCode:301},
   {source:'/index/',target:'/',statusCode:301},
   {source:'/graph.jsonld/dataset',target:'/graph.jsonld',statusCode:200},
@@ -36,6 +34,9 @@ const robots=renderRobotsTxt({origin:'https://www.ghezelbaash.ir',robots:{userAg
 assert.equal(robots,'User-agent: *\nContent-Signal: search=yes, ai-input=yes, ai-train=yes, use=full\nAllow: /\nDisallow: /cdn-cgi/\nSitemap: https://www.ghezelbaash.ir/sitemap.xml\n');
 const SOURCE=canonicalSource;
 const realRoutingRows=deriveRoutingRows(SOURCE,SOURCE.graph);
+for(const resource of SOURCE.routes.resources.filter(resource=>resource.path!=='/')) {
+ for(const alias of [resource.path+'/',resource.path+'.html'])assert(!realRoutingRows.some(row=>row.source===alias),'Platform-owned HTML normalization must not be emitted '+alias);
+}
 const fs=await import('node:fs/promises');
 await assert.rejects(fs.access(new URL('../src/data/legacy-routing-supplement.json',import.meta.url)),{code:'ENOENT'},'Legacy routing supplement must be removed');
 assert.equal(new Set(realRoutingRows.map(row=>row.source)).size,realRoutingRows.length,'Routing sources must remain unique');
