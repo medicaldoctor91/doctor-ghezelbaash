@@ -16,7 +16,7 @@
     "test:assets": "node infrastructure/test-public-assets.mjs",
     "test:routing": "node infrastructure/test-routing.mjs",
     "test:copy": "node infrastructure/test-canonical-copy.mjs",
-    "test:machine": "node infrastructure/test-machine-resources.mjs",
+    "test:machine": "node infrastructure/test-machine-resources.mjs && node infrastructure/test-catalog-protocol.mjs",
     "test:integrity": "node infrastructure/test-integrity.mjs",
     "test:rendering": "node infrastructure/test-rendering-policy.mjs",
     "test:dist": "node infrastructure/test-dist-verifier.mjs",

@@ -11,6 +11,7 @@ await fs.writeFile(path.join(dist,'assets/site.0123456789ab.css'),'body{color:#1
 await fs.writeFile(path.join(dist,'assets/site.abcdef123456.js'),'console.log("ok")');
 await fs.writeFile(path.join(dist,'media/photo.abcdef123456.webp'),Buffer.from([1,2,3,4,5]));
 await fs.writeFile(path.join(dist,'index.html'),'<!doctype html><html><head><link rel="stylesheet" href="/assets/site.0123456789ab.css"></head><body><script src="/assets/site.abcdef123456.js"></script></body></html>');
+await fs.writeFile(path.join(dist,'doctor.vcf'),'BEGIN:VCARD\r\nVERSION:4.0\r\nFN:Test\r\nEND:VCARD\r\n');
 await fs.writeFile(path.join(dist,'_headers'),'/*\n  Cache-Control: public, max-age=0, must-revalidate\n');
 const result=await sealRelease({distDir:dist,projectRoot:process.cwd(),releaseDate:'2026-10-05'});
 const html=await fs.readFile(path.join(dist,'index.html'),'utf8');
@@ -20,6 +21,7 @@ assert(html.includes(`integrity="sha384-${cssHash}"`));
 assert(html.includes(`integrity="sha384-${jsHash}"`));
 const manifest=JSON.parse(await fs.readFile(path.join(dist,'integrity-manifest.json'),'utf8'));
 assert(manifest.files['/index.html']?.sha256);
+assert.equal(manifest.files['/doctor.vcf'].mediaType,'text/vcard','Sealed MIME comes from canonical resource registry');
 assert(manifest.files['/assets/site.0123456789ab.css']?.sha256);
 assert(!manifest.files['/integrity-manifest.json'], 'manifest must not self-hash');
 const sbom=JSON.parse(await fs.readFile(path.join(dist,'sbom.cdx.json'),'utf8'));

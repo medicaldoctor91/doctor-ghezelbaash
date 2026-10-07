@@ -7,14 +7,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { materializeMachineResources } from './materialize-machine-resources.mjs';
-import { serializeGraphAsNTriples } from '../src/lib/machine-output.mjs';
+import { serializeGraphAsNTriples,buildCsvMetadata } from '../src/lib/machine-output.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = canonicalSource;
 const authoredBody = canonicalBody;
 const packageJson = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
 assert.match(packageJson.scripts.build, /materialize-machine-resources\.mjs/, 'Build must materialize declared machine resources after Astro');
-assert.equal(packageJson.scripts['test:machine'], 'node infrastructure/test-machine-resources.mjs', 'Machine resource contract must have a direct test script');
+assert.match(packageJson.scripts['test:machine'], /node infrastructure\/test-machine-resources\.mjs/, 'Machine resource contract must have a direct test script');
 assert.match(packageJson.scripts['test:v2'], /npm run test:machine/, 'V2 suite must include machine resource verification');
 const distDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ghezelbaash-machine-'));
 try {
@@ -43,6 +43,7 @@ try {
   assert.match(await fs.readFile(path.join(distDir, 'shapes.ttl'), 'utf8'), /@prefix sh:/);
 
   const csv = await fs.readFile(path.join(distDir, 'entity-facts.csv'), 'utf8');
+  assert.deepEqual(csv.split('\n',1)[0].split(','),buildCsvMetadata(source).tableSchema.columns.map(c=>c.name),'CSVW columns match the real export header');
   assert.match(csv.split('\n', 1)[0], /row_id,subject,predicate,object,object_kind,datatype,language/);
   assert.match(await fs.readFile(path.join(distDir, 'answers.txt'), 'utf8'), /Question ID:/);
   assert.match(await fs.readFile(path.join(distDir, 'answers.txt'), 'utf8'), /Answer:/);
@@ -51,7 +52,7 @@ try {
   assert.match(await fs.readFile(path.join(distDir, 'doctor.vcf'), 'utf8'), /BEGIN:VCARD[\s\S]*UID:https:\/\/www\.ghezelbaash\.ir\/#saeed-ghezelbash/);
   assert.match(await fs.readFile(path.join(distDir, 'clinic.vcf'), 'utf8'), /BEGIN:VCARD/);
   assert(Array.isArray(JSON.parse(await fs.readFile(path.join(distDir, 'linkset.json'), 'utf8')).linkset));
-  assert.equal(JSON.parse(await fs.readFile(path.join(distDir, 'croissant.json'), 'utf8'))['@context'], 'https://mlcommons.org/croissant/1.1');
+  assert.equal(JSON.parse(await fs.readFile(path.join(distDir, 'croissant.json'), 'utf8')).conformsTo, 'http://mlcommons.org/croissant/1.1');
   const before=new Map(await Promise.all(result.paths.map(async resourcePath=>[resourcePath,await fs.readFile(path.join(distDir,resourcePath.slice(1)),'utf8')])));
   await materializeMachineResources({source,authoredBody,distDir});
   for(const [resourcePath,bytes] of before)assert.equal(await fs.readFile(path.join(distDir,resourcePath.slice(1)),'utf8'),bytes,'Repeated materialization is deterministic '+resourcePath);

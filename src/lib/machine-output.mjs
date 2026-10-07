@@ -1,3 +1,4 @@
+import {croissantContext} from './croissant-context.mjs';
 import { createHash } from 'node:crypto';
 
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -274,7 +275,7 @@ export function buildCsvMetadata(source) {
     '@context': 'http://www.w3.org/ns/csvw',
     url: source.canonicalOrigin + '/entity-facts.csv',
     tableSchema: { columns: [
-      { name: 'row_id', datatype: 'string' }, { name: 'subject', datatype: 'anyURI' }, { name: 'predicate', datatype: 'anyURI' },
+      { name: 'row_id', datatype: 'string' }, { name: 'subject', datatype: 'string' }, { name: 'predicate', datatype: 'anyURI' },
       { name: 'object', datatype: 'string' }, { name: 'object_kind', datatype: 'string' }, { name: 'datatype', datatype: 'string' }, { name: 'language', datatype: 'string' },
     ] },
   };
@@ -296,15 +297,30 @@ export function buildDcatTurtle(source) {
 }
 
 export function buildCroissant(source) {
+  const dataset=source.graph['@graph'].find(n=>n['@id']===source.canonicalOrigin+'/graph.jsonld/dataset');
+  const columns=buildCsvMetadata(source).tableSchema.columns;
   return {
-    '@context': 'https://mlcommons.org/croissant/1.1',
-    '@type': 'Dataset',
-    name: 'Dr. Saeed Ghezelbash Public Knowledge Graph',
-    url: source.canonicalOrigin + '/graph.jsonld/dataset',
-    license: 'https://creativecommons.org/licenses/by/4.0/',
-    distribution: source.machineResources.filter((resource) => resource.path !== '/index.html').map((resource) => ({
-      '@type': 'FileObject', name: resource.path.replace(/^\//,''), contentUrl: source.canonicalOrigin + resource.path, encodingFormat: resource.mediaType,
+    '@context': croissantContext,
+    '@type': 'sc:Dataset',
+    name: literal(dataset.name),
+    description: literal(dataset.description),
+    conformsTo: 'http://mlcommons.org/croissant/1.1',
+    url: dataset['@id'],
+    license: dataset.license,
+    citeAs: dataset['@id'],
+    ...(dataset.datePublished?{datePublished:literal(dataset.datePublished)}:{}),
+    ...(dataset.version?{version:dataset.version}:{}),
+    distribution: source.machineResources.filter(resource=>!['/index.html','/croissant.json'].includes(resource.path)).map(resource=>({
+      '@type':'cr:FileObject','@id':resource.path.slice(1),name:resource.path.slice(1),contentUrl:source.canonicalOrigin+resource.path,encodingFormat:resource.mediaType,
     })),
+    recordSet:[{
+      '@type':'cr:RecordSet','@id':'entity-facts',name:'entity-facts',
+      key:{'@id':'entity-facts/row_id'},
+      field:columns.map(column=>({
+        '@type':'cr:Field','@id':'entity-facts/'+column.name,name:column.name,dataType:'sc:Text',
+        source:{fileObject:{'@id':'entity-facts.csv'},extract:{column:column.name}},
+      })),
+    }],
   };
 }
 
@@ -317,7 +333,7 @@ export function buildDataPackage(source, fileStats = new Map()) {
     licenses: [{ name: 'CC-BY-4.0', path: 'https://creativecommons.org/licenses/by/4.0/' }],
     resources: source.machineResources.filter((resource) => resource.path !== '/index.html').map((resource) => {
       const stat = fileStats.get(resource.path);
-      return { name: resource.path.replace(/^\//,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,''), path: resource.path, mediatype: resource.mediaType, ...(stat ? { bytes: stat.bytes, hash: `sha256:${stat.sha256}` } : {}) };
+      return { name: resource.path.replace(/^\//,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,''), path: source.canonicalOrigin+resource.path, mediatype: resource.mediaType, ...(stat ? { bytes: stat.bytes, hash: `sha256:${stat.sha256}` } : {}) };
     }),
   };
 }
@@ -327,7 +343,7 @@ export function buildCroissantWithStats(source, fileStats = new Map()) {
   output.distribution = output.distribution.map((file) => {
     const resource = source.machineResources.find((item) => source.canonicalOrigin + item.path === file.contentUrl);
     const stat = resource ? fileStats.get(resource.path) : undefined;
-    return { ...file, ...(stat ? { sha256: stat.sha256, contentSize: stat.bytes } : {}) };
+    return { ...file, ...(stat ? { sha256: stat.sha256, contentSize: `${stat.bytes} B` } : {}) };
   });
   return output;
 }

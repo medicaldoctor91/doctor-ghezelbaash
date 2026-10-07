@@ -99,11 +99,13 @@ export async function measureDelivery({distDir,source,verify=false,locked=null,s
   for(const documentName of ['datapackage.json','croissant.json']){
    const doc=JSON.parse(await fs.readFile(path.join(distDir,documentName),'utf8'));
    for(const resource of doc.resources??doc.distribution){
-    const url=resource.path??new URL(resource.contentUrl).pathname;
+    const url=new URL(resource.path??resource.contentUrl,origin).pathname;
     const expected=resource.hash?.replace(/^sha256:/,'')??resource.sha256;
-    if(expected){const bytes=await fs.readFile(path.join(distDir,url.slice(1)));assert.equal(hash(bytes),expected,'Accurate distribution checksum '+documentName+' '+url);assert.equal(bytes.length,resource.bytes??resource.contentSize,'Accurate distribution size '+documentName+' '+url);}
+    if(expected){const bytes=await fs.readFile(path.join(distDir,url.slice(1)));assert.equal(hash(bytes),expected,'Accurate distribution checksum '+documentName+' '+url);assert.equal(bytes.length,resource.bytes??Number.parseInt(resource.contentSize,10),'Accurate distribution size '+documentName+' '+url);}
    }
   }
+  const manifestText=await fs.readFile(path.join(distDir,'integrity-manifest.json'),'utf8').catch(()=>null);
+  if(manifestText){const manifest=JSON.parse(manifestText);for(const resource of [...source.machineResources,...source.delivery.releaseResources])if(manifest.files[resource.path])assert.equal(manifest.files[resource.path].mediaType,resource.mediaType,'Sealed resource MIME truth '+resource.path);}
   for(const row of rows)assert(!rows.some(next=>next.source===row.target),'No routing chain or loop '+row.source);
   if(headers){
    const blocks=headers.trim().split(/\n\s*\n/).map(b=>b.split('\n'));
