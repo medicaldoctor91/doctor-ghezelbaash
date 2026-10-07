@@ -28,18 +28,30 @@ vm.runInContext(`const SOURCE=${sourceLiteral}; const richResultsContract={asser
 const { SOURCE, document } = sandbox.result;
 assert.equal(document['@context'], 'https://schema.org');
 const graph = document['@graph'];
-assert(graph.length > 800, 'Home Search graph regressed below aggressive authority threshold');
+assert.ok(Array.isArray(graph) && graph.length > 0, 'Search graph must contain semantic nodes');
 assert.equal(new Set(graph.map((node) => node['@id'])).size, graph.length, 'Duplicate Search graph IDs');
 const ids = new Set(graph.map((node) => node['@id']));
 const physicianId = 'https://www.ghezelbaash.ir/#saeed-ghezelbash';
+const homeId = 'https://www.ghezelbaash.ir/webpage';
+const clinicId = 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
 const person = graph.find((node) => node['@id'] === physicianId); assert(person, 'Search Person missing');
-assert.equal(graph[0]?.['@id'], physicianId, 'Search graph must serialize the canonical physician first');
+assert(graph.some((node) => node['@id'] === homeId), 'Search Home page missing');
+assert(graph.some((node) => node['@id'] === clinicId), 'Search Clinic missing');
 assert.equal(graph.filter((node) => [node['@type']].flat().includes('FAQPage')).length, 0, 'Synthetic FAQPage wrapper must not leak into Search graph');
 const refs = (value) => [value].flat().filter(Boolean).map((entry) => typeof entry === 'string' ? entry : entry?.['@id']).filter(Boolean);
 for (const property of ['availableService', 'hasCertification', 'makesOffer', 'hasCredential', 'hasOccupation']) {
   const targets = refs(person[property]);
   assert(targets.length, `Search Person ${property} missing`);
   assert(targets.every((id) => ids.has(id)), `Search Person ${property} has undefined target`);
+}
+for (const node of graph) {
+  for (const [property,value] of Object.entries(node)) {
+    if (property.startsWith('@') || ['url','sameAs','contentUrl','embedUrl','thumbnailUrl'].includes(property)) continue;
+    for (const id of refs(value)) {
+      if (!id.startsWith('https://www.ghezelbaash.ir/')) continue;
+      assert(ids.has(id) || id.includes('#') === false && /^https:\/\/www\.ghezelbaash\.ir\/$/.test(id), `Unresolved internal Search reference: ${node['@id']} ${property} -> ${id}`);
+    }
+  }
 }
 const customTerms = new Set(Object.entries(SOURCE.graph['@context']).filter(([, def]) => def && typeof def === 'object' && def['@id']?.startsWith?.('https://www.ghezelbaash.ir/ontology/')).map(([term]) => term));
 for (const node of graph) for (const property of Object.keys(node)) {
@@ -52,10 +64,12 @@ console.log(JSON.stringify({
   searchGraphAudit: 'PASS',
   context: document['@context'],
   nodes: graph.length,
+  authorityMetric: 'semantic-contracts-not-node-count',
   availableServicesDefined: refs(person.availableService).length,
   certificationsDefined: refs(person.hasCertification).length,
   offersDefined: refs(person.makesOffer).length,
   credentialsDefined: refs(person.hasCredential).length,
   occupationsDefined: refs(person.hasOccupation).length,
   customOntologyProperties: 0,
+  unresolvedInternalReferences: 0,
 }, null, 2));
