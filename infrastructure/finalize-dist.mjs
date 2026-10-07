@@ -14,14 +14,19 @@ export function serializeJsonLdForHtml(value){
     .replaceAll('\u2029','\\u2029');
 }
 
-export function embedCanonicalKnowledgeGraph(homeHtml,graph){
+export function replaceHomeStructuredDataWithCanonicalGraph(homeHtml,graph){
   if(typeof homeHtml!=='string'||!homeHtml.includes('</head>'))throw new Error('Home HTML must contain a closing head');
-  if(homeHtml.includes('id="canonical-knowledge-graph"')||homeHtml.includes("id='canonical-knowledge-graph'"))throw new Error('Home already contains canonical knowledge graph');
   if(!graph||typeof graph!=='object'||!Array.isArray(graph['@graph']))throw new Error('Canonical graph.jsonld must contain an @graph array');
+  const target=/<script\b(?=[^>]*\bid=["']schema-core-mainentity["'])(?=[^>]*\btype=["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script>/gi;
+  const matches=[...homeHtml.matchAll(target)];
+  if(matches.length!==1)throw new Error(`Home must contain exactly one schema-core-mainentity JSON-LD script before finalization; found ${matches.length}`);
   const payload=serializeJsonLdForHtml(graph);
-  const script=`<script id="canonical-knowledge-graph" type="application/ld+json">${payload}</script>`;
-  const html=homeHtml.replace('</head>',`${script}</head>`);
-  const scriptEnd=html.indexOf('</script>',html.indexOf('id="canonical-knowledge-graph"'))+'</script>'.length;
+  const script=`<script id="schema-core-mainentity" type="application/ld+json">${payload}</script>`;
+  const html=homeHtml.replace(target,script);
+  const allJsonLd=[...html.matchAll(/<script\b(?=[^>]*\btype=["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script>/gi)];
+  if(allJsonLd.length!==1)throw new Error(`Home must contain exactly one JSON-LD script after canonical graph replacement; found ${allJsonLd.length}`);
+  const scriptStart=html.indexOf('id="schema-core-mainentity"');
+  const scriptEnd=html.indexOf('</script>',scriptStart)+'</script>'.length;
   return {html,graphNodes:graph['@graph'].length,graphScriptEndBytes:Buffer.byteLength(html.slice(0,scriptEnd),'utf8')};
 }
 
@@ -34,15 +39,15 @@ export async function finalizeDist({distDir,routes,routingRows=[],sourceEdition,
   if(!(await pathExists(graphFile)))throw new Error(`Missing canonical graph: ${graphFile}`);
   const home=await fs.readFile(homeFile,'utf8');
   const canonicalGraph=JSON.parse(await fs.readFile(graphFile,'utf8'));
-  const embedded=embedCanonicalKnowledgeGraph(home,canonicalGraph);
-  await fs.writeFile(homeFile,embedded.html);
-  const critical=discoverCriticalAssets(embedded.html);if(critical.css.length!==1)throw new Error(`Expected one critical stylesheet, found ${critical.css.length}`);
+  const replaced=replaceHomeStructuredDataWithCanonicalGraph(home,canonicalGraph);
+  await fs.writeFile(homeFile,replaced.html);
+  const critical=discoverCriticalAssets(replaced.html);if(critical.css.length!==1)throw new Error(`Expected one critical stylesheet, found ${critical.css.length}`);
   await fs.writeFile(path.join(distDir,'_headers'),generateHeaders({origin,routes,cssPath:critical.css[0],watchPosters,earlyHints:true,delivery,machineResources}));
   await fs.writeFile(path.join(distDir,'_redirects'),renderRedirects(routingRows));
   const wellKnown=path.join(distDir,'.well-known');await fs.mkdir(wellKnown,{recursive:true});
   const expiry=new Date(`${sourceEdition}T00:00:00Z`);expiry.setUTCDate(expiry.getUTCDate()+182);
   await fs.writeFile(path.join(wellKnown,'security.txt'),generateSecurityTxt({origin,email:securityEmail,expires:expiry.toISOString().replace('.000Z','Z')}));
-  return {htmlDocuments:routes.length,sourceEdition,distDir,canonicalGraphInline:true,canonicalGraphNodes:embedded.graphNodes,canonicalGraphScriptEndBytes:embedded.graphScriptEndBytes};
+  return {htmlDocuments:routes.length,sourceEdition,distDir,canonicalGraphInline:true,canonicalGraphNodes:replaced.graphNodes,canonicalGraphScriptEndBytes:replaced.graphScriptEndBytes,homeJsonLdScripts:1};
 }
 
 export async function extractSourceObject(sourceFile){
