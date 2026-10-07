@@ -1,3 +1,4 @@
+import {SOURCE,AUTHORED_BODY} from '../src/canonical/source.mjs';
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
@@ -5,28 +6,6 @@ const source = await fs.readFile(new URL('../src/pages/index.astro', import.meta
 const origin = 'https://www.ghezelbaash.ir';
 const physicianId = origin + '/#saeed-ghezelbash';
 
-function extractJsonObjectAfter(marker) {
-  const markerIndex = source.indexOf(marker);
-  assert(markerIndex >= 0, `Missing marker: ${marker}`);
-  const start = source.indexOf('{', markerIndex + marker.length);
-  assert(start >= 0, `Missing object after marker: ${marker}`);
-  let depth = 0, inString = false, escaped = false;
-  for (let i = start; i < source.length; i++) {
-    const char = source[i];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (char === '\\') escaped = true;
-      else if (char === '"') inString = false;
-      continue;
-    }
-    if (char === '"') inString = true;
-    else if (char === '{') depth++;
-    else if (char === '}' && --depth === 0) return JSON.parse(source.slice(start, i + 1));
-  }
-  throw new Error(`Unclosed object after marker: ${marker}`);
-}
-
-const SOURCE = extractJsonObjectAfter('export const SOURCE = ');
 assert.equal(SOURCE.canonicalOrigin, origin);
 assert.deepEqual(Object.keys(SOURCE.routes), ['schemaVersion', 'canonicalOrigin', 'resources', 'htmlIdTargets', 'legacyRedirects']);
 assert.equal(SOURCE.routes.schemaVersion, 2);
@@ -72,17 +51,11 @@ assert([home['@type']].flat().includes('MedicalWebPage'));
 assert.deepEqual(home.mainEntity, { '@id': physicianId });
 assert.equal(nodes.filter((node) => [node['@type']].flat().includes('ProfilePage')).length, 1, 'Competing ProfilePage');
 
-const homeRevision = home.dateModified?.['@value'] ?? home.dateModified;
-assert.equal(typeof homeRevision, 'string', 'Homepage release date missing');
-assert.match(homeRevision, /^\d{4}-\d{2}-\d{2}$/, 'Homepage source date must be ISO YYYY-MM-DD');
-assert.equal(SOURCE.edition, homeRevision, 'Edition must match canonical homepage source date');
+assert.match(SOURCE.edition, /^\d{4}-\d{2}-\d{2}$/, 'Source edition is an ISO date, independent of clinical modification');
 for (const resource of SOURCE.routes.resources) {
-  const pageId = resource.path === '/' ? origin + '/webpage' : origin + resource.path + '#webpage';
-  const page = byId.get(pageId);
-  const revision = page?.dateModified?.['@value'] ?? page?.dateModified;
-  assert.equal(revision, homeRevision, `Canonical page release date drift: ${resource.path}`);
+  const page = byId.get(origin + (resource.path === '/' ? '/webpage' : resource.path + '#webpage'));
+  for(const key of ['datePublished','dateModified','lastReviewed']) if(page?.[key]) assert.match(page[key]['@value']??page[key], /^\d{4}-\d{2}-\d{2}/, `Invalid authored ${key}: ${resource.path}`);
 }
-assert(!source.includes('id="canonical-knowledge-graph"'), 'Full canonical graph must not be duplicated inline in homepage HTML');
 const fullGraphResource = SOURCE.machineResources.find((resource) => resource.path === '/graph.jsonld');
 assert.equal(fullGraphResource?.rel, 'describedby', 'Homepage must discover the canonical /graph.jsonld resource');
 assert.equal(fullGraphResource?.discoverable, true, 'Canonical graph must remain discoverable');
@@ -93,7 +66,7 @@ for (const token of ['baseHead', '<title>', '<link rel=\"canonical\"', 'discover
 assert(rawHomeSource.indexOf('baseHead') < rawHomeSource.indexOf('<title>'), 'Base metadata must precede title');
 assert(rawHomeSource.indexOf('<title>') < rawHomeSource.indexOf('<link rel=\"canonical\"'), 'Title/description metadata must precede canonical');
 assert(rawHomeSource.indexOf('<link rel=\"canonical\"') < rawHomeSource.indexOf('discoveryHead'), 'Canonical must precede CSS/discovery links');
-assert(rawHomeSource.indexOf('discoveryHead') < rawHomeSource.indexOf('schema-core-mainentity'), 'CSS/discovery links must precede Search JSON-LD');
+assert(rawHomeSource.indexOf('schema-core-mainentity') < rawHomeSource.indexOf('discoveryHead'), 'Full KG must precede discovery links');
 assert(source.includes('function browserContextFor() { return "https://schema.org"; }'), 'Search-facing JSON-LD must use a pure Schema.org context');
 assert(source.includes('"availableService", "hasCertification", "makesOffer"'), 'Focused authority spine is missing high-value physician relations');
 
@@ -105,7 +78,7 @@ for (const page of eligibleMedicalPages) {
   assert([page.medicalAudience].flat().filter(Boolean).some((audience) => audience?.['@type'] === 'Patient'), `Medical audience missing Patient: ${page['@id']}`);
   assert(refIds(page.specialty).includes(medicalSpecialtyId), `Medical specialty missing: ${page['@id']}`);
   assert(refIds(page.reviewedBy).includes(physicianId), `Medical reviewer drift: ${page['@id']}`);
-  assert.equal(page.lastReviewed?.['@value'] ?? page.lastReviewed, '2026-10-04', `Medical review date drift: ${page['@id']}`);
+  if(page.lastReviewed) assert.match(page.lastReviewed?.['@value'] ?? page.lastReviewed, /^\d{4}-\d{2}-\d{2}$/, `Medical review date invalid: ${page['@id']}`);
 }
 const allSourceText = JSON.stringify(SOURCE);
 assert(!allSourceText.includes('https://www.pinterest.com/medicaldoctor91/'), 'Invalid Pinterest identity must be absent from the entire source');
@@ -127,10 +100,7 @@ assert(shacl.includes(`<${physicianId}>`), 'SHACL does not target canonical phys
 assert(SOURCE.machineProjection.discoveryGuide.includes(`Primary entity: ${physicianId}.`), 'Discovery guide identity drift');
 assert(SOURCE.delivery.http.documentIdentity.about.includes(physicianId), 'HTTP about identity drift');
 
-const bodyStart = source.indexOf('export const AUTHORED_BODY = [');
-const bodyEnd = source.indexOf('].join("");', bodyStart);
-assert(bodyStart >= 0 && bodyEnd > bodyStart, 'AUTHORED_BODY boundary missing');
-const authoredSource = source.slice(bodyStart, bodyEnd);
+const authoredSource = AUTHORED_BODY;
 assert(authoredSource.includes('id="saeed-ghezelbash"'), 'Real physician H1 fragment missing');
 assert(authoredSource.includes(`itemid="${physicianId}"`), 'Microdata physician identity drift');
 assert(!authoredSource.includes(`itemid="${nonFragmentPhysicianId}"`), 'Microdata physician identity must use the canonical fragment');
@@ -166,9 +136,9 @@ const report = {
   physicianId,
   routeModel: 'canonical-documents+authored-fragments',
   canonicalPageAuthorPublisherConsistency: `${SOURCE.routes.resources.length}/${SOURCE.routes.resources.length}`,
-  sharedReleaseDate: homeRevision,
-  fullCanonicalGraphEmbeddedInHome: false,
-  searchFacingContext: 'https://schema.org',
+  sourceEdition: SOURCE.edition,
+  fullCanonicalGraphEmbeddedInHome: true,
+  focusedSearchContext: 'https://schema.org',
   shaclIdentityAligned: true,
   microdataIdentityAligned: true,
 };

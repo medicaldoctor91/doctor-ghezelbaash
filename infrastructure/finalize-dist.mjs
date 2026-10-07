@@ -1,3 +1,4 @@
+import {SOURCE as canonicalSource} from '../src/canonical/source.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,16 +22,10 @@ export async function finalizeDist({distDir,routes,routingRows=[],sourceEdition,
   return {htmlDocuments:routes.length,sourceEdition,distDir};
 }
 
-export async function extractSourceObject(sourceFile){
-  const source=await fs.readFile(sourceFile,'utf8'),marker='export const SOURCE = ',at=source.indexOf(marker);if(at<0)throw new Error('SOURCE marker missing');
-  const start=source.indexOf('{',at+marker.length);let depth=0,quoted=false,escaped=false,end=-1;
-  for(let i=start;i<source.length;i++){const c=source[i];if(quoted){if(escaped)escaped=false;else if(c==='\\')escaped=true;else if(c==='"')quoted=false;continue;}if(c==='"')quoted=true;else if(c==='{')depth++;else if(c==='}'&&--depth===0){end=i+1;break;}}
-  if(end<0)throw new Error('SOURCE object unclosed');return JSON.parse(source.slice(start,end));
-}
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){
   const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),distDir=path.resolve(process.argv[2]??path.join(root,'dist'));
-  const SOURCE=await extractSourceObject(path.join(root,'src/pages/index.astro')),routes=SOURCE.routes.resources.map(entry=>entry.path),byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
+  const SOURCE=canonicalSource,routes=SOURCE.routes.resources.map(entry=>entry.path),byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
   const watchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const url=byId.get(entry.videoId)?.thumbnailUrl;if(typeof url!=='string')throw new Error('Video thumbnail missing: '+entry.videoId);const parsed=new URL(url);if(parsed.origin!==SOURCE.canonicalOrigin)throw new Error('Cross-origin video poster: '+entry.videoId);return[entry.path,parsed.pathname];}));
   const graph=JSON.parse(await fs.readFile(path.join(distDir,'graph.jsonld'),'utf8')),routingRows=deriveRoutingRows(SOURCE,graph);
   console.log(JSON.stringify(await finalizeDist({distDir,routes,routingRows,sourceEdition:SOURCE.edition,origin:SOURCE.canonicalOrigin,watchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources}),null,2));

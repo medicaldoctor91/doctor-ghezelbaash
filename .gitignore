@@ -5,3 +5,4 @@ release/
 __pycache__/
 *.pyc
 .DS_Store
+.astro/

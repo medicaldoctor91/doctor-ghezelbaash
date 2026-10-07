@@ -1,8 +1,9 @@
+import {SOURCE as canonicalSource} from '../src/canonical/source.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { generateHeaders, generateSecurityTxt } from './lib/headers.mjs';
-import { extractSourceObject } from './finalize-dist.mjs';
+
 
 const origin='https://www.ghezelbaash.ir';
 const routes=['/','/botox','/video-saeed-ghezelbash-subcision-technique'];
@@ -71,11 +72,25 @@ const rules=headers.split(/\n\n+/).filter(Boolean);assert.ok(rules.length<=100,`
 assert.ok(headers.split('\n').every(line=>line.length<=2000),'Cloudflare header line length limit exceeded');
 const security=generateSecurityTxt({origin,email:'doctor@ghezelbaash.ir',expires:'2027-04-05T00:00:00Z'});
 assert.equal(security,`Contact: mailto:doctor@ghezelbaash.ir\nExpires: 2027-04-05T00:00:00Z\nPreferred-Languages: fa, en\nCanonical: https://www.ghezelbaash.ir/.well-known/security.txt\n`);
-const SOURCE=await extractSourceObject(new URL('../src/pages/index.astro', import.meta.url));
+const SOURCE=canonicalSource;
 const realRoutes=SOURCE.routes.resources.map(entry=>entry.path);
 const byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
 const realWatchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const thumb=byId.get(entry.videoId)?.thumbnailUrl;assert.equal(typeof thumb,'string',`Missing video poster for ${entry.videoId}`);return [entry.path,new URL(thumb).pathname];}));
 const realHeaders=generateHeaders({origin:SOURCE.canonicalOrigin,routes:realRoutes,cssPath:'/assets/site.0123456789ab.css',watchPosters:realWatchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+for (const resource of [
+ {path:'/sbom.cdx.json',mediaType:'application/vnd.cyclonedx+json'},
+ {path:'/integrity-manifest.json',mediaType:'application/json'},
+ {path:'/release-provenance.json',mediaType:'application/json'},
+ {path:'/content-digest-eligibility.json',mediaType:'application/json'},
+ {path:'/_headers.content-digest.pending',mediaType:'text/plain'},
+ {path:'/.well-known/security.txt',mediaType:'text/plain'},
+]) {
+ const block=realHeaders.split(/\n\n+/).find(b=>b.startsWith(resource.path+'\n'));
+ assert(block,'Existing release resource has explicit policy '+resource.path);
+ assert(block.includes('Content-Type: '+resource.mediaType));
+ assert(block.includes('X-Robots-Tag: noindex, follow'));
+ assert(block.includes('Access-Control-Allow-Origin: *'));
+}
 const realRules=realHeaders.trim().split(/\n\n+/).filter(Boolean);
 assert.ok(realRules.length<=100,`Real Cloudflare _headers rule limit exceeded: ${realRules.length}`);
 assert.ok(realHeaders.split('\n').every(line=>line.length<=2000),'Real Cloudflare _headers line length limit exceeded');

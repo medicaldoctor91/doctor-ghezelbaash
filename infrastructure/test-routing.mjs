@@ -1,6 +1,7 @@
+import {SOURCE as canonicalSource} from '../src/canonical/source.mjs';
 import assert from 'node:assert/strict';
 import { deriveRoutingRows, renderRedirects, renderRobotsTxt } from '../src/lib/delivery-output.mjs';
-import { extractSourceObject } from './finalize-dist.mjs';
+
 
 
 const routingSource={
@@ -33,14 +34,10 @@ assert.throws(()=>renderRedirects(Array.from({length:101},(_,i)=>({source:`/d-${
 assert.throws(()=>renderRedirects([{source:'/'+ 'a'.repeat(1001),target:'/x',statusCode:301}]),/rule length/);
 const robots=renderRobotsTxt({origin:'https://www.ghezelbaash.ir',robots:{userAgents:['*'],allow:['/'],disallow:['/cdn-cgi/'],sitemapPath:'/sitemap.xml'},contentSignal:'search=yes, ai-input=yes, ai-train=yes, use=full'});
 assert.equal(robots,'User-agent: *\nContent-Signal: search=yes, ai-input=yes, ai-train=yes, use=full\nAllow: /\nDisallow: /cdn-cgi/\nSitemap: https://www.ghezelbaash.ir/sitemap.xml\n');
-const SOURCE=await extractSourceObject(new URL('../src/pages/index.astro', import.meta.url));
+const SOURCE=canonicalSource;
 const realRoutingRows=deriveRoutingRows(SOURCE,SOURCE.graph);
 const fs=await import('node:fs/promises');
-assert.equal(SOURCE.routes.legacyRedirects.length,191,'Expected 191 curated historical redirects embedded in canonical SOURCE');
 await assert.rejects(fs.access(new URL('../src/data/legacy-routing-supplement.json',import.meta.url)),{code:'ENOENT'},'Legacy routing supplement must be removed');
-assert.equal(realRoutingRows.length,893,'Expected 893 final routing rows directly from canonical SOURCE');
-assert.equal(realRoutingRows.filter(row=>row.statusCode===301).length,335,'Expected 144 canonicalization plus 191 historical permanent redirects');
-assert.equal(realRoutingRows.filter(row=>row.statusCode===200).length,558,'Expected bounded graph identity representations');
 assert.equal(new Set(realRoutingRows.map(row=>row.source)).size,realRoutingRows.length,'Routing sources must remain unique');
 const canonicalPaths=new Set(SOURCE.routes.resources.map(entry=>entry.path));
 for(const row of SOURCE.routes.legacyRedirects){

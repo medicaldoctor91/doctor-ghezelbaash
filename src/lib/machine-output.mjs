@@ -32,7 +32,8 @@ function literalTerm(value, { datatype, language } = {}) {
   if (typeof value === 'boolean') return `"${value ? 'true' : 'false'}"^^<http://www.w3.org/2001/XMLSchema#boolean>`;
   if (typeof value === 'number') {
     const type = Number.isInteger(value) ? 'integer' : 'double';
-    return `"${String(value)}"^^<http://www.w3.org/2001/XMLSchema#${type}>`;
+    const lexical = type === 'double' ? value.toExponential(15).replace(/(\d)0*e\+?/, '$1E') : String(value);
+    return `"${lexical}"^^<http://www.w3.org/2001/XMLSchema#${type}>`;
   }
   const quoted = JSON.stringify(String(value)).replace(/\\\//g, '/');
   if (language) return `${quoted}@${language}`;

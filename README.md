@@ -1,18 +1,20 @@
 # Dr. Saeed Ghezelbash canonical site source
 
-این سورس فقط برای تولید dist نهایی همین corpus طراحی شده است. مرجع اصلی محتوا، routeها، هویت‌ها، graph و policyهای انتشار در `src/pages/index.astro` قرار دارد.
+این سورس فقط برای تولید dist نهایی همین corpus طراحی شده است. مرجع اصلی محتوا، routeها، هویت‌ها، graph و policyهای انتشار در `src/canonical/source.mjs` قرار دارد و renderer در `src/pages/index.astro` آن را مستقیماً import می‌کند.
 
 ## قرارداد خروجی
 
 - دقیقاً ۷۲ صفحهٔ canonical تولید می‌شود: Home جامع + ۷۱ focused entry که همان reader/corpus را با context موضوعی باز می‌کنند.
 - هویت canonical پزشک `https://www.ghezelbaash.ir/#saeed-ghezelbash` است؛ مسیر `/saeed-ghezelbash` صفحه یا alias عمومی نیست.
-- Home کل corpus قابل‌دیدن را حفظ می‌کند. Search-facing JSON-LD قبل از body قرار می‌گیرد و با Person پزشک شروع می‌شود؛ full canonical graph داخل HTML تکرار نمی‌شود و به‌صورت `/graph.jsonld` منتشر می‌شود.
-- full graph شامل ۱۵۹۲ node است. Search projection فقط plumbing غیرSearch مانند SHACL/PROV/DCAT/RDF vocabulary را کنار می‌گذارد و روابط مفید Schema.org پزشک را حفظ می‌کند.
-- چهار `VideoObject` به watch pageهای canonical خود متصل‌اند و sitemap نیز همان watch pageها را منتشر می‌کند.
-- media با URLهای semantic و پایدار منتشر می‌شود؛ نسخه‌های fingerprinted byte-identical اضافی در source نگه‌داری نمی‌شوند.
-- ۱۹۱ redirect تاریخی curated مستقیماً در `SOURCE.routes.legacyRedirects` قرار دارند؛ خروجی routing نهایی ۸۹۳ rule است: ۳۳۵ permanent redirect و ۵۵۸ bounded representation rewrite.
-- ۲۴ machine resource در registry وجود دارد؛ ۲۰ artifact ثابت/مشتق پس از Astro build materialize می‌شوند و HTML/sitemap/robots/manifest از مسیرهای اصلی build می‌آیند.
-- `_headers`، `_redirects` و `security.txt` مستقیماً از truth فعلی تولید می‌شوند؛ candidate A/B/C، benchmark انتخاب winner، supplement routing و post-build date/language repair وجود ندارند.
+- Home کل corpus قابل‌دیدن را حفظ می‌کند و full canonical KG را در ابتدای `<head>` منتشر می‌کند. همان `SOURCE.graph` مستقیماً `/graph.jsonld` را نیز تولید می‌کند.
+- برابری RDF میان SOURCE، Home، JSON-LD خارجی و Turtle با RDFC-1.0 و SHA-256 بررسی می‌شود. تعداد node یا artifact معیار authority نیست.
+- focused projectionها فقط Schema.org و Q&A/media مرتبط با محتوای قابل‌دیدن همان route را دارند؛ هویت غنی Person و Clinic حفظ می‌شود.
+- پس از اجرای JavaScript، reader پیرامون بخش منتخب باز می‌شود ولی title، H1، canonical، primary article و JSON-LD همان route باقی می‌مانند.
+- چهار `VideoObject` به watch pageهای canonical متصل‌اند؛ لینک‌های Clip با `?t=` واقعاً زمان ویدیو را انتخاب می‌کنند.
+- تاریخ edition از publication/modification/review جدا است. تاریخ‌های unsupported حذف می‌شوند و trust metadata قابل‌دیدن از truth گراف تولید می‌شود.
+- redirectهای HTML یک‌مرحله‌ای هستند. aliasهای هویت 200 با MIME ماشین، CORS، noindex/follow و describedby پوشش داده می‌شوند؛ در sitemap HTML قرار نمی‌گیرند.
+- representationهای مفید ماشین حفظ می‌شوند. موجودی و بررسی تک‌تک آن‌ها در [delivery audit](docs/delivery-audit.md) مستند است؛ llms.txt معیار ranking نیست.
+- مسیر انتشار: validation → build → verification → finalize → seal → **read-only verification** → artifact. hashهای dist قبل و بعد از بررسی نهایی باید یکسان باشند.
 
 ## Toolchain
 
@@ -22,6 +24,7 @@
 npm ci
 npm run test:v2
 npm run build
+npm run verify
 npm run finalize
 npm run seal
 npm run verify:dist
@@ -32,6 +35,8 @@ npm run verify:dist
 ```sh
 npm run release:v2
 ```
+
+`npm run release:v2` بررسی Chromium تمام ۷۲ route، seeking ویدیو و read-only بودن مرحلهٔ post-seal را هم اجرا می‌کند.
 
 `npm run test:v2` قراردادهای source، Search graph، machine resources، routing، media، headers/security، integrity، rendering و release runner را بررسی می‌کند.
 

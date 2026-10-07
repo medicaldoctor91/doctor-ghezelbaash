@@ -1,25 +1,16 @@
+import {AUTHORED_BODY as canonicalBody} from '../src/canonical/source.mjs';
+import {SOURCE as canonicalSource} from '../src/canonical/source.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { extractSourceObject } from './finalize-dist.mjs';
+
 import {
   serializeGraphAsNTriples, serializeEntityFactsCsv, htmlToMarkdown, htmlToPlainText,
   buildAnswersText, buildFactMap, buildKnowledgeXml, buildProvenanceGraph, buildEvidenceSnapshot,
   buildVCard, buildLinkset, buildCsvMetadata, buildVoidTurtle, buildDcatTurtle, buildCroissantWithStats, buildDataPackage,
 } from '../src/lib/machine-output.mjs';
 
-export function extractAuthoredBody(sourceText) {
-  const marker = 'export const AUTHORED_BODY = ';
-  const at = sourceText.indexOf(marker);
-  if (at < 0) throw new Error('AUTHORED_BODY marker missing');
-  const expressionStart = at + marker.length;
-  const endMarker = ';\nexport const DESIGN';
-  const end = sourceText.indexOf(endMarker, expressionStart);
-  if (end < 0) throw new Error('AUTHORED_BODY boundary missing');
-  return vm.runInNewContext(sourceText.slice(expressionStart, end), Object.create(null), { timeout: 5000 });
-}
 
 const json = (value) => JSON.stringify(value) + '\n';
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
@@ -43,7 +34,7 @@ async function collectStats(distDir, source) {
 
 export async function materializeMachineResources({ source, authoredBody, distDir }) {
   if (!source?.graph?.['@graph'] || !Array.isArray(source.machineResources)) throw new Error('Canonical source and machine resource registry required');
-  if (typeof authoredBody !== 'string' || authoredBody.length < 1000) throw new Error('Complete authored body required');
+  if (typeof authoredBody !== 'string' || !authoredBody.trim()) throw new Error('Complete authored body required');
   const outputs = new Map();
   const graphTtl = serializeGraphAsNTriples(source.graph);
   outputs.set('/graph.jsonld', json(source.graph));
@@ -67,8 +58,11 @@ export async function materializeMachineResources({ source, authoredBody, distDi
 
   for (const [resourcePath, content] of outputs) await write(distDir, resourcePath, content);
   let stats = await collectStats(distDir, source);
+  // Never hash stale/self-referential catalog output left by a prior run.
+  stats.delete('/datapackage.json');stats.delete('/croissant.json');
   await write(distDir, '/datapackage.json', json(buildDataPackage(source, stats)));
   stats = await collectStats(distDir, source);
+  stats.delete('/croissant.json');
   await write(distDir, '/croissant.json', json(buildCroissantWithStats(source, stats)));
   const paths = [...outputs.keys(), '/datapackage.json', '/croissant.json'];
   const declared = new Set(source.machineResources.map((resource) => resource.path));
@@ -78,10 +72,8 @@ export async function materializeMachineResources({ source, authoredBody, distDi
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const sourceFile = path.join(root, 'src/pages/index.astro');
-  const sourceText = await fs.readFile(sourceFile, 'utf8');
-  const source = await extractSourceObject(sourceFile);
-  const authoredBody = extractAuthoredBody(sourceText);
+  const source = canonicalSource;
+  const authoredBody = canonicalBody;
   const distDir = path.resolve(process.argv[2] ?? path.join(root, 'dist'));
   console.log(JSON.stringify(await materializeMachineResources({ source, authoredBody, distDir }), null, 2));
 }

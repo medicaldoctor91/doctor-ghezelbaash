@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install pinned browser for reader verification
+        run: npx playwright-core install --with-deps chromium
+
       - name: Build, finalize, seal and verify V2 dist
         run: npm run release:v2
 

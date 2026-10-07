@@ -1,17 +1,8 @@
+import {SOURCE} from '../src/canonical/source.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+const source=await fs.readFile(new URL('../src/pages/index.astro',import.meta.url),'utf8');
 
-const source = await fs.readFile(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
-function extract(marker) {
-  const at = source.indexOf(marker); assert(at >= 0, `missing ${marker}`);
-  const start = source.indexOf('{', at + marker.length); let depth=0, quoted=false, escaped=false;
-  for (let i=start;i<source.length;i++) { const c=source[i];
-    if (quoted) { if (escaped) escaped=false; else if (c==='\\') escaped=true; else if (c==='"') quoted=false; continue; }
-    if (c==='"') quoted=true; else if (c==='{') depth++; else if (c==='}' && --depth===0) return JSON.parse(source.slice(start,i+1));
-  }
-  throw new Error('unclosed source object');
-}
-const SOURCE = extract('export const SOURCE = ');
 const nodes = new Map(SOURCE.graph['@graph'].map((node)=>[node['@id'],node]));
 const paths = new Map(SOURCE.routes.resources.map((route)=>[route.path,route]));
 const policy = SOURCE.discovery?.sitemapPolicy;
@@ -25,7 +16,7 @@ for (const entry of policy.videoWatchPages) {
   assert([node['@type']].flat().includes('VideoObject'), `not a VideoObject: ${entry.videoId}`);
   const watchUrl = SOURCE.canonicalOrigin + entry.path;
   assert.equal(node.url, watchUrl, `VideoObject.url must equal dedicated watch page: ${entry.videoId}`);
-  assert.equal(node.mainEntityOfPage?.['@id'], watchUrl, `VideoObject.mainEntityOfPage must equal dedicated watch page: ${entry.videoId}`);
+  assert.equal(node.mainEntityOfPage?.['@id'], watchUrl + '#webpage', `VideoObject.mainEntityOfPage must equal dedicated watch page: ${entry.videoId}`);
   assert(!videoIds.has(entry.videoId), `duplicate video mapping: ${entry.videoId}`); videoIds.add(entry.videoId);
 }
 assert.equal(videoIds.size, SOURCE.graph['@graph'].filter((node)=>[node['@type']].flat().includes('VideoObject')).length, 'every VideoObject must map exactly once');

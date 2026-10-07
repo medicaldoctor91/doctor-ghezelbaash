@@ -40,7 +40,7 @@ function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
   const profile=profileFor(delivery,resource.indexing);if(profile?.default)lines.push(`  X-Robots-Tag: ${profile.default}`);
-  if(resource.indexing==='machine'){
+  if(['machine','contact'].includes(resource.indexing)){
     const cors=delivery.http.machineCors??{};
     if(cors.origin)lines.push(`  Access-Control-Allow-Origin: ${cors.origin}`);
     if(cors.exposeHeaders?.length)lines.push(`  Access-Control-Expose-Headers: ${cors.exposeHeaders.join(', ')}`);
@@ -51,6 +51,7 @@ function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}
 function countPotential({routes,machineResources,watchPosters}){return 1+routes.length+machineResources.length+3+2+1+(watchPosters?.size??0);}
 export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),earlyHints=true,delivery=null,machineResources=[]}){
   if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');requirePath(cssPath,'cssPath');
+  machineResources=[...machineResources,...(delivery?.releaseResources??[])];
   const blocks=[];const global=globalBlock(delivery);if(global)blocks.push(global);
   const compact=delivery&&countPotential({routes,machineResources,watchPosters})>100&&routes.filter(r=>r!=='/').every(r=>/^\/[a-z0-9-]+$/i.test(r));
   if(compact){
@@ -61,6 +62,16 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
     for(const route of routes){requirePath(route,'route');const poster=watchPosters.get(route);if(poster)requirePath(poster,'poster');const cache=delivery?.html?.cacheControl??'public, max-age=0, must-revalidate';blocks.push(`${route}\n  Cache-Control: ${cache}\n  Link: ${linkValue(origin,cssPath,poster,{earlyHints})}`);}
   }
   if(delivery&&machineResources.length){const resourceByPath=new Map(machineResources.map(r=>[r.path,r]));for(const resource of machineResources){requirePath(resource.path,'machine resource');blocks.push(machineBlock({origin,resource,resourceByPath,delivery,detachHtml:compact&&/^\/[a-z0-9._-]+$/i.test(resource.path)}));}}
+  if(delivery?.routing?.graphIdentityRepresentations){
+    const policy=delivery.routing.graphIdentityRepresentations;
+    const patterns=[...policy.namedRootSubjects,...policy.graphSubjectPrefixes.map(prefix=>prefix+'*')];
+    for(const pattern of patterns){
+      const representation=pattern.startsWith('/provenance.jsonld/')?policy.provenanceRepresentation:policy.representation;
+      const resource=machineResources.find(r=>r.path===representation);
+      if(!resource)throw new Error('Unregistered identity representation '+representation);
+      blocks.push(`${pattern}\n  ! Link\n  ! Cache-Control\n  Content-Type: ${contentType(resource)}\n  X-Robots-Tag: noindex, follow\n  Access-Control-Allow-Origin: *\n  Access-Control-Expose-Headers: Link, Content-Type\n  Cross-Origin-Resource-Policy: cross-origin\n  Cache-Control: ${delivery.machine.cacheControl}\n  Link: <${representation}>; rel=describedby; type="${resource.mediaType}"`);
+    }
+  }
   blocks.push(`/assets/*\n  Cache-Control: public, max-age=31536000, immutable`);
   blocks.push(`/media/*\n  Cache-Control: public, max-age=31536000, immutable`);
   blocks.push(`/fonts/*\n  Cache-Control: public, max-age=31536000, immutable`);

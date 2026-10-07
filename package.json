@@ -9,7 +9,7 @@
     "audit": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs",
     "test:source": "node infrastructure/audit-source.mjs && node infrastructure/audit-search-graph.mjs && node infrastructure/test-discovery.mjs",
     "test:finalizer": "node infrastructure/test-finalizer.mjs && node infrastructure/test-headers.mjs",
-    "test:v2": "npm run test:source && npm run test:machine && npm run test:copy && npm run test:routing && npm run test:assets && npm run test:finalizer && npm run test:integrity && npm run test:rendering && npm run test:dist && npm run test:release",
+    "test:v2": "npm run test:semantic && npm run test:source && npm run test:machine && npm run test:copy && npm run test:routing && npm run test:assets && npm run test:finalizer && npm run test:integrity && npm run test:rendering && npm run test:dist && npm run test:release",
     "finalize": "node infrastructure/finalize-dist.mjs dist",
     "seal": "node infrastructure/seal-release.mjs dist",
     "release:v2": "node infrastructure/run-v2-release.mjs",
@@ -21,15 +21,19 @@
     "test:rendering": "node infrastructure/test-rendering-policy.mjs",
     "test:dist": "node infrastructure/test-dist-verifier.mjs",
     "test:release": "node infrastructure/test-release-runner.mjs",
-    "verify:dist": "node infrastructure/verify-dist.mjs dist"
+    "verify:dist": "node infrastructure/verify-dist.mjs dist",
+    "test:semantic": "node infrastructure/test-source-module.mjs && node infrastructure/test-jsonld.mjs && node infrastructure/test-rdf-equivalence.mjs && node infrastructure/test-search-contract.mjs && node infrastructure/test-identity-policy.mjs && node infrastructure/test-video-contract.mjs && node infrastructure/test-semantic-contract.mjs",
+    "test:reader": "node infrastructure/test-reader-browser.mjs"
   },
   "engines": {
     "node": ">=22.19.0 <25"
   },
   "devDependencies": {
     "astro": "7.2.8",
-    "parse5": "8.0.1",
     "jsonld": "9.0.0",
+    "n3": "2.0.3",
+    "parse5": "8.0.1",
+    "playwright-core": "1.58.2",
     "rdf-canonize": "5.0.0"
   },
   "packageManager": "npm@11.17.0",
