@@ -7,6 +7,11 @@ assert.equal(releaseRunner.resolveReleaseDate, undefined, 'Release date must com
 assert.equal(releaseRunner.promoteWinner,undefined,'Winner promotion must be removed');
 const runnerSource=await fs.readFile(new URL('./run-v2-release.mjs',import.meta.url),'utf8');
 assert.doesNotMatch(runnerSource,/APPROVED_BASELINE_SHA256|benchmark-mobile|candidate-a|candidate-b|candidate-c/,'Release runner must not contain freeze/candidate selection machinery');
+const buildStep=runnerSource.indexOf("await execute('npm',['run','build'],projectRoot)");
+const finalizeStep=runnerSource.indexOf('await finalizeDist(');
+const verifyStep=runnerSource.indexOf("await execute('npm',['run','verify'],projectRoot)");
+const sealStep=runnerSource.indexOf('await sealRelease(');
+assert.ok(buildStep>=0&&finalizeStep>buildStep&&verifyStep>finalizeStep&&sealStep>verifyStep,'Release must build, finalize final semantic bytes, verify read-only, then seal');
 const workflow=await fs.readFile(new URL('../.github/workflows/build.yml',import.meta.url),'utf8');
 assert.doesNotMatch(workflow,/frozen|candidate|benchmark|release\/winner|setup-python|requirements-benchmark|public-assets\.lock/i,'CI must operate on the single final dist without obsolete freeze/candidate machinery');
 assert.match(workflow,/npm run release:v2/,'CI must run the final release contract');
