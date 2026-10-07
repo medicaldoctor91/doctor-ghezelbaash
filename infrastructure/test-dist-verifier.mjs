@@ -13,12 +13,12 @@ await fs.writeFile(path.join(root,'assets/site.0123456789ab.css'),css);
 await fs.writeFile(path.join(root,'assets/site.abcdef123456.js'),js);
 const sri=b=>'sha384-'+createHash('sha384').update(b).digest('base64');
 const origin='https://www.ghezelbaash.ir', physician=origin+'/#saeed-ghezelbash', clinic=origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
-const search=(pageId,url)=>({ '@context':'https://schema.org','@graph':[
-  {'@id':pageId,'@type':'MedicalWebPage',url,dateModified:'2026-10-05',author:{'@id':physician},publisher:{'@id':physician},medicalAudience:{'@type':'Patient'},specialty:{'@id':origin+'/medical-specialty-aesthetic-medicine'},reviewedBy:{'@id':physician},lastReviewed:'2026-10-04'},
-  {'@id':physician,'@type':'Person',url:origin+'/'}, {'@id':clinic,'@type':'MedicalClinic'}
-]});
-const full={'@context':{'@vocab':'https://schema.org/'},'@graph':[{'@id':origin+'/webpage','@type':['ProfilePage','MedicalWebPage']},{'@id':physician,'@type':'Person'}]};
-const html=(route,home=false)=>`<!doctype html><html lang="fa-IR" dir="rtl"><head><link rel="canonical" href="${origin}${route}"><link rel="stylesheet" href="/assets/site.0123456789ab.css" integrity="${sri(css)}"><script id="schema-core-mainentity" type="application/ld+json">${JSON.stringify(search(home?origin+'/webpage':origin+route+'#webpage',origin+route))}</script></head><body lang="fa-IR" dir="rtl"><article lang="fa-IR" dir="rtl">ok</article><script src="/assets/site.abcdef123456.js" integrity="${sri(js)}"></script></body></html>`;
+const pageNode=(pageId,url,type='MedicalWebPage')=>({'@id':pageId,'@type':type,url,dateModified:'2026-10-05',author:{'@id':physician},publisher:{'@id':physician},medicalAudience:{'@type':'Patient'},specialty:{'@id':origin+'/medical-specialty-aesthetic-medicine'},reviewedBy:{'@id':physician},lastReviewed:'2026-10-04'});
+const personNode={'@id':physician,'@type':['Person','IndividualPhysician'],url:origin+'/'};
+const clinicNode={'@id':clinic,'@type':['MedicalClinic','PhysiciansOffice','LocalBusiness']};
+const full={'@context':{'@vocab':'https://schema.org/'},'@graph':[pageNode(origin+'/webpage',origin+'/', ['ProfilePage','MedicalWebPage']),personNode,clinicNode]};
+const focused=(pageId,url)=>({'@context':'https://schema.org','@graph':[pageNode(pageId,url),personNode,clinicNode]});
+const html=(route,home=false)=>{const structured=home?full:focused(origin+route+'#webpage',origin+route);return `<!doctype html><html lang="fa-IR" dir="rtl"><head><link rel="canonical" href="${origin}${route}"><link rel="stylesheet" href="/assets/site.0123456789ab.css" integrity="${sri(css)}"><script id="schema-core-mainentity" type="application/ld+json">${JSON.stringify(structured)}</script></head><body lang="fa-IR" dir="rtl"><article lang="fa-IR" dir="rtl">ok</article><script src="/assets/site.abcdef123456.js" integrity="${sri(js)}"></script></body></html>`;};
 await fs.writeFile(path.join(root,'index.html'),html('/',true));
 await fs.writeFile(path.join(root,'botox.html'),html('/botox'));
 await fs.writeFile(path.join(root,'sitemap.xml'),`<?xml version="1.0"?><urlset xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"><url><loc>${origin}/</loc><lastmod>2026-10-05</lastmod>${'<video:video></video:video>'.repeat(4)}</url><url><loc>${origin}/botox</loc><lastmod>2026-10-05</lastmod></url></urlset>`);
@@ -31,6 +31,6 @@ for(const rel of ['index.html','botox.html','assets/site.0123456789ab.css','asse
   const bytes=await fs.readFile(path.join(root,rel));manifestFiles['/'+rel]={bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
 }
 await fs.writeFile(path.join(root,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate:'2026-10-05',files:manifestFiles}));
-const report=await verifyDist({distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedGraphNodes:2,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true});
-assert.equal(report.canonicalPages,2);assert.equal(report.graphNodes,2);assert.equal(report.videoEntries,4);assert.equal(report.integrityVerified,true);
+const report=await verifyDist({distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedGraphNodes:3,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true});
+assert.equal(report.canonicalPages,2);assert.equal(report.graphNodes,3);assert.equal(report.videoEntries,4);assert.equal(report.integrityVerified,true);assert.ok(report.fullGraphEndBytes>0);
 console.log(JSON.stringify({distVerifier:'PASS',...report},null,2));
