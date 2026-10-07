@@ -55,7 +55,7 @@ const homeHtml=await fs.readFile(path.join(root,'dist/index.html'),'utf8');
 const homeNodes=inspect(homeHtml);
 assert.ok(homeNodes.some(node=>attr(node,'itemid')===physicianId),'Home Microdata uses canonical physician fragment');
 const inlineGraph=jsonLdByPath.get('/');
-const graphLink=homeNodes.find(node=>node.tagName==='link'&&attr(node,'rel')==='describedby'&&attr(node,'href')==='/graph.jsonld');assert.ok(graphLink,'Home discovers external canonical graph');
+const graphLink=homeNodes.find(node=>node.tagName==='link'&&attr(node,'rel')==='describedby'&&attr(node,'href')&&new URL(attr(node,'href'),SOURCE.canonicalOrigin).href===SOURCE.canonicalOrigin+'/graph.jsonld');assert.ok(graphLink,'Home discovers external canonical graph');
 const externalGraph=JSON.parse(await fs.readFile(path.join(root,'dist/graph.jsonld'),'utf8'));
 assert.deepEqual(externalGraph,SOURCE.graph,'External canonical graph equals authoritative graph');
 assert.deepEqual(inlineGraph,externalGraph,'Home inline graph equals external canonical graph');
