@@ -15,7 +15,6 @@ const renderBoundary=frontmatter.lastIndexOf('\nconst requestedPath =');
 assert.ok(renderBoundary>0,'Component-only boundary');
 frontmatter=frontmatter.slice(0,renderBoundary);
 const generated=path.join(root,'.generated');await fs.mkdir(generated,{recursive:true});
-// Derived build module: execute beside the Astro source so its relative imports resolve exactly as authored.
 const {SOURCE,CANONICAL,AUTHORED_BODY}=await importModuleFromSourceDirectory(frontmatter,sourceFile,'canonical-source');
 assert.equal(SOURCE.routes.schemaVersion,2,'Clean canonical route schema');
 assert.deepEqual(Object.keys(SOURCE.routes),['schemaVersion','canonicalOrigin','resources','htmlIdTargets','legacyRedirects'],'Canonical route and fragment model');
@@ -25,7 +24,7 @@ const inspect=html=>{const nodes=[];function walk(node){nodes.push(node);for(con
 const text=node=>{if(['script','style','template'].includes(node.tagName))return '';if(node.nodeName==='#text')return node.value;return(node.childNodes??[]).map(text).join('');};
 const normalizedCopy=html=>{const body=inspect(html).find(node=>node.tagName==='body');return text(body).replace(/\s+/g,' ').trim();};
 const signature=value=>createHash('sha256').update(value).digest('hex');
-const nodesByPath=new Map(),urlsByPath=new Map();
+const nodesByPath=new Map(),urlsByPath=new Map(),jsonLdByPath=new Map();
 for(const resource of SOURCE.routes.resources){
  const file=resource.path==='/'?'index.html':resource.path.slice(1)+'.html';
  const html=await fs.readFile(path.join(root,'dist',file),'utf8');
@@ -34,11 +33,12 @@ for(const resource of SOURCE.routes.resources){
  assert.equal(nodes.filter(node=>node.tagName==='h1').length,1,'Sole H1 '+resource.path);
  const canonicals=nodes.filter(node=>node.tagName==='link'&&attr(node,'rel')==='canonical');assert.equal(canonicals.length,1);
  assert.equal(attr(canonicals[0],'href'),SOURCE.canonicalOrigin+resource.path);
- const scripts=nodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json');
- assert.equal(scripts.length,resource.path==='/'?2:1,'Expected Search JSON-LD on every route and one additional full KG only on Home: '+resource.path);
- const searchScript=scripts.find(node=>attr(node,'id')==='schema-core-mainentity');assert.ok(searchScript,'Search JSON-LD missing '+resource.path);
- const graph=JSON.parse(serialize(searchScript));assert.equal(graph['@context'],'https://schema.org','Pure Schema.org Search context '+resource.path);assert.equal(new Set(graph['@graph'].map(n=>n['@id'])).size,graph['@graph'].length);
- if(resource.path!=='/')assert.ok(!scripts.some(node=>attr(node,'id')==='canonical-knowledge-graph'),'Focused route must not duplicate full canonical graph '+resource.path);
+ const scripts=nodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json');assert.equal(scripts.length,1,'Exactly one JSON-LD document '+resource.path);
+ const schemaScript=scripts[0];assert.equal(attr(schemaScript,'id'),'schema-core-mainentity','Stable JSON-LD script identity '+resource.path);
+ const graph=JSON.parse(serialize(schemaScript));jsonLdByPath.set(resource.path,graph);
+ if(resource.path==='/')assert.deepEqual(graph,SOURCE.graph,'Home inline JSON-LD must equal the complete canonical graph');
+ else assert.equal(graph['@context'],'https://schema.org','Focused Search JSON-LD must use pure Schema.org context '+resource.path);
+ assert.equal(new Set((graph['@graph']??[]).map(n=>n['@id'])).size,(graph['@graph']??[]).length,'Unique structured-data IDs '+resource.path);
  const pageId=resource.path==='/'?SOURCE.canonicalOrigin+'/webpage':SOURCE.canonicalOrigin+resource.path+'#webpage';
  const pageNode=graph['@graph'].find(node=>node['@id']===pageId), personNode=graph['@graph'].find(node=>node['@id']===physicianId), clinicNode=graph['@graph'].find(node=>node['@id']===clinicId);
  assert.ok(pageNode,'Contextual page node '+resource.path);assert.ok(personNode,'Contextual physician node '+resource.path);assert.ok(clinicNode,'Contextual clinic authority node '+resource.path);
@@ -48,55 +48,38 @@ for(const resource of SOURCE.routes.resources){
  assert.equal(personNode.url,SOURCE.canonicalOrigin+'/','Contextual physician URL '+resource.path);
  assert.equal(personNode.mainEntityOfPage?.['@id'],SOURCE.canonicalOrigin+'/webpage','Contextual physician home '+resource.path);
  const actualIds=new Set(ids);
- for(const node of nodes)for(const property of ['aria-labelledby','aria-describedby','aria-controls','aria-owns'])
-  for(const id of(attr(node,property)??'').split(/\s+/).filter(Boolean))assert.ok(actualIds.has(id),'ARIA '+resource.path+' '+id);
+ for(const node of nodes)for(const property of ['aria-labelledby','aria-describedby','aria-controls','aria-owns'])for(const id of(attr(node,property)??'').split(/\s+/).filter(Boolean))assert.ok(actualIds.has(id),'ARIA '+resource.path+' '+id);
  urlsByPath.set(resource.path,nodes.filter(n=>n.tagName==='a'&&attr(n,'href')).map(n=>new URL(attr(n,'href'),SOURCE.canonicalOrigin+resource.path)).filter(u=>u.origin===SOURCE.canonicalOrigin));
 }
 const homeHtml=await fs.readFile(path.join(root,'dist/index.html'),'utf8');
 const homeNodes=inspect(homeHtml);
 assert.ok(homeNodes.some(node=>attr(node,'itemid')===physicianId),'Home Microdata uses canonical physician fragment');
-const fullGraphScripts=homeNodes.filter(node=>node.tagName==='script'&&attr(node,'id')==='canonical-knowledge-graph');
-assert.equal(fullGraphScripts.length,1,'Home must embed exactly one full canonical graph');
-const inlineGraph=JSON.parse(serialize(fullGraphScripts[0]));
-const graphLink=homeNodes.find(node=>node.tagName==='link'&&attr(node,'rel')==='describedby'&&attr(node,'href')==='/graph.jsonld');
-assert.ok(graphLink,'Home discovers the external canonical graph');
+const inlineGraph=jsonLdByPath.get('/');
+const graphLink=homeNodes.find(node=>node.tagName==='link'&&attr(node,'rel')==='describedby'&&attr(node,'href')==='/graph.jsonld');assert.ok(graphLink,'Home discovers external canonical graph');
 const externalGraph=JSON.parse(await fs.readFile(path.join(root,'dist/graph.jsonld'),'utf8'));
 assert.deepEqual(externalGraph,SOURCE.graph,'External canonical graph equals authoritative graph');
-assert.deepEqual(inlineGraph,SOURCE.graph,'Inline Home canonical graph equals authoritative graph');
-const fullGraphMarker='id="canonical-knowledge-graph"';
-const fullGraphStart=homeHtml.indexOf(fullGraphMarker);assert.ok(fullGraphStart>=0,'Raw Home full graph marker');
-const fullGraphEnd=homeHtml.indexOf('</script>',fullGraphStart)+'</script>'.length;assert.ok(fullGraphEnd>'</script>'.length,'Raw Home full graph closes');
-const fullGraphEndBytes=Buffer.byteLength(homeHtml.slice(0,fullGraphEnd),'utf8');
-assert.ok(fullGraphEndBytes<2_000_000,`Full canonical graph must close within the first 2,000,000 uncompressed Home bytes; ended at ${fullGraphEndBytes}`);
-const homeSchemaScript=homeNodes.find(node=>node.tagName==='script'&&attr(node,'id')==='schema-core-mainentity');assert.ok(homeSchemaScript,'Home Search JSON-LD missing');
-const homeSchema=JSON.parse(serialize(homeSchemaScript)),homeSchemaIds=new Set(homeSchema['@graph'].map(node=>node['@id']));
-const homePerson=homeSchema['@graph'].find(node=>node['@id']===physicianId);
+assert.deepEqual(inlineGraph,externalGraph,'Home inline graph equals external canonical graph');
+const fullGraphMarker='id="schema-core-mainentity"';const fullGraphStart=homeHtml.indexOf(fullGraphMarker);assert.ok(fullGraphStart>=0,'Raw Home graph marker');
+const fullGraphEnd=homeHtml.indexOf('</script>',fullGraphStart)+'</script>'.length;assert.ok(fullGraphEnd>'</script>'.length,'Raw Home graph closes');
+const fullGraphEndBytes=Buffer.byteLength(homeHtml.slice(0,fullGraphEnd),'utf8');assert.ok(fullGraphEndBytes<2_000_000,`Full canonical graph must close within the first 2,000,000 uncompressed Home bytes; ended at ${fullGraphEndBytes}`);
+const homePerson=inlineGraph['@graph'].find(node=>node['@id']===physicianId),homeIds=new Set(inlineGraph['@graph'].map(node=>node['@id']));
 const refs=value=>[value].flat().filter(Boolean).map(entry=>typeof entry==='string'?entry:entry?.['@id']).filter(Boolean);
-for(const property of ['availableService','hasCertification','makesOffer']) { const ids=refs(homePerson[property]);assert.ok(ids.length,`Home physician ${property} missing`);assert.ok(ids.every(id=>homeSchemaIds.has(id)),`Home physician ${property} targets must be defined`); }
+for(const property of ['availableService','hasCertification','makesOffer']){const targets=refs(homePerson[property]);assert.ok(targets.length,`Home physician ${property} missing`);assert.ok(targets.every(id=>homeIds.has(id)),`Home physician ${property} targets must be defined`);}
 const customTerms=new Set(Object.entries(SOURCE.graph['@context']).filter(([,definition])=>definition&&typeof definition==='object'&&definition['@id']?.startsWith?.('https://www.ghezelbaash.ir/ontology/')).map(([term])=>term));
-for(const node of homeSchema['@graph'])for(const key of Object.keys(node))assert.ok(!key.includes(':')&&!customTerms.has(key),`Non-Schema Search property leaked: ${key}`);
+for(const [route,document] of jsonLdByPath)if(route!=='/')for(const node of document['@graph'])for(const key of Object.keys(node))assert.ok(!key.includes(':')&&!customTerms.has(key),`Non-Schema focused Search property leaked: ${key} in ${route}`);
 assert.equal(normalizedCopy(homeHtml),normalizedCopy('<html><body>'+AUTHORED_BODY+'</body></html>'),'Authored copy preservation');
-const queue=['/'],depth=new Map([['/',0]]);
-while(queue.length){const p=queue.shift();for(const u of urlsByPath.get(p))if(nodesByPath.has(u.pathname)&&!depth.has(u.pathname)){depth.set(u.pathname,depth.get(p)+1);queue.push(u.pathname);}}
+const queue=['/'],depth=new Map([['/',0]]);while(queue.length){const p=queue.shift();for(const u of urlsByPath.get(p))if(nodesByPath.has(u.pathname)&&!depth.has(u.pathname)){depth.set(u.pathname,depth.get(p)+1);queue.push(u.pathname);}}
 assert.equal(depth.size,SOURCE.routes.resources.length,'No canonical orphans');
 for(const[p,urls]of urlsByPath)for(const u of urls)if(u.hash&&nodesByPath.has(u.pathname))assert.ok(nodesByPath.get(u.pathname).some(n=>attr(n,'id')===decodeURIComponent(u.hash.slice(1))),'Native fragment '+p+' '+u.href);
 const sitemap=await fs.readFile(path.join(root,'dist/sitemap.xml'),'utf8');
-assert.ok(sitemap.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'),'Image sitemap namespace');
-assert.ok(sitemap.includes('xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"'),'Video sitemap namespace');
-assert.equal((sitemap.match(/<url>/g)||[]).length,SOURCE.routes.resources.length,'Sitemap canonical URL count');
-assert.ok((sitemap.match(/<image:image>/g)||[]).length>0,'Image sitemap entries');
-assert.ok((sitemap.match(/<video:video>/g)||[]).length>=4,'Video sitemap entries');
+assert.ok(sitemap.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'),'Image sitemap namespace');assert.ok(sitemap.includes('xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"'),'Video sitemap namespace');
+assert.equal((sitemap.match(/<url>/g)||[]).length,SOURCE.routes.resources.length,'Sitemap canonical URL count');assert.ok((sitemap.match(/<image:image>/g)||[]).length>0,'Image sitemap entries');assert.ok((sitemap.match(/<video:video>/g)||[]).length>=4,'Video sitemap entries');
 const homeRevision=SOURCE.graph['@graph'].find(node=>node['@id']===SOURCE.canonicalOrigin+'/webpage').dateModified['@value'];
-assert.equal(new Set([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match=>match[1])).size,1,'Shared sitemap release date');
-assert.ok(sitemap.includes(`<lastmod>${homeRevision}</lastmod>`),'Sitemap release date matches graph');
+assert.equal(new Set([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(match=>match[1])).size,1,'Shared sitemap release date');assert.ok(sitemap.includes(`<lastmod>${homeRevision}</lastmod>`),'Sitemap release date matches graph');
 const robots=await fs.readFile(path.join(root,'dist/robots.txt'),'utf8');assert.ok(robots.includes(`Sitemap: ${SOURCE.canonicalOrigin}/sitemap.xml`),'Robots advertises sitemap');
-for(const resource of SOURCE.machineResources){
- const file=path.join(root,'dist',resource.path.replace(/^\//,''));
- const stat=await fs.stat(file);assert.ok(stat.isFile()&&stat.size>0,'Declared machine resource missing or empty '+resource.path);
-}
-const graphTtl=await fs.readFile(path.join(root,'dist/graph.ttl'),'utf8');
-assert.equal(graphTtl,serializeGraphAsNTriples(SOURCE.graph),'Graph Turtle must deterministically represent the canonical graph');
+for(const resource of SOURCE.machineResources){const file=path.join(root,'dist',resource.path.replace(/^\//,''));const stat=await fs.stat(file);assert.ok(stat.isFile()&&stat.size>0,'Declared machine resource missing or empty '+resource.path);}
+const graphTtl=await fs.readFile(path.join(root,'dist/graph.ttl'),'utf8');assert.equal(graphTtl,serializeGraphAsNTriples(SOURCE.graph),'Graph Turtle must deterministically represent the canonical graph');
 const shapesTtl=await fs.readFile(path.join(root,'dist/shapes.ttl'),'utf8');assert.ok(shapesTtl.includes('@prefix sh:'),'SHACL Turtle resource');
 const rdfTriples=graphTtl.split('\n').filter(Boolean).length;
-const report={canonicalPages:depth.size,maxCrawlDepth:Math.max(...depth.values()),copyUnchanged:true,copySha256:signature(normalizedCopy(homeHtml)),graphNodes:SOURCE.graph['@graph'].length,homeSearchGraphNodes:homeSchema['@graph'].length,fullGraphEmbedded:true,fullGraphEndBytes,externalCanonicalGraph:true,sharedReleaseDate:homeRevision,imageSitemapEntries:(sitemap.match(/<image:image>/g)||[]).length,videoSitemapEntries:(sitemap.match(/<video:video>/g)||[]).length,rdfTriples,registeredResources:SOURCE.machineResources.length,sourceSha256:signature(source)};
+const report={canonicalPages:depth.size,maxCrawlDepth:Math.max(...depth.values()),copyUnchanged:true,copySha256:signature(normalizedCopy(homeHtml)),graphNodes:SOURCE.graph['@graph'].length,homeJsonLdScripts:1,homeEmbeddedGraphNodes:inlineGraph['@graph'].length,fullGraphEmbedded:true,fullGraphEndBytes,externalCanonicalGraph:true,sharedReleaseDate:homeRevision,imageSitemapEntries:(sitemap.match(/<image:image>/g)||[]).length,videoSitemapEntries:(sitemap.match(/<video:video>/g)||[]).length,rdfTriples,registeredResources:SOURCE.machineResources.length,sourceSha256:signature(source)};
 await fs.writeFile(path.join(generated,'verification.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
