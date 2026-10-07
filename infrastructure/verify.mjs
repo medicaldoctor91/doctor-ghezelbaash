@@ -1,12 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { parse, serialize } from 'parse5';
 import { serializeGraphAsNTriples } from '../src/lib/machine-output.mjs';
+import { importModuleFromSourceDirectory } from './lib/derived-module-loader.mjs';
 
-const root=process.cwd(),source=await fs.readFile(path.join(root,'src/pages/index.astro'),'utf8');
+const root=process.cwd(),sourceFile=path.join(root,'src/pages/index.astro'),source=await fs.readFile(sourceFile,'utf8');
 const physicianId='https://www.ghezelbaash.ir/#saeed-ghezelbash', clinicId='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
 const closing=source.lastIndexOf('\n---\n');
 assert.ok(source.startsWith('---\n')&&closing>0,'Astro source boundary');
@@ -15,9 +15,8 @@ const renderBoundary=frontmatter.lastIndexOf('\nconst requestedPath =');
 assert.ok(renderBoundary>0,'Component-only boundary');
 frontmatter=frontmatter.slice(0,renderBoundary);
 const generated=path.join(root,'.generated');await fs.mkdir(generated,{recursive:true});
-const moduleFile=path.join(generated,'canonical-source.mjs');await fs.writeFile(moduleFile,frontmatter);
-// Derived build module: never author or patch this file.
-const {SOURCE,CANONICAL,AUTHORED_BODY}=await import(pathToFileURL(moduleFile));
+// Derived build module: execute beside the Astro source so its relative imports resolve exactly as authored.
+const {SOURCE,CANONICAL,AUTHORED_BODY}=await importModuleFromSourceDirectory(frontmatter,sourceFile,'canonical-source');
 assert.equal(SOURCE.routes.schemaVersion,2,'Clean canonical route schema');
 assert.deepEqual(Object.keys(SOURCE.routes),['schemaVersion','canonicalOrigin','resources','htmlIdTargets','legacyRedirects'],'Canonical route and fragment model');
 assert.ok(SOURCE.graph['@graph'].some(node=>node['@id']===physicianId),'Canonical physician fragment identity');
