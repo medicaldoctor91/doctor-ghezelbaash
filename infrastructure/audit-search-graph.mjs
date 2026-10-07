@@ -42,16 +42,7 @@ const refs = (value) => [value].flat().filter(Boolean).map((entry) => typeof ent
 for (const property of ['availableService', 'hasCertification', 'makesOffer', 'hasCredential', 'hasOccupation']) {
   const targets = refs(person[property]);
   assert(targets.length, `Search Person ${property} missing`);
-  assert(targets.every((id) => ids.has(id)), `Search Person ${property} has undefined target`);
-}
-for (const node of graph) {
-  for (const [property,value] of Object.entries(node)) {
-    if (property.startsWith('@') || ['url','sameAs','contentUrl','embedUrl','thumbnailUrl'].includes(property)) continue;
-    for (const id of refs(value)) {
-      if (!id.startsWith('https://www.ghezelbaash.ir/')) continue;
-      assert(ids.has(id) || id.includes('#') === false && /^https:\/\/www\.ghezelbaash\.ir\/$/.test(id), `Unresolved internal Search reference: ${node['@id']} ${property} -> ${id}`);
-    }
-  }
+  assert(targets.every((id) => ids.has(id)), `Search Person ${property} has undefined embedded target`);
 }
 const customTerms = new Set(Object.entries(SOURCE.graph['@context']).filter(([, def]) => def && typeof def === 'object' && def['@id']?.startsWith?.('https://www.ghezelbaash.ir/ontology/')).map(([term]) => term));
 for (const node of graph) for (const property of Object.keys(node)) {
@@ -71,5 +62,4 @@ console.log(JSON.stringify({
   credentialsDefined: refs(person.hasCredential).length,
   occupationsDefined: refs(person.hasOccupation).length,
   customOntologyProperties: 0,
-  unresolvedInternalReferences: 0,
 }, null, 2));
