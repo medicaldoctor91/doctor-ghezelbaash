@@ -25,10 +25,29 @@ for (const route of routes) {
 }
 await fs.mkdir(path.join(dist,'assets')); await fs.writeFile(path.join(dist,'assets/site.abc123.css'),'.render-chunk{content-visibility:auto;contain:layout style paint;contain-intrinsic-size:auto var(--cis,2800px)}'); await fs.writeFile(path.join(dist,'assets/site.def456.js'),'');
 await fs.writeFile(path.join(dist,'sitemap.xml'),'<?xml version="1.0"?><urlset>'+routes.map((r)=>`<url><loc>https://www.ghezelbaash.ir${r==='/'?'/':r}</loc><lastmod>2026-10-04</lastmod></url>`).join('')+'</urlset>');
+const canonicalGraph={
+  '@context':{'@vocab':'https://schema.org/'},
+  '@graph':[
+    {'@id':'https://www.ghezelbaash.ir/#saeed-ghezelbash','@type':['Person','IndividualPhysician'],'name':'دکتر سعید قزلباش'},
+    {'@id':'https://www.ghezelbaash.ir/#serialization-safety','@type':'Thing','description':'literal </script><script id="escaped-breakout">must stay data</script>'},
+  ],
+};
+await fs.writeFile(path.join(dist,'graph.jsonld'),JSON.stringify(canonicalGraph)+'\n');
 const routingRows=[{source:'/route-1/',target:'/route-1',statusCode:301},{source:'/graph.jsonld/entity',target:'/graph.jsonld',statusCode:200},{source:'/legacy-old-url',target:'/route-1',statusCode:301}];
 const summary=await finalizeDist({distDir:dist,routes,routingRows,sourceEdition:'2026-10-05',origin:'https://www.ghezelbaash.ir',watchPosters:new Map([['/route-1','/media/poster.0123456789ab.webp']]),securityEmail:'doctor@ghezelbaash.ir'});
 assert.equal(summary.htmlDocuments,72);
 assert.equal(summary.distDir,dist);
+assert.equal(summary.canonicalGraphInline,true,'Finalizer must report full canonical graph embedded in Home');
+
+const finalizedHome=await fs.readFile(path.join(dist,'index.html'),'utf8');
+const fullGraphScripts=[...finalizedHome.matchAll(/<script\b(?=[^>]*\bid=["']canonical-knowledge-graph["'])[^>]*>([\s\S]*?)<\/script>/gi)];
+assert.equal(fullGraphScripts.length,1,'Home must contain exactly one full canonical knowledge graph script');
+assert.ok(finalizedHome.indexOf('id="canonical-knowledge-graph"')<finalizedHome.indexOf('</head>'),'Full canonical graph must be emitted in Home head');
+assert.deepEqual(JSON.parse(fullGraphScripts[0][1]),canonicalGraph,'Inline Home graph must equal canonical graph.jsonld after parsing');
+assert.ok(!fullGraphScripts[0][1].includes('</script>'),'Inline JSON-LD payload must escape HTML script-closing sequences');
+assert.ok(!finalizedHome.includes('<script id="escaped-breakout">'),'Canonical graph literals must not break out of the JSON-LD script');
+const focusedHtml=await fs.readFile(path.join(dist,'route-1.html'),'utf8');
+assert.ok(!focusedHtml.includes('canonical-knowledge-graph'),'Full canonical graph must be Home-only; focused pages keep route-specific structured data');
 
 const redirects=await fs.readFile(path.join(dist,'_redirects'),'utf8');
 assert.equal(redirects,'/route-1/ /route-1 301\n/graph.jsonld/entity /graph.jsonld 200\n/legacy-old-url /route-1 301\n');
@@ -39,4 +58,4 @@ const security=await fs.readFile(path.join(dist,'.well-known/security.txt'),'utf
 assert.match(security,/Contact: mailto:doctor@ghezelbaash.ir/);
 const sitemap=await fs.readFile(path.join(dist,'sitemap.xml'),'utf8');
 assert.equal([...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].every((m)=>m[1]==='2026-10-04'),true);
-console.log(JSON.stringify({finalizerFoundation:'PASS',htmlDocuments:summary.htmlDocuments},null,2));
+console.log(JSON.stringify({finalizerFoundation:'PASS',htmlDocuments:summary.htmlDocuments,canonicalGraphInline:summary.canonicalGraphInline},null,2));
