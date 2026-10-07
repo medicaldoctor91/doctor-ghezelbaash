@@ -72757,7 +72757,7 @@ export function compileCanonicalSource() {
         if(!page||!original||!values(original['@type']).includes(resource.pageType))throw new Error('Canonical schema classification disagreement: '+record.path);
         const types=values(page['@type']);
         const classified={...page,'@type':types.includes('FAQPage')?[resource.pageType,'FAQPage']:resource.pageType};
-        return {...record,pageType:resource.pageType,schemaClassification:{reason:'reviewed-source-purpose',purpose:resource.pagePurpose,sourceRoleIds:[record.entityId,...record.topicSelection.references.map(ref=>ref['@id'])]},document:{...record.document,'@graph':record.document['@graph'].map(node=>node===page?classified:node)}};
+        return {...record,pageType:resource.pageType,pagePurpose:resource.pagePurpose,schemaClassification:{reason:'reviewed-source-purpose',purpose:resource.pagePurpose,sourceRoleIds:[record.entityId,...record.topicSelection.references.map(ref=>ref['@id'])]},document:{...record.document,'@graph':record.document['@graph'].map(node=>node===page?classified:node)}};
       });
     }
     return {applyRouteSchemaPolicy};
