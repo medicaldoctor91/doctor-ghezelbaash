@@ -8,12 +8,22 @@ import { fileURLToPath } from 'node:url';
 
 import { materializeMachineResources } from './materialize-machine-resources.mjs';
 import { serializeGraphAsNTriples,buildCsvMetadata,serializeEntityFactsCsv } from '../src/lib/machine-output.mjs';
+import {semanticFingerprint,rdfFingerprint,csvFingerprint} from './lib/rdf.mjs';
+import {Parser} from 'n3';
 
 const fixture={'@context':{'@vocab':'https://schema.org/'},'@graph':[
  {'@id':'https://example.com/entity',name:['duplicate','duplicate','unique']},
  {'@id':'https://example.com/entity',name:'duplicate'},
 ]};
 const fixtureRows=serializeEntityFactsCsv(fixture).trim().split('\n').slice(1);
+const typedFixture={'@context':{'@vocab':'https://schema.org/'},'@graph':[
+ {'@id':'https://example.com/entity',value:[1,'1',-2,3.14,true,false,{'@value':2.5},{'@value':'bonjour','@language':'fr'},{'@value':'12','@type':'http://www.w3.org/2001/XMLSchema#integer'}],name:'Comma, quote " and\nnewline'},
+]};
+assert.equal(await csvFingerprint(serializeEntityFactsCsv(typedFixture)),await semanticFingerprint(typedFixture),'CSV reconstruction preserves native and explicit RDF datatypes, language and quoted strings');
+const numericEdges={'@context':{'@vocab':'https://schema.org/'},'@graph':[{'@id':'https://example.com/entity',largeValue:1e21,zeroValue:-0,smallValue:1e-7,decimalValue:{'@value':2.5,'@type':'http://www.w3.org/2001/XMLSchema#decimal'},doubleValue:{'@value':'2.5','@type':'http://www.w3.org/2001/XMLSchema#double'}}]};
+assert.equal(await csvFingerprint(serializeEntityFactsCsv(numericEdges)),await semanticFingerprint(numericEdges),'Numeric CSV lexical values agree with the installed JSON-LD processor');
+const fixtureTurtle=serializeGraphAsNTriples(fixture).trim().split('\n');
+assert.equal(fixtureTurtle.length,2,'Turtle emits each unique RDF statement once');
 assert.equal(fixtureRows.length,2,'CSV materializer emits one row per unique fact');
 assert.equal(new Set(fixtureRows).size,fixtureRows.length,'No duplicate complete CSV rows');
 assert.equal(new Set(fixtureRows.map(row=>row.split(',')[0])).size,fixtureRows.length,'No duplicate CSV row_id');
@@ -59,6 +69,12 @@ try {
   assert.match(await fs.readFile(path.join(distDir, 'shapes.ttl'), 'utf8'), /@prefix sh:/);
 
   const csv = await fs.readFile(path.join(distDir, 'entity-facts.csv'), 'utf8');
+  assert.equal(await csvFingerprint(csv),await semanticFingerprint(source.graph),'Full CSV reconstruction equals canonical RDF graph');
+  const statements=expectedNTriples.trim().split('\n');
+  assert.equal(statements.length,new Set(statements).size,'No duplicate Turtle statements');
+  assert.equal(await rdfFingerprint(expectedNTriples),await semanticFingerprint(source.graph),'Dedupe preserves full RDF semantics');
+  const uniqueCount=new Set(new Parser().parse(expectedNTriples).map(q=>JSON.stringify(q))).size;
+  assert.match(await fs.readFile(path.join(distDir,'void.ttl'),'utf8'),new RegExp('void:triples '+uniqueCount+'\\b'),'VoID counts unique RDF triples');
   assert.deepEqual(csv.split('\n',1)[0].split(','),buildCsvMetadata(source).tableSchema.columns.map(c=>c.name),'CSVW columns match the real export header');
   assertCanonicalRows(csv);
   assert.match(csv.split('\n', 1)[0], /row_id,subject,predicate,object,object_kind,datatype,language/);

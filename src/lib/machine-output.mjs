@@ -51,8 +51,24 @@ export function graphFactRows(graph) {
   const context = graph?.['@context'] ?? {};
   const rows = [];
   const seenExpanded = new Set();
+  const seenFacts = new Set();
   const add = ({ subject, predicate, object, objectKind, datatype = '', language = '' }) => {
+    if(objectKind==='literal') {
+      if(typeof object==='boolean') {
+        datatype ||= 'http://www.w3.org/2001/XMLSchema#boolean';
+        object=object?'true':'false';
+      } else if((typeof object==='number'&&(String(object).includes('.')||Math.abs(object)>=1e21))||datatype==='http://www.w3.org/2001/XMLSchema#double') {
+        // Match jsonld's RDF lexical conversion, including explicit double values.
+        datatype ||= 'http://www.w3.org/2001/XMLSchema#double';
+        object=Number.parseFloat(object).toExponential(15).replace(/(\d)0*e\+?/, '$1E');
+      } else if(typeof object==='number') {
+        datatype ||= 'http://www.w3.org/2001/XMLSchema#integer';
+        object=object.toFixed(0);
+      } else object=String(object);
+    }
     const raw = `${subject}\u0000${predicate}\u0000${object}\u0000${objectKind}\u0000${datatype}\u0000${language}`;
+    if(seenFacts.has(raw))return;
+    seenFacts.add(raw);
     rows.push({ row_id: `sha256:${sha256(raw)}`, subject, predicate, object, object_kind: objectKind, datatype, language });
   };
   const blankId = (path) => `_:b${sha256(path).slice(0, 20)}`;
@@ -71,7 +87,7 @@ export function graphFactRows(graph) {
       values(rawValue).forEach((entry, index) => {
         const childPath = `${path}/${property}/${index}`;
         if (entry && typeof entry === 'object' && Object.hasOwn(entry, '@value')) {
-          add({ subject, predicate, object: String(entry['@value']), objectKind: 'literal', datatype: entry['@type'] ? expandTerm(entry['@type'], context) : '', language: entry['@language'] ?? '' });
+          add({ subject, predicate, object: entry['@value'], objectKind: 'literal', datatype: entry['@type'] ? expandTerm(entry['@type'], context) : '', language: entry['@language'] ?? '' });
           return;
         }
         if (entry && typeof entry === 'object') {
@@ -93,7 +109,7 @@ export function graphFactRows(graph) {
     const subject = typeof node['@id'] === 'string' ? node['@id'] : blankId(`/@graph/${index}`);
     emitNode(node, subject, `/@graph/${index}`);
   }
-  rows.sort((a, b) => a.subject.localeCompare(b.subject) || a.predicate.localeCompare(b.predicate) || String(a.object).localeCompare(String(b.object)) || a.object_kind.localeCompare(b.object_kind));
+  rows.sort((a, b) => a.subject.localeCompare(b.subject) || a.predicate.localeCompare(b.predicate) || String(a.object).localeCompare(String(b.object)) || a.object_kind.localeCompare(b.object_kind) || a.datatype.localeCompare(b.datatype) || a.language.localeCompare(b.language));
   return rows;
 }
 
@@ -115,8 +131,7 @@ const csvCell = (value) => {
 
 export function serializeEntityFactsCsv(graph) {
   const headers = ['row_id','subject','predicate','object','object_kind','datatype','language'];
-  const seen=new Set();
-  const rows=graphFactRows(graph).filter(row=>{if(seen.has(row.row_id))return false;seen.add(row.row_id);return true;});
+  const rows=graphFactRows(graph);
   return headers.join(',') + '\n' + rows.map((row) => headers.map((key) => csvCell(row[key])).join(',')).join('\n') + '\n';
 }
 

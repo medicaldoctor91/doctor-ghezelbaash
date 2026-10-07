@@ -134,6 +134,18 @@ main
   content-visibility: visible;
   contain: none;
 }
+[data-topic-navigation] {
+  max-width: var(--reading-measure);
+  margin-block: 2rem;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid currentColor;
+}
+[data-topic-navigation] ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding-inline-start: 1.5rem;
+}
 h1,
 h2,
 h3,
@@ -4096,7 +4108,15 @@ export function compileCanonicalSource() {
           name: entry.title, item: new URL(entry.path, canonicalUrl).href }))];
     }
     
-    return { attachTopicNavigation, deriveTopicBreadcrumbItems };
+    function renderTopicNavigation(record) {
+      const related=[record.navigation?.parent,...(record.navigation?.children??[])].filter(Boolean);
+      if(!related.length)return '';
+      const escape=value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+      const labels={en:'Related sections',ar:'الأقسام المرتبطة',ckb:'بەشە پەیوەندیدارەکان',fa:'بخش‌های مرتبط'};
+      const label=labels[record.lang.split('-')[0]]??labels.fa;
+      return '<nav data-topic-navigation aria-label="'+escape(label)+'"><p><strong>'+escape(label)+'</strong></p><ul>'+related.map(entry=>'<li><a href="'+escape(entry.path)+'" lang="'+escape(entry.lang)+'">'+escape(entry.title)+'</a></li>').join('')+'</ul></nav>';
+    }
+    return { attachTopicNavigation, deriveTopicBreadcrumbItems, renderTopicNavigation };
   })();
 
   // translation-alternates: one private semantic/build responsibility.
@@ -4553,7 +4573,7 @@ export function compileCanonicalSource() {
     });
     const headingId = attr(firstHeading,'id');
     if (!headingId) throw new Error('Canonical route lacks a persistent heading anchor');
-    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + renderMedicalTrust(record.document['@graph'].find(node=>node['@id']===record.canonicalUrl+'#webpage'),SOURCE.graph,record.lang) + serialize(primary) + '</article>' + homeSuffix;
+    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + renderMedicalTrust(record.document['@graph'].find(node=>node['@id']===record.canonicalUrl+'#webpage'),SOURCE.graph,record.lang) + serialize(primary) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
     const document = parse(result);
     const head = document.childNodes.find(n=>n.tagName==='html').childNodes.find(n=>n.tagName==='head');
     head.childNodes = head.childNodes.filter(n => !(n.tagName==='title' || n.tagName==='script' && ['application/ld+json','application/json'].includes(attr(n,'type')) ||
@@ -4561,7 +4581,7 @@ export function compileCanonicalSource() {
       n.tagName==='meta' && (['description','author'].includes(attr(n,'name')) || attr(n,'property')?.startsWith('og:') || attr(n,'property')?.startsWith('profile:') || attr(n,'name')?.startsWith('twitter:'))));
     const locales=record.alternates.filter(alternate=>alternate.hrefLang!=='x-default').map(alternate=>alternate.hrefLang==='en'?'en_US':alternate.hrefLang.replace('-','_'));
     const watch=SOURCE.discovery.sitemapPolicy.videoWatchPages.find(w=>w.path===path),thumbnail=watch?byId.get(watch.videoId)?.thumbnailUrl:undefined;
-    const routeImage=thumbnail?SOURCE.graph['@graph'].find(n=>n.contentUrl===thumbnail&&[n['@type']].flat().includes('ImageObject'))??{contentUrl:thumbnail,encodingFormat:'image/jpeg',name:byId.get(watch.videoId).name}:social;
+    const routeImage=thumbnail?SOURCE.graph['@graph'].find(n=>n.contentUrl===thumbnail&&[n['@type']].flat().includes('ImageObject'))??{contentUrl:thumbnail,encodingFormat:new URL(thumbnail).pathname.endsWith('.webp')?'image/webp':'image/jpeg',name:byId.get(watch.videoId).name}:social;
     const extras = '<title>' + escape(record.documentTitle) + '</title>' + meta('description',record.description) + meta('author',local(person.name,record.lang)) + socialMeta(record.documentTitle,record.description,record.canonicalUrl,record.lang,record.pageType,locales,routeImage) +
       '<link rel="canonical" href="' + record.canonicalUrl + '">' + record.alternates.map(a=>'<link rel="alternate" hreflang="'+escape(a.hrefLang)+'" href="'+escape(a.href)+'">').join('') +
       '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.document)+'</script>';

@@ -3,6 +3,7 @@ import canonize from 'rdf-canonize';
 import {createHash} from 'node:crypto';
 import {Parser,Writer} from 'n3';
 import fs from 'node:fs/promises';
+import {factCsvNQuads} from './fact-csv.mjs';
 
 const schemaContext=JSON.parse(await fs.readFile(new URL('../fixtures/schema-context.jsonld',import.meta.url),'utf8'));
 const documentLoader=async url=>{
@@ -15,6 +16,9 @@ export async function canonicalNQuads(document) {
 }
 const hash=value=>createHash('sha256').update(value).digest('hex');
 export async function semanticFingerprint(document){return hash(await canonicalNQuads(document));}
+export async function csvFingerprint(csv){
+ return hash(await canonize.canonize(await factCsvNQuads(csv),{inputFormat:'application/n-quads',algorithm:'RDFC-1.0',format:'application/n-quads'}));
+}
 export async function rdfFingerprint(turtle){
   // N-Triples is valid Turtle. Parse the declared representation as Turtle, then
   // canonicalize the RDF dataset, including blank-node identity and datatypes.

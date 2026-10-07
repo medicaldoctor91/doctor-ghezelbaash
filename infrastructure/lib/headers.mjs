@@ -80,8 +80,8 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
     }
   }
   blocks.push(`/assets/*\n  Cache-Control: public, max-age=31536000, immutable`);
-  blocks.push(`/media/*\n  Cache-Control: public, max-age=31536000, immutable`);
-  blocks.push(`/fonts/*\n  Cache-Control: public, max-age=31536000, immutable`);
+  blocks.push(`/media/*\n  Cache-Control: public, max-age=3600, must-revalidate`);
+  blocks.push(`/fonts/*\n  Cache-Control: public, max-age=3600, must-revalidate`);
   if(delivery?.routing?.notFound?.cacheControl){const p=profileFor(delivery,delivery.routing.notFound.indexing);blocks.push(`/404.html\n  Cache-Control: ${delivery.routing.notFound.cacheControl}${p?.default?`\n  X-Robots-Tag: ${p.default}`:''}`);}
   const preview=delivery?.http?.indexingProfiles?.preview?.default??'noindex';blocks.push(`https://:project.pages.dev/*\n  X-Robots-Tag: ${preview}`);blocks.push(`https://:version.:project.pages.dev/*\n  X-Robots-Tag: ${preview}`);
   if(blocks.length>100)throw new Error(`Cloudflare _headers rule limit exceeded: ${blocks.length}`);

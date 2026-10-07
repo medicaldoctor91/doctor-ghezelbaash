@@ -62543,12 +62543,10 @@ export const SOURCE = {
           ],
           "upgradeInsecureRequests": true,
           "scriptSrc": [
-            "'self'",
-            "'unsafe-inline'"
+            "'self'"
           ],
           "styleSrc": [
-            "'self'",
-            "'unsafe-inline'"
+            "'self'"
           ],
           "frameAncestors": [
             "'none'"

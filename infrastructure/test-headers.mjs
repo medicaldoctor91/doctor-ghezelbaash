@@ -57,8 +57,8 @@ assert.match(headers,/https:\/\/www\.ghezelbaash\.ir\/#saeed-ghezelbash>; rel=ab
 assert.match(headers,/\/video-saeed-ghezelbash-subcision-technique\n[\s\S]*<\/media\/posters\/subcision\.0123456789ab\.webp>; rel=preload; as=image/);
 assert(!headers.includes('as=script'), 'JS must not be Early-Hinted by default');
 assert.match(headers,/\/assets\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
-assert.match(headers,/\/media\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
-assert.match(headers,/\/fonts\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
+assert.match(headers,/\/media\/\*\n\s+Cache-Control: public, max-age=3600, must-revalidate/);
+assert.match(headers,/\/fonts\/\*\n\s+Cache-Control: public, max-age=3600, must-revalidate/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Content-Type: application\/ld\+json/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Access-Control-Allow-Origin: \*/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Cross-Origin-Resource-Policy: cross-origin/);
@@ -78,6 +78,9 @@ const realRoutes=SOURCE.routes.resources.map(entry=>entry.path);
 const byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
 const realWatchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const thumb=byId.get(entry.videoId)?.thumbnailUrl;assert.equal(typeof thumb,'string',`Missing video poster for ${entry.videoId}`);return [entry.path,new URL(thumb).pathname];}));
 const realHeaders=generateHeaders({origin:SOURCE.canonicalOrigin,routes:realRoutes,cssPath:'/assets/site.0123456789ab.css',watchPosters:realWatchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+assert.doesNotMatch(realHeaders,/'unsafe-inline'/,'Canonical CSP forbids untrusted inline execution and styles');
+assert.match(realHeaders,/script-src 'self'(?:;|$)/);
+assert.match(realHeaders,/style-src 'self'(?:;|$)/);
 for (const resource of [
  {path:'/sbom.cdx.json',mediaType:'application/vnd.cyclonedx+json'},
  {path:'/integrity-manifest.json',mediaType:'application/json'},

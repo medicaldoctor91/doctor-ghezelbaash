@@ -22,6 +22,16 @@ assert.equal(await semanticFingerprint(inline),await semanticFingerprint(SOURCE.
 for(const record of CANONICAL.records){
  assert.equal(record.document['@context'],'https://schema.org');
  const rendered=CANONICAL.render(record.path);
+ const nav=rendered.match(/<nav\b[^>]*data-topic-navigation[^>]*>(.*?)<\/nav>/s)?.[1];
+ const related=[record.navigation?.parent,...(record.navigation?.children??[])].filter(Boolean);
+ if(related.length){
+  assert(nav,'Focused page exposes contextual navigation '+record.path);
+  const links=[...nav.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);
+  assert.deepEqual(links,related.map(r=>r.path),'Only authored parent/children navigation '+record.path);
+  assert(!links.includes(record.path),'No navigation self-link');
+ }else assert.equal(nav,undefined,'No generic navigation on unrelated page');
+ const socialImage=rendered.match(/property="og:image" content="([^"]+)"/)?.[1];
+ if(socialImage&&new URL(socialImage).pathname.endsWith('.webp'))assert.match(rendered,/property="og:image:type" content="image\/webp"/,'WebP social MIME '+record.path);
  assert.equal(/<body[^>]* lang="([^"]+)"/.exec(rendered)?.[1],record.lang,'Focused body language '+record.path);
  assert.equal(/<body[^>]* dir="([^"]+)"/.exec(rendered)?.[1],record.dir,'Focused body direction '+record.path);
  const questions=record.document['@graph'].filter(n=>[n['@type']].flat().includes('Question'));
