@@ -6,7 +6,7 @@ const end=source.indexOf('\nexport const READER_RUNTIME',start);
 assert(start>0&&end>start,'DESIGN boundary');
 const design=source.slice(start,end);
 const renderRule=/\.render-chunk\s*\{([\s\S]*?)\}/.exec(design)?.[1]??'';
-assert.match(renderRule,/content-visibility\s*:\s*visible/,'Final rendering policy must be baked as non-deferred');
+assert.match(renderRule,/content-visibility\s*:\s*visible/,'Focused primary content is non-deferred by default');
 assert.doesNotMatch(renderRule,/content-visibility\s*:\s*auto/);
 assert.match(renderRule,/contain\s*:\s*none/);
 const pkg=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8'));
@@ -17,4 +17,4 @@ for (const relative of ['benchmark_mobile.py','test_benchmark_mobile.py','requir
   const url=new URL(`./${relative}`,import.meta.url);
   await assert.rejects(fs.access(url),undefined,`Obsolete candidate/baseline file must be removed: ${relative}`);
 }
-console.log(JSON.stringify({renderingPolicy:'PASS',deferred:false},null,2));
+console.log(JSON.stringify({renderingPolicy:'PASS',focusedPrimaryDeferred:false},null,2));

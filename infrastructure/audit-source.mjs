@@ -60,11 +60,11 @@ const fullGraphResource = SOURCE.machineResources.find((resource) => resource.pa
 assert.equal(fullGraphResource?.rel, 'describedby', 'Homepage must discover the canonical /graph.jsonld resource');
 assert.equal(fullGraphResource?.discoverable, true, 'Canonical graph must remain discoverable');
 assert(source.includes("const baseHead = SOURCE.head.metaValues"), 'Homepage head must separate critical metadata from discovery links');
-assert(source.includes("const discoveryHead = `<link rel=\"stylesheet\""), 'Stylesheet must lead the discovery layer');
 const rawHomeSource = source.slice(source.indexOf('const rawHome = shell('), source.indexOf('const home = readerScope.stampGuideSource', source.indexOf('const rawHome = shell(')));
-for (const token of ['baseHead', '<title>', '<link rel=\"canonical\"', 'discoveryHead', 'schema-core-mainentity']) assert(rawHomeSource.includes(token), `Homepage head construction missing ${token}`);
+for (const token of ['baseHead', '<title>', '<link rel=\"canonical\"', '<link rel=\"stylesheet\"', 'discoveryHead', 'schema-core-mainentity']) assert(rawHomeSource.includes(token), `Homepage head construction missing ${token}`);
 assert(rawHomeSource.indexOf('baseHead') < rawHomeSource.indexOf('<title>'), 'Base metadata must precede title');
 assert(rawHomeSource.indexOf('<title>') < rawHomeSource.indexOf('<link rel=\"canonical\"'), 'Title/description metadata must precede canonical');
+assert(rawHomeSource.indexOf('<link rel=\"stylesheet\"') < rawHomeSource.indexOf('schema-core-mainentity'), 'Stylesheet discovery must precede the complete inline KG');
 assert(rawHomeSource.indexOf('<link rel=\"canonical\"') < rawHomeSource.indexOf('discoveryHead'), 'Canonical must precede CSS/discovery links');
 assert(rawHomeSource.indexOf('schema-core-mainentity') < rawHomeSource.indexOf('discoveryHead'), 'Full KG must precede discovery links');
 assert(source.includes('function browserContextFor() { return "https://schema.org"; }'), 'Search-facing JSON-LD must use a pure Schema.org context');

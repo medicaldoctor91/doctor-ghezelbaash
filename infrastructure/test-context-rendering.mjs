@@ -42,8 +42,14 @@ const executable=process.env.PLAYWRIGHT_EXECUTABLE_PATH??(process.env.CI==='true
 const browser=await chromium.launch({executablePath:executable,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
- await page.setContent(`<style>${css}</style><main><article class="medical-guide medical-guide--entity-home"><h1>Home</h1><div class="render-chunk" id="home"><p>Canonical Home text</p></div></article></main>`);
- assert.equal(await page.locator('#home').evaluate(n=>getComputedStyle(n).contentVisibility),'visible','Canonical Home corpus remains non-deferred');
+ await page.setContent(`<style>${css}</style><main><article class="medical-guide medical-guide--entity-home"><header class="entity-hero"><h1>Home</h1></header><div class="render-chunk" id="home"><h2 id="home-target">Home clinical topic</h2><p>Canonical Home text</p></div></article></main>`);
+ assert.equal(await page.locator('.entity-hero').evaluate(n=>getComputedStyle(n).contentVisibility),'visible','Home entity heading and hero are always rendered');
+ assert.equal(await page.locator('#home').evaluate(n=>getComputedStyle(n).contentVisibility),'auto','Home offscreen chunks may defer rendering');
+ assert.equal(await page.locator('#home').textContent(),'Home clinical topicCanonical Home text','Home clinical copy remains complete in the DOM');
+ await page.locator('#home').evaluate(n=>n.classList.add('is-target-chunk'));
+ assert.equal(await page.locator('#home').evaluate(n=>getComputedStyle(n).contentVisibility),'visible','Home fragment navigation materializes its target chunk');
+ await page.locator('#home-target').evaluate(n=>n.scrollIntoView({block:'start'}));
+ assert(await page.locator('#home-target').evaluate(n=>{const r=n.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight;}),'Materialized Home clinical target is visible');
  await page.setContent(`<style>${css}</style><div class="guide-reader"><aside class="medical-guide guide-context" data-guide-context="before"><div class="render-chunk" id="before"><h2>Earlier context</h2></div></aside><main><article class="medical-guide" data-guide-primary><h1>Focused page</h1><div class="render-chunk" id="primary"><p>Primary clinical text</p></div></article></main><aside class="medical-guide guide-context" data-guide-context="after"><div class="render-chunk" id="after"><h2 id="context-target">Later context</h2><p>Complete surrounding reader text</p></div></aside></div>`);
  for(const id of ['before','after'])assert.equal(await page.locator('#'+id).evaluate(n=>getComputedStyle(n).contentVisibility),'auto','Only surrounding context uses deferred rendering: '+id);
  const primary=await page.locator('#primary').evaluate(n=>({visibility:getComputedStyle(n).contentVisibility,contain:getComputedStyle(n).contain,text:n.textContent}));
@@ -58,4 +64,4 @@ try{
  assert.equal(await page.locator('article.medical-guide').count(),1,'One focused primary article');
  assert.equal(await page.locator('h1').count(),1,'One focused page title');
 }finally{await browser.close();}
-console.log(JSON.stringify({contextRendering:'PASS',primaryAndHome:'non-deferred',focusedWatchHeading:'PASS',homeVideoCentering:'PASS',timestampSeek:'PASS'},null,2));
+console.log(JSON.stringify({contextRendering:'PASS',focusedPrimaryAndHomeHero:'non-deferred',homeOffscreenCorpus:'DOM-preserved, deferred',focusedWatchHeading:'PASS',homeVideoCentering:'PASS',timestampSeek:'PASS'},null,2));

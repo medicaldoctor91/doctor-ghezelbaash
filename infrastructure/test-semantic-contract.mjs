@@ -17,7 +17,12 @@ for(const entry of SOURCE.discovery.sitemapPolicy.videoWatchPages){
  const record=CANONICAL.records.find(r=>r.path===entry.path);
  assert.equal(record.pagePurpose,SOURCE.routes.resources.find(r=>r.path===entry.path).pagePurpose,'Watch page retains registry purpose');
 }
-const inline=JSON.parse(CANONICAL.render('/').match(/<script id="schema-core-mainentity"[^>]*>(.*?)<\/script>/s)[1]);
+const homeHtml=CANONICAL.render('/');
+const homeHead=homeHtml.slice(homeHtml.indexOf('<head>'),homeHtml.indexOf('</head>'));
+const stylesheets=[...homeHead.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)];
+assert.equal(stylesheets.length,1,'Home discovers one render-blocking stylesheet');
+assert(stylesheets[0].index<homeHead.indexOf('<script id="schema-core-mainentity"'),'Browser discovers render-blocking CSS before the complete inline KG');
+const inline=JSON.parse(homeHtml.match(/<script id="schema-core-mainentity"[^>]*>(.*?)<\/script>/s)[1]);
 assert.equal(await semanticFingerprint(inline),await semanticFingerprint(SOURCE.graph),'Home includes full canonical truth');
 for(const record of CANONICAL.records){
  assert.equal(record.document['@context'],'https://schema.org');
