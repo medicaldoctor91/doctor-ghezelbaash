@@ -319,6 +319,11 @@ blockquote {
   margin-block-end: clamp(3rem, 6vw, 5rem);
   content-visibility: visible;
 }
+/* Paint the dependent hero blocks only once their final sibling has parsed.
+   The complete static page and cloned reader context expose all content without JS. */
+.medical-guide--entity-home > .entity-hero:not(:has(> .hero-trust-strip)) > :not(.hero-title) {
+  visibility: hidden;
+}
 .entity-hero .hero-title {
   grid-area: title;
   display: flex;
