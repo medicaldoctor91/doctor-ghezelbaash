@@ -75,7 +75,15 @@ try{
     const controls=[...document.querySelectorAll('.hero-action,.quick-actions__item,.quick-actions__top,article.medical-guide summary,[data-topic-navigation] a')].filter(visible).map(e=>({tag:e.tagName,...rect(e)}));
     const body=rect(document.body);
     const summaryMargins=[...document.querySelectorAll('.multilingual-collapsible-section > summary > h2')].map(e=>parseFloat(getComputedStyle(e).marginBlockStart));
-    return {clientWidth:document.documentElement.clientWidth,layoutCenter:body.x+body.width/2,scrollWidth:document.documentElement.scrollWidth,primary:rect(article),heading:rect(heading),h1Font:parseFloat(getComputedStyle(heading).fontSize),bodyFont:parseFloat(getComputedStyle(article).fontSize),overflow,media,controls,summaryMargins,title:document.title,h1:heading.textContent,canonical:document.querySelector('link[rel="canonical"]').href,ld:document.querySelector('script[type="application/ld+json"]').textContent,articleCount:document.querySelectorAll('article.medical-guide').length,h1Count:document.querySelectorAll('h1').length};
+    // Measure primary trust metadata only. DOM text can retain a correct ISO
+    // date while RTL bidi resolution physically reverses its three parts.
+    const trustDates=[...article.querySelectorAll('.medical-trust time')].filter(time=>!time.closest('[data-guide-context]')).map(time=>{
+     const value=time.textContent,datetime=time.getAttribute('datetime'),iso=/^\d{4}-\d{2}-\d{2}$/.test(value);
+     if(!iso||time.firstChild?.nodeType!==Node.TEXT_NODE)return {value,datetime,iso,glyphs:null};
+     const rangeRect=(start,end)=>{const range=document.createRange();range.setStart(time.firstChild,start);range.setEnd(time.firstChild,end);const r=range.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};};
+     return {value,datetime,iso,glyphs:{year:rangeRect(0,4),month:rangeRect(5,7),day:rangeRect(8,10)}};
+    });
+    return {clientWidth:document.documentElement.clientWidth,layoutCenter:body.x+body.width/2,scrollWidth:document.documentElement.scrollWidth,primary:rect(article),heading:rect(heading),h1Font:parseFloat(getComputedStyle(heading).fontSize),bodyFont:parseFloat(getComputedStyle(article).fontSize),overflow,media,controls,summaryMargins,trustDates,title:document.title,h1:heading.textContent,canonical:document.querySelector('link[rel="canonical"]').href,ld:document.querySelector('script[type="application/ld+json"]').textContent,articleCount:document.querySelectorAll('article.medical-guide').length,h1Count:document.querySelectorAll('h1').length};
    });
    const label=route+' '+width+'x'+height;
    const checks=[];const check=(ok,message)=>{if(!ok){failures.push(label+': '+message);checks.push(message);}};
@@ -88,8 +96,14 @@ try{
    check(m.media.every(e=>e.width<=m.primary.width+1&&e.x>=m.primary.x-1&&e.right<=m.primary.right+1),'Responsive media contained in article');
    check(m.controls.every(e=>e.height>=43.5),'Tap controls at least 44px high');
    check(m.summaryMargins.every(margin=>margin===0),'No excess multilingual summary heading margin');
+   for(const date of m.trustDates){
+    check(date.iso&&date.value===date.datetime,'Visible trust ISO date equals structured datetime '+JSON.stringify(date));
+    const glyphs=date.glyphs;
+    check(glyphs&&glyphs.year.left<glyphs.month.left&&glyphs.month.left<glyphs.day.left,'Trust date physically reads year-month-day '+JSON.stringify(date));
+    check(glyphs&&Math.abs(glyphs.year.top-glyphs.month.top)<=0.5&&Math.abs(glyphs.year.top-glyphs.day.top)<=0.5,'Trust date remains on one line '+JSON.stringify(date));
+   }
    const exp=expected.get(route);for(const k of ['title','h1','canonical'])check(m[k]===exp[k],'Unchanged '+k);check(hash(m.ld)===exp.ld,'Unchanged JSON-LD/mainEntity');check(m.articleCount===1&&m.h1Count===1,'Sole primary article/H1');
-   results.push({route,viewport:{width,height},entry,primary:m.primary,heading:m.heading,h1Font:m.h1Font,bodyFont:m.bodyFont,scrollWidth:m.scrollWidth,failures:checks});
+   results.push({route,viewport:{width,height},entry,primary:m.primary,heading:m.heading,h1Font:m.h1Font,bodyFont:m.bodyFont,scrollWidth:m.scrollWidth,trustDates:m.trustDates,failures:checks});
   }
   }finally{await context.close();}
  }

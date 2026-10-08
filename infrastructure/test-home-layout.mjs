@@ -63,10 +63,26 @@ try{
    }
    assert.equal(await page.locator('.entity-hero').evaluate(node=>node.textContent.replace(/\s+/g,' ').trim()),originalText,'The complete Home hero retains its original clinical and trust text');
    assert.equal(await page.locator('h1').count(),1,'Home retains its one clear entity heading');
+   const dates=await page.locator('.medical-trust time[datetime]').evaluateAll(nodes=>nodes.map(node=>{
+    const glyphs=(start,end)=>{
+     const range=document.createRange();range.setStart(node.firstChild,start);range.setEnd(node.firstChild,end);
+     return [...range.getClientRects()].map(rect=>({left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width,height:rect.height}));
+    };
+    return {text:node.textContent,datetime:node.getAttribute('datetime'),year:glyphs(0,4),month:glyphs(5,7),day:glyphs(8,10)};
+   }));
+   assert(dates.length,'The actual Home medical review date is rendered');
+   for(const date of dates){
+    assert.equal(date.text,date.datetime,'Visible date text preserves its exact canonical datetime value');
+    assert.match(date.text,/^\d{4}-\d{2}-\d{2}$/,'The Home canonical date uses its unchanged ISO year-month-day text');
+    for(const group of ['year','month','day'])assert(date[group].length===1&&date[group][0].width>0&&date[group][0].height>0,'Each ISO date component has one visible glyph range: '+JSON.stringify({viewport,date,group}));
+    const [year,month,day]=[date.year[0],date.month[0],date.day[0]];
+    assert(year.right<=month.left+.05&&month.right<=day.left+.05,'ISO date glyphs read physically from year to month to day, left to right: '+JSON.stringify({viewport,date}));
+    assert(Math.abs(year.top-month.top)<.05&&Math.abs(month.top-day.top)<.05,'ISO year/month/day glyphs stay on the same line: '+JSON.stringify({viewport,date}));
+   }
    for(const selector of ['h1','.medical-trust'])assert(await page.locator(selector).evaluate(node=>{const r=node.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;}),'Home heading and canonical review metadata remain visible: '+JSON.stringify({selector,viewport}));
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'The streaming hero fits its viewport');
    cases++;
   }finally{await page.close();}
  }
 }finally{await browser.close();}
-console.log(JSON.stringify({homeLayout:'PASS',lateTrustStrip:'stable earlier hero geometry',canonicalReview:'visible after entity heading',text:'preserved',cases,finalDist:!!process.argv[2]},null,2));
+console.log(JSON.stringify({homeLayout:'PASS',lateTrustStrip:'stable earlier hero geometry',canonicalReview:'visible after entity heading',isoDateGlyphs:'year/month/day LTR, same line, text equals datetime',text:'preserved',cases,finalDist:!!process.argv[2]},null,2));
