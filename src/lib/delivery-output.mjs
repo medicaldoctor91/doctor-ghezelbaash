@@ -3,6 +3,14 @@ function sitePath(value,name){
   return value;
 }
 
+const EVIDENCE_BACKED_MIGRATION_ALIASES=[
+  {source:'/blog/',target:'/aesthetic-treatment-selection',statusCode:301},
+  {source:'/category/blog/',target:'/aesthetic-treatment-selection',statusCode:301},
+  {source:'/videos/',target:'/video-saeed-ghezelbash-subcision-technique',statusCode:301},
+  {source:'/evidence/',target:'/aesthetic-treatment-selection',statusCode:301},
+  {source:'/aesthetic-medicine-dataset.html',target:'/historical-patient-origin-summary',statusCode:301},
+];
+
 export function deriveRoutingRows(source,graph){
   if(!source||typeof source!=='object')throw new Error('source required');
   const base=source.canonicalOrigin;
@@ -46,6 +54,10 @@ export function deriveRoutingRows(source,graph){
     if(!canonicalPaths.has(targetPath||'/'))throw new Error(`Historical routing target is not a canonical document: ${target}`);
     if(fragment&&source.routes?.htmlIdTargets?.[fragment]!==target)throw new Error(`Historical routing fragment is not owned by its canonical document: ${target}`);
     addRoute({source:row.source,target,statusCode:301});
+  }
+  for(const row of EVIDENCE_BACKED_MIGRATION_ALIASES){
+    if(!canonicalPaths.has(row.target))continue;
+    addRoute(row);
   }
   const routingRows=[...routingRowsBySource.values()];
   for(const row of routingRows){
