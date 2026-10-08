@@ -1,7 +1,8 @@
 import {parse} from 'parse5';
 import {createHash} from 'node:crypto';
 // Exclude synchronized date/author metadata, never clinical prose. The fixture
-// was captured from the required starting commit's diagnostic renderer.
+// preserves the starting reader text with the documented restoration of two
+// corrupted sentence fragments to their production wording.
 export function clinicalCopyFingerprint(html){
  function text(node,parent){
   const attrs=Object.fromEntries((node.attrs??[]).map(a=>[a.name,a.value]));
