@@ -31,7 +31,7 @@ export async function sealRelease({distDir,projectRoot,releaseDate}){
   const provenance={sourceCommit:commit.trim(),releaseDate,packageLockSha256:sha256Hex(lockBytes),node:process.versions.node,sbom:{path:'/sbom.cdx.json',format:sbom.bomFormat,specVersion:sbom.specVersion},contentDigest:'pending-live-byte-identity-verification'};
   await fs.writeFile(path.join(distDir,'release-provenance.json'),JSON.stringify(provenance,null,2)+'\n');
   const files={};
-  for(const file of await walk(distDir)){if(path.basename(file)==='integrity-manifest.json')continue;const bytes=await fs.readFile(file);files[publicPath(distDir,file)]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}
+  for(const file of await walk(distDir)){if(publicPath(distDir,file)==='/integrity-manifest.json')continue;const bytes=await fs.readFile(file);files[publicPath(distDir,file)]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}
   await fs.writeFile(path.join(distDir,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate,files},null,2)+'\n');
   return {manifestFiles:Object.keys(files).length,sbomComponents:sbom.components?.length??0,contentDigestEligible:Object.keys(eligible).length};
 }

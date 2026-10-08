@@ -44,11 +44,19 @@ const origin='http://127.0.0.1:'+server.address().port;
 const executable=process.env.PLAYWRIGHT_EXECUTABLE_PATH??(process.env.CI==='true'?chromium.executablePath():'/usr/bin/chromium');
 const browser=await chromium.launch({executablePath:executable,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const results=[],failures=[];
-try{
- const context=await browser.newContext({viewport:{width:360,height:800},reducedMotion:'reduce'});
+const openContext=async viewport=>{
+ const context=await browser.newContext({viewport,reducedMotion:'reduce'});
  await context.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());
  const page=await context.newPage();await page.addInitScript(()=>sessionStorage.clear());
+ return {context,page};
+};
+try{
  for(const route of routes){
+  // Keep live-resize coverage within a route, then release its reader DOM and
+  // browser storage before testing the next route. The complete route corpus
+  // should not accumulate in one renderer during the nine-viewport audit.
+  const {context,page}=await openContext({width:360,height:800});
+  try{
   for(const [width,height] of viewports){
    process.stderr.write('Responsive '+route+' '+width+'x'+height+'\n');
    await page.setViewportSize({width,height});
@@ -83,9 +91,12 @@ try{
    const exp=expected.get(route);for(const k of ['title','h1','canonical'])check(m[k]===exp[k],'Unchanged '+k);check(hash(m.ld)===exp.ld,'Unchanged JSON-LD/mainEntity');check(m.articleCount===1&&m.h1Count===1,'Sole primary article/H1');
    results.push({route,viewport:{width,height},entry,primary:m.primary,heading:m.heading,h1Font:m.h1Font,bodyFont:m.bodyFont,scrollWidth:m.scrollWidth,failures:checks});
   }
+  }finally{await context.close();}
  }
  // Actual in-reader navigation, keyboard focus and history restoration.
  for(const viewport of [{width:390,height:844},{width:1440,height:900}]){
+  const {context,page}=await openContext(viewport);
+  try{
   await page.setViewportSize(viewport);await page.goto(origin+'/botox',{waitUntil:'domcontentloaded'});await page.waitForSelector('[data-guide-context="after"]',{state:'attached'});
   const link=page.locator('article.medical-guide [data-topic-navigation] a').first();await link.scrollIntoViewIfNeeded();await link.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');
   assert.equal(await link.evaluate(e=>document.activeElement===e),true,'Contextual links retain keyboard focus');
@@ -93,7 +104,8 @@ try{
   await page.goBack();await page.waitForFunction(url=>document.querySelector('link[rel="canonical"]')?.href===url,SOURCE.canonicalOrigin+'/botox');
   assert.equal(await page.locator('h1').textContent(),expected.get('/botox').h1,'Back restores focused H1');
   assert.equal(await page.locator('article.medical-guide').count(),1);assert.equal(await page.locator('[data-guide-context]').count(),2);
+  }finally{await context.close();}
  }
- await context.close();console.log(JSON.stringify({responsiveBrowser:failures.length?'FAIL':'PASS',shard,routes:routes.length,viewports,checks:results.length,navigationBackKeyboard:'PASS',failures,results},null,2));
+ console.log(JSON.stringify({responsiveBrowser:failures.length?'FAIL':'PASS',shard,routes:routes.length,viewports,checks:results.length,navigationBackKeyboard:'PASS',failures,results},null,2));
  assert.deepEqual(failures,[],'Responsive layout contracts');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

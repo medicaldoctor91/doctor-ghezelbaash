@@ -22,6 +22,18 @@ assert.equal(await semanticFingerprint(inline),await semanticFingerprint(SOURCE.
 for(const record of CANONICAL.records){
  assert.equal(record.document['@context'],'https://schema.org');
  const rendered=CANONICAL.render(record.path);
+ const tree=parse(rendered),visibleNodes=[];
+ function visit(node){visibleNodes.push(node);for(const child of node.childNodes??[])visit(child);}visit(tree);
+ const attribute=(node,name)=>node.attrs?.find(entry=>entry.name===name)?.value;
+ const trust=visibleNodes.find(node=>attribute(node,'data-medical-trust'));
+ if(trust){
+  const heading=visibleNodes.find(node=>node.tagName==='h1');
+  const anchor=['a','summary'].includes(heading.parentNode.tagName)?heading.parentNode:heading;
+  const siblings=anchor.parentNode.childNodes.filter(node=>node.tagName);
+  assert(trust.parentNode===anchor.parentNode,'Medical trust shares the focused heading container '+record.path);
+  assert.equal(siblings.indexOf(trust),siblings.indexOf(anchor)+1,'Medical trust follows the focused title and stays in its entry viewport '+record.path);
+  if(anchor.tagName==='summary')assert(anchor.parentNode.attrs.some(entry=>entry.name==='open'),'Focused multilingual trust is initially expanded '+record.path);
+ }
  const nav=rendered.match(/<nav\b[^>]*data-topic-navigation[^>]*>(.*?)<\/nav>/s)?.[1];
  const related=[record.navigation?.parent,...(record.navigation?.children??[])].filter(Boolean);
  if(related.length){

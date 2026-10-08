@@ -4,6 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { verifyDist } from './verify-dist.mjs';
+import {distHashes} from './lib/delivery-contract.mjs';
+import {sealRelease} from './seal-release.mjs';
+import {fileURLToPath} from 'node:url';
 
 const root=await fs.mkdtemp(path.join(os.tmpdir(),'v2-dist-'));
 await fs.mkdir(path.join(root,'assets'),{recursive:true});
@@ -34,10 +37,30 @@ await fs.writeFile(path.join(root,'integrity-manifest.json'),JSON.stringify({alg
 const report=await verifyDist({distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true});
 assert.equal(report.canonicalPages,2);assert.equal(report.graphNodes,3);assert.equal(report.videoEntries,4);assert.equal(report.integrityVerified,true);
 const verifyOptions={distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true};
+for(const [filename,content] of [['unsealed.html','<!doctype html><html><body>Unsealed HTML</body></html>'],['unsealed.jsonld','{"@context":"https://schema.org","@type":"Dataset"}']]){
+ const extraFile=path.join(root,filename);await fs.writeFile(extraFile,content);
+ await assert.rejects(verifyDist(verifyOptions),/Manifest inventory/,'Final verification rejects an unsealed artifact '+filename);
+ await fs.rm(extraFile);
+}
+const graphFile=path.join(root,'graph.jsonld'),validGraph=await fs.readFile(graphFile,'utf8');
+await fs.writeFile(graphFile,JSON.stringify({'@graph':full['@graph'],'@context':full['@context']}));
+await assert.rejects(verifyDist(verifyOptions),/Manifest hash \/graph\.jsonld/,'Equivalent RDF cannot conceal tampered sealed bytes');
+await fs.writeFile(graphFile,validGraph);
+const beforeVerification=await distHashes(root);await verifyDist(verifyOptions);
+assert.deepEqual(await distHashes(root),beforeVerification,'Final verification reads the sealed artifact without repairs or mutation');
 const validHeaders=await fs.readFile(path.join(root,'_headers'),'utf8');
 const invalidHeaders=validHeaders+'\n/fixture\n  Link: </graph.ttl>; type="text/turtle; charset=utf-8"\n';
 await fs.writeFile(path.join(root,'_headers'),invalidHeaders);
 const bytes=Buffer.from(invalidHeaders);manifestFiles['/_headers']={bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
 await fs.writeFile(path.join(root,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate:'2026-10-05',files:manifestFiles}));
 await assert.rejects(verifyDist(verifyOptions),/Link type/,'Final verification rejects invalid delivered Link types even with matching seal hashes');
+await fs.writeFile(path.join(root,'_headers'),validHeaders);
+await fs.mkdir(path.join(root,'nested'));
+await fs.writeFile(path.join(root,'nested/integrity-manifest.json'),'{}\n');
+await sealRelease({distDir:root,projectRoot:fileURLToPath(new URL('../',import.meta.url)),releaseDate:'2026-10-05'});
+const nestedManifest=JSON.parse(await fs.readFile(path.join(root,'integrity-manifest.json'),'utf8'));
+assert(nestedManifest.files['/nested/integrity-manifest.json'],'Only the root manifest is excluded from the seal; nested namesakes remain ordinary sealed files');
+const sealedHashes=await distHashes(root);
+await verifyDist(verifyOptions);
+assert.deepEqual(await distHashes(root),sealedHashes,'Verification of the exact sealed inventory is read-only');
 console.log(JSON.stringify({distVerifier:'PASS',...report},null,2));

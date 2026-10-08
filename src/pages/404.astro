@@ -1,0 +1,46 @@
+---
+import {CANONICAL, SOURCE} from './index.astro';
+
+export const prerender = true;
+const person = SOURCE.graph['@graph'].find(node => node['@id'] === SOURCE.canonicalOrigin + '/#saeed-ghezelbash');
+const onlineChannel = SOURCE.graph['@graph'].find(node => node['@id'] === SOURCE.canonicalOrigin + '/online-consultation-channel');
+const stylesheet = CANONICAL.assets.find(asset => asset.type.startsWith('text/css;')).path;
+---
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>صفحه پیدا نشد | دکتر سعید قزلباش</title>
+    <meta name="description" content="صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش استفاده کنید." />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#075244" />
+    <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png" />
+    <link href={stylesheet} rel="stylesheet" />
+  </head>
+  <body lang="fa-IR" dir="rtl">
+    <a class="skip-link" href="#main-content" lang="fa-IR" dir="rtl">پرش به محتوای اصلی</a>
+    <main id="main-content" tabindex="-1">
+      <article class="medical-guide" lang="fa-IR" dir="rtl">
+        <div class="not-found-page">
+          <p class="not-found-page__code hero-title__name" aria-hidden="true">404</p>
+          <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
+          <p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. از مسیرهای اصلی زیر ادامه دهید.</p>
+          <nav class="not-found-page__links hero-actions" aria-label="مسیرهای اصلی">
+            <a class="hero-action" href="/botox">بوتاکس</a>
+            <a class="hero-action" href="/filler">فیلر</a>
+            <a class="hero-action" href="/thread-lift">لیفت نخ</a>
+            <a class="hero-action" href="/acne-pigmentation-and-scars">جوش، لک و اسکار</a>
+            <a class="hero-action" href="/hair-loss">ریزش مو</a>
+            <a class="hero-action" href="/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a>
+          </nav>
+          <div class="not-found-page__actions hero-actions">
+            <a class="not-found-page__primary hero-action hero-action--primary" href="/">بازگشت به صفحه اصلی</a>
+            <a class="hero-action" href={'tel:' + person.telephone}>تماس با کلینیک</a>
+            <a class="hero-action" href={onlineChannel.serviceUrl} rel="external">ارزیابی اولیه آنلاین</a>
+          </div>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

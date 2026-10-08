@@ -1845,6 +1845,16 @@ table[tabindex]:focus-visible{outline:3px solid var(--focus-ring);outline-offset
   border-block: 1px solid var(--line);
   color: #46594f;
 }
+/* Only copied Home context may defer offscreen layout. Canonical Home and the
+   focused primary article keep their ordinary, fully rendered layout. */
+.guide-context .render-chunk {
+  content-visibility: auto;
+  contain: layout style paint;
+  contain-intrinsic-size: auto 2800px;
+}
+.guide-context .render-chunk.is-target-chunk {
+  content-visibility: visible;
+}
 .guide-context :is(h2, .hero-title) {
   margin-block-start: 2.25rem;
   font-size: clamp(1.2rem, 1rem + 0.5vw, 1.5rem);
@@ -2663,7 +2673,13 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     revealPoster(video);
     video.closest("figure")?.classList.add("video-deeplink-target");
     // Navigation must work even if media cannot load; metadata only gates seeking.
-    if(scroll){moveTo(video);video.scrollIntoView({block:"center"})}
+    if(scroll){
+      // A focused watch page owns its heading. Centering the video after that
+      // first scroll competes with newly materialized surrounding context.
+      const pageHeading=location.pathname!=="/"&&video.closest("article[data-guide-primary]")?.querySelector("h1");
+      if(pageHeading)moveTo(pageHeading);
+      else{moveTo(video);video.scrollIntoView({block:"center"})}
+    }
     if(focus)focusTarget(video);
     if(seconds===null)return;
     const seek=()=>{
@@ -4673,7 +4689,14 @@ export function compileCanonicalSource() {
     });
     const headingId = attr(firstHeading,'id');
     if (!headingId) throw new Error('Canonical route lacks a persistent heading anchor');
-    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + renderMedicalTrust(record.document['@graph'].find(node=>node['@id']===record.canonicalUrl+'#webpage'),SOURCE.graph,record.lang) + serialize(primary) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
+    const trustNodes = parseFragment(renderMedicalTrust(record.document['@graph'].find(node=>node['@id']===record.canonicalUrl+'#webpage'),SOURCE.graph,record.lang)).childNodes;
+    // Keep the canonical trust values in the focused entry viewport. Summary
+    // and link wrappers remain intact; interactive trust links stay outside them.
+    const trustAnchor = ['a','summary'].includes(firstHeading.parentNode.tagName) ? firstHeading.parentNode : firstHeading;
+    const trustParent = trustAnchor.parentNode;
+    trustParent.childNodes.splice(trustParent.childNodes.indexOf(trustAnchor)+1,0,...trustNodes);
+    for (const node of trustNodes) node.parentNode = trustParent;
+    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
     const document = parse(result);
     const head = document.childNodes.find(n=>n.tagName==='html').childNodes.find(n=>n.tagName==='head');
     head.childNodes = head.childNodes.filter(n => !(n.tagName==='title' || n.tagName==='script' && ['application/ld+json','application/json'].includes(attr(n,'type')) ||
