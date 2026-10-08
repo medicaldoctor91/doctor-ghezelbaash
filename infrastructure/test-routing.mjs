@@ -50,7 +50,15 @@ for(const row of SOURCE.routes.legacyRedirects){
 }
 for(const source of ['/graph.jsonld/*','/provenance.jsonld/*','/ontology/*','/shapes/*','/annotation/*']) assert(!realRoutingRows.some(row=>row.source===source),`Bounded V2 namespace must not be broadened: ${source}`);
 assert.ok(realRoutingRows.some(row=>row.source==='/2025/02/blog-post54.html'&&row.target==='/subcision-for-tethered-acne-scars'&&row.statusCode===301),'Expected legacy Blogger redirect');
-for(const removed of ['/kg','/routes.json','/dataset.json','/research','/feeds','/blog','/videos','/evidence','/nap.csv','/aesthetic-medicine-dataset.html']) assert(!realRoutingRows.some(row=>row.source===removed),`Legacy/development surface must stay absent: ${removed}`);
+const evidenceBackedMigrationAliases=[
+  ['/blog/','/aesthetic-treatment-selection'],
+  ['/category/blog/','/aesthetic-treatment-selection'],
+  ['/videos/','/video-saeed-ghezelbash-subcision-technique'],
+  ['/evidence/','/aesthetic-treatment-selection'],
+  ['/aesthetic-medicine-dataset.html','/historical-patient-origin-summary'],
+];
+for(const [source,target] of evidenceBackedMigrationAliases)assert.ok(realRoutingRows.some(row=>row.source===source&&row.target===target&&row.statusCode===301),`Evidence-backed public alias must retain its permanent redirect: ${source}`);
+for(const removed of ['/kg','/routes.json','/dataset.json','/research','/feeds','/blog','/videos','/evidence','/nap.csv']) assert(!realRoutingRows.some(row=>row.source===removed),`Legacy/development surface must stay absent: ${removed}`);
 assert.ok(realRoutingRows.some(row=>row.source==='/subcision-kermanshah'&&row.target==='/subcision-for-tethered-acne-scars'&&row.statusCode===301));
 assert.ok(realRoutingRows.some(row=>row.source==='/hifu-therapy-in-kermanshah'&&row.target==='/thread-lift-vs-surgery-hifu-and-radiofrequency'&&row.statusCode===301));
 assert.ok(realRoutingRows.some(row=>row.source==='/double-chin-liposuction-kermanshah'&&row.target==='/submental-liposuction-for-fat-dominant-fullness'&&row.statusCode===301));
