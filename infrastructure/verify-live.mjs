@@ -48,6 +48,7 @@ for (const resource of [...SOURCE.machineResources, ...(SOURCE.delivery.releaseR
 }
 const home = await get('/');
 assert.equal(home.response.status, 200);
+if (origin === SOURCE.canonicalOrigin) assert.doesNotMatch(home.response.headers.get('x-robots-tag') ?? '', /noindex|nofollow/i, 'Production Home remains indexable');
 assert.ok(home.response.headers.get('content-security-policy'), 'Live CSP');
 assert.match(home.response.headers.get('link') ?? '', /rel=describedby/, 'Home graph HTTP discovery');
 const html = home.bytes.toString('utf8');
