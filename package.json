@@ -21,7 +21,7 @@
     "test:rendering": "node infrastructure/test-rendering-policy.mjs && node infrastructure/test-context-rendering.mjs && node infrastructure/test-video-layout.mjs && node infrastructure/test-home-layout.mjs",
     "test:dist": "node infrastructure/test-dist-verifier.mjs",
     "test:release": "node infrastructure/test-release-runner.mjs",
-    "verify:dist": "node infrastructure/verify-dist.mjs dist && node infrastructure/test-not-found.mjs dist && node infrastructure/test-video-layout.mjs dist && node infrastructure/test-home-layout.mjs dist",
+    "verify:dist": "node infrastructure/verify-dist.mjs dist && node infrastructure/test-not-found.mjs dist && node infrastructure/test-video-layout.mjs dist && node infrastructure/test-home-layout.mjs dist && node infrastructure/test-video-contract.mjs dist",
     "test:semantic": "node infrastructure/test-source-module.mjs && node infrastructure/test-jsonld.mjs && node infrastructure/test-rdf-equivalence.mjs && node infrastructure/test-search-contract.mjs && node infrastructure/test-identity-policy.mjs && node infrastructure/test-video-contract.mjs && node infrastructure/test-semantic-contract.mjs && node infrastructure/test-recording-chronology.mjs",
     "test:reader": "node infrastructure/test-reader-browser.mjs",
     "test:responsive": "node infrastructure/test-responsive-browser.mjs dist"

@@ -34,6 +34,7 @@ export async function runV2Release({projectRoot}){
   await execute('node',['infrastructure/test-not-found.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/test-video-layout.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/test-home-layout.mjs',distDir],projectRoot);
+  await execute('node',['infrastructure/test-video-contract.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/test-reader-browser.mjs',distDir],projectRoot);
   assert.equal((await distHashes(distDir)).sha256,sealedHashes.sha256,'Post-seal verification is read-only');
   const report={sourceCommit:JSON.parse(await fs.readFile(path.join(distDir,'release-provenance.json'),'utf8')).sourceCommit,postSealReadOnly:true,browserVerification:'PASS',status:'PASS',sourceEdition:SOURCE.edition,node:process.versions.node,verification,seal,liveOnlyGates:['cloudflare-identity-rewrites-and-response-header-evaluation','machine-mime-cors-link-indexing-live-http','waf-googlebot-bingbot-oai-searchbot-access','sitemap-robots-and-media-live-http','cloudflare-103-early-hints','zstd-br-gzip-negotiation','http2-http3','tls-and-canonical-host-redirects','pages-dev-noindex-live-response','content-digest-live-byte-identity']};

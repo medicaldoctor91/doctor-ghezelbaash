@@ -75,8 +75,42 @@ try{
    const playable=await page.locator('article.medical-guide video').evaluate(v=>v.duration);
    assert(Math.abs(playable-declared)<1,'Truthful rounded video duration '+route);
    for(const ref of [video.hasPart].flat()){const c=source.graph['@graph'].find(n=>n['@id']===ref['@id']);assert(c.startOffset<playable&&(c.endOffset===undefined||c.endOffset<=Math.ceil(playable)),'Clip within playable media '+route);}
+   const chapters=page.locator('article.medical-guide #'+route.slice(1)+'-chapters');
+   if(!await chapters.evaluate(node=>node.open))await chapters.locator('summary').click();
+   const lastClip=source.graph['@graph'].find(n=>n['@id']===[video.hasPart].flat().at(-1)['@id']);
+   const chapterLink=chapters.locator('a[href]').last();
+   assert.equal(new URL(await chapterLink.getAttribute('href'),source.canonicalOrigin).href,lastClip.url,'Visible chapter uses the canonical Clip URL '+route);
+   await chapterLink.click();
+   await page.waitForURL(local+route+'?t='+lastClip.startOffset);
+   await page.waitForFunction(seconds=>{const v=document.querySelector('article.medical-guide video');return v?.readyState>=1&&Math.abs(v.currentTime-seconds)<0.25;},lastClip.startOffset,{timeout:30000});
+   const afterChapter=await snapshot();
+   for(const key of ['title','canonical','h1','ld'])assert.equal(afterChapter[key],before[key],'Chapter navigation preserves route identity '+key+' '+route);
+   await page.goto(local+route+'?video='+route.slice('/video-saeed-ghezelbash-'.length)+'&t='+clip.startOffset,{waitUntil:'domcontentloaded'});
+   await page.waitForFunction(seconds=>{const v=document.querySelector('article.medical-guide video');return v?.readyState>=1&&Math.abs(v.currentTime-seconds)<0.25;},clip.startOffset,{timeout:30000});
+   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),source.canonicalOrigin+route,'Previously published timestamp URLs remain supported '+route);
   }
-  results.push({route,ownership:'PASS',csp:'PASS',readerContext:route==='/'?'Home':'PASS',contextualNavigation:route==='/botox'?'PASS':undefined,timestampSeek:watch?'PASS':undefined});await context.close();
+  if(route==='/'){
+   const destination=source.discovery.sitemapPolicy.videoWatchPages.find(w=>w.path==='/video-saeed-ghezelbash-subcision-technique');
+   const video=source.graph['@graph'].find(n=>n['@id']===destination.videoId);
+   const clip=source.graph['@graph'].find(n=>n['@id']===[video.hasPart].flat()[2]['@id']);
+   const chapters=page.locator('#'+destination.path.slice(1)+'-chapters');
+   for(const detail of await chapters.locator('xpath=ancestor-or-self::details').all()){
+    if(!await detail.evaluate(node=>node.open))await detail.locator(':scope > summary').click();
+   }
+   await chapters.locator('a[href]').nth(2).click();
+   await page.waitForURL(local+destination.path+'?t='+clip.startOffset);
+   await page.waitForFunction(url=>document.querySelector('link[rel="canonical"]')?.href===url,source.canonicalOrigin+destination.path);
+   await page.waitForFunction(seconds=>{const v=document.querySelector('article.medical-guide video');return v?.readyState>=1&&Math.abs(v.currentTime-seconds)<0.25;},clip.startOffset,{timeout:30000});
+   assert.equal(await page.locator('article.medical-guide').count(),1,'Home chapter navigation has one focused primary article');
+   const focusedLd=JSON.parse((await snapshot()).ld);
+   const focusedPage=focusedLd['@graph'].find(n=>n['@id']===source.canonicalOrigin+destination.path+'#webpage');
+   assert.equal(focusedPage.mainEntity['@id'],destination.videoId,'Home chapter navigation retains watch mainEntity');
+   await page.goBack();await page.waitForURL(local+'/');
+   await page.waitForFunction(url=>document.querySelector('link[rel="canonical"]')?.href===url,source.canonicalOrigin+'/');
+   const restored=await snapshot();
+   for(const key of Object.keys(before))assert.equal(key==='ld'?await semanticFingerprint(JSON.parse(restored[key])):restored[key],key==='ld'?await semanticFingerprint(JSON.parse(before[key])):before[key],'Chapter Back restores Home '+key);
+  }
+  results.push({route,ownership:'PASS',csp:'PASS',readerContext:route==='/'?'Home':'PASS',contextualNavigation:route==='/botox'?'PASS':undefined,timestampSeek:watch?'PASS':undefined,chapterNavigation:watch?'PASS':undefined,legacyTimestampSeek:watch?'PASS':undefined,homeChapterAndBack:route==='/'?'PASS':undefined});await context.close();
  }
  console.log(JSON.stringify({localBrowserVerification:'PASS',edgeBehavior:'UNVERIFIED LIVE GATE',results},null,2));
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
