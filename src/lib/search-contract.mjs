@@ -1,6 +1,15 @@
 const values=v=>Array.isArray(v)?v:v==null?[]:[v];
 const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariable','Observation','SoftwareSourceCode','FAQPage']);
 const OMIT=Symbol('omit');
+const personBoundaryKeys=new Set(['@id','@type','name','alternateName','givenName','familyName','honorificPrefix','jobTitle','description','disambiguatingDescription','url','sameAs','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage']);
+const clinicBoundaryKeys=new Set(['@id','@type','name','alternateName','url','description','telephone','address','geo','openingHoursSpecification','hasMap','sameAs','medicalSpecialty','owner','founder','priceRange','areaServed']);
+function focusedAuthorityBoundary(node,id,primaryPageId){
+  if(id===primaryPageId)return structuredClone(node);
+  const types=values(node?.['@type']);
+  const keys=types.includes('Person')?personBoundaryKeys:types.some(type=>['MedicalClinic','PhysiciansOffice','LocalBusiness'].includes(type))?clinicBoundaryKeys:null;
+  if(!keys)return structuredClone(node);
+  return Object.fromEntries(Object.entries(node).filter(([key])=>keys.has(key)).map(([key,value])=>[key,structuredClone(value)]));
+}
 /** Complete Schema.org reference closure without importing machine infrastructure. */
 export function closeSearchReferences(document,{origin,graph,project,primaryPageId=document['@graph'][0]['@id'],visibleQuestionIds,visibleMediaIds}) {
   const truth=new Map(graph['@graph'].map(n=>[n['@id'],n]));
@@ -19,7 +28,7 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
     if(answers&&types.includes('Answer')&&!answers.has(id))return false;
     if(media&&types.includes('VideoObject')&&!media.has(id))return false;
     if(clips&&types.includes('Clip')&&!clips.has(id))return false;
-    let output=structuredClone(node);
+    let output=focusedAuthorityBoundary(node,id,primaryPageId);
     // Apply to preselected pages as well as newly resolved pages. A cited
     // document is a link to its identity, never a copy of its clinical corpus.
     if(id!==primaryPageId&&(id.endsWith('#webpage')||id===origin+'/webpage')) {
