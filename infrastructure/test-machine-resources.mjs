@@ -49,6 +49,10 @@ try {
   await fs.writeFile(path.join(distDir, 'robots.txt'), 'User-agent: *\nAllow: /\n');
   await fs.copyFile(path.join(root, 'public/site.webmanifest'), path.join(distDir, 'site.webmanifest'));
   const result = await materializeMachineResources({ source, authoredBody, distDir });
+  const evidenceSnapshot = JSON.parse(await fs.readFile(path.join(distDir, 'evidence-snapshot.json'), 'utf8'));
+  assert.equal(evidenceSnapshot.observedAt, null, 'Materialized evidence cannot label a release date as an observation');
+  assert.equal(evidenceSnapshot.edition, source.edition, 'Materialized evidence exposes the authored release edition');
+
   for (const resource of source.machineResources) {
     const file = path.join(distDir, resource.path.replace(/^\//, ''));
     const stat = await fs.stat(file);

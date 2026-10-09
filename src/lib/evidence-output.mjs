@@ -79,7 +79,9 @@ export function buildEvidenceSnapshot(source) {
   return {
     schemaVersion: 2,
     subject,
-    observedAt: source.edition,
+    edition: source.edition,
+    // Canonical source currently authors no observation of the whole snapshot.
+    observedAt: null,
     evidence: [...evidenceIds].filter(id => byId.has(id)).sort().map(id => {
       const node = byId.get(id);
       const assessments = (assessmentsByEvidence.get(id) ?? []).sort((a, b) => a.id.localeCompare(b.id));

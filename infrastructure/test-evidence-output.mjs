@@ -65,6 +65,15 @@ const fixture = {
     { '@id': origin + '/hash-property', '@type': 'PropertyValue', propertyID: 'contentHashSha256', value: 'abc123' },
   ] },
 };
+const fixtureSnapshot = buildEvidenceSnapshot(fixture);
+assert.equal(fixtureSnapshot.observedAt, null, 'An authored edition cannot fabricate a snapshot observation timestamp');
+assert.equal(fixtureSnapshot.edition, fixture.edition, 'Release edition retains its explicit meaning');
+const nextEdition = buildEvidenceSnapshot({ ...fixture, edition: '2026-09-01' });
+assert.equal(nextEdition.edition, '2026-09-01');
+assert.equal(nextEdition.observedAt, null, 'Changing edition does not create an observation date');
+assert.deepEqual(nextEdition.evidence, fixtureSnapshot.evidence, 'Changing edition cannot change evidence observations');
+assert.equal(snapshot.edition, SOURCE.edition);
+assert.equal(snapshot.observedAt, null, 'The canonical source authors no envelope observation date');
 const explicit = buildEvidenceSnapshot(fixture).evidence.find(item => item.id === evidenceId);
 assert.equal(explicit.issuer, origin + '/issuer');
 assert.equal(explicit.sourceIdentity, origin + '/source-owner');
