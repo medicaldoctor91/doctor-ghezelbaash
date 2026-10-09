@@ -1,60 +1,43 @@
-# Dr. Saeed Ghezelbash — Website Source
+# Dr. Saeed Ghezelbash canonical site source
 
-Canonical source repository for **https://www.ghezelbaash.ir/**, the public website and first-party machine-readable knowledge graph for Dr. Saeed Ghezelbash (دکتر سعید قزلباش).
+این سورس فقط برای تولید dist نهایی همین corpus طراحی شده است. مرجع اصلی محتوا، routeها، هویت‌ها، graph و policyهای انتشار در `src/canonical/source.mjs` قرار دارد و renderer در `src/pages/index.astro` آن را مستقیماً import می‌کند.
 
-The site is built as a finite static Astro project and publishes human-readable pages together with structured JSON-LD/RDF and related discovery resources from the same authored source.
+## قرارداد خروجی
 
-## Build
+- دقیقاً ۷۲ صفحهٔ canonical تولید می‌شود: Home جامع + ۷۱ focused entry که همان reader/corpus را با context موضوعی باز می‌کنند.
+- هویت canonical پزشک `https://www.ghezelbaash.ir/#saeed-ghezelbash` است؛ مسیر `/saeed-ghezelbash` صفحه یا alias عمومی نیست.
+- Home کل corpus قابل‌دیدن را حفظ می‌کند و full canonical KG را در ابتدای `<head>` منتشر می‌کند. همان `SOURCE.graph` مستقیماً `/graph.jsonld` را نیز تولید می‌کند.
+- برابری RDF میان SOURCE، Home، JSON-LD خارجی و Turtle با RDFC-1.0 و SHA-256 بررسی می‌شود. تعداد node یا artifact معیار authority نیست.
+- focused projectionها فقط Schema.org و Q&A/media مرتبط با محتوای قابل‌دیدن همان route را دارند؛ هویت غنی Person و Clinic حفظ می‌شود.
+- پس از اجرای JavaScript، reader پیرامون بخش منتخب باز می‌شود ولی title، H1، canonical، primary article و JSON-LD همان route باقی می‌مانند.
+- چهار `VideoObject` به watch pageهای canonical متصل‌اند؛ لینک‌های Clip با `?t=` واقعاً زمان ویدیو را انتخاب می‌کنند.
+- تاریخ edition از publication/modification/review جدا است. تاریخ‌های unsupported حذف می‌شوند و trust metadata قابل‌دیدن از truth گراف تولید می‌شود.
+- redirectهای HTML یک‌مرحله‌ای هستند. aliasهای هویت 200 با MIME ماشین، CORS، noindex/follow و describedby پوشش داده می‌شوند؛ در sitemap HTML قرار نمی‌گیرند.
+- representationهای مفید ماشین حفظ می‌شوند. موجودی و بررسی تک‌تک آن‌ها در [delivery audit](docs/delivery-audit.md) مستند است؛ llms.txt معیار ranking نیست.
+- مسیر انتشار: validation → build → verification → finalize → seal → **read-only verification** → artifact. hashهای dist قبل و بعد از بررسی نهایی باید یکسان باشند.
 
-```bash
+## Toolchain
+
+حداقل Node عملی این package `22.19.0` است (وابستگی lock‌شدهٔ فعلی این حد را لازم دارد) و Node 24 نیز در range پشتیبانی می‌شود.
+
+```sh
 npm ci
+npm run test:v2
 npm run build
+npm run verify
+npm run finalize
+npm run seal
+npm run verify:dist
 ```
 
-Runtime requirements are defined by `.nvmrc`, `.npmrc`, and `package.json`. The primary build entry is `scripts/build.mjs`.
+برای اجرای کامل همان زنجیره با یک دستور:
 
-## Repository structure
-
-- `src/` — authored website source, content, configuration, URL policy, styles, scripts, and semantic data.
-- `public/` — static public assets such as images, fonts, icons, and verification files.
-- `scripts/` — build, generation, validation, and regression tooling required to produce and verify the deployable static distribution.
-- `.github/workflows/build.yml` — CI build and validation contract.
-- `astro.config.mjs`, `tsconfig.json`, `package.json`, `package-lock.json` — project and dependency configuration.
-
-Generated build output is not authoritative source. The build derives the deployable distribution and machine-readable projections from the authored inputs above.
-
-## Semantic source
-
-The canonical knowledge graph is maintained at:
-
-`src/data/semantic/knowledge-graph.jsonld`
-
-It is used to derive structured publication formats and browser-facing semantic projections rather than maintaining separate competing copies of entity facts.
-
-## Identity
-
-- Website: https://www.ghezelbaash.ir/
-- Wikidata: https://www.wikidata.org/wiki/Q140287622
-- ORCID: https://orcid.org/0009-0001-9346-8475
-
-## Validation
-
-The repository includes automated checks for source ownership, generated output, rendered-reader behavior, semantic/RDF validity, SHACL constraints, redirects, headers, and deployment fingerprints.
-
-Useful commands include:
-
-```bash
-npm run build
-npm run validate:dist
-npm run validate:live
+```sh
+npm run release:v2
 ```
 
-GitHub Actions runs the build and validation pipeline on pushes and pull requests.
+`npm run release:v2` بررسی Chromium تمام ۷۲ route، seeking ویدیو و read-only بودن مرحلهٔ post-seal را هم اجرا می‌کند.
 
-## Citation
+`npm run test:v2` قراردادهای source، Search graph، machine resources، routing، media، headers/security، integrity، rendering و release runner را بررسی می‌کند.
 
-Citation metadata is provided in `CITATION.cff` for tools and platforms that support the Citation File Format.
-
-## License
-
-See `LICENSE` for the repository's current license terms.
+رفتارهای edge/CDN مانند TLS، HTTP/2/3، compression negotiation و پاسخ live میزبان پس از deploy جداگانه قابل بررسی‌اند و در source شبیه‌سازی نمی‌شوند.

@@ -1,0 +1,127 @@
+import {SOURCE as canonicalSource} from '../src/canonical/source.mjs';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { generateHeaders, generateSecurityTxt } from './lib/headers.mjs';
+import * as headerContract from './lib/headers.mjs';
+
+
+const origin='https://www.ghezelbaash.ir';
+const routes=['/','/botox','/video-saeed-ghezelbash-subcision-technique'];
+const delivery={
+  http:{
+    contentSignal:'search=yes, ai-input=yes, ai-train=yes, use=full',
+    htmlIndexing:'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    indexingProfiles:{
+      machine:{default:'noindex, follow'},
+      contact:{default:'noindex, follow'}, support:{default:'noindex'}, preview:{default:'noindex, nofollow, noarchive'}
+    },
+    compression:{vary:['Accept-Encoding']},
+    machineCors:{origin:'*',exposeHeaders:['Link','Content-Signal'],resourcePolicy:'cross-origin'},
+    security:{
+      referrerPolicy:'strict-origin-when-cross-origin',xContentTypeOptions:'nosniff',crossOriginOpenerPolicy:'same-origin',originAgentCluster:'?1',
+      permissionsPolicy:{camera:[],microphone:[],autoplay:['self'],fullscreen:['self']},
+      xFrameOptions:'DENY',
+      csp:{defaultSrc:["'none'"],baseUri:["'self'"],scriptSrc:["'self'","'unsafe-inline'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'",'data:'],mediaSrc:["'self'"],fontSrc:["'self'"],manifestSrc:["'self'"],connectSrc:["'self'"],objectSrc:["'none'"],frameSrc:["'none'"],formAction:["'self'"],frameAncestors:["'none'"],upgradeInsecureRequests:true}
+    }
+  },
+  html:{cacheControl:'public, max-age=0, must-revalidate'},
+  machine:{cacheControl:'public, max-age=3600, must-revalidate'},
+  routing:{notFound:{cacheControl:'no-store'}}
+};
+const machineResources=[
+  {path:'/graph.jsonld',mediaType:'application/ld+json',parameters:{},indexing:'machine',canonicalPath:'/graph.jsonld',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[{path:'/graph.ttl',rel:'alternate'}]},
+  {path:'/graph.ttl',mediaType:'text/turtle',parameters:{charset:'utf-8'},indexing:'machine',canonicalPath:'/graph.ttl',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[]},
+  {path:'/doctor.vcf',mediaType:'text/vcard',parameters:{charset:'utf-8'},indexing:'contact',canonicalPath:'/doctor.vcf',about:[origin+'/#saeed-ghezelbash'],httpRelationships:[]},
+  {path:'/robots.txt',mediaType:'text/plain',parameters:{charset:'utf-8'},indexing:'support',canonicalPath:'/robots.txt',about:[],httpRelationships:[]},
+];
+const headers=generateHeaders({
+  origin,routes,cssPath:'/assets/site.0123456789ab.css',delivery,machineResources,
+  watchPosters:new Map([['/video-saeed-ghezelbash-subcision-technique','/media/posters/subcision.0123456789ab.webp']]),
+});
+assert.match(headers,/Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full/);
+assert.match(headers,/Referrer-Policy: strict-origin-when-cross-origin/);
+assert.match(headers,/X-Content-Type-Options: nosniff/);
+assert.match(headers,/Cross-Origin-Opener-Policy: same-origin/);
+assert.match(headers,/Origin-Agent-Cluster: \?1/);
+assert.match(headers,/X-Frame-Options: DENY/);
+assert.match(headers,/Content-Security-Policy: [^\n]*default-src 'none'/);
+assert.match(headers,/Content-Security-Policy: [^\n]*frame-ancestors 'none'/);
+assert.match(headers,/Content-Security-Policy: [^\n]*upgrade-insecure-requests/);
+assert.match(headers,/Permissions-Policy: autoplay=\(self\), camera=\(\), fullscreen=\(self\), microphone=\(\)/);
+assert.match(headers,/Vary: Accept-Encoding/);
+assert.match(headers,/\/botox\n[\s\S]*Link: <\/assets\/site\.0123456789ab\.css>; rel=preload; as=style/);
+assert.match(headers,/rel=describedby; type="application\/ld\+json"/);
+assert.match(headers,/rel=describedby; type="text\/turtle"/);
+assert.match(headers,/https:\/\/www\.ghezelbaash\.ir\/#saeed-ghezelbash>; rel=about/);
+assert.match(headers,/\/video-saeed-ghezelbash-subcision-technique\n[\s\S]*<\/media\/posters\/subcision\.0123456789ab\.webp>; rel=preload; as=image/);
+assert(!headers.includes('as=script'), 'JS must not be Early-Hinted by default');
+assert.match(headers,/\/assets\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
+assert.match(headers,/\/media\/\*\n\s+Cache-Control: public, max-age=3600, must-revalidate/);
+assert.match(headers,/\/fonts\/\*\n\s+Cache-Control: public, max-age=3600, must-revalidate/);
+assert.match(headers,/\/graph\.jsonld\n[\s\S]*Content-Type: application\/ld\+json/);
+assert.match(headers,/\/graph\.jsonld\n[\s\S]*Access-Control-Allow-Origin: \*/);
+assert.match(headers,/\/graph\.jsonld\n[\s\S]*Cross-Origin-Resource-Policy: cross-origin/);
+assert.match(headers,/\/graph\.jsonld\n[\s\S]*X-Robots-Tag: noindex, follow/);
+assert.doesNotMatch(headers,/X-Robots-Tag: googlebot:/);
+assert.match(headers,/\/doctor\.vcf\n[\s\S]*X-Robots-Tag: noindex, follow/);
+assert.match(headers,/\/robots\.txt\n[\s\S]*X-Robots-Tag: noindex/);
+assert.match(headers,/https:\/\/:project\.pages\.dev\/\*\n\s+X-Robots-Tag: noindex, nofollow, noarchive/);
+assert.match(headers,/https:\/\/:version\.:project\.pages\.dev\/\*\n\s+X-Robots-Tag: noindex, nofollow, noarchive/);
+assert(!headers.includes('Strict-Transport-Security:'),'Unconfigured fixture hosts must not acquire an invented HSTS policy');
+const rules=headers.split(/\n\n+/).filter(Boolean);assert.ok(rules.length<=100,`Cloudflare header rule limit exceeded: ${rules.length}`);
+assert.ok(headers.split('\n').every(line=>line.length<=2000),'Cloudflare header line length limit exceeded');
+const security=generateSecurityTxt({origin,email:'doctor@ghezelbaash.ir',expires:'2027-04-05T00:00:00Z'});
+assert.equal(security,`Contact: mailto:doctor@ghezelbaash.ir\nExpires: 2027-04-05T00:00:00Z\nPreferred-Languages: fa, en\nCanonical: https://www.ghezelbaash.ir/.well-known/security.txt\n`);
+const SOURCE=canonicalSource;
+const realRoutes=SOURCE.routes.resources.map(entry=>entry.path);
+const byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
+const realWatchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const thumb=byId.get(entry.videoId)?.thumbnailUrl;assert.equal(typeof thumb,'string',`Missing video poster for ${entry.videoId}`);return [entry.path,new URL(thumb).pathname];}));
+const realHeaders=generateHeaders({origin:SOURCE.canonicalOrigin,routes:realRoutes,cssPath:'/assets/site.0123456789ab.css',watchPosters:realWatchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+assert.doesNotMatch(realHeaders,/'unsafe-inline'/,'Canonical CSP forbids untrusted inline execution and styles');
+assert.match(realHeaders,/^  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload$/m,'Preserve the already-live canonical host HSTS policy');
+const notFoundBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith('/404.html\n'));
+assert(notFoundBlock,'The support 404 page has a dedicated response policy');
+assert.match(notFoundBlock,/^  ! Link$/m,'404 must not inherit medical graph discovery relationships');
+assert.match(notFoundBlock,/^  ! Cache-Control$/m,'404 must not inherit canonical HTML cache policy');
+assert.match(notFoundBlock,/^  Content-Type: text\/html; charset=utf-8$/m);
+assert.match(notFoundBlock,/^  Cache-Control: no-store$/m);
+assert.match(notFoundBlock,/^  X-Robots-Tag: noindex(?:, follow)?$/m);
+assert.match(realHeaders,/script-src 'self'(?:;|$)/);
+assert.match(realHeaders,/style-src 'self'(?:;|$)/);
+for (const resource of [
+ {path:'/sbom.cdx.json',mediaType:'application/vnd.cyclonedx+json'},
+ {path:'/integrity-manifest.json',mediaType:'application/json'},
+ {path:'/release-provenance.json',mediaType:'application/json'},
+ {path:'/content-digest-eligibility.json',mediaType:'application/json'},
+ {path:'/_headers.content-digest.pending',mediaType:'text/plain'},
+ {path:'/.well-known/security.txt',mediaType:'text/plain'},
+]) {
+ const block=realHeaders.split(/\n\n+/).find(b=>b.startsWith(resource.path+'\n'));
+ assert(block,'Existing release resource has explicit policy '+resource.path);
+ assert(block.includes('Content-Type: '+resource.mediaType));
+ assert(block.includes('X-Robots-Tag: noindex, follow'));
+ assert(block.includes('Access-Control-Allow-Origin: *'));
+}
+for(const line of realHeaders.split('\n').filter(line=>line.trim().startsWith('Link:'))) {
+ for(const match of line.matchAll(/\btype="([^"]*)"/g))assert.match(match[1],/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i,'Link type is a bare media type: '+match[1]);
+}
+for(const resourcePath of ['/graph.ttl','/shapes.ttl','/dcat.ttl']) {
+ const block=realHeaders.split(/\n\n+/).find(block=>block.startsWith(resourcePath+'\n'));
+ assert.equal(block.split('\n').find(line=>line.trim().startsWith('Content-Type:')).trim(),'Content-Type: text/turtle; charset=utf-8','Turtle has registered Content-Type parameters');
+}
+assert.equal(typeof headerContract.assertValidLinkTypes,'function','Generated and delivered Link hints must have a validator');
+for(const value of ['text/csv; charset=utf-8','application/ld+json; profile="https://example.com"','text/turtle"oops','text/turtle']) {
+ const header='  Link: </graph.ttl>; rel=alternate; type="'+value+'"\n';
+ if(value==='text/turtle')assert.doesNotThrow(()=>headerContract.assertValidLinkTypes(header));
+ else assert.throws(()=>headerContract.assertValidLinkTypes(header),/Link type/);
+}
+assert.throws(()=>headerContract.assertValidLinkTypes('  Link: </graph.ttl>; type="text/turtle\n'),/Link type/);
+const graphBlock=realHeaders.split(/\n\n+/).find(block=>block.startsWith('/graph.jsonld\n'));
+assert.match(graphBlock,/Content-Type: application\/ld\+json; profile="/,'Legitimate JSON-LD response parameters stay intact');
+const csvBlock=realHeaders.split(/\n\n+/).find(block=>block.startsWith('/entity-facts.csv\n'));
+assert.match(csvBlock,/Content-Type: text\/csv; charset=utf-8; header=present/,'Legitimate CSV response parameters stay intact');
+const realRules=realHeaders.trim().split(/\n\n+/).filter(Boolean);
+assert.ok(realRules.length<=100,`Real Cloudflare _headers rule limit exceeded: ${realRules.length}`);
+assert.ok(realHeaders.split('\n').every(line=>line.length<=2000),'Real Cloudflare _headers line length limit exceeded');
+console.log(JSON.stringify({headersPolicy:'PASS',securityTxt:'PASS',fixtureRules:rules.length,realRules:realRules.length,realMachineResources:SOURCE.machineResources.length},null,2));

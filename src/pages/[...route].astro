@@ -1,0 +1,7 @@
+---
+import CanonicalIndex, { SOURCE } from './index.astro';
+export function getStaticPaths() {
+  return SOURCE.routes.resources.filter(resource => resource.path !== '/').map(resource => ({params:{route:resource.path.slice(1)},props:{canonicalPath:resource.path}}));
+}
+---
+<CanonicalIndex canonicalPath={Astro.props.canonicalPath} />

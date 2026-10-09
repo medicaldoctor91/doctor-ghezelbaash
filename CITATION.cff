@@ -10,5 +10,5 @@ authors:
     orcid: https://orcid.org/0009-0001-9346-8475
 doi: 10.5281/zenodo.22838416
 repository-code: https://github.com/medicaldoctor91/doctor-ghezelbaash
-url: https://www.ghezelbaash.ir/graph.jsonld#dataset
+url: https://www.ghezelbaash.ir/graph.jsonld/dataset
 license: CC-BY-4.0

@@ -1,88 +1,46 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { canonicalLifecycle as release, canonicalGraph } from '../lib/canonical-inputs.mjs';
-import { deriveSiteContactData } from '../lib/site-data.mjs';
+import {CANONICAL, SOURCE} from './index.astro';
 
-const site = deriveSiteContactData(release, canonicalGraph);
-const presentation = {
-  title: 'صفحه پیدا نشد | دکتر سعید قزلباش',
-  description:
-    'صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش استفاده کنید.',
-  lang: 'fa-IR',
-  dir: 'rtl',
-  robots: 'noindex, follow',
-} as const;
+export const prerender = true;
+const person = SOURCE.graph['@graph'].find(node => node['@id'] === SOURCE.canonicalOrigin + '/#saeed-ghezelbash');
+const onlineChannel = SOURCE.graph['@graph'].find(node => node['@id'] === SOURCE.canonicalOrigin + '/online-consultation-channel');
+const stylesheet = CANONICAL.assets.find(asset => asset.type.startsWith('text/css;')).path;
 ---
-
-<BaseLayout {...presentation} isMain={false}>
-  <div class="not-found-page">
-    <p class="not-found-page__code" aria-hidden="true">404</p>
-    <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
-    <p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. از مسیرهای اصلی زیر ادامه دهید.</p>
-    <nav class="not-found-page__links" aria-label="مسیرهای اصلی">
-      <a href="/botox">بوتاکس</a>
-      <a href="/filler">فیلر</a>
-      <a href="/thread-lift">لیفت نخ</a>
-      <a href="/acne-pigmentation-and-scars">جوش، لک و اسکار</a>
-      <a href="/hair-loss">ریزش مو</a>
-      <a href="/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a>
-    </nav>
-    <div class="not-found-page__actions">
-      <a class="not-found-page__primary" href="/">بازگشت به صفحه اصلی</a>
-      <a href={site.telHref}>تماس با کلینیک</a>
-      <a href={site.chatUrl} rel="external">ارزیابی اولیه آنلاین</a>
-    </div>
-  </div>
-</BaseLayout>
-
-<style>
-  .not-found-page {
-    min-height: 100svh;
-    display: grid;
-    align-content: center;
-    gap: 1rem;
-    padding-block: clamp(2rem, 8vw, 7rem) 8rem;
-  }
-  .not-found-page__code {
-    margin: 0;
-    color: var(--accent);
-    font-size: clamp(4rem, 18vw, 10rem);
-    font-weight: 900;
-    line-height: .8;
-    letter-spacing: -.06em;
-  }
-  .not-found-page h1 {
-    max-width: 18ch;
-    margin-block: .4rem .8rem;
-  }
-  .not-found-page__links,
-  .not-found-page__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .7rem;
-    max-width: var(--reading-measure);
-  }
-  .not-found-page__links {
-    margin-block: 1rem;
-    padding: 1rem;
-    border: 1px solid var(--line);
-    border-radius: 1rem;
-    background: var(--surface-soft);
-  }
-  .not-found-page__links a,
-  .not-found-page__actions a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.75rem;
-    padding: .55rem .85rem;
-    border: 1px solid #cfe3dc;
-    border-radius: 999px;
-    background: #fff;
-    font-weight: 720;
-    text-decoration: none;
-  }
-  .not-found-page__actions .not-found-page__primary {
-    background: var(--accent-strong);
-    color: #fff;
-  }
-</style>
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>صفحه پیدا نشد | دکتر سعید قزلباش</title>
+    <meta name="description" content="صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش استفاده کنید." />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" content="#075244" />
+    <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png" />
+    <link href={stylesheet} rel="stylesheet" />
+  </head>
+  <body lang="fa-IR" dir="rtl">
+    <a class="skip-link" href="#main-content" lang="fa-IR" dir="rtl">پرش به محتوای اصلی</a>
+    <main id="main-content" tabindex="-1">
+      <article class="medical-guide" lang="fa-IR" dir="rtl">
+        <div class="not-found-page">
+          <p class="not-found-page__code hero-title__name" aria-hidden="true">404</p>
+          <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
+          <p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. از مسیرهای اصلی زیر ادامه دهید.</p>
+          <nav class="not-found-page__links hero-actions" aria-label="مسیرهای اصلی">
+            <a class="hero-action" href="/botox">بوتاکس</a>
+            <a class="hero-action" href="/filler">فیلر</a>
+            <a class="hero-action" href="/thread-lift">لیفت نخ</a>
+            <a class="hero-action" href="/acne-pigmentation-and-scars">جوش، لک و اسکار</a>
+            <a class="hero-action" href="/hair-loss">ریزش مو</a>
+            <a class="hero-action" href="/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a>
+          </nav>
+          <div class="not-found-page__actions hero-actions">
+            <a class="not-found-page__primary hero-action hero-action--primary" href="/">بازگشت به صفحه اصلی</a>
+            <a class="hero-action" href={'tel:' + person.telephone}>تماس با کلینیک</a>
+            <a class="hero-action" href={onlineChannel.serviceUrl} rel="external">ارزیابی اولیه آنلاین</a>
+          </div>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

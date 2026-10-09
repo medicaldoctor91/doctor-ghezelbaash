@@ -1,8 +1,8 @@
 node_modules/
-.astro/
 dist/
-.DS_Store
-*.log
-
-# Canonical untracked build workspace.
+release/
 .generated/
+__pycache__/
+*.pyc
+.DS_Store
+.astro/

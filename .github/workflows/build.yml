@@ -1,4 +1,4 @@
-name: Build contract
+name: V2 dist contract
 
 on:
   pull_request:
@@ -6,14 +6,20 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      preview:
+        description: Upload sealed experimental dist to a nonproduction Cloudflare Pages preview
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  dist:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,75 +33,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium for reader regression checks
+      - name: Install pinned browser for reader verification
         run: npx playwright-core install --with-deps chromium
 
-      - name: Test source, discovery and reader contracts
-        run: node --test scripts/tests/*.test.mjs
+      - name: Build, finalize, seal and verify V2 dist
+        run: npm run release:v2
 
-      # Source-normalization branches preserve authored content and every output
-      # byte while separating canonical content, graph facts and build policy.
-      - name: Checkout the distribution baseline
-        if: startsWith(github.head_ref, 'codex/normalize-canonical-')
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: .baseline
-          persist-credentials: false
+      - name: Verify preview deployment safety guards
+        run: node --test infrastructure/test-cloudflare-preview.mjs
 
-      - name: Build the distribution baseline
-        if: startsWith(github.head_ref, 'codex/normalize-canonical-')
-        working-directory: .baseline
-        run: |
-          npm ci
-          npm run build
+      - name: Upload exact sealed experimental dist to Cloudflare preview
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview && github.ref == 'refs/heads/experiment/source-preview' && github.repository == 'medicaldoctor91/doctor-ghezelbaash' }}
+        env:
+          PREVIEW_REQUESTED: 'true'
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node infrastructure/deploy-cloudflare-preview.mjs
 
-      - name: Build distribution
-        run: npm run build
-
-      - name: Validate primary content in the rendered reader
-        run: node scripts/validate-reader.mjs
-
-      - name: Use Python for semantic validation
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: scripts/requirements-shacl.txt
-
-      - name: Validate the published RDF against compiled SHACL
-        run: |
-          python -m pip install -r scripts/requirements-shacl.txt
-          python scripts/validate-shacl.py --regression-checks
-
-      - name: Compare every distribution file with the baseline
-        if: startsWith(github.head_ref, 'codex/normalize-canonical-')
-        run: node scripts/compare-dist.mjs .baseline/dist dist
-
-      - name: Compare canonical content and editorial guide with the baseline
-        if: startsWith(github.head_ref, 'codex/normalize-canonical-')
-        run: node scripts/compare-canonical-content.mjs .baseline .
-
-      - name: Verify deployment fingerprint artifact
-        run: |
-          test -f dist/build-info.json
-          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync("dist/build-info.json","utf8")); if (!x.release || !x.commit || !x.branch || !x.provider) process.exit(1); console.log(x)'
-
-      - name: Retain the distribution and validation reports
+      - name: Retain distribution and reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dist-review-${{ github.sha }}
+          name: v2-dist-${{ github.sha }}
           path: |
             dist/
-            .generated/dist-manifest.json
-            .generated/dist-equivalence.json
-            .generated/authored-content-equivalence.json
-            .generated/schema-inventory.json
-            .generated/schema-inventory.csv
-            .generated/shacl-validation.json
-            .generated/shacl-validation.txt
-            .generated/reader-validation.json
+            release/verification-report.json
+            release/verification-report-fa.md
+            release/cloudflare-preview-proof.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14

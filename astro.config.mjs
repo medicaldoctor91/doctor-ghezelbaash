@@ -1,19 +1,3 @@
-import { defineConfig } from "astro/config";
-import { canonicalLifecycle as release } from "./src/lib/canonical-inputs.mjs";
-
-export default defineConfig({
-  site: release.canonicalUrl,
-  output: "static",
-  trailingSlash: "never",
-  compressHTML: true,
-  build: {
-    format: "file",
-    inlineStylesheets: "always",
-  },
-  vite: {
-    build: {
-      emptyOutDir: true,
-      sourcemap: false,
-    },
-  },
-});
+import { defineConfig } from 'astro/config';
+// Canonical extensionless files avoid directory-to-slash redirects on Pages.
+export default defineConfig({output:'static',trailingSlash:'never',build:{format:'file'}});

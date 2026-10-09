@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import jsonld from 'jsonld';
+import {SOURCE} from '../src/canonical/source.mjs';
+import {buildCroissant,buildDataPackage,buildCsvMetadata} from '../src/lib/machine-output.mjs';
+const croissant=buildCroissant(SOURCE);
+assert.equal(typeof croissant['@context'],'object','Croissant uses an actual pinned JSON-LD context, not the specification HTML URL');
+assert.equal(croissant.conformsTo,'http://mlcommons.org/croissant/1.1');
+assert(croissant.description,'Canonical Dataset description');
+assert(!croissant.distribution.some(file=>file['@id']==='croissant.json'),'Catalog cannot contain a self-checksummed distribution');
+assert(croissant.distribution.every(file=>file['@id']&&file['@type']==='cr:FileObject'));
+const record=croissant.recordSet.find(r=>r['@id']==='entity-facts');
+const columns=buildCsvMetadata(SOURCE).tableSchema.columns;
+assert.deepEqual(record.field.map(f=>f.name),columns.map(c=>c.name),'Ingestion columns exactly match CSVW');
+for(const field of record.field){assert.equal(field.source.fileObject['@id'],'entity-facts.csv');assert.equal(field.source.extract.column,field.name);}
+const expanded=await jsonld.expand(croissant,{base:SOURCE.canonicalOrigin+'/croissant.json',documentLoader:()=>{throw new Error('Unexpected remote context fetch');}});
+assert(expanded[0]['http://mlcommons.org/croissant/recordSet'],'Standard Croissant RDF vocabulary');
+assert.equal(expanded[0]['@type'][0],'https://schema.org/Dataset');
+const pkg=buildDataPackage(SOURCE);
+assert(pkg.resources.every(r=>r.path.startsWith(SOURCE.canonicalOrigin+'/')),'Data Package URLs work for remote consumers without absolute filesystem paths');
+assert.equal(columns.find(c=>c.name==='subject').datatype,'string','RDF subject text may include blank-node labels, not just absolute IRIs');
+console.log('Croissant 1.1 ingestion vocabulary, field mapping, CSVW and remote Data Package paths PASS');
