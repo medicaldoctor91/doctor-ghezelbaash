@@ -1,4 +1,4 @@
-import {parseFragment} from 'parse5';
+import {parse, parseFragment} from 'parse5';
 import {createHash} from 'node:crypto';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -35,13 +35,15 @@ export function buildClinicalPassages(source, authoredBody) {
   };
   function walk(node) {
     if (['script', 'style', 'template', 'nav', 'button'].includes(node.tagName)) return;
-    if (['section', 'details', 'header'].includes(node.tagName)) current = owned(node) ?? current;
+    const scoped = ['section', 'details', 'figure'].includes(node.tagName);
+    const parentLocation = current, parentHeadings = [...headingPath];
+    if (scoped) current = owned(node) ?? current;
     const heading = /^h([1-6])$/.exec(node.tagName ?? '');
     if (heading) {
       const level = Number(heading[1]);
       headingPath.length = level;
       headingPath[level - 1] = normalize(text(node));
-      current = owned(node) ?? current;
+      if (source.routes.htmlIdTargets[attr(node, 'id')]) current = owned(node) ?? current;
     }
     const block = ['p', 'li', 'figcaption', 'blockquote'].includes(node.tagName);
     const nestedBlock = block && (node.childNodes ?? []).some(child => ['p', 'li', 'ul', 'ol', 'blockquote'].includes(child.tagName));
@@ -90,7 +92,27 @@ export function buildClinicalPassages(source, authoredBody) {
       }
     }
     for (const child of node.childNodes ?? []) walk(child);
+    if (scoped) {
+      current = parentLocation;
+      headingPath.splice(0, headingPath.length, ...parentHeadings);
+    }
   }
   walk(parseFragment(authoredBody));
   return result;
+}
+
+/** Some focused disclosures intentionally omit surrounding Home paragraphs. Cite the delivered owner. */
+export function bindClinicalPassagesToDocuments(source, passages, documents) {
+  const origin = source.canonicalOrigin, home = origin + '/';
+  const visible = new Map([...documents].map(([url, html]) => [url, normalize(text(parse(html)))]));
+  const seen = new Set();
+  return passages.map(record => {
+    if (visible.get(record.sourceUrl)?.includes(record.text)) return record;
+    if (!visible.get(home)?.includes(record.text)) throw new Error('Authored passage is absent from delivered HTML: ' + record.htmlUrl);
+    const sourceUrl = home, htmlUrl = home + '#' + record.htmlId;
+    const sourceHashSha256 = hash(JSON.stringify({htmlUrl, language: record.language, headingPath: record.headingPath, text: record.text}));
+    return {...record, sourceUrl, htmlUrl, sourceHashSha256,
+      passageId: origin + '/clinical-passages.jsonl#passage-' + sourceHashSha256,
+      entityIds: [...new Set(record.entityIds.filter(id => id !== record.sourceUrl + '#webpage').concat(origin + '/webpage'))].sort()};
+  }).filter(record => {if (seen.has(record.passageId)) return false; seen.add(record.passageId); return true;});
 }

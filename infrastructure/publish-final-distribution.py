@@ -116,13 +116,29 @@ def package(dist, output, commit):
         file.parent.mkdir(parents=True, exist_ok=True)
         # Lists/objects are preserved as JSON strings; this avoids null/mixed-list loader inference.
         keys = sorted({key for row in rows for key in row})
+        nested = {key for key in keys if any(isinstance(row.get(key), (list, dict)) for row in rows)}
         packed = [{key: (json.dumps(row[key], ensure_ascii=False) if isinstance(row.get(key), (list, dict))
             else str(row[key]) if row.get(key) is not None else None) for key in keys} for row in rows]
-        table = pa.Table.from_pylist(packed, schema=pa.schema([pa.field(key, pa.string()) for key in keys]))
+        for original, row in zip(rows, packed):
+            row['_source_omitted_fields'] = json.dumps([key for key in keys if key not in original])
+        fields = keys + ['_source_omitted_fields']
+        table = pa.Table.from_pylist(packed, schema=pa.schema([pa.field(key, pa.string()) for key in fields]))
         pq.write_table(table, file, compression='zstd')
-        if pq.read_table(file).to_pylist() != packed:
+        readback = pq.read_table(file).to_pylist()
+        if readback != packed:
             raise RuntimeError('Parquet round trip differs: ' + name)
-        return {'rows': len(rows), 'fields': keys, 'source': source_path,
+        restored = []
+        for row in readback:
+            omitted = json.loads(row.pop('_source_omitted_fields'))
+            for key in omitted:
+                del row[key]
+            for key in nested - set(omitted):
+                if row[key] is not None:
+                    row[key] = json.loads(row[key])
+            restored.append(row)
+        if restored != rows:
+            raise RuntimeError('Viewer source reconstruction differs: ' + name)
+        return {'rows': len(rows), 'fields': fields, 'sourceFields': keys, 'jsonEncodedFields': sorted(nested), 'source': source_path,
             'sourceSha256': sha((output / source_path).read_bytes()), 'file': 'viewer/' + file.name,
             'sha256': sha(file.read_bytes()), 'nestedEncoding': 'JSON strings; scalar values are strings or null'}
 
@@ -161,7 +177,7 @@ The current files reproduce the verified final website distribution at source co
 - **entity_facts**: ''' + str(len(facts)) + ''' RDF statements. Seven fields preserve subject, predicate, object, object kind, datatype, language and stable row identity; graph/provenance resources retain the linked evidence context.
 - **query_matrix**: ''' + str(len(queries)) + ''' multilingual retrieval aliases reconciled to the current graph IDs. Superlative query wording records a search intent and resolves to clinical selection criteria; it does not assert a comparative ranking.
 
-All configurations use string-typed Parquet for predictable loading. Nested lists and objects are JSON strings: decode those fields with `json.loads` when needed. Null is distinct from an empty string. The `train` split is an access convention. [Packaging metadata](viewer/packaging.json) records exact schemas, source hashes and row counts; [IRI migration](viewer/iri-migration.json) records reconciliation from the previous public snapshot.
+All configurations use string-typed Parquet for predictable loading. Nested lists and objects are JSON strings: decode those fields with `json.loads` when needed. To reconstruct a source row, remove the keys listed in `_source_omitted_fields`, remove the helper itself, and decode the JSON fields named by the packaging metadata. Missing keys, null and empty strings remain distinct. Every source row is reconstructed and checked. The `train` split is an access convention. [Packaging metadata](viewer/packaging.json) records exact schemas, source hashes and row counts; [IRI migration](viewer/iri-migration.json) records reconciliation from the previous public snapshot.
 
 ```python
 import json
