@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 
 import {
   serializeGraphAsNTriples, serializeEntityFactsCsv, htmlToMarkdown, htmlToPlainText,
-  buildAnswersText, buildFactMap, buildKnowledgeXml, buildProvenanceGraph, buildEvidenceSnapshot,
+  buildRetrievalRecords, serializeAnswersText, buildFactMap, buildKnowledgeXml, buildProvenanceGraph, buildEvidenceSnapshot,
   buildVCard, buildLinkset, buildCsvMetadata, buildVoidTurtle, buildDcatTurtle, buildCroissantWithStats, buildDataPackage,
 } from '../src/lib/machine-output.mjs';
 
@@ -42,8 +42,9 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   outputs.set('/shapes.ttl', source.validation.shaclSupplement.trimEnd() + '\n');
   outputs.set('/entity-facts.csv', serializeEntityFactsCsv(source.graph));
   outputs.set('/entity-facts.csv-metadata.json', json(buildCsvMetadata(source)));
-  outputs.set('/answers.txt', buildAnswersText(source));
-  outputs.set('/fact-map.json', json(buildFactMap(source)));
+  const retrievalRecords = buildRetrievalRecords(source);
+  outputs.set('/answers.txt', serializeAnswersText(retrievalRecords));
+  outputs.set('/fact-map.json', json(buildFactMap(source, retrievalRecords)));
   outputs.set('/knowledge.xml', buildKnowledgeXml(source));
   outputs.set('/llms.txt', source.machineProjection.discoveryGuide.trimEnd() + '\n');
   outputs.set('/index.md', htmlToMarkdown(authoredBody));

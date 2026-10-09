@@ -1,4 +1,5 @@
 import {croissantContext} from './croissant-context.mjs';
+export { buildRetrievalRecords, serializeAnswersText, buildAnswersText, buildFactMap } from './retrieval-output.mjs';
 import { createHash } from 'node:crypto';
 
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -176,43 +177,6 @@ export function htmlToPlainText(html) {
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
     .split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
-}
-
-export function buildAnswersText(source) {
-  const byId = new Map(source.graph['@graph'].map((node) => [node['@id'], node]));
-  const questions = source.graph['@graph'].filter((node) => values(node['@type']).includes('Question') && node.acceptedAnswer);
-  const blocks = questions.map((question) => {
-    const answerId = values(question.acceptedAnswer).map((item) => typeof item === 'string' ? item : item?.['@id']).find(Boolean);
-    const answer = byId.get(answerId);
-    const page = question.mainEntityOfPage?.['@id'] ?? question.isPartOf?.['@id'] ?? question.url ?? '';
-    return [
-      `Question ID: ${question['@id']}`,
-      `Question: ${literal(question.name)}`,
-      `Answer ID: ${answerId ?? ''}`,
-      `Answer: ${literal(answer?.text)}`,
-      `Source: ${page}`,
-      `Author: ${source.canonicalOrigin}/#saeed-ghezelbash`,
-    ].join('\n');
-  });
-  return blocks.join('\n\n---\n\n') + '\n';
-}
-
-export function buildFactMap(source) {
-  const byId = new Map(source.graph['@graph'].map((node) => [node['@id'], node]));
-  const records = source.graph['@graph'].filter((node) => values(node['@type']).includes('Question') && node.acceptedAnswer).map((question) => {
-    const answerId = values(question.acceptedAnswer).map((item) => typeof item === 'string' ? item : item?.['@id']).find(Boolean);
-    const answer = byId.get(answerId);
-    const evidence = [...new Set([...values(question.citation), ...values(answer?.citation)].map((item) => typeof item === 'string' ? item : item?.['@id']).filter(Boolean))];
-    return {
-      questionId: question['@id'],
-      question: literal(question.name),
-      answerId,
-      answer: literal(answer?.text),
-      sourceUrl: question.url ?? question.mainEntityOfPage?.['@id'] ?? question.isPartOf?.['@id'] ?? '',
-      evidence,
-    };
-  });
-  return { schemaVersion: 1, canonicalEntity: source.canonicalOrigin + '/#saeed-ghezelbash', records };
 }
 
 const xmlEscape = (value) => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');
