@@ -1,5 +1,5 @@
 import {croissantContext} from './croissant-context.mjs';
-export { buildRetrievalRecords, serializeAnswersText, buildAnswersText, buildFactMap } from './retrieval-output.mjs';
+export { buildRetrievalRecords, serializeAnswersText, buildAnswersText, buildFactMap, buildProvenanceGraph } from './retrieval-output.mjs';
 import { createHash } from 'node:crypto';
 
 const values = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
@@ -194,15 +194,6 @@ export function buildKnowledgeXml(source) {
     `  <videos>${videos.map((node) => `<video id="${xmlEscape(node['@id'])}" url="${xmlEscape(node.url)}" contentUrl="${xmlEscape(node.contentUrl)}">${xmlEscape(literal(node.name))}</video>`).join('')}</videos>\n` +
     `  <questions>${questions.map((node) => `<question id="${xmlEscape(node['@id'])}">${xmlEscape(literal(node.name))}</question>`).join('')}</questions>\n` +
     `</knowledge>\n`;
-}
-
-export function buildProvenanceGraph(source) {
-  const selected = source.graph['@graph'].filter((node) => {
-    const id = node['@id'] ?? '';
-    const types = values(node['@type']);
-    return id.includes('/provenance.jsonld/') || types.some((type) => typeof type === 'string' && (type.startsWith('prov:') || type.startsWith('oa:'))) || types.includes('Claim');
-  });
-  return { '@context': source.graph['@context'], '@graph': selected };
 }
 
 export function buildEvidenceSnapshot(source) {

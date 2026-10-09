@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import jsonld from 'jsonld';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -42,12 +43,75 @@ for (const record of records) {
   assert.deepEqual(record.evidenceIds, []);
 }
 
+// Passage provenance must cover every shared record without changing authored lineage.
+const authoredProvenance = SOURCE.graph['@graph'].filter(node => {
+  const types = [node['@type']].flat();
+  return node['@id'].includes('/provenance.jsonld/') || types.some(type => typeof type === 'string' && (type.startsWith('prov:') || type.startsWith('oa:'))) || types.includes('Claim');
+});
+const canonicalBefore = JSON.stringify(SOURCE.graph);
+const provenance = machine.buildProvenanceGraph(SOURCE, records);
+const provenanceById = new Map(provenance['@graph'].map(node => [node['@id'], node]));
+const refs = ids => ids.map(id => ({ '@id': id }));
+function assertPassageProvenance(graph, record, source) {
+  const byId = new Map(graph['@graph'].map(node => [node['@id'], node]));
+  const passage = byId.get(record.passageId);
+  const generated = byId.get(record.passageId + '/retrieval-record');
+  assert(passage, `Missing passage provenance for ${record.questionId}`);
+  assert(generated, `Missing generated retrieval record for ${record.questionId}`);
+  for (const node of [passage, generated]) {
+    assert([node['@type']].flat().includes('prov:Entity'));
+    assert.equal(node.questionId, record.questionId);
+    assert.equal(node.answerId, record.answerId);
+    assert.equal(node.sourceUrl, record.sourceUrl);
+    assert.equal(node.htmlUrl, record.htmlUrl);
+    assert.equal(node.version, record.release.version);
+    assert.equal(node.releaseEdition, record.release.edition);
+    assert([node.isPartOf].flat().some(ref => ref['@id'] === source.canonicalOrigin + '/graph.jsonld/dataset'));
+    for (const field of ['sourceHashSha256', 'answerHashSha256', 'passageHashSha256']) assert.equal(node[field], record[field], `Shared ${field}`);
+    assert.deepEqual(node.evidenceIds, record.evidenceIds);
+    assert.deepEqual(node.claimEvidenceIds, record.claimEvidenceIds);
+    assert.deepEqual(node.entityEvidenceIds, record.entityEvidenceIds);
+    assert.deepEqual(node.about, refs(record.aboutIds), 'Topical and Claim references survive projection');
+    assert.deepEqual(node.mentions, refs(record.graphNodeIds), 'Associated canonical graph identities remain linked');
+    assert.equal(node.provenanceClass, record.provenanceClass);
+    assert.deepEqual(node.reviewedBy, refs(record.reviewedBy));
+    assert.equal(node.reviewedAt, record.reviewedAt);
+  }
+  assert.deepEqual(passage['prov:specializationOf'], { '@id': record.htmlUrl }, 'Passage resolves to exact source fragment');
+  const sourceIds = [...new Set([record.questionId, record.answerId, ...record.evidenceIds])].sort();
+  assert.deepEqual(passage['prov:wasDerivedFrom'], refs(sourceIds), 'Canonical Q&A and explicit evidence are the source lineage');
+  assert.deepEqual(generated['prov:wasDerivedFrom'], refs([record.passageId, ...sourceIds].sort()), 'Retrieval derives from its passage and canonical source lineage');
+  assert([generated.isPartOf].flat().some(ref => ref['@id'] === source.canonicalOrigin + '/fact-map.json'));
+}
+for (const record of records) assertPassageProvenance(provenance, record, SOURCE);
+for (const node of authoredProvenance) assert.deepEqual(provenanceById.get(node['@id']), node, `Authored provenance preserved: ${node['@id']}`);
+for (const type of ['Claim', 'oa:Annotation', 'prov:Collection']) assert(authoredProvenance.some(node => [node['@type']].flat().includes(type)), `Real authored ${type} is covered`);
+assert.equal(provenance['@graph'].length, authoredProvenance.length + 2 * records.length);
+assert.equal(provenanceById.size, provenance['@graph'].length, 'Generated and authored IDs remain unique');
+assert.equal(JSON.stringify(SOURCE.graph), canonicalBefore, 'Projection never mutates canonical truth');
+assert.deepEqual(machine.buildProvenanceGraph(SOURCE, records), provenance);
+assert.deepEqual(machine.buildProvenanceGraph(SOURCE, [...records].reverse()), provenance, 'Generated record ordering is deterministic');
+assert.deepEqual(machine.buildProvenanceGraph(SOURCE), provenance, 'One-argument provenance interface remains supported');
+assert.equal(provenance['@context'], SOURCE.graph['@context'], 'Authored context is preserved');
+const expanded = await jsonld.expand(provenance);
+for (const record of records) {
+  const passage = expanded.find(node => node['@id'] === record.passageId);
+  const ontology = SOURCE.canonicalOrigin + '/ontology/';
+  assert.deepEqual(passage[ontology + 'questionId'], refs([record.questionId]), 'Question identity is an RDF IRI');
+  assert.deepEqual(passage[ontology + 'answerId'], refs([record.answerId]), 'Answer identity is an RDF IRI');
+  assert.deepEqual(passage['https://schema.org/url'], refs([record.sourceUrl]), 'Source URL is an RDF IRI');
+  assert.deepEqual(passage['https://schema.org/contentUrl'], refs([record.htmlUrl]), 'Exact HTML location is an RDF IRI');
+  assert.deepEqual(passage[ontology + 'sourceHashSha256'], [{ '@value': record.sourceHashSha256 }], 'Source hash remains a literal');
+  assert(!Object.hasOwn(passage, 'http://www.w3.org/ns/prov#generatedAtTime'), 'No build timestamp is invented');
+}
+
+
 const origin = 'https://example.com';
 const ref = id => ({ '@id': origin + id });
 const fixture = (questionOverrides = {}, answerOverrides = {}) => ({
   canonicalOrigin: origin, edition: '2026-10-01',
   routes: { resources: [{ path: '/', htmlId: 'home' }, { path: '/topic', htmlId: 'topic-content' }], htmlIdTargets: { 'topic-content': '/topic' } },
-  graph: { '@graph': [
+  graph: { '@context': { '@vocab': 'https://schema.org/', prov: 'http://www.w3.org/ns/prov#' }, '@graph': [
     { '@id': origin + '/q', '@type': 'Question', name: 'Question', inLanguage: 'en', acceptedAnswer: ref('/a'), mainEntityOfPage: ref('/webpage'), url: origin + '/topic#exact', ...questionOverrides },
     { '@id': origin + '/a', '@type': 'Answer', text: 'Answer', url: origin + '/topic#answer-target', ...answerOverrides },
     { '@id': origin + '/webpage', '@type': 'WebPage', url: origin + '/', reviewedBy: ref('/reviewer'), lastReviewed: { '@value': '2026-09-30' } },
@@ -96,6 +160,31 @@ const reordered = fixture();
 reordered.graph['@graph'] = reordered.graph['@graph'].reverse().map(node => Object.fromEntries(Object.entries(node).reverse()));
 assert.deepEqual(buildRetrievalRecords(reordered), buildRetrievalRecords(fixture()), 'Graph and property order do not affect records or hashes');
 
+const richSource = fixture({ about: [ref('/claim'), ref('/entity')], citation: ref('/citation') }, { reviewedBy: ref('/answer-reviewer'), reviewedAt: '2026-09-28' });
+const richRecords = buildRetrievalRecords(richSource);
+assertPassageProvenance(machine.buildProvenanceGraph(richSource, richRecords), richRecords[0], richSource);
+// Provided records are authoritative; provenance cannot independently derive source/hash/release values.
+const supplied = { ...richRecords[0], sourceUrl: origin + '/topic?shared=1', htmlUrl: origin + '/topic?shared=1#shared', sourceHashSha256: 'a'.repeat(64), release: { version: 'shared-version', edition: 'shared-edition' } };
+assertPassageProvenance(machine.buildProvenanceGraph(richSource, [supplied]), supplied, richSource);
+for (const collisionId of [richRecords[0].passageId, richRecords[0].passageId + '/retrieval-record']) {
+  const collisionSource = fixture();
+  const authored = { '@id': collisionId, '@type': 'prov:Entity', name: 'Authored identity' };
+  collisionSource.graph['@graph'].push(authored);
+  const before = JSON.stringify(collisionSource);
+  assert.throws(() => machine.buildProvenanceGraph(collisionSource, richRecords), /authored.*collision|collision.*authored/i, 'Authored IDs cannot be overwritten by generated records');
+  assert.equal(JSON.stringify(collisionSource), before);
+}
+
+const inlineCollision = fixture();
+inlineCollision.graph['@graph'][0].subjectOf = { '@id': richRecords[0].passageId, '@type': 'prov:Entity', name: 'Embedded authored identity' };
+assert.throws(() => machine.buildProvenanceGraph(inlineCollision, richRecords), /authored.*collision/i, 'Embedded authored definitions cannot be overwritten');
+assert.throws(() => machine.buildProvenanceGraph(richSource, [richRecords[0], richRecords[0]]), /duplicate generated/i, 'Duplicate records cannot silently duplicate entity IDs');
+const richExpanded = await jsonld.expand(machine.buildProvenanceGraph(richSource, richRecords));
+const richPassage = richExpanded.find(node => node['@id'] === richRecords[0].passageId);
+assert.deepEqual(richPassage['https://schema.org/citation'], refs(richRecords[0].evidenceIds), 'Explicit evidence becomes RDF links');
+assert.deepEqual(richPassage[origin + '/ontology/claimEvidence'], refs(richRecords[0].claimEvidenceIds));
+assert.deepEqual(richPassage[origin + '/ontology/entityEvidence'], refs(richRecords[0].entityEvidenceIds));
+
 const factMap = buildFactMap(SOURCE, records);
 assert.deepEqual(factMap.records, records, 'Fact map projects the exact shared record model');
 assert.equal(factMap.canonicalOrigin, SOURCE.canonicalOrigin);
@@ -120,10 +209,13 @@ try {
   const facts = await fs.readFile(path.join(distDir, 'fact-map.json'), 'utf8');
   assert.equal(answers, text);
   assert.equal(facts, JSON.stringify(factMap) + '\n');
+  const provenanceBytes = await fs.readFile(path.join(distDir, 'provenance.jsonld'), 'utf8');
+  assert.equal(provenanceBytes, JSON.stringify(provenance) + '\n', 'Materialized provenance projects the shared retrieval recordset');
   await materializeMachineResources({ source: SOURCE, authoredBody: AUTHORED_BODY, distDir });
   assert.equal(await fs.readFile(path.join(distDir, 'answers.txt'), 'utf8'), answers);
   assert.equal(await fs.readFile(path.join(distDir, 'fact-map.json'), 'utf8'), facts);
+  assert.equal(await fs.readFile(path.join(distDir, 'provenance.jsonld'), 'utf8'), provenanceBytes, 'Provenance bytes repeat deterministically');
 } finally {
   await fs.rm(distDir, { recursive: true, force: true });
 }
-console.log(JSON.stringify({ retrievalProvenance: 'PASS', records: records.length, fields: fields.length }, null, 2));
+console.log(JSON.stringify({ retrievalProvenance: 'PASS', records: records.length, fields: fields.length, authoredProvenance: authoredProvenance.length, generatedProvenance: 2 * records.length }, null, 2));

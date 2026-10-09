@@ -49,7 +49,7 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   outputs.set('/llms.txt', source.machineProjection.discoveryGuide.trimEnd() + '\n');
   outputs.set('/index.md', htmlToMarkdown(authoredBody));
   outputs.set('/llms-full.txt', `Canonical entity: ${source.canonicalOrigin}/#saeed-ghezelbash\nCanonical page: ${source.canonicalOrigin}/\nEdition: ${source.edition}\n\n${htmlToPlainText(authoredBody)}\n`);
-  outputs.set('/provenance.jsonld', json(buildProvenanceGraph(source)));
+  outputs.set('/provenance.jsonld', json(buildProvenanceGraph(source, retrievalRecords)));
   outputs.set('/evidence-snapshot.json', json(buildEvidenceSnapshot(source)));
   outputs.set('/doctor.vcf', buildVCard(source, 'physician'));
   outputs.set('/clinic.vcf', buildVCard(source, 'clinic'));
