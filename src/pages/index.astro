@@ -3284,6 +3284,95 @@ export function compileCanonicalSource() {
       return schemaOnlyNode(graph, graph?.["@graph"]?.find((node) => node["@id"] === id), language);
     }
 
+    /** Route roots may expand their topics; identity hubs never expand their inventories. */
+    function focusedProjection(graph, roots, { language = "fa-IR", primaryPageId, visibleQuestionIds = [], visibleMediaIds = [] } = {}) {
+      const byId = new Map(graph["@graph"].map(node => [node["@id"], node]));
+      const templates = new Map(roots.filter(Boolean).map(node => [node["@id"], node]));
+      const personId = SOURCE.canonicalOrigin + "/#saeed-ghezelbash";
+      const person = byId.get(personId);
+      const rootIds = new Set(templates.keys()), questions = new Set(visibleQuestionIds), media = new Set(visibleMediaIds);
+      const answers = new Set(visibleQuestionIds.flatMap(id => values(byId.get(id)?.acceptedAnswer).map(ref => ref["@id"])));
+      const skills = new Set(values(person.skills).map(ref => ref["@id"]));
+      const coreCredentials = new Set(["credential-doctor-of-medicine", "irimc-credential-167430"].map(id => SOURCE.canonicalOrigin + "/" + id));
+      const identityTypes = new Set(["Person", "MedicalClinic", "PhysiciansOffice", "LocalBusiness", "Organization", "EducationalOrganization", "CollegeOrUniversity", "WebSite", "ServiceChannel"]);
+      const personKeys = new Set(["@id", "@type", "additionalType", "name", "givenName", "familyName", "additionalName", "alternateName",
+        "honorificPrefix", "jobTitle", "description", "disambiguatingDescription", "url", "mainEntityOfPage", "identifier", "sameAs",
+        "image", "email", "telephone", "knowsLanguage", "nationality", "address", "practicesAt", "workLocation", "worksFor",
+        "affiliation", "alumniOf", "medicalSpecialty", "areaServed", "potentialAction"]);
+      const clinicKeys = new Set(["@id", "@type", "name", "alternateName", "description", "url", "identifier", "sameAs", "image", "logo",
+        "address", "telephone", "location", "owner", "founder", "employee", "areaServed", "geo", "openingHoursSpecification",
+        "openingHours", "hasMap", "medicalSpecialty", "containedInPlace", "potentialAction", "contactPoint", "mainEntityOfPage"]);
+      const pick = (node, keys) => Object.fromEntries(Object.entries(node).filter(([key]) => keys.has(key)));
+      const filterRelation = (node, key, keep) => {
+        if (!node[key]) return;
+        const filtered = values(node[key]).filter(keep);
+        if (filtered.length) node[key] = Array.isArray(node[key]) ? filtered : filtered[0]; else delete node[key];
+      };
+      function baseNode(id) {
+        const source = templates.get(id) ?? byId.get(id);
+        const types = values(source?.["@type"]);
+        if (!source || (types.includes("Question") && !questions.has(id)) || (types.includes("Answer") && !answers.has(id)) ||
+            (types.includes("VideoObject") && !media.has(id))) return undefined;
+        // Clinic meaning and language are identical on every focused route.
+        const isClinic = types.includes("MedicalClinic");
+        let node = schemaOnlyNode(graph, source, isClinic ? "fa-IR" : language);
+        if (!node) return undefined;
+        if (id === personId) {
+          node = pick(node, personKeys);
+          node.hasCredential = values(person.hasCredential).filter(ref => coreCredentials.has(ref["@id"]));
+          node.hasOccupation = values(person.hasOccupation).filter(ref => values(byId.get(ref["@id"])?.["@type"]).includes("Occupation"));
+        } else if (isClinic) node = pick(node, clinicKeys);
+        else if (types.some(type => identityTypes.has(type))) {
+          for (const key of ["hasPart", "subjectOf", "knowsAbout", "skills", "hasCredential", "hasCertification", "memberOf", "member", "alumni",
+            "availableService", "providesService", "makesOffer", "hasOfferCatalog", "employee", "subOrganization", "owns", "performerIn"]) delete node[key];
+        }
+        if (id !== primaryPageId && (types.includes("WebPage") || types.includes("ProfilePage") || types.includes("MedicalWebPage")) &&
+            (id.endsWith("#webpage") || id === SOURCE.canonicalOrigin + "/webpage"))
+          node = pick(node, new Set(["@id", "@type", "url", "name", "inLanguage", "author", "publisher", "mainEntity"]));
+        if (types.includes("WebPageElement")) {
+          delete node.isPartOf; delete node.hasPart;
+          if (!rootIds.has(id)) node = pick(node, new Set(["@id", "@type", "url", "name", "inLanguage"]));
+        }
+        // A procedure's inverse content index is not a new route topic seed.
+        filterRelation(node, "subjectOf", ref => {
+          const target = byId.get(ref?.["@id"]), targetTypes = values(target?.["@type"]);
+          if (targetTypes.includes("WebPageElement")) return rootIds.has(ref["@id"]);
+          if (targetTypes.includes("Question")) return questions.has(ref["@id"]);
+          if (targetTypes.includes("Answer")) return answers.has(ref["@id"]);
+          if (targetTypes.includes("VideoObject")) return media.has(ref["@id"]);
+          return true;
+        });
+        return node;
+      }
+      // Determine expertise from authored topic edges, before following the physician identity.
+      const topical = new Set(), queue = [...rootIds];
+      while (queue.length) {
+        const id = queue.shift();
+        if (topical.has(id)) continue;
+        const node = baseNode(id);
+        if (!node) continue;
+        topical.add(id);
+        if (values(node["@type"]).some(type => identityTypes.has(type))) continue;
+        queue.push(...internalRefs(node, byId).filter(ref => !topical.has(ref)));
+        const authored = byId.get(id);
+        for (const ref of values(authored?.["dcterms:relation"])) if (skills.has(ref?.["@id"])) queue.push(ref["@id"]);
+        // Keep credentials directly supporting the selected clinical skill, including their issuer/evidence chains.
+        if (skills.has(id)) for (const ref of values(authored?.supportedBy)) {
+          if (values(byId.get(ref?.["@id"])?.["@type"]).some(type => ["EducationalOccupationalCredential", "Certification"].includes(type))) queue.push(ref["@id"]);
+        }
+      }
+      return id => {
+        const node = baseNode(id);
+        if (node?.["@id"] === personId) {
+          for (const key of ["knowsAbout", "skills", "availableService", "subjectOf", "hasCredential", "hasCertification", "memberOf"]) {
+            const refs = values(person[key]).filter(ref => topical.has(ref?.["@id"]) || (key === "hasCredential" && coreCredentials.has(ref?.["@id"])));
+            if (refs.length) node[key] = refs;
+          }
+        }
+        return node;
+      };
+    }
+
     /** Maximal entity-first Search graph; the complete canonical graph is published separately. */
     function projectPageJsonLd(graph, scriptId = "schema-core-mainentity") {
       const all = graph?.["@graph"];
@@ -3326,7 +3415,7 @@ export function compileCanonicalSource() {
       return [{ id: scriptId, document }];
     }
 
-    return { browserContextFor, localizedText, schemaNodeFor, schemaOnlyNode, isSearchInfrastructureNode, collectSchemaSubgraph, projectPageJsonLd };
+    return { browserContextFor, localizedText, schemaNodeFor, schemaOnlyNode, isSearchInfrastructureNode, collectSchemaSubgraph, focusedProjection, projectPageJsonLd };
   })();
 
   // html-contract: one private semantic/build responsibility.
@@ -4131,6 +4220,9 @@ export function compileCanonicalSource() {
           parsed.ids.includes(canonicalContentHtmlId(node.url, canonicalUrl)) &&
           values(node.acceptedAnswer).every((ref) => parsed.ids.includes(canonicalContentHtmlId(ref["@id"], canonicalUrl))))
           .map((node) => browserNode(node["@id"])).filter(Boolean);
+        const projectFocused = pageDiscoveryJsonld.focusedProjection(graph, [pageNode, entity, ...videoNodes, ...scopedQuestions], {
+          language, primaryPageId: pageNode["@id"], visibleQuestionIds: [...scopedQuestions.map(node => node["@id"]), ...(typed(entity, "Question") ? [entity["@id"]] : [])],
+          visibleMediaIds: videoNodes.map(node => node["@id"]) });
         const pageEnrichmentReferences = ["about", "primaryImageOfPage", "reviewedBy", "sdPublisher", "citation", "isBasedOn"]
           .flatMap((property) => namedReferences(pageNode[property]));
         const queue = [entity, browserNode(person["@id"]), browserNode(website["@id"]), browserNode(clinicSource?.["@id"]), ...videoNodes, ...scopedQuestions,
@@ -4145,13 +4237,13 @@ export function compileCanonicalSource() {
           "instructor", "organizer", "performer", "audience", "recordedIn", "reviewRating", "itemReviewed", "about", "mentions",
           "subjectOf", "isBasedOn", "citation", "hasPart", "hasCredential", "memberOf", "worksFor", "affiliation", "alumniOf",
           "recognizedBy", "identifier", "hasOccupation", "medicalSpecialty", "knowsAbout", "category", "inDefinedTermSet",
-          "spatialCoverage", "containedInPlace"];
+          "spatialCoverage", "containedInPlace", "skills"];
         while (queue.length) {
           const node = queue.shift();
           if (!node || selected.has(node["@id"])) continue;
           const authored = authoredById.get(node["@id"]) ?? node;
           if (isSearchInfrastructureNode(graph, authored, homePage["@id"]) && node["@id"] !== pageNode["@id"]) continue;
-          const output = schemaOnlyNode(graph, authored, language) ?? structuredClone(node);
+          const output = projectFocused(node["@id"]);
           if (!output?.["@id"]) continue;
           if (output["@id"] !== person["@id"] && !typed(output, "VideoObject") && output.mainEntityOfPage) {
             const contextualPages = values(output.mainEntityOfPage).filter(ref => (typeof ref === "string" ? ref : ref?.["@id"]) === pageNode["@id"]);
@@ -4747,9 +4839,12 @@ export function compileCanonicalSource() {
   const records = routeDiscovery.deriveRouteDiscovery(home,SOURCE.graph,SOURCE.discovery,homeUrl);
   if (records.length + 1 !== SOURCE.routes.resources.length) throw new Error('Published route inventory drift');
   for(const record of records) {
-    const clinicId=clinic['@id'];
-    record.document['@graph']=record.document['@graph'].map(node=>node['@id']===clinicId?pageDiscoveryJsonld.schemaNodeFor(SOURCE.graph,clinicId,'fa-IR'):node);
-    closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId:record.canonicalUrl+'#webpage',visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project:id=>pageDiscoveryJsonld.schemaNodeFor(SOURCE.graph,id,record.lang)});
+    const primaryPageId=record.canonicalUrl+'#webpage';
+    const rootIds=new Set([primaryPageId,record.entityId,...record.visibleQuestionIds,...record.visibleMediaIds]);
+    const project=pageDiscoveryJsonld.focusedProjection(SOURCE.graph,record.document['@graph'].filter(node=>rootIds.has(node['@id'])),
+      {language:record.lang,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds});
+    record.document['@graph']=record.document['@graph'].map(node=>project(node['@id'])??node);
+    closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));
   const article = htmlContract.inspectHtml(home).guideArticles[0], location = article.sourceCodeLocation;

@@ -11,6 +11,7 @@ import {
   buildVCard, buildLinkset, buildCsvMetadata, buildVoidTurtle, buildDcatTurtle, buildCroissantWithStats, buildDataPackage,
 } from '../src/lib/machine-output.mjs';
 import { buildEvidenceSnapshot } from '../src/lib/evidence-output.mjs';
+import { buildClinicalPassages } from '../src/lib/clinical-passages.mjs';
 
 
 const json = (value) => JSON.stringify(value) + '\n';
@@ -52,6 +53,8 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   outputs.set('/llms-full.txt', `Canonical entity: ${source.canonicalOrigin}/#saeed-ghezelbash\nCanonical page: ${source.canonicalOrigin}/\nEdition: ${source.edition}\n\n${htmlToPlainText(authoredBody)}\n`);
   outputs.set('/provenance.jsonld', json(buildProvenanceGraph(source, retrievalRecords)));
   outputs.set('/evidence-snapshot.json', json(buildEvidenceSnapshot(source)));
+  outputs.set('/clinical-passages.jsonl', buildClinicalPassages(source, authoredBody).map(json).join(''));
+  outputs.set('/physician-expertise.md', await fs.readFile(new URL('../src/canonical/physician-expertise.md', import.meta.url), 'utf8'));
   outputs.set('/doctor.vcf', buildVCard(source, 'physician'));
   outputs.set('/clinic.vcf', buildVCard(source, 'clinic'));
   outputs.set('/linkset.json', json(buildLinkset(source)));
