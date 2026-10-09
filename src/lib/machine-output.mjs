@@ -1,4 +1,5 @@
 import {croissantContext} from './croissant-context.mjs';
+export { buildEvidenceSnapshot } from './evidence-output.mjs';
 export { buildRetrievalRecords, serializeAnswersText, buildAnswersText, buildFactMap, buildProvenanceGraph } from './retrieval-output.mjs';
 import { createHash } from 'node:crypto';
 
@@ -196,20 +197,6 @@ export function buildKnowledgeXml(source) {
     `</knowledge>\n`;
 }
 
-export function buildEvidenceSnapshot(source) {
-  const personId = source.canonicalOrigin + '/#saeed-ghezelbash';
-  const person = source.graph['@graph'].find((node) => node['@id'] === personId);
-  const byId = new Map(source.graph['@graph'].map((node) => [node['@id'], node]));
-  const ids = values(person?.subjectOf).map((entry) => typeof entry === 'string' ? entry : entry?.['@id']).filter(Boolean);
-  return {
-    schemaVersion: 1,
-    subject: personId,
-    observedAt: source.edition,
-    evidence: ids.map((id) => byId.get(id)).filter(Boolean).map((node) => ({
-      id: node['@id'], type: values(node['@type']), name: literal(node.name), url: node.url ?? '', dateModified: literal(node.dateModified, 'en'),
-    })),
-  };
-}
 
 const vEscape = (value) => String(value ?? '').replaceAll('\\','\\\\').replaceAll('\n','\\n').replaceAll(';','\\;').replaceAll(',','\\,');
 const refId = (value) => typeof value === 'string' ? value : value?.['@id'];

@@ -7,9 +7,10 @@ import { createHash } from 'node:crypto';
 
 import {
   serializeGraphAsNTriples, serializeEntityFactsCsv, htmlToMarkdown, htmlToPlainText,
-  buildRetrievalRecords, serializeAnswersText, buildFactMap, buildKnowledgeXml, buildProvenanceGraph, buildEvidenceSnapshot,
+  buildRetrievalRecords, serializeAnswersText, buildFactMap, buildKnowledgeXml, buildProvenanceGraph,
   buildVCard, buildLinkset, buildCsvMetadata, buildVoidTurtle, buildDcatTurtle, buildCroissantWithStats, buildDataPackage,
 } from '../src/lib/machine-output.mjs';
+import { buildEvidenceSnapshot } from '../src/lib/evidence-output.mjs';
 
 
 const json = (value) => JSON.stringify(value) + '\n';
