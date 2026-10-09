@@ -5,8 +5,6 @@ import http from 'node:http';
 import {once} from 'node:events';
 import {parse,parseFragment,serializeOuter} from 'parse5';
 import {chromium} from 'playwright-core';
-import {SOURCE,AUTHORED_BODY} from '../src/canonical/source.mjs';
-import {renderMedicalTrust} from '../src/lib/search-contract.mjs';
 
 const root=new URL('../',import.meta.url);
 const source=await fs.readFile(new URL('src/pages/index.astro',root),'utf8');
@@ -22,20 +20,31 @@ if(process.argv[2]){
  css=await fs.readFile(path.join(dist,stylesheet.slice(1)),'utf8');
  tree=parse(html);assetRoot=dist;
 }else{
- const home=SOURCE.graph['@graph'].find(node=>node['@id']===SOURCE.canonicalOrigin+'/webpage');
- assert(home,'Canonical Home page exists');
- tree=parseFragment(AUTHORED_BODY.replace('</h1>','</h1>'+renderMedicalTrust(home,SOURCE.graph,'fa-IR')));
+ let code=source.slice(4,source.lastIndexOf('\n---\n'));
+ code=code.slice(0,code.lastIndexOf('\nconst requestedPath ='));
+ code=code.replace(/from "\.\.\/lib\/([^"]+)"/g,(_,name)=>`from "${new URL('src/lib/'+name,root).href}"`);
+ code=code.replaceAll('../canonical/source.mjs',new URL('src/canonical/source.mjs',root).href);
+ await fs.mkdir(new URL('.generated/',root),{recursive:true});
+ const moduleFile=new URL('.generated/home-layout-source.mjs',root);
+ await fs.writeFile(moduleFile,code);
+ const {CANONICAL}=await import(moduleFile.href);
+ tree=parse(CANONICAL.render('/'));
 }
 const attr=(node,name)=>node.attrs?.find(a=>a.name===name)?.value;
 let hero;function visit(node){if(node.tagName==='header'&&attr(node,'class')==='entity-hero')hero=node;for(const child of node.childNodes??[])visit(child);}visit(tree);
 assert(hero,'The actual Home entity hero exists');
 const strip=hero.childNodes.find(node=>attr(node,'class')==='hero-trust-strip');
-assert(strip,'The actual late-parsed trust strip exists');
+assert(strip,'The actual three-part trust strip exists');
+const children=hero.childNodes.filter(node=>node.tagName);
+assert(children[children.findIndex(node=>node.tagName==='h1')+1]===strip,'The three-part trust strip immediately follows the Home title');
+assert.equal(strip.childNodes.filter(node=>node.tagName).length,3,'The relocated strip retains its three items');
+assert(!children.some(node=>attr(node,'data-medical-trust')),'The removed author/reviewer card stays absent');
 const text=node=>node.nodeName==='#text'?node.value:(node.childNodes??[]).map(text).join('');
 const originalText=text(hero).replace(/\s+/g,' ').trim();
 const complete=serializeOuter(hero);
-const late=serializeOuter(strip);
-hero.childNodes=hero.childNodes.filter(node=>node!==strip);
+const finalChild=children.at(-1);
+const late=serializeOuter(finalChild);
+hero.childNodes=hero.childNodes.filter(node=>node!==finalChild);
 const partial=serializeOuter(hero);
 const viewports=[{width:360,height:800},{width:390,height:844},{width:393,height:852},{width:430,height:932},{width:768,height:1024},{width:1280,height:800},{width:1366,height:768},{width:1440,height:900},{width:1920,height:1080}];
 const executable=process.env.PLAYWRIGHT_EXECUTABLE_PATH??(process.env.CI==='true'?chromium.executablePath():await fs.access('/usr/bin/chromium').then(()=>'/usr/bin/chromium',()=>'/usr/bin/google-chrome'));
@@ -58,7 +67,7 @@ for(const child of streamedHero.childNodes??[]){
  }
  boundaries.push({name:attr(child,'class')??child.tagName,offset:child.sourceCodeLocation.endTag?.endOffset??child.sourceCodeLocation.endOffset});
 }
-const selectors=['.hero-title','.medical-trust','.hero-subtitle','.hero-search-launch','.hero-figure','.hero-actions','.hero-lead','.hero-identity'];
+const selectors=['.hero-title','.hero-trust-strip','.hero-subtitle','.hero-search-launch','.hero-figure','.hero-actions','.hero-lead','.hero-identity'];
 let streamingResponse;
 const server=http.createServer((request,response)=>{
  if(request.url==='/stream-home'){response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});response.flushHeaders();streamingResponse?.(response);return;}
@@ -115,22 +124,25 @@ try{
     completedHeroes.push({viewport,portrait});
     streamingCases++;
    }finally{response.end();await navigation.catch(()=>{});}
-   // Reproduce the actual pre-DOMContentLoaded dependency: the header's final
-   // named grid child arrives after the earlier hero has already been painted.
+   // Delay the actual final authored child, so the relocated strip cannot act
+   // as an early completion signal for the remaining streamed hero markup.
    await page.setContent('<!doctype html><html dir="rtl" lang="fa-IR"><head><base href="http://home-layout.invalid/"><style>'+css+'</style></head><body><main><article class="medical-guide medical-guide--entity-home">'+partial+'</article></main></body></html>',{waitUntil:'load'});
    await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
-   const snapshot=()=>page.evaluate(()=>Object.fromEntries(['.medical-trust','.hero-title','.hero-figure','.hero-actions','.hero-lead','.hero-identity'].map(selector=>{const node=document.querySelector(selector),r=node.getBoundingClientRect();return [selector,{top:r.top,left:r.left,width:r.width,height:r.height,text:node.textContent}];})));
+   const snapshot=()=>page.evaluate(selectors=>Object.fromEntries(selectors.flatMap(selector=>{const node=document.querySelector(selector);if(!node)return[];const r=node.getBoundingClientRect();return [[selector,{top:r.top,left:r.left,width:r.width,height:r.height,text:node.textContent,painted:getComputedStyle(node).visibility==='visible'}]];})),selectors);
    const before=await snapshot();
    await page.locator('.entity-hero').evaluate((node,html)=>node.insertAdjacentHTML('beforeend',html),late);
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
    const after=await snapshot();
    for(const selector of Object.keys(before)){
-    for(const dimension of ['top','left','width','height'])assert(Math.abs(before[selector][dimension]-after[selector][dimension])<.05,'Late trust strip preserves existing hero geometry: '+JSON.stringify({viewport,selector,dimension,before:before[selector],after:after[selector]}));
+    if(before[selector].painted)for(const dimension of ['top','left','width','height'])assert(Math.abs(before[selector][dimension]-after[selector][dimension])<.05,'Late final markup preserves already-painted hero geometry: '+JSON.stringify({viewport,selector,dimension,before:before[selector],after:after[selector]}));
     assert.equal(after[selector].text,before[selector].text,'Existing hero text stays intact');
    }
    assert.equal(await page.locator('.entity-hero').evaluate(node=>node.textContent.replace(/\s+/g,' ').trim()),originalText,'The complete Home hero retains its original clinical and trust text');
    assert.equal(await page.locator('h1').count(),1,'Home retains its one clear entity heading');
-   const dates=await page.locator('.medical-trust time[datetime]').evaluateAll(nodes=>nodes.map(node=>{
+   assert.equal(await page.locator('.medical-trust').count(),0,'Home omits the removed author/reviewer card');
+   const placement=await page.evaluate(()=>{const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom};};return {title:rect('.hero-title'),trust:rect('.hero-trust-strip'),subtitle:rect('.hero-subtitle')};});
+   assert(placement.title.bottom<=placement.trust.top+.05&&placement.trust.bottom<=placement.subtitle.top+.05,'The strip occupies the removed card position between the title and subtitle: '+JSON.stringify({viewport,placement}));
+   const dates=await page.locator('.hero-trust-strip time[datetime]').evaluateAll(nodes=>nodes.map(node=>{
     const glyphs=(start,end)=>{
      const range=document.createRange();range.setStart(node.firstChild,start);range.setEnd(node.firstChild,end);
      return [...range.getClientRects()].map(rect=>({left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width,height:rect.height}));
@@ -146,10 +158,10 @@ try{
     assert(year.right<=month.left+.05&&month.right<=day.left+.05,'ISO date glyphs read physically from year to month to day, left to right: '+JSON.stringify({viewport,date}));
     assert(Math.abs(year.top-month.top)<.05&&Math.abs(month.top-day.top)<.05,'ISO year/month/day glyphs stay on the same line: '+JSON.stringify({viewport,date}));
    }
-   for(const selector of ['h1','.medical-trust'])assert(await page.locator(selector).evaluate(node=>{const r=node.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;}),'Home heading and canonical review metadata remain visible: '+JSON.stringify({selector,viewport}));
+   for(const selector of ['h1','.hero-trust-strip'])assert(await page.locator(selector).evaluate(node=>{const r=node.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1&&r.left>=-1&&r.right<=innerWidth+1;}),'Home heading and three-part trust strip remain visible: '+JSON.stringify({selector,viewport}));
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'The streaming hero fits its viewport');
    cases++;
   }finally{await page.close();}
  }
 }finally{await browser.close();server.close();await once(server,'close');}
-console.log(JSON.stringify({homeLayout:'PASS',lateTrustStrip:'stable earlier hero geometry',canonicalReview:'visible after entity heading',isoDateGlyphs:'year/month/day LTR, same line, text equals datetime',text:'preserved',cases,streamingCases,streamingStages,completedHeroes,realHtmlStream:'stable already-painted geometry, complete content visible without reader JS',finalDist:!!process.argv[2]},null,2));
+console.log(JSON.stringify({homeLayout:'PASS',trustStrip:'three items immediately after the entity heading, author/reviewer card removed',lateFinalMarkup:'stable already-painted hero geometry',canonicalReview:'visible in the relocated strip',isoDateGlyphs:'year/month/day LTR, same line, text equals datetime',text:'preserved',cases,streamingCases,streamingStages,completedHeroes,realHtmlStream:'stable already-painted geometry, complete content visible without reader JS',finalDist:!!process.argv[2]},null,2));

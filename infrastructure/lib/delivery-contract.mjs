@@ -49,7 +49,22 @@ export async function measureDelivery({distDir,source,verify=false,locked=null,s
   if(resource.pagePurpose==='clinical-guide'&&vals(page?.about).some(v=>v?.['@id']===personId))incorrectAbout++;
   const authored=truth.get(pageId);for(const key of ['datePublished','dateModified','lastReviewed'])if(value(page?.[key])!==value(authored?.[key]))dateErrors++;
   const trust=nodes.filter(n=>attr(n,'data-medical-trust')===pageId);
-  if(route==='/'){const review=nodes.find(n=>(attr(n,'class')??'').split(/\s+/).includes('hero-trust-item--review'));const times=[];function collect(n){if(n?.tagName==='time')times.push(n);for(const child of n?.childNodes??[])collect(child);}collect(review);if(times.some(n=>attr(n,'datetime')!==value(page.lastReviewed)))visibleReviewDateErrors++;if(verify)assert.equal(visibleReviewDateErrors,0,'Visible Home review badge derives from canonical review date');}
+  if(route==='/'){
+   const strips=nodes.filter(n=>attr(n,'class')==='hero-trust-strip');
+   const review=nodes.find(n=>(attr(n,'class')??'').split(/\s+/).includes('hero-trust-item--review'));
+   const times=[];function collect(n){if(n?.tagName==='time')times.push(n);for(const child of n?.childNodes??[])collect(child);}collect(review);
+   if(times.some(n=>attr(n,'datetime')!==value(page.lastReviewed)||text(n)!==value(page.lastReviewed)))visibleReviewDateErrors++;
+   if(verify){
+    assert.equal(trust.length,0,'Home omits the removed author/reviewer card');
+    assert.equal(strips.length,1,'Home retains one three-part trust strip');
+    const siblings=strips[0].parentNode.childNodes.filter(n=>n.tagName);
+    assert(siblings[siblings.findIndex(n=>n.tagName==='h1')+1]===strips[0],'Home trust strip immediately follows its title');
+    assert.equal(strips[0].childNodes.filter(n=>n.tagName).length,3,'Home strip retains all three trust items');
+    assert.equal(times.length,1,'Home review badge exposes one canonical date');
+    assert.equal(visibleReviewDateErrors,0,'Visible Home review badge derives from canonical review date');
+    trustPages++;
+   }
+  }
   if(verify){
    assert.equal(scripts.length,1,'One inline JSON-LD '+route);assert.equal(canonical.length,1,'One canonical '+route);assert.equal(attr(canonical[0],'href'),origin+route,'Canonical ownership '+route);
    assert.equal(h1.length,1,'One H1 '+route);assert.equal(nodes.filter(n=>n.tagName==='article'&&(attr(n,'class')??'').split(/\s+/).includes('medical-guide')).length,1,'One primary article '+route);
@@ -64,7 +79,7 @@ export async function measureDelivery({distDir,source,verify=false,locked=null,s
     assert(Buffer.byteLength(html)<1500000,'Focused page comfortably below Search fetch limit '+route);
    }
    for(const key of ['datePublished','dateModified','lastReviewed'])assert.equal(value(page[key]),value(authored[key]),'Route date truth '+key+' '+route);
-   if(vals(page['@type']).includes('MedicalWebPage')){
+   if(route!=='/'&&vals(page['@type']).includes('MedicalWebPage')){
     assert.equal(trust.length,1,'Visible medical trust '+route);trustPages++;
     for(const key of ['author','reviewedBy','lastReviewed','dateModified']){
      const expected=page[key];const elements=nodes.filter(n=>attr(n,'data-trust-property')===key);

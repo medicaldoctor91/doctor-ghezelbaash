@@ -18,7 +18,7 @@ All canonical HTML paths remain crawlable through the unchanged wildcard robots 
 
 ## Dates and visible clinical trust
 
-Source edition remains release metadata. The starting source assigned that edition to every canonical page's dateModified without route-specific evidence of meaningful clinical modification. Those unsupported page dates and corresponding sitemap lastmod values were omitted. Historical publication/media/research dates and the existing canonical medical review date were preserved. Visible author/reviewer/review-date metadata and the hero review badge now derive from the canonical graph, replacing conflicting handwritten dates. No review date or historical event was invented.
+Source edition remains release metadata. The starting source assigned that edition to every canonical page's dateModified without route-specific evidence of meaningful clinical modification. Those unsupported page dates and corresponding sitemap lastmod values were omitted. Historical publication/media/research dates and the existing canonical medical review date were preserved. Focused entries display author/reviewer/review-date metadata derived from the canonical graph. At the owner's request, Home displays its three-part license/clinic-status/review-date strip directly after the entity heading, replacing the separate author/reviewer card. The Home review badge still derives from the canonical graph; author and reviewer remain in structured data. The clinical-copy lock was refreshed for the strip's changed text order, with clinical prose and the strip contents preserved. No review date or historical event was invented.
 
 ## Evidence relations
 

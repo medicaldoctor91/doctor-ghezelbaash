@@ -77,7 +77,7 @@ try{
     const summaryMargins=[...document.querySelectorAll('.multilingual-collapsible-section > summary > h2')].map(e=>parseFloat(getComputedStyle(e).marginBlockStart));
     // Measure primary trust metadata only. DOM text can retain a correct ISO
     // date while RTL bidi resolution physically reverses its three parts.
-    const trustDates=[...article.querySelectorAll('.medical-trust time')].filter(time=>!time.closest('[data-guide-context]')).map(time=>{
+    const trustDates=[...article.querySelectorAll('.medical-trust time, .hero-trust-strip time')].filter(time=>!time.closest('[data-guide-context]')).map(time=>{
      const value=time.textContent,datetime=time.getAttribute('datetime'),iso=/^\d{4}-\d{2}-\d{2}$/.test(value);
      if(!iso||time.firstChild?.nodeType!==Node.TEXT_NODE)return {value,datetime,iso,glyphs:null};
      const rangeRect=(start,end)=>{const range=document.createRange();range.setStart(time.firstChild,start);range.setEnd(time.firstChild,end);const r=range.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};};

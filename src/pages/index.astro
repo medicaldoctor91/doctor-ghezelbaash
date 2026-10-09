@@ -312,16 +312,16 @@ blockquote {
 .entity-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-  grid-template-areas: "title portrait" "review portrait" "subtitle portrait" "search portrait" "actions portrait" "lead lead" "identity identity" "trust trust";
+  grid-template-areas: "title portrait" "trust portrait" "subtitle portrait" "search portrait" "actions portrait" "lead lead" "identity identity";
   column-gap: clamp(1.3rem, 3vw, 3rem);
   row-gap: 0.56rem;
   align-items: start;
   margin-block-end: clamp(3rem, 6vw, 5rem);
   content-visibility: visible;
 }
-/* Paint the dependent hero blocks only once their final sibling has parsed.
+/* Paint the dependent hero blocks once the final portrait caption has parsed.
    The complete static page and cloned reader context expose all content without JS. */
-.medical-guide--entity-home > .entity-hero:not(:has(> .hero-trust-strip)) > :not(.hero-title) {
+.medical-guide--entity-home > .entity-hero:not(:has(> .hero-figure #medical-review-note)) > :not(.hero-title) {
   visibility: hidden;
 }
 .entity-hero .hero-title {
@@ -332,9 +332,6 @@ blockquote {
   justify-self: center;
   margin-block-end: 0.05rem;
   text-align: center;
-}
-.entity-hero > .medical-trust {
-  grid-area: review;
 }
 .guide-context .hero-title {
   max-width: 24ch;
@@ -636,7 +633,7 @@ blockquote {
 @media (max-width: 960px) {
   .entity-hero {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "title" "review" "subtitle" "search" "portrait" "actions" "lead" "identity" "trust";
+    grid-template-areas: "title" "trust" "subtitle" "search" "portrait" "actions" "lead" "identity";
     gap: 0.5rem;
     margin-block-end: 2.2rem;
   }
@@ -900,7 +897,7 @@ blockquote {
   gap: 0;
   justify-self: center;
   width: 100%;
-  margin: 1rem auto 0.2rem;
+  margin: 0.3rem auto 0.2rem;
   padding: 0.42rem 0;
   border: 0;
   border-block: 1px solid #dce7e2;
@@ -976,7 +973,7 @@ a.hero-trust-item:hover {
   }
   .hero-trust-strip {
     width: 100%;
-    margin-block-start: 0.86rem;
+    margin-block-start: 0.3rem;
   }
   .hero-trust-item {
     min-height: 3.55rem;
@@ -1857,7 +1854,8 @@ table[tabindex]:focus-visible{outline:3px solid var(--focus-ring);outline-offset
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
-.medical-trust time {
+.medical-trust time,
+.hero-trust-copy time {
   direction: ltr;
   unicode-bidi: isolate;
 }
@@ -4743,7 +4741,7 @@ export function compileCanonicalSource() {
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
   const rawHome = shell(baseHead + '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' + `<link rel="stylesheet" href="${assets[0].path}">` +
-    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml.replace('</h1>', '</h1>'+renderMedicalTrust(page,SOURCE.graph,'fa-IR')));
+    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
   const home = readerScope.stampGuideSource(rawHome);
   htmlContract.assertDocumentContract(home);
   const records = routeDiscovery.deriveRouteDiscovery(home,SOURCE.graph,SOURCE.discovery,homeUrl);

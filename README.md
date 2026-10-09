@@ -12,6 +12,7 @@
 - پس از اجرای JavaScript، reader پیرامون بخش منتخب باز می‌شود ولی title، H1، canonical، primary article و JSON-LD همان route باقی می‌مانند.
 - چهار `VideoObject` به watch pageهای canonical متصل‌اند؛ لینک‌های Clip با `?t=` واقعاً زمان ویدیو را انتخاب می‌کنند.
 - تاریخ edition از publication/modification/review جدا است. تاریخ‌های unsupported حذف می‌شوند و trust metadata قابل‌دیدن از truth گراف تولید می‌شود.
+- در Home، باکس سه‌قسمتی نظام پزشکی، وضعیت مراجعه و تاریخ بازبینی درست زیر H1 قرار دارد؛ کادر نویسنده/بازبین فقط در ورودی‌های موضوعی نمایش داده می‌شود.
 - redirectهای HTML یک‌مرحله‌ای هستند. aliasهای هویت 200 با MIME ماشین، CORS، noindex/follow و describedby پوشش داده می‌شوند؛ در sitemap HTML قرار نمی‌گیرند.
 - representationهای مفید ماشین حفظ می‌شوند. موجودی و بررسی تک‌تک آن‌ها در [delivery audit](docs/delivery-audit.md) مستند است؛ llms.txt معیار ranking نیست.
 - مسیر انتشار: validation → build → verification → finalize → seal → **read-only verification** → artifact. hashهای dist قبل و بعد از بررسی نهایی باید یکسان باشند.

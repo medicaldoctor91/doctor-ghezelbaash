@@ -24,6 +24,15 @@ assert.equal(stylesheets.length,1,'Home discovers one render-blocking stylesheet
 assert(stylesheets[0].index<homeHead.indexOf('<script id="schema-core-mainentity"'),'Browser discovers render-blocking CSS before the complete inline KG');
 const inline=JSON.parse(homeHtml.match(/<script id="schema-core-mainentity"[^>]*>(.*?)<\/script>/s)[1]);
 assert.equal(await semanticFingerprint(inline),await semanticFingerprint(SOURCE.graph),'Home includes full canonical truth');
+const homeNodes=[];
+function visitHome(node){homeNodes.push(node);for(const child of node.childNodes??[])visitHome(child);}visitHome(parse(homeHtml));
+const homeAttribute=(node,name)=>node.attrs?.find(entry=>entry.name===name)?.value;
+const homeHero=homeNodes.find(node=>homeAttribute(node,'class')==='entity-hero');
+const homeChildren=homeHero.childNodes.filter(node=>node.tagName);
+const homeStrip=homeChildren.find(node=>homeAttribute(node,'class')==='hero-trust-strip');
+assert.equal(homeNodes.filter(node=>homeAttribute(node,'data-medical-trust')).length,0,'Home omits the removed author/reviewer card');
+assert.equal(homeNodes.filter(node=>homeAttribute(node,'class')==='hero-trust-strip').length,1,'Home exposes one three-part trust strip');
+assert(homeChildren[homeChildren.findIndex(node=>node.tagName==='h1')+1]===homeStrip,'The three-part strip immediately follows the Home title in document order');
 for(const record of CANONICAL.records){
  assert.equal(record.document['@context'],'https://schema.org');
  const rendered=CANONICAL.render(record.path);
