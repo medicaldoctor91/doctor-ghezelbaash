@@ -229,70 +229,161 @@ export function buildLinkset(source) {
   }] };
 }
 
+const DCT = 'http://purl.org/dc/terms/';
+const PROV = 'http://www.w3.org/ns/prov#';
+const SCHEMA = 'https://schema.org/';
+const datasetNode = source => source.graph['@graph'].find(node => node['@id'] === source.canonicalOrigin + '/graph.jsonld/dataset');
+const projectionReferences = source => ['/answers.txt', '/fact-map.json', '/provenance.jsonld'].map(path => ({'@id': source.canonicalOrigin + path}));
+const factColumns = () => [
+  {name: 'row_id', datatype: 'string', [DCT + 'description']: 'Stable SHA-256 identifier of the complete RDF statement tuple; the primary key of this unique-statement table.'},
+  {name: 'subject', datatype: 'string', [DCT + 'description']: 'RDF subject IRI or deterministic blank-node identifier, preserving the canonical statement subject.'},
+  {name: 'predicate', datatype: 'anyURI', [DCT + 'description']: 'Expanded absolute RDF predicate IRI identifying the relationship or property asserted by the statement.'},
+  {name: 'object', datatype: 'string', [DCT + 'description']: 'RDF object IRI, blank-node identifier or literal lexical value; interpret together with object_kind, datatype and language.'},
+  {name: 'object_kind', datatype: 'string', [DCT + 'description']: 'RDF object term kind: iri, blank or literal; distinguishes resources from literal lexical values.'},
+  {name: 'datatype', datatype: 'string', [DCT + 'description']: 'RDF literal datatype IRI when explicit or native; an empty value leaves RDF plain or language-tagged literal semantics unchanged.'},
+  {name: 'language', datatype: 'string', [DCT + 'description']: 'RDF literal language tag when present; an empty value means this statement has no language tag.'},
+];
+
 export function buildCsvMetadata(source) {
+  const dataset = datasetNode(source);
   return {
     '@context': 'http://www.w3.org/ns/csvw',
+    '@id': source.canonicalOrigin + '/entity-facts.csv-metadata.json',
     url: source.canonicalOrigin + '/entity-facts.csv',
-    tableSchema: { columns: [
-      { name: 'row_id', datatype: 'string' }, { name: 'subject', datatype: 'string' }, { name: 'predicate', datatype: 'anyURI' },
-      { name: 'object', datatype: 'string' }, { name: 'object_kind', datatype: 'string' }, { name: 'datatype', datatype: 'string' }, { name: 'language', datatype: 'string' },
-    ] },
+    [DCT + 'title']: literal(dataset.name),
+    [DCT + 'description']: literal(dataset.description),
+    [DCT + 'isPartOf']: {'@id': dataset['@id']},
+    [SCHEMA + 'version']: dataset.version,
+    ...(dataset.datePublished ? {[DCT + 'issued']: literal(dataset.datePublished)} : {}),
+    ...(dataset.dateModified ? {[DCT + 'modified']: literal(dataset.dateModified)} : {}),
+    ...(dataset['dcat:hasCurrentVersion'] ? {[DCT + 'hasVersion']: dataset['dcat:hasCurrentVersion']} : {}),
+    [DCT + 'creator']: dataset.creator,
+    [DCT + 'publisher']: dataset.publisher,
+    [DCT + 'license']: {'@id': dataset.license},
+    [PROV + 'wasDerivedFrom']: {'@id': source.canonicalOrigin + '/graph.jsonld'},
+    [DCT + 'references']: projectionReferences(source),
+    notes: `Release edition: ${source.edition}. One row per unique canonical RDF statement. Read object_kind, datatype and language together to reconstruct RDF terms; join entity IRIs to the canonical graph and linked retrieval/provenance resources.`,
+    tableSchema: {primaryKey: 'row_id', columns: factColumns()},
   };
 }
 
+function catalogDatasetLines(source, types) {
+  const dataset = datasetNode(source);
+  const terms = [
+    `a ${types.join(', ')}`,
+    `dcterms:title ${literalTerm(literal(dataset.name))}`,
+    `dcterms:description ${literalTerm(literal(dataset.description))}`,
+    `dcterms:identifier ${literalTerm(dataset['@id'])}, ${literalTerm('edition:' + source.edition)}`,
+    `dcat:version ${literalTerm(dataset.version)}`,
+    `dcterms:creator ${iriTerm(refId(dataset.creator))}`,
+    `dcterms:publisher ${iriTerm(refId(dataset.publisher))}`,
+    `dcterms:license ${iriTerm(dataset.license)}`,
+    `dcat:landingPage ${iriTerm(dataset.url)}`,
+    `prov:wasDerivedFrom ${iriTerm(source.canonicalOrigin + '/graph.jsonld')}`,
+    `dcterms:provenance ${iriTerm(source.canonicalOrigin + '/provenance.jsonld')}`,
+    `dcterms:references ${projectionReferences(source).map(ref => iriTerm(ref['@id'])).join(', ')}`,
+  ];
+  for (const [property, value] of [['dcterms:issued', dataset.datePublished], ['dcterms:modified', dataset.dateModified]]) {
+    if (value) terms.push(`${property} ${literalTerm(literal(value), {datatype: value['@type']})}`);
+  }
+  if (dataset['dcat:hasCurrentVersion']) terms.push(`dcat:hasCurrentVersion ${iriTerm(refId(dataset['dcat:hasCurrentVersion']))}`);
+  const versions = values(dataset['dcat:hasVersion']).map(ref => iriTerm(refId(ref)));
+  if (versions.length) terms.push(`dcat:hasVersion ${versions.join(', ')}`);
+  for (const property of ['prov:wasAttributedTo', 'prov:wasGeneratedBy', 'prov:wasDerivedFrom', 'dcterms:provenance']) {
+    for (const ref of values(dataset[property])) terms.push(`${property} ${iriTerm(refId(ref))}`);
+  }
+  return [`@prefix dcat: <http://www.w3.org/ns/dcat#> .`, `@prefix dcterms: <${DCT}> .`, `@prefix prov: <${PROV}> .`, `<${dataset['@id']}> ${terms.join(' ;\n  ')} .`];
+}
+
+function catalogDistributionLines(source) {
+  const dataset = datasetNode(source);
+  return source.machineResources.filter(resource => resource.distributionIri).flatMap(resource => [
+    `<${dataset['@id']}> dcat:distribution <${resource.distributionIri}> .`,
+    `<${resource.distributionIri}> a dcat:Distribution, prov:Entity ; dcat:downloadURL <${source.canonicalOrigin}${resource.path}> ; dcat:mediaType ${literalTerm(resource.mediaType)} ; dcat:version ${literalTerm(dataset.version)} ; prov:wasDerivedFrom <${dataset['@id']}> .`,
+  ]);
+}
+
 export function buildVoidTurtle(source, tripleCount) {
-  const dataset = `${source.canonicalOrigin}/graph.jsonld/dataset`;
-  return `@prefix void: <http://rdfs.org/ns/void#> .\n@prefix dcterms: <http://purl.org/dc/terms/> .\n<${dataset}> a void:Dataset ;\n  dcterms:title "Dr. Saeed Ghezelbash Public Knowledge Graph" ;\n  void:triples ${tripleCount} ;\n  void:dataDump <${source.canonicalOrigin}/graph.jsonld>, <${source.canonicalOrigin}/graph.ttl> ;\n  void:vocabulary <https://schema.org/>, <http://www.w3.org/ns/prov#>, <http://www.w3.org/ns/shacl#> .\n`;
+  const dataset = datasetNode(source);
+  return [
+    '@prefix void: <http://rdfs.org/ns/void#> .',
+    ...catalogDatasetLines(source, ['void:Dataset', 'dcat:Dataset', 'prov:Entity']),
+    `<${dataset['@id']}> void:triples ${tripleCount} ; void:dataDump <${source.canonicalOrigin}/graph.jsonld>, <${source.canonicalOrigin}/graph.ttl> ; void:vocabulary <https://schema.org/>, <http://www.w3.org/ns/prov#>, <http://www.w3.org/ns/shacl#> .`,
+    ...catalogDistributionLines(source),
+  ].join('\n') + '\n';
 }
 
 export function buildDcatTurtle(source) {
-  const dataset = `${source.canonicalOrigin}/graph.jsonld/dataset`;
-  const lines = [`@prefix dcat: <http://www.w3.org/ns/dcat#> .`,`@prefix dcterms: <http://purl.org/dc/terms/> .`,`<${dataset}> a dcat:Dataset ; dcterms:title "Dr. Saeed Ghezelbash Public Knowledge Graph" .`];
-  for (const resource of source.machineResources.filter((item) => item.distributionIri)) {
-    lines.push(`<${dataset}> dcat:distribution <${resource.distributionIri}> .`);
-    lines.push(`<${resource.distributionIri}> a dcat:Distribution ; dcat:downloadURL <${source.canonicalOrigin}${resource.path}> ; dcat:mediaType "${resource.mediaType}" .`);
-  }
-  return lines.join('\n') + '\n';
+  return [...catalogDatasetLines(source, ['dcat:Dataset', 'prov:Entity']), ...catalogDistributionLines(source)].join('\n') + '\n';
 }
 
 export function buildCroissant(source) {
-  const dataset=source.graph['@graph'].find(n=>n['@id']===source.canonicalOrigin+'/graph.jsonld/dataset');
-  const columns=buildCsvMetadata(source).tableSchema.columns;
+  const dataset = datasetNode(source);
+  const columns = factColumns();
   return {
-    '@context': croissantContext,
+    '@context': {...croissantContext, prov: PROV},
+    '@id': dataset['@id'],
     '@type': 'sc:Dataset',
     name: literal(dataset.name),
     description: literal(dataset.description),
     conformsTo: 'http://mlcommons.org/croissant/1.1',
     url: dataset['@id'],
+    identifier: [dataset['@id'], {'@type': 'sc:PropertyValue', propertyID: 'Release edition', value: source.edition}],
+    creator: dataset.creator,
+    publisher: dataset.publisher,
     license: dataset.license,
     citeAs: dataset['@id'],
-    ...(dataset.datePublished?{datePublished:literal(dataset.datePublished)}:{}),
-    ...(dataset.version?{version:dataset.version}:{}),
-    distribution: source.machineResources.filter(resource=>!['/index.html','/croissant.json'].includes(resource.path)).map(resource=>({
-      '@type':'cr:FileObject','@id':resource.path.slice(1),name:resource.path.slice(1),contentUrl:source.canonicalOrigin+resource.path,encodingFormat:resource.mediaType,
+    ...(dataset.datePublished ? {datePublished: literal(dataset.datePublished)} : {}),
+    ...(dataset.dateModified ? {dateModified: literal(dataset.dateModified)} : {}),
+    ...(dataset.version ? {version: dataset.version} : {}),
+    ...(dataset['dcat:hasCurrentVersion'] ? {'dct:hasVersion': dataset['dcat:hasCurrentVersion']} : {}),
+    'prov:wasDerivedFrom': {'@id': source.canonicalOrigin + '/graph.jsonld'},
+    'dct:references': projectionReferences(source),
+    distribution: source.machineResources.filter(resource => !['/index.html', '/croissant.json'].includes(resource.path)).map(resource => ({
+      '@type': 'cr:FileObject', '@id': resource.path.slice(1), name: resource.path.slice(1), contentUrl: source.canonicalOrigin + resource.path, encodingFormat: resource.mediaType,
+      ...(resource.title ? {description: resource.title} : {}),
     })),
-    recordSet:[{
-      '@type':'cr:RecordSet','@id':'entity-facts',name:'entity-facts',
-      key:{'@id':'entity-facts/row_id'},
-      field:columns.map(column=>({
-        '@type':'cr:Field','@id':'entity-facts/'+column.name,name:column.name,dataType:'sc:Text',
-        source:{fileObject:{'@id':'entity-facts.csv'},extract:{column:column.name}},
+    recordSet: [{
+      '@type': 'cr:RecordSet', '@id': 'entity-facts', name: 'entity-facts',
+      description: 'One row per unique canonical RDF statement; RDF object kind, datatype and language preserve term identity.',
+      key: {'@id': 'entity-facts/row_id'},
+      field: columns.map(column => ({
+        '@type': 'cr:Field', '@id': 'entity-facts/' + column.name, name: column.name, description: column[DCT + 'description'], dataType: 'sc:Text',
+        source: {fileObject: {'@id': 'entity-facts.csv'}, extract: {column: column.name}},
       })),
     }],
   };
 }
 
 export function buildDataPackage(source, fileStats = new Map()) {
+  const dataset = datasetNode(source);
+  const contributor = (ref, role) => {
+    const entity = source.graph['@graph'].find(node => node['@id'] === refId(ref));
+    return {title: literal(entity?.name, 'en') || refId(ref), path: refId(ref), role};
+  };
   return {
     profile: 'data-package',
+    id: dataset['@id'],
     name: 'dr-saeed-ghezelbash-public-knowledge-graph',
-    title: 'Dr. Saeed Ghezelbash Public Knowledge Graph',
-    version: source.edition,
-    licenses: [{ name: 'CC-BY-4.0', path: 'https://creativecommons.org/licenses/by/4.0/' }],
-    resources: source.machineResources.filter((resource) => resource.path !== '/index.html').map((resource) => {
+    title: literal(dataset.name),
+    description: literal(dataset.description),
+    homepage: dataset.url,
+    keywords: dataset.keywords,
+    version: dataset.version,
+    edition: source.edition,
+    ...(dataset.datePublished ? {datePublished: literal(dataset.datePublished)} : {}),
+    ...(dataset.dateModified ? {dateModified: literal(dataset.dateModified)} : {}),
+    contributors: [contributor(dataset.creator, 'author'), contributor(dataset.publisher, 'publisher')],
+    sources: [{title: 'Canonical graph', path: source.canonicalOrigin + '/graph.jsonld'}, ...projectionReferences(source).map(ref => ({title: ref['@id'].split('/').at(-1), path: ref['@id']}))],
+    licenses: [{name: 'CC-BY-4.0', path: dataset.license}],
+    resources: source.machineResources.filter(resource => resource.path !== '/index.html').map(resource => {
       const stat = fileStats.get(resource.path);
-      return { name: resource.path.replace(/^\//,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,''), path: source.canonicalOrigin+resource.path, mediatype: resource.mediaType, ...(stat ? { bytes: stat.bytes, hash: `sha256:${stat.sha256}` } : {}) };
+      return {
+        name: resource.path.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, ''), path: source.canonicalOrigin + resource.path, mediatype: resource.mediaType,
+        ...(resource.title ? {title: resource.title, description: resource.title} : {}),
+        ...(resource.path === '/entity-facts.csv' ? {profile: 'tabular-data-resource', schema: {primaryKey: 'row_id', fields: factColumns().map(column => ({name: column.name, type: 'string', description: column[DCT + 'description']}))}} : {}),
+        ...(stat ? {bytes: stat.bytes, hash: `sha256:${stat.sha256}`} : {}),
+      };
     }),
   };
 }

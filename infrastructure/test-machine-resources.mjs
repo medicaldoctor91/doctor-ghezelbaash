@@ -10,6 +10,8 @@ import { materializeMachineResources } from './materialize-machine-resources.mjs
 import { serializeGraphAsNTriples,buildCsvMetadata,serializeEntityFactsCsv } from '../src/lib/machine-output.mjs';
 import {semanticFingerprint,rdfFingerprint,csvFingerprint} from './lib/rdf.mjs';
 import {Parser} from 'n3';
+import {createHash} from 'node:crypto';
+import jsonld from 'jsonld';
 
 const fixture={'@context':{'@vocab':'https://schema.org/'},'@graph':[
  {'@id':'https://example.com/entity',name:['duplicate','duplicate','unique']},
@@ -90,6 +92,101 @@ try {
   assert.match(await fs.readFile(path.join(distDir, 'clinic.vcf'), 'utf8'), /BEGIN:VCARD/);
   assert(Array.isArray(JSON.parse(await fs.readFile(path.join(distDir, 'linkset.json'), 'utf8')).linkset));
   assert.equal(JSON.parse(await fs.readFile(path.join(distDir, 'croissant.json'), 'utf8')).conformsTo, 'http://mlcommons.org/croissant/1.1');
+  console.log('Canonical RDF/CSV equivalence, native datatypes, language tags and uniqueness: PASS');
+  const dataset = source.graph['@graph'].find(node => node['@id'] === source.canonicalOrigin + '/graph.jsonld/dataset');
+  const dct = 'http://purl.org/dc/terms/';
+  const prov = 'http://www.w3.org/ns/prov#';
+  const schema = 'https://schema.org/';
+  const metadataFailures = [];
+  const check = (name, assertion) => { try { assertion(); } catch (error) { metadataFailures.push(name + ': ' + error.message); } };
+  const csvMetadata = JSON.parse(await fs.readFile(path.join(distDir, 'entity-facts.csv-metadata.json'), 'utf8'));
+  check('CSVW portable metadata', () => {
+    assert.equal(csvMetadata.tableSchema.primaryKey, 'row_id');
+    assert.equal(csvMetadata[dct + 'isPartOf']['@id'], dataset['@id']);
+    assert.equal(csvMetadata[schema + 'version'], dataset.version);
+    assert.equal(csvMetadata[dct + 'issued'], dataset.datePublished['@value']);
+    assert.equal(csvMetadata[dct + 'modified'], dataset.dateModified['@value']);
+    assert.equal(csvMetadata[dct + 'hasVersion']['@id'], dataset['dcat:hasCurrentVersion']['@id']);
+    assert.match(csvMetadata.notes, new RegExp(source.edition));
+    assert.deepEqual(csvMetadata[prov + 'wasDerivedFrom'], {'@id': source.canonicalOrigin + '/graph.jsonld'});
+    assert.deepEqual(csvMetadata[dct + 'references'].map(ref => ref['@id']), ['/answers.txt', '/fact-map.json', '/provenance.jsonld'].map(p => source.canonicalOrigin + p));
+    for (const column of csvMetadata.tableSchema.columns) {
+      assert(column[dct + 'description']?.length > 30, column.name + ' has a meaningful RDF role description');
+      assert.equal(column.datatype, column.name === 'predicate' ? 'anyURI' : 'string', 'CSV lexical datatype is unchanged');
+    }
+    assert.match(csvMetadata.tableSchema.columns.find(c => c.name === 'row_id')[dct + 'description'], /SHA-256/);
+    assert.match(csvMetadata.tableSchema.columns.find(c => c.name === 'object')[dct + 'description'], /lexical/);
+    assert.match(csvMetadata.tableSchema.columns.find(c => c.name === 'datatype')[dct + 'description'], /RDF/);
+  });
+  const dataPackage = JSON.parse(await fs.readFile(path.join(distDir, 'datapackage.json'), 'utf8'));
+  check('Data Package descriptive metadata', () => {
+    assert.equal(dataPackage.id, dataset['@id']);
+    assert.equal(dataPackage.description, dataset.description);
+    assert.equal(dataPackage.version, dataset.version);
+    assert.equal(dataPackage.edition, source.edition);
+    assert.equal(dataPackage.datePublished, dataset.datePublished['@value']);
+    assert(!Object.hasOwn(dataPackage, 'created'), 'Dataset publication date must not become an invented package creation timestamp');
+    assert.equal(dataPackage.dateModified, dataset.dateModified['@value']);
+    assert.deepEqual(dataPackage.keywords, dataset.keywords);
+    assert.equal(dataPackage.homepage, dataset.url);
+    assert(dataPackage.contributors.some(c => c.role === 'author' && c.path === dataset.creator['@id']));
+    assert(dataPackage.contributors.some(c => c.role === 'publisher' && c.path === dataset.publisher['@id']));
+    assert(dataPackage.sources.some(s => s.path === source.canonicalOrigin + '/graph.jsonld'));
+    assert(dataPackage.sources.some(s => s.path === source.canonicalOrigin + '/provenance.jsonld'));
+    const facts = dataPackage.resources.find(r => r.path.endsWith('/entity-facts.csv'));
+    assert.equal(facts.schema.primaryKey, 'row_id');
+    assert.deepEqual(facts.schema.fields.map(f => f.name), csvMetadata.tableSchema.columns.map(c => c.name));
+    assert(facts.schema.fields.every(f => f.description && f.type === 'string'));
+  });
+  const croissant = JSON.parse(await fs.readFile(path.join(distDir, 'croissant.json'), 'utf8'));
+  check('Croissant dataset attribution and structure', () => {
+    assert.equal(croissant['@id'], dataset['@id']);
+    assert.deepEqual(croissant.creator, dataset.creator);
+    assert.deepEqual(croissant.publisher, dataset.publisher);
+    assert.equal(croissant.license, dataset.license);
+    assert.equal(croissant.version, dataset.version);
+    assert.equal(croissant.datePublished, dataset.datePublished['@value']);
+    assert.equal(croissant.dateModified, dataset.dateModified['@value']);
+    assert.equal(croissant['dct:hasVersion']['@id'], dataset['dcat:hasCurrentVersion']['@id']);
+    assert.deepEqual(croissant['prov:wasDerivedFrom'], {'@id': source.canonicalOrigin + '/graph.jsonld'});
+    assert(croissant['dct:references'].some(r => r['@id'].endsWith('/fact-map.json')));
+    assert(croissant.recordSet[0].field.every(field => field.description));
+  });
+  const expandedCroissant = await jsonld.expand(croissant, {base: source.canonicalOrigin + '/croissant.json', documentLoader: () => { throw new Error('Croissant context must stay local'); }});
+  check('Croissant local JSON-LD semantics', () => {
+    assert.equal(expandedCroissant[0][schema + 'creator'][0]['@id'], dataset.creator['@id']);
+    assert.equal(expandedCroissant[0][prov + 'wasDerivedFrom'][0]['@id'], source.canonicalOrigin + '/graph.jsonld');
+    assert.equal(expandedCroissant[0][dct + 'references'].length, 3);
+  });
+  for (const file of croissant.distribution) {
+    const bytes = await fs.readFile(path.join(distDir, new URL(file.contentUrl).pathname.slice(1)));
+    assert.equal(file.sha256, createHash('sha256').update(bytes).digest('hex'), 'Croissant digest describes current bytes');
+    assert.equal(file.contentSize, bytes.byteLength + ' B', 'Croissant size describes current bytes');
+  }
+  for (const resource of dataPackage.resources.filter(r => !r.path.endsWith('/datapackage.json') && !r.path.endsWith('/croissant.json'))) {
+    const bytes = await fs.readFile(path.join(distDir, new URL(resource.path).pathname.slice(1)));
+    assert.equal(resource.hash, 'sha256:' + createHash('sha256').update(bytes).digest('hex'), 'Data Package digest describes current bytes');
+    assert.equal(resource.bytes, bytes.byteLength, 'Data Package size describes current bytes');
+  }
+  assert(!dataPackage.resources.filter(r => /\/(datapackage|croissant)\.json$/.test(r.path)).some(r => r.hash || r.bytes), 'Cyclic catalog checksums are omitted');
+  for (const catalogPath of ['dcat.ttl', 'void.ttl']) {
+    const quads = new Parser({format: 'text/turtle'}).parse(await fs.readFile(path.join(distDir, catalogPath), 'utf8'));
+    const has = (subject, predicate, object) => quads.some(q => q.subject.termType === 'NamedNode' && q.subject.value === subject && q.predicate.value === predicate && q.object.value === object);
+    check(catalogPath + ' named dataset, release and provenance', () => {
+      assert(has(dataset['@id'], 'http://www.w3.org/ns/dcat#version', dataset.version));
+      assert(has(dataset['@id'], 'http://www.w3.org/ns/dcat#hasCurrentVersion', dataset['dcat:hasCurrentVersion']['@id']));
+      assert(has(dataset['@id'], prov + 'wasDerivedFrom', source.canonicalOrigin + '/graph.jsonld'));
+      assert(has(dataset['@id'], dct + 'provenance', source.canonicalOrigin + '/provenance.jsonld'));
+      assert(has(dataset['@id'], dct + 'references', source.canonicalOrigin + '/fact-map.json'));
+      assert(has(dataset['@id'], dct + 'modified', dataset.dateModified['@value']));
+      for (const resource of source.machineResources.filter(r => r.distributionIri)) {
+        assert(has(dataset['@id'], 'http://www.w3.org/ns/dcat#distribution', resource.distributionIri));
+        assert(has(resource.distributionIri, prov + 'wasDerivedFrom', dataset['@id']));
+        assert(has(resource.distributionIri, 'http://www.w3.org/ns/dcat#version', dataset.version));
+      }
+    });
+  }
+  assert.equal(metadataFailures.length, 0, metadataFailures.join('\n'));
   const before=new Map(await Promise.all(result.paths.map(async resourcePath=>[resourcePath,await fs.readFile(path.join(distDir,resourcePath.slice(1)),'utf8')])));
   await materializeMachineResources({source,authoredBody,distDir});
   for(const [resourcePath,bytes] of before)assert.equal(await fs.readFile(path.join(distDir,resourcePath.slice(1)),'utf8'),bytes,'Repeated materialization is deterministic '+resourcePath);
