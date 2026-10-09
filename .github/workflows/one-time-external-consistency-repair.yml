@@ -1,0 +1,233 @@
+name: One-time external dataset identity repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/one-time-external-consistency-repair.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CURRENT_IRI: https://www.ghezelbaash.ir/graph.jsonld/dataset
+      HISTORICAL_IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+      HF_EXPECTED_MAIN: 2e985b380fce714c21ba682285a9637c58d37097
+      ZENODO_RECORD: "22838416"
+      ZENODO_DOI: 10.5281/zenodo.22838416
+      RELEASE_VERSION: "1.3.3"
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned Hugging Face client
+        run: python -m pip install --disable-pip-version-check "huggingface_hub==1.32.0"
+
+      - name: Reconcile Hugging Face current metadata only
+        env:
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          python3 - <<'PY'
+          import hashlib, json, os, tempfile, urllib.request
+          from pathlib import Path
+          from huggingface_hub import HfApi, CommitOperationAdd
+
+          token=os.environ['HF_TOKEN']
+          repo=os.environ['HF_REPO']
+          current=os.environ['CURRENT_IRI']
+          historical=os.environ['HISTORICAL_IRI']
+          expected_main=os.environ['HF_EXPECTED_MAIN']
+          api=HfApi(endpoint='https://huggingface.co',token=token)
+
+          who=api.whoami()
+          if str(who.get('name','')).casefold()!='ghezelbaash':
+              raise RuntimeError('Unexpected Hugging Face identity')
+          main=api.repo_info(repo_id=repo,repo_type='dataset',revision='main')
+          if main.sha!=expected_main:
+              raise RuntimeError(f'HF main moved since audit: {main.sha}')
+          frozen=api.repo_info(repo_id=repo,repo_type='dataset',revision='v1.3.3')
+          frozen_before=frozen.sha
+
+          def raw(revision,name):
+              url=f'https://huggingface.co/datasets/{repo}/resolve/{revision}/{name}?download=true'
+              req=urllib.request.Request(url,headers={'Authorization':f'Bearer {token}','User-Agent':'ghezelbaash-v2-identity-repair/1.0','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=120) as r: return r.read()
+          def digest(b): return hashlib.sha256(b).hexdigest()
+
+          readme=raw('main','README.md')
+          manifest_bytes=raw('main','dist-sha256.json')
+          croissant=raw('main','croissant.json')
+          graph=raw('main','graph.jsonld')
+          graph_sha=digest(graph)
+          if readme.decode().count(historical)!=1 or readme.decode().count(current)!=0:
+              raise RuntimeError('Unexpected README identity state')
+          manifest=json.loads(manifest_bytes)
+          if manifest.get('canonicalDatasetIri')!=historical:
+              raise RuntimeError('Unexpected HF manifest canonicalDatasetIri')
+          if croissant.decode().count(historical)!=1 or croissant.decode().count(current)!=0:
+              raise RuntimeError('Unexpected Croissant identity state')
+          if graph.decode().count(historical)!=36 or graph.decode().count(current)!=0:
+              raise RuntimeError('Unexpected preserved graph snapshot identity state')
+
+          text=readme.decode('utf-8').replace(historical,current)
+          marker='### V2 canonical identity note'
+          if marker not in text:
+              text += f'''\n\n{marker}\n\nThe current canonical Dataset IRI is `{current}`. The frozen v1.3.3 release tag and preservation files may retain the historical internal IRI `{historical}`; those frozen bytes are intentionally preserved for reproducibility and are not the current identity authority.\n'''
+          new_readme=text.encode('utf-8')
+
+          manifest['canonicalDatasetIri']=current
+          manifest['historicalSnapshotDatasetIri']=historical
+          manifest['canonicalIdentityUpdatedAt']='2026-10-09'
+          new_manifest=(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
+
+          croissant_text=croissant.decode('utf-8').replace(historical,current)
+          if croissant_text.count(current)!=1 or croissant_text.count(historical)!=0:
+              raise RuntimeError('Croissant replacement was not exact')
+          new_croissant=croissant_text.encode('utf-8')
+
+          with tempfile.TemporaryDirectory() as d:
+              ops=[]
+              for name,data in [('README.md',new_readme),('dist-sha256.json',new_manifest),('croissant.json',new_croissant)]:
+                  p=Path(d)/name; p.write_bytes(data)
+                  ops.append(CommitOperationAdd(path_in_repo=name,path_or_fileobj=str(p)))
+              result=api.create_commit(repo_id=repo,repo_type='dataset',revision='main',parent_commit=expected_main,operations=ops,create_pr=False,commit_message='Align current metadata with V2 canonical Dataset IRI',commit_description='Metadata-only identity reconciliation. Frozen v1.3.3 tag and preserved graph bytes remain unchanged.')
+              if not result.oid or result.oid==expected_main:
+                  raise RuntimeError('HF metadata commit did not advance main')
+
+          latest=api.repo_info(repo_id=repo,repo_type='dataset',revision='main')
+          if api.repo_info(repo_id=repo,repo_type='dataset',revision='v1.3.3').sha!=frozen_before:
+              raise RuntimeError('Frozen HF v1.3.3 tag changed')
+          rr=raw('main','README.md').decode('utf-8')
+          mm=json.loads(raw('main','dist-sha256.json'))
+          cc=raw('main','croissant.json').decode('utf-8')
+          if current not in rr or mm.get('canonicalDatasetIri')!=current or mm.get('historicalSnapshotDatasetIri')!=historical or cc.count(current)!=1:
+              raise RuntimeError('HF readback failed')
+          if digest(raw('main','graph.jsonld'))!=graph_sha:
+              raise RuntimeError('HF preserved graph bytes changed')
+          print(json.dumps({'huggingFace':'VERIFIED','before':expected_main,'after':latest.sha,'frozenTag':frozen_before,'preservedGraphSha256':graph_sha,'currentCanonicalDatasetIri':current},sort_keys=True))
+          PY
+
+      - name: Reconcile Zenodo record metadata without touching files
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"
+          echo "::add-mask::$ZENODO_TOKEN"
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.error, time
+
+          token=os.environ['ZENODO_TOKEN']
+          record=os.environ['ZENODO_RECORD']
+          doi=os.environ['ZENODO_DOI']
+          version=os.environ['RELEASE_VERSION']
+          current=os.environ['CURRENT_IRI']
+          historical=os.environ['HISTORICAL_IRI']
+          base='https://zenodo.org/api'
+          headers={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'ghezelbaash-v2-identity-repair/1.0'}
+
+          def call(url,method='GET',data=None,content_type=None,allowed=(200,)):
+              h=dict(headers)
+              if content_type: h['Content-Type']=content_type
+              req=urllib.request.Request(url,data=data,method=method,headers=h)
+              try:
+                  with urllib.request.urlopen(req,timeout=120) as r:
+                      body=r.read()
+                      if r.status not in allowed: raise RuntimeError(f'{method} {url}: HTTP {r.status}')
+                      return r.status,body
+              except urllib.error.HTTPError as e:
+                  body=e.read()
+                  raise RuntimeError(f'{method} {url}: HTTP {e.code}: {body[:500]!r}') from e
+          def public_record():
+              req=urllib.request.Request(f'{base}/records/{record}',headers={'Accept':'application/json','User-Agent':'ghezelbaash-v2-identity-repair/1.0','Cache-Control':'no-cache'})
+              with urllib.request.urlopen(req,timeout=120) as r: return json.loads(r.read())
+          def file_fingerprint(z):
+              return sorted((f.get('key'),f.get('size'),f.get('checksum')) for f in z.get('files',[]))
+
+          before=public_record()
+          meta_before=before.get('metadata') or {}
+          if str(before.get('id'))!=record or before.get('doi')!=doi or meta_before.get('version')!=version:
+              raise RuntimeError('Zenodo identity mismatch before repair')
+          files_before=file_fingerprint(before)
+          related=meta_before.get('related_identifiers') or []
+          matches=[x for x in related if isinstance(x,dict) and x.get('identifier')==historical]
+          if len(matches)!=1 or matches[0].get('relation')!='isDerivedFrom':
+              raise RuntimeError('Unexpected Zenodo historical related identifier state')
+          if any(isinstance(x,dict) and x.get('identifier')==current for x in related):
+              raise RuntimeError('Zenodo current canonical identifier already present unexpectedly')
+
+          edited=False
+          try:
+              # Official legacy deposition API remains the safest metadata-only edit path.
+              try:
+                  call(f'{base}/deposit/depositions/{record}/actions/edit','POST',allowed=(201,))
+                  edited=True
+              except RuntimeError as e:
+                  # If an edit session is already open, continue only if we can read it.
+                  if 'HTTP 400' not in str(e): raise
+                  edited=True
+              _,body=call(f'{base}/deposit/depositions/{record}')
+              dep=json.loads(body)
+              metadata=dep.get('metadata') or {}
+              if metadata.get('version')!=version:
+                  raise RuntimeError('Zenodo deposition version drift')
+
+              def replace(v):
+                  if isinstance(v,str): return v.replace(historical,current)
+                  if isinstance(v,list): return [replace(x) for x in v]
+                  if isinstance(v,dict): return {k:replace(x) for k,x in v.items()}
+                  return v
+              changed=replace(metadata)
+              if historical in json.dumps(changed,ensure_ascii=False):
+                  raise RuntimeError('Unclassified historical IRI remains in editable Zenodo metadata')
+              desc=changed.get('description','')
+              marker='V2 canonical identity note:'
+              note=(f'<p><strong>{marker}</strong> The current canonical Dataset IRI is '
+                    f'<a href="{current}">{current}</a>. Files in this DOI-preserved v1.3.3 snapshot remain byte-for-byte unchanged; '
+                    f'they may encode the earlier internal Dataset IRI <code>{historical}</code> for historical reproducibility.</p>')
+              if marker not in desc: changed['description']=desc+note
+
+              call(f'{base}/deposit/depositions/{record}','PUT',json.dumps({'metadata':changed},ensure_ascii=False).encode('utf-8'),'application/json',(200,))
+              call(f'{base}/deposit/depositions/{record}/actions/publish','POST',allowed=(202,))
+              edited=False
+          except Exception:
+              if edited:
+                  try: call(f'{base}/deposit/depositions/{record}/actions/discard','POST',allowed=(201,))
+                  except Exception: pass
+              raise
+
+          # Zenodo can take a short moment to expose the republished metadata.
+          after=None
+          for _ in range(12):
+              after=public_record()
+              rel=(after.get('metadata') or {}).get('related_identifiers') or []
+              if any(isinstance(x,dict) and x.get('identifier')==current and x.get('relation')=='isDerivedFrom' for x in rel): break
+              time.sleep(5)
+          meta_after=after.get('metadata') or {}
+          if after.get('doi')!=doi or meta_after.get('version')!=version:
+              raise RuntimeError('Zenodo DOI/version changed during metadata repair')
+          rel=meta_after.get('related_identifiers') or []
+          if not any(isinstance(x,dict) and x.get('identifier')==current and x.get('relation')=='isDerivedFrom' for x in rel):
+              raise RuntimeError('Zenodo current canonical relation missing after repair')
+          if any(isinstance(x,dict) and x.get('identifier')==historical for x in rel):
+              raise RuntimeError('Zenodo stale related identifier remains after repair')
+          if file_fingerprint(after)!=files_before:
+              raise RuntimeError('Zenodo preserved files changed during metadata-only repair')
+          desc=meta_after.get('description','')
+          if 'V2 canonical identity note:' not in desc or current not in desc or historical not in desc:
+              raise RuntimeError('Zenodo migration note missing after repair')
+          print(json.dumps({'zenodo':'VERIFIED_METADATA_ONLY','record':record,'doi':doi,'version':version,'filesUnchanged':len(files_before),'currentCanonicalDatasetIri':current},sort_keys=True))
+          PY
