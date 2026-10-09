@@ -11,7 +11,7 @@ function focusedAuthorityBoundary(node,id,primaryPageId){
   return Object.fromEntries(Object.entries(node).filter(([key])=>keys.has(key)).map(([key,value])=>[key,structuredClone(value)]));
 }
 /** Complete Schema.org reference closure without importing machine infrastructure. */
-export function closeSearchReferences(document,{origin,graph,project,primaryPageId=document['@graph'][0]['@id'],visibleQuestionIds,visibleMediaIds}) {
+export function closeSearchReferences(document,{origin,graph,project,primaryPageId=document['@graph'][0]['@id'],visibleQuestionIds,visibleMediaIds,authorityIsScoped=false}) {
   const truth=new Map(graph['@graph'].map(n=>[n['@id'],n]));
   const templates=new Map(document['@graph'].map(n=>[n['@id'],n]));
   const questions=visibleQuestionIds?new Set(visibleQuestionIds):null;
@@ -28,7 +28,9 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
     if(answers&&types.includes('Answer')&&!answers.has(id))return false;
     if(media&&types.includes('VideoObject')&&!media.has(id))return false;
     if(clips&&types.includes('Clip')&&!clips.has(id))return false;
-    let output=focusedAuthorityBoundary(node,id,primaryPageId);
+    // The renderer's route projector already selects topic-specific credentials
+    // and expertise. Keep those selected edges; generic callers retain the boundary.
+    let output=authorityIsScoped?structuredClone(node):focusedAuthorityBoundary(node,id,primaryPageId);
     // Apply to preselected pages as well as newly resolved pages. A cited
     // document is a link to its identity, never a copy of its clinical corpus.
     if(id!==primaryPageId&&(id.endsWith('#webpage')||id===origin+'/webpage')) {
