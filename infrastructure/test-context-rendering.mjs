@@ -10,17 +10,17 @@ const runtimeStart=source.indexOf('export const READER_RUNTIME = ');
 const design=Function('return '+source.slice(designStart,runtimeStart).trim())();
 const runtime=Function('return '+source.slice(runtimeStart+'export const READER_RUNTIME = '.length,source.indexOf('\nexport function compileCanonicalSource',runtimeStart)).trim())();
 
-// Exercise the emitted runtime function, keeping media and scrolling observable.
-const selectionStart=runtime.indexOf('  let highlightedVideo,waitingVideo,waitingSeek;');
+// Observe only positioning here. Native timestamp behavior has its own real
+// MP4/HTTP/native-frame tests in test-video-seeking, not a currentTime mock.
+const selectionStart=runtime.indexOf('  let highlightedVideo,');
 const selectionEnd=runtime.indexOf('  let navigationTicket',selectionStart);
 assert(selectionStart>=0&&selectionEnd>selectionStart,'Video selection runtime exists');
 function selection(pathname){
  const calls=[],heading={id:'watch-heading'};
- const video={readyState:1,duration:20,currentTime:0,closest(selector){return selector==='article[data-guide-primary]'?{querySelector:()=>heading}:{classList:{add(){},remove(){}}};},scrollIntoView(options){calls.push(['center',options]);}};
+ const video={closest(selector){return selector==='article[data-guide-primary]'?{querySelector:()=>heading}:{classList:{add(){},remove(){}}};},scrollIntoView(options){calls.push(['center',options]);}};
  const select=Function('location','moveTo','revealPoster','focusTarget',runtime.slice(selectionStart,selectionEnd)+'\nreturn selectVideo;')(
   {pathname},node=>calls.push(['move',node]),()=>{},node=>calls.push(['focus',node]));
- select({video,seconds:4},{scroll:true,focus:true});
- assert.equal(video.currentTime,4,'Timestamp selection still seeks the playable media');
+ select({video,seconds:null},{scroll:true,focus:true});
  return {calls,heading,video};
 }
 const focused=selection('/video-saeed-ghezelbash-kurdish-patient-review');
@@ -64,4 +64,4 @@ try{
  assert.equal(await page.locator('article.medical-guide').count(),1,'One focused primary article');
  assert.equal(await page.locator('h1').count(),1,'One focused page title');
 }finally{await browser.close();}
-console.log(JSON.stringify({contextRendering:'PASS',focusedPrimaryAndHomeHero:'non-deferred',homeOffscreenCorpus:'DOM-preserved, deferred',focusedWatchHeading:'PASS',homeVideoCentering:'PASS',timestampSeek:'PASS'},null,2));
+console.log(JSON.stringify({contextRendering:'PASS',focusedPrimaryAndHomeHero:'non-deferred',homeOffscreenCorpus:'DOM-preserved, deferred',focusedWatchHeading:'PASS',homeVideoCentering:'PASS',timestampSeek:'tested separately with native video frames'},null,2));

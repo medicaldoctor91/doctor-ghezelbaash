@@ -2686,17 +2686,18 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if(rawTime!==null&&(!rawTime.trim()||!Number.isFinite(seconds)||seconds<0))return null;
     return {video,seconds};
   };
-  let highlightedVideo,waitingVideo,waitingSeek;
+  let highlightedVideo,cancelVideoSeek;
   const selectVideo = (selection, {scroll=false,focus=false}={}) => {
-    waitingVideo?.removeEventListener("loadedmetadata",waitingSeek);
-    waitingVideo=waitingSeek=undefined;
+    const pendingPlayback=cancelVideoSeek?.();
+    const resumePending=highlightedVideo===selection?.video?pendingPlayback:undefined;
+    cancelVideoSeek=undefined;
     highlightedVideo?.closest("figure")?.classList.remove("video-deeplink-target");
     highlightedVideo=selection?.video;
     if(!selection)return;
     const {video,seconds}=selection;
     revealPoster(video);
     video.closest("figure")?.classList.add("video-deeplink-target");
-    // Navigation must work even if media cannot load; metadata only gates seeking.
+    // Navigation remains independent of native media availability.
     if(scroll){
       // A focused watch page owns its heading. Centering the video after that
       // first scroll competes with newly materialized surrounding context.
@@ -2706,16 +2707,115 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     }
     if(focus)focusTarget(video);
     if(seconds===null)return;
-    const seek=()=>{
-      video.currentTime=Math.min(seconds,Number.isFinite(video.duration)?video.duration:seconds);
-      waitingVideo=waitingSeek=undefined;
+    const originalPreload=video.preload,selectedUrl=location.href;
+    const requestedPreload=seconds>0?"auto":video.readyState<1?"metadata":originalPreload;
+    const controller=new AbortController();
+    let mediaUrl,stopped=false,assigned=false,warming=false,reloaded=false,resume=!!resumePending?.resume||!video.paused,guardedPauses=resumePending?.guardedPauses||0,spaceDown=!!resumePending?.spaceDown;
+    const events=["loadedmetadata","durationchange","loadeddata","progress","canplay","canplaythrough","suspend","seeked"];
+    const stop=()=>{
+      if(stopped)return {resume,guardedPauses,spaceDown};
+      stopped=true;
+      controller.abort();
+      for(const name of events)video.removeEventListener(name,pump);
+      video.removeEventListener("play",holdPlay);
+      video.removeEventListener("pause",paused);
+      video.removeEventListener("seeking",manualSeek);
+      video.removeEventListener("keydown",scrub,true);
+      video.removeEventListener("keypress",blockPendingSpace,true);
+      video.removeEventListener("keyup",blockPendingSpace,true);
+      video.removeEventListener("blur",releaseKey);
+      video.removeEventListener("error",stop);
+      window.removeEventListener("blur",releaseKey);
+      window.removeEventListener("pagehide",stop);
+      if(video.preload===requestedPreload)video.preload=originalPreload;
+      if(cancelVideoSeek===stop)cancelVideoSeek=undefined;
+      return {resume,guardedPauses,spaceDown};
     };
-    if(video.readyState>=1)seek();
-    else{
-      waitingVideo=video;waitingSeek=seek;
-      video.addEventListener("loadedmetadata",seek,{once:true});
-      video.preload="metadata";
-    }
+    const pausePending=()=>{if(!video.paused){guardedPauses++;video.pause();}};
+    const holdPlay=()=>{if(!stopped){resume=true;pausePending();}};
+    const paused=()=>{if(guardedPauses)guardedPauses--;else resume=false;};
+    const manualSeek=()=>{if(!assigned)stop();};
+    const releaseKey=()=>{if(spaceDown){spaceDown=false;pump();}};
+    const blockPendingSpace=(event)=>{
+      if(![" ","Spacebar","MediaPlayPause"].includes(event.key))return;
+      event.preventDefault();
+      if(event.type==="keyup"){
+        if(spaceDown)resume=!resume;
+        spaceDown=false;
+        pump();
+      }
+    };
+    const scrub=(event)=>{
+      if([" ","Spacebar","MediaPlayPause"].includes(event.key)){
+        // Native Play events are queued; capture pending keyboard intent before
+        // its default action can present an unrelated frame at the old time.
+        event.preventDefault();
+        if(!event.repeat)spaceDown=true;
+      }else if(["ArrowLeft","ArrowRight","Home","End"].includes(event.key))stop();
+    };
+    const current=()=>!stopped&&video.isConnected&&location.href===selectedUrl&&(!mediaUrl||!video.currentSrc||video.currentSrc===mediaUrl.href);
+    const warmCache=async()=>{
+      warming=true;
+      try{
+        // A complete, reusable HTTP response lets the native player seek from
+        // browser cache when the delivery path answered its Range request 200.
+        // Keep the authored media URL and native controls; never manufacture
+        // range support, autoplay to the offset, or replace the source by a Blob.
+        if(mediaUrl.origin!==location.origin||mediaUrl.username||mediaUrl.password)throw new Error("Invalid local video source");
+        const response=await fetch(mediaUrl.href,{signal:controller.signal});
+        if(response.status!==200||response.url!==mediaUrl.href||!/^video\\/(?:mp4|webm)(?:;|$)/i.test(response.headers.get("Content-Type")||""))throw new Error("Invalid complete video response");
+        const bytes=await response.arrayBuffer(),length=response.headers.get("Content-Length");
+        if(!bytes.byteLength||(length!==null&&Number(length)!==bytes.byteLength))throw new Error("Incomplete video response");
+        if(!current()){stop();return;}
+        reloaded=true;
+        video.load();
+      }catch{if(!stopped)stop();}
+    };
+    const pump=()=>{
+      if(stopped)return;
+      if(!current()){stop();return;}
+      if(video.readyState<1||!Number.isFinite(video.duration))return;
+      // Bind the source chosen by the native codec/resource algorithm. The
+      // first authored alternative may differ from the selected currentSrc.
+      if(!mediaUrl)mediaUrl=new URL(video.currentSrc,location.href);
+      const target=Math.min(seconds,video.duration);
+      if(assigned){
+        if(video.seeking||video.readyState<2||spaceDown)return;
+        const reached=Math.abs(video.currentTime-target)<0.15;
+        stop();
+        if(reached&&resume)video.play().catch(()=>{});
+        return;
+      }
+      let available=target===0;
+      for(let index=0;index<video.seekable.length;index++){
+        if(target>=video.seekable.start(index)&&target<=video.seekable.end(index))available=true;
+      }
+      if(!available){
+        // One complete cache warmup is sufficient under this site's media
+        // cache policy. Unsupported delivery releases the gate without a loop.
+        if(reloaded)stop();
+        else if(!warming)warmCache();
+        return;
+      }
+      assigned=true;
+      video.currentTime=target;
+      if(!video.seeking)pump();
+    };
+    cancelVideoSeek=stop;
+    for(const name of events)video.addEventListener(name,pump);
+    video.addEventListener("play",holdPlay);
+    video.addEventListener("pause",paused);
+    video.addEventListener("seeking",manualSeek);
+    video.addEventListener("keydown",scrub,true);
+    video.addEventListener("keypress",blockPendingSpace,true);
+    video.addEventListener("keyup",blockPendingSpace,true);
+    video.addEventListener("blur",releaseKey);
+    video.addEventListener("error",stop);
+    window.addEventListener("blur",releaseKey);
+    window.addEventListener("pagehide",stop);
+    video.preload=requestedPreload;
+    pausePending();
+    pump();
   };
   let navigationTicket = 0;
   const afterLayout = async () => {
