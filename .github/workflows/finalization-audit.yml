@@ -171,3 +171,14 @@ jobs:
           path: release/external-audit.json
           if-no-files-found: error
           retention-days: 7
+
+      - name: Fetch the existing verified main release for delivery preview
+        uses: actions/download-artifact@v4
+        with:
+          name: v2-dist-932c9deaa9c6e3d348e64b6d513e5bef8173f724
+          run-id: 37952769155
+          github-token: ${{ github.token }}
+          path: baseline
+
+      - name: Preview the sealed baseline without changing production
+        run: npx --yes wrangler@4.149.0 pages deploy baseline/dist --project-name=doctor-ghezelbaash --branch=finalization-verification --commit-hash=932c9deaa9c6e3d348e64b6d513e5bef8173f724 --commit-dirty=false
