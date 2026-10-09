@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
-import { configurePagesCi } from './configure-pages-ci.mjs';
+import { configurePagesCi, assertVerifiedRelease } from './configure-pages-ci.mjs';
 
 const sha = 'a'.repeat(40);
+const report = { status: 'PASS', sourceCommit: sha, postSealReadOnly: true };
+assert.doesNotThrow(() => assertVerifiedRelease({ sourceCommit: sha }, report, sha));
+assert.throws(() => assertVerifiedRelease({ sourceCommit: 'b'.repeat(40) }, report, sha), /artifact source/, 'A stale artifact cannot publish as current main');
+assert.throws(() => assertVerifiedRelease({ sourceCommit: sha }, { ...report, sourceCommit: 'b'.repeat(40) }, sha), /report source/, 'Report must describe this artifact');
+assert.throws(() => assertVerifiedRelease({ sourceCommit: sha }, { ...report, status: 'FAIL' }, sha), /verified release/, 'Failed release cannot publish');
+assert.throws(() => assertVerifiedRelease({ sourceCommit: sha }, { ...report, postSealReadOnly: false }, sha), /read.only/, 'Post-seal integrity is required');
 const project = {
   production_branch: 'main', domains: ['doctor-ghezelbaash.pages.dev', 'www.ghezelbaash.ir'],
   source: { type: 'github', config: { owner: 'medicaldoctor91', repo_name: 'doctor-ghezelbaash', production_branch: 'main', production_deployments_enabled: true, preview_deployment_setting: 'none' } },

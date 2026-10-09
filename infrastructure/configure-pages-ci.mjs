@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const repository = 'medicaldoctor91/doctor-ghezelbaash';
 const projectUrl = 'https://api.cloudflare.com/client/v4/accounts/884d1d90bd1fb6ecca14992c6c60d677/pages/projects/doctor-ghezelbaash';
+
+export function assertVerifiedRelease(provenance, report, sourceCommit) {
+  assert.equal(provenance.sourceCommit, sourceCommit, 'Published artifact source must match current main');
+  assert.equal(report.sourceCommit, sourceCommit, 'Verification report source must match published artifact');
+  assert.equal(report.status, 'PASS', 'A verified release is required');
+  assert.equal(report.postSealReadOnly, true, 'Final verification must preserve read-only sealed bytes');
+}
 
 export async function configurePagesCi({ token, githubToken, sourceCommit, request = fetch }) {
   assert.ok(token, 'Cloudflare API token is required');
@@ -35,5 +43,8 @@ export async function configurePagesCi({ token, githubToken, sourceCommit, reque
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const provenance = JSON.parse(await fs.readFile(new URL('../dist/release-provenance.json', import.meta.url), 'utf8'));
+  const report = JSON.parse(await fs.readFile(new URL('../release/verification-report.json', import.meta.url), 'utf8'));
+  assertVerifiedRelease(provenance, report, process.env.GITHUB_SHA);
   console.log(JSON.stringify(await configurePagesCi({ token: process.env.CLOUDFLARE_API_TOKEN, githubToken: process.env.GITHUB_TOKEN, sourceCommit: process.env.GITHUB_SHA }), null, 2));
 }
