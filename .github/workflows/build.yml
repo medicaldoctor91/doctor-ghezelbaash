@@ -50,6 +50,10 @@ jobs:
           node infrastructure/configure-pages-ci.mjs
           npx --yes wrangler@4.149.0 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-dirty=false
 
+      - name: Verify published bytes and response contracts
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: node infrastructure/verify-live.mjs dist
+
       - name: Retain distribution and reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,6 +63,7 @@ jobs:
             dist/
             release/verification-report.json
             release/verification-report-fa.md
+            release/live-verification.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
