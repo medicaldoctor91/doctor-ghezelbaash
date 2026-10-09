@@ -1,0 +1,87 @@
+name: One-time Hugging Face manifest repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/one-time-hf-manifest-repair.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+      HF_EXPECTED_MAIN: 944c65471dd241b4316d53b6e59bc28699de83ed
+      CURRENT_IRI: https://www.ghezelbaash.ir/graph.jsonld/dataset
+      HISTORICAL_IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check "huggingface_hub==1.32.0"
+      - name: Repair and verify current manifest against every referenced file
+        env:
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          python3 - <<'PY'
+          import hashlib, json, os, tempfile, urllib.parse, urllib.request
+          from pathlib import Path
+          from huggingface_hub import HfApi, CommitOperationAdd
+
+          repo=os.environ['HF_REPO']; expected=os.environ['HF_EXPECTED_MAIN']; token=os.environ['HF_TOKEN']
+          current=os.environ['CURRENT_IRI']; historical=os.environ['HISTORICAL_IRI']
+          api=HfApi(endpoint='https://huggingface.co',token=token)
+          if str(api.whoami().get('name','')).casefold()!='ghezelbaash': raise RuntimeError('Unexpected HF identity')
+          info=api.repo_info(repo_id=repo,repo_type='dataset',revision='main')
+          if info.sha!=expected: raise RuntimeError(f'HF main moved since identity repair: {info.sha}')
+          frozen_before=api.repo_info(repo_id=repo,repo_type='dataset',revision='v1.3.3').sha
+
+          def raw(rev,name):
+              q=urllib.parse.quote(name,safe='/')
+              req=urllib.request.Request(f'https://huggingface.co/datasets/{repo}/resolve/{rev}/{q}?download=true',headers={'Authorization':f'Bearer {token}','Cache-Control':'no-cache','User-Agent':'ghezelbaash-manifest-repair/1.0'})
+              with urllib.request.urlopen(req,timeout=180) as r: return r.read()
+          def sha(b): return hashlib.sha256(b).hexdigest()
+
+          manifest=json.loads(raw('main','dist-sha256.json'))
+          if manifest.get('canonicalDatasetIri')!=current or manifest.get('historicalSnapshotDatasetIri')!=historical:
+              raise RuntimeError('Canonical identity fields drifted before manifest repair')
+          files=manifest.get('files')
+          if not isinstance(files,dict) or not files: raise RuntimeError('Unexpected manifest files structure')
+          mismatches={}
+          for name,entry in files.items():
+              if not isinstance(entry,dict) or 'bytes' not in entry or 'sha256' not in entry:
+                  raise RuntimeError(f'Unexpected manifest entry: {name}')
+              data=raw('main',name)
+              actual={'bytes':len(data),'sha256':sha(data)}
+              expected_entry={'bytes':entry['bytes'],'sha256':entry['sha256']}
+              if actual!=expected_entry:
+                  mismatches[name]={'before':expected_entry,'after':actual}
+                  entry.update(actual)
+          if not mismatches:
+              raise RuntimeError('Expected at least the metadata files changed in the prior guarded repair')
+          allowed={'README.md','croissant.json'}
+          if not set(mismatches).issubset(allowed):
+              raise RuntimeError('Unexpected pre-existing HF manifest drift: '+','.join(sorted(set(mismatches)-allowed)))
+          new=(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
+          with tempfile.TemporaryDirectory() as d:
+              p=Path(d)/'dist-sha256.json'; p.write_bytes(new)
+              result=api.create_commit(repo_id=repo,repo_type='dataset',revision='main',parent_commit=expected,operations=[CommitOperationAdd(path_in_repo='dist-sha256.json',path_or_fileobj=str(p))],create_pr=False,commit_message='Refresh current distribution checksums after identity metadata repair',commit_description='Integrity-only update. No dataset content or frozen release tag changed.')
+              if not result.oid or result.oid==expected: raise RuntimeError('HF manifest commit did not advance main')
+          latest=api.repo_info(repo_id=repo,repo_type='dataset',revision='main')
+          if api.repo_info(repo_id=repo,repo_type='dataset',revision='v1.3.3').sha!=frozen_before: raise RuntimeError('Frozen tag changed')
+          verify=json.loads(raw('main','dist-sha256.json'))
+          if verify.get('canonicalDatasetIri')!=current: raise RuntimeError('Canonical IRI lost')
+          for name,entry in verify['files'].items():
+              data=raw('main',name)
+              if {'bytes':len(data),'sha256':sha(data)}!={'bytes':entry['bytes'],'sha256':entry['sha256']}:
+                  raise RuntimeError(f'Manifest readback mismatch: {name}')
+          print(json.dumps({'huggingFaceManifest':'VERIFIED_ALL_REFERENCED_FILES','before':expected,'after':latest.sha,'mismatchesRepaired':sorted(mismatches),'referencedFiles':len(verify['files']),'frozenTag':frozen_before},sort_keys=True))
+          PY
