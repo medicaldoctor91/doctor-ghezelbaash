@@ -29,7 +29,7 @@ await Promise.all(Array.from({ length: 4 }, async () => {
   while (next < entries.length) {
     const [name, expected] = entries[next++];
     const { response, bytes } = await get(name);
-    assert.equal(response.status, 200, `Live file ${name}`);
+    assert.ok(response.status === 200 || (name === '/404.html' && response.status === 404), `Live file ${name}: ${response.status}`);
     assert.equal(bytes.length, expected.bytes, `Live byte size ${name}`);
     assert.equal(hash(bytes), expected.sha256, `Live SHA-256 ${name}`);
     verifiedBytes += bytes.length;
@@ -40,7 +40,7 @@ for (const resource of [...SOURCE.machineResources, ...(SOURCE.delivery.releaseR
   const { response } = await get(resource.path);
   assert.equal(response.status, 200, `Machine resource ${resource.path}`);
   assert.equal(response.headers.get('content-type')?.split(';')[0].trim(), resource.mediaType, `Machine MIME ${resource.path}`);
-  assert.match(response.headers.get('link') ?? '', /rel=canonical/, `Machine canonical Link ${resource.path}`);
+  if (resource.indexing !== 'canonical-html') assert.match(response.headers.get('link') ?? '', /rel=canonical/, `Machine canonical Link ${resource.path}`);
   if (resource.indexing === 'machine' || resource.indexing === 'contact') {
     assert.match(response.headers.get('x-robots-tag') ?? '', /noindex/, `Machine indexing ${resource.path}`);
     assert.equal(response.headers.get('access-control-allow-origin'), '*', `Machine CORS ${resource.path}`);

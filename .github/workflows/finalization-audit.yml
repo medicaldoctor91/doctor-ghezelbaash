@@ -182,3 +182,6 @@ jobs:
 
       - name: Preview the sealed baseline without changing production
         run: npx --yes wrangler@4.149.0 pages deploy baseline/dist --project-name=doctor-ghezelbaash --branch=finalization-verification --commit-hash=932c9deaa9c6e3d348e64b6d513e5bef8173f724 --commit-dirty=false
+
+      - name: Verify preview bytes and live response contracts
+        run: node infrastructure/verify-live.mjs baseline/dist https://finalization-verification.doctor-ghezelbaash.pages.dev
