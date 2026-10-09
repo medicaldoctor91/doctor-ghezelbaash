@@ -185,3 +185,13 @@ jobs:
 
       - name: Verify preview bytes and live response contracts
         run: node infrastructure/verify-live.mjs baseline/dist https://finalization-verification.doctor-ghezelbaash.pages.dev
+
+      - name: Stop competing native Git builds after delivery verification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module - <<'JS'
+          import { configurePagesCi } from './infrastructure/configure-pages-ci.mjs';
+          const result = await configurePagesCi({ token: process.env.CLOUDFLARE_API_TOKEN, githubToken: process.env.GITHUB_TOKEN, sourceCommit: '932c9deaa9c6e3d348e64b6d513e5bef8173f724' });
+          console.log(JSON.stringify(result, null, 2));
+          JS
