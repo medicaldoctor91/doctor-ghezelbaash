@@ -6,12 +6,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      preview:
-        description: Upload sealed experimental dist to a nonproduction Cloudflare Pages preview
-        type: boolean
-        required: false
-        default: false
 
 permissions:
   contents: read
@@ -39,16 +33,6 @@ jobs:
       - name: Build, finalize, seal and verify V2 dist
         run: npm run release:v2
 
-      - name: Verify preview deployment safety guards
-        run: node --test infrastructure/test-cloudflare-preview.mjs
-
-      - name: Upload exact sealed experimental dist to Cloudflare preview
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview && github.ref == 'refs/heads/experiment/source-preview' && github.repository == 'medicaldoctor91/doctor-ghezelbaash' }}
-        env:
-          PREVIEW_REQUESTED: 'true'
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node infrastructure/deploy-cloudflare-preview.mjs
-
       - name: Retain distribution and reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -58,7 +42,6 @@ jobs:
             dist/
             release/verification-report.json
             release/verification-report-fa.md
-            release/cloudflare-preview-proof.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
