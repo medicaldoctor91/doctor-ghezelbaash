@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: v2-dist-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dist:
     runs-on: ubuntu-latest
@@ -32,6 +36,19 @@ jobs:
 
       - name: Build, finalize, seal and verify V2 dist
         run: npm run release:v2
+
+      - name: Verify production delivery guards
+        run: node infrastructure/test-pages-delivery.mjs
+
+      - name: Publish the verified distribution to Cloudflare Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          node infrastructure/configure-pages-ci.mjs
+          npx --yes wrangler@4.149.0 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-dirty=false
 
       - name: Retain distribution and reports
         if: always()
