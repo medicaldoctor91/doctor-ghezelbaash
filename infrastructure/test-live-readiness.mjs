@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {sha256Hex} from './lib/hash.mjs';
-import {waitForPublishedFile} from './lib/live-readiness.mjs';
+import {waitForPublishedFile,waitForPublishedRange} from './lib/live-readiness.mjs';
 
 const current=Buffer.from('new'),old=Buffer.from('old');
 const expected={bytes:current.length,sha256:sha256Hex(current)};
@@ -16,4 +16,13 @@ await assert.rejects(waitForPublishedFile({name:'/mutable.json',expected,deadlin
 await assert.rejects(waitForPublishedFile({name:'/private.json',expected,deadline:0,get:async()=>response(current,403)}),/Live file/,'Blocked files cannot pass with correct-looking bytes');
 const errorPage=await waitForPublishedFile({name:'/404.html',expected,deadline:0,get:async()=>response(current,404)});
 assert.equal(errorPage.attempts,1,'Only the sealed custom error page may legitimately use HTTP 404');
-console.log('PASS published-file readiness: exact bytes, bounded retry, permanent failure and sealed 404');
+const media=Buffer.from('new encoding'),start=4,end=7,range=media.subarray(start,end+1);
+const partial=(bytes,boundary=`bytes ${start}-${end}/${media.length}`,status=206)=>({response:{status,headers:new Headers({'content-range':boundary})},bytes});
+requests=0;pauses=0;
+const activated=await waitForPublishedRange({name:'/media/videos/example.mp4',bytes:media,start,end,deadline:Date.now()+30000,get:async()=>++requests===1?partial(Buffer.from('old!'),`bytes ${start}-${end}/99`):partial(range),pause:async()=>{pauses++;}});
+assert.equal(activated.attempts,2);assert.equal(pauses,1);assert.deepEqual(activated.bytes,range,'An older native encoding cannot pass range verification');
+const checkRange=get=>waitForPublishedRange({name:'/media/videos/example.mp4',bytes:media,start,end,deadline:0,get});
+await assert.rejects(checkRange(async()=>partial(media,null,200)),/byte-range HTTP/,'Full-body HTTP 200 never proves native seeking');
+await assert.rejects(checkRange(async()=>partial(range,`bytes ${start}-${end}/99`)),/byte-range boundary/,'Correct-looking bytes cannot hide a stale total length');
+await assert.rejects(checkRange(async()=>partial(Buffer.from('old!'))),/byte-range bytes/,'Correct range headers cannot hide stale bytes');
+console.log('PASS published-file and native-range readiness: exact bytes, bounded retries, permanent failures and sealed 404');

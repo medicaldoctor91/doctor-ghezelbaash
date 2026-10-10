@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { SOURCE } from '../src/canonical/source.mjs';
-import {waitForPublishedFile} from './lib/live-readiness.mjs';
+import {waitForPublishedFile,waitForPublishedRange} from './lib/live-readiness.mjs';
 
 const dist = path.resolve(process.argv[2] ?? 'dist');
 const origin = new URL(process.argv[3] ?? SOURCE.canonicalOrigin).origin;
@@ -17,6 +17,10 @@ async function get(resourcePath, userAgent) {
   url.searchParams.set('release', provenance.sourceCommit);
   const response = await fetch(url, { headers: { 'User-Agent': userAgent ?? 'ghezelbaash-release-verifier/1.0', 'Accept-Encoding': 'identity' }, signal: AbortSignal.timeout(45_000) });
   return { response, bytes: Buffer.from(await response.arrayBuffer()) };
+}
+async function getRange(resourcePath,start,end) {
+  const response = await fetch(new URL(resourcePath,origin), {headers: {'User-Agent': 'ghezelbaash-release-verifier/1.0', 'Accept-Encoding': 'identity', Range: `bytes=${start}-${end}`}, signal: AbortSignal.timeout(45_000)});
+  return {response,bytes:Buffer.from(await response.arrayBuffer())};
 }
 // Pages upload completion can precede activation on the custom domain.
 // Readiness requires the exact sealed manifest before verifying any live files.
@@ -36,7 +40,7 @@ assert.equal(hash(remoteManifest.bytes), hash(manifestBytes), 'Live release must
 // Pages consumes these configuration files rather than serving them as assets.
 const privateConfig = new Set(['/_headers', '/_redirects']);
 const entries = Object.entries(manifest.files).filter(([name]) => !privateConfig.has(name));
-let next = 0, verifiedBytes = 0, fileReadinessRetries = 0, mediaRangeChecks = 0;
+let next = 0, verifiedBytes = 0, fileReadinessRetries = 0, mediaRangeChecks = 0, rangeReadinessRetries = 0;
 await Promise.all(Array.from({ length: 4 }, async () => {
   while (next < entries.length) {
     const [name, expected] = entries[next++];
@@ -44,11 +48,9 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     fileReadinessRetries += attempts - 1;
     if (/^\/media\/videos\/.+\.(?:mp4|webm)$/.test(name)) {
       for (const start of [0, bytes.length - 512]) {
-        const end = start + 511, url = new URL(name, origin);
-        const partial = await fetch(url, {headers: {'User-Agent': 'ghezelbaash-release-verifier/1.0', 'Accept-Encoding': 'identity', Range: `bytes=${start}-${end}`}, signal: AbortSignal.timeout(45_000)});
-        assert.equal(partial.status, 206, `Native media byte-range HTTP ${name}`);
-        assert.equal(partial.headers.get('content-range'), `bytes ${start}-${end}/${bytes.length}`, `Native media byte-range boundary ${name}`);
-        assert.deepEqual(Buffer.from(await partial.arrayBuffer()), bytes.subarray(start, end + 1), `Native media byte-range bytes ${name}`);
+        const end = start + 511;
+        const partial = await waitForPublishedRange({name,bytes,start,end,get:getRange,deadline:readinessDeadline});
+        rangeReadinessRetries += partial.attempts - 1;
         mediaRangeChecks++;
       }
     }
@@ -105,7 +107,7 @@ for (const [name] of entries.filter(([name]) => /^\/assets\/(?:site|reader|guide
     assert.equal(response.headers.get('content-type')?.split(';')[0].trim(), 'application/json', `Reader data MIME ${name}`);
   }
 }
-const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, readinessAttempts, fileReadinessRetries, mediaRangeChecks, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
+const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, readinessAttempts, fileReadinessRetries, rangeReadinessRetries, mediaRangeChecks, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
 await fs.mkdir('release', { recursive: true });
 await fs.writeFile('release/live-verification.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));
