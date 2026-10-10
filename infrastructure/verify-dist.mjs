@@ -66,7 +66,19 @@ export async function verifyDist({
   const home=htmlByRoute.get('/');const full=JSON.parse(await fs.readFile(path.join(distDir,'graph.jsonld'),'utf8'));assert.equal(await semanticFingerprint(scriptJson(home,'schema-core-mainentity')),await semanticFingerprint(full),'Full Home KG equals graph.jsonld');
   assert.equal(full['@graph'].filter(n=>types(n).includes('ProfilePage')).length,1,'One ProfilePage');assert.ok(full['@graph'].some(n=>n['@id']===physicianId&&types(n).includes('Person')),'Canonical physician identity');
   for(const route of languageRoutes){const html=htmlByRoute.get(route);assert.ok(html,`Language route missing ${route}`);assert.match(html,/hreflang=["']x-default["'][^>]*href=["']https:\/\/www\.ghezelbaash\.ir\/aesthetic-guide-en["']|href=["']https:\/\/www\.ghezelbaash\.ir\/aesthetic-guide-en["'][^>]*hreflang=["']x-default["']/i,`x-default ${route}`);}
-  const sitemap=await fs.readFile(path.join(distDir,'sitemap.xml'),'utf8');assert.equal((sitemap.match(/<url>/g)??[]).length,routes.length,'Sitemap canonical count');const lastmods=[...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map(m=>m[1]);for(const entry of sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)){const route=new URL(entry[1].match(/<loc>([^<]+)<\/loc>/)[1]).pathname;const search=scriptJson(htmlByRoute.get(route),'schema-core-mainentity'),page=medicalPageNode(search,origin+(route==='/'?'/webpage':route+'#webpage'));assert.equal(entry[1].match(/<lastmod>([^<]+)<\/lastmod>/)?.[1],page.dateModified?.['@value']??page.dateModified,'Sitemap follows actual route modification '+route);}const videoEntries=(sitemap.match(/<video:video>/g)??[]).length;assert.equal(videoEntries,expectedVideos,'Video sitemap count');
+  const sitemap=await fs.readFile(path.join(distDir,'sitemap.xml'),'utf8');
+  assert.equal((sitemap.match(/<url>/g)??[]).length,routes.length,'Sitemap canonical count');
+  assert.equal((sitemap.match(/<lastmod>/g)??[]).length,routes.length,'Sitemap lastmod is present for every canonical route');
+  for(const entry of sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)){
+    const route=new URL(entry[1].match(/<loc>([^<]+)<\/loc>/)[1]).pathname;
+    const search=scriptJson(htmlByRoute.get(route),'schema-core-mainentity'),page=medicalPageNode(search,origin+(route==='/'?'/webpage':route+'#webpage'));
+    const dates=[...entry[1].matchAll(/<lastmod>([^<]+)<\/lastmod>/g)];
+    assert.equal(dates.length,1,'Sitemap lastmod is unique for '+route);
+    const date=dates[0][1];assert.match(date,/^\d{4}-\d{2}-\d{2}$/,'Sitemap lastmod calendar format '+route);
+    assert.equal(new Date(date).toISOString().slice(0,10),date,'Sitemap lastmod real calendar date '+route);
+    assert.equal(date,page.dateModified?.['@value']??page.dateModified,'Sitemap follows actual route modification '+route);
+  }
+  const videoEntries=(sitemap.match(/<video:video>/g)??[]).length;assert.equal(videoEntries,expectedVideos,'Video sitemap count');
   const headers=await fs.readFile(path.join(distDir,'_headers'),'utf8');assertValidLinkTypes(headers);assert.match(headers,/https:\/\/:project\.pages\.dev\/\*[\s\S]*X-Robots-Tag: noindex/,'pages.dev noindex');assert.match(headers,/rel=describedby; type="application\/ld\+json"/,'JSON-LD HTTP discovery');assert.match(headers,/rel=describedby; type="text\/turtle"/,'Turtle HTTP discovery');assert.ok(headers.includes(`<${physicianId}>; rel=about`),'HTTP rel=about');
   const security=await fs.readFile(path.join(distDir,'.well-known/security.txt'),'utf8');assert.match(security,/^Contact: mailto:doctor@ghezelbaash\.ir$/m);assert.match(security,new RegExp(`^Canonical: ${origin.replace(/[.*+?^${}()|[\\]\\]/g,'\\$&')}/\\.well-known/security\\.txt$`,'m'));assert.match(security,/^Preferred-Languages: fa, en$/m);const expiry=/^Expires: (.+)$/m.exec(security)?.[1];assert.ok(expiry&&Date.parse(expiry)>Date.parse(sourceEdition+'T00:00:00Z'),'security.txt future Expires');
   if(requireSbom){const sbom=JSON.parse(await fs.readFile(path.join(distDir,'sbom.cdx.json'),'utf8'));assert.equal(sbom.bomFormat,'CycloneDX','CycloneDX SBOM');}

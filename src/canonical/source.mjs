@@ -91,7 +91,7 @@ export const SOURCE = {
       }
     }
   },
-  "edition": "2026-10-07",
+  "edition": "2026-10-10",
   "canonicalOrigin": "https://www.ghezelbaash.ir",
   "graph": {
     "@context": {
@@ -2304,6 +2304,10 @@ export const SOURCE = {
         },
         "medicalAudience": {
           "@type": "Patient"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -8691,7 +8695,10 @@ export const SOURCE = {
           }
         ],
         "transcript": "آقای دکتر میشه بگی چه کاری انجام میدین؟\nمن دارم یه سری نقاط تزریقو مشخص می‌کنم\nبرای این خانم قصد دارم که\nیک نوع مزوژل به نام EJAL 40\nرو براشون تزریق کنیم که از آنالوگ‌های شاید پروفایلو باشه در نظر گرفت\nیه سری تفاوت‌های کوچیکی داره\nما باید تزریق کنیم هر سمت پنج نقاط تزریق\nنقطه اینجا هر سمت چهار نقطه است و بهش میگن\nBIOREVITALIZATION POINTS\nهر دوی این نوع مزوژل‌ها در لایه تزریق میشن و\nبه نوعی یک مقدار لیفت\nآبرسانی عمیقی دارند.\nتفاوتشون حالا خیلیا میان میپرسن\nحالا اینم که مثل پروفایلو بهتره یا جالپرو سوپرهیدرو؟\nخب اصلا لایه‌ها متفاوته، هدف از\nتزریق‌ها متفاوته و\nدو تا چیز قابل مقایسه نیستن",
-        "caption": ["https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt", "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.subtitles.en.vtt"],
+        "caption": [
+          "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt",
+          "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.subtitles.en.vtt"
+        ],
         "mainEntityOfPage": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo#webpage"
         }
@@ -8811,7 +8818,10 @@ export const SOURCE = {
           }
         ],
         "transcript": "آقای دکتر\nسابسیژن انجام دادید؟\nآره، داریم سابسیژن انجام میدیم.\nراستش من خیلی ایراد میگیرم راجع به سابسیژن\nو خیلی میگن یه جلسه انجام دادیم خوب نشده\nحقیقت اینه که سابسیژن بدون تزریق فیلر معنا نداره\nبی‌تاثیره!!\nولی اکثر مواقع تاثیرش بالعکسه\nباید حتما ما هنگام سابسیژن\nتزریق فیلر مونوفازیک داشته باشیم\nکه اون دو تا بافتی که چسبندگی داشتن\nجدا شدن از هم با سابسیژن ما\nکه یک فاصله یافته جدا جدا بهبود پیدا کنن\nبدون تزریق فیلر\nقطعا قطعا شرایط بیمار بدتر خواهد شد\nسابسیژن اصولی یک جلسه است",
-        "caption": ["https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt", "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.subtitles.en.vtt"],
+        "caption": [
+          "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt",
+          "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.subtitles.en.vtt"
+        ],
         "mainEntityOfPage": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique#webpage"
         }
@@ -10654,7 +10664,7 @@ export const SOURCE = {
           }
         ],
         "dateModified": {
-          "@value": "2026-10-04",
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "identifier": [
@@ -48455,7 +48465,11 @@ export const SOURCE = {
         "specialty": {
           "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
         },
-        "description": "محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود. معاینه ، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، اصلاح یا ارجاع."
+        "description": "محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود. معاینه ، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، اصلاح یا ارجاع.",
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/shapes/PrimaryDatasetDiscoveryShape/title",
@@ -49398,6 +49412,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -49513,6 +49531,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -49614,7 +49636,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/acne-scars#breadcrumb",
@@ -49701,7 +49727,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-active-acne"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/active-acne#breadcrumb",
@@ -49776,6 +49806,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -49896,7 +49930,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq#breadcrumb",
@@ -50051,7 +50089,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq#breadcrumb",
@@ -50200,7 +50242,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/aesthetic-guide-en#breadcrumb",
@@ -50306,6 +50352,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -50387,6 +50437,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -50461,6 +50515,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -50551,6 +50609,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -50656,6 +50718,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -50781,6 +50847,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -50865,6 +50935,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -50961,6 +51035,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -51074,6 +51152,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -51152,6 +51234,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -51245,7 +51331,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-botox-platysma-neck"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/botox-for-jaw-neck-body-and-hyperhidrosis#breadcrumb",
@@ -51349,6 +51439,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -51448,6 +51542,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -51536,6 +51634,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -51617,6 +51719,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -51720,6 +51826,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -51822,6 +51932,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -51897,6 +52011,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -51988,6 +52106,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -52059,6 +52181,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -52183,6 +52309,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -52287,7 +52417,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-filler-temple"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/facial-filler-by-anatomic-area-and-cause#breadcrumb",
@@ -52373,6 +52507,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -52536,6 +52674,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -52608,6 +52750,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -52688,6 +52834,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -52763,6 +52913,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -52836,6 +52990,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -52908,6 +53066,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -52992,6 +53154,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -53095,6 +53261,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -53186,6 +53356,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -53249,6 +53423,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -53333,6 +53511,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -53426,6 +53608,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -53535,6 +53721,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -53618,6 +53808,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -53705,7 +53899,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary#webpage"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/out-of-town-aesthetic-patients-iran#breadcrumb",
@@ -53797,7 +53995,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-botox-chin-dao"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/perioral-and-lip-botox#breadcrumb",
@@ -53891,6 +54093,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -53954,6 +54160,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -54031,6 +54241,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -54118,6 +54332,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -54205,7 +54423,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-pigmentation"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/skin-pigmentation#breadcrumb",
@@ -54294,6 +54516,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -54386,6 +54612,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -54473,6 +54703,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -54558,6 +54792,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -54630,6 +54868,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -54714,6 +54956,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -54816,6 +55062,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -54933,7 +55183,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-thread-submental"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/thread-lift-by-anatomic-area#breadcrumb",
@@ -55033,6 +55287,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -55112,6 +55370,10 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -55189,6 +55451,10 @@ export const SOURCE = {
         },
         "lastReviewed": {
           "@value": "2026-10-04",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -55286,7 +55552,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-suture-techniques"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/thread-lift-vs-surgery-hifu-and-radiofrequency#breadcrumb",
@@ -55375,7 +55645,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-thread-pcl"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/thread-types-and-selection#breadcrumb",
@@ -55485,7 +55759,11 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-botox-brow-lift"
           }
-        ]
+        ],
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/upper-face-botox#breadcrumb",
@@ -55551,6 +55829,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -55614,6 +55896,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -55677,6 +55963,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -55752,6 +56042,10 @@ export const SOURCE = {
         ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop#breadcrumb"
+        },
+        "dateModified": {
+          "@value": "2026-10-10",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
       {
@@ -62956,14 +63250,27 @@ export const SOURCE = {
       "title": "Dr. Saeed Ghezelbash — clinical expertise, research and practice",
       "discoverable": true,
       "mediaType": "text/markdown",
-      "parameters": {"charset": "utf-8"},
+      "parameters": {
+        "charset": "utf-8"
+      },
       "profiles": [],
-      "publicationTargets": ["website", "huggingFace", "zenodo"],
+      "publicationTargets": [
+        "website",
+        "huggingFace",
+        "zenodo"
+      ],
       "publishInHttpHeader": false,
       "canonicalPath": "/physician-expertise.md",
       "indexing": "machine",
-      "about": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
-      "httpRelationships": [{"path": "/graph.jsonld", "rel": "describedby"}],
+      "about": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "httpRelationships": [
+        {
+          "path": "/graph.jsonld",
+          "rel": "describedby"
+        }
+      ],
       "representation": "expertise-brief"
     },
     {
@@ -62972,14 +63279,27 @@ export const SOURCE = {
       "title": "Clinical passages — source-bound text, headings, entities and evidence",
       "discoverable": true,
       "mediaType": "application/x-ndjson",
-      "parameters": {"charset": "utf-8"},
+      "parameters": {
+        "charset": "utf-8"
+      },
       "profiles": [],
-      "publicationTargets": ["website", "huggingFace", "zenodo"],
+      "publicationTargets": [
+        "website",
+        "huggingFace",
+        "zenodo"
+      ],
       "publishInHttpHeader": false,
       "canonicalPath": "/clinical-passages.jsonl",
       "indexing": "machine",
-      "about": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
-      "httpRelationships": [{"path": "/graph.jsonld", "rel": "describedby"}],
+      "about": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "httpRelationships": [
+        {
+          "path": "/graph.jsonld",
+          "rel": "describedby"
+        }
+      ],
       "representation": "clinical-passages"
     }
   ],
@@ -63227,49 +63547,49 @@ export const SOURCE = {
       "cacheControl": "public, max-age=3600, must-revalidate"
     },
     "releaseResources": [
-  {
-    "path": "/sbom.cdx.json",
-    "mediaType": "application/vnd.cyclonedx+json",
-    "indexing": "machine",
-    "about": [],
-    "httpRelationships": []
-  },
-  {
-    "path": "/integrity-manifest.json",
-    "mediaType": "application/json",
-    "indexing": "machine",
-    "about": [],
-    "httpRelationships": []
-  },
-  {
-    "path": "/release-provenance.json",
-    "mediaType": "application/json",
-    "indexing": "machine",
-    "about": [],
-    "httpRelationships": []
-  },
-  {
-    "path": "/content-digest-eligibility.json",
-    "mediaType": "application/json",
-    "indexing": "machine",
-    "about": [],
-    "httpRelationships": []
-  },
-  {
-    "path": "/_headers.content-digest.pending",
-    "mediaType": "text/plain",
-    "indexing": "machine",
-    "about": [],
-    "httpRelationships": []
-  },
-  {
-    "path": "/.well-known/security.txt",
-    "mediaType": "text/plain",
-    "indexing": "machine",
-    "about": [],
-    "httpRelationships": []
-  }
-]
+      {
+        "path": "/sbom.cdx.json",
+        "mediaType": "application/vnd.cyclonedx+json",
+        "indexing": "machine",
+        "about": [],
+        "httpRelationships": []
+      },
+      {
+        "path": "/integrity-manifest.json",
+        "mediaType": "application/json",
+        "indexing": "machine",
+        "about": [],
+        "httpRelationships": []
+      },
+      {
+        "path": "/release-provenance.json",
+        "mediaType": "application/json",
+        "indexing": "machine",
+        "about": [],
+        "httpRelationships": []
+      },
+      {
+        "path": "/content-digest-eligibility.json",
+        "mediaType": "application/json",
+        "indexing": "machine",
+        "about": [],
+        "httpRelationships": []
+      },
+      {
+        "path": "/_headers.content-digest.pending",
+        "mediaType": "text/plain",
+        "indexing": "machine",
+        "about": [],
+        "httpRelationships": []
+      },
+      {
+        "path": "/.well-known/security.txt",
+        "mediaType": "text/plain",
+        "indexing": "machine",
+        "about": [],
+        "httpRelationships": []
+      }
+    ]
   },
   "machineProjection": {
     "retrieval": {

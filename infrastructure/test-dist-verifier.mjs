@@ -37,6 +37,12 @@ await fs.writeFile(path.join(root,'integrity-manifest.json'),JSON.stringify({alg
 const report=await verifyDist({distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true});
 assert.equal(report.canonicalPages,2);assert.equal(report.graphNodes,3);assert.equal(report.videoEntries,4);assert.equal(report.integrityVerified,true);
 const verifyOptions={distDir:root,routes:['/','/botox'],origin,physicianId:physician,clinicId:clinic,expectedVideos:4,sourceEdition:'2026-10-05',requireMedicalSemantics:true};
+const sitemapFile=path.join(root,'sitemap.xml'),validSitemap=await fs.readFile(sitemapFile,'utf8');
+await fs.writeFile(sitemapFile,validSitemap.replace(/<lastmod>[^<]+<\/lastmod>/g,''));
+await assert.rejects(verifyDist(verifyOptions),/Sitemap lastmod is present/,'Absent dates cannot pass by comparing undefined values');
+await fs.writeFile(sitemapFile,validSitemap.replace('2026-10-05</lastmod>','2026-02-30</lastmod>'));
+await assert.rejects(verifyDist(verifyOptions),/Sitemap lastmod real calendar date/,'Calendar rollovers are not real modification dates');
+await fs.writeFile(sitemapFile,validSitemap);
 for(const [filename,content] of [['unsealed.html','<!doctype html><html><body>Unsealed HTML</body></html>'],['unsealed.jsonld','{"@context":"https://schema.org","@type":"Dataset"}']]){
  const extraFile=path.join(root,filename);await fs.writeFile(extraFile,content);
  await assert.rejects(verifyDist(verifyOptions),/Manifest inventory/,'Final verification rejects an unsealed artifact '+filename);

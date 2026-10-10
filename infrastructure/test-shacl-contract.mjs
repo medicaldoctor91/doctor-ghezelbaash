@@ -35,8 +35,10 @@ function cardinalityViolations(dataset, shapeStore, focus) {
 
 assert(shapes.countQuads(null, sh('targetNode'), home, null) > 0,
   'The machine contract actually constrains the canonical Home resource');
-assert.equal(graph.countQuads(home, schema('dateModified'), null, null), 0,
-  'The canonical corpus omits unsupported Home modification dates');
+const dates=graph.getObjects(home,schema('dateModified'),null);
+assert.equal(dates.length,1,'The finalized Home has one documented modification date');
+assert.equal(dates[0].value,'2026-10-10','Home records its actual final content and structured-data modification');
+assert.equal(dates[0].datatype.value,'http://www.w3.org/2001/XMLSchema#date');
 assert.deepEqual(cardinalityViolations(graph, shapes, home), [],
   'Published Home cardinality rules must accept the real canonical RDF without inventing dates');
 
@@ -49,11 +51,15 @@ assert.equal(shapes.getObjects(dateShape, sh('maxCount'), null)[0]?.value, '1',
 
 const staleShapes = new Store(shapes.getQuads(null, null, null, null));
 staleShapes.addQuad(quad(dateShape, sh('minCount'), literal('1', namedNode('http://www.w3.org/2001/XMLSchema#integer'))));
-assert(cardinalityViolations(graph, staleShapes, home).some(violation =>
+const undated=new Store(graph.getQuads(null,null,null,null));
+undated.removeQuads(undated.getQuads(home,schema('dateModified'),null,null));
+assert.deepEqual(cardinalityViolations(undated,shapes,home),[],
+  'The published optional date contract never forces an unsupported date');
+assert(cardinalityViolations(undated, staleShapes, home).some(violation =>
   violation.path === schema('dateModified').value && violation.constraint === 'minCount'),
   'A stale required-date contract is detected against the real published RDF');
 
-const fixture = new Store(graph.getQuads(null, null, null, null));
+const fixture = new Store(undated.getQuads(null, null, null, null));
 fixture.addQuad(home, schema('dateModified'), literal('2000-01-01', namedNode('http://www.w3.org/2001/XMLSchema#date')));
 assert.deepEqual(cardinalityViolations(fixture, shapes, home), [],
   'A supported single modification date is accepted (test fixture only)');
@@ -62,4 +68,4 @@ assert(cardinalityViolations(fixture, shapes, home).some(violation =>
   violation.path === schema('dateModified').value && violation.constraint === 'maxCount'),
   'Multiple modification dates still fail the semantic cardinality contract');
 
-console.log('Published SHACL Home cardinality agrees with canonical RDF; unsupported date omission and stale-contract regression PASS');
+console.log('Published SHACL Home cardinality agrees with its documented date; optional omission and duplicate-date regression PASS');

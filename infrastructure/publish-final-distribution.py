@@ -16,6 +16,17 @@ from concurrent.futures import ThreadPoolExecutor
 ORIGIN = 'https://www.ghezelbaash.ir'
 HF_REPO = 'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 HF_PARENT = '560c4c053a12e2f530cc8047d57746f84dc7f6b0'
+HF_PUBLISH_PARENT = '1288d175e6682c43507f078eec4a630270af504a'
+HF_STALE_FILES = {
+    'assets/reader.43aa9b7f8ae3.js',
+    'assets/site.33ab856098f2.css',
+    'media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.63cad84cf10c.vtt',
+    'media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.chapters.fa.fadc4fdb5db1.vtt',
+    'media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.7f2640c97d71.vtt',
+    'media/video-tracks/education/saeed-ghezelbash-subcision-technique.chapters.fa.b3457c65f474.vtt',
+    'media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.155ce514ff8d.vtt',
+    'media/video-tracks/testimonials/saeed-ghezelbash-kurdish-patient-review.chapters.fa.4c2c5187b393.vtt',
+}
 ZENODO_ID = '22838416'
 ZENODO_DOI = '10.5281/zenodo.22838416'
 DATASET = ORIGIN + '/graph.jsonld/dataset'
@@ -219,17 +230,22 @@ Clinical descriptions and educational passages are attributable first-party mate
 
 
 def publish_hf(output, commit):
-    from huggingface_hub import HfApi, CommitOperationAdd
+    from huggingface_hub import HfApi, CommitOperationAdd, CommitOperationDelete
     token = os.environ['HF_TOKEN']
     api = HfApi(token=token)
     if api.whoami().get('name', '').casefold() != 'ghezelbaash':
         raise RuntimeError('Unexpected Hugging Face account')
     frozen = api.dataset_info(HF_REPO, revision='v1.3.3').sha
     current = api.dataset_info(HF_REPO, revision='main').sha
-    if current == HF_PARENT:
+    wanted = {str(file.relative_to(output)) for file in output.rglob('*') if file.is_file()}
+    if current == HF_PUBLISH_PARENT:
+        existing = set(api.list_repo_files(HF_REPO, repo_type='dataset', revision=HF_PUBLISH_PARENT))
+        if existing - wanted - {'.gitattributes'} != HF_STALE_FILES:
+            raise RuntimeError('Obsolete Hub files differ from the audited eight derived assets')
         operations = [CommitOperationAdd(path_in_repo=str(file.relative_to(output)), path_or_fileobj=str(file))
             for file in sorted(output.rglob('*')) if file.is_file()]
-        result = api.create_commit(repo_id=HF_REPO, repo_type='dataset', revision='main', parent_commit=HF_PARENT,
+        operations += [CommitOperationDelete(path_in_repo=name) for name in sorted(HF_STALE_FILES)]
+        result = api.create_commit(repo_id=HF_REPO, repo_type='dataset', revision='main', parent_commit=HF_PUBLISH_PARENT,
             operations=operations, commit_message='Publish verified physician expertise and clinical retrieval distribution',
             commit_description='Exact sealed website bytes, current graph/provenance, source-linked professional brief, clinical passages and four Viewer tables. Historical v1.3.3 tag preserved.')
         revision = result.oid
@@ -240,6 +256,8 @@ def publish_hf(output, commit):
         raise RuntimeError('Hugging Face main moved to an unrelated release since the audit')
     if api.dataset_info(HF_REPO, revision='v1.3.3').sha != frozen:
         raise RuntimeError('Frozen historical tag changed')
+    if set(api.list_repo_files(HF_REPO, repo_type='dataset', revision=revision)) != wanted | {'.gitattributes'}:
+        raise RuntimeError('Published Hub inventory differs from the verified current package')
     entries = json.loads((output / 'dist-sha256.json').read_text())['files']
     def verify(item):
         name, entry = item

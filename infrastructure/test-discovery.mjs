@@ -7,6 +7,11 @@ const nodes = new Map(SOURCE.graph['@graph'].map((node)=>[node['@id'],node]));
 const paths = new Map(SOURCE.routes.resources.map((route)=>[route.path,route]));
 const policy = SOURCE.discovery?.sitemapPolicy;
 assert(policy, 'discovery sitemapPolicy missing');
+for(const route of paths.values()){
+ const id=SOURCE.canonicalOrigin+(route.path==='/'?'/webpage':route.path+'#webpage'),page=nodes.get(id),date=page?.dateModified?.['@value']??page?.dateModified;
+ assert.match(date??'',/^\d{4}-\d{2}-\d{2}$/,'Every canonical page has an explicit meaningful modification date: '+route.path);
+ assert.equal(new Date(date).toISOString().slice(0,10),date,'Page dates are real calendar values: '+route.path);
+}
 assert.equal(policy.videoWatchPages?.length, 4, 'exactly four video watch-page mappings required');
 const videoIds = new Set();
 for (const entry of policy.videoWatchPages) {
