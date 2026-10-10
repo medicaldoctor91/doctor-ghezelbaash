@@ -17,7 +17,18 @@ async function get(resourcePath, userAgent) {
   const response = await fetch(url, { headers: { 'User-Agent': userAgent ?? 'ghezelbaash-release-verifier/1.0', 'Accept-Encoding': 'identity' }, signal: AbortSignal.timeout(45_000) });
   return { response, bytes: Buffer.from(await response.arrayBuffer()) };
 }
-const remoteManifest = await get('/integrity-manifest.json');
+// Pages upload completion can precede activation on the custom domain.
+// Readiness requires the exact sealed manifest before verifying any live files.
+const readinessDeadline = Date.now() + 90_000;
+let remoteManifest;
+let readinessAttempts = 0;
+do {
+  readinessAttempts++;
+  remoteManifest = await get('/integrity-manifest.json');
+  if (remoteManifest.response.status === 200 && hash(remoteManifest.bytes) === hash(manifestBytes)) break;
+  if (Date.now() >= readinessDeadline) break;
+  await new Promise(resolve => setTimeout(resolve, 2_000));
+} while (Date.now() < readinessDeadline);
 assert.equal(remoteManifest.response.status, 200, 'Live integrity manifest must be accessible');
 assert.equal(hash(remoteManifest.bytes), hash(manifestBytes), 'Live release must match verified local manifest');
 
@@ -81,7 +92,7 @@ for (const [name] of entries.filter(([name]) => /^\/assets\/(?:site|reader)\.[a-
   const { response } = await get(name);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable', `Hashed asset cache policy ${name}`);
 }
-const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
+const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, readinessAttempts, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
 await fs.mkdir('release', { recursive: true });
 await fs.writeFile('release/live-verification.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));
