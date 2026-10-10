@@ -70,7 +70,7 @@ export function renderMedicalTrust(page,graph,language='fa-IR') {
     const id=values(value)[0]?.['@id'];
     const display=id?truthText(byId.get(id)?.name,language):truthText(value,language);
     if(!display)continue;
-    const content=id?`<a href="${escape(byId.get(id)?.url??id)}">${escape(display)}</a>`:`<time datetime="${escape(display)}">${escape(display)}</time>`;
+    const content=id?`<a href="${escape(byId.get(id)?.url??id)}"${key==='author'?' rel="author"':''}>${escape(display)}</a>`:`<time datetime="${escape(display)}">${escape(display)}</time>`;
     parts.push(`<span data-trust-property="${key}"${id?` data-entity-id="${escape(id)}"`:''}>${labels[i]}: ${content}</span>`);
   }
   return parts.length?`<div class="medical-trust" data-medical-trust="${escape(page['@id'])}">${parts.join(' · ')}</div>`:'';

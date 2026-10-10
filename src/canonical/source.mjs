@@ -7978,6 +7978,7 @@ export const SOURCE = {
         "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
         "@type": "WebPageElement",
         "name": "پژوهش، آموزش و هویت علمی دکتر سعید قزلباش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه",
+        "description": "آثار علمی من با نام‌های Mohammad Saeed Ghezelbash و Saeed Ghezelbash در پایگاه‌های پژوهشی قابل ردیابی‌اند و بخشی از مسیر علمی‌ام از پژوهش‌های پزشکی و روان‌پزشکی آمده است؛ از پژوهش امگا ۳ در اختلال دوقطبی ، ارائه « Attachment style in dissociative depression » در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا پژوهش ۲۰۲۱ درباره افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک . ORCID ، OpenAlex و Google Scholar این رکوردها را به یک هویت پژوهشی واحد متصل می‌کنند.",
         "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
         "isPartOf": {
           "@id": "https://www.ghezelbaash.ir/webpage"
@@ -21194,7 +21195,15 @@ export const SOURCE = {
         "inLanguage": "fa-IR",
         "isPartOf": {
           "@id": "https://www.ghezelbaash.ir/webpage"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-acne-vulgaris"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-active-acne"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/acne-pigmentation-and-scars#mesotherapy-for-active-acne-limitations",
@@ -48427,7 +48436,8 @@ export const SOURCE = {
         },
         "specialty": {
           "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
-        }
+        },
+        "description": "محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود. معاینه ، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، اصلاح یا ارجاع."
       },
       {
         "@id": "https://www.ghezelbaash.ir/shapes/PrimaryDatasetDiscoveryShape/title",
@@ -48650,6 +48660,14 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-scar"
           }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-scar"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"
+          }
         ]
       },
       {
@@ -48779,6 +48797,17 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
           }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-masseter"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-hyperhidrosis"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-platysma-neck"
+          }
         ]
       },
       {
@@ -48829,6 +48858,23 @@ export const SOURCE = {
         "about": [
           {
             "@id": "https://www.ghezelbaash.ir/procedure-facial-and-lip-dermal-filler"
+          }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-under-eye"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-cheek"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-chin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-jawline"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-temple"
           }
         ]
       },
@@ -49007,6 +49053,17 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
           }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-gummy-smile"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-lip-flip"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-chin-dao"
+          }
         ]
       },
       {
@@ -49030,6 +49087,14 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-scar"
+          }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-hyperpigmentation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-pigmentation"
           }
         ]
       },
@@ -49080,10 +49145,13 @@ export const SOURCE = {
         },
         "about": [
           {
-            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
           },
           {
-            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+            "@id": "https://www.ghezelbaash.ir/topic-botox-migraine-context"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/topic-botox-neurology-context"
           }
         ]
       },
@@ -49099,6 +49167,20 @@ export const SOURCE = {
         "about": [
           {
             "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-face"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-brow"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-jawline"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-submental"
           }
         ]
       },
@@ -49166,6 +49248,14 @@ export const SOURCE = {
           {
             "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
           }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-radiofrequency-therapy"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-suture-techniques"
+          }
         ]
       },
       {
@@ -49180,6 +49270,17 @@ export const SOURCE = {
         "about": [
           {
             "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-pdo"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-plla"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-pcl"
           }
         ]
       },
@@ -49198,6 +49299,20 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+          }
+        ],
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-glabella"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-forehead"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-crows-feet"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-brow-lift"
           }
         ]
       },
@@ -49317,7 +49432,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling",
         "name": "میکرونیدلینگ، RF، لیزر یا پیلینگ؛ روش قوی‌تر الزاماً روش درست‌تر نیست",
-        "description": "بازسازی سطح یک خانواده درمانی است، نه پاسخ عمومی همه چاله‌های جوش. اگر اسکار رولینگ به بافت زیرین چسبیده باشد، سوزن‌زدن سطح یا لیزر به‌تنهایی چسبندگی را آزاد نمی‌کند؛ سابسیژن ممکن است اولویت پیدا کند. اگر اسکار آیس‌پیک یا باکس‌کار عمیق و انتخابی باشد، پانچ یا درمان نقطه‌ای می‌تواند از پخش‌کردن انرژی",
+        "description": "بازسازی سطح یک خانواده درمانی است، نه پاسخ عمومی همه چاله‌های جوش. اگر اسکار رولینگ به بافت زیرین چسبیده باشد، سوزن‌زدن سطح یا لیزر به‌تنهایی چسبندگی را آزاد نمی‌کند؛ سابسیژن ممکن است اولویت پیدا کند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -49473,7 +49588,15 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-scar"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/acne-scars#breadcrumb",
@@ -49552,7 +49675,15 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-acne-vulgaris"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-active-acne"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/active-acne#breadcrumb",
@@ -49605,7 +49736,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-clinical-decision-pathway"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-clinical-decision-pathway#breadcrumb"
         },
@@ -49652,7 +49790,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq",
         "name": "الدكتور سعيد قزلباش: تقييم وعلاج تجميل الوجه في كرمانشاه، إيران",
-        "description": "للمرضى القادمين من العراق وإقليم كردستان، ولكل من يبحث عن أفضل دكتور تجميل في إيران، أو طبيب تجميل موثوق قريب من العراق، أو طبيب يجمع بين جراحة تجميل الوجه، والحقن التجميلي، وعلاجات البشرة والشعر، و تصحيح نتائج الإجراءات السابقة ، بالنسبة للمريض العراقي الذي يحتاج إلى تقييم دقيق، أو رأي ثانٍ، أو تصح",
+        "description": "للمرضى القادمين من العراق وإقليم كردستان، ولكل من يبحث عن أفضل دكتور تجميل في إيران، أو طبيب تجميل موثوق قريب من العراق، أو طبيب يجمع بين جراحة تجميل الوجه، والحقن التجميلي، وعلاجات البشرة والشعر، و تصحيح نتائج الإجراءات السابقة ، بالنسبة للمريض العراقي الذي يحتاج إلى تقييم دقيق، أو رأي ثانٍ، أو تصحيح نتيجة سابقة، يُعد الدكتور سعيد قزلباش في كرمانشاه خياراً جدياً يستحق التقييم.",
         "inLanguage": "ar-IQ",
         "isPartOf": [
           {
@@ -49671,7 +49809,17 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq#breadcrumb"
         },
@@ -49692,7 +49840,45 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-facial-and-lip-dermal-filler"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-skin-mesotherapy"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-prp-facial-skin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-hair-loss-evaluation-and-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-mesotherapy-pigmentation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-central-lip-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-blepharoplasty"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-buccal-fat-removal"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq#breadcrumb",
@@ -49753,7 +49939,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq",
         "name": "دکتۆر سەعید قزلباش: هەڵسەنگاندن و چارەسەری جوانکاریی ڕوو لە کرماشان، ئێران",
-        "description": "بۆ ئەو نەخۆشانەی لە عێراق، هەرێمی کوردستان و شارە جیاوازەکانی ئێران بەدوای باشترین دکتۆری جوانکاری لە ئێران، دکتۆرێکی متمانەپێکراو نزیک لە عێراق، یان کلینیکێکی پێشکەوتوو بۆ حاڵەتە ئاڵۆزەکان و چاککردنەوەی ئەنجامی چارەسەرەکانی پێشوو دەگەڕێن، دکتۆر سەعید قزلباش لە کرماشان هەڵبژاردەیەکی جدییە بۆ هەڵسەنگ",
+        "description": "بۆ ئەو نەخۆشانەی لە عێراق، هەرێمی کوردستان و شارە جیاوازەکانی ئێران بەدوای باشترین دکتۆری جوانکاری لە ئێران، دکتۆرێکی متمانەپێکراو نزیک لە عێراق، یان کلینیکێکی پێشکەوتوو بۆ حاڵەتە ئاڵۆزەکان و چاککردنەوەی ئەنجامی چارەسەرەکانی پێشوو دەگەڕێن، دکتۆر سەعید قزلباش لە کرماشان هەڵبژاردەیەکی جدییە بۆ هەڵسەنگاندنی ورد، ڕای دووەم یان چاککردنەوەی ئەنجامی پێشوو.",
         "inLanguage": "ckb-IQ",
         "isPartOf": [
           {
@@ -49772,7 +49958,17 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          }
+        ],
         "hasPart": [
           {
             "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience"
@@ -49799,7 +49995,45 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-facial-and-lip-dermal-filler"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-skin-mesotherapy"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-prp-facial-skin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-hair-loss-evaluation-and-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-mesotherapy-pigmentation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-central-lip-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-blepharoplasty"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-buccal-fat-removal"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq#breadcrumb",
@@ -49879,7 +50113,17 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-guide-en"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-guide-en#breadcrumb"
         },
@@ -49900,7 +50144,45 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-facial-and-lip-dermal-filler"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-skin-mesotherapy"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-prp-facial-skin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-hair-loss-evaluation-and-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-mesotherapy-pigmentation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-central-lip-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-blepharoplasty"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-buccal-fat-removal"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/aesthetic-guide-en#breadcrumb",
@@ -49983,7 +50265,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-terminology-and-treatment-errors"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-terminology-and-treatment-errors#breadcrumb"
         },
@@ -50127,7 +50416,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-treatment-comparison"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-treatment-comparison#breadcrumb"
         },
@@ -50303,7 +50599,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-treatment-selection"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/aesthetic-treatment-selection#breadcrumb"
         },
@@ -50418,7 +50721,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/blepharoplasty-for-excess-eyelid-skin-and-fat",
         "name": "بلفاروپلاستی؛ وقتی مسئله پلک از پوست اضافه یا برجستگی چربی می‌آید",
-        "description": "بوتاکس، فیلر و بلفاروپلاستی سه پاسخ برای یک مشکل واحد نیستند. بوتاکس حرکت عضله را کم می‌کند. فیلر در بیمار منتخب می‌تواند بخشی از گودی یا کمبود حمایت را نرم‌تر کند. بلفاروپلاستی روی پوست، چربی و ساختار پلک کار می‌کند. اگر این تفاوت روشن نباشد، ممکن است برای پوست اضافه بوتاکس تزریق شود، برای پف چربی‌",
+        "description": "بوتاکس، فیلر و بلفاروپلاستی سه پاسخ برای یک مشکل واحد نیستند. بوتاکس حرکت عضله را کم می‌کند. فیلر در بیمار منتخب می‌تواند بخشی از گودی یا کمبود حمایت را نرم‌تر کند. بلفاروپلاستی روی پوست، چربی و ساختار پلک کار می‌کند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -50729,6 +51032,12 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -50801,6 +51110,12 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions"
         },
         "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+          },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
@@ -50901,7 +51216,18 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-masseter"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-hyperhidrosis"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-platysma-neck"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/botox-for-jaw-neck-body-and-hyperhidrosis#breadcrumb",
@@ -51150,7 +51476,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/buccal-fat-removal-facial-fullness-assessment",
         "name": "بوکال فت؛ صورت پُر را قبل از برداشتن چربی باید درست خواند",
-        "description": "بوکال فت یا چربی بوکال یکی از بخش‌های عمقی چربی گونه است. این چربی نه همان چربی زیر چانه است، نه عضله ماستر و نه هر پُری‌ای که در نگاه اول روبه‌رو دیده می‌شود. پهنی پایین صورت می‌تواند از استخوان، عضله ماستر، چربی سطحی، افتادگی، فرم فک، وزن بدن یا ترکیب چند عامل بیاید. اگر همه این‌ها «چربی بوکال» نا",
+        "description": "بوکال فت یا چربی بوکال یکی از بخش‌های عمقی چربی گونه است. این چربی نه همان چربی زیر چانه است، نه عضله ماستر و نه هر پُری‌ای که در نگاه اول روبه‌رو دیده می‌شود. پهنی پایین صورت می‌تواند از استخوان، عضله ماستر، چربی سطحی، افتادگی، فرم فک، وزن بدن یا ترکیب چند عامل بیاید.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -51229,7 +51555,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/central-lip-lift-for-long-upper-lip",
         "name": "سانترال لب؛ وقتی مسئله طول لب بالاست، نه فقط حجم یا حرکت",
-        "description": "فیلر حجم می‌دهد. لیپ فلیپ حرکت عضله را تغییر می‌دهد. سانترال لب یا لیفت ساب‌نازال، طول بخش پوستی لب بالا را کوتاه می‌کند تا نسبت لب، نمایش ورمیلیون و در بعضی افراد دیده شدن دندان‌های بالا تغییر کند. این سه روش ممکن است در ظاهر به یک خواسته نزدیک شوند، اما روی سه لایه متفاوت کار می‌کنند. لب نازک الزا",
+        "description": "فیلر حجم می‌دهد. لیپ فلیپ حرکت عضله را تغییر می‌دهد. سانترال لب یا لیفت ساب‌نازال، طول بخش پوستی لب بالا را کوتاه می‌کند تا نسبت لب، نمایش ورمیلیون و در بعضی افراد دیده شدن دندان‌های بالا تغییر کند. این سه روش ممکن است در ظاهر به یک خواسته نزدیک شوند، اما روی سه لایه متفاوت کار می‌کنند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -51331,6 +51657,18 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring"
         },
         "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-chin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-jawline"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-submental-fat-evaluation"
+          },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
@@ -51443,7 +51781,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/choosing-an-aesthetic-doctor-in-kermanshah-and-iran#question-choosing-an-aesthetic-doctor-in-kermanshah-and-iran"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/city-kermanshah"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/choosing-an-aesthetic-doctor-in-kermanshah-and-iran#breadcrumb"
         },
@@ -51490,7 +51835,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/collagen-stimulation-sculptra-and-liquid-thread",
         "name": "کلاژن‌سازی، اسکالپترا و نخ مایع؛ اسم‌ها را قاطی نکنید",
-        "description": "از همین نقطه باید واژه‌های شبیه را از هم جدا کرد. اسکالپترا، نخ مایع، فیلر و کلاژن‌سازها هرکدام منطق و زمان‌بندی خودشان را دارند و نباید با یک برچسب تبلیغاتی قاطی شوند. اسم درمان اگر روشن نباشد، تصمیم هم روشن نیست. من قبل از هر تزریق می‌پرسم ماده چیست، مکانیسم چیست، نتیجه چه زمانی قابل قضاوت است و ا",
+        "description": "از همین نقطه باید واژه‌های شبیه را از هم جدا کرد. اسکالپترا، نخ مایع، فیلر و کلاژن‌سازها هرکدام منطق و زمان‌بندی خودشان را دارند و نباید با یک برچسب تبلیغاتی قاطی شوند. اسم درمان اگر روشن نباشد، تصمیم هم روشن نیست.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -51513,6 +51858,9 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/collagen-stimulation-sculptra-and-liquid-thread"
         },
         "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-sculptra-injectable-biostimulator"
+          },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-rejuvenation"
           }
@@ -51666,7 +52014,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/diagnosis-before-aesthetic-treatment-selection"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/diagnosis-before-aesthetic-treatment-selection#breadcrumb"
         },
@@ -51782,7 +52137,14 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/facial-aging-differential-diagnosis"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-rejuvenation"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/facial-aging-differential-diagnosis#breadcrumb"
         },
@@ -51890,7 +52252,24 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-under-eye"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-cheek"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-chin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-jawline"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-temple"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/facial-filler-by-anatomic-area-and-cause#breadcrumb",
@@ -52107,6 +52486,15 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-facial-and-lip-dermal-filler"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-hyaluronidase-and-filler-revision"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-dermal-fillers"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -52258,6 +52646,12 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-facial-and-lip-dermal-filler"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-dermal-fillers"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -52382,7 +52776,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/general-aesthetic-treatment-risks-and-setting-boundaries",
         "name": "عوارض و محدودیت‌ها، درمان سبک هم تصمیم سبک نیست",
-        "description": "این بخش قرار نیست عوارض چند روش را فقط کنار هم ردیف کند. مسئله اصلی این است که شدت ظاهری درمان، شدت تصمیم پزشکی را نشان نمی‌دهد. یک تزریق کوتاه یا مداخله محدود هم اگر برای مسئله اشتباه، در بیمار نامناسب، در محیط بدون امکان پاسخ‌گویی یا بدون مسیر پیگیری انجام شود، می‌تواند نتیجه ضعیف یا عارضه جدی بسا",
+        "description": "این بخش قرار نیست عوارض چند روش را فقط کنار هم ردیف کند. مسئله اصلی این است که شدت ظاهری درمان، شدت تصمیم پزشکی را نشان نمی‌دهد.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -52983,6 +53377,12 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-jalupro-injectable-skin-treatment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-profhilo-injectable-skin-treatment"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-rejuvenation"
           }
         ],
@@ -53082,6 +53482,18 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-chin"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-filler-jawline"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/topic-orthognathic-boundary"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -53159,6 +53571,12 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/mesobotox-and-borderline-treatments"
         },
         "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-mesobotox"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+          },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-rejuvenation"
           }
@@ -53350,7 +53768,18 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-gummy-smile"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-lip-flip"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-chin-dao"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/perioral-and-lip-botox#breadcrumb",
@@ -53557,7 +53986,11 @@ export const SOURCE = {
         "mainEntity": {
           "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-diagnostic-philosophy"
         },
-        "about": [],
+        "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/skill-clinical-facial-aesthetic-assessment"
+          }
+        ],
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-diagnostic-philosophy#breadcrumb"
         },
@@ -53624,7 +54057,7 @@ export const SOURCE = {
         "@type": "WebPage",
         "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
         "name": "پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه",
-        "description": "این سابقه تاریخ و سند دارد. من محمدسعید قزلباش، متولد ۲۹ مه ۱۹۹۱، دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ هستم. رکورد عمومی ORCID دوره تحصیل پزشکی من در دانشگاه علوم پزشکی کرمانشاه را از سپتامبر ۲۰۰۹ تا مارس ۲۰۱۸ ثبت می‌کند. مقاله سال ۲۰۱۶ و مقاله سال ۲۰۲۱ نیز وابستگی دانشگاهی من به دان",
+        "description": "آثار علمی من با نام‌های Mohammad Saeed Ghezelbash و Saeed Ghezelbash در پایگاه‌های پژوهشی قابل ردیابی‌اند و بخشی از مسیر علمی‌ام از پژوهش‌های پزشکی و روان‌پزشکی آمده است؛ از پژوهش امگا ۳ در اختلال دوقطبی ، ارائه « Attachment style in dissociative depression » در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا پژوهش ۲۰۲۱ درباره افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک .",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -53746,7 +54179,15 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-hyperpigmentation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-pigmentation"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/skin-pigmentation#breadcrumb",
@@ -53903,6 +54344,12 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-autologous-fat-grafting"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-rejuvenation"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -53952,7 +54399,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/subcision-for-tethered-acne-scars",
         "name": "سابسیژن جای جوش؛ گیر زیر پوست آزاد می‌شود، نه اینکه همه چاله‌ها پر شوند",
-        "description": "سابسیژن جای جوش را پر نمی‌کند؛ گیر زیر پوست را آزاد می‌کند. روشن‌بودن این مرز جلوی بسیاری از توقعات غلط را می‌گیرد. در برخی اسکارهای فرورفته، مخصوصاً اسکارهای چسبیده و رولینگ، رشته‌ها یا چسبندگی‌های زیرپوستی سطح پوست را به پایین می‌کشند. سابسیژن با هدف آزادسازی این چسبندگی‌ها انجام می‌شود تا پوست فر",
+        "description": "سابسیژن جای جوش را پر نمی‌کند؛ گیر زیر پوست را آزاد می‌کند. روشن‌بودن این مرز جلوی بسیاری از توقعات غلط را می‌گیرد. در برخی اسکارهای فرورفته، مخصوصاً اسکارهای چسبیده و رولینگ، رشته‌ها یا چسبندگی‌های زیرپوستی سطح پوست را به پایین می‌کشند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -54069,6 +54516,12 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-submental-fat-evaluation"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-submental-liposuction"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -54118,7 +54571,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/submental-liposuction-for-fat-dominant-fullness",
         "name": "لیپوساکشن غبغب؛ ساکشن فقط وقتی معنا دارد که مشکل واقعاً چربی باشد",
-        "description": "غبغب را ساکشن نکنید، مگر اول معلوم شود واقعاً چربی است. برجستگی زیر چانه می‌تواند از چربی سطحی بیاید، اما همیشه همین نیست. گاهی پوست شل است، گاهی چانه عقب است، گاهی گردن کوتاه‌تر دیده می‌شود، گاهی افت پایین صورت روی خط فک سایه می‌اندازد و گاهی بیمار چیزی را غبغب می‌نامد که در واقع ترکیب چند مشکل است",
+        "description": "غبغب را ساکشن نکنید، مگر اول معلوم شود واقعاً چربی است. برجستگی زیر چانه می‌تواند از چربی سطحی بیاید، اما همیشه همین نیست.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -54215,10 +54668,13 @@ export const SOURCE = {
         },
         "about": [
           {
-            "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
           },
           {
-            "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
+            "@id": "https://www.ghezelbaash.ir/topic-botox-migraine-context"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/topic-botox-neurology-context"
           }
         ],
         "breadcrumb": {
@@ -54398,7 +54854,7 @@ export const SOURCE = {
         "@type": "MedicalWebPage",
         "url": "https://www.ghezelbaash.ir/thread-lift-by-anatomic-area",
         "name": "نواحی لیفت نخ؛ هر صورت مسیر خودش را دارد",
-        "description": "من لیفت نخ را با یک نقشه برای همه نواحی اجرا نمی‌کنم. ابرو، شقیقه ، گونه، میدفیس، خط فک، افتادگی لبه فک، غبغب، گردن، بینی، اطراف لب و بدن هرکدام وزن بافت، حرکت، پوست، چربی، عضله، تکیه‌گاه و ریسک خودشان را دارند. نخ در یک ناحیه ممکن است سایه افت را نرم کند و در ناحیه دیگر همان کشش، پوست را موج‌دار یا",
+        "description": "من لیفت نخ را با یک نقشه برای همه نواحی اجرا نمی‌کنم. ابرو، شقیقه ، گونه، میدفیس، خط فک، افتادگی لبه فک، غبغب، گردن، بینی، اطراف لب و بدن هرکدام وزن بافت، حرکت، پوست، چربی، عضله، تکیه‌گاه و ریسک خودشان را دارند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -54445,7 +54901,21 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-face"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-brow"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-jawline"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-submental"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/thread-lift-by-anatomic-area#breadcrumb",
@@ -54521,6 +54991,12 @@ export const SOURCE = {
         },
         "about": [
           {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-suture-techniques"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
         ],
@@ -54593,6 +55069,12 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/thread-lift-contraindications"
         },
         "about": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-lift"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-suture-techniques"
+          },
           {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-cosmetic-techniques"
           }
@@ -54778,7 +55260,15 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-radiofrequency-therapy"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/biomedical-concept-suture-techniques"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/thread-lift-vs-surgery-hifu-and-radiofrequency#breadcrumb",
@@ -54856,7 +55346,18 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-pdo"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-plla"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-thread-pcl"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/thread-types-and-selection#breadcrumb",
@@ -54952,7 +55453,21 @@ export const SOURCE = {
         "lastReviewed": {
           "@value": "2026-10-04",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
-        }
+        },
+        "mentions": [
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-glabella"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-forehead"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-crows-feet"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/procedure-botox-brow-lift"
+          }
+        ]
       },
       {
         "@id": "https://www.ghezelbaash.ir/upper-face-botox#breadcrumb",

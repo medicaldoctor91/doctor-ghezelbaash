@@ -161,28 +161,36 @@ h5,
 h6 {
   line-height: 1.45;
 }
-h1,
-h2 {
+:is(h1:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="1"])),
+:is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"])) {
   text-wrap: balance;
 }
-h1 {
+/* Retain heading UA defaults when a focused semantic tag changes level. */
+:where([data-heading-visual-level]) { font-weight: bold; margin-inline: 0; }
+:where([data-heading-visual-level="1"]) { font-size: 2em; margin-block: .67em; }
+:where([data-heading-visual-level="2"]) { font-size: 1.5em; margin-block: .83em; }
+:where([data-heading-visual-level="3"]) { font-size: 1.17em; margin-block: 1em; }
+:where([data-heading-visual-level="4"]) { font-size: 1em; margin-block: 1.33em; }
+:where([data-heading-visual-level="5"]) { font-size: .83em; margin-block: 1.67em; }
+:where([data-heading-visual-level="6"]) { font-size: .67em; margin-block: 2.33em; }
+:is(h1:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="1"])) {
   max-width: 24ch;
   margin-block: 0.2rem 1.5rem;
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1.3;
 }
-[data-route-context] h1 {
+[data-route-context] :is(h1:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="1"])) {
   max-width: none;
   font-size: clamp(1.65rem, 3vw, 2.5rem);
 }
-h2 {
+:is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"])) {
   position: relative;
   margin-top: 4.6rem;
   padding-top: 0.35rem;
   border-block-start: 0;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
 }
-h2::before {
+:is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"]))::before {
   content: "";
   display: block;
   width: 2.9rem;
@@ -191,13 +199,13 @@ h2::before {
   border-radius: 999px;
   background: linear-gradient(90deg, var(--accent-strong), #55a58f);
 }
-h3 {
+:is(h3:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="3"])) {
   margin-top: 3.2rem;
   font-size: clamp(1.3rem, 2.2vw, 1.75rem);
 }
-h4,
-h5,
-h6 {
+:is(h4:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="4"])),
+:is(h5:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="5"])),
+:is(h6:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="6"])) {
   margin-top: 2.2rem;
 }
 p {
@@ -625,7 +633,7 @@ blockquote {
     border-radius: 0;
     box-shadow: none;
   }
-  h1,
+  :is(h1:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="1"])),
   .guide-context .hero-title {
     font-size: clamp(1.85rem, 8.3vw, 2.65rem);
   }
@@ -1238,7 +1246,7 @@ details[open]:where(:not(.caption-disclosure)) {
   cursor: pointer;
   font-weight: 700;
 }
-.multilingual-collapsible-section > summary > h2 {
+.multilingual-collapsible-section > summary > :is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"])) {
   margin-top: 0;
 }
 hr {
@@ -1287,7 +1295,7 @@ address {
   outline-offset: 3px;
 }
 @media (max-width: 720px) {
-  h2 {
+  :is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"])) {
     margin-top: 3.8rem;
   }
   table {
@@ -1588,7 +1596,7 @@ html {
   border-radius: 1rem;
   background: color-mix(in srgb, Canvas 94%, currentColor 6%);
 }
-.trust-governance h3 {
+.trust-governance :is(h3:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="3"])) {
   margin-block-start: 0;
 }
 .trust-governance p:last-child {
@@ -1827,19 +1835,19 @@ table[tabindex]:focus-visible{outline:3px solid var(--focus-ring);outline-offset
   max-inline-size: 48rem;
   justify-self: center;
 }
-.medical-guide:not(.medical-guide--entity-home, .guide-context) h1 {
+.medical-guide:not(.medical-guide--entity-home, .guide-context) :is(h1:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="1"])) {
   max-inline-size: 100%;
   margin-block: 0.25rem 1.25rem;
   font-size: clamp(1.6rem, 1.35rem + 1.2vw, 2.55rem);
   font-weight: 800;
   line-height: 1.4;
 }
-.medical-guide:not(.guide-context) h2 {
+.medical-guide:not(.guide-context) :is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"])) {
   margin-block-start: clamp(2.25rem, 4vw, 3.25rem);
   font-size: clamp(1.4rem, 1.15rem + 0.9vw, 1.9rem);
 }
-.medical-guide .multilingual-collapsible-section > summary > h2 { margin-block-start: 0; }
-.medical-guide:not(.guide-context) h3 {
+.medical-guide .multilingual-collapsible-section > summary > :is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"])) { margin-block-start: 0; }
+.medical-guide:not(.guide-context) :is(h3:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="3"])) {
   margin-block-start: 2rem;
   font-size: clamp(1.18rem, 1rem + 0.6vw, 1.45rem);
 }
@@ -1876,15 +1884,15 @@ table[tabindex]:focus-visible{outline:3px solid var(--focus-ring);outline-offset
 .guide-context .render-chunk.is-target-chunk {
   content-visibility: visible;
 }
-.guide-context :is(h2, .hero-title) {
+.guide-context :is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"]), .hero-title) {
   margin-block-start: 2.25rem;
   font-size: clamp(1.2rem, 1rem + 0.5vw, 1.5rem);
   font-weight: 700;
   line-height: 1.5;
 }
-.guide-context :is(h3,h4,h5,h6) { font-size: 1.1rem; }
+.guide-context :is(h3:where(:not([data-heading-visual-level])),h4:where(:not([data-heading-visual-level])),h5:where(:not([data-heading-visual-level])),h6:where(:not([data-heading-visual-level])),:where([data-heading-visual-level="3"],[data-heading-visual-level="4"],[data-heading-visual-level="5"],[data-heading-visual-level="6"])) { font-size: 1.1rem; }
 .guide-context .hero-title__name { font-size: inherit; line-height: inherit; }
-.guide-context h2::before { inline-size: 1.8rem; block-size: 0.18rem; }
+.guide-context :is(h2:where(:not([data-heading-visual-level])), :where([data-heading-visual-level="2"]))::before { inline-size: 1.8rem; block-size: 0.18rem; }
 .guide-context :is(.section-answer,.answer-projection,.hero-portrait-media picture) { box-shadow: none; }
 .guide-context .hero-figure { max-inline-size: 22rem; margin-inline: auto; }
 .medical-guide :is(section,header,details,figure,nav,address) { min-inline-size: 0; }
@@ -3311,7 +3319,9 @@ export function compileCanonicalSource() {
       function baseNode(id) {
         const source = templates.get(id) ?? byId.get(id);
         const types = values(source?.["@type"]);
-        if (!source || (types.includes("Question") && !questions.has(id)) || (types.includes("Answer") && !answers.has(id)) ||
+        // Reject machine catalogs before traversing their contents, not only at publication.
+        if (!source || types.some(type => infrastructureTypes.has(type)) ||
+            (types.includes("Question") && !questions.has(id)) || (types.includes("Answer") && !answers.has(id)) ||
             (types.includes("VideoObject") && !media.has(id))) return undefined;
         // Clinic meaning and language are identical on every focused route.
         const isClinic = types.includes("MedicalClinic");
@@ -3355,7 +3365,12 @@ export function compileCanonicalSource() {
         if (values(node["@type"]).some(type => identityTypes.has(type))) continue;
         queue.push(...internalRefs(node, byId).filter(ref => !topical.has(ref)));
         const authored = byId.get(id);
-        for (const ref of values(authored?.["dcterms:relation"])) if (skills.has(ref?.["@id"])) queue.push(ref["@id"]);
+        // An authored clinical subject can establish its supported skill. A citation or
+        // credential may document that skill, but its cross-topic evidence index cannot.
+        const establishesExpertise = rootIds.has(id) || skills.has(id) || values(authored?.["@type"])
+          .some(type => ["MedicalProcedure", "MedicalTherapy", "MedicalCondition", "DiagnosticProcedure", "SurgicalProcedure", "Service"].includes(type));
+        if (establishesExpertise) for (const ref of values(authored?.["dcterms:relation"]))
+          if (skills.has(ref?.["@id"])) queue.push(ref["@id"]);
         // Keep credentials directly supporting the selected clinical skill, including their issuer/evidence chains.
         if (skills.has(id)) for (const ref of values(authored?.supportedBy)) {
           if (values(byId.get(ref?.["@id"])?.["@type"]).some(type => ["EducationalOccupationalCredential", "Certification"].includes(type))) queue.push(ref["@id"]);
@@ -3906,6 +3921,21 @@ export function compileCanonicalSource() {
       return fragment;
     };
     const scopedDescription = (parsed, entity, byId, authoredById, language, mediaTarget) => {
+      // This is a prose budget, not a search-engine character limit. Keep whole
+      // authored sentences, including a longer first sentence when necessary.
+      const completeDescription = (value) => {
+        const prose = normalize(value);
+        if (prose.length <= 300) return prose;
+        const sentences = [...new Intl.Segmenter(language, { granularity: "sentence" }).segment(prose)]
+          .map(({ segment }) => normalize(segment)).filter(Boolean);
+        let description = sentences[0] || prose;
+        for (const sentence of sentences.slice(1)) {
+          const candidate = description + " " + sentence;
+          if (candidate.length > 300) break;
+          description = candidate;
+        }
+        return description;
+      };
       const original = authoredById.get(entity["@id"]) ?? entity;
       let authored;
       if (mediaTarget && (typed(entity, "VideoObject") || typed(entity, "ImageObject")))
@@ -3916,10 +3946,11 @@ export function compileCanonicalSource() {
         const answer = authoredById.get(answerId) ?? byId.get(answerId);
         if (answer) authored = localizedText(answer.description ?? answer.text, language);
       }
-      if (typeof authored === "string" && normalize(authored)) return normalize(authored).slice(0, 300);
+      else if (typed(entity, "WebPageElement")) authored = localizedText(original.description, language);
+      if (typeof authored === "string" && normalize(authored)) return completeDescription(authored);
       if (typed(entity, "Person")) {
         const profile = localizedText(original.disambiguatingDescription ?? original.description, language);
-        if (typeof profile === "string" && normalize(profile)) return normalize(profile).slice(0, 300);
+        if (typeof profile === "string" && normalize(profile)) return completeDescription(profile);
       }
       const eligible = parsed.elements.filter((node) => ["p", "address", "figcaption", "li"].includes(node.tagName));
       const prose = eligible.map((node) => {
@@ -3928,7 +3959,7 @@ export function compileCanonicalSource() {
               attr(parent, "aria-hidden") === "true" || (attr(parent, "class") || "").split(/\s+/).includes("video-chapters")) return "";
         return normalize(summaryText(node));
       }).find(Boolean);
-      return (prose || normalize(summaryText(parsed.document))).slice(0, 300);
+      return completeDescription(prose || summaryText(parsed.document));
     };
     const routeDocumentFile = (route) => {
       if (!/^\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(route)) throw new Error("Unsafe independent route: " + route);
@@ -4897,12 +4928,17 @@ export function compileCanonicalSource() {
       firstHeading.childNodes=parseFragment(escape(record.title)).childNodes;
       for(const node of firstHeading.childNodes)node.parentNode=firstHeading;
     }
-    firstHeading.tagName=firstHeading.nodeName='h1';
-    let headingLevel = 1;
+    const headingDelta = 1 - Number(firstHeading.tagName.slice(1));
+    let visualHeadingLevel = 1;
     walk(primary,node => {
-      if(node===firstHeading || !/^h[1-6]$/.test(node.tagName ?? ''))return;
-      const level=Math.min(Number(node.tagName.slice(1)),headingLevel+1);
-      node.tagName=node.nodeName='h'+Math.max(2,level);headingLevel=Math.max(2,level);
+      if(!/^h[1-6]$/.test(node.tagName ?? ''))return;
+      const originalLevel = Number(node.tagName.slice(1));
+      if(node!==firstHeading)visualHeadingLevel=Math.max(2,Math.min(originalLevel,visualHeadingLevel+1));
+      // Typography retains the previous rendered level; semantic levels rebase
+      // the entire authored outline together, preserving sibling relationships.
+      set(node,'data-heading-visual-level',String(visualHeadingLevel));
+      const semanticLevel=node===firstHeading?1:Math.max(2,Math.min(6,originalLevel+headingDelta));
+      node.tagName=node.nodeName='h'+semanticLevel;
     });
     const headingId = attr(firstHeading,'id');
     if (!headingId) throw new Error('Canonical route lacks a persistent heading anchor');

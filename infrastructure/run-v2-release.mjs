@@ -37,6 +37,7 @@ export async function runV2Release({projectRoot}){
   await execute('node',['infrastructure/test-video-contract.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/test-video-seeking.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/test-focused-graph.mjs',distDir],projectRoot);
+  await execute('node',['infrastructure/test-focused-html-semantics.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/verify-clinical-passages.mjs',distDir],projectRoot);
   await execute('node',['infrastructure/test-reader-browser.mjs',distDir],projectRoot);
   assert.equal((await distHashes(distDir)).sha256,sealedHashes.sha256,'Post-seal verification is read-only');

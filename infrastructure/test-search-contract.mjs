@@ -11,6 +11,8 @@ assert(document['@graph'].some(n=>n['@id']===origin+'/service'));
 assert(document['@graph'].some(n=>n['@id']===clinic));
 const html=renderMedicalTrust(page,truth,'en');
 assert(html.includes('Doctor'));assert(html.includes('2026-10-04'));assert(!html.includes('2026-10-07'));
+assert.equal((html.match(/rel="author"/g)??[]).length,1,'Visible author link explicitly identifies its authorship');
+assert(!html.includes('rel="reviewer"'),'Reviewer attribution retains supported visible and JSON-LD semantics');
 assert.equal(renderMedicalTrust({...page,'@type':'WebPage'},truth,'en'),'');
 const hostile={...truth,'@graph':truth['@graph'].map(n=>n['@id']===person?{...n,name:'</script><script>bad</script>'}:n)};
 assert(!renderMedicalTrust(page,hostile,'en').includes('<script>'));

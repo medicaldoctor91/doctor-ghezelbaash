@@ -49,4 +49,60 @@ for (const route of ['/aesthetic-guide-en', '/aesthetic-guide-ar-iq', '/aestheti
   assert(document['@graph'].some(node => node['@id'] === doctor));
   assert(document['@graph'].some(node => node['@id'] === origin + '/procedure-facial-and-lip-dermal-filler'));
 }
+
+const refIds = value => [].concat(value ?? []).map(ref => ref?.['@id']).filter(Boolean);
+const truthById = new Map(SOURCE.graph['@graph'].map(node => [node['@id'], node]));
+for (const [route, document] of graphs) {
+  if (route === '/') continue;
+  const page = document['@graph'].find(node => node['@id'] === origin + route + '#webpage');
+  if ([].concat(page['@type']).includes('MedicalWebPage'))
+    assert(refIds(page.about).length, 'Every clinical page names its discussed subject: ' + route);
+  const authoredPage = truthById.get(page['@id']);
+  for (const id of refIds(authoredPage.about))
+    if (!(SOURCE.routes.resources.find(resource => resource.path === route).pagePurpose === 'clinical-guide' && id === doctor))
+      assert(refIds(page.about).includes(id), 'Focused topics retain the canonical authored page relationships: ' + route + ': ' + id);
+  for (const id of refIds(authoredPage.mentions))
+    assert(refIds(page.mentions).includes(id), 'Explicit discussed procedures survive projection: ' + route + ': ' + id);
+  const physician = document['@graph'].find(node => node['@id'] === doctor), authoredPhysician = truthById.get(doctor);
+  for (const key of ['skills', 'availableService', 'hasCredential', 'hasCertification'])
+    for (const id of refIds(physician[key]))
+      assert(refIds(authoredPhysician[key]).includes(id), 'Projection cannot invent physician expertise or services: ' + route + ': ' + key + ': ' + id);
+}
+// Source support and the machine Dataset are links, not new clinical topic seeds.
+for (const route of ['/historical-patient-origin-summary', '/out-of-town-aesthetic-patients-iran']) {
+  const ids = new Set(graphs.get(route)['@graph'].map(node => node['@id']));
+  assert(ids.has(origin + '/historical-patient-origin-summary'), 'Historical work remains connected: ' + route);
+  assert(ids.has(origin + '/patient-origin-city-ahvaz'), 'Historical spatial evidence remains connected: ' + route);
+  for (const unrelated of ['procedure-cryolipolysis-localized-fat-reduction', 'article-omega-3-bipolar-i-2016',
+    'article-mdd-attachment-dissociation-trauma-2021', 'role-former-mmt-physician', 'claim-lead-author-global-consensus-injectable-safety'])
+    assert(!ids.has(origin + '/' + unrelated), 'Machine Dataset does not widen ' + route + ': ' + unrelated);
+}
+for (const [route, relevant, unrelated] of [
+  ['/upper-face-botox', 'skill-botulinum-toxin-injection', ['skill-subcision', 'skill-thread-lifting', 'skill-dermal-filler-injection']],
+  ['/thread-types-and-selection', 'skill-thread-lifting', ['skill-subcision', 'skill-botulinum-toxin-injection', 'skill-dermal-filler-injection']],
+  ['/subcision-for-tethered-acne-scars', 'skill-subcision', ['skill-thread-lifting', 'skill-botulinum-toxin-injection']]
+]) {
+  const document = graphs.get(route), person = document['@graph'].find(node => node['@id'] === doctor);
+  const skillIds = new Set(refIds(person.skills));
+  assert(skillIds.has(origin + '/' + relevant), 'Directly supported clinical expertise remains: ' + route);
+  for (const id of unrelated) assert(!skillIds.has(origin + '/' + id), 'Cited evidence cannot seed an unrelated physician skill: ' + route + ': ' + id);
+}
+for (const [route, topic] of [
+  ['/botox-contraindications-and-precautions', 'procedure-botulinum-toxin-aesthetic-treatment'],
+  ['/filler-treatment-exclusion-criteria', 'procedure-facial-and-lip-dermal-filler'],
+  ['/thread-lift-complications-preparation-and-aftercare', 'procedure-thread-lift'],
+  ['/submental-fat-and-neck-contour', 'procedure-submental-fat-evaluation'],
+  ['/collagen-stimulation-sculptra-and-liquid-thread', 'procedure-sculptra-injectable-biostimulator'],
+  ['/saeed-ghezelbash-diagnostic-philosophy', 'skill-clinical-facial-aesthetic-assessment']
+]) {
+  const page = graphs.get(route)['@graph'].find(node => node['@id'] === origin + route + '#webpage');
+  assert(refIds(page.about).includes(origin + '/' + topic), 'Narrow clinical page identifies its actual discussed topic: ' + route);
+}
+const therapeutic = graphs.get('/therapeutic-botox-indications')['@graph'];
+const therapeuticPage = therapeutic.find(node => node['@id'] === origin + '/therapeutic-botox-indications#webpage');
+assert(refIds(therapeuticPage.about).includes(origin + '/topic-botox-neurology-context'), 'Therapeutic boundary describes neurologic context');
+assert(!refIds(therapeuticPage.about).includes(origin + '/procedure-botulinum-toxin-aesthetic-treatment'), 'Therapeutic context is not classified as the aesthetic service');
+assert(!therapeutic.some(node => node['@id'] === origin + '/procedure-botulinum-toxin-chronic-migraine'), 'Specialist referral context does not import a provider-bearing neurologic procedure');
+assert(therapeutic.filter(node => ['topic-botox-neurology-context', 'topic-botox-migraine-context'].some(id => node['@id'] === origin + '/' + id))
+  .every(node => ![].concat(node['@type']).includes('Service')), 'Neurologic discussion does not create a neurological service');
 console.log(JSON.stringify({focusedGraphs: 'PASS', routes: metrics.length, sample: metrics.filter(item => ['/botox', '/filler', '/aesthetic-guide-en'].includes(item.path))}, null, 2));

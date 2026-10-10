@@ -63,5 +63,28 @@ try{
  assert(await page.locator('#context-target').evaluate(n=>{const r=n.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight;}),'Revealed context target is visible');
  assert.equal(await page.locator('article.medical-guide').count(),1,'One focused primary article');
  assert.equal(await page.locator('h1').count(),1,'One focused page title');
+ // Semantic heading repairs must preserve the already-rendered typography,
+ // including UA bottom margins, smaller-level fonts and H2 decorations.
+ for(const width of [390,1280]){
+  await page.setViewportSize({width,height:844});
+  for(const wrapper of ['<div>','<div class="trust-governance">','<details class="multilingual-collapsible-section" open><summary>']){
+   const close=wrapper.startsWith('<details')?'</summary></details>':'</div>';
+   for(const [visual,semantic] of [[2,3],[3,2],[4,2],[5,3],[6,4]]){
+    await page.setContent(`<style>${css}</style><main><article class="medical-guide">${wrapper}<h${visual} id="heading">Same authored heading text</h${visual}>${close}</article></main>`);
+    const snapshot=()=>page.locator('#heading').evaluate(node=>{
+     const properties=['fontFamily','fontSize','fontWeight','fontStyle','lineHeight','marginTop','marginBottom','marginLeft','marginRight','paddingTop','paddingBottom','paddingLeft','paddingRight','maxWidth','textWrap','position','borderTopWidth','borderBottomWidth'];
+     const read=pseudo=>{const style=getComputedStyle(node,pseudo);return Object.fromEntries(properties.map(key=>[key,style[key]]).concat(['content','display','width','height','background','borderRadius'].map(key=>[key,style[key]])));};
+     const rect=node.getBoundingClientRect();return {element:read(null),before:read('::before'),rect:{x:rect.x,y:rect.y,width:rect.width,height:rect.height}};
+    });
+    const previous=await snapshot();
+    await page.locator('#heading').evaluate((node,{visual,semantic})=>{
+     const replacement=document.createElement('h'+semantic);
+     replacement.id=node.id;replacement.dataset.headingVisualLevel=String(visual);
+     replacement.append(...node.childNodes);node.replaceWith(replacement);
+    },{visual,semantic});
+    assert.deepEqual(await snapshot(),previous,'Visual heading level preserves typography after semantic rebase: '+JSON.stringify({width,visual,semantic,wrapper}));
+   }
+  }
+ }
 }finally{await browser.close();}
-console.log(JSON.stringify({contextRendering:'PASS',focusedPrimaryAndHomeHero:'non-deferred',homeOffscreenCorpus:'DOM-preserved, deferred',focusedWatchHeading:'PASS',homeVideoCentering:'PASS',timestampSeek:'tested separately with native video frames'},null,2));
+console.log(JSON.stringify({contextRendering:'PASS',focusedHeadingTypography:'PASS (mobile and desktop)',focusedPrimaryAndHomeHero:'non-deferred',homeOffscreenCorpus:'DOM-preserved, deferred',focusedWatchHeading:'PASS',homeVideoCentering:'PASS',timestampSeek:'tested separately with native video frames'},null,2));
