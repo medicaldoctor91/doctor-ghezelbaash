@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { SOURCE } from '../src/canonical/source.mjs';
+import {waitForPublishedFile} from './lib/live-readiness.mjs';
 
 const dist = path.resolve(process.argv[2] ?? 'dist');
 const origin = new URL(process.argv[3] ?? SOURCE.canonicalOrigin).origin;
@@ -35,14 +36,22 @@ assert.equal(hash(remoteManifest.bytes), hash(manifestBytes), 'Live release must
 // Pages consumes these configuration files rather than serving them as assets.
 const privateConfig = new Set(['/_headers', '/_redirects']);
 const entries = Object.entries(manifest.files).filter(([name]) => !privateConfig.has(name));
-let next = 0, verifiedBytes = 0;
+let next = 0, verifiedBytes = 0, fileReadinessRetries = 0, mediaRangeChecks = 0;
 await Promise.all(Array.from({ length: 4 }, async () => {
   while (next < entries.length) {
     const [name, expected] = entries[next++];
-    const { response, bytes } = await get(name);
-    assert.ok(response.status === 200 || (name === '/404.html' && response.status === 404), `Live file ${name}: ${response.status}`);
-    assert.equal(bytes.length, expected.bytes, `Live byte size ${name}`);
-    assert.equal(hash(bytes), expected.sha256, `Live SHA-256 ${name}`);
+    const { response, bytes, attempts } = await waitForPublishedFile({name,expected,get,deadline:readinessDeadline});
+    fileReadinessRetries += attempts - 1;
+    if (/^\/media\/videos\/.+\.(?:mp4|webm)$/.test(name)) {
+      for (const start of [0, bytes.length - 512]) {
+        const end = start + 511, url = new URL(name, origin);
+        const partial = await fetch(url, {headers: {'User-Agent': 'ghezelbaash-release-verifier/1.0', 'Accept-Encoding': 'identity', Range: `bytes=${start}-${end}`}, signal: AbortSignal.timeout(45_000)});
+        assert.equal(partial.status, 206, `Native media byte-range HTTP ${name}`);
+        assert.equal(partial.headers.get('content-range'), `bytes ${start}-${end}/${bytes.length}`, `Native media byte-range boundary ${name}`);
+        assert.deepEqual(Buffer.from(await partial.arrayBuffer()), bytes.subarray(start, end + 1), `Native media byte-range bytes ${name}`);
+        mediaRangeChecks++;
+      }
+    }
     verifiedBytes += bytes.length;
   }
 }));
@@ -96,7 +105,7 @@ for (const [name] of entries.filter(([name]) => /^\/assets\/(?:site|reader|guide
     assert.equal(response.headers.get('content-type')?.split(';')[0].trim(), 'application/json', `Reader data MIME ${name}`);
   }
 }
-const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, readinessAttempts, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
+const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, readinessAttempts, fileReadinessRetries, mediaRangeChecks, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
 await fs.mkdir('release', { recursive: true });
 await fs.writeFile('release/live-verification.json', JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(report, null, 2));
