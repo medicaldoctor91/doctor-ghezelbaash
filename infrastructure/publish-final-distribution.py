@@ -16,16 +16,9 @@ from concurrent.futures import ThreadPoolExecutor
 ORIGIN = 'https://www.ghezelbaash.ir'
 HF_REPO = 'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 HF_PARENT = '560c4c053a12e2f530cc8047d57746f84dc7f6b0'
-HF_PUBLISH_PARENT = '1288d175e6682c43507f078eec4a630270af504a'
+HF_PUBLISH_PARENT = 'affe29db4c070da6582a8239488861e4213b1a60'
 HF_STALE_FILES = {
-    'assets/reader.43aa9b7f8ae3.js',
-    'assets/site.33ab856098f2.css',
-    'media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.63cad84cf10c.vtt',
-    'media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.chapters.fa.fadc4fdb5db1.vtt',
-    'media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.7f2640c97d71.vtt',
-    'media/video-tracks/education/saeed-ghezelbash-subcision-technique.chapters.fa.b3457c65f474.vtt',
-    'media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.155ce514ff8d.vtt',
-    'media/video-tracks/testimonials/saeed-ghezelbash-kurdish-patient-review.chapters.fa.4c2c5187b393.vtt',
+    'assets/guide.d71600d24715.json',
 }
 ZENODO_ID = '22838416'
 ZENODO_DOI = '10.5281/zenodo.22838416'
@@ -241,7 +234,7 @@ def publish_hf(output, commit):
     if current == HF_PUBLISH_PARENT:
         existing = set(api.list_repo_files(HF_REPO, repo_type='dataset', revision=HF_PUBLISH_PARENT))
         if existing - wanted - {'.gitattributes'} != HF_STALE_FILES:
-            raise RuntimeError('Obsolete Hub files differ from the audited eight derived assets')
+            raise RuntimeError('Obsolete Hub files differ from the audited derived-asset allowlist')
         operations = [CommitOperationAdd(path_in_repo=str(file.relative_to(output)), path_or_fileobj=str(file))
             for file in sorted(output.rglob('*')) if file.is_file()]
         operations += [CommitOperationDelete(path_in_repo=name) for name in sorted(HF_STALE_FILES)]

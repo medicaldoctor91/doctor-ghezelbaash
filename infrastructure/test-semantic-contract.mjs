@@ -19,6 +19,8 @@ for(const entry of SOURCE.discovery.sitemapPolicy.videoWatchPages){
 }
 const homeHtml=CANONICAL.render('/');
 const homeHead=homeHtml.slice(homeHtml.indexOf('<head>'),homeHtml.indexOf('</head>'));
+assert.match(homeHead,/property="og:image:width" content="1200"/,'Home social portrait declares its actual pixel width');
+assert.match(homeHead,/property="og:image:height" content="630"/,'Home social portrait declares its actual pixel height');
 const stylesheets=[...homeHead.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)];
 assert.equal(stylesheets.length,1,'Home discovers one render-blocking stylesheet');
 assert(stylesheets[0].index<homeHead.indexOf('<script id="schema-core-mainentity"'),'Browser discovers render-blocking CSS before the complete inline KG');
@@ -57,6 +59,10 @@ for(const record of CANONICAL.records){
   assert(!links.includes(record.path),'No navigation self-link');
  }else assert.equal(nav,undefined,'No generic navigation on unrelated page');
  const socialImage=rendered.match(/property="og:image" content="([^"]+)"/)?.[1];
+ if(socialImage?.endsWith('/saeed-ghezelbaash-social-1200x630.jpg')){
+  assert.match(rendered,/property="og:image:width" content="1200"/,'Focused social portrait width '+record.path);
+  assert.match(rendered,/property="og:image:height" content="630"/,'Focused social portrait height '+record.path);
+ }
  if(socialImage&&new URL(socialImage).pathname.endsWith('.webp'))assert.match(rendered,/property="og:image:type" content="image\/webp"/,'WebP social MIME '+record.path);
  assert.equal(/<body[^>]* lang="([^"]+)"/.exec(rendered)?.[1],record.lang,'Focused body language '+record.path);
  assert.equal(/<body[^>]* dir="([^"]+)"/.exec(rendered)?.[1],record.dir,'Focused body direction '+record.path);

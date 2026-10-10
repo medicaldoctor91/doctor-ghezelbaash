@@ -4928,7 +4928,11 @@ export function compileCanonicalSource() {
   const discoveryHead = identityLinks + clinicIdentityLinks + machineLinks;
   const title = local(page.name), description = local(page.description), author = local(person.name);
   const socialMeta = (documentTitle, documentDescription, url, lang, pageType, alternateLocales=[],routeImage=social) => {
-    const dimension=key=>typeof routeImage[key]==='number'?routeImage[key]:byId.get(routeImage[key]?.['@id'])?.value;
+    const dimension=key=> {
+      const declared=routeImage[key];
+      const value=typeof declared==='number'?declared:declared?.value??byId.get(declared?.['@id'])?.value;
+      return Number.isInteger(value)&&value>0?value:undefined;
+    };
     const imageAlt=local(routeImage.caption??routeImage.name)||SOURCE.head.socialImageAlt;
     const imageDimensions=['width','height'].filter(key=>dimension(key)).map(key=>meta('og:image:'+key,dimension(key))).join('');
     const locale = lang === 'en' ? 'en_US' : lang.replace(/^ckb/, 'ku').replace('-', '_');
