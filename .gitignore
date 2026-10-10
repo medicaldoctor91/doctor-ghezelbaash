@@ -1,8 +1,4 @@
 node_modules/
 dist/
-release/
-.generated/
-__pycache__/
-*.pyc
-.DS_Store
 .astro/
+.DS_Store
