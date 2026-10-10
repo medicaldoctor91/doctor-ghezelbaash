@@ -88,9 +88,13 @@ const errorPage = await get('/404');
 assert.match(errorPage.response.headers.get('x-robots-tag') ?? '', /noindex/, 'Normalized error document indexing');
 assert.equal(errorPage.response.headers.get('cache-control'), 'no-store', 'Normalized error document must not be cached');
 assert.equal(errorPage.response.headers.get('link'), null, 'Normalized error document has no canonical graph relationships');
-for (const [name] of entries.filter(([name]) => /^\/assets\/(?:site|reader)\.[a-f0-9]+\.(?:css|js)$/.test(name))) {
+for (const [name] of entries.filter(([name]) => /^\/assets\/(?:site|reader|guide|guide-meta)\.[a-f0-9]+\.(?:css|js|json)$/.test(name))) {
   const { response } = await get(name);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable', `Hashed asset cache policy ${name}`);
+  if (name.startsWith('/assets/guide')) {
+    assert.match(response.headers.get('x-robots-tag') ?? '', /noindex/, `Reader data indexing ${name}`);
+    assert.equal(response.headers.get('content-type')?.split(';')[0].trim(), 'application/json', `Reader data MIME ${name}`);
+  }
 }
 const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, readinessAttempts, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
 await fs.mkdir('release', { recursive: true });

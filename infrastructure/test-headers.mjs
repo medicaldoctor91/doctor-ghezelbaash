@@ -83,6 +83,7 @@ const htmlAliasBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsW
 assert.match(htmlAliasBlock,/^  Cache-Control: public, max-age=0, must-revalidate$/m,'The Home HTML alias follows the canonical HTML freshness policy');
 assert.doesNotMatch(realHeaders,/'unsafe-inline'/,'Canonical CSP forbids untrusted inline execution and styles');
 assert.match(realHeaders,/^  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload$/m,'Preserve the already-live canonical host HSTS policy');
+assert.match(realHeaders,/^\/assets\/guide\*\n  X-Robots-Tag: noindex$/m,'Shared reader payloads do not become competing indexed pages');
 for(const assetPattern of ['/assets/*','/media/*','/fonts/*']){
  const assetBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith(assetPattern+'\n'));
  assert.match(assetBlock,/^  ! Link$/m,'Assets do not inherit HTML graph discovery or preloads '+assetPattern);

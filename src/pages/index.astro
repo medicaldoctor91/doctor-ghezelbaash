@@ -1913,6 +1913,21 @@ table[tabindex]:focus-visible{outline:3px solid var(--focus-ring);outline-offset
   scroll-margin-block-start: 10rem;
 }
 .medical-guide figcaption > a:has(h1) { color: var(--ink); text-decoration: none; }
+.video-transcript ol { list-style: none; padding-inline: 0; }
+.video-transcript li + li { margin-block-start: 0.4rem; }
+.video-transcript a {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+  min-block-size: 2.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+.video-transcript a:is(:hover,:focus-visible) { background: var(--surface-soft); }
+.video-transcript time { direction: ltr; font-variant-numeric: tabular-nums; }
+.video-transcript a[aria-current="true"] { background: var(--surface-soft); outline: 1px solid var(--line); }
 [data-topic-navigation] { border-block-start-color: var(--line); }
 [data-topic-navigation] ul { list-style: none; padding: 0; gap: 0.5rem; }
 [data-topic-navigation] a {
@@ -2145,33 +2160,37 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   window.addEventListener("scroll", scheduleScrollState, { passive: true });
   window.addEventListener("popstate", window.pauseGuideScrollState);
   window.addEventListener("pagehide", () => { if (!scrollPaused) window.saveGuideScrollState(); });
-  const fetchHtml = async (path) => {
+  const yieldReader = () => globalThis.scheduler?.yield ? scheduler.yield() : new Promise(resolve => setTimeout(resolve, 0));
+  const fetchContent = async (path, { json = false, priority = "auto" } = {}) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch(path, {
-        credentials: "same-origin", headers: { Accept: "text/html" }, signal: controller.signal,
+        credentials: "same-origin", headers: { Accept: json ? "application/json" : "text/html" },
+        priority, signal: controller.signal,
       });
       if (!response.ok) throw new Error("Page unavailable");
-      return await response.text();
+      return json ? await response.json() : await response.text();
     } finally { clearTimeout(timeout); }
   };
-  const snapshot = (doc) => {
+  const fetchHtml = path => fetchContent(path);
+  const snapshot = (doc, takeArticle = false) => {
     const article = doc.querySelector("article.medical-guide");
     const scope = doc.getElementById("guide-reader-scope");
+    const copy = node => node && d.importNode(node, true);
     return {
       title: doc.title,
       lang: doc.documentElement.getAttribute("lang"),
       dir: doc.documentElement.getAttribute("dir"),
-      article: article?.cloneNode(true),
+      article: article && (takeArticle ? d.adoptNode(article) : copy(article)),
       sourceSignature: doc.head.querySelector('meta[name="guide-source-signature"]')?.getAttribute("content"),
       scope: scope ? JSON.parse(scope.textContent) : null,
-      sourceMarker: doc.head.querySelector('meta[name="guide-source-signature"]')?.cloneNode(true),
-      scopeScript: scope?.cloneNode(true),
-      metas: [...doc.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map((node) => node.cloneNode(true)),
-      canonical: doc.head.querySelector('link[rel="canonical"]')?.cloneNode(true),
-      alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map((node) => node.cloneNode(true)),
-      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map((node) => node.cloneNode(true)),
+      sourceMarker: copy(doc.head.querySelector('meta[name="guide-source-signature"]')),
+      scopeScript: copy(scope),
+      metas: [...doc.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map(copy),
+      canonical: copy(doc.head.querySelector('link[rel="canonical"]')),
+      alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map(copy),
+      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map(copy),
     };
   };
   const initialArticle = primaryArticle();
@@ -2210,13 +2229,14 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (value.offset > length) throw new Error("Invalid guide boundary offset");
     return { node, offset: value.offset };
   };
-  const partition = (primary, state) => {
+  const partition = async (primary, state) => {
     const scope = state.scope;
     if (!homeSource || !scope || scope.schemaVersion !== 1 || !scope.sourceSignature ||
       scope.sourceSignature !== homeState.sourceSignature || state.sourceSignature !== homeState.sourceSignature ||
       !Array.isArray(scope.ranges) || !scope.ranges.length)
       throw new Error("Guide source changed");
     const full = homeSource.cloneNode(true);
+    await yieldReader();
     // Resolve every path against the intact source, including inert scripts,
     // whitespace and comments, before any live Range deletes adjust its tree.
     const ranges = scope.ranges.map(({ start, end }) => {
@@ -2234,6 +2254,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     const insertion = point(full, scope.insertion), anchor = d.createRange();
     anchor.setStart(insertion.node, insertion.offset); anchor.collapse(true);
     for (const range of [...ranges].reverse()) range.deleteContents();
+    await yieldReader();
     const prefix = d.createRange();
     prefix.setStart(full, 0); prefix.setEnd(anchor.startContainer, anchor.startOffset);
     const before = prefix.extractContents(), after = d.createDocumentFragment();
@@ -2257,6 +2278,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
         for (const attr of heading.attributes) replacement.setAttribute(attr.name, attr.value);
         replacement.append(...heading.childNodes); heading.replaceWith(replacement);
       }
+      await yieldReader();
     }
     return { before, after };
   };
@@ -2278,11 +2300,11 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (existing) { video.replaceWith(existing); players.delete(video.id); }
     }
   };
-  const prepareReader = (state, path, preservePrimary) => {
+  const prepareReader = async (state, path, preservePrimary) => {
     if (!state.article || !primaryArticle() || !d.getElementById("main-content"))
       throw new Error("Reader unavailable");
     const candidate = preservePrimary ? primaryArticle() : state.article.cloneNode(true);
-    return { candidate, context: path === "/" ? null : partition(candidate, state) };
+    return { candidate, context: path === "/" ? null : await partition(candidate, state) };
   };
   const commitReader = ({ candidate, context }, path, preservePrimary = false) => {
     const article = primaryArticle(), main = d.getElementById("main-content");
@@ -2374,7 +2396,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (!cache.has(key)) {
         const doc = new DOMParser().parseFromString(await fetchHtml(key), "text/html");
         if (!isPageDocument(doc, key)) return false;
-        cache.set(key, snapshot(doc));
+        cache.set(key, snapshot(doc, true));
       }
       if (current !== ticket || keyFor(location.pathname) !== key) return false;
       if (!readerLoaded && !await window.expandCompleteGuide()) return false;
@@ -2382,7 +2404,22 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       // Fragment and video-time history entries share the same primary body.
       // Preserve its live disclosures, focus and native restoration geometry.
       if (key === committedPath) return true;
-      const state = cache.get(key), prepared = prepareReader(state, key, false);
+      const state = cache.get(key);
+      // The complete Home graph is needed only when Home becomes primary.
+      // Internal entries share its visible guide without downloading that graph.
+      if (key === "/" && state.metadataPath && !state.scripts.length) {
+        const metadata = await fetchContent(state.metadataPath, { json: true });
+        if (metadata.schemaVersion !== 1 || metadata.sourceSignature !== state.sourceSignature ||
+          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 1)
+          throw new Error("Guide metadata changed");
+        state.scripts = metadata.scripts.map(({ id, text }) => {
+          JSON.parse(text);
+          const script = d.createElement("script"); script.type = "application/ld+json";
+          script.id = id; script.textContent = text; return script;
+        });
+      }
+      const prepared = await prepareReader(state, key, false);
+      if (current !== ticket || keyFor(location.pathname) !== key) return false;
       commitReader(prepared, key);
       commitMetadata(state);
       committedPath = key;
@@ -2399,13 +2436,31 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (status) status.textContent = control?.getAttribute("data-loading") || "در حال بارگذاری راهنمای کامل…";
     expansion = (async () => {
       try {
-        const home = new DOMParser().parseFromString(await fetchHtml("/"), "text/html");
+        let home, metadataPath;
+        const resourcePath = d.head.querySelector('meta[name="guide-reader-resource"]')?.getAttribute("content");
+        try {
+          if (!resourcePath || !/^\\/assets\\/guide\\.[a-f0-9]{12}\\.json$/.test(resourcePath))
+            throw new Error("Guide resource unavailable");
+          const resource = await fetchContent(resourcePath, { json: true, priority: "low" });
+          if (resource.schemaVersion !== 1 || resource.sourceSignature !== initialState.sourceSignature ||
+            typeof resource.html !== "string" || !/^\\/assets\\/guide-meta\\.[a-f0-9]{12}\\.json$/.test(resource.metadataPath))
+            throw new Error("Guide resource changed");
+          await yieldReader();
+          home = new DOMParser().parseFromString(resource.html, "text/html");
+          metadataPath = resource.metadataPath;
+        } catch {
+          // An interrupted deployment or unavailable payload keeps native Home
+          // delivery as a compatibility path; partition still checks its signature.
+          home = new DOMParser().parseFromString(await fetchHtml("/"), "text/html");
+        }
         const full = home.querySelector("article.medical-guide");
         if (!full || !current || !isPageDocument(home, "/")) throw new Error("Guide unavailable");
-        homeState = snapshot(home); homeSource = homeState.article;
+        homeState = snapshot(home, true); homeState.metadataPath = metadataPath;
+        homeSource = homeState.article;
         cache.set("/", homeState);
         const path = committedPath, state = cache.get(path);
-        const prepared = prepareReader(state, path, true);
+        await yieldReader();
+        const prepared = await prepareReader(state, path, true);
         const position = window.completeGuideInteraction && readingAnchor();
         commitReader(prepared, path, true);
         if (position) restoreAnchor(position);
@@ -2659,6 +2714,30 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     else (window.requestIdleCallback || ((fn) => setTimeout(fn, 1)))(() => videos.forEach(revealPoster));
   };
   refreshPosters();
+  const transcriptStates = new WeakMap();
+  const syncTranscript = (video) => {
+    const state = transcriptStates.get(video);
+    if (!state) return;
+    const active = state.cues.find(cue=>video.currentTime>=cue.start&&video.currentTime<cue.end)?.link;
+    if (state.active === active) return;
+    state.active?.removeAttribute("aria-current");
+    active?.setAttribute("aria-current","true"); state.active = active;
+  };
+  const refreshTranscripts = () => {
+    for (const video of d.querySelectorAll("video[id]")) {
+      const transcript = d.querySelector('[data-video-transcript="'+CSS.escape(video.id)+'"]');
+      if (!transcript) continue;
+      const previous = transcriptStates.get(video);
+      previous?.active?.removeAttribute("aria-current");
+      const cues = [...transcript.querySelectorAll("a[data-transcript-end]")].map(link=>({link,
+        start:Number(new URL(link.href).searchParams.get("t")),end:Number(link.dataset.transcriptEnd)}));
+      transcriptStates.set(video,{cues});
+      if (!previous) for (const event of ["timeupdate","seeking","seeked","loadedmetadata"])
+        video.addEventListener(event,()=>syncTranscript(video));
+      syncTranscript(video);
+    }
+  };
+  refreshTranscripts();
   let readerRevision = 0;
   const refreshReader = () => {
     readerRevision++;
@@ -2671,6 +2750,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (searchReady) d.querySelector("[data-guide-search-open]")?.remove();
     syncClinicHours();
     refreshPosters();
+    refreshTranscripts();
     if (searchReady && norm(input.value).length >= 2) render();
   };
   d.addEventListener("guide:primary-changed", refreshReader);
@@ -4865,7 +4945,27 @@ export function compileCanonicalSource() {
   const rawHome = shell(baseHead + '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' + `<link rel="stylesheet" href="${assets[0].path}">` +
     '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
-  const home = readerScope.stampGuideSource(rawHome);
+  const stampedHome = readerScope.stampGuideSource(rawHome);
+  // Internal entries need the authored article, not a second full document and
+  // its 1,592-node discovery graph. Keep exact DOM boundaries from this Home.
+  // Content-addressed assets bind the article and lazy Home metadata together.
+  const readerDocument = parse(stampedHome);
+  const readerRoot = readerDocument.childNodes.find(node=>node.tagName==='html');
+  const readerHead = readerRoot.childNodes.find(node=>node.tagName==='head');
+  const readerBody = readerRoot.childNodes.find(node=>node.tagName==='body');
+  let readerArticle;
+  walk(readerBody,node=>{if(node.tagName==='article'&&attr(node,'class')?.split(/\s+/).includes('medical-guide'))readerArticle=node;});
+  const sourceSignature = attr(readerHead.childNodes.find(node=>node.tagName==='meta'&&attr(node,'name')==='guide-source-signature'),'content');
+  const metadataAsset = asset('guide-meta','json',JSON.stringify({schemaVersion:1,sourceSignature,
+    scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json')
+      .map(node=>({id:attr(node,'id'),text:node.childNodes.map(child=>child.value??'').join('')}))}), 'application/json; charset=utf-8');
+  readerHead.childNodes = readerHead.childNodes.filter(node=>node.tagName==='title'||node.tagName==='meta'||
+    node.tagName==='link'&&['canonical','alternate'].includes(attr(node,'rel')));
+  readerBody.childNodes = [readerArticle]; readerArticle.parentNode = readerBody;
+  const readerAsset = asset('guide','json',JSON.stringify({schemaVersion:1,sourceSignature,
+    metadataPath:metadataAsset.path,html:serialize(readerDocument)}), 'application/json; charset=utf-8');
+  assets.push(readerAsset,metadataAsset);
+  const home = stampedHome.replace('</head>',meta('guide-reader-resource',readerAsset.path)+'</head>');
   htmlContract.assertDocumentContract(home);
   const records = routeDiscovery.deriveRouteDiscovery(home,SOURCE.graph,SOURCE.discovery,homeUrl);
   if (records.length + 1 !== SOURCE.routes.resources.length) throw new Error('Published route inventory drift');

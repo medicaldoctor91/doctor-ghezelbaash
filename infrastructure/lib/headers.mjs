@@ -84,6 +84,7 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
     }
   }
   blocks.push(`/assets/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable`);
+  blocks.push(`/assets/guide*\n  X-Robots-Tag: noindex`);
   blocks.push(`/media/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=3600, must-revalidate`);
   blocks.push(`/fonts/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=3600, must-revalidate`);
   for(const route of MUTABLE_ROOT_ASSETS)blocks.push(`${route}\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=3600, must-revalidate`);

@@ -8594,6 +8594,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm",
         "encodingFormat": "video/webm",
+        "contentSize": "1586652 bytes",
+        "bitrate": "203130 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo-webm-encoding-width"
         },
@@ -8689,7 +8691,7 @@ export const SOURCE = {
           }
         ],
         "transcript": "آقای دکتر میشه بگی چه کاری انجام میدین؟\nمن دارم یه سری نقاط تزریقو مشخص می‌کنم\nبرای این خانم قصد دارم که\nیک نوع مزوژل به نام EJAL 40\nرو براشون تزریق کنیم که از آنالوگ‌های شاید پروفایلو باشه در نظر گرفت\nیه سری تفاوت‌های کوچیکی داره\nما باید تزریق کنیم هر سمت پنج نقاط تزریق\nنقطه اینجا هر سمت چهار نقطه است و بهش میگن\nBIOREVITALIZATION POINTS\nهر دوی این نوع مزوژل‌ها در لایه تزریق میشن و\nبه نوعی یک مقدار لیفت\nآبرسانی عمیقی دارند.\nتفاوتشون حالا خیلیا میان میپرسن\nحالا اینم که مثل پروفایلو بهتره یا جالپرو سوپرهیدرو؟\nخب اصلا لایه‌ها متفاوته، هدف از\nتزریق‌ها متفاوته و\nدو تا چیز قابل مقایسه نیستن",
-        "caption": "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt",
+        "caption": ["https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt", "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.subtitles.en.vtt"],
         "mainEntityOfPage": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo#webpage"
         }
@@ -8699,6 +8701,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4",
         "encodingFormat": "video/mp4",
+        "contentSize": "3812039 bytes",
+        "bitrate": "488183 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo-width"
         },
@@ -8719,6 +8723,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-subcision-technique.webm",
         "encodingFormat": "video/webm",
+        "contentSize": "1324957 bytes",
+        "bitrate": "296096 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-subcision-technique-webm-encoding-width"
         },
@@ -8805,7 +8811,7 @@ export const SOURCE = {
           }
         ],
         "transcript": "آقای دکتر\nسابسیژن انجام دادید؟\nآره، داریم سابسیژن انجام میدیم.\nراستش من خیلی ایراد میگیرم راجع به سابسیژن\nو خیلی میگن یه جلسه انجام دادیم خوب نشده\nحقیقت اینه که سابسیژن بدون تزریق فیلر معنا نداره\nبی‌تاثیره!!\nولی اکثر مواقع تاثیرش بالعکسه\nباید حتما ما هنگام سابسیژن\nتزریق فیلر مونوفازیک داشته باشیم\nکه اون دو تا بافتی که چسبندگی داشتن\nجدا شدن از هم با سابسیژن ما\nکه یک فاصله یافته جدا جدا بهبود پیدا کنن\nبدون تزریق فیلر\nقطعا قطعا شرایط بیمار بدتر خواهد شد\nسابسیژن اصولی یک جلسه است",
-        "caption": "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt",
+        "caption": ["https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt", "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-subcision-technique.subtitles.en.vtt"],
         "mainEntityOfPage": {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique#webpage"
         }
@@ -8815,6 +8821,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-subcision-technique.mp4",
         "encodingFormat": "video/mp4",
+        "contentSize": "3191562 bytes",
+        "bitrate": "713364 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-subcision-technique-width"
         },
@@ -8835,6 +8843,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm",
         "encodingFormat": "video/webm",
+        "contentSize": "2062340 bytes",
+        "bitrate": "423608 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop-webm-encoding-width"
         },
@@ -8901,6 +8911,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         },
         "description": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
+        "transcript": "[بخشی از گفتار نامفهوم]\n... آقای دکتر قزلباش هستیم.\nما رو دعوت کردن اینجا که با هم دیگه صحبت...\nاینجا جهت خار [نامفهوم] این شکلی می‌شه.\nپس می‌تونم اینو لیفت کنم.\nولی وقتی یونی‌دیرکشنال باشه...\nریورس [نامفهوم] انتری پوینتت بیاد اینجا.\nنقطه ورودت بیاد اینجا.\nدو تا [نامفهوم] رو چجوری می‌آمدی؟\nکتاب [نام کتاب نامفهوم] تردلیفت...\nمی‌آید روی آرک [نامفهوم]...\nاگه جایی هم بخوای بترسی، اینجا [نامفهوم] تمپوراله.\nچرا؟ طرف یه سمت صورتش اسکار داره، یه سمت نداره.\nاون سمتی که اسکار داره، الاستیسیتیش کمتره.",
+        "caption": "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.captions.fa.vtt",
         "version": "1.2.1",
         "dateModified": {
           "@value": "2026-09-30",
@@ -8935,6 +8947,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4",
         "encodingFormat": "video/mp4",
+        "contentSize": "4600265 bytes",
+        "bitrate": "945510 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop-width"
         },
@@ -8955,6 +8969,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm",
         "encodingFormat": "video/webm",
+        "contentSize": "666680 bytes",
+        "bitrate": "264188 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience-webm-encoding-width"
         },
@@ -9046,6 +9062,8 @@ export const SOURCE = {
         "@type": "MediaObject",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4",
         "encodingFormat": "video/mp4",
+        "contentSize": "1673689 bytes",
+        "bitrate": "664096 bit/s",
         "width": {
           "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience-width"
         },
@@ -61008,12 +61026,15 @@ export const SOURCE = {
       "video-kurdish-patient-experience": "/video-saeed-ghezelbash-kurdish-patient-review#video-kurdish-patient-experience",
       "video-saeed-ghezelbash-jalupro-vs-profhilo": "/video-saeed-ghezelbash-jalupro-vs-profhilo",
       "video-saeed-ghezelbash-jalupro-vs-profhilo-chapters": "/video-saeed-ghezelbash-jalupro-vs-profhilo#video-saeed-ghezelbash-jalupro-vs-profhilo-chapters",
+      "video-saeed-ghezelbash-jalupro-vs-profhilo-transcript": "/video-saeed-ghezelbash-jalupro-vs-profhilo#video-saeed-ghezelbash-jalupro-vs-profhilo-transcript",
       "video-saeed-ghezelbash-kurdish-patient-review": "/video-saeed-ghezelbash-kurdish-patient-review",
       "video-saeed-ghezelbash-kurdish-patient-review-chapters": "/video-saeed-ghezelbash-kurdish-patient-review#video-saeed-ghezelbash-kurdish-patient-review-chapters",
       "video-saeed-ghezelbash-subcision-technique": "/video-saeed-ghezelbash-subcision-technique",
       "video-saeed-ghezelbash-subcision-technique-chapters": "/video-saeed-ghezelbash-subcision-technique#video-saeed-ghezelbash-subcision-technique-chapters",
+      "video-saeed-ghezelbash-subcision-technique-transcript": "/video-saeed-ghezelbash-subcision-technique#video-saeed-ghezelbash-subcision-technique-transcript",
       "video-saeed-ghezelbash-thread-lift-workshop": "/video-saeed-ghezelbash-thread-lift-workshop",
       "video-saeed-ghezelbash-thread-lift-workshop-chapters": "/video-saeed-ghezelbash-thread-lift-workshop#video-saeed-ghezelbash-thread-lift-workshop-chapters",
+      "video-saeed-ghezelbash-thread-lift-workshop-transcript": "/video-saeed-ghezelbash-thread-lift-workshop#video-saeed-ghezelbash-thread-lift-workshop-transcript",
       "video-subcision-technique": "/video-saeed-ghezelbash-subcision-technique#video-subcision-technique",
       "video-thread-lift-workshop": "/video-saeed-ghezelbash-thread-lift-workshop#video-thread-lift-workshop",
       "when-migraine-botox-is-inappropriate": "/botox-contraindications-and-precautions#when-migraine-botox-is-inappropriate",
@@ -65437,7 +65458,7 @@ export const AUTHORED_BODY = [
   `<p>سابسیژن جای جوش را پر نمی‌کند؛ گیر زیر پوست را آزاد می‌کند. روشن‌بودن این مرز جلوی بسیاری از توقعات غلط را می‌گیرد. در برخی اسکارهای فرورفته، مخصوصاً اسکارهای چسبیده و رولینگ، رشته‌ها یا چسبندگی‌های زیرپوستی سطح پوست را به پایین می‌کشند. سابسیژن با هدف آزادسازی این چسبندگی‌ها انجام می‌شود تا پوست فرصت پیدا کند از حالت گیرکرده خارج شود و روند ترمیم کنترل‌شده وارد عمل شود.</p>`,
   `<p><strong>مکانیسم سابسیژن با نوع اسکار گره خورده است:</strong> مرور کارآزمایی‌های بالینی منتشرشده در <a href="https://pubmed.ncbi.nlm.nih.gov/36315903/" rel="external noopener">Journal of Cosmetic Dermatology</a> سابسیژن را روشی برای بریدن رشته‌های فیبروتیک زیر اسکارهای آتروفیک و بالا آمدن اسکار توصیف می‌کند. پس «جای جوش دارم» هنوز اندیکاسیون سابسیژن نیست؛ باید اسکار واقعاً tethered/rolling و قابل آزادسازی باشد.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-subcision-technique" id="video-subcision-technique">`,
-  `<video aria-describedby="caption-saeed-ghezelbash-subcision-technique video-saeed-ghezelbash-subcision-technique-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره سابسیژن" controls="" height="960" id="video-saeed-ghezelbash-subcision-technique" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-subcision-technique.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره سابسیژن" width="540"><source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-subcision-technique.mp4" type="video/mp4"><track kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt" srclang="fa"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
+  `<video aria-describedby="caption-saeed-ghezelbash-subcision-technique video-saeed-ghezelbash-subcision-technique-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره سابسیژن" controls="" height="960" id="video-saeed-ghezelbash-subcision-technique" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-subcision-technique.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره سابسیژن" width="540"><source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-subcision-technique.mp4" type="video/mp4"><track default="" kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt" srclang="fa"><track kind="subtitles" label="English subtitles" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.subtitles.en.vtt" srclang="en"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-subcision-technique-chapters">`,
   `<summary>فصل‌های ویدئوی سابسیژن و درمان اسکار آکنه</summary>`,
   `<ol>`,
@@ -65445,6 +65466,7 @@ export const AUTHORED_BODY = [
   `<li><a href="/video-saeed-ghezelbash-subcision-technique?t=7"><time datetime="PT7S">00:07</time><span>نمایش آزادسازی بافت اسکار</span></a></li>`,
   `<li><a href="/video-saeed-ghezelbash-subcision-technique?t=15"><time datetime="PT15S">00:15</time><span>بحث تزریق فیلر و درمان ترکیبی</span></a></li>`,
   `<li><a href="/video-saeed-ghezelbash-subcision-technique?t=25"><time datetime="PT25S">00:25</time><span>توضیح تکمیلی و جمع‌بندی</span></a></li></ol></details>`,
+  `<details class="video-transcript" id="video-saeed-ghezelbash-subcision-technique-transcript" lang="fa" data-video-transcript="video-saeed-ghezelbash-subcision-technique"><summary>متن گفتار ویدئو؛ رفتن به زمان هر جمله</summary><ol><li><a data-transcript-end="1.5" href="/video-saeed-ghezelbash-subcision-technique?t=0"><time datetime="PT0S">00:00:00</time><span>آقای دکتر</span></a></li><li><a data-transcript-end="2.5" href="/video-saeed-ghezelbash-subcision-technique?t=1.5"><time datetime="PT1.5S">00:00:01</time><span>سابسیژن انجام دادید؟</span></a></li><li><a data-transcript-end="4.2" href="/video-saeed-ghezelbash-subcision-technique?t=2.5"><time datetime="PT2.5S">00:00:02</time><span>آره، داریم سابسیژن انجام میدیم.</span></a></li><li><a data-transcript-end="6.5" href="/video-saeed-ghezelbash-subcision-technique?t=4.5"><time datetime="PT4.5S">00:00:04</time><span>راستش من خیلی ایراد میگیرم راجع به سابسیژن</span></a></li><li><a data-transcript-end="8.5" href="/video-saeed-ghezelbash-subcision-technique?t=6.5"><time datetime="PT6.5S">00:00:06</time><span>و خیلی میگن یه جلسه انجام دادیم خوب نشده</span></a></li><li><a data-transcript-end="12.5" href="/video-saeed-ghezelbash-subcision-technique?t=9"><time datetime="PT9S">00:00:09</time><span>حقیقت اینه که سابسیژن بدون تزریق فیلر معنا نداره</span></a></li><li><a data-transcript-end="14.5" href="/video-saeed-ghezelbash-subcision-technique?t=13.5"><time datetime="PT13.5S">00:00:13</time><span>بی‌تاثیره!!</span></a></li><li><a data-transcript-end="17.5" href="/video-saeed-ghezelbash-subcision-technique?t=15"><time datetime="PT15S">00:00:15</time><span>ولی اکثر مواقع تاثیرش بالعکسه</span></a></li><li><a data-transcript-end="21" href="/video-saeed-ghezelbash-subcision-technique?t=17.5"><time datetime="PT17.5S">00:00:17</time><span>باید حتما ما هنگام سابسیژن</span></a></li><li><a data-transcript-end="22.5" href="/video-saeed-ghezelbash-subcision-technique?t=21"><time datetime="PT21S">00:00:21</time><span>تزریق فیلر مونوفازیک داشته باشیم</span></a></li><li><a data-transcript-end="24.5" href="/video-saeed-ghezelbash-subcision-technique?t=22.5"><time datetime="PT22.5S">00:00:22</time><span>که اون دو تا بافتی که چسبندگی داشتن</span></a></li><li><a data-transcript-end="26.2" href="/video-saeed-ghezelbash-subcision-technique?t=24.5"><time datetime="PT24.5S">00:00:24</time><span>جدا شدن از هم با سابسیژن ما</span></a></li><li><a data-transcript-end="29" href="/video-saeed-ghezelbash-subcision-technique?t=26.2"><time datetime="PT26.2S">00:00:26</time><span>که یک فاصله یافته جدا جدا بهبود پیدا کنن</span></a></li><li><a data-transcript-end="30.5" href="/video-saeed-ghezelbash-subcision-technique?t=29.25"><time datetime="PT29.25S">00:00:29</time><span>بدون تزریق فیلر</span></a></li><li><a data-transcript-end="33.5" href="/video-saeed-ghezelbash-subcision-technique?t=30.5"><time datetime="PT30.5S">00:00:30</time><span>قطعا قطعا شرایط بیمار بدتر خواهد شد</span></a></li><li><a data-transcript-end="35.7" href="/video-saeed-ghezelbash-subcision-technique?t=33.5"><time datetime="PT33.5S">00:00:33</time><span>سابسیژن اصولی یک جلسه است</span></a></li></ol></details>`,
   `<figcaption id="caption-saeed-ghezelbash-subcision-technique">توضیحات دکتر سعید قزلباش درباره سابسیژن.<a href="https://www.instagram.com/reel/DE5QDlepCe7/">مشاهده انتشار اصلی این ویدئو در اینستاگرام</a></figcaption></figure></div>`,
   `<div class="render-chunk">`,
   `<h4 id="tethered-acne-scars-when-laser-and-creams-are-insufficient">چسبندگی زیر پوست؛ جایی که کرم و لیزر تنها کافی نیستند</h4>`,
@@ -65702,7 +65724,7 @@ export const AUTHORED_BODY = [
   `<p id="answer-jalupro-vs-profhilo-selection" class="answer-projection"><span>جالپرو و پروفایلو هر دو در حوزه کیفیت پوست مطرح می‌شوند، اما جای فیلر کلاسیک را نمی‌گیرند. هدف آن‌ها تغییر واضح فرم صورت نیست؛ انتخاب میان آن‌ها به وضعیت پوست، ناحیه درمان، سابقه تزریق و انتظار بیمار بستگی دارد. توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.</span></p>`,
   `<p>جالپرو و پروفایلو هر دو در حوزه کیفیت پوست مطرح می‌شوند، اما جای فیلر کلاسیک را نمی‌گیرند. هدف آن‌ها تغییر واضح فرم صورت نیست؛ انتخاب میان آن‌ها به وضعیت پوست، ناحیه درمان، سابقه تزریق و انتظار بیمار بستگی دارد.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-jalupro-vs-profhilo" id="video-jalupro-vs-profhilo">`,
-  `<video aria-describedby="caption-saeed-ghezelbash-jalupro-vs-profhilo video-saeed-ghezelbash-jalupro-vs-profhilo-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی" controls="" height="960" id="video-saeed-ghezelbash-jalupro-vs-profhilo" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره جالپرو و پروفایلو" width="540"><source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4" type="video/mp4"><track kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt" srclang="fa"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
+  `<video aria-describedby="caption-saeed-ghezelbash-jalupro-vs-profhilo video-saeed-ghezelbash-jalupro-vs-profhilo-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی" controls="" height="960" id="video-saeed-ghezelbash-jalupro-vs-profhilo" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره جالپرو و پروفایلو" width="540"><source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4" type="video/mp4"><track default="" kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt" srclang="fa"><track kind="subtitles" label="English subtitles" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.subtitles.en.vtt" srclang="en"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-jalupro-vs-profhilo-chapters">`,
   `<summary>فصل‌های ویدئوی پروفایلو، جالپرو و جوانسازهای تزریقی</summary>`,
   `<ol>`,
@@ -65711,6 +65733,7 @@ export const AUTHORED_BODY = [
   `<li><a href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=19"><time datetime="PT19S">00:19</time><span>بیورویتالیزیشن و اصطلاحات جوانسازی</span></a></li>`,
   `<li><a href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=31"><time datetime="PT31S">00:31</time><span>بحث عمق و لایه تزریق</span></a></li>`,
   `<li><a href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=46"><time datetime="PT46S">00:46</time><span>جمع‌بندی مقایسه جالپرو و پروفایلو</span></a></li></ol></details>`,
+  `<details class="video-transcript" id="video-saeed-ghezelbash-jalupro-vs-profhilo-transcript" lang="fa" data-video-transcript="video-saeed-ghezelbash-jalupro-vs-profhilo"><summary>متن گفتار ویدئو؛ رفتن به زمان هر جمله</summary><ol><li><a data-transcript-end="2.25" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=0.75"><time datetime="PT0.75S">00:00:00</time><span>آقای دکتر میشه بگی چه کاری انجام میدین؟</span></a></li><li><a data-transcript-end="6" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=2.25"><time datetime="PT2.25S">00:00:02</time><span>من دارم یه سری نقاط تزریقو مشخص می‌کنم</span></a></li><li><a data-transcript-end="9" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=6"><time datetime="PT6S">00:00:06</time><span>برای این خانم قصد دارم که</span></a></li><li><a data-transcript-end="11.5" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=9"><time datetime="PT9S">00:00:09</time><span>یک نوع مزوژل به نام EJAL 40</span></a></li><li><a data-transcript-end="16.5" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=11.5"><time datetime="PT11.5S">00:00:11</time><span>رو براشون تزریق کنیم که از آنالوگ‌های شاید پروفایلو باشه در نظر گرفت</span></a></li><li><a data-transcript-end="19.5" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=16.5"><time datetime="PT16.5S">00:00:16</time><span>یه سری تفاوت‌های کوچیکی داره</span></a></li><li><a data-transcript-end="22.75" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=20.25"><time datetime="PT20.25S">00:00:20</time><span>ما باید تزریق کنیم هر سمت پنج نقاط تزریق</span></a></li><li><a data-transcript-end="25.5" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=23.25"><time datetime="PT23.25S">00:00:23</time><span>نقطه اینجا هر سمت چهار نقطه است و بهش میگن</span></a></li><li><a data-transcript-end="29.25" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=26.25"><time datetime="PT26.25S">00:00:26</time><span>BIOREVITALIZATION POINTS</span></a></li><li><a data-transcript-end="38.25" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=31.5"><time datetime="PT31.5S">00:00:31</time><span>هر دوی این نوع مزوژل‌ها در لایه تزریق میشن و</span></a></li><li><a data-transcript-end="42" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=38.25"><time datetime="PT38.25S">00:00:38</time><span>به نوعی یک مقدار لیفت</span></a></li><li><a data-transcript-end="44.25" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=42.75"><time datetime="PT42.75S">00:00:42</time><span>آبرسانی عمیقی دارند.</span></a></li><li><a data-transcript-end="47.25" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=44.25"><time datetime="PT44.25S">00:00:44</time><span>تفاوتشون حالا خیلیا میان میپرسن</span></a></li><li><a data-transcript-end="51.75" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=48"><time datetime="PT48S">00:00:48</time><span>حالا اینم که مثل پروفایلو بهتره یا جالپرو سوپرهیدرو؟</span></a></li><li><a data-transcript-end="55.5" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=52.5"><time datetime="PT52.5S">00:00:52</time><span>خب اصلا لایه‌ها متفاوته، هدف از</span></a></li><li><a data-transcript-end="58.5" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=55.5"><time datetime="PT55.5S">00:00:55</time><span>تزریق‌ها متفاوته و</span></a></li><li><a data-transcript-end="62" href="/video-saeed-ghezelbash-jalupro-vs-profhilo?t=60"><time datetime="PT60S">00:01:00</time><span>دو تا چیز قابل مقایسه نیستن</span></a></li></ol></details>`,
   `<figcaption id="caption-saeed-ghezelbash-jalupro-vs-profhilo">توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.<a href="https://www.instagram.com/reel/DDty1BcujKB/">مشاهده انتشار اصلی این ویدئو در اینستاگرام</a></figcaption></figure>`,
   `<p>پوست خسته همیشه فیلر نمی‌خواهد؛ گاهی کیفیت پوست مسئله اصلی است. اما این حکم را هم نباید برعکس فهمید. هر پوست خسته‌ای هم جالپرو یا پروفایلو نمی‌خواهد. اگر پوست التهاب فعال دارد، جوش ناپایدار دارد، لک تحریک‌پذیر دارد، سابقه واکنش شدید دارد، عفونت پوستی وجود دارد، یا انتظار بیمار «لیفت فوری» و تغییر فرم واضح است، تصمیم باید عوض شود.</p>`,
   `<p>درمان‌های جوانساز تزریقی در ناحیه‌ای بین مراقبت پوستی، ترمیم بافتی، آب‌رسانی عمقی، تحریک ملایم بافت و بهبود ظاهر پوست قرار می‌گیرند. همین‌جایگاه بینابینی باعث ارزش آن‌ها می‌شود، اما همین هم محل سوءاستفاده تبلیغاتی است. وقتی محصولی برای کیفیت پوست ساخته شده، نباید نقش فیلر، نخ یا جراحی را به آن داد.</p>`,
@@ -67578,7 +67601,7 @@ export const AUTHORED_BODY = [
   `<p>تاریخ این آموزش هم روشن است: ورکشاپ پیشرفته لیفت نخ در <time datetime="2025-02-04">۱۶ بهمن ۱۴۰۳</time> در تهران و برای متخصصان زیبایی از سراسر ایران برگزار شد.</p>`,
   `<p>در ورکشاپ <a href="https://www.instagram.com/reel/DEAp2Xnuu4c/">لیفت نخ</a> هم حرف من همین است: قبل از اینکه پزشک بداند نخ را از کجا رد کند، باید بداند چه صورتی را اصلاً نباید نخ بزند. وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی و انتظار بیمار از اسم نخ مهم‌ترند. تکنیک وقتی ارزش دارد که روی انتخاب درست بیمار سوار شود؛ وگرنه فقط خطا را تمیزتر اجرا می‌کند.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-thread-lift-workshop" id="video-thread-lift-workshop">`,
-  `<video aria-describedby="caption-saeed-ghezelbash-thread-lift-workshop video-saeed-ghezelbash-thread-lift-workshop-chapters" aria-label="بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران" controls="" height="854" id="video-saeed-ghezelbash-thread-lift-workshop" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-thread-lift-workshop.webp" preload="none" title="ویدئوی ورکشاپ لیفت نخ دکتر سعید قزلباش" width="480"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4" type="video/mp4"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
+  `<video aria-describedby="caption-saeed-ghezelbash-thread-lift-workshop video-saeed-ghezelbash-thread-lift-workshop-chapters" aria-label="بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران" controls="" height="854" id="video-saeed-ghezelbash-thread-lift-workshop" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-thread-lift-workshop.webp" preload="none" title="ویدئوی ورکشاپ لیفت نخ دکتر سعید قزلباش" width="480"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4" type="video/mp4"><track default="" kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.captions.fa.vtt" srclang="fa"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-thread-lift-workshop-chapters">`,
   `<summary>فصل‌های ویدئوی ورکشاپ لیفت نخ</summary>`,
   `<ol>`,
@@ -67586,6 +67609,7 @@ export const AUTHORED_BODY = [
   `<li><a href="/video-saeed-ghezelbash-thread-lift-workshop?t=8"><time datetime="PT8S">00:08</time><span>نمایش ابزار و تکنیک اجرایی</span></a></li>`,
   `<li><a href="/video-saeed-ghezelbash-thread-lift-workshop?t=18"><time datetime="PT18S">00:18</time><span>نمایش زنده روی مدل</span></a></li>`,
   `<li><a href="/video-saeed-ghezelbash-thread-lift-workshop?t=30"><time datetime="PT30S">00:30</time><span>توضیح تکمیلی و تعامل با شرکت‌کنندگان</span></a></li></ol></details>`,
+  `<details class="video-transcript" id="video-saeed-ghezelbash-thread-lift-workshop-transcript" lang="fa" data-video-transcript="video-saeed-ghezelbash-thread-lift-workshop"><summary>متن گفتار ویدئو؛ رفتن به زمان هر جمله</summary><ol><li><a data-transcript-end="3.4" href="/video-saeed-ghezelbash-thread-lift-workshop?t=0"><time datetime="PT0S">00:00:00</time><span>[بخشی از گفتار نامفهوم]</span></a></li><li><a data-transcript-end="4.8" href="/video-saeed-ghezelbash-thread-lift-workshop?t=3.4"><time datetime="PT3.4S">00:00:03</time><span>... آقای دکتر قزلباش هستیم.</span></a></li><li><a data-transcript-end="7.36" href="/video-saeed-ghezelbash-thread-lift-workshop?t=4.84"><time datetime="PT4.84S">00:00:04</time><span>ما رو دعوت کردن اینجا که با هم دیگه صحبت...</span></a></li><li><a data-transcript-end="9.26" href="/video-saeed-ghezelbash-thread-lift-workshop?t=7.4"><time datetime="PT7.4S">00:00:07</time><span>اینجا جهت خار [نامفهوم] این شکلی می‌شه.</span></a></li><li><a data-transcript-end="12.6" href="/video-saeed-ghezelbash-thread-lift-workshop?t=10.16"><time datetime="PT10.16S">00:00:10</time><span>پس می‌تونم اینو لیفت کنم.</span></a></li><li><a data-transcript-end="14.36" href="/video-saeed-ghezelbash-thread-lift-workshop?t=12.62"><time datetime="PT12.62S">00:00:12</time><span>ولی وقتی یونی‌دیرکشنال باشه...</span></a></li><li><a data-transcript-end="16.66" href="/video-saeed-ghezelbash-thread-lift-workshop?t=14.36"><time datetime="PT14.36S">00:00:14</time><span>ریورس [نامفهوم] انتری پوینتت بیاد اینجا.</span></a></li><li><a data-transcript-end="18.88" href="/video-saeed-ghezelbash-thread-lift-workshop?t=16.7"><time datetime="PT16.7S">00:00:16</time><span>نقطه ورودت بیاد اینجا.</span></a></li><li><a data-transcript-end="21.4" href="/video-saeed-ghezelbash-thread-lift-workshop?t=19.34"><time datetime="PT19.34S">00:00:19</time><span>دو تا [نامفهوم] رو چجوری می‌آمدی؟</span></a></li><li><a data-transcript-end="24.92" href="/video-saeed-ghezelbash-thread-lift-workshop?t=21.4"><time datetime="PT21.4S">00:00:21</time><span>کتاب [نام کتاب نامفهوم] تردلیفت...</span></a></li><li><a data-transcript-end="27.04" href="/video-saeed-ghezelbash-thread-lift-workshop?t=24.92"><time datetime="PT24.92S">00:00:24</time><span>می‌آید روی آرک [نامفهوم]...</span></a></li><li><a data-transcript-end="31.32" href="/video-saeed-ghezelbash-thread-lift-workshop?t=27.04"><time datetime="PT27.04S">00:00:27</time><span>اگه جایی هم بخوای بترسی، اینجا [نامفهوم] تمپوراله.</span></a></li><li><a data-transcript-end="35.08" href="/video-saeed-ghezelbash-thread-lift-workshop?t=31.36"><time datetime="PT31.36S">00:00:31</time><span>چرا؟ طرف یه سمت صورتش اسکار داره، یه سمت نداره.</span></a></li><li><a data-transcript-end="37.84" href="/video-saeed-ghezelbash-thread-lift-workshop?t=35.26"><time datetime="PT35.26S">00:00:35</time><span>اون سمتی که اسکار داره، الاستیسیتیش کمتره.</span></a></li></ol></details>`,
   `<figcaption id="caption-saeed-ghezelbash-thread-lift-workshop">بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.<a href="https://www.instagram.com/reel/DE_39nRIakj/">مشاهده انتشار اصلی این ویدئو در اینستاگرام</a></figcaption></figure>`,
   `<p>نمونه‌های ویدئویی آموزش و محتوای بالینی من در <a href="https://www.instagram.com/doctor.ghezelbaash/reels/">بخش Reels صفحه رسمی اینستاگرام</a> نیز در دسترس است. ویدئو برای من جای توضیح علمی را نمی‌گیرد، اما می‌تواند نحوه فکرکردن، آموزش و اجرای واقعی را قابل مشاهده‌تر کند.</p></div>`,
   `<div class="render-chunk">`,

@@ -18,7 +18,7 @@ const server=http.createServer(async(req,res)=>{
   const url=new URL(req.url,'http://localhost');const logical=url.pathname;
   const rel=htmlPaths.has(logical)?(logical==='/'?'index.html':logical.slice(1)+'.html'):logical.slice(1);
   const file=path.resolve(distDir,rel);if(!file.startsWith(distDir+'/'))throw new Error('path');
-  const bytes=await fs.readFile(file);const type={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.mp4':'video/mp4','.webm':'video/webm','.jsonld':'application/ld+json','.ttl':'text/turtle','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2','.jpg':'image/jpeg','.svg':'image/svg+xml'}[path.extname(file)]??'application/octet-stream';
+  const bytes=await fs.readFile(file);const type={'.html':'text/html; charset=utf-8','.json':'application/json','.vtt':'text/vtt','.js':'text/javascript','.css':'text/css','.mp4':'video/mp4','.webm':'video/webm','.jsonld':'application/ld+json','.ttl':'text/turtle','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2','.jpg':'image/jpeg','.svg':'image/svg+xml'}[path.extname(file)]??'application/octet-stream';
   res.setHeader('Content-Type',type);res.setHeader('Accept-Ranges','bytes');
   res.setHeader('Content-Security-Policy',csp);
   const range=/bytes=(\d+)-(\d*)/.exec(req.headers.range??'');
@@ -36,13 +36,14 @@ try{
   process.stderr.write('Testing reader '+route+'\n');
   const context=await browser.newContext({viewport:{width:1280,height:800}});
   await context.addInitScript(()=>{window.cspViolations=[];document.addEventListener('securitypolicyviolation',event=>window.cspViolations.push({directive:event.effectiveDirective,blocked:event.blockedURI}));});
-  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage();const errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));
+  page.on('request',request=>requests.push(new URL(request.url()).pathname));
   // Delay only the runtime so we can capture the original static primary state.
   let releaseRuntime;const hold=new Promise(resolve=>releaseRuntime=resolve);
   await page.route('**/assets/reader.*.js',async request=>{await hold;await request.continue();});
   await page.goto(local+route,{waitUntil:'commit'});
   await page.waitForSelector('article.medical-guide h1');
-  const snapshot=()=>page.evaluate(()=>{const article=document.querySelector('article.medical-guide').cloneNode(true);for(const dynamic of article.querySelectorAll('[data-clinic-open-status],[data-guide-search-open],#guide-search'))dynamic.remove();return {title:document.title,canonical:document.querySelector('link[rel="canonical"]').href,h1:document.querySelector('h1').textContent,primary:article.textContent.replace(/\s+/g,' ').trim(),ld:document.querySelector('script[type="application/ld+json"]').textContent};});
+  const snapshot=()=>page.evaluate(()=>{const article=document.querySelector('article.medical-guide').cloneNode(true);for(const dynamic of article.querySelectorAll('[data-clinic-open-status],[data-guide-search-open],#guide-search'))dynamic.remove();return {title:document.title,canonical:document.querySelector('link[rel="canonical"]').href,h1:document.querySelector('h1').textContent,primary:article.textContent.replace(/\s+/g,' ').trim(),social:JSON.stringify([...document.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map(node=>node.outerHTML)),ld:document.querySelector('script[type="application/ld+json"]').textContent};});
   const before=await snapshot();releaseRuntime();
   if(route!=='/')await page.waitForSelector('[data-guide-reader] [data-guide-context="after"]',{state:'attached',timeout:30000});
   else await page.waitForFunction(()=>typeof window.syncGuidePageState==='function');
@@ -51,6 +52,11 @@ try{
   assert.equal(await page.locator('script[type="application/ld+json"]').count(),1,'One route-specific graph '+route);
   if(route!=='/'){assert.equal(await page.locator('[data-guide-context]').count(),2,'Surrounding Home reader context '+route);assert((await page.locator('[data-guide-context]').allTextContents()).join('').length>1000,'Substantive surrounding context '+route);}
   assert.deepEqual(errors,[],'Browser errors '+route);
+  if(route!=='/'){
+   assert.equal(requests.filter(p=>/^\/assets\/guide\.[a-f0-9]{12}\.json$/.test(p)).length,1,'One shared content payload '+route);
+   assert(!requests.includes('/'),'Internal entry does not fetch full Home '+route);
+   assert(!requests.some(p=>p.startsWith('/assets/guide-meta.')),'Home graph stays deferred '+route);
+  }
   assert.deepEqual(await page.evaluate(()=>window.cspViolations),[],'Reader and external styles load without CSP violations '+route);
   if(route==='/botox'){
    await page.evaluate(()=>{const script=document.createElement('script');script.textContent='window.inlineBreakoutExecuted=true';document.body.append(script);});
@@ -88,6 +94,19 @@ try{
    await page.goto(local+route+'?video='+route.slice('/video-saeed-ghezelbash-'.length)+'&t='+clip.startOffset,{waitUntil:'domcontentloaded'});
    await page.waitForFunction(seconds=>{const v=document.querySelector('article.medical-guide video');return v?.readyState>=1&&Math.abs(v.currentTime-seconds)<0.25;},clip.startOffset,{timeout:30000});
    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),source.canonicalOrigin+route,'Previously published timestamp URLs remain supported '+route);
+   if(video.caption){
+    const captions=page.locator('article.medical-guide track[kind="captions"]');
+    await page.waitForFunction(()=>document.querySelector('article.medical-guide track[kind="captions"]')?.readyState===2);
+    assert.equal(await captions.evaluate(track=>track.track.mode),'showing','Speech captions are available without opening a menu '+route);
+    assert(await captions.evaluate(track=>track.track.cues.length)>0,'Native player loads actual WebVTT cues '+route);
+    const transcript=page.locator('article.medical-guide [data-video-transcript]');
+    if(!await transcript.evaluate(node=>node.open))await transcript.locator('summary').click();
+    const last=transcript.locator('a[href]').last(),timestamp=Number(new URL(await last.getAttribute('href'),source.canonicalOrigin).searchParams.get('t'));
+    await last.click();await page.waitForURL(local+route+'?t='+timestamp);
+    await page.waitForFunction(seconds=>Math.abs(document.querySelector('article.medical-guide video')?.currentTime-seconds)<.25,timestamp);
+    await page.waitForFunction(href=>document.querySelector('article.medical-guide [data-video-transcript] a[aria-current="true"]')?.getAttribute('href')===href,await last.getAttribute('href'));
+    assert.equal(await transcript.locator('a[aria-current="true"]').getAttribute('href'),await last.getAttribute('href'),'Speech highlight follows the selected sentence '+route);
+   }
   }
   if(route==='/'){
    const destination=source.discovery.sitemapPolicy.videoWatchPages.find(w=>w.path==='/video-saeed-ghezelbash-subcision-technique');
@@ -112,5 +131,59 @@ try{
   }
   results.push({route,ownership:'PASS',csp:'PASS',readerContext:route==='/'?'Home':'PASS',contextualNavigation:route==='/botox'?'PASS':undefined,timestampSeek:watch?'PASS':undefined,chapterNavigation:watch?'PASS':undefined,legacyTimestampSeek:watch?'PASS':undefined,homeChapterAndBack:route==='/'?'PASS':undefined});await context.close();
  }
+ // A cold internal entry must still restore the full Home graph on navigation,
+ // then restore its own semantic ownership on Back without reloading the guide.
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ const page=await context.newPage(),requests=[];
+ page.on('request',request=>requests.push(new URL(request.url()).pathname));
+ await page.goto(local+'/botox');
+ await page.waitForFunction(()=>document.documentElement.classList.contains('js')&&document.querySelectorAll('[data-guide-context]').length===2);
+ assert(!requests.includes('/'),'Cold internal entry skips Home document');
+ assert(!requests.some(p=>p.startsWith('/assets/guide-meta.')),'Cold internal entry skips Home graph');
+ await page.evaluate(()=>{const a=document.createElement('a');a.href='/';a.id='reader-home-test';a.textContent='Home';document.querySelector('main article').prepend(a);});
+ await page.locator('#reader-home-test').click();await page.waitForURL(local+'/');
+ await page.waitForFunction(url=>document.querySelector('link[rel="canonical"]')?.href===url,source.canonicalOrigin+'/');
+ const restoredGraph=await page.locator('script[type="application/ld+json"]').textContent();
+ assert.equal(await semanticFingerprint(JSON.parse(restoredGraph)),await semanticFingerprint(source.graph),'Internal-to-Home restores complete canonical graph');
+ assert.equal(requests.filter(p=>p.startsWith('/assets/guide-meta.')).length,1,'Home metadata loads once when needed');
+ assert(!requests.includes('/'),'Internal-to-Home uses the shared article without full-document refetch');
+ await page.goBack();await page.waitForURL(local+'/botox');
+ await page.waitForFunction(url=>document.querySelector('link[rel="canonical"]')?.href===url,source.canonicalOrigin+'/botox');
+ assert.equal(await page.locator('h1').count(),1,'Back restores one focused primary heading');
+ assert.equal(await page.locator('[data-guide-context]').count(),2,'Back restores surrounding complete guide');
+ await page.locator('#guide-search-input').fill('بوتاکس');
+ assert(await page.locator('#guide-search-results a').count()>0,'Complete-guide search works after Home and Back');
+ await context.close();
+ // A late Home graph must never overwrite a newer Back/route navigation.
+ const racing=await browser.newContext({viewport:{width:390,height:844}}),race=await racing.newPage();
+ let releaseMetadata,metadataRequested;
+ const heldMetadata=new Promise(resolve=>releaseMetadata=resolve),requestedMetadata=new Promise(resolve=>metadataRequested=resolve);
+ await race.route('**/assets/guide-meta.*.json',async request=>{metadataRequested();await heldMetadata;await request.continue();});
+ await race.goto(local+'/botox');
+ await race.waitForFunction(()=>document.documentElement.classList.contains('js')&&document.querySelectorAll('[data-guide-context]').length===2);
+ const raceDestination=await race.locator('article.medical-guide nav[data-topic-navigation] a').first().getAttribute('href');
+ assert(htmlPaths.has(raceDestination)&&raceDestination!=='/'&&raceDestination!=='/botox');
+ await race.evaluate(destination=>{
+  const sync=window.syncGuidePageState;window.readerHomeSyncComplete=false;
+  window.syncGuidePageState=path=>{const pending=sync(path);if(path==='/')pending.finally(()=>window.readerHomeSyncComplete=true);return pending;};
+  for(const [id,href] of [['reader-race-home','/'],['reader-race-next',destination]]){const a=document.createElement('a');a.id=id;a.href=href;a.textContent=id;document.querySelector('main article').prepend(a);}
+ },raceDestination);
+ await race.locator('#reader-race-home').click();await requestedMetadata;
+ await race.waitForURL(local+'/');
+ await race.goBack();await race.waitForURL(local+'/botox');
+ await race.locator('#reader-race-next').click();await race.waitForURL(local+raceDestination);
+ await race.waitForFunction(url=>document.querySelector('link[rel="canonical"]')?.href===url,source.canonicalOrigin+raceDestination);
+ releaseMetadata();await race.waitForFunction(()=>window.readerHomeSyncComplete);
+ assert.equal(new URL(race.url()).pathname,raceDestination,'Late Home metadata keeps newer navigation URL');
+ assert.equal(await race.locator('link[rel="canonical"]').getAttribute('href'),source.canonicalOrigin+raceDestination,'Late Home metadata cannot replace newer ownership');
+ assert.equal(await race.locator('h1').count(),1,'Overlapping navigation retains one primary H1');
+ assert.equal(await race.locator('[data-guide-context]').count(),2,'Overlapping navigation retains complete surrounding context');
+ await racing.close();
+ const fallback=await browser.newPage();
+ await fallback.route('**/assets/guide.*.json',request=>request.abort());
+ await fallback.goto(local+'/botox');
+ await fallback.waitForFunction(()=>document.querySelectorAll('[data-guide-context]').length===2);
+ assert.equal(await fallback.locator('link[rel="canonical"]').getAttribute('href'),source.canonicalOrigin+'/botox','Unavailable payload preserves native Home fallback and focused identity');
+ await fallback.close();
  console.log(JSON.stringify({localBrowserVerification:'PASS',edgeBehavior:'UNVERIFIED LIVE GATE',results},null,2));
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

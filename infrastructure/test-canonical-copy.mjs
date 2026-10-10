@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {AUTHORED_BODY} from '../src/canonical/source.mjs';
+import {clinicalCopyFingerprint} from './lib/clinical-copy.mjs';
 
 const source = await fs.readFile(new URL('../src/canonical/source.mjs', import.meta.url), 'utf8');
 
@@ -13,5 +14,11 @@ assert.ok(source.includes('محمدسعید قزلباش'), 'Canonical identity 
 
 assert.ok(AUTHORED_BODY.includes('اگر دومی است، باید دید عضله اجازه می‌دهد یا نه.'), 'The clinical distinction between structural eye change and mild brow change remains readable');
 assert.ok(AUTHORED_BODY.includes('زمینهٔ نارضایتی را می‌سازد و می‌تواند ریسک را بالا ببرد.'), 'The original warning retains its complete sentence');
+
+const clinical='<article><p>اگر دومی است، باید دید عضله اجازه می‌دهد یا نه.</p></article>';
+const transcript='<details data-video-transcript="video"><summary>متن گفتار</summary><ol><li>گفتار ضبط‌شدهٔ ویدئو</li></ol></details>';
+assert.equal(clinicalCopyFingerprint(clinical.replace('</article>',transcript+'</article>')),clinicalCopyFingerprint(clinical),'Separately verified video transcripts do not change the clinical copy lock');
+assert.notEqual(clinicalCopyFingerprint(clinical.replace('اجازه می‌دهد','اجازه نمی‌دهد')),clinicalCopyFingerprint(clinical),'Changed clinical meaning still fails the copy lock');
+assert.notEqual(clinicalCopyFingerprint(clinical.replace('</article>','<details><summary>Clinical advice</summary><p>New advice</p></details></article>')),clinicalCopyFingerprint(clinical),'Ordinary details remain protected clinical copy');
 
 console.log(JSON.stringify({ canonicalVisibleIdentityCopy: 'PASS' }, null, 2));

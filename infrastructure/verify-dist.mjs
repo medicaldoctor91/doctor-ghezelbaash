@@ -10,6 +10,7 @@ import {semanticFingerprint} from './lib/rdf.mjs';
 import {assertValidLinkTypes} from './lib/headers.mjs';
 import {deriveRoutingRows,renderRedirects} from '../src/lib/delivery-output.mjs';
 import {measureDelivery} from './lib/delivery-contract.mjs';
+import {verifyReaderPayload} from './lib/reader-payload.mjs';
 
 const TEXT_EXTENSIONS=new Set(['.html','.css','.js','.json','.jsonld','.ttl','.xml','.txt','.md','.csv','.webmanifest']);
 const vals=v=>Array.isArray(v)?v:v==null?[]:[v];
@@ -75,8 +76,9 @@ export async function verifyDist({
   for(const [publicPath,meta] of Object.entries(manifest.files)){const file=path.join(distDir,publicPath.slice(1));const bytes=await fs.readFile(file);assert.equal(bytes.length,meta.bytes,`Manifest bytes ${publicPath}`);assert.equal(sha256(bytes),meta.sha256,`Manifest hash ${publicPath}`);}
   for(const file of await walk(distDir)){if(!TEXT_EXTENSIONS.has(path.extname(file).toLowerCase())&&path.basename(file)!=='_headers')continue;const text=await fs.readFile(file,'utf8');assert.ok(!text.includes('pinterest.com/medicaldoctor91'),`Invalid Pinterest in ${path.relative(distDir,file)}`);}
   if(source)assert.equal(await fs.readFile(path.join(distDir,'_redirects'),'utf8'),renderRedirects(deriveRoutingRows(source,full)),'Delivered routing preserves exact canonical/historical/identity policy');
+  const readerPayload=source?await verifyReaderPayload({distDir,htmlByRoute}):null;
   const metrics=source?await measureDelivery({distDir,source,verify:true,locked:JSON.parse(await fs.readFile(new URL('./fixtures/locked-route-text.json',import.meta.url),'utf8'))}):null;
-  return {metrics,canonicalPages:routes.length,graphNodes:full['@graph'].length,videoEntries,integrityVerified:true,manifestFiles:Object.keys(manifest.files).length};
+  return {metrics,readerPayload,canonicalPages:routes.length,graphNodes:full['@graph'].length,videoEntries,integrityVerified:true,manifestFiles:Object.keys(manifest.files).length};
 }
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){
