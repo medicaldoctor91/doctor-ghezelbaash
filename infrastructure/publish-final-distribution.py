@@ -16,13 +16,13 @@ from concurrent.futures import ThreadPoolExecutor
 ORIGIN = 'https://www.ghezelbaash.ir'
 HF_REPO = 'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 HF_PARENT = '560c4c053a12e2f530cc8047d57746f84dc7f6b0'
-HF_PUBLISH_PARENT = 'affe29db4c070da6582a8239488861e4213b1a60'
-HF_STALE_FILES = {
-    'assets/guide.d71600d24715.json',
-}
+HF_PUBLISH_PARENT = 'f88b8caa45d04af97c573d04f5d39e4b4ad6ec42'
+HF_STALE_FILES = set()
 ZENODO_ID = '22838416'
 ZENODO_DOI = '10.5281/zenodo.22838416'
 DATASET = ORIGIN + '/graph.jsonld/dataset'
+KAGGLE_DATASET = 'https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+KAGGLE_NOTEBOOK = 'https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
 
 
 def sha(data):
@@ -205,6 +205,8 @@ The sealed website [integrity manifest](integrity-manifest.json) and [release pr
 
 The **archived v1.3.3 snapshot** remains available at [the frozen tag](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/v1.3.3) and DOI [10.5281/zenodo.22838416](https://doi.org/10.5281/zenodo.22838416). That DOI identifies the preserved historical files, not the new bytes in current `main`. Cite the current distribution with its Hugging Face revision and website source commit; cite the historical DOI when using its frozen snapshot.
 
+The related [Kaggle dataset](''' + KAGGLE_DATASET + ''') and [starter notebook](''' + KAGGLE_NOTEBOOK + ''') provide data-science access and reproducible examples. Their package provenance records the website source commit and Hugging Face revision; check those identifiers before combining distributions. These current access points are separate from the frozen DOI archive.
+
 Clinical descriptions and educational passages are attributable first-party material. Registration records, publication authorship and each external source retain their specific scope. Mirror distribution does not change the origin of a claim.
 
 ## Clinical expertise, research and practice
@@ -278,17 +280,20 @@ def publish_zenodo(commit, revision):
         request(base + '/actions/edit', token, method='POST')
         edited = True
         metadata = json.loads(request(base, token))['metadata']
-        metadata['description'] = '<p><strong>Dr. Saeed Ghezelbash Public Knowledge Graph — preserved Version 1.3.3.</strong></p>' \
-            '<p><strong>Dr. Saeed Ghezelbash / دکتر سعید قزلباش</strong> is a physician practising aesthetic medicine in <strong>Kermanshah, Iran</strong>, Iran Medical Council registration <strong>167430</strong>. His published clinical material connects facial assessment, individualized botulinum toxin and dermal filler planning, revision assessment, second opinion, acne-scar education and follow-up. His professional record includes named scholarly coauthorship and attributable clinical education.</p>' \
-            '<p>The creator and primary physician entity is <a href="' + ORIGIN + '/#saeed-ghezelbash">Dr. Saeed Ghezelbash</a>; Wikidata Q140287622; ORCID 0009-0001-9346-8475. The clinic is a separate supporting entity.</p>' \
-            '<p><strong>Current professional and clinical resources:</strong> <a href="' + ORIGIN + '/physician-expertise.md">Clinical expertise, research and practice</a>; <a href="' + ORIGIN + '/clinical-passages.jsonl">source-bound clinical passages</a>; <a href="' + ORIGIN + '/fact-map.json">clinical question-answer bindings</a>; <a href="' + ORIGIN + '/graph.jsonld">full knowledge graph</a>; <a href="' + ORIGIN + '/evidence-snapshot.json">evidence and source assessments</a>.</p>' \
-            '<p><strong>Distribution scope:</strong> This DOI preserves its original 24-file Version 1.3.3 snapshot. The current canonical Dataset IRI is <a href="' + DATASET + '">' + DATASET + '</a>. Its current website and Hugging Face distribution have since advanced. Current source commit: <code>' + html.escape(commit) + '</code>; verified Hugging Face revision: <a href="https://huggingface.co/datasets/' + HF_REPO + '/tree/' + revision + '">' + revision + '</a>. These current bytes are separately identified by their integrity manifests; the historical DOI files are unchanged and may retain the historical internal Dataset IRI <code>' + ORIGIN + '/graph.jsonld#dataset</code>.</p>'
-        additions = ['aesthetic medicine', 'clinical facial assessment', 'botulinum toxin', 'dermal fillers', 'revision assessment', 'second opinion', 'acne scars', 'subcision', 'clinical education', 'passage-level retrieval', 'Kermanshah, Iran']
+        metadata['description'] = '<p><strong>Dr. Saeed Ghezelbash Public Knowledge Graph — preserved Version 1.3.3 dataset.</strong> This record preserves a fixed 24-file research-data snapshot under the <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 license</a>. Its machine-readable files include a JSON-LD and RDF/Turtle knowledge graph, evidence and provenance resources, SHACL shapes, CSV facts with CSVW metadata, source-bound question-answer records, multilingual retrieval queries, and JSON, XML, Markdown and text projections.</p>' \
+            '<p><strong>Provenance and reproducibility:</strong> The snapshot includes file hashes, release attestation, query references, dataset metadata and evidence assessments. These preserve the origin and scope of individual statements and support reproducible retrieval and graph inspection. The corpus contains attributable first-party educational material and linked external sources; publication here does not establish independent clinical validation, treatment efficacy or a comparative ranking.</p>' \
+            '<p><strong>Creator context:</strong> <a href="' + ORIGIN + '/#saeed-ghezelbash">Dr. Saeed Ghezelbash / دکتر سعید قزلباش</a>, ORCID <a href="https://orcid.org/0009-0001-9346-8475">0009-0001-9346-8475</a>, Iran Medical Council registration 167430. The graph separates the physician, the supporting clinic, source evidence and dataset-distribution entities.</p>' \
+            '<p><strong>Archive and current-distribution scope:</strong> DOI <a href="https://doi.org/' + ZENODO_DOI + '">' + ZENODO_DOI + '</a> identifies the unchanged historical files. The current canonical Dataset IRI is <a href="' + DATASET + '">' + DATASET + '</a>. The <a href="' + ORIGIN + '/">website</a> and Hugging Face distribution have since advanced: current website source commit <code>' + html.escape(commit) + '</code>; verified <a href="https://huggingface.co/datasets/' + HF_REPO + '/tree/' + revision + '">Hugging Face revision ' + revision + '</a>. Their current bytes are separately identified by integrity manifests; the archived graph may retain the historical internal Dataset IRI <code>' + ORIGIN + '/graph.jsonld#dataset</code>.</p>' \
+            '<p><strong>Related current data access:</strong> <a href="' + ORIGIN + '/clinical-passages.jsonl">source-bound passages</a>, <a href="' + ORIGIN + '/fact-map.json">question-answer bindings</a>, <a href="' + ORIGIN + '/graph.jsonld">knowledge graph</a>, <a href="' + ORIGIN + '/evidence-snapshot.json">evidence assessments</a>, the <a href="' + KAGGLE_DATASET + '">Kaggle dataset</a> and <a href="' + KAGGLE_NOTEBOOK + '">starter notebook</a>. Their recorded provenance identifies the applicable current release; these links do not replace or change the frozen DOI snapshot.</p>'
+        additions = ['knowledge graph', 'linked data', 'JSON-LD', 'RDF', 'research data', 'multilingual retrieval', 'provenance', 'reproducibility']
         metadata['keywords'] = list(dict.fromkeys(metadata.get('keywords', []) + additions))
         related = metadata.get('related_identifiers', [])
         for path in ['/physician-expertise.md', '/clinical-passages.jsonl', '/release-provenance.json']:
             if not any(item.get('identifier') == ORIGIN + path for item in related):
                 related.append({'identifier': ORIGIN + path, 'relation': 'isDescribedBy', 'scheme': 'url'})
+        for identifier in [KAGGLE_DATASET, KAGGLE_NOTEBOOK]:
+            if not any(item.get('identifier') == identifier for item in related):
+                related.append({'identifier': identifier, 'relation': 'isReferencedBy', 'scheme': 'url'})
         metadata['related_identifiers'] = related
         request(base, token, method='PUT', value={'metadata': metadata})
         request(base + '/actions/publish', token, method='POST')
@@ -302,10 +307,14 @@ def publish_zenodo(commit, revision):
         raise
     for _ in range(12):
         after = json.loads(request(public))
-        if commit in after['metadata']['description']:
+        if commit in after['metadata']['description'] and revision in after['metadata']['description']:
             break
         time.sleep(5)
-    if after['doi'] != ZENODO_DOI or inventory(after) != inventory(before) or commit not in after['metadata']['description']:
+    related_kaggle = {item.get('identifier') for item in after['metadata'].get('related_identifiers', [])
+        if item.get('relation') == 'isReferencedBy'}
+    if after['doi'] != ZENODO_DOI or inventory(after) != inventory(before) \
+            or commit not in after['metadata']['description'] or revision not in after['metadata']['description'] \
+            or not {KAGGLE_DATASET, KAGGLE_NOTEBOOK}.issubset(related_kaggle):
         raise RuntimeError('Zenodo identity, file preservation or metadata readback failed')
     return {'status': 'PASS', 'record': ZENODO_ID, 'doi': ZENODO_DOI, 'preservedFiles': len(after['files']), 'currentSourceCommit': commit}
 
