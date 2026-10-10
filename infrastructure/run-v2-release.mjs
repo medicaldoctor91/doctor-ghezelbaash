@@ -10,6 +10,7 @@ import { sealRelease } from './seal-release.mjs';
 import { verifyDist } from './verify-dist.mjs';
 import {distHashes} from './lib/delivery-contract.mjs';
 import { deriveRoutingRows } from '../src/lib/delivery-output.mjs';
+import {materializeMediaWorker} from './materialize-media-worker.mjs';
 
 const execFileAsync=promisify(execFile);
 async function execute(command,args,cwd){const{stdout='',stderr=''}=await execFileAsync(command,args,{cwd,maxBuffer:128*1024*1024,env:process.env});if(stdout)process.stdout.write(stdout);if(stderr)process.stderr.write(stderr);}
@@ -27,6 +28,7 @@ export async function runV2Release({projectRoot}){
   const builtGraph=JSON.parse(await fs.readFile(path.join(distDir,'graph.jsonld'),'utf8'));
   const routingRows=deriveRoutingRows(SOURCE,builtGraph);
   await finalizeDist({distDir,routes,routingRows,sourceEdition:SOURCE.edition,origin:SOURCE.canonicalOrigin,watchPosters,securityEmail:'doctor@ghezelbaash.ir',delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+  await materializeMediaWorker({distDir,source:SOURCE});
   const seal=await sealRelease({distDir,projectRoot,releaseDate:SOURCE.edition});
   const sealedHashes=await distHashes(distDir);
   const languageRoutes=(SOURCE.discovery.translationGroups??[]).flatMap(group=>(group.members??[]).map(member=>member.path));

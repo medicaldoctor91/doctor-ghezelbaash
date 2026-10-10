@@ -38,7 +38,7 @@ assert.equal(remoteManifest.response.status, 200, 'Live integrity manifest must 
 assert.equal(hash(remoteManifest.bytes), hash(manifestBytes), 'Live release must match verified local manifest');
 
 // Pages consumes these configuration files rather than serving them as assets.
-const privateConfig = new Set(['/_headers', '/_redirects']);
+const privateConfig = new Set(['/_headers', '/_redirects', '/_worker.js', '/_routes.json']);
 const entries = Object.entries(manifest.files).filter(([name]) => !privateConfig.has(name));
 let next = 0, verifiedBytes = 0, fileReadinessRetries = 0, mediaRangeChecks = 0, rangeReadinessRetries = 0;
 await Promise.all(Array.from({ length: 4 }, async () => {

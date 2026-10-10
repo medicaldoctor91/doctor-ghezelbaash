@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { routeFileForPath, discoverCriticalAssets } from './lib/dist-html.mjs';
 import { generateHeaders, generateSecurityTxt } from './lib/headers.mjs';
 import { deriveRoutingRows, renderRedirects } from '../src/lib/delivery-output.mjs';
+import {materializeMediaWorker} from './materialize-media-worker.mjs';
 
 async function pathExists(file){try{await fs.access(file);return true;}catch{return false;}}
 
@@ -29,4 +30,5 @@ if(process.argv[1]===fileURLToPath(import.meta.url)){
   const watchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const url=byId.get(entry.videoId)?.thumbnailUrl;if(typeof url!=='string')throw new Error('Video thumbnail missing: '+entry.videoId);const parsed=new URL(url);if(parsed.origin!==SOURCE.canonicalOrigin)throw new Error('Cross-origin video poster: '+entry.videoId);return[entry.path,parsed.pathname];}));
   const graph=JSON.parse(await fs.readFile(path.join(distDir,'graph.jsonld'),'utf8')),routingRows=deriveRoutingRows(SOURCE,graph);
   console.log(JSON.stringify(await finalizeDist({distDir,routes,routingRows,sourceEdition:SOURCE.edition,origin:SOURCE.canonicalOrigin,watchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources}),null,2));
+  console.log(JSON.stringify(await materializeMediaWorker({distDir,source:SOURCE}),null,2));
 }
