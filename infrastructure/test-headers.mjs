@@ -56,9 +56,10 @@ assert.match(headers,/rel=describedby; type="text\/turtle"/);
 assert.match(headers,/https:\/\/www\.ghezelbaash\.ir\/#saeed-ghezelbash>; rel=about/);
 assert.match(headers,/\/video-saeed-ghezelbash-subcision-technique\n[\s\S]*<\/media\/posters\/subcision\.0123456789ab\.webp>; rel=preload; as=image/);
 assert(!headers.includes('as=script'), 'JS must not be Early-Hinted by default');
-assert.match(headers,/\/assets\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
-assert.match(headers,/\/media\/\*\n\s+Cache-Control: public, max-age=3600, must-revalidate/);
-assert.match(headers,/\/fonts\/\*\n\s+Cache-Control: public, max-age=3600, must-revalidate/);
+for(const [pattern,cache] of [['/assets/*','public, max-age=31536000, immutable'],['/media/*','public, max-age=3600, must-revalidate'],['/fonts/*','public, max-age=3600, must-revalidate']]){
+ const block=headers.split(/\n\n+/).find(block=>block.startsWith(pattern+'\n'));
+ assert(block?.split('\n').includes('  Cache-Control: '+cache),'Correct resource cache policy '+pattern);
+}
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Content-Type: application\/ld\+json/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Access-Control-Allow-Origin: \*/);
 assert.match(headers,/\/graph\.jsonld\n[\s\S]*Cross-Origin-Resource-Policy: cross-origin/);
@@ -78,15 +79,31 @@ const realRoutes=SOURCE.routes.resources.map(entry=>entry.path);
 const byId=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
 const realWatchPosters=new Map(SOURCE.discovery.sitemapPolicy.videoWatchPages.map(entry=>{const thumb=byId.get(entry.videoId)?.thumbnailUrl;assert.equal(typeof thumb,'string',`Missing video poster for ${entry.videoId}`);return [entry.path,new URL(thumb).pathname];}));
 const realHeaders=generateHeaders({origin:SOURCE.canonicalOrigin,routes:realRoutes,cssPath:'/assets/site.0123456789ab.css',watchPosters:realWatchPosters,delivery:SOURCE.delivery,machineResources:SOURCE.machineResources});
+const htmlAliasBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith('/index.html\n'));
+assert.match(htmlAliasBlock,/^  Cache-Control: public, max-age=0, must-revalidate$/m,'The Home HTML alias follows the canonical HTML freshness policy');
 assert.doesNotMatch(realHeaders,/'unsafe-inline'/,'Canonical CSP forbids untrusted inline execution and styles');
 assert.match(realHeaders,/^  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload$/m,'Preserve the already-live canonical host HSTS policy');
-const notFoundBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith('/404.html\n'));
-assert(notFoundBlock,'The support 404 page has a dedicated response policy');
-assert.match(notFoundBlock,/^  ! Link$/m,'404 must not inherit medical graph discovery relationships');
-assert.match(notFoundBlock,/^  ! Cache-Control$/m,'404 must not inherit canonical HTML cache policy');
-assert.match(notFoundBlock,/^  Content-Type: text\/html; charset=utf-8$/m);
-assert.match(notFoundBlock,/^  Cache-Control: no-store$/m);
-assert.match(notFoundBlock,/^  X-Robots-Tag: noindex(?:, follow)?$/m);
+for(const assetPattern of ['/assets/*','/media/*','/fonts/*']){
+ const assetBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith(assetPattern+'\n'));
+ assert.match(assetBlock,/^  ! Link$/m,'Assets do not inherit HTML graph discovery or preloads '+assetPattern);
+ assert.match(assetBlock,/^  ! Cache-Control$/m,'Assets replace any inherited HTML freshness policy '+assetPattern);
+}
+for(const assetPath of ['/favicon.png','/favicon.svg','/apple-touch-icon.png','/2d0a99837e327f6744f9184ec6d2877f.txt']){
+ const block=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith(assetPath+'\n'));
+ assert(block,'The existing mutable root asset has an explicit response policy '+assetPath);
+ assert.match(block,/^  ! Link$/m,'Root assets do not preload HTML resources '+assetPath);
+ assert.match(block,/^  ! Cache-Control$/m,'Root assets replace inherited HTML freshness '+assetPath);
+ assert.match(block,/^  Cache-Control: public, max-age=3600, must-revalidate$/m,'Mutable root assets can change at their existing URLs '+assetPath);
+}
+for(const notFoundPath of ['/404.html','/404']){
+ const notFoundBlock=realHeaders.trim().split(/\n\n+/).find(block=>block.startsWith(notFoundPath+'\n'));
+ assert(notFoundBlock,'The support 404 page and normalized path have a dedicated response policy '+notFoundPath);
+ assert.match(notFoundBlock,/^  ! Link$/m,'404 must not inherit medical graph discovery relationships');
+ assert.match(notFoundBlock,/^  ! Cache-Control$/m,'404 must not inherit canonical HTML cache policy');
+ assert.match(notFoundBlock,/^  Content-Type: text\/html; charset=utf-8$/m);
+ assert.match(notFoundBlock,/^  Cache-Control: no-store$/m);
+ assert.match(notFoundBlock,/^  X-Robots-Tag: noindex(?:, follow)?$/m);
+}
 assert.match(realHeaders,/script-src 'self'(?:;|$)/);
 assert.match(realHeaders,/style-src 'self'(?:;|$)/);
 for (const resource of [

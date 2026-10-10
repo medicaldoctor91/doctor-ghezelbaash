@@ -1,3 +1,5 @@
+const MUTABLE_ROOT_ASSETS=['/favicon.png','/favicon.svg','/apple-touch-icon.png','/2d0a99837e327f6744f9184ec6d2877f.txt'];
+
 export function assertValidLinkTypes(headers){
   for(const line of headers.split('\n').filter(line=>/^\s*Link:/i.test(line))){
     const attributes=[...line.matchAll(/;\s*type\s*=/gi)];
@@ -44,7 +46,8 @@ function globalBlock(delivery){
 function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}){
   const lines=[resource.path];
   if(detachHtml){lines.push('  ! Cache-Control','  ! Link');}
-  lines.push(`  Cache-Control: ${delivery.machine.cacheControl}`);
+  const cache=resource.indexing==='canonical-html'?delivery.html.cacheControl:delivery.machine.cacheControl;
+  lines.push(`  Cache-Control: ${cache}`);
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
   const profile=profileFor(delivery,resource.indexing);if(profile?.default)lines.push(`  X-Robots-Tag: ${profile.default}`);
@@ -56,7 +59,7 @@ function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}
   }
   return lines.join('\n');
 }
-function countPotential({routes,machineResources,watchPosters}){return 1+routes.length+machineResources.length+3+2+1+(watchPosters?.size??0);}
+function countPotential({routes,machineResources,watchPosters}){return 1+routes.length+machineResources.length+3+MUTABLE_ROOT_ASSETS.length+2+2+(watchPosters?.size??0);}
 export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),earlyHints=true,delivery=null,machineResources=[]}){
   if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');requirePath(cssPath,'cssPath');
   machineResources=[...machineResources,...(delivery?.releaseResources??[])];
@@ -80,10 +83,11 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
       blocks.push(`${pattern}\n  ! Link\n  ! Cache-Control\n  Content-Type: ${contentType(resource)}\n  X-Robots-Tag: noindex, follow\n  Access-Control-Allow-Origin: *\n  Access-Control-Expose-Headers: Link, Content-Type\n  Cross-Origin-Resource-Policy: cross-origin\n  Cache-Control: ${delivery.machine.cacheControl}\n  Link: <${representation}>; rel=describedby; type="${resource.mediaType}"`);
     }
   }
-  blocks.push(`/assets/*\n  Cache-Control: public, max-age=31536000, immutable`);
-  blocks.push(`/media/*\n  Cache-Control: public, max-age=3600, must-revalidate`);
-  blocks.push(`/fonts/*\n  Cache-Control: public, max-age=3600, must-revalidate`);
-  if(delivery?.routing?.notFound?.cacheControl){const p=profileFor(delivery,delivery.routing.notFound.indexing);blocks.push(`/404.html\n  ! Link\n  ! Cache-Control\n  Content-Type: text/html; charset=utf-8\n  Cache-Control: ${delivery.routing.notFound.cacheControl}${p?.default?`\n  X-Robots-Tag: ${p.default}`:''}`);}
+  blocks.push(`/assets/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable`);
+  blocks.push(`/media/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=3600, must-revalidate`);
+  blocks.push(`/fonts/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=3600, must-revalidate`);
+  for(const route of MUTABLE_ROOT_ASSETS)blocks.push(`${route}\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=3600, must-revalidate`);
+  if(delivery?.routing?.notFound?.cacheControl){const p=profileFor(delivery,delivery.routing.notFound.indexing);for(const route of ['/404.html','/404'])blocks.push(`${route}\n  ! Link\n  ! Cache-Control\n  Content-Type: text/html; charset=utf-8\n  Cache-Control: ${delivery.routing.notFound.cacheControl}${p?.default?`\n  X-Robots-Tag: ${p.default}`:''}`);}
   const preview=delivery?.http?.indexingProfiles?.preview?.default??'noindex';blocks.push(`https://:project.pages.dev/*\n  X-Robots-Tag: ${preview}`);blocks.push(`https://:version.:project.pages.dev/*\n  X-Robots-Tag: ${preview}`);
   if(blocks.length>100)throw new Error(`Cloudflare _headers rule limit exceeded: ${blocks.length}`);
   const output=blocks.join('\n\n')+'\n';for(const line of output.split('\n'))if(line.length>2000)throw new Error(`Cloudflare _headers line limit exceeded: ${line.length}`);assertValidLinkTypes(output);return output;

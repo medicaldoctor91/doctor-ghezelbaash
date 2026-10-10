@@ -48,6 +48,7 @@ for (const resource of [...SOURCE.machineResources, ...(SOURCE.delivery.releaseR
 }
 const home = await get('/');
 assert.equal(home.response.status, 200);
+assert.equal(home.response.headers.get('cache-control'), SOURCE.delivery.html.cacheControl, 'Live HTML freshness policy');
 if (origin === SOURCE.canonicalOrigin) assert.doesNotMatch(home.response.headers.get('x-robots-tag') ?? '', /noindex|nofollow/i, 'Production Home remains indexable');
 assert.ok(home.response.headers.get('content-security-policy'), 'Live CSP');
 assert.match(home.response.headers.get('link') ?? '', /rel=describedby/, 'Home graph HTTP discovery');
@@ -61,6 +62,25 @@ assert.match(html, /<link\b[^>]*integrity="sha384-/, 'Live stylesheet SRI');
 const missing = await get('/release-verification-missing-page');
 assert.equal(missing.response.status, 404, 'Actual not-found HTTP status');
 assert.match(missing.response.headers.get('x-robots-tag') ?? '', /noindex/, 'Not-found indexing');
+// Status-based response corrections belong to the canonical Cloudflare zone.
+if (origin === SOURCE.canonicalOrigin) {
+  assert.equal(missing.response.headers.get('cache-control'), 'no-store', 'Error responses must not persist in caches');
+  assert.equal(missing.response.headers.get('link'), null, 'Errors must not inherit canonical graph relationships');
+  assert.equal(missing.response.headers.get('content-type')?.split(';')[0].trim(), 'text/html', 'Error response uses the HTML body MIME');
+  const missingSubject = await get('/graph.jsonld/release-verification-missing-subject');
+  assert.equal(missingSubject.response.status, 404, 'Undefined graph subject remains not found');
+  assert.equal(missingSubject.response.headers.get('content-type')?.split(';')[0].trim(), 'text/html', 'Undefined subjects must not label HTML errors as JSON-LD');
+  assert.equal(missingSubject.response.headers.get('link'), null, 'Undefined subjects must not advertise graph identity relationships');
+  assert.equal(missingSubject.response.headers.get('cache-control'), 'no-store', 'Undefined subjects must not be cached');
+}
+const errorPage = await get('/404');
+assert.match(errorPage.response.headers.get('x-robots-tag') ?? '', /noindex/, 'Normalized error document indexing');
+assert.equal(errorPage.response.headers.get('cache-control'), 'no-store', 'Normalized error document must not be cached');
+assert.equal(errorPage.response.headers.get('link'), null, 'Normalized error document has no canonical graph relationships');
+for (const [name] of entries.filter(([name]) => /^\/assets\/(?:site|reader)\.[a-f0-9]+\.(?:css|js)$/.test(name))) {
+  const { response } = await get(name);
+  assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable', `Hashed asset cache policy ${name}`);
+}
 const report = { status: 'PASS', origin, sourceCommit: provenance.sourceCommit, verifiedFiles: entries.length + 1, verifiedBytes, canonicalRoutes: SOURCE.routes.resources.length, graphNodes: SOURCE.graph['@graph'].length, privateConfigurationFiles: [...privateConfig] };
 await fs.mkdir('release', { recursive: true });
 await fs.writeFile('release/live-verification.json', JSON.stringify(report, null, 2) + '\n');
