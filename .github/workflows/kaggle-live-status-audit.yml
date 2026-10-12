@@ -1,0 +1,31 @@
+name: Audit current Kaggle publication visibility
+on:
+  push:
+    branches: [maintenance/kaggle-documentation-20261012]
+    paths: [.github/workflows/kaggle-live-status-audit.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
+      - name: Read owner status and anonymous current version
+        run: |
+          python - <<'PY'
+          import json,urllib.request
+          from kaggle import api
+          ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+          print('OWNER_STATUS',api.dataset_status(ref,format='json(status,current_version_number)'))
+          url='https://api.kaggle.com/v1/datasets.DatasetApiService/GetDataset'
+          payload={'ownerSlug':ref.split('/')[0],'datasetSlug':ref.split('/')[1]}
+          request=urllib.request.Request(url,data=json.dumps(payload).encode(),headers={'Content-Type':'application/json'},method='POST')
+          public=json.load(urllib.request.urlopen(request,timeout=45))
+          print('PUBLIC_STATUS',json.dumps({k:public.get(k) for k in ['currentVersionNumber','lastUpdated','isPrivate','subtitle']}))
+          PY
