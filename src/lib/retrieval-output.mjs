@@ -180,7 +180,7 @@ export function buildProvenanceGraph(source, records = buildRetrievalRecords(sou
     htmlUrl: { '@id': 'https://schema.org/contentUrl', '@type': '@id' },
     evidenceIds: { '@id': 'https://schema.org/citation', '@type': '@id' },
     ...Object.fromEntries(['sourceHashSha256', 'answerHashSha256', 'passageHashSha256', 'releaseEdition', 'provenanceClass'].map(field => [field, ontology + field])),
-    reviewedAt: 'https://schema.org/lastReviewed',
+    reviewedAt: { '@id': 'https://schema.org/lastReviewed', '@type': 'http://www.w3.org/2001/XMLSchema#date' },
   };
   const generated = [...records].sort((a, b) => a.passageId < b.passageId ? -1 : a.passageId > b.passageId ? 1 : 0).flatMap(record => {
     const passageId = record.passageId;
