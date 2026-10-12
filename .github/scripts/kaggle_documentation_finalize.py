@@ -23,7 +23,7 @@ name='physician-expertise.md'
 p=hf_hub_download(HF_REPO,name,repo_type='dataset',revision=pin,token=False)
 shutil.copyfile(p,hf/name)
 assert load(hf/'release-provenance.json')['sourceCommit']==ctx['source_commit']
-current=api.dataset_view(KAGGLE_REF).current_version_number
+current=json.loads(api.dataset_status(KAGGLE_REF,format='json(current_version_number)'))['current_version_number']
 version=max(int(current),int(manifest['desired_kaggle_version']))+1
 kg=ROOT/'package';description=build_kaggle(hf,previous,kg,ctx,version,pin)
 raw=load(kg/'dataset-metadata.json');metadata=dict(raw.get('info') or raw)
