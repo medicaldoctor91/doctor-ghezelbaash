@@ -1,0 +1,25 @@
+name: Correct organization canonical dataset pointer
+on:
+  push:
+    branches: [maintenance/platform-convergence-20261012]
+    paths: [.github/scripts/hf_org_profile_repair.py, .github/workflows/hf-org-profile-repair.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Correct the actual organization profile form and verify public output
+        run: python .github/scripts/hf_org_profile_repair.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hf-org-profile-repair-evidence
+          path: /tmp/hf-org-profile-repair.json
+          if-no-files-found: ignore
