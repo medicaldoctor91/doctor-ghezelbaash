@@ -123,6 +123,10 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     for item in manifest['original_files']:
         dest=out/item['path'];dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(hf/item['path'],dest)
         item.update(bytes=dest.stat().st_size,sha256=sha(dest))
+    expertise='physician-expertise.md'
+    if expertise not in {item['path'] for item in manifest['original_files']}:
+        shutil.copyfile(hf/expertise,out/expertise)
+        manifest['original_files'].append({'path':expertise,'bytes':(out/expertise).stat().st_size,'sha256':sha(out/expertise)})
     manifest.update(packaging_revision=version,desired_kaggle_version=version,packaging_date='2026-10-12',
        canonical_dataset_iri=DATASET,upstream_revision=hf_revision,website_source_commit=ctx['source_commit'],
        website_release_run_id=int(ctx['run_id']),website_release_run_url=ctx['run_url'])
@@ -141,6 +145,8 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
             writer.writerow(dst)
     readme=f'''# Dr. Saeed Ghezelbash Knowledge Graph and NLP Data
 
+Creator: **Dr. Saeed Ghezelbash (دکتر سعید قزلباش)**, aesthetic physician and medical researcher in Kermanshah, Iran. Iran Medical Council registration **167430**. This public, first-party dataset connects the physician's identity, authored clinical education, source-linked answers and multilingual retrieval aliases through explicit professional provenance.
+
 Source release **1.3.3**, edition **2026-10-10**. Kaggle packaging revision and dataset version **{version}**; maintenance **2026-10-12**.
 
 Canonical dataset: `{DATASET}`. Physician: `Q140287622`; ORCID `0009-0001-9346-8475`; OpenAlex `A5146521397`.
@@ -150,14 +156,33 @@ Pinned Hugging Face revision: `{hf_revision}`.
 
 All copied resources retain the exact bytes of this Hub revision. Four Parquet tables reconstruct every original source row, including omitted fields and JSON arrays. Query references resolve against current graph and provenance nodes. `checksums.sha256` covers all {{checksum_count}} other downloadable files.
 
+- **clinical_passages:** 3,248 authored passages with language, exact page anchors, content hashes, headings, review metadata and evidence references.
+- **clinical_answers:** 125 canonical answers with source and passage bindings.
+- **entity_facts:** 22,142 RDF statements preserving complete IRIs, datatypes and languages.
+- **query_matrix:** 876 multilingual retrieval aliases reconciled to the current graph; CSV, JSONL and Parquet reconstruct the same rows.
+
+`starter.ipynb` verifies resource hashes, reconstructs all four tables and CSV, resolves every query reference, and checks the distinct identities of physician, clinic and dataset. Nested fields and omitted values follow `viewer/packaging.json`. `physician-expertise.md` provides the recorded clinical approach, education, research and practice with source references; `clinical-passages.jsonl` supplies the corresponding authored educational material. Load both `graph.jsonld` and `provenance.jsonld` to retain their complete evidence definitions. These resources support Persian NLP, multilingual retrieval, entity resolution and evidence-grounded RAG.
+
 - Website: {ctx['website']}
+- Physician IRI: {PERSON}
+- Clinic IRI: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah
+- Canonical dataset IRI: {DATASET}
 - Wikidata physician: {ctx['wikidata']}
+- ORCID: https://orcid.org/{ctx['orcid']}
+- Active OpenAlex author: https://openalex.org/{ctx['openalex']}
 - Current pinned Hub: {ctx['hf']}/tree/{hf_revision}
 - Zenodo dataset version: {ctx['zenodo_dataset']}
 - Current DOI-versioned website source: {ctx['zenodo_source']}
 - Kaggle current distribution: {ctx['kaggle']}
+- Starter notebook: https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter
 
 The Zenodo dataset record documents its current corrected files and maintenance date. Version-specific historical source archives retain their original provenance; the concept DOI resolves to the latest corrected source. Each distribution has explicit hashes and version identifiers.
+
+## فارسی
+
+این مجموعه، هویت حرفه‌ای دکتر سعید قزلباش، متن‌های آموزشی تألیفی، پاسخ‌های مستند، گراف دانش و پرس‌وجوهای چندزبانه را به شناسه‌ها و منابع دقیق متصل می‌کند. نسخهٔ جاری کاگل و هاگینگ‌فیس از فایل‌های یکسان استفاده می‌کنند؛ زیرمجموعهٔ ۲۴فایلی زنودو نیز با همان گراف، منابع و پرس‌وجوهای اصلاح‌شده هماهنگ است. شخص پزشک، کلینیک و مجموعه‌داده شناسه‌های مستقل و ارتباط‌های روشن دارند. DOIهای فعلی زنودو ثابت مانده‌اند و نسخه‌های تاریخی محفوظ‌اند.
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0). Preserve resource-level provenance and third-party attribution.
 '''
     citation=f'''cff-version: 1.2.0
 message: "Cite the pinned current dataset revision and the corresponding DOI-preserved distribution."
