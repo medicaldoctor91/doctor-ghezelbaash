@@ -1,0 +1,59 @@
+name: In-place Zenodo machine-resource maintenance
+
+on:
+  push:
+    branches: [maintenance/zenodo-in-place-20261014]
+    paths:
+      - '.github/workflows/zenodo-in-place-maintenance.yml'
+      - '.github/scripts/zenodo_in_place_sync.py'
+      - 'tests/test_zenodo_in_place_sync.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-zenodo-in-place-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Read live publication identities before tests
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          def get(url):
+              req=urllib.request.Request(url,headers={'Accept':'application/json','Cache-Control':'no-cache','User-Agent':'ghezelbaash-zenodo-maintenance-preflight/1.0'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          out={}
+          for record in ['22838416','23289009']:
+              data=get('https://zenodo.org/api/records/'+record)
+              out['zenodo_'+record]={'id':data['id'],'doi':data.get('doi') or data['pids']['doi']['identifier'],'version':data['metadata'].get('version'),'files':sorted(f['key'] for f in data['files'])}
+          hf=get('https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data')
+          site=get('https://www.ghezelbaash.ir/release-provenance.json?zenodo-preflight=20261014')
+          out['hf']={'sha':hf['sha'],'siblings':len(hf.get('siblings',[]))}
+          out['website']={'sourceCommit':site['sourceCommit']}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Run regression tests
+        run: python -m unittest tests/test_zenodo_in_place_sync.py -v
+
+      - name: Apply same-DOI Zenodo correction and verify live readback
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+        run: |
+          test -n "${ZENODO_TOKEN:-}"
+          echo "::add-mask::$ZENODO_TOKEN"
+          python .github/scripts/zenodo_in_place_sync.py --apply
