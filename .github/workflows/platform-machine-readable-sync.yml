@@ -1,76 +1,125 @@
-name: Synchronize validated Hugging Face and Kaggle machine resources
+name: One-shot Hugging Face DOI correction
 on:
-  workflow_dispatch:
-    inputs:
-      hf_revision:
-        description: Exact reviewed Hugging Face revision
-        required: true
-        type: string
-      kaggle_version:
-        description: Current reviewed Kaggle version
-        required: true
-        type: string
-      website_commit:
-        description: Current published website source commit
-        required: true
-        type: string
-      website_run_url:
-        description: Verified website publication run URL
-        required: true
-        type: string
+  push:
+    branches: [main]
+    paths:
+      - .github/hf-one-shot-trigger
 permissions:
   contents: read
 concurrency:
-  group: doctor-ghezelbaash-platform-convergence
+  group: doctor-ghezelbaash-hf-one-shot
   cancel-in-progress: false
 jobs:
-  publish:
-    if: github.ref == 'refs/heads/main'
+  correct-hf:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 10
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
-      EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
-      EXPECTED_KAGGLE_VERSION: ${{ inputs.kaggle_version }}
-      EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
-      WEBSITE_PUBLICATION_RUN_URL: ${{ inputs.website_run_url }}
     steps:
-      - uses: actions/checkout@v4
-        with: {fetch-depth: 0, persist-credentials: false}
-      - uses: actions/setup-node@v4
-        with: {node-version-file: .nvmrc, cache: npm}
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - name: Check existing publication bindings
-        run: |
-          python - <<'PY'
-          import os
-          missing=[key for key in ['HF_TOKEN','KAGGLE_API_TOKEN'] if not os.environ.get(key)]
-          assert not missing, 'Missing existing publication bindings: '+str(missing)
-          print('Both existing publication bindings are present')
-          PY
-      - name: Install build and platform validation dependencies
-        run: |
-          npm ci
-          python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
-      - name: Verify source and generate candidate website resources
-        run: |
-          node --test tests/*.test.mjs
-          python tests/platform-bundle-sync.test.py
-          npm run build
-          python -m py_compile .github/scripts/sync_platform_machine_resources.py tests/validate_platform_sync.py
-      - name: Validate both packages, publish and verify public bytes
-        run: |
-          python .github/scripts/sync_platform_machine_resources.py --root /tmp/platform-machine-sync --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --website-run-url "$WEBSITE_PUBLICATION_RUN_URL"
-      - name: Save publication and validation evidence
-        if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: platform-machine-sync-evidence
-          path: |
-            /tmp/platform-machine-sync/context.json
-            /tmp/platform-machine-sync/publication-report.json
-            /tmp/platform-machine-sync/*validation.json
-            /tmp/platform-machine-sync/website-file-sources.json
-          if-no-files-found: warn
+          python-version: '3.12'
+      - name: Install Hugging Face client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1'
+      - name: Correct only the stale Zenodo source DOI and dependent checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}" || { echo 'HF publication secret is missing'; exit 1; }
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import re
+          import tempfile
+          import time
+          from pathlib import Path
+          from huggingface_hub import HfApi, CommitOperationAdd, hf_hub_download
+
+          REPO = 'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          WRONG = 'https://doi.org/10.5281/zenodo.18765168'
+          RIGHT = 'https://doi.org/10.5281/zenodo.23289009'
+          token = os.environ['HF_TOKEN']
+          api = HfApi(token=token)
+          parent = api.dataset_info(REPO).sha
+
+          with tempfile.TemporaryDirectory() as td:
+              root = Path(td)
+              matrix_src = Path(hf_hub_download(REPO, 'current-release-matrix.json', repo_type='dataset', revision=parent, token=token))
+              dist_src = Path(hf_hub_download(REPO, 'dist-sha256.json', repo_type='dataset', revision=parent, token=token))
+              matrix_before = matrix_src.read_bytes()
+              dist_before = dist_src.read_bytes()
+              matrix_text = matrix_before.decode('utf-8')
+
+              wrong_count = matrix_text.count(WRONG)
+              right_count = matrix_text.count(RIGHT)
+              assert wrong_count in (0, 1), f'unexpected stale DOI count: {wrong_count}'
+              if wrong_count == 1:
+                  matrix_text = matrix_text.replace(WRONG, RIGHT, 1)
+              else:
+                  assert right_count >= 1, 'neither stale nor corrected source DOI is present'
+
+              matrix_after = matrix_text.encode('utf-8')
+              matrix_sha = hashlib.sha256(matrix_after).hexdigest()
+              matrix_bytes = len(matrix_after)
+
+              dist_text = dist_before.decode('utf-8')
+              pattern = re.compile(
+                  r'("current-release-matrix\.json"\s*:\s*\{\s*"bytes"\s*:\s*)\d+'
+                  r'(\s*,\s*"sha256"\s*:\s*")[0-9a-f]{64}("\s*\})'
+              )
+              matches = list(pattern.finditer(dist_text))
+              assert len(matches) == 1, f'unexpected current-release-matrix inventory entries: {len(matches)}'
+              dist_text = pattern.sub(lambda m: m.group(1) + str(matrix_bytes) + m.group(2) + matrix_sha + m.group(3), dist_text, count=1)
+              dist_after = dist_text.encode('utf-8')
+              parsed = json.loads(dist_after)
+              entry = parsed['files']['current-release-matrix.json']
+              assert entry['bytes'] == matrix_bytes
+              assert entry['sha256'] == matrix_sha
+
+              matrix_out = root / 'current-release-matrix.json'
+              dist_out = root / 'dist-sha256.json'
+              matrix_out.write_bytes(matrix_after)
+              dist_out.write_bytes(dist_after)
+
+              operations = []
+              changed = []
+              if matrix_after != matrix_before:
+                  operations.append(CommitOperationAdd(path_in_repo='current-release-matrix.json', path_or_fileobj=str(matrix_out)))
+                  changed.append('current-release-matrix.json')
+              if dist_after != dist_before:
+                  operations.append(CommitOperationAdd(path_in_repo='dist-sha256.json', path_or_fileobj=str(dist_out)))
+                  changed.append('dist-sha256.json')
+
+              if operations:
+                  result = api.create_commit(
+                      repo_id=REPO,
+                      repo_type='dataset',
+                      revision='main',
+                      parent_commit=parent,
+                      operations=operations,
+                      commit_message='Correct stale Zenodo source DOI reference',
+                      commit_description='Direct one-shot correction via GitHub Actions; no source generator changes.'
+                  )
+                  revision = result.oid
+              else:
+                  revision = parent
+
+              live_matrix = Path(hf_hub_download(REPO, 'current-release-matrix.json', repo_type='dataset', revision=revision, token=token, force_download=True)).read_bytes()
+              live_dist = Path(hf_hub_download(REPO, 'dist-sha256.json', repo_type='dataset', revision=revision, token=token, force_download=True)).read_bytes()
+              assert live_matrix == matrix_after, 'live HF matrix bytes differ from intended bytes'
+              assert live_dist == dist_after, 'live HF inventory bytes differ from intended bytes'
+              live_text = live_matrix.decode('utf-8')
+              assert WRONG not in live_text, 'stale DOI remains live'
+              assert RIGHT in live_text, 'correct DOI is absent live'
+              live_entry = json.loads(live_dist)['files']['current-release-matrix.json']
+              assert live_entry['bytes'] == len(live_matrix)
+              assert live_entry['sha256'] == hashlib.sha256(live_matrix).hexdigest()
+
+              for _ in range(12):
+                  if api.dataset_info(REPO).sha == revision:
+                      break
+                  time.sleep(2)
+              assert api.dataset_info(REPO).sha == revision, 'HF main did not converge to verified revision'
+              print(json.dumps({'status':'PASS','parentRevision':parent,'liveRevision':revision,'changedFiles':changed,'sourceDOI':RIGHT}, sort_keys=True))
+          PY
