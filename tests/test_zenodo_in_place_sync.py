@@ -65,6 +65,16 @@ class ZenodoInPlaceSyncTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             module.changed_names({'a': b'1'}, {'a': b'1', 'b': b'2'})
 
+    def test_partition_sources_allows_only_known_hf_package_files(self):
+        module = load_module(self)
+        dataset = {'graph.jsonld', 'croissant.json', 'query-matrix.jsonl', 'query-matrix.json-seq'}
+        website = {'graph.jsonld', 'croissant.json'}
+        site, hf = module.partition_mirror_sources(dataset, website)
+        self.assertEqual(site, {'graph.jsonld', 'croissant.json'})
+        self.assertEqual(hf, {'query-matrix.jsonl', 'query-matrix.json-seq'})
+        with self.assertRaises(AssertionError):
+            module.partition_mirror_sources(dataset | {'unexpected.bin'}, website)
+
 
 if __name__ == '__main__':
     unittest.main()
