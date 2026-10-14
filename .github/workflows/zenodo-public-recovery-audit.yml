@@ -1,0 +1,74 @@
+name: Audit public Zenodo recovery state
+
+on:
+  push:
+    branches:
+      - maintenance/zenodo-in-place-20261014
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read public Zenodo state only
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, subprocess, tempfile, urllib.parse, urllib.request
+          Z='https://zenodo.org/api'
+          ORIGIN='https://www.ghezelbaash.ir'
+          def req(url, parse_json=True, timeout=180):
+              r=urllib.request.Request(url,headers={'Accept':'application/json','Cache-Control':'no-cache','User-Agent':'ghezelbaash-zenodo-public-recovery-audit/1.0'})
+              with urllib.request.urlopen(r,timeout=timeout) as resp:
+                  body=resp.read()
+                  return json.loads(body) if parse_json else body
+          ds=req(f'{Z}/records/22838416')
+          src=req(f'{Z}/records/23289009')
+          source_commit=req(ORIGIN+'/release-provenance.json?recovery-audit=20261014')['sourceCommit']
+          checks={}
+          for name in ['croissant.json','shapes.ttl','dcat.ttl','datapackage.json','current-release-matrix.json','release-attestation.json','dist-sha256.json']:
+              body=req(f"{Z}/records/22838416/files/{urllib.parse.quote(name,safe='')}/content",False)
+              row={'bytes':len(body),'sha256':hashlib.sha256(body).hexdigest()}
+              if name=='croissant.json':
+                  o=json.loads(body); row['datasetIri']=o.get('@id')
+                  def typed(v):
+                      vals=v if isinstance(v,list) else [v]
+                      for x in vals:
+                          if isinstance(x,dict):
+                              ts=x.get('@type',[]); ts=ts if isinstance(ts,list) else [ts]
+                              if any(str(t).endswith(('Person','Organization')) for t in ts): return True
+                      return False
+                  row['creatorTyped']=typed(o.get('creator')); row['publisherTyped']=typed(o.get('publisher'))
+              elif name=='shapes.ttl':
+                  t=body.decode(); row['nodeShapes']=t.count('<http://www.w3.org/ns/shacl#NodeShape>')+t.count('sh:NodeShape')
+              elif name=='dcat.ttl':
+                  t=body.decode(); row['measuredMarkers']=all(m in t for m in ['dcat:byteSize','spdx:checksum','spdx:checksumAlgorithm_sha256','https://www.iana.org/assignments/media-types/'])
+              elif name=='datapackage.json': row['resources']=len(json.loads(body).get('resources',[]))
+              elif name=='current-release-matrix.json':
+                  o=json.loads(body); row['websiteSourceCommit']=o.get('websiteSourceCommit'); row['canonicalDatasetIri']=o.get('canonicalDatasetIri'); row['publicationScope']=o.get('publicationScope')
+              elif name=='release-attestation.json':
+                  o=json.loads(body); row['sourceCommit']=o.get('sourceCommit'); row['canonicalDatasetIri']=o.get('canonicalDatasetIri'); row['version']=o.get('version')
+              checks[name]=row
+          srcf=src['files'][0]
+          subprocess.run(['git','cat-file','-e',source_commit+'^{commit}'],check=True)
+          with tempfile.TemporaryDirectory() as td:
+              p=pathlib.Path(td)/'source.zip'
+              subprocess.run(['git','archive','--format=zip','--prefix=doctor-ghezelbaash-source-final-2026-10-10/','-o',str(p),source_commit],check=True)
+              desired=p.read_bytes()
+          live_checksum=srcf.get('checksum',''); live_md5=live_checksum.split(':',1)[1] if live_checksum.startswith('md5:') else None
+          out={
+            'dataset':{'doi':ds.get('doi'),'version':ds.get('metadata',{}).get('version'),'fileCount':len(ds.get('files',[])),'checks':checks},
+            'source':{'doi':src.get('doi'),'version':src.get('metadata',{}).get('version'),'fileCount':len(src.get('files',[])),'key':srcf.get('key'),'liveBytes':srcf.get('size'),'liveChecksum':live_checksum,'desiredBytes':len(desired),'desiredMd5':hashlib.md5(desired).hexdigest(),'matchesDesiredArchive':live_md5==hashlib.md5(desired).hexdigest() and int(srcf.get('size',-1))==len(desired)},
+            'websiteSourceCommit':source_commit
+          }
+          print('AUDIT_JSON='+json.dumps(out,ensure_ascii=False,sort_keys=True))
+          PY
