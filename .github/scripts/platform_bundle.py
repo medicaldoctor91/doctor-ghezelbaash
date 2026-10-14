@@ -1,5 +1,6 @@
 """Build deterministic platform bundles from one canonical website distribution."""
-import csv, hashlib, json, shutil
+import csv, hashlib, json, re, shutil
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 PERSON='https://www.ghezelbaash.ir/#saeed-ghezelbash'
@@ -13,8 +14,12 @@ def load(path):return json.loads(Path(path).read_text())
 def dump(path,value):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
-def context(source_commit,run_id):
+def context(source_commit,run_id,maintenance_date=None):
+    maintenance_date=maintenance_date or datetime.now(timezone.utc).date().isoformat()
+    date.fromisoformat(maintenance_date)
     return {'source_commit':source_commit,'run_id':str(run_id),'run_url':f'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/{run_id}',
+            'maintenance_date':maintenance_date,
+            'publication_scope':['hf','kaggle','zenodo_dataset','zenodo_source'],'archived_snapshots_updated':True,
             'website':'https://www.ghezelbaash.ir/','wikidata':'https://www.wikidata.org/wiki/Q140287622',
             'hf':'https://huggingface.co/datasets/'+HF_REPO,'kaggle':'https://www.kaggle.com/datasets/'+KAGGLE_REF,
             'zenodo_dataset':'https://doi.org/10.5281/zenodo.22838416','zenodo_source':'https://doi.org/10.5281/zenodo.18765168',
@@ -22,14 +27,25 @@ def context(source_commit,run_id):
 
 
 def common_release(root,ctx):
+    scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
+    publication={'verifiedPublicationRun':ctx['run_url'],'publicationScope':scope}
+    if ctx.get('website_publication_run_url'):publication['websitePublicationRun']=ctx['website_publication_run_url']
+    if ctx.get('publication_commit'):publication['publicationCommit']=ctx['publication_commit']
     dump(root/'current-release-matrix.json',{
       'websiteSourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,'canonicalPersonIri':PERSON,
-      'edition':'2026-10-10','publicationMaintenanceDate':'2026-10-12','sourceVersion':'1.3.3',
+      'edition':'2026-10-10','publicationMaintenanceDate':ctx['maintenance_date'],'sourceVersion':'1.3.3',
       'activeOpenAlexAuthorId':ctx['openalex'],'orcid':ctx['orcid'],'wikidata':'Q140287622',
-      'verifiedPublicationRun':ctx['run_url'],'distributions':{k:ctx[k] for k in ['website','hf','kaggle','zenodo_dataset','zenodo_source']}})
+      **publication,'distributions':{k:ctx[k] for k in ['website',*scope]},
+      'archivedSnapshots':{} if archives_updated else {k:ctx[k] for k in ['zenodo_dataset','zenodo_source']},
+      'archivedSnapshotsUpdated':archives_updated})
+    verified_names=['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json',
+                    'croissant.json','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json']
     att={'sourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,'publicationRun':ctx['run_url'],
-         'version':'1.3.3','maintenanceDate':'2026-10-12','openalex':ctx['openalex'],
-         'verifiedResources':{n:sha(root/n) for n in ['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json']}}
+         'version':'1.3.3','maintenanceDate':ctx['maintenance_date'],'openalex':ctx['openalex'],
+         'publicationScope':scope,'archivedSnapshotsUpdated':archives_updated,
+         'verifiedResources':{n:sha(root/n) for n in verified_names if (root/n).is_file()}}
+    if ctx.get('website_publication_run_url'):att['websitePublicationRun']=ctx['website_publication_run_url']
+    if ctx.get('publication_commit'):att['publicationCommit']=ctx['publication_commit']
     dump(root/'release-attestation.json',att)
 
 
@@ -86,13 +102,19 @@ def build_hf(dist,baseline,out,ctx):
     md=(out/'README.md').read_text()
     previous=load(baseline/'viewer/packaging.json')['sourceCommit']
     md=md.replace(previous,ctx['source_commit']).replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
-    # Source-run claims always point to the actual verified publication run, not an older build.
-    import re
-    md=re.sub(r'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/\d+',ctx['run_url'],md)
-    md=re.sub(r'\n\n## Publication convergence — 2026-10-12\n.*\Z','',md,flags=re.S)
-    md += '\n\n## Publication convergence — 2026-10-12\n\nCanonical identity and dataset: `'+ctx['openalex']+'`; `'+DATASET+'`. '
-    md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and all four Viewer tables are rebuilt from the pinned canonical source.\n\n'
-    md += '\n'.join('- '+k+': '+ctx[k] for k in ['website','wikidata','kaggle','zenodo_dataset','zenodo_source'])+'\n'
+    md=re.sub(r'\n\n## (?:Publication convergence|Machine-readable package maintenance) — \d{4}-\d{2}-\d{2}\n.*\Z','',md,flags=re.S)
+    md += '\n\n## Machine-readable package maintenance — '+ctx['maintenance_date']+'\n\n'
+    md += 'This package mirrors the published website source commit `'+ctx['source_commit']+'`. '
+    md += 'Croissant creator/publisher types, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
+    md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and all four Viewer tables are rebuilt without changing their source-row semantics.\n\n'
+    md += 'Package publication run: '+ctx['run_url']+'.\n'
+    if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
+    if ctx['archived_snapshots_updated']:
+        md += '\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
+        md += 'Their DOI identifiers are retained; consult per-platform publication receipts for the final files and provenance.\n'
+    else:
+        md += '\nArchived Zenodo snapshots are retained at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
+        md += 'They were not updated by this Hugging Face/Kaggle maintenance publication; use their own recorded provenance when citing those archives.\n'
     (out/'README.md').write_text(md)
     # Preserve a explicitly named historical pointer, but the current inventory hashes exact bytes.
     inventory={p.relative_to(out).as_posix():{'bytes':p.stat().st_size,'sha256':sha(p)} for p in sorted(out.rglob('*')) if p.is_file() and p.name not in {'dist-sha256.json'} and '.git' not in p.parts}
@@ -120,12 +142,23 @@ def build_zenodo(hf,previous,out,ctx):
 def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     hf,previous,out=map(Path,[hf,previous,out]);shutil.copytree(previous,out,dirs_exist_ok=True)
     manifest=load(out/'kaggle-manifest.json')
+    known={item['path'] for item in manifest['original_files']}
+    # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.
+    for name in ['datapackage.json','release-attestation.json']:
+        if name not in known:manifest['original_files'].append({'path':name})
     for item in manifest['original_files']:
         dest=out/item['path'];dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(hf/item['path'],dest)
         item.update(bytes=dest.stat().st_size,sha256=sha(dest))
-    manifest.update(packaging_revision=version,desired_kaggle_version=version,packaging_date='2026-10-12',
+    manifest.update(packaging_revision=version,desired_kaggle_version=version,packaging_date=ctx['maintenance_date'],
        canonical_dataset_iri=DATASET,upstream_revision=hf_revision,website_source_commit=ctx['source_commit'],
-       website_release_run_id=int(ctx['run_id']),website_release_run_url=ctx['run_url'])
+       package_publication_run_id=int(ctx['run_id']),package_publication_run_url=ctx['run_url'],
+       archived_files_are_current_dist=False)
+    if ctx.get('website_publication_run_url'):
+        manifest['website_release_run_url']=ctx['website_publication_run_url']
+        manifest['website_release_run_id']=int(ctx['website_publication_run_url'].rstrip('/').rsplit('/',1)[-1])
+    else:
+        manifest.pop('website_release_run_id',None);manifest.pop('website_release_run_url',None)
+    manifest['kaggle_payload_note']='dataset-metadata.json is Kaggle control metadata and is not part of the downloadable payload. datapackage.json and release-attestation.json are included; website-only descriptor URLs remain canonical remote representations.'
     dump(out/'kaggle-manifest.json',manifest)
     # The public notebook reconstructs CSV and Parquet into these same JSONL rows.
     with (previous/'query-matrix.csv').open(newline='') as handle:
@@ -139,44 +172,58 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
                  for k in fields if k in row}
             dst['_source_omitted_fields']=json.dumps([k for k in fields if k!='_source_omitted_fields' and k not in row],separators=(',',':'))
             writer.writerow(dst)
-    readme=f'''# Dr. Saeed Ghezelbash Knowledge Graph and NLP Data
-
-Source release **1.3.3**, edition **2026-10-10**. Kaggle packaging revision and dataset version **{version}**; maintenance **2026-10-12**.
-
-Canonical dataset: `{DATASET}`. Physician: `Q140287622`; ORCID `0009-0001-9346-8475`; OpenAlex `A5146521397`.
-
-Website source commit: `{ctx['source_commit']}`. Verified website publication: {ctx['run_url']}.
-Pinned Hugging Face revision: `{hf_revision}`.
-
-All copied resources retain the exact bytes of this Hub revision. Four Parquet tables reconstruct every original source row, including omitted fields and JSON arrays. Query references resolve against current graph and provenance nodes. `checksums.sha256` covers all {{checksum_count}} other downloadable files.
-
-- Website: {ctx['website']}
-- Wikidata physician: {ctx['wikidata']}
-- Current pinned Hub: {ctx['hf']}/tree/{hf_revision}
-- Zenodo dataset version: {ctx['zenodo_dataset']}
-- Current DOI-versioned website source: {ctx['zenodo_source']}
-- Kaggle current distribution: {ctx['kaggle']}
-
-The Zenodo dataset record documents its current corrected files and maintenance date. Version-specific historical source archives retain their original provenance; the concept DOI resolves to the latest corrected source. Each distribution has explicit hashes and version identifiers.
-'''
-    citation=f'''cff-version: 1.2.0
-message: "Cite the pinned current dataset revision and the corresponding DOI-preserved distribution."
-title: "Dr. Saeed Ghezelbash Knowledge Graph and NLP Data"
-type: dataset
-version: "2026-10-12-kaggle-packaging-{version}"
-date-released: "2026-10-12"
-license: CC-BY-4.0
-authors:
-  - family-names: "Ghezelbash"
-    given-names: "Saeed"
-    orcid: "https://orcid.org/0009-0001-9346-8475"
-repository-code: "{ctx['hf']}/tree/{hf_revision}"
-url: "{ctx['kaggle']}"
-'''
+    old=load(previous/'kaggle-manifest.json')
+    readme=(previous/'README.md').read_text()
+    for key,replacement in [('website_source_commit',ctx['source_commit']),('upstream_revision',hf_revision)]:
+        if old.get(key):readme=readme.replace(old[key],replacement)
+    readme=re.sub(r'(Kaggle packaging revision and dataset version \*\*)\d+(\*\*; maintenance \*\*)\d{4}-\d{2}-\d{2}(\*\*)',
+                  lambda m:m[1]+str(version)+m[2]+ctx['maintenance_date']+m[3],readme)
+    if ctx.get('website_publication_run_url'):
+        readme=re.sub(r'(Verified website publication: )https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/\d+',
+                      lambda m:m[1]+ctx['website_publication_run_url'],readme)
+    if not ctx['archived_snapshots_updated']:
+        readme=readme.replace('Zenodo dataset version:','Archived Zenodo dataset snapshot:')
+        readme=readme.replace('Current DOI-versioned website source:','Archived DOI-versioned website source:')
+        readme=re.sub(r'The Zenodo dataset record documents its current corrected files and maintenance date\..*?(?=\n\n|\Z)',
+                      'Zenodo DOI links identify archived snapshots with their own recorded provenance. Those archives were not updated by this Hugging Face/Kaggle maintenance publication.',readme,flags=re.S)
+        readme=readme.replace('زیرمجموعهٔ ۲۴فایلی زنودو نیز با همان گراف، منابع و پرس‌وجوهای اصلاح‌شده هماهنگ است.',
+                              'آرشیوهای زنودو، نسخه‌های ثبت‌شدهٔ خود را حفظ می‌کنند و در این انتشار به‌روزرسانی نشده‌اند.')
+    else:
+        # A later broad publication can start from a previously scoped package.
+        readme=readme.replace('Archived Zenodo dataset snapshot:','Zenodo dataset version:')
+        readme=readme.replace('Archived DOI-versioned website source:','DOI-versioned website source:')
+        readme=readme.replace('Zenodo DOI links identify archived snapshots with their own recorded provenance. Those archives were not updated by this Hugging Face/Kaggle maintenance publication.',
+                              'The publication scope includes the existing Zenodo distributions. Consult per-platform receipts for the final files and provenance.')
+        readme=readme.replace('آرشیوهای زنودو، نسخه‌های ثبت‌شدهٔ خود را حفظ می‌کنند و در این انتشار به‌روزرسانی نشده‌اند.',
+                              'نسخه‌ها و فراداده‌های زنودو در رسیدهای انتشار همان پلتفرم ثبت می‌شوند.')
+    readme=re.sub(r'\n\n## Machine-readable package maintenance — \d{4}-\d{2}-\d{2}\n.*\Z','',readme,flags=re.S)
+    readme+='\n\n## Machine-readable package maintenance — '+ctx['maintenance_date']+'\n\n'
+    readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **1.3.3**, edition **2026-10-10**.\n\n'
+    readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
+    readme+='Package publication run: '+ctx['run_url']+'.\n'
+    if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
+    readme+='\nCroissant, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
+    readme+='The package includes `datapackage.json` and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '
+    readme+='All four Parquet tables preserve source rows and JSON/omitted-field semantics. `checksums.sha256` covers all {checksum_count} other downloadable files.\n'
+    if ctx['archived_snapshots_updated']:
+        readme+='\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. Their DOI identifiers are retained; consult per-platform receipts for final files and provenance.\n'
+    else:
+        readme+='\nArchived Zenodo snapshots: '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. They were not updated in this publication.\n'
+    # Update only current release fields; keep every existing author and contributor verbatim.
+    citation=(previous/'CITATION.cff').read_text()
+    for key,value in [('version',ctx['maintenance_date']+'-kaggle-packaging-'+str(version)),
+                      ('date-released',ctx['maintenance_date']),('repository-code',ctx['hf']+'/tree/'+hf_revision),
+                      ('url',ctx['kaggle']),('message','Cite this Kaggle version and its pinned Hugging Face revision; archived DOI snapshots have separate provenance.')]:
+        line=key+': '+json.dumps(value)+'\n'
+        if re.search(r'^'+re.escape(key)+r':.*$',citation,flags=re.M):
+            citation=re.sub(r'^'+re.escape(key)+r':.*(?:\n|$)',lambda _:line,citation,flags=re.M)
+        else:citation+=line
     (out/'CITATION.cff').write_text(citation)
     controls={'dataset-metadata.json','kernel-metadata.json','checksums.sha256'}
     payload=[p for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls]
-    (out/'README.md').write_text(readme.replace('{checksum_count}',str(len(payload)+int(not (out/'README.md').exists()))))
+    checksum_count=str(len(payload)+int(not (out/'README.md').exists()))
+    readme=re.sub(r'(`checksums\.sha256` covers all )\d+( other downloadable files)',lambda m:m[1]+checksum_count+m[2],readme)
+    (out/'README.md').write_text(readme.replace('{checksum_count}',checksum_count))
     payload=sorted(p.relative_to(out).as_posix() for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls)
     (out/'checksums.sha256').write_text(''.join(f'{sha(out/n)}  {n}\n' for n in payload))
     return (out/'README.md').read_text()
