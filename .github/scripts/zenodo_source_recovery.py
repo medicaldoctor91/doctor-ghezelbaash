@@ -1,11 +1,12 @@
 """Recover only the existing Zenodo source archive in place.
 
 The dataset record is read-only in this recovery. Its DOI/version/file metadata
-fingerprint is captured before the source write and must be byte-for-byte
-metadata-identical afterward. The source record keeps the same DOI, version and
-file key. Upload uses curl retries and a long timeout, then public Zenodo bytes
-are downloaded and compared with the exact git archive built from the live
-website source commit.
+fingerprint is captured before the source write and must be metadata-identical
+afterward. The source record keeps the same DOI, version and file key.
+
+For the replacement itself, use Zenodo's documented deposition bucket upload
+API (links.bucket + streaming PUT). This avoids the slower draft-file content
+endpoint that previously stalled on the ~24 MB source ZIP.
 """
 from __future__ import annotations
 
@@ -44,13 +45,20 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def cache_bust(url: str) -> str:
+    joiner = "&" if "?" in url else "?"
+    return f"{url}{joiner}_cb={time.time_ns()}"
+
+
 def request(method: str, url: str, *, token: str | None = None, payload=None,
             allowed=(200,), parse_json=True, timeout=180):
     if token and not url.startswith(ZEN_BASE + "/"):
         raise RuntimeError("Refusing to send Zenodo credential to a non-Zenodo host")
     headers = {
         "Accept": "application/json",
-        "Cache-Control": "no-cache",
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
         "User-Agent": "doctor-ghezelbaash-zenodo-source-recovery/2026-10-14",
     }
     if token:
@@ -100,7 +108,10 @@ def get_bytes(url: str, token: str | None = None, timeout=600) -> bytes:
 
 
 def record(record_id: str, token: str | None = None) -> dict:
-    return get_json(f"{ZEN_BASE}/records/{record_id}", token)
+    url = f"{ZEN_BASE}/records/{record_id}"
+    if token is None:
+        url = cache_bust(url)
+    return get_json(url, token)
 
 
 def record_identity(rec: dict) -> dict:
@@ -128,7 +139,10 @@ def source_file_matches(entry: dict, desired: bytes) -> bool:
 
 def record_content(record_id: str, key: str, token: str | None = None, timeout=600) -> bytes:
     encoded = urllib.parse.quote(key, safe="")
-    return get_bytes(f"{ZEN_BASE}/records/{record_id}/files/{encoded}/content", token, timeout)
+    url = f"{ZEN_BASE}/records/{record_id}/files/{encoded}/content"
+    if token is None:
+        url = cache_bust(url)
+    return get_bytes(url, token, timeout)
 
 
 def typed_contributor(value) -> bool:
@@ -179,7 +193,7 @@ def validate_dataset_public() -> tuple[dict, tuple, str]:
     assert matrix.get("publicationScope") == ["zenodo_dataset", "zenodo_source"]
     assert attestation.get("version") == DATASET_VERSION
 
-    live_site = get_json(ORIGIN + "/release-provenance.json?zenodo-source-recovery=20261014")
+    live_site = get_json(cache_bust(ORIGIN + "/release-provenance.json"))
     assert live_site.get("sourceCommit") == source_commit
     return rec, dataset_fingerprint(rec), source_commit
 
@@ -226,6 +240,15 @@ def draft_exists(token: str) -> bool:
 
 
 def discard_draft(token: str) -> None:
+    dep_url = f"{ZEN_BASE}/deposit/depositions/{SOURCE_RECORD}"
+    try:
+        dep = get_json(dep_url, token)
+        discard = dep.get("links", {}).get("discard")
+        if discard and dep.get("submitted") is False:
+            request("POST", discard, token=token, allowed=(200, 201, 202, 204))
+            return
+    except Exception:
+        pass
     try:
         request("DELETE", f"{ZEN_BASE}/records/{SOURCE_RECORD}/draft", token=token,
                 allowed=(200, 202, 204))
@@ -234,29 +257,57 @@ def discard_draft(token: str) -> None:
             raise
 
 
-def robust_upload(url: str, data: bytes, token: str) -> None:
-    if not url.startswith(ZEN_BASE + "/"):
-        raise RuntimeError("Refusing upload to non-Zenodo host")
+def bucket_upload_target(draft: dict, key: str) -> str:
+    bucket = draft.get("links", {}).get("bucket")
+    if not isinstance(bucket, str) or not bucket.startswith(ZEN_BASE + "/files/"):
+        raise RuntimeError("Zenodo deposition did not expose a trusted links.bucket upload endpoint")
+    return bucket.rstrip("/") + "/" + urllib.parse.quote(key, safe="")
+
+
+def deposition_files(value) -> list[dict]:
+    if isinstance(value, list):
+        return value
+    if isinstance(value, dict):
+        return value.get("entries", [])
+    return []
+
+
+def robust_bucket_upload(url: str, data: bytes, token: str) -> dict:
+    if not url.startswith(ZEN_BASE + "/files/"):
+        raise RuntimeError("Refusing bucket upload to non-Zenodo files endpoint")
     with tempfile.TemporaryDirectory() as directory:
         path = pathlib.Path(directory) / "source.zip"
         path.write_bytes(data)
         command = [
             "curl", "--fail-with-body", "--silent", "--show-error",
-            "--retry", "5", "--retry-all-errors", "--retry-delay", "5",
-            "--connect-timeout", "30", "--max-time", "1800",
-            "-X", "PUT",
-            "-H", "Content-Type: application/octet-stream",
+            "--retry", "4", "--retry-all-errors", "--retry-delay", "2",
+            "--retry-max-time", "900", "--connect-timeout", "20",
+            "--max-time", "600", "--speed-time", "90", "--speed-limit", "1024",
+            "--http1.1", "--expect100-timeout", "5",
+            "-H", "Content-Type: application/zip",
             "-H", "Authorization: Bearer " + token,
             "--upload-file", str(path), url,
         ]
-        subprocess.run(command, check=True)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=1000)
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "curl upload failed").replace(token, "[redacted]")
+            raise RuntimeError(detail[:1200])
+        try:
+            uploaded = json.loads(result.stdout) if result.stdout.strip() else {}
+        except json.JSONDecodeError as error:
+            raise RuntimeError("Zenodo bucket upload returned non-JSON response") from error
+    if uploaded:
+        assert uploaded.get("key") == SOURCE_KEY, uploaded
+        assert int(uploaded.get("size", -1)) == len(data), uploaded
+        assert uploaded.get("checksum") == "md5:" + md5(data), uploaded
+    return uploaded
 
 
 def replace_source_in_place(desired: bytes, token: str) -> None:
     before = record(SOURCE_RECORD, token)
     assert_source_identity(before)
     if draft_exists(token):
-        raise RuntimeError("Source record already has an unpublished draft; refusing to overwrite it")
+        raise RuntimeError("Source record already has an unpublished draft; refusing concurrent overwrite")
 
     request("POST", f"{ZEN_BASE}/records/{SOURCE_RECORD}/draft", token=token,
             allowed=(200, 201, 202))
@@ -277,18 +328,34 @@ def replace_source_in_place(desired: bytes, token: str) -> None:
         if status != 200:
             raise RuntimeError("Zenodo source file modification requires moderator approval")
 
-        draft = get_json(f"{ZEN_BASE}/records/{SOURCE_RECORD}/draft", token)
-        files_url = draft.get("links", {}).get("files") or f"{ZEN_BASE}/records/{SOURCE_RECORD}/draft/files"
-        publish_url = draft.get("links", {}).get("publish") or f"{ZEN_BASE}/records/{SOURCE_RECORD}/draft/actions/publish"
-        encoded = urllib.parse.quote(SOURCE_KEY, safe="")
-        try:
-            request("DELETE", f"{files_url}/{encoded}", token=token, allowed=(200, 202, 204))
-        except RuntimeError as error:
-            if "HTTP 404" not in str(error):
-                raise
-        request("POST", files_url, token=token, payload=[{"key": SOURCE_KEY}], allowed=(200, 201))
-        robust_upload(f"{files_url}/{encoded}/content", desired, token)
-        request("POST", f"{files_url}/{encoded}/commit", token=token, allowed=(200, 201, 202, 204))
+        dep_url = f"{ZEN_BASE}/deposit/depositions/{SOURCE_RECORD}"
+        draft = get_json(dep_url, token)
+        assert draft.get("submitted") is False, draft.get("submitted")
+        upload_url = bucket_upload_target(draft, SOURCE_KEY)
+        files_url = draft.get("links", {}).get("files") or dep_url + "/files"
+        publish_url = draft.get("links", {}).get("publish") or dep_url + "/actions/publish"
+
+        existing = deposition_files(get_json(files_url, token))
+        matches = [f for f in existing if (f.get("filename") or f.get("name") or f.get("key")) == SOURCE_KEY]
+        assert len(matches) == 1, {"expectedKey": SOURCE_KEY, "files": existing}
+        file_id = matches[0].get("id")
+        if not file_id:
+            raise RuntimeError("Zenodo deposition file entry did not expose an id for replacement")
+        request("DELETE", files_url.rstrip("/") + "/" + urllib.parse.quote(str(file_id), safe=""),
+                token=token, allowed=(200, 202, 204))
+
+        robust_bucket_upload(upload_url, desired, token)
+
+        after_upload = deposition_files(get_json(files_url, token))
+        matches = [f for f in after_upload if (f.get("filename") or f.get("name") or f.get("key")) == SOURCE_KEY]
+        assert len(matches) == 1, after_upload
+        uploaded = matches[0]
+        size = uploaded.get("filesize") if uploaded.get("filesize") is not None else uploaded.get("size")
+        checksum = uploaded.get("checksum", "")
+        checksum = checksum if str(checksum).startswith("md5:") else "md5:" + str(checksum)
+        assert int(size) == len(desired), {"draftSize": size, "desiredSize": len(desired)}
+        assert checksum == "md5:" + md5(desired), {"draftChecksum": checksum, "desiredMd5": md5(desired)}
+
         request("POST", publish_url, token=token, allowed=(200, 201, 202))
         published = True
     finally:
@@ -308,6 +375,9 @@ def verify_public_source(desired: bytes) -> dict:
                 "desiredSize": len(desired), "desiredMd5": md5(desired),
             }
             public = record_content(SOURCE_RECORD, SOURCE_KEY, timeout=900)
+            assert len(public) == len(desired)
+            assert md5(public) == md5(desired)
+            assert sha256(public) == sha256(desired)
             assert public == desired, "Public source ZIP bytes differ from exact git archive"
             validate_source_archive(public)
             return rec
@@ -331,6 +401,7 @@ def main() -> None:
 
     plan = {
         "mode": "apply" if sys.argv[1:] else "preflight",
+        "transport": "official-links.bucket",
         "dataset": record_identity(dataset_before),
         "source": record_identity(source_before),
         "websiteSourceCommit": source_commit,
@@ -363,6 +434,7 @@ def main() -> None:
     print(json.dumps({
         "liveVerification": "PASS",
         "datasetUnchanged": True,
+        "transport": "official-links.bucket",
         "source": record_identity(verified_source),
         "sourceBytes": verified_source["files"][0].get("size"),
         "sourceChecksum": verified_source["files"][0].get("checksum"),
