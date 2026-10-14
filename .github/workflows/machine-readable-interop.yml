@@ -1,0 +1,57 @@
+name: Validate and deploy machine-readable website fixes
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-machine-readable-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install build and standards validators
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+      - name: Validate source and complete built release
+        run: |
+          node --test tests/*.test.mjs
+          npm run build
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
+      - name: Deploy validated website
+        run: |
+          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-message='Repair machine-readable interoperability' --commit-dirty=false
+      - name: Verify published representations
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,time,urllib.request
+          from pathlib import Path
+          origin='https://www.ghezelbaash.ir/'
+          def fetch(path):
+              req=urllib.request.Request(origin+path,headers={'Cache-Control':'no-cache'})
+              return urllib.request.urlopen(req,timeout=30).read()
+          for attempt in range(24):
+              live=json.loads(fetch('release-provenance.json?verify='+os.environ['GITHUB_SHA']+'-'+str(attempt)))
+              if live.get('sourceCommit')==os.environ['GITHUB_SHA']:break
+              time.sleep(5)
+          else:raise RuntimeError('Published release did not converge to the deployed commit')
+          for name in ['graph.jsonld','graph.ttl','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json','croissant.json','integrity-manifest.json']:
+              assert hashlib.sha256(fetch(name)).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
+          response=urllib.request.urlopen(origin+'data-catalog',timeout=30)
+          assert response.status==200 and response.headers.get_content_type()=='application/ld+json'
+          assert hashlib.sha256(response.read()).digest()==hashlib.sha256((Path('dist')/'graph.jsonld').read_bytes()).digest()
+          print('Published machine resources and catalog route match this validated build')
+          PY

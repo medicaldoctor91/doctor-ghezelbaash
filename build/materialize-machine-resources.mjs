@@ -12,6 +12,7 @@ import {
 } from '../src/lib/machine-output.mjs';
 import { buildEvidenceSnapshot } from '../src/lib/evidence-output.mjs';
 import { buildClinicalPassages, bindClinicalPassagesToDocuments } from '../src/lib/clinical-passages.mjs';
+import { buildShaclTurtle } from '../src/lib/shacl-output.mjs';
 
 
 const json = (value) => JSON.stringify(value) + '\n';
@@ -29,7 +30,7 @@ async function collectStats(distDir, source) {
     try {
       const bytes = await fs.readFile(file);
       stats.set(resource.path, { bytes: bytes.byteLength, sha256: sha256(bytes) });
-    } catch {}
+    } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
   return stats;
 }
@@ -41,7 +42,7 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   const graphTtl = serializeGraphAsNTriples(source.graph);
   outputs.set('/graph.jsonld', json(source.graph));
   outputs.set('/graph.ttl', graphTtl);
-  outputs.set('/shapes.ttl', source.validation.shaclSupplement.trimEnd() + '\n');
+  outputs.set('/shapes.ttl', buildShaclTurtle(source));
   outputs.set('/entity-facts.csv', serializeEntityFactsCsv(source.graph));
   outputs.set('/entity-facts.csv-metadata.json', json(buildCsvMetadata(source)));
   const retrievalRecords = buildRetrievalRecords(source);
@@ -66,10 +67,16 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   outputs.set('/clinic.vcf', buildVCard(source, 'clinic'));
   outputs.set('/linkset.json', json(buildLinkset(source)));
   outputs.set('/void.ttl', buildVoidTurtle(source, graphTtl.split('\n').filter(Boolean).length));
-  outputs.set('/dcat.ttl', buildDcatTurtle(source));
 
   for (const [resourcePath, content] of outputs) await write(distDir, resourcePath, content);
   let stats = await collectStats(distDir, source);
+  // Measure stable distributions before the catalogs that describe their hashes.
+  // A DCAT self-checksum, or a checksum of a manifest that hashes DCAT, is cyclic.
+  // The final release integrity manifest independently measures all three files.
+  for (const catalogPath of ['/dcat.ttl', '/datapackage.json', '/croissant.json']) stats.delete(catalogPath);
+  outputs.set('/dcat.ttl', buildDcatTurtle(source, stats));
+  await write(distDir, '/dcat.ttl', outputs.get('/dcat.ttl'));
+  stats = await collectStats(distDir, source);
   // Never hash stale/self-referential catalog output left by a prior run.
   stats.delete('/datapackage.json');stats.delete('/croissant.json');
   await write(distDir, '/datapackage.json', json(buildDataPackage(source, stats)));

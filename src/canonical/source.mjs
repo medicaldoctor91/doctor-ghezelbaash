@@ -63311,6 +63311,7 @@ export const SOURCE = {
         "namedRootSubjects": [
           "/webpage",
           "/website",
+          "/data-catalog",
           "/medical-specialty-aesthetic-medicine"
         ],
         "graphSubjectPrefixes": [

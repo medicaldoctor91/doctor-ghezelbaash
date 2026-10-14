@@ -199,6 +199,24 @@ export function buildKnowledgeXml(source) {
 
 
 const vEscape = (value) => String(value ?? '').replaceAll('\\','\\\\').replaceAll('\n','\\n').replaceAll(';','\\;').replaceAll(',','\\,');
+function foldVCardLine(line) {
+  const folded = [];
+  let part = '', octets = 0;
+  // Count UTF-8 bytes while iterating whole code points, including the space
+  // that starts every continuation line.
+  for (const character of line) {
+    const size = Buffer.byteLength(character, 'utf8');
+    if (octets + size > 75) {
+      folded.push(part);
+      part = ' ';
+      octets = 1;
+    }
+    part += character;
+    octets += size;
+  }
+  folded.push(part);
+  return folded.join('\r\n');
+}
 const refId = (value) => typeof value === 'string' ? value : value?.['@id'];
 export function buildVCard(source, kind) {
   const nodes = source.graph['@graph'];
@@ -208,13 +226,16 @@ export function buildVCard(source, kind) {
   const address = entity?.address && typeof entity.address === 'object' && !entity.address['@id'] ? entity.address : nodes.find((node) => node['@id'] === refId(entity?.address));
   const lines = ['BEGIN:VCARD','VERSION:4.0',`UID:${vEscape(entity?.['@id'])}`];
   if (kind === 'physician') lines.push(`FN:${vEscape(literal(person?.name))}`,`N:${vEscape(literal(person?.familyName))};${vEscape(literal(person?.givenName))};;;`);
-  else lines.push(`FN:${vEscape(literal(clinic?.name))}`,`ORG:${vEscape(literal(clinic?.name))}`);
+  else lines.push('KIND:org',`FN:${vEscape(literal(clinic?.name))}`,`ORG:${vEscape(literal(clinic?.name))}`);
   for (const phone of values(entity?.telephone ?? clinic?.telephone)) if (phone) lines.push(`TEL;TYPE=voice:${vEscape(phone)}`);
-  if (entity?.email) lines.push(`EMAIL:${vEscape(entity.email)}`);
+  for (const email of values(entity?.email)) {
+    const address = literal(email).trim().replace(/^mailto:/i, '');
+    if (address) lines.push(`EMAIL:${vEscape(address)}`);
+  }
   if (entity?.url) lines.push(`URL:${vEscape(entity.url)}`);
   if (address) lines.push(`ADR:;;${vEscape(address.streetAddress)};${vEscape(address.addressLocality)};${vEscape(address.addressRegion)};${vEscape(address.postalCode)};${vEscape(address.addressCountry?.name ?? address.addressCountry)}`);
   lines.push('END:VCARD');
-  return lines.join('\r\n') + '\r\n';
+  return lines.map(foldVCardLine).join('\r\n') + '\r\n';
 }
 
 export function buildLinkset(source) {
@@ -295,12 +316,19 @@ function catalogDatasetLines(source, types) {
   return [`@prefix dcat: <http://www.w3.org/ns/dcat#> .`, `@prefix dcterms: <${DCT}> .`, `@prefix prov: <${PROV}> .`, `<${dataset['@id']}> ${terms.join(' ;\n  ')} .`];
 }
 
-function catalogDistributionLines(source) {
+function catalogDistributionLines(source, fileStats = new Map()) {
   const dataset = datasetNode(source);
-  return source.machineResources.filter(resource => resource.distributionIri).flatMap(resource => [
-    `<${dataset['@id']}> dcat:distribution <${resource.distributionIri}> .`,
-    `<${resource.distributionIri}> a dcat:Distribution, prov:Entity ; dcat:downloadURL <${source.canonicalOrigin}${resource.path}> ; dcat:mediaType ${literalTerm(resource.mediaType)} ; dcat:version ${literalTerm(dataset.version)} ; prov:wasDerivedFrom <${dataset['@id']}> .`,
-  ]);
+  return source.machineResources.filter(resource => resource.distributionIri).flatMap(resource => {
+    const stat = fileStats.get(resource.path);
+    const mediaType = resource.mediaType.split(';', 1)[0].trim().toLowerCase();
+    const integrity = stat
+      ? ` ; dcat:byteSize ${literalTerm(String(stat.bytes), {datatype: 'http://www.w3.org/2001/XMLSchema#decimal'})} ; spdx:checksum [ a spdx:Checksum ; spdx:algorithm spdx:checksumAlgorithm_sha256 ; spdx:checksumValue ${literalTerm(stat.sha256, {datatype: 'http://www.w3.org/2001/XMLSchema#hexBinary'})} ]`
+      : '';
+    return [
+      `<${dataset['@id']}> dcat:distribution <${resource.distributionIri}> .`,
+      `<${resource.distributionIri}> a dcat:Distribution, prov:Entity ; dcat:downloadURL <${source.canonicalOrigin}${resource.path}> ; dcat:mediaType ${iriTerm('https://www.iana.org/assignments/media-types/' + mediaType)} ; dcat:version ${literalTerm(dataset.version)} ; prov:wasDerivedFrom <${dataset['@id']}>${integrity} .`,
+    ];
+  });
 }
 
 export function buildVoidTurtle(source, tripleCount) {
@@ -313,13 +341,24 @@ export function buildVoidTurtle(source, tripleCount) {
   ].join('\n') + '\n';
 }
 
-export function buildDcatTurtle(source) {
-  return [...catalogDatasetLines(source, ['dcat:Dataset', 'prov:Entity']), ...catalogDistributionLines(source)].join('\n') + '\n';
+export function buildDcatTurtle(source, fileStats = new Map()) {
+  return [
+    '@prefix spdx: <http://spdx.org/rdf/terms#> .',
+    ...catalogDatasetLines(source, ['dcat:Dataset', 'prov:Entity']),
+    ...catalogDistributionLines(source, fileStats),
+  ].join('\n') + '\n';
 }
 
 export function buildCroissant(source) {
   const dataset = datasetNode(source);
   const columns = factColumns();
+  const contributor = ref => {
+    const entity = source.graph['@graph'].find(node => node['@id'] === refId(ref));
+    const type = values(entity?.['@type'] ?? ref?.['@type'])
+      .map(value => expandTerm(value, source.graph['@context']))
+      .find(value => [SCHEMA + 'Person', SCHEMA + 'Organization'].includes(value));
+    return {...(typeof ref === 'string' ? {'@id': ref} : ref), ...(type ? {'@type': type} : {})};
+  };
   return {
     '@context': {...croissantContext, prov: PROV},
     '@id': dataset['@id'],
@@ -329,8 +368,8 @@ export function buildCroissant(source) {
     conformsTo: 'http://mlcommons.org/croissant/1.1',
     url: dataset['@id'],
     identifier: [dataset['@id'], {'@type': 'sc:PropertyValue', propertyID: 'Release edition', value: source.edition}],
-    creator: dataset.creator,
-    publisher: dataset.publisher,
+    creator: contributor(dataset.creator),
+    publisher: contributor(dataset.publisher),
     license: dataset.license,
     citeAs: dataset['@id'],
     ...(dataset.datePublished ? {datePublished: literal(dataset.datePublished)} : {}),
