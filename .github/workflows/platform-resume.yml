@@ -19,6 +19,10 @@ jobs:
   resume:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +31,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install contract-test runtime dependency
-        run: python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1'
-      - name: Contract tests
-        run: python -m unittest tests/test_platform_resume.py -v
+      - name: Verify required publication bindings without exposing values
+        run: |
+          python - <<'PY'
+          import os
+          required=['HF_TOKEN','ZENODO_TOKEN','KAGGLE_API_TOKEN']
+          missing=[name for name in required if not os.environ.get(name)]
+          assert not missing, 'Missing existing publication bindings: '+str(missing)
+          for name in required:
+              print(name+': SET')
+          PY
+      - name: Install locked resume dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' \
+            'rdflib>=7,<8' 'pyshacl>=0.30,<1'
+      - name: Contract tests and syntax verification
+        run: |
+          python -m unittest tests/test_platform_resume.py -v
+          python -m py_compile .github/scripts/platform_resume.py .github/scripts/platform_bundle.py .github/scripts/platform_publish.py
+      - name: Resume Zenodo in-place correction and Kaggle convergence
+        run: python .github/scripts/platform_resume.py
+      - name: Save resume evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-resume-evidence
+          path: /tmp/platform-resume-report.json
+          if-no-files-found: warn
+          overwrite: true
