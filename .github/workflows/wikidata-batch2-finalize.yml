@@ -1,4 +1,4 @@
-name: Audit Wikidata Batch 4 identity
+name: Wikidata Batch 5 semantic detail
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,54 +6,51 @@ on:
 permissions:
   contents: read
 jobs:
-  audit:
+  inspect:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 7
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Inspect live identifiers and professional role
+      - name: Inspect exact duplicate clusters and URL properties
         shell: bash
         run: |
-          set -euo pipefail
           python - <<'PY'
-          import json, urllib.parse, urllib.request, urllib.error, time
-          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch4-live-audit/1.0 (read-only)'
-          def api(p,retries=8):
-              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
+          import json,urllib.parse,urllib.request,urllib.error,time
+          API='https://www.wikidata.org/w/api.php';Q='Q140287622';UA='Q140287622-batch5-detail/1.0 (read-only)'
+          def api(p,retries=7):
+              p={'format':'json','formatversion':'2',**p};u=API+'?'+urllib.parse.urlencode(p);last=None
               for i in range(retries):
                   try:
                       req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
                       with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
                   except urllib.error.HTTPError as e:
                       last=e
-                      if e.code!=429: raise
-                      time.sleep(min(20,2**i))
+                      if e.code!=429:raise
+                      time.sleep(min(15,2**i))
               raise last
-          def qid(s):
-              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
-          def sval(s):
-              v=s.get('datavalue',{}).get('value'); return v if isinstance(v,str) else None
-          def snak_val(s):
-              if s.get('snaktype')!='value': return s.get('snaktype')
-              return qid(s) or sval(s) or s.get('datavalue',{}).get('value')
-          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; claims=e.get('claims',{})
-          focus=['P496','P10283','P1960','P4012','P2037','P12201','P6634','P11079','P1153','P39','P108','P1830','P121','P937']
-          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'claims':{},'constraint_mentions':{}}
-          for pid in focus:
+          def val(s):
+              if s.get('snaktype')!='value':return s.get('snaktype')
+              v=s.get('datavalue',{}).get('value')
+              if isinstance(v,dict) and 'id' in v:return v['id']
+              if isinstance(v,dict) and 'text' in v:return {'text':v['text'],'language':v.get('language')}
+              if isinstance(v,dict) and 'time' in v:return {'time':v['time'],'precision':v.get('precision')}
+              return v
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q];cs=e['claims']
+          out={'lastrevid':e['lastrevid'],'clusters':{},'urls':{}}
+          for p in ['P10611','P1416']:
               arr=[]
-              for c in claims.get(pid,[]):
-                  refs=[]
-                  for r in c.get('references',[]):
-                      rr={}
-                      for rp,ss in r.get('snaks',{}).items(): rr[rp]=[snak_val(x) for x in ss]
-                      refs.append(rr)
-                  quals={qp:[snak_val(x) for x in ss] for qp,ss in c.get('qualifiers',{}).items()}
-                  arr.append({'guid':c.get('id'),'value':snak_val(c.get('mainsnak',{})),'rank':c.get('rank'),'qualifiers':quals,'references':refs})
-              out['claims'][pid]=arr
-          cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
-          blob=json.dumps(cc,ensure_ascii=False)
-          for pid in focus: out['constraint_mentions'][pid]=(pid in blob)
-          print(json.dumps(out,ensure_ascii=False,indent=2))
-          print('BATCH4_LIVE_AUDIT_PASS')
+              for c in cs.get(p,[]):
+                  arr.append({'guid':c['id'],'value':val(c['mainsnak']),'rank':c['rank'],'qualifiers':{qp:[val(s) for s in ss] for qp,ss in c.get('qualifiers',{}).items()},'references':[{rp:[val(s) for s in ss] for rp,ss in r.get('snaks',{}).items()} for r in c.get('references',[])]})
+              out['clusters'][p]=arr
+          for p in ['P973','P1325','P968']:
+              arr=[]
+              for c in cs.get(p,[]):
+                  arr.append({'guid':c['id'],'value':val(c['mainsnak']),'rank':c['rank'],'qualifiers':{qp:[val(s) for s in ss] for qp,ss in c.get('qualifiers',{}).items()},'references':[{rp:[val(s) for s in ss] for rp,ss in r.get('snaks',{}).items()} for r in c.get('references',[])]})
+              out['urls'][p]=arr
+          # Fetch only current constraint suggestions, preserving enough structure to identify the statement/property.
+          cc=api({'action':'wbcheckconstraints','id':Q,'status':'suggestion','uselang':'en'})
+          out['constraint_suggestions']=cc
+          print(json.dumps(out,ensure_ascii=False,indent=2,default=str))
+          print('BATCH5_DETAIL_PASS')
           PY
