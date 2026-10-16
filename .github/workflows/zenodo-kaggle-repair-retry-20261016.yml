@@ -1,0 +1,70 @@
+name: Retry-safe Zenodo and Kaggle convergence repair
+
+on:
+  push:
+    branches:
+      - ops/solo-practice-convergence-20261016
+    paths:
+      - .github/scripts/zenodo_kaggle_repair_retry.py
+      - .github/workflows/zenodo-kaggle-repair-retry-20261016.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-zenodo-kaggle-repair-retry
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      TARGET_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+      HF_REVISION: bdb6f229f121b02684bad0ccebd6cf767f1debd7
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/solo-practice-convergence-20261016
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Preflight exact source and safety invariants
+        run: |
+          set -euo pipefail
+          test -n "$HF_TOKEN"
+          test -n "$ZENODO_TOKEN"
+          test -n "$KAGGLE_API_TOKEN"
+          git cat-file -e "$TARGET_SHA^{commit}"
+          python -m py_compile .github/scripts/zenodo_kaggle_repair_retry.py
+          if grep -nE 'newversion|actions/newversion' .github/scripts/zenodo_kaggle_repair_retry.py; then
+            echo 'Refusing to run: Zenodo new-version path detected.' >&2
+            exit 1
+          fi
+
+      - name: Install publication and validation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check \
+            'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' \
+            'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+
+      - name: Run bounded retry-safe repair
+        run: python .github/scripts/zenodo_kaggle_repair_retry.py
+
+      - name: Save final repaired publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: convergence-repair-retry-final-evidence
+          path: |
+            /tmp/platform-repair-retry/context.json
+            /tmp/platform-repair-retry/publication-report.json
+          if-no-files-found: warn
+          overwrite: true
