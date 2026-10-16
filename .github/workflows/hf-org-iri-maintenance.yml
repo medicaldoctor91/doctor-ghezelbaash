@@ -1,0 +1,57 @@
+name: Correct the organization profile dataset IRI
+on:
+  push:
+    branches: [ops/solo-practice-final-convergence-20261016]
+    paths: [.github/workflows/hf-org-iri-maintenance.yml]
+permissions:
+  contents: read
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - name: Use the official profile form to replace only the obsolete dataset IRI
+        run: |
+          python - <<'PY'
+          import http.cookiejar,json,os,time,urllib.request,urllib.parse
+          from html.parser import HTMLParser
+          org='doctor-ghezelbaash'
+          profile='https://huggingface.co/organizations/'+org+'/settings/profile'
+          overview='https://huggingface.co/api/organizations/'+org+'/overview'
+          opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+          headers={'Authorization':'Bearer '+os.environ['HF_TOKEN'],'User-Agent':'canonical-profile-maintenance/1.0','Cache-Control':'no-cache'}
+          class Component(HTMLParser):
+              def __init__(self):super().__init__();self.props=None
+              def handle_starttag(self,tag,attrs):
+                  attrs=dict(attrs)
+                  if attrs.get('data-target')=='OrgSettingsProfileForm':self.props=json.loads(attrs['data-props'])
+          def read_profile():
+              with opener.open(urllib.request.Request(profile,headers=headers),timeout=90) as response:
+                  assert '/login' not in response.url,'Existing token cannot authenticate to the official profile form'
+                  page=response.read().decode()
+              parser=Component();parser.feed(page)
+              assert parser.props is not None,'Official editable profile component was not returned'
+              return parser.props
+          before=read_profile()
+          assert before.get('canWrite') is True,'Existing credential does not permit profile editing'
+          old='https://www.ghezelbaash.ir/graph.jsonld#dataset'
+          new='https://www.ghezelbaash.ir/graph.jsonld/dataset'
+          assert old in before.get('details','')
+          fields=['fullname','homepage','orgType','details','github','twitter','linkedin']
+          form={k:before.get(k) or '' for k in fields}
+          form['details']=form['details'].replace(old,new);form['csrf']=before['csrfToken']
+          request=urllib.request.Request(profile,data=urllib.parse.urlencode(form).encode(),method='POST',headers={**headers,'Content-Type':'application/x-www-form-urlencoded','Referer':profile})
+          with opener.open(request,timeout=90) as response:
+              assert response.status==200 and '/login' not in response.url
+              response.read()
+          after=read_profile()
+          assert after['details']==form['details']
+          for key in fields:
+              if key!='details':assert (before.get(key) or '')==(after.get(key) or ''),key
+          with urllib.request.urlopen(overview+'?_audit='+str(time.time_ns()),timeout=90) as response:public=json.load(response)
+          details=public.get('details',public.get('org',{}).get('details'))
+          assert details==form['details']
+          print(json.dumps({'status':'PASS','organization':org,'change':'Replace the obsolete dataset IRI with the canonical dataset IRI','otherProfileFieldsUnchanged':True,'publicOverviewVerified':True}))
+          PY
