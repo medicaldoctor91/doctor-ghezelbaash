@@ -33,7 +33,7 @@ jobs:
           python-version: '3.12'
       - name: Install Kaggle client
         run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
-      - name: Regression test
+      - name: Regression tests
         run: python -m unittest tests/test_kaggle_payload_fix.py -v
       - name: Build and validate corrected candidate from ready current version
         run: |
@@ -68,7 +68,17 @@ jobs:
           print(json.dumps({'current':current,'target':target,**result},indent=2))
           PY
           kaggle datasets metadata "$KAGGLE_REF" -p /tmp/kaggle-candidate
-          test -f /tmp/kaggle-candidate/dataset-metadata.json
+          python - <<'PY'
+          import json, os, pathlib, sys
+          sys.path.insert(0,'.github/scripts')
+          from kaggle_payload_fix import normalize_kaggle_metadata
+          path=pathlib.Path('/tmp/kaggle-candidate/dataset-metadata.json')
+          value=json.loads(path.read_text())
+          normalized=normalize_kaggle_metadata(value,os.environ['KAGGLE_REF'])
+          assert normalized['id']==os.environ['KAGGLE_REF']
+          path.write_text(json.dumps(normalized,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({'metadata_id':normalized['id'],'title':normalized.get('title')},ensure_ascii=False))
+          PY
       - name: Publish corrected Kaggle version
         run: |
           target=$(cat /tmp/kaggle-target-version)
