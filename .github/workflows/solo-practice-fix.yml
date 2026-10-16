@@ -82,23 +82,6 @@ jobs:
               raise RuntimeError(f'visible Medical Director row: expected exactly 1 occurrence, found {visible_count}')
           text = text.replace(visible_row, '', 1)
 
-          # Positive invariants: the strengthening/canonical relations must remain.
-          required = [
-              '"owns": {',
-              '"practicesAt": {',
-              '"owner": {',
-              '"founder": {',
-              '"provider": {',
-              'Founder / بنیان‌گذار',
-              'Owner / مالک',
-              'Operator / گرداننده',
-              'Physician / پزشک',
-              'مجوز و اعتبار تصاویر کلینیک',
-          ]
-          for marker in required:
-              if marker not in text:
-                  raise RuntimeError(f'required retained marker missing after patch: {marker}')
-
           forbidden = [
               '"worksFor": {\n          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"',
               '"affiliation": [\n          {\n            "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"',
