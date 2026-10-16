@@ -1,0 +1,89 @@
+name: Verify Wikidata Batch 1 audit
+on:
+  push:
+    branches: [audit/wikidata-batch1-20261016]
+    paths: [.github/workflows/wikidata-batch1-verify.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify core constraints, clinic coherence and deleted target absence
+        run: |
+          python - <<'PY'
+          import json, math, urllib.parse, urllib.request
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; DEAD='Q140288589'
+          CORE={'P31','P106','P512','P69','P1416','P463','P511','P937','P1830','P121','P10611'}
+          UA='Q140287622-batch1-verifier/1.0 (read-only; github.com/medicaldoctor91/doctor-ghezelbaash)'
+          def api(params):
+              p={'format':'json','formatversion':'2',**params}
+              url=API+'?'+urllib.parse.urlencode(p)
+              req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'application/json'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          ent=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
+          dead=api({'action':'wbgetentities','ids':DEAD,'props':'info|labels'})['entities'][DEAD]
+          dead_missing=('missing' in dead)
+          raw=json.dumps(ent,ensure_ascii=False)
+          dead_occurrences=raw.count(DEAD)
+          cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
+          claim_tree=cc.get('wbcheckconstraints',{}).get(Q,{}).get('claims',{})
+          issues=[]
+          def collect_statuses(obj,path=''):
+              found=[]
+              if isinstance(obj,dict):
+                  if 'status' in obj and obj.get('status') not in (None,'compliance'):
+                      found.append({'status':obj.get('status'),'property':obj.get('property'),'path':path,'message':obj.get('message-html') or obj.get('message')})
+                  for k,v in obj.items(): found.extend(collect_statuses(v,path+'/'+str(k)))
+              elif isinstance(obj,list):
+                  for i,v in enumerate(obj): found.extend(collect_statuses(v,path+'/'+str(i)))
+              return found
+          for p in CORE:
+              for c in claim_tree.get(p,[]) or []:
+                  sts=collect_statuses(c)
+                  if sts: issues.append({'property':p,'guid':c.get('id'),'issues':sts})
+          # exact current core GUID inventory
+          inventory=[]
+          for p in sorted(CORE):
+              for c in ent.get('claims',{}).get(p,[]): inventory.append((p,c.get('id'),c.get('rank'),c.get('mainsnak',{}).get('snaktype')))
+          # clinic stable IDs and coordinates
+          stable={'P11693','P13096','P2671','P3749'}
+          clinic=[]
+          def sval(s):
+              v=s.get('datavalue',{}).get('value')
+              if isinstance(v,dict):
+                  if 'id' in v:return v['id']
+                  if 'latitude' in v:return (v['latitude'],v['longitude'])
+              return v
+          for p in ['P937','P1830','P121']:
+              for c in ent.get('claims',{}).get(p,[]):
+                  if c.get('mainsnak',{}).get('snaktype')!='somevalue':continue
+                  qs=c.get('qualifiers',{}) or {}
+                  sig=sorted((k,sval(s)) for k in stable for s in qs.get(k,[]))
+                  coords=[sval(s) for s in qs.get('P625',[])]
+                  clinic.append({'property':p,'guid':c['id'],'stable':sig,'coords':coords})
+          identical=(len(clinic)==3 and all(x['stable']==clinic[0]['stable'] and len(x['stable'])==4 for x in clinic))
+          coord_distances=[]
+          def hav(a,b):
+              R=6371000; la1,lo1=map(math.radians,a);la2,lo2=map(math.radians,b)
+              dla=la2-la1;dlo=lo2-lo1
+              h=math.sin(dla/2)**2+math.cos(la1)*math.cos(la2)*math.sin(dlo/2)**2
+              return 2*R*math.asin(math.sqrt(h))
+          with_coords=[x for x in clinic if x['coords']]
+          for i,a in enumerate(with_coords):
+              for b in with_coords[i+1:]:coord_distances.append({'a':a['property'],'b':b['property'],'meters':hav(a['coords'][0],b['coords'][0])})
+          # deletion log, machine-verifiable historical state
+          logs=api({'action':'query','list':'logevents','letype':'delete','letitle':DEAD,'lelimit':'10','leprop':'title|type|user|timestamp|comment|details'}).get('query',{}).get('logevents',[])
+          out={'entity':Q,'lastrevid':ent.get('lastrevid'),'modified':ent.get('modified'),'core_count':len(inventory),'core_constraint_issues':issues,'deleted_target':{'id':DEAD,'missing':dead_missing,'occurrences_in_current_entity_json':dead_occurrences,'deletion_log':logs},'clinic':{'records':clinic,'stable_ids_identical':identical,'coordinate_distances_m':coord_distances}}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          assert len(inventory)==18, inventory
+          assert not issues, issues
+          assert dead_missing, dead
+          assert dead_occurrences==0, dead_occurrences
+          assert identical, clinic
+          assert all(x['meters'] < 1.0 for x in coord_distances), coord_distances
+          print('BATCH1_MACHINE_VERIFY_PASS')
+          PY
