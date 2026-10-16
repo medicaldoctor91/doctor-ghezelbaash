@@ -1,0 +1,25 @@
+name: Inspect source transfer progress
+on:
+  push:
+    branches: [ops/solo-practice-final-convergence-20261016]
+    paths: [.github/workflows/zenodo-transfer-progress.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+    steps:
+      - name: Read transfer state without mutations
+        run: |
+          python - <<'PY'
+          import json,os,time,urllib.request,urllib.error
+          for suffix in ['/draft/files','/files']:
+              req=urllib.request.Request('https://zenodo.org/api/records/23289009'+suffix+'?_audit='+str(time.time_ns()),headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN'],'Cache-Control':'no-cache'})
+              try:
+                  with urllib.request.urlopen(req,timeout=90) as response:value=json.load(response)
+                  print(suffix,[{k:e.get(k) for k in ['key','status','size','checksum','created','updated']} for e in value.get('entries',[])],flush=True)
+              except urllib.error.HTTPError as error:print(suffix,error.code,flush=True)
+          PY
