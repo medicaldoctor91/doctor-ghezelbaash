@@ -1,0 +1,57 @@
+name: Diagnose Zenodo repair state after timeout
+
+on:
+  push:
+    branches:
+      - ops/solo-practice-convergence-20261016
+    paths:
+      - .github/workflows/zenodo-repair-diagnose-20261016.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TARGET_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 62cd2dd0432790916467c0c25d8264c20ba103cd
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Inspect source ZIP size and Zenodo draft state
+        run: |
+          set -euo pipefail
+          test -n "$ZENODO_TOKEN"
+          git archive --format=zip --prefix=doctor-ghezelbaash-source-final-2026-10-10/ -o /tmp/source.zip "$TARGET_SHA"
+          ls -lh /tmp/source.zip
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+          token=os.environ['ZENODO_TOKEN']
+          base='https://zenodo.org/api'
+          def get(url,auth=False):
+              h={'Accept':'application/json','User-Agent':'doctor-ghezelbaash-zenodo-repair-diagnose/1.0'}
+              if auth:h['Authorization']='Bearer '+token
+              req=urllib.request.Request(url,headers=h)
+              try:
+                  with urllib.request.urlopen(req,timeout=60) as r:return r.status,json.loads(r.read() or b'{}')
+              except urllib.error.HTTPError as e:
+                  return e.code, {'error':e.read().decode(errors='replace')[:500]}
+          for rec in ['23289009','22838416']:
+              print('RECORD',rec)
+              s,record=get(f'{base}/records/{rec}',True)
+              print('record_status',s,'doi',record.get('doi'),'version',(record.get('metadata') or {}).get('version'),'updated',record.get('updated'))
+              s,files=get(f'{base}/records/{rec}/files',True)
+              print('files_status',s,'files',[(x.get('key'),x.get('size'),x.get('checksum')) for x in files.get('entries',[])])
+              s,draft=get(f'{base}/records/{rec}/draft',True)
+              print('draft_status',s)
+              if s==200:
+                  print('draft_id',draft.get('id'),'created',draft.get('created'),'updated',draft.get('updated'),'is_published',draft.get('is_published'))
+                  s2,df=get(f'{base}/records/{rec}/draft/files',True)
+                  print('draft_files_status',s2,'draft_files',[(x.get('key'),x.get('size'),x.get('checksum'),x.get('status')) for x in df.get('entries',[])])
+          PY
