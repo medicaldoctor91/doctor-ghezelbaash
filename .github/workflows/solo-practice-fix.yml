@@ -1,0 +1,141 @@
+name: Apply and verify solo-practice semantic fix
+
+on:
+  push:
+    branches:
+      - fix/solo-practice-semantics-20261016
+    paths:
+      - .github/workflows/solo-practice-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Confirm regression test fails on the old model
+        shell: bash
+        run: |
+          set +e
+          node --test tests/solo-practice-semantics.test.mjs
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo 'Expected the regression test to fail before the patch, but it passed.' >&2
+            exit 1
+          fi
+          echo 'Baseline failure confirmed.'
+
+      - name: Patch only the approved canonical semantics
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/canonical/source.mjs')
+          text = path.read_text(encoding='utf-8')
+
+          graph_blocks = {
+              'person worksFor clinic': '''        "worksFor": {\n          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"\n        },\n''',
+              'person affiliation clinic': '''        "affiliation": [\n          {\n            "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"\n          }\n        ],\n''',
+              'clinic employee person': '''        "employee": {\n          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"\n        },\n''',
+          }
+
+          shacl_lines = {
+              'SHACL worksFor requirement': '  sh:property [ sh:path schema:worksFor ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\\n',
+              'SHACL affiliation requirement': '  sh:property [ sh:path schema:affiliation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\\n',
+              'SHACL employee requirement': '  sh:property [ sh:path schema:employee ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\\n',
+          }
+
+          visible_row = '<dt><strong>Medical Director / مدیر پزشکی</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd>'
+
+          for label, block in graph_blocks.items():
+              count = text.count(block)
+              if count != 1:
+                  raise RuntimeError(f'{label}: expected exactly 1 canonical block, found {count}')
+              text = text.replace(block, '', 1)
+
+          for label, line in shacl_lines.items():
+              count = text.count(line)
+              if count != 1:
+                  raise RuntimeError(f'{label}: expected exactly 1 canonical constraint, found {count}')
+              text = text.replace(line, '', 1)
+
+          visible_count = text.count(visible_row)
+          if visible_count != 1:
+              raise RuntimeError(f'visible Medical Director row: expected exactly 1 occurrence, found {visible_count}')
+          text = text.replace(visible_row, '', 1)
+
+          # Positive invariants: the strengthening/canonical relations must remain.
+          required = [
+              '"owns": {',
+              '"practicesAt": {',
+              '"owner": {',
+              '"founder": {',
+              '"provider": {',
+              'Founder / بنیان‌گذار',
+              'Owner / مالک',
+              'Operator / گرداننده',
+              'Physician / پزشک',
+              'مجوز و اعتبار تصاویر کلینیک',
+          ]
+          for marker in required:
+              if marker not in text:
+                  raise RuntimeError(f'required retained marker missing after patch: {marker}')
+
+          forbidden = [
+              '"worksFor": {\n          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"',
+              '"affiliation": [\n          {\n            "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"',
+              '"employee": {\n          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"',
+              'Medical Director / مدیر پزشکی',
+              'sh:path schema:worksFor ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
+              'sh:path schema:affiliation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
+              'sh:path schema:employee ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash>',
+          ]
+          for marker in forbidden:
+              if marker in text:
+                  raise RuntimeError(f'forbidden old-model marker remains after patch: {marker}')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify regression test turns green
+        run: node --test tests/solo-practice-semantics.test.mjs
+
+      - name: Install validators
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+
+      - name: Run complete validation suite
+        run: |
+          node --test tests/*.test.mjs
+          npm run build
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
+
+      - name: Commit verified source fix and remove one-shot workflow
+        shell: bash
+        run: |
+          rm .github/workflows/solo-practice-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/canonical/source.mjs tests/solo-practice-semantics.test.mjs .github/workflows/solo-practice-fix.yml
+          git commit -m 'fix: align clinic with solo physician practice'
+          git push origin HEAD:fix/solo-practice-semantics-20261016
