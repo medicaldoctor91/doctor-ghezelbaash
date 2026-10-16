@@ -1,4 +1,4 @@
-name: Finalize Wikidata Batch 2
+name: Verify Wikidata Batch 2 and 3
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,22 +6,21 @@ on:
 permissions:
   contents: read
 jobs:
-  finalize:
+  verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Assert reversible scar relation and emit QS
+      - name: Verify live Wikidata post-state
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/b2final
           python - <<'PY'
           import json, urllib.parse, urllib.request, urllib.error, time
           API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; SCAR='Q206060'
-          UA='Q140287622-batch2-finalizer/1.0 (read-only)'
-          def api(p,retries=7):
+          UA='Q140287622-post-batch23-verifier/1.0 (read-only)'
+          def api(p,retries=8):
               p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
               for i in range(retries):
                   try:
@@ -29,39 +28,54 @@ jobs:
                       with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
                   except urllib.error.HTTPError as e:
                       last=e
-                      if e.code!=429:raise
+                      if e.code!=429: raise
                       time.sleep(min(20,2**i))
               raise last
           def qid(s):
-              v=s.get('datavalue',{}).get('value')
-              return v.get('id') if isinstance(v,dict) else None
+              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
+          def sval(s):
+              v=s.get('datavalue',{}).get('value'); return v if isinstance(v,str) else None
           e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
-          p101=e.get('claims',{}).get('P101',[])
-          by_value={qid(c['mainsnak']):c for c in p101 if qid(c['mainsnak'])}
-          assert SCAR in by_value, 'scar is not a current P101'
-          scar_claim=by_value[SCAR]
-          scar_uses={qid(s) for s in (scar_claim.get('qualifiers',{}).get('P2283',[]) or []) if qid(s)}
-          forward=[]
+          claims=e.get('claims',{})
+          p101=claims.get('P101',[])
+          scar=[c for c in p101 if qid(c['mainsnak'])==SCAR]
+          remaining=[]
           for c in p101:
-              main=qid(c['mainsnak'])
-              for s in (c.get('qualifiers',{}).get('P2175',[]) or []):
-                  if qid(s)==SCAR: forward.append((main,c['id']))
-          forward_values={v for v,g in forward}
-          assert len(forward)==5, f'Expected exactly 5 P2175->scar qualifiers, got {len(forward)}: {forward}'
-          assert forward_values==scar_uses, f'Forward/reverse relation mismatch: P2175={sorted(forward_values)} scar.P2283={sorted(scar_uses)}'
-          # Native constraint checker must still flag the target typing problem; otherwise do not auto-normalize.
-          cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
-          blob=json.dumps(cc,ensure_ascii=False)
-          assert SCAR in blob and 'P2175' in blob, 'Expected live P2175/scar constraint signal not present; aborting automatic proposal'
-          lines=[f'REMOVE_QUAL|{Q}|P101|{v}|P2175|{SCAR}' for v in sorted(forward_values)]
-          open('/tmp/b2final/Batch2_QS.txt','w').write('\n'.join(lines)+'\n')
-          report={'lastrevid':e.get('lastrevid'),'scar_p101_guid':scar_claim['id'],'scar_reverse_P2283':sorted(scar_uses),'forward_P2175_scar':sorted([{'value':v,'guid':g} for v,g in forward],key=lambda x:x['value']),'invariant_exact_match':True,'proposed_action':'remove only redundant constraint-invalid P2175->scar qualifiers; retain P101 scar and reverse P2283 uses relations','quickstatements':lines}
+              for s in c.get('qualifiers',{}).get('P2175',[]) or []:
+                  if qid(s)==SCAR: remaining.append({'main':qid(c['mainsnak']),'guid':c['id']})
+          ref_urls=[]; uses=[]; locs=[]
+          for c in scar:
+              uses += [qid(x) for x in c.get('qualifiers',{}).get('P2283',[]) if qid(x)]
+              locs += [qid(x) for x in c.get('qualifiers',{}).get('P927',[]) if qid(x)]
+              for r in c.get('references',[]):
+                  for x in r.get('snaks',{}).get('P854',[]) or []:
+                      if sval(x): ref_urls.append(sval(x))
+          expected_refs={
+            'https://www.ghezelbaash.ir/acne-scars',
+            'https://www.ghezelbaash.ir/subcision-for-tethered-acne-scars',
+            'https://www.ghezelbaash.ir/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling'}
+          p800=[qid(c['mainsnak']) for c in claims.get('P800',[]) if qid(c['mainsnak'])]
+          p3919=[qid(c['mainsnak']) for c in claims.get('P3919',[]) if qid(c['mainsnak'])]
+          ids={}
+          for pid in ['P496','P10283','P1960','P4012','P2037','P12201','P6634','P11079','P1153']:
+              ids[pid]=[{'value':sval(c['mainsnak']),'rank':c.get('rank'),'guid':c.get('id'),'qualifier_props':sorted(c.get('qualifiers',{}).keys()),'reference_count':len(c.get('references',[]))} for c in claims.get(pid,[])]
+          report={
+            'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),
+            'batch2':{'scar_statement_count':len(scar),'remaining_P2175_to_scar':remaining,'scar_P2283_uses':sorted(set(uses)),'scar_P927':sorted(set(locs)),'new_refs_present':sorted(expected_refs & set(ref_urls)),'new_refs_missing':sorted(expected_refs-set(ref_urls))},
+            'batch3':{'P800':sorted(p800),'P3919':sorted(p3919)},
+            'batch4_identifier_snapshot':ids}
+          expected_uses={'Q16949888','Q17081562','Q3267987','Q613879','Q851186'}
+          expected_p800={'Q36942316','Q140298431'}
+          expected_p3919={'Q36942316','Q140298431','Q140306302','Q141099455','Q141129555','Q141131757'}
+          checks={
+            'B2_single_scar':len(scar)==1,
+            'B2_bad_qualifiers_removed':not remaining,
+            'B2_uses_preserved':set(uses)==expected_uses,
+            'B2_refs_added':not (expected_refs-set(ref_urls)),
+            'B3_P800_exact':set(p800)==expected_p800,
+            'B3_P3919_preserved':set(p3919)==expected_p3919}
+          report['checks']=checks; report['status']='PASS' if all(checks.values()) else 'FAIL'
           print(json.dumps(report,ensure_ascii=False,indent=2))
-          print('BATCH2_FINALIZER_PASS')
+          assert all(checks.values()), checks
+          print('POST_BATCH23_VERIFY_PASS')
           PY
-      - name: Upload Batch 2 final QS
-        uses: actions/upload-artifact@v4
-        with:
-          name: wikidata-batch2-final
-          path: /tmp/b2final/*
-          retention-days: 7
