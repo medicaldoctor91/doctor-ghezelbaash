@@ -1,4 +1,4 @@
-name: Final solo-practice convergence
+name: Resume convergence with the current Zenodo file API
 on:
   push:
     branches: [ops/solo-practice-final-convergence-20261016]
@@ -11,17 +11,17 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45
     env:
       TARGET_SOURCE_COMMIT: a1125c05f298cf10f1f171a1d8584bd8288ad33a
-      EXPECTED_HF_REVISION: 7496f1f70cd13f26973bf78e9480155696c6eff7
+      PUBLICATION_COMMIT: ${{ github.sha }}
+      EXPECTED_HF_REVISION: 30cd99d850d66144e0f1c90f0504deffd3f406f9
       EXPECTED_KAGGLE_VERSION: '11'
       PUBLICATION_MAINTENANCE_DATE: '2026-10-16'
       HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
       ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      HF_HUB_DISABLE_PROGRESS_BARS: '1'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,69 +29,80 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
-        with: {node-version-file: .nvmrc, cache: npm}
+        with: {node-version-file: .nvmrc}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Verify immutable source and existing credential bindings
-        run: |
-          test "$(git rev-parse HEAD)" = "$TARGET_SOURCE_COMMIT"
-          python - <<'PY'
-          import os
-          required=['HF_TOKEN','ZENODO_TOKEN','KAGGLE_API_TOKEN','CLOUDFLARE_API_TOKEN']
-          assert all(os.environ.get(k) for k in required), 'An existing publication binding is missing'
-          print('Source and four existing credential bindings verified')
-          PY
-      - name: Install locked build and publication dependencies
-        run: |
-          npm ci --no-audit --no-fund
-          python -m pip install --disable-pip-version-check 'huggingface_hub==0.36.2' 'pyarrow==22.0.0' 'kaggle>=2.2,<3' 'rdflib==7.6.0' 'pyshacl==0.40.1' 'mlcroissant==1.1.1'
-      - name: Validate source and produce the current canonical distribution
+      - name: Install publication validators
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.36.2' 'pyarrow==22.0.0' 'kaggle>=2.2,<3' 'rdflib==7.6.0' 'pyshacl==0.40.1' 'mlcroissant==1.1.1'
+      - name: Verify the already-published release and finish platform corrections
         run: |
           export GITHUB_SHA="$TARGET_SOURCE_COMMIT"
-          node --test tests/*.test.mjs
-          python tests/platform-bundle-sync.test.py
-          python tests/platform-publication.test.py
-          npm run build
           python - <<'PY'
-          from pathlib import Path
-          import shutil
-          path=Path('dist/.prerender')
-          assert path.resolve()==Path.cwd()/'dist/.prerender'
-          if path.is_dir():shutil.rmtree(path)
+          import hashlib,json,os,pathlib,shutil,subprocess,sys,tempfile,urllib.parse
+          sys.path.insert(0,'.github/scripts')
+          import platform_publish as pub
+          from huggingface_hub import HfApi,snapshot_download
+          target=os.environ['TARGET_SOURCE_COMMIT']
+          assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==target
+          info=HfApi(token=os.environ['HF_TOKEN']).dataset_info(pub.HF_REPO)
+          assert info.sha==os.environ['EXPECTED_HF_REVISION']
+          baseline=pathlib.Path(snapshot_download(pub.HF_REPO,repo_type='dataset',revision=info.sha,token=os.environ['HF_TOKEN'],max_workers=4))
+          inv=pub.load(baseline/'dist-sha256.json')
+          assert inv['sourceCommit']==target
+          for name,spec in inv['files'].items():
+              path=baseline/name
+              assert path.stat().st_size==spec['bytes'] and pub.sha(path)==spec['sha256'],name
+          manifest=pub.load(baseline/'integrity-manifest.json')
+          dist=pathlib.Path('dist');dist.mkdir()
+          for name,spec in manifest['files'].items():
+              rel=name.lstrip('/')
+              assert (dist/rel).resolve().is_relative_to(dist.resolve())
+              body=(baseline/rel).read_bytes()
+              assert len(body)==spec['bytes'] and hashlib.sha256(body).hexdigest()==spec['sha256']
+              dst=dist/rel;dst.parent.mkdir(parents=True,exist_ok=True);dst.write_bytes(body)
+          shutil.copyfile(baseline/'integrity-manifest.json',dist/'integrity-manifest.json')
+          live=json.loads(pub.download_bytes('https://www.ghezelbaash.ir/release-provenance.json'))
+          assert live['sourceCommit']==target
+          for name in ['graph.jsonld','shapes.ttl','integrity-manifest.json']:
+              assert pub.download_bytes('https://www.ghezelbaash.ir/'+name)==(dist/name).read_bytes(),name
+          original_context=pub.context
+          def context(*args,**kwargs):
+              value=original_context(*args,**kwargs)
+              value['website_publication_run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/38950651952'
+              value['publication_commit']=os.environ['PUBLICATION_COMMIT']
+              return value
+          pub.context=context
+          def modern_source_upload(rec,changed,token):
+              assert str(rec)=='23289009' and len(changed)==1
+              key,body=next(iter(changed.items()))
+              assert key=='medicaldoctor91/doctor-ghezelbaash-source-final-2026-10-10.zip'
+              root=pub.BASE+'/records/'+str(rec)+'/draft'
+              files=root+'/files'
+              encoded=urllib.parse.quote(key,safe='')
+              pub.request('DELETE',files+'/'+encoded,token=token)
+              pub.request('POST',files,payload=[{'key':key}],token=token)
+              url=files+'/'+encoded+'/content'
+              assert url.startswith('https://zenodo.org/api/records/23289009/draft/files/')
+              with tempfile.TemporaryDirectory() as directory:
+                  path=pathlib.Path(directory)/'source.zip';path.write_bytes(body)
+                  cmd=['curl','--fail-with-body','--silent','--show-error','--retry','4','--retry-all-errors','--retry-delay','2','--connect-timeout','20','--max-time','600','--http1.1','-H','Content-Type: application/octet-stream','-H','Authorization: Bearer '+token,'--upload-file',str(path),url]
+                  try:result=subprocess.run(cmd,capture_output=True,text=True,timeout=1000)
+                  except subprocess.TimeoutExpired:raise RuntimeError('Source upload exceeded time limit') from None
+                  if result.returncode:raise RuntimeError((result.stderr or result.stdout).replace(token,'[redacted]')[:1000])
+              pub.request('POST',files+'/'+encoded+'/commit',token=token)
+              _,listing=pub.request('GET',files,token=token)
+              entry=next(x for x in listing['entries'] if x['key']==key)
+              assert entry['checksum']=='md5:'+hashlib.md5(body).hexdigest() and int(entry['size'])==len(body)
+              pub.request('POST',root+'/actions/publish',token=token)
+              print('ZENODO_SOURCE_MODERN_STREAM_PUBLISHED',flush=True)
+          pub.publish_source_bucket=modern_source_upload
+          pub.main()
           PY
-          node build/seal-release.mjs dist
-          python tests/validate_platform_bundle.py dist --no-query --rdf
-          python tests/validate_machine_resources.py dist
-      - name: Deploy and verify actual website bytes
-        run: |
-          export GITHUB_SHA="$TARGET_SOURCE_COMMIT"
-          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$TARGET_SOURCE_COMMIT" --commit-message='Complete physician-owned solo-practice correction' --commit-dirty=false
-          python - <<'PY'
-          import hashlib,json,os,time,urllib.request
-          from pathlib import Path
-          origin='https://www.ghezelbaash.ir/'
-          def fetch(path):
-              req=urllib.request.Request(origin+path,headers={'Cache-Control':'no-cache'})
-              return urllib.request.urlopen(req,timeout=60).read()
-          for attempt in range(30):
-              live=json.loads(fetch('release-provenance.json?verify='+os.environ['TARGET_SOURCE_COMMIT']+'-'+str(attempt)))
-              if live.get('sourceCommit')==os.environ['TARGET_SOURCE_COMMIT']:break
-              time.sleep(5)
-          else:raise RuntimeError('Published website did not converge to the immutable source')
-          for name in ['graph.jsonld','graph.ttl','provenance.jsonld','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json','croissant.json','integrity-manifest.json']:
-              assert hashlib.sha256(fetch(name)).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
-          assert hashlib.sha256(fetch('data-catalog')).digest()==hashlib.sha256((Path('dist')/'graph.jsonld').read_bytes()).digest()
-          print('PUBLISHED_WEBSITE_BYTES_PASS')
-          PY
-      - name: Publish HF, correct the same Zenodo DOIs, and update Kaggle
-        run: |
-          export GITHUB_SHA="$TARGET_SOURCE_COMMIT"
-          python .github/scripts/platform_publish.py
-      - name: Preserve publication and validation evidence
+      - name: Preserve final publication evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: solo-practice-final-convergence-evidence
+          name: final-current-api-convergence-evidence
           path: |
             /tmp/platform-publish/context.json
             /tmp/platform-publish/publication-report.json
