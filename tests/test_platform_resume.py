@@ -1,5 +1,6 @@
 import importlib.util
 import pathlib
+import sys
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -9,6 +10,7 @@ MODULE = ROOT / '.github' / 'scripts' / 'platform_resume.py'
 class PlatformResumeContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        sys.path.insert(0, str(MODULE.parent))
         spec = importlib.util.spec_from_file_location('platform_resume', MODULE)
         cls.mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.mod)
