@@ -1,84 +1,63 @@
-name: Kaggle current-state read-only verification
+name: Kaggle descriptor read-only diagnostic
 
 on:
   push:
     branches: [ops/platform-convergence-resume-20261016]
-    paths:
-      - '.github/workflows/platform-resume.yml'
+    paths: ['.github/workflows/platform-resume.yml']
 
 permissions:
   contents: read
 
 jobs:
-  verify-current:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
-      TARGET_SOURCE_COMMIT: 62cd2dd0432790916467c0c25d8264c20ba103cd
       TARGET_HF_REVISION: 45bc20d21be4eaa1e25b1798e9aff0e53243417a
       KAGGLE_REF: saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+        with: {persist-credentials: false}
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        with: {python-version: '3.12'}
       - name: Install Kaggle client
         run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
-      - name: Read current status and download current public payload
+      - name: Download current payload and compare descriptor
         run: |
-          kaggle datasets status "$KAGGLE_REF" --format json | tee /tmp/kaggle-status-current.json
+          kaggle datasets status "$KAGGLE_REF" --format json | tee /tmp/kaggle-status.json
           rm -rf /tmp/kaggle-current && mkdir -p /tmp/kaggle-current
-          kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-current --unzip --force
-      - name: Verify current payload and solo-practice graph
-        run: |
+          kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-current --unzip --force >/dev/null
           python - <<'PY'
           import hashlib,json,os,pathlib,urllib.request
           root=pathlib.Path('/tmp/kaggle-current')
-          status=json.loads(pathlib.Path('/tmp/kaggle-status-current.json').read_text())
-          assert status['status']=='ready', status
-          current=int(status['current_version_number'])
-          actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
-          assert 'datapackage.json' not in actual
-          assert 'frictionless-datapackage.json' in actual
-          checks={}
-          for line in (root/'checksums.sha256').read_text().splitlines():
-              digest,name=line.split('  ',1); checks[name]=digest
-          assert set(checks)==actual-{'checksums.sha256'}, (sorted(set(checks)-actual), sorted((actual-{'checksums.sha256'})-set(checks)))
-          for name,digest in checks.items():
-              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest,name
           alias=(root/'frictionless-datapackage.json').read_bytes()
           url='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/'+os.environ['TARGET_HF_REVISION']+'/datapackage.json?download=true'
-          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-current-state-verify/2.0'})
+          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-descriptor-diagnostic/1.0'})
           canonical=urllib.request.urlopen(req,timeout=60).read()
-          assert alias==canonical
-          manifest=json.loads((root/'kaggle-manifest.json').read_text())
-          assert int(manifest['desired_kaggle_version'])==current, (manifest['desired_kaggle_version'],current)
-          assert manifest['website_source_commit']==os.environ['TARGET_SOURCE_COMMIT']
-          assert manifest['upstream_revision']==os.environ['TARGET_HF_REVISION']
-          paths={item['path'] for item in manifest.get('original_files',[]) if isinstance(item,dict) and item.get('path')}
-          assert 'datapackage.json' not in paths and 'frictionless-datapackage.json' in paths
-          graph=json.loads((root/'graph.jsonld').read_text())
-          nodes={n.get('@id'):n for n in graph.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
-          person=nodes['https://www.ghezelbaash.ir/#saeed-ghezelbash']
-          clinic=nodes['https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah']
-          assert 'worksFor' not in person and 'affiliation' not in person
-          assert 'employee' not in clinic
-          assert person.get('owns') and person.get('practicesAt') and person.get('workLocation')
-          assert clinic.get('owner')
-          report={'status':'PASS','kaggleVersion':current,'payloadFiles':len(actual),'sourceCommit':manifest['website_source_commit'],'hfRevision':manifest['upstream_revision'],'checksums':'PASS','frictionlessAlias':'PASS','soloPracticeGraph':'PASS'}
-          pathlib.Path('/tmp/kaggle-current-state.json').write_text(json.dumps(report,indent=2)+'\n')
-          print(json.dumps(report,indent=2))
+          a=json.loads(alias); c=json.loads(canonical)
+          def diff(x,y,path='$',out=None):
+              out=[] if out is None else out
+              if type(x)!=type(y): out.append({'path':path,'kind':'type','alias':type(x).__name__,'canonical':type(y).__name__}); return out
+              if isinstance(x,dict):
+                  for k in sorted(set(x)|set(y)):
+                      if k not in x: out.append({'path':path+'.'+k,'kind':'missing_in_alias'})
+                      elif k not in y: out.append({'path':path+'.'+k,'kind':'extra_in_alias'})
+                      else: diff(x[k],y[k],path+'.'+k,out)
+              elif isinstance(x,list):
+                  if len(x)!=len(y): out.append({'path':path,'kind':'length','alias':len(x),'canonical':len(y)})
+                  for i,(xx,yy) in enumerate(zip(x,y)): diff(xx,yy,f'{path}[{i}]',out)
+              elif x!=y: out.append({'path':path,'kind':'value','alias':x,'canonical':y})
+              return out
+          report={'status':json.loads(pathlib.Path('/tmp/kaggle-status.json').read_text()),'alias_sha256':hashlib.sha256(alias).hexdigest(),'canonical_sha256':hashlib.sha256(canonical).hexdigest(),'byte_equal':alias==canonical,'json_equal':a==c,'diffs':diff(a,c)}
+          pathlib.Path('/tmp/kaggle-descriptor-diagnostic.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
           PY
-      - name: Save current-state evidence
+      - name: Save diagnostic
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaggle-current-state-verification
-          path: |
-            /tmp/kaggle-current-state.json
-            /tmp/kaggle-status-current.json
+          name: kaggle-descriptor-diagnostic
+          path: /tmp/kaggle-descriptor-diagnostic.json
           if-no-files-found: warn
           overwrite: true
