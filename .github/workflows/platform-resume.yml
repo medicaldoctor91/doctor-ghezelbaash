@@ -1,57 +1,148 @@
-name: Kaggle version processing diagnostic
+name: Kaggle final convergence correction
 
 on:
   push:
     branches: [ops/platform-convergence-resume-20261016]
     paths:
       - '.github/workflows/platform-resume.yml'
+      - '.github/scripts/kaggle_payload_fix.py'
+      - 'tests/test_kaggle_payload_fix.py'
 
 permissions:
   contents: read
 
+concurrency:
+  group: doctor-ghezelbaash-kaggle-final-correction
+  cancel-in-progress: false
+
 jobs:
-  status:
+  correct-and-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      TARGET_SOURCE_COMMIT: 62cd2dd0432790916467c0c25d8264c20ba103cd
+      TARGET_HF_REVISION: 45bc20d21be4eaa1e25b1798e9aff0e53243417a
       KAGGLE_REF: saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install Kaggle client
         run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
-      - name: Compare creation status, public view, and downloadable manifest
+      - name: Regression test
+        run: python -m unittest tests/test_kaggle_payload_fix.py -v
+      - name: Build and validate corrected candidate from ready current version
         run: |
-          echo '--- STATUS JSON ---'
-          kaggle datasets status "$KAGGLE_REF" --format json | tee /tmp/kaggle-status.json
-          echo '--- VIEW API ---'
+          kaggle datasets status "$KAGGLE_REF" --format json > /tmp/kaggle-status-before.json
+          rm -rf /tmp/kaggle-candidate && mkdir -p /tmp/kaggle-candidate
+          kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-candidate --unzip --force
           python - <<'PY'
-          import json,os,urllib.request
-          url='https://www.kaggle.com/api/v1/datasets/view/'+os.environ['KAGGLE_REF']
-          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-version-diagnostic/1.0'})
-          value=json.load(urllib.request.urlopen(req,timeout=60))
-          keys=['currentVersionNumber','lastUpdated','ref','title','totalBytes','downloadCount']
-          out={k:value.get(k) for k in keys}
-          print(json.dumps(out,indent=2,default=str))
-          open('/tmp/kaggle-view.json','w').write(json.dumps(value,indent=2,default=str)+'\n')
+          import json, os, pathlib, urllib.request, sys
+          sys.path.insert(0,'.github/scripts')
+          from kaggle_payload_fix import normalize_kaggle_payload
+          root=pathlib.Path('/tmp/kaggle-candidate')
+          status=json.loads(pathlib.Path('/tmp/kaggle-status-before.json').read_text())
+          assert status['status']=='ready',status
+          current=int(status['current_version_number'])
+          manifest=json.loads((root/'kaggle-manifest.json').read_text())
+          assert int(manifest['desired_kaggle_version'])==current,(manifest['desired_kaggle_version'],current)
+          assert manifest['website_source_commit']==os.environ['TARGET_SOURCE_COMMIT']
+          assert manifest['upstream_revision']==os.environ['TARGET_HF_REVISION']
+          target=current+1
+          manifest['desired_kaggle_version']=target
+          (root/'kaggle-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
+          url='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/'+os.environ['TARGET_HF_REVISION']+'/datapackage.json?download=true'
+          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-final-fix/1.0'})
+          descriptor=urllib.request.urlopen(req,timeout=60).read()
+          assert json.loads(descriptor).get('resources')
+          result=normalize_kaggle_payload(root,descriptor)
+          actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
+          checks={line.split('  ',1)[1] for line in (root/'checksums.sha256').read_text().splitlines() if '  ' in line}
+          assert 'datapackage.json' not in actual and 'frictionless-datapackage.json' in actual
+          assert checks==actual-{'checksums.sha256'}
+          pathlib.Path('/tmp/kaggle-target-version').write_text(str(target))
+          print(json.dumps({'current':current,'target':target,**result},indent=2))
           PY
-          echo '--- DOWNLOAD MANIFEST ---'
-          rm -rf /tmp/kaggle-status-download && mkdir -p /tmp/kaggle-status-download
-          kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-status-download --unzip --force >/dev/null
+          kaggle datasets metadata "$KAGGLE_REF" -p /tmp/kaggle-candidate
+          test -f /tmp/kaggle-candidate/dataset-metadata.json
+      - name: Publish corrected Kaggle version
+        run: |
+          target=$(cat /tmp/kaggle-target-version)
+          kaggle datasets version -p /tmp/kaggle-candidate \
+            -m "Expose canonical Frictionless descriptor under Kaggle-safe filename; align payload manifest and checksums" \
+            --dir-mode zip
+          echo "Requested Kaggle version $target"
+      - name: Wait until target version is ready
+        run: |
+          target=$(cat /tmp/kaggle-target-version)
+          ready=0
+          for attempt in $(seq 1 60); do
+            kaggle datasets status "$KAGGLE_REF" --format json > /tmp/kaggle-status-after.json
+            if python - "$target" <<'PY'
+          import json,sys
+          value=json.load(open('/tmp/kaggle-status-after.json'))
+          target=int(sys.argv[1])
+          raise SystemExit(0 if value.get('status')=='ready' and int(value.get('current_version_number',-1))==target else 1)
+          PY
+            then ready=1; break; fi
+            echo "Kaggle target version not ready yet (attempt $attempt/60)"
+            sleep 10
+          done
+          test "$ready" = 1 || { cat /tmp/kaggle-status-after.json; exit 1; }
+      - name: Verify public payload, checksums, canonical descriptor and solo-practice graph
+        run: |
+          rm -rf /tmp/kaggle-final && mkdir -p /tmp/kaggle-final
+          kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-final --unzip --force
           python - <<'PY'
-          import json,pathlib
-          m=json.loads((pathlib.Path('/tmp/kaggle-status-download')/'kaggle-manifest.json').read_text())
-          print(json.dumps({k:m.get(k) for k in ['desired_kaggle_version','website_source_commit','upstream_revision']},indent=2))
+          import hashlib,json,os,pathlib,urllib.request
+          root=pathlib.Path('/tmp/kaggle-final')
+          actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
+          assert 'datapackage.json' not in actual
+          assert 'frictionless-datapackage.json' in actual
+          checks={}
+          for line in (root/'checksums.sha256').read_text().splitlines():
+              digest,name=line.split('  ',1); checks[name]=digest
+          assert set(checks)==actual-{'checksums.sha256'}
+          for name,digest in checks.items():
+              assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest,name
+          alias=(root/'frictionless-datapackage.json').read_bytes()
+          url='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/'+os.environ['TARGET_HF_REVISION']+'/datapackage.json?download=true'
+          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-final-verify/1.0'})
+          canonical=urllib.request.urlopen(req,timeout=60).read()
+          assert alias==canonical
+          manifest=json.loads((root/'kaggle-manifest.json').read_text())
+          target=int(pathlib.Path('/tmp/kaggle-target-version').read_text())
+          assert int(manifest['desired_kaggle_version'])==target
+          assert manifest['website_source_commit']==os.environ['TARGET_SOURCE_COMMIT']
+          assert manifest['upstream_revision']==os.environ['TARGET_HF_REVISION']
+          paths={item['path'] for item in manifest.get('original_files',[]) if isinstance(item,dict) and item.get('path')}
+          assert 'datapackage.json' not in paths and 'frictionless-datapackage.json' in paths
+          graph=json.loads((root/'graph.jsonld').read_text())
+          nodes={n.get('@id'):n for n in graph.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
+          person=nodes['https://www.ghezelbaash.ir/#saeed-ghezelbash']
+          clinic=nodes['https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah']
+          assert 'worksFor' not in person and 'affiliation' not in person
+          assert 'employee' not in clinic
+          assert person.get('owns') and person.get('practicesAt') and person.get('workLocation')
+          assert clinic.get('owner')
+          status=json.load(open('/tmp/kaggle-status-after.json'))
+          assert status['status']=='ready' and int(status['current_version_number'])==target
+          report={'status':'PASS','kaggleVersion':target,'sourceCommit':manifest['website_source_commit'],'hfRevision':manifest['upstream_revision'],'payloadFiles':len(actual),'frictionlessAlias':'frictionless-datapackage.json','checksums':'PASS','soloPracticeGraph':'PASS'}
+          pathlib.Path('/tmp/kaggle-final-report.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
           PY
-      - name: Save status evidence
+      - name: Save final evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kaggle-version-status
+          name: kaggle-final-convergence-evidence
           path: |
-            /tmp/kaggle-status.json
-            /tmp/kaggle-view.json
+            /tmp/kaggle-final-report.json
+            /tmp/kaggle-status-before.json
+            /tmp/kaggle-status-after.json
           if-no-files-found: warn
           overwrite: true
