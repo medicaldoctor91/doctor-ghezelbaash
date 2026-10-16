@@ -1,26 +1,20 @@
-name: Kaggle convergence payload diagnostic
+name: Kaggle payload correction contract test
 
 on:
   push:
     branches: [ops/platform-convergence-resume-20261016]
     paths:
       - '.github/workflows/platform-resume.yml'
+      - '.github/scripts/kaggle_payload_fix.py'
+      - 'tests/test_kaggle_payload_fix.py'
 
 permissions:
   contents: read
 
-concurrency:
-  group: doctor-ghezelbaash-kaggle-diagnostic
-  cancel-in-progress: false
-
 jobs:
-  diagnose:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
-      TARGET_SOURCE_COMMIT: 62cd2dd0432790916467c0c25d8264c20ba103cd
-      TARGET_HF_REVISION: 45bc20d21be4eaa1e25b1798e9aff0e53243417a
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,62 +22,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install Kaggle client
-        run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
-      - name: Download current public Kaggle payload and compute set differences
-        run: |
-          rm -rf /tmp/kaggle-live && mkdir -p /tmp/kaggle-live
-          kaggle datasets download saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data -p /tmp/kaggle-live --unzip --force
-          (kaggle datasets files saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data > /tmp/kaggle-files-cli.txt 2>&1 || true)
-          python - <<'PY'
-          import json, os, pathlib, urllib.request
-          root=pathlib.Path('/tmp/kaggle-live')
-          actual=sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file())
-          manifest=json.loads((root/'kaggle-manifest.json').read_text())
-          declared=sorted(item['path'] for item in manifest.get('original_files',[]) if isinstance(item,dict) and item.get('path'))
-          checks=[]
-          for line in (root/'checksums.sha256').read_text().splitlines():
-              if '  ' in line:
-                  checks.append(line.split('  ',1)[1])
-          checks=sorted(checks)
-          def hf_exists(name):
-              url='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/'+os.environ['TARGET_HF_REVISION']+'/'+name+'?download=true'
-              try:
-                  req=urllib.request.Request(url,method='HEAD',headers={'User-Agent':'kaggle-diagnostic/1.0'})
-                  with urllib.request.urlopen(req,timeout=30) as response:
-                      return response.status==200
-              except Exception:
-                  return False
-          missing_declared=sorted(set(declared)-set(actual))
-          missing_checks=sorted(set(checks)-set(actual))
-          extra=sorted(set(actual)-set(declared))
-          report={
-              'actual_count':len(actual),
-              'declared_count':len(declared),
-              'checksum_count':len(checks),
-              'actual':actual,
-              'declared':declared,
-              'checksum_paths':checks,
-              'missing_declared_from_payload':missing_declared,
-              'missing_checksum_paths_from_payload':missing_checks,
-              'extra_payload_vs_declared':extra,
-              'missing_paths_exist_on_pinned_hf':{name:hf_exists(name) for name in sorted(set(missing_declared+missing_checks))},
-              'manifest_source_commit':manifest.get('website_source_commit'),
-              'manifest_hf_revision':manifest.get('upstream_revision'),
-              'manifest_version':manifest.get('desired_kaggle_version'),
-          }
-          pathlib.Path('/tmp/kaggle-payload-diagnostic.json').write_text(json.dumps(report,indent=2)+'\n')
-          print(json.dumps(report,indent=2))
-          PY
-          echo '--- kaggle datasets files ---'
-          cat /tmp/kaggle-files-cli.txt
-      - name: Save diagnostic evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: kaggle-payload-diagnostic
-          path: |
-            /tmp/kaggle-payload-diagnostic.json
-            /tmp/kaggle-files-cli.txt
-          if-no-files-found: warn
-          overwrite: true
+      - name: Kaggle reserved-file regression test
+        run: python -m unittest tests/test_kaggle_payload_fix.py -v
