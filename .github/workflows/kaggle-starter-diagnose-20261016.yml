@@ -1,0 +1,86 @@
+name: Diagnose Kaggle starter notebook validation
+
+on:
+  push:
+    branches:
+      - ops/solo-practice-convergence-20261016
+    paths:
+      - .github/workflows/kaggle-starter-diagnose-20261016.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      HF_REVISION: bdb6f229f121b02684bad0ccebd6cf767f1debd7
+      TARGET_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/solo-practice-convergence-20261016
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install minimal dependencies
+        run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3' 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23'
+      - name: Inspect current notebook and candidate assertions
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/kaggle-current /tmp/hf /tmp/kaggle-candidate
+          mkdir -p /tmp/kaggle-current
+          kaggle datasets download saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data -p /tmp/kaggle-current --unzip --force >/dev/null
+          kaggle datasets metadata saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data -p /tmp/kaggle-current >/dev/null
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          nb=json.loads(Path('/tmp/kaggle-current/starter.ipynb').read_text())
+          print('=== CURRENT STARTER NOTEBOOK CODE CELLS ===')
+          for i,cell in enumerate(nb['cells']):
+              if cell.get('cell_type')=='code':
+                  print(f'--- CELL {i} ---')
+                  for n,line in enumerate(''.join(cell.get('source',[])).splitlines(),1):
+                      print(f'{n:03d}: {line}')
+          manifest=json.loads(Path('/tmp/kaggle-current/kaggle-manifest.json').read_text())
+          print('CURRENT_MANIFEST',json.dumps({k:manifest.get(k) for k in ['packaging_revision','desired_kaggle_version','packaging_date','upstream_revision','website_source_commit']},indent=2))
+          meta=json.loads(Path('/tmp/kaggle-current/dataset-metadata.json').read_text())
+          print('CURRENT_METADATA_KEYS',sorted(meta))
+          PY
+          python - <<'PY'
+          import os,sys,json,subprocess
+          from pathlib import Path
+          sys.path.insert(0,str(Path('.github/scripts').resolve()))
+          from platform_bundle import build_kaggle,context
+          from huggingface_hub import snapshot_download
+          root=Path('/tmp')
+          snapshot_download('doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',repo_type='dataset',revision=os.environ['HF_REVISION'],token=os.environ['HF_TOKEN'],local_dir=root/'hf')
+          # Determine current version from public Kaggle API via the CLI's downloaded manifest: next packaging rev is current+1.
+          old=json.loads((root/'kaggle-current'/'kaggle-manifest.json').read_text())
+          next_version=int(old['desired_kaggle_version'])+1
+          ctx=context(os.environ['TARGET_SHA'],os.environ['GITHUB_RUN_ID'])
+          build_kaggle(root/'hf',root/'kaggle-current',root/'kaggle-candidate',ctx,next_version,os.environ['HF_REVISION'])
+          nb=json.loads((root/'kaggle-candidate'/'starter.ipynb').read_text())
+          print('=== CANDIDATE ASSERT DIAGNOSTICS ===')
+          ns={}
+          import os as _os
+          cwd=Path.cwd();_os.chdir(root/'kaggle-candidate')
+          try:
+              for i,cell in enumerate(nb['cells']):
+                  if cell.get('cell_type')!='code':continue
+                  source=''.join(cell.get('source',[]))
+                  print('EXEC_CELL',i)
+                  try:exec(compile(source,f'starter.ipynb:cell{i}','exec'),ns)
+                  except Exception as e:
+                      print('CELL_FAILURE',i,type(e).__name__,repr(e))
+                      print('NAMESPACE_KEYS',sorted(k for k in ns if not k.startswith('__')))
+                      for k in ['manifest','PACKAGING_VERSION','SOURCE_COMMIT','UPSTREAM_REVISION','CANONICAL_DATASET_IRI']:
+                          if k in ns: print('NS',k,repr(ns[k]))
+                      raise
+          finally:_os.chdir(cwd)
+          PY
