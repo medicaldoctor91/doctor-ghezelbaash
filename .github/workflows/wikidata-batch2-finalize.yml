@@ -1,4 +1,4 @@
-name: Wikidata Batch 5 Zenodo lineage
+name: Finalize strengthened Wikidata Batch 5
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,37 +6,90 @@ on:
 permissions:
   contents: read
 jobs:
-  inspect:
+  finalize:
     runs-on: ubuntu-24.04
-    timeout-minutes: 7
+    timeout-minutes: 8
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Resolve Zenodo records and DOI lineage
+      - name: Assert live state and emit exact QS
         shell: bash
         run: |
+          set -euo pipefail
           python - <<'PY'
-          import json,urllib.request,time
-          UA='Q140287622-batch5-zenodo/1.0 (read-only)'
-          ids=['18765169','22651268','22838416']
-          out={}
-          for rid in ids:
-              url='https://zenodo.org/api/records/'+rid
-              last=None
-              for i in range(5):
+          import json, urllib.parse, urllib.request, urllib.error, time
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch5-finalizer/1.0 (read-only)'
+          def api(p,retries=8):
+              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
+              for i in range(retries):
+                  try:
+                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(20,2**i))
+              raise last
+          def sval(s):
+              if s.get('snaktype')!='value': return None
+              v=s.get('datavalue',{}).get('value'); return v if isinstance(v,str) else None
+          def qid(s):
+              if s.get('snaktype')!='value': return None
+              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; c=e.get('claims',{})
+
+          # Current IMCAS P973 must exist exactly once and still lack P407.
+          imcas_url='https://www.imcas.com/en/profile/dr-saeed-ghezelbash'
+          imcas=[x for x in c.get('P973',[]) if sval(x['mainsnak'])==imcas_url]
+          assert len(imcas)==1, f'Expected exactly one IMCAS P973, got {len(imcas)}'
+          im=imcas[0]
+          assert im['id']=='Q140287622$EB7D0FDA-C608-4F83-83C4-8733F69B07CF', f'IMCAS GUID changed: {im["id"]}'
+          assert not im.get('qualifiers',{}).get('P407'), 'IMCAS already has P407; abort recreate proposal'
+          assert any(imcas_url in [sval(s) for s in r.get('snaks',{}).get('P854',[])] for r in im.get('references',[])), 'IMCAS reference missing'
+
+          # P1325 exact live values and GUIDs.
+          p1325={sval(x['mainsnak']):x for x in c.get('P1325',[]) if sval(x['mainsnak'])}
+          stale1='https://doi.org/10.5281/zenodo.18765169'
+          stale2='https://zenodo.org/records/22651268'
+          concept='https://doi.org/10.5281/zenodo.18765168'
+          current='https://doi.org/10.5281/zenodo.22838416'
+          assert p1325.get(stale1,{}).get('id')=='Q140287622$FB01E25D-2B01-41F2-A5E5-B672177C8024', 'Historical v1.0.0 statement changed/missing'
+          assert p1325.get(stale2,{}).get('id')=='Q140287622$D222D5E5-9CA0-4ABA-A85C-8F3AF1DF69C8', 'Historical v1.2.6 statement changed/missing'
+          assert concept in p1325, 'Canonical concept DOI missing; abort deletion'
+          assert current in p1325, 'Current v1.3.3 DOI missing; abort deletion'
+
+          # Confirm live Zenodo lineage + stale-vs-current identity state.
+          def zenodo(rid):
+              url='https://zenodo.org/api/records/'+str(rid); last=None
+              for i in range(6):
                   try:
                       req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'application/json'})
-                      with urllib.request.urlopen(req,timeout=60) as r:x=json.load(r)
-                      md=x.get('metadata',{});links=x.get('links',{})
-                      out[rid]={
-                        'id':x.get('id'),'doi':x.get('doi'),'conceptdoi':x.get('conceptdoi'),'conceptrecid':x.get('conceptrecid'),
-                        'title':md.get('title'),'version':md.get('version'),'publication_date':md.get('publication_date'),
-                        'resource_type':md.get('resource_type'),'creators':md.get('creators'),'description':md.get('description'),
-                        'related_identifiers':md.get('related_identifiers'),'self':links.get('self'),'html':links.get('html')}
-                      break
-                  except Exception as e:
-                      last=repr(e);time.sleep(2**i)
-              else: out[rid]={'error':last}
-          print(json.dumps(out,ensure_ascii=False,indent=2))
-          print('ZENODO_LINEAGE_PASS')
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except Exception as ex:
+                      last=ex; time.sleep(min(16,2**i))
+              raise last
+          z1=zenodo(18765169); z2=zenodo(22651268); z3=zenodo(22838416)
+          for z in [z1,z2,z3]: assert z.get('conceptdoi')=='10.5281/zenodo.18765168', f'Unexpected Zenodo lineage {z.get("id")}: {z.get("conceptdoi")}'
+          blob1=json.dumps(z1.get('metadata',{}),ensure_ascii=False); blob2=json.dumps(z2.get('metadata',{}),ensure_ascii=False); blob3=json.dumps(z3.get('metadata',{}),ensure_ascii=False)
+          assert 'Q140288589' in blob1, 'v1.0.0 no longer contains stale deleted clinic QID; reassess instead of delete'
+          assert 'Q140288589' in blob2, 'v1.2.6 no longer contains stale deleted clinic QID; reassess instead of delete'
+          assert 'Q140288589' not in blob3, 'Current v1.3.3 unexpectedly contains stale deleted clinic QID; abort'
+
+          lines=[
+            '-STATEMENT|Q140287622$EB7D0FDA-C608-4F83-83C4-8733F69B07CF',
+            'Q140287622|P973|"https://www.imcas.com/en/profile/dr-saeed-ghezelbash"|P407|Q1860|S854|"https://www.imcas.com/en/profile/dr-saeed-ghezelbash"|S813|+2026-10-16T00:00:00Z/11',
+            '-STATEMENT|Q140287622$FB01E25D-2B01-41F2-A5E5-B672177C8024',
+            '-STATEMENT|Q140287622$D222D5E5-9CA0-4ABA-A85C-8F3AF1DF69C8',
+          ]
+          report={
+            'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),
+            'imcas_guid':im['id'],'imcas_missing_language':True,
+            'zenodo':{
+              'historical_v1.0.0':{'record':z1.get('id'),'conceptdoi':z1.get('conceptdoi'),'contains_deleted_clinic_qid':True},
+              'historical_v1.2.6':{'record':z2.get('id'),'conceptdoi':z2.get('conceptdoi'),'contains_deleted_clinic_qid':True},
+              'current_v1.3.3':{'record':z3.get('id'),'conceptdoi':z3.get('conceptdoi'),'contains_deleted_clinic_qid':False},
+              'canonical_concept_statement_present':True,'current_statement_present':True},
+            'quickstatements':lines}
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          print('BATCH5_FINALIZER_PASS')
           PY
