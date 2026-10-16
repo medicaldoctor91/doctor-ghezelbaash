@@ -1,6 +1,8 @@
 import importlib.util
 import pathlib
+import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -31,6 +33,28 @@ class PlatformResumeContractTests(unittest.TestCase):
         self.assertEqual(revision, 'hf-revision')
         with self.assertRaises(AssertionError):
             self.mod.verify_existing_hf(info, matrix, 'other-source')
+
+    def test_kaggle_download_retries_transient_not_found(self):
+        calls = {'count': 0}
+        expected_version = 17
+        with tempfile.TemporaryDirectory() as directory:
+            destination = pathlib.Path(directory)
+
+            def fake_runner(command, **kwargs):
+                calls['count'] += 1
+                if calls['count'] == 1:
+                    raise subprocess.CalledProcessError(1, command)
+                (destination / 'kaggle-manifest.json').write_text(
+                    '{"desired_kaggle_version": 17}\n'
+                )
+                return subprocess.CompletedProcess(command, 0)
+
+            self.cls_result = self.mod.download_kaggle_version_with_retry(
+                'owner/dataset', destination, expected_version,
+                attempts=2, sleep_seconds=0, runner=fake_runner,
+            )
+            self.assertEqual(calls['count'], 2)
+            self.assertEqual(self.cls_result['desired_kaggle_version'], expected_version)
 
 
 if __name__ == '__main__':
