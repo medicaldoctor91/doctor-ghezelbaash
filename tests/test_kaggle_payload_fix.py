@@ -51,6 +51,22 @@ class KagglePayloadFixTests(unittest.TestCase):
             self.assertNotIn('  checksums.sha256', checks)
             self.assertEqual(result['alias'], 'frictionless-datapackage.json')
 
+    def test_kaggle_metadata_is_flattened_and_given_dataset_id(self):
+        nested = {
+            'info': {
+                'title': 'Dr. Saeed Ghezelbash Knowledge Graph and NLP Data',
+                'licenses': [{'name': 'CC-BY-4.0'}],
+                'description': 'Existing description',
+            },
+            'resources': [{'name': 'not-a-kaggle-control-field'}],
+        }
+        out = self.mod.normalize_kaggle_metadata(nested, 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data')
+        self.assertEqual(out['id'], 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data')
+        self.assertEqual(out['title'], nested['info']['title'])
+        self.assertEqual(out['description'], nested['info']['description'])
+        self.assertNotIn('info', out)
+        self.assertNotIn('resources', out)
+
 
 if __name__ == '__main__':
     unittest.main()
