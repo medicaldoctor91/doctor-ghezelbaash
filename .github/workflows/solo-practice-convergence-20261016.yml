@@ -1,0 +1,192 @@
+name: Converge solo-practice semantics across public distributions
+
+on:
+  push:
+    branches:
+      - ops/solo-practice-convergence-20261016
+    paths:
+      - .github/workflows/solo-practice-convergence-20261016.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-solo-practice-convergence-20261016
+  cancel-in-progress: false
+
+jobs:
+  converge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      TARGET_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+    steps:
+      - name: Checkout the exact canonical main commit
+        uses: actions/checkout@v4
+        with:
+          ref: 62cd2dd0432790916467c0c25d8264c20ba103cd
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify target and publication bindings
+        run: |
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          python - <<'PY'
+          import os
+          required=['HF_TOKEN','ZENODO_TOKEN','KAGGLE_API_TOKEN','CLOUDFLARE_API_TOKEN']
+          missing=[k for k in required if not os.environ.get(k)]
+          assert not missing, 'Missing existing publication bindings: '+str(missing)
+          print('All four publication bindings are present')
+          PY
+          if grep -nE 'newversion|actions/newversion' .github/scripts/platform_publish.py; then
+            echo 'Refusing to run: publisher contains a Zenodo new-version path.' >&2
+            exit 1
+          fi
+          echo 'Zenodo publisher has no new-version action.'
+
+      - name: Install locked validation and publication dependencies
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check \
+            'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' \
+            'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+
+      - name: Validate source and build canonical distribution
+        run: |
+          node --test tests/*.test.mjs
+          python tests/platform-bundle-sync.test.py
+          npm run build
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
+          python -m py_compile .github/scripts/platform_bundle.py .github/scripts/platform_publish.py
+
+      - name: Assert corrected semantics in built artifacts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          graph=json.loads(Path('dist/graph.jsonld').read_text())
+          person='https://www.ghezelbaash.ir/#saeed-ghezelbash'
+          clinic='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          nodes={n.get('@id'):n for n in graph.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
+          p=nodes[person]; c=nodes[clinic]
+          def ids(v):
+            vals=v if isinstance(v,list) else ([] if v is None else [v])
+            return [x.get('@id') if isinstance(x,dict) else x for x in vals]
+          assert not ids(p.get('worksFor'))
+          assert clinic not in ids(p.get('affiliation'))
+          assert not ids(c.get('employee'))
+          assert clinic in ids(p.get('owns'))
+          assert clinic in ids(p.get('practicesAt'))
+          assert person in ids(c.get('owner'))
+          assert person in ids(c.get('founder'))
+          assert any(person in ids(n.get('provider')) for n in graph.get('@graph',[]) if isinstance(n,dict))
+          shapes=Path('dist/shapes.ttl').read_text()
+          for old in ['schema:worksFor','schema:affiliation','schema:employee']:
+            assert old not in shapes, old
+          for file in Path('dist').glob('*.html'):
+            text=file.read_text(errors='ignore')
+            assert 'Medical Director / مدیر پزشکی' not in text, file
+          print('Built graph, SHACL and visible HTML match the solo-practice model')
+          PY
+
+      - name: Deploy exact canonical distribution
+        run: |
+          npx --yes wrangler@4 pages deploy dist \
+            --project-name=doctor-ghezelbaash \
+            --branch=main \
+            --commit-hash="$TARGET_SHA" \
+            --commit-message='Align clinic with physician-owned solo aesthetic practice' \
+            --commit-dirty=false
+          GITHUB_SHA="$TARGET_SHA" python - <<'PY'
+          import hashlib,json,os,time,urllib.request
+          from pathlib import Path
+          origin='https://www.ghezelbaash.ir/'
+          def fetch(path):
+              req=urllib.request.Request(origin+path,headers={'Cache-Control':'no-cache'})
+              return urllib.request.urlopen(req,timeout=30).read()
+          for attempt in range(30):
+              live=json.loads(fetch('release-provenance.json?verify='+os.environ['GITHUB_SHA']+'-'+str(attempt)))
+              if live.get('sourceCommit')==os.environ['GITHUB_SHA']:break
+              time.sleep(5)
+          else:raise RuntimeError('Website did not converge to target source commit')
+          for name in ['graph.jsonld','graph.ttl','shapes.ttl','provenance.jsonld','integrity-manifest.json']:
+              assert hashlib.sha256(fetch(name)).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
+          print('Live website bytes equal the validated build')
+          PY
+
+      - name: Verify live website semantics and visible copy
+        run: |
+          GITHUB_SHA="$TARGET_SHA" python - <<'PY'
+          import json,urllib.request
+          origin='https://www.ghezelbaash.ir/'
+          def get(path):
+              return urllib.request.urlopen(urllib.request.Request(origin+path,headers={'Cache-Control':'no-cache'}),timeout=30).read()
+          graph=json.loads(get('graph.jsonld'))
+          person='https://www.ghezelbaash.ir/#saeed-ghezelbash'
+          clinic='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          nodes={n.get('@id'):n for n in graph.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
+          def ids(v):
+              vals=v if isinstance(v,list) else ([] if v is None else [v])
+              return [x.get('@id') if isinstance(x,dict) else x for x in vals]
+          p=nodes[person]; c=nodes[clinic]
+          assert not ids(p.get('worksFor'))
+          assert clinic not in ids(p.get('affiliation'))
+          assert not ids(c.get('employee'))
+          assert clinic in ids(p.get('owns')) and clinic in ids(p.get('practicesAt'))
+          assert person in ids(c.get('owner')) and person in ids(c.get('founder'))
+          for path in ['', 'dr-saeed-ghezelbash-aesthetic-clinic-kermanshah', 'historical-patient-origin-summary']:
+              html=get(path).decode(errors='ignore')
+              assert 'Medical Director / مدیر پزشکی' not in html, path
+          print('Live graph and visible projections are clean')
+          PY
+
+      - name: Converge Hugging Face, Zenodo in place, and Kaggle
+        env:
+          GITHUB_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+        run: python .github/scripts/platform_publish.py
+
+      - name: Verify publication receipt invariants
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/platform-publish/publication-report.json')
+          assert p.is_file(), 'publication report missing'
+          report=json.loads(p.read_text())
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          assert report.get('sourceCommit')=='62cd2dd0432790916467c0c25d8264c20ba103cd'
+          for key in ['zenodoSource','zenodoDataset']:
+              rec=report.get(key) or {}
+              assert rec.get('DOI_unchanged') is True, (key,rec)
+          assert report.get('hfRevision')
+          assert (report.get('kaggle') or {}).get('checksums')=='PASS'
+          assert (report.get('kaggle') or {}).get('query_bindings')=='PASS'
+          print('HF, Zenodo same-DOI corrections and Kaggle verification passed')
+          PY
+
+      - name: Save convergence evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: solo-practice-platform-convergence-evidence
+          path: |
+            /tmp/platform-publish/context.json
+            /tmp/platform-publish/publication-report.json
+          if-no-files-found: warn
+          overwrite: true
