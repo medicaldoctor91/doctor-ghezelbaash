@@ -1,4 +1,4 @@
-name: Verify Wikidata Batch 2 and 3
+name: Audit Wikidata Batch 4 identity
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,20 +6,19 @@ on:
 permissions:
   contents: read
 jobs:
-  verify:
+  audit:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Verify live Wikidata post-state
+      - name: Inspect live identifiers and professional role
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           import json, urllib.parse, urllib.request, urllib.error, time
-          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; SCAR='Q206060'
-          UA='Q140287622-post-batch23-verifier/1.0 (read-only)'
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch4-live-audit/1.0 (read-only)'
           def api(p,retries=8):
               p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
               for i in range(retries):
@@ -35,47 +34,26 @@ jobs:
               v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
           def sval(s):
               v=s.get('datavalue',{}).get('value'); return v if isinstance(v,str) else None
-          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
-          claims=e.get('claims',{})
-          p101=claims.get('P101',[])
-          scar=[c for c in p101 if qid(c['mainsnak'])==SCAR]
-          remaining=[]
-          for c in p101:
-              for s in c.get('qualifiers',{}).get('P2175',[]) or []:
-                  if qid(s)==SCAR: remaining.append({'main':qid(c['mainsnak']),'guid':c['id']})
-          ref_urls=[]; uses=[]; locs=[]
-          for c in scar:
-              uses += [qid(x) for x in c.get('qualifiers',{}).get('P2283',[]) if qid(x)]
-              locs += [qid(x) for x in c.get('qualifiers',{}).get('P927',[]) if qid(x)]
-              for r in c.get('references',[]):
-                  for x in r.get('snaks',{}).get('P854',[]) or []:
-                      if sval(x): ref_urls.append(sval(x))
-          expected_refs={
-            'https://www.ghezelbaash.ir/acne-scars',
-            'https://www.ghezelbaash.ir/subcision-for-tethered-acne-scars',
-            'https://www.ghezelbaash.ir/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling'}
-          p800=[qid(c['mainsnak']) for c in claims.get('P800',[]) if qid(c['mainsnak'])]
-          p3919=[qid(c['mainsnak']) for c in claims.get('P3919',[]) if qid(c['mainsnak'])]
-          ids={}
-          for pid in ['P496','P10283','P1960','P4012','P2037','P12201','P6634','P11079','P1153']:
-              ids[pid]=[{'value':sval(c['mainsnak']),'rank':c.get('rank'),'guid':c.get('id'),'qualifier_props':sorted(c.get('qualifiers',{}).keys()),'reference_count':len(c.get('references',[]))} for c in claims.get(pid,[])]
-          report={
-            'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),
-            'batch2':{'scar_statement_count':len(scar),'remaining_P2175_to_scar':remaining,'scar_P2283_uses':sorted(set(uses)),'scar_P927':sorted(set(locs)),'new_refs_present':sorted(expected_refs & set(ref_urls)),'new_refs_missing':sorted(expected_refs-set(ref_urls))},
-            'batch3':{'P800':sorted(p800),'P3919':sorted(p3919)},
-            'batch4_identifier_snapshot':ids}
-          expected_uses={'Q16949888','Q17081562','Q3267987','Q613879','Q851186'}
-          expected_p800={'Q36942316','Q140298431'}
-          expected_p3919={'Q36942316','Q140298431','Q140306302','Q141099455','Q141129555','Q141131757'}
-          checks={
-            'B2_single_scar':len(scar)==1,
-            'B2_bad_qualifiers_removed':not remaining,
-            'B2_uses_preserved':set(uses)==expected_uses,
-            'B2_refs_added':not (expected_refs-set(ref_urls)),
-            'B3_P800_exact':set(p800)==expected_p800,
-            'B3_P3919_preserved':set(p3919)==expected_p3919}
-          report['checks']=checks; report['status']='PASS' if all(checks.values()) else 'FAIL'
-          print(json.dumps(report,ensure_ascii=False,indent=2))
-          assert all(checks.values()), checks
-          print('POST_BATCH23_VERIFY_PASS')
+          def snak_val(s):
+              if s.get('snaktype')!='value': return s.get('snaktype')
+              return qid(s) or sval(s) or s.get('datavalue',{}).get('value')
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; claims=e.get('claims',{})
+          focus=['P496','P10283','P1960','P4012','P2037','P12201','P6634','P11079','P1153','P39','P108','P1830','P121','P937']
+          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'claims':{},'constraint_mentions':{}}
+          for pid in focus:
+              arr=[]
+              for c in claims.get(pid,[]):
+                  refs=[]
+                  for r in c.get('references',[]):
+                      rr={}
+                      for rp,ss in r.get('snaks',{}).items(): rr[rp]=[snak_val(x) for x in ss]
+                      refs.append(rr)
+                  quals={qp:[snak_val(x) for x in ss] for qp,ss in c.get('qualifiers',{}).items()}
+                  arr.append({'guid':c.get('id'),'value':snak_val(c.get('mainsnak',{})),'rank':c.get('rank'),'qualifiers':quals,'references':refs})
+              out['claims'][pid]=arr
+          cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
+          blob=json.dumps(cc,ensure_ascii=False)
+          for pid in focus: out['constraint_mentions'][pid]=(pid in blob)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          print('BATCH4_LIVE_AUDIT_PASS')
           PY
