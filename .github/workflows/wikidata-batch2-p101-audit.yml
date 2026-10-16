@@ -1,0 +1,180 @@
+name: Deterministic Wikidata Batch 2 P101 audit
+on:
+  push:
+    branches: [audit/wikidata-batch1-20261016]
+    paths: [.github/workflows/wikidata-batch2-p101-audit.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build live P101 and qualifier matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/batch2
+          python - <<'PY'
+          import json, urllib.parse, urllib.request, time, csv, collections, re, hashlib
+          OUT='/tmp/batch2'; API='https://www.wikidata.org/w/api.php'; Q='Q140287622'
+          UA='Q140287622-batch2-p101-auditor/1.0 (deterministic read-only audit; github.com/medicaldoctor91/doctor-ghezelbaash)'
+          QUAL_PROPS={'P2283','P2175','P366','P927','P518'}
+          def get(url,params=None,retries=4):
+              if params: url += ('&' if '?' in url else '?')+urllib.parse.urlencode(params)
+              req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'application/json'})
+              last=None
+              for i in range(retries):
+                  try:
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except Exception as e:
+                      last=e; time.sleep(1.5*(i+1))
+              raise last
+          def api(params): return get(API,{'format':'json','formatversion':'2',**params})
+          def sval(s):
+              if s.get('snaktype')!='value': return s.get('snaktype')
+              v=s.get('datavalue',{}).get('value')
+              if isinstance(v,dict):
+                  if 'id' in v:return v['id']
+                  if 'text' in v:return {'text':v.get('text'),'language':v.get('language')}
+                  if 'time' in v:return v.get('time')
+                  if 'amount' in v:return v.get('amount')
+                  if 'latitude' in v:return {'lat':v.get('latitude'),'lon':v.get('longitude'),'precision':v.get('precision')}
+              return v
+          ent=api({'action':'wbgetentities','ids':Q,'props':'claims|labels|info'})['entities'][Q]
+          p101=ent.get('claims',{}).get('P101',[])
+          constraints=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
+          json.dump(constraints,open(OUT+'/constraints.json','w'),ensure_ascii=False,indent=2)
+          # Gather QIDs and full normalized rows
+          qids=set(); rows=[]
+          for c in p101:
+              main=sval(c['mainsnak'])
+              if isinstance(main,str) and main.startswith('Q'):qids.add(main)
+              quals={}
+              for p,snaks in (c.get('qualifiers') or {}).items():
+                  vals=[sval(s) for s in snaks]; quals[p]=vals
+                  for v in vals:
+                      if isinstance(v,str) and v.startswith('Q'):qids.add(v)
+              refs=[]
+              for r in c.get('references') or []:
+                  rd={}
+                  for p,snaks in (r.get('snaks') or {}).items():rd[p]=[sval(s) for s in snaks]
+                  refs.append(rd)
+              rows.append({'guid':c['id'],'rank':c['rank'],'snaktype':c['mainsnak']['snaktype'],'value':main,'qualifiers':quals,'references':refs})
+          # Resolve labels/descriptions and missing state
+          entities={}
+          for i in range(0,len(qids),50):
+              block=api({'action':'wbgetentities','ids':'|'.join(sorted(qids)[i:i+50]),'props':'labels|descriptions|claims|info','languages':'en|fa'})['entities']
+              entities.update(block)
+          def label(q):
+              e=entities.get(q,{})
+              labs=e.get('labels',{})
+              return (labs.get('en') or labs.get('fa') or {}).get('value',q)
+          def desc(q):
+              e=entities.get(q,{})
+              ds=e.get('descriptions',{})
+              return (ds.get('en') or ds.get('fa') or {}).get('value','')
+          missing={q for q,e in entities.items() if 'missing' in e}
+          # Parse wbcheckconstraints by property and statement GUID robustly.
+          tree=constraints.get('wbcheckconstraints',{}).get(Q,{})
+          guid_issues=collections.defaultdict(list)
+          def walk(obj, prop_hint=None, guid_hint=None):
+              if isinstance(obj,dict):
+                  ph=obj.get('property') or prop_hint
+                  gh=obj.get('id') or guid_hint
+                  st=obj.get('status')
+                  if st and st!='compliance' and gh:
+                      guid_issues[gh].append({'status':st,'property':ph,'message':obj.get('message-html') or obj.get('message'),'constraint':obj.get('constraint')})
+                  for k,v in obj.items():
+                      walk(v, ph or (k if isinstance(k,str) and k.startswith('P') else prop_hint), gh)
+              elif isinstance(obj,list):
+                  for v in obj:walk(v,prop_hint,guid_hint)
+          walk(tree)
+          # Duplicate signatures and duplicate qualifier values.
+          value_map=collections.defaultdict(list); exact_map=collections.defaultdict(list)
+          for r in rows:
+              value_map[r['value']].append(r['guid'])
+              sig=json.dumps([r['value'],r['rank'],r['qualifiers']],sort_keys=True,ensure_ascii=False)
+              exact_map[sig].append(r['guid'])
+          # Reference-domain scoring (deterministic; no semantic guessing).
+          TIER_A=('pubmed.ncbi.nlm.nih.gov','ncbi.nlm.nih.gov','pmc.ncbi.nlm.nih.gov','doi.org','kums.ac.ir','irimc.org','irimc.ir')
+          TIER_B=('orcid.org','openalex.org','semanticscholar.org','scholar.google.')
+          TIER_C=('imcas.com','a4m.com','iapam.com','ghezelbaash.ir')
+          def domain(url):
+              try:return urllib.parse.urlparse(url).netloc.lower().removeprefix('www.')
+              except:return ''
+          def tier(d):
+              if any(d==x or d.endswith('.'+x) for x in TIER_A):return 'A'
+              if any(d==x or d.endswith('.'+x) for x in TIER_B):return 'B'
+              if any(d==x or d.endswith('.'+x) for x in TIER_C):return 'C'
+              return 'D'
+          # Intrinsic object-claim comparison: informational only; never auto-delete a qualifier because of it.
+          def intrinsic_pairs(mainq,p):
+              e=entities.get(mainq,{})
+              out=[]
+              for c in e.get('claims',{}).get(p,[]):
+                  v=sval(c.get('mainsnak',{}))
+                  if isinstance(v,str) and v.startswith('Q'):out.append(v)
+              return out
+          # Per-row classifier.
+          matrix=[]; qualifier_rows=[]
+          for r in rows:
+              qdups={p:[v for v,n in collections.Counter(map(lambda x:json.dumps(x,sort_keys=True,ensure_ascii=False),vals)).items() if n>1] for p,vals in r['qualifiers'].items()}
+              qdups={p:v for p,v in qdups.items() if v}
+              urls=[]
+              for ref in r['references']:
+                  for u in ref.get('P854',[]):
+                      if isinstance(u,str):urls.append(u)
+              domains=sorted(set(domain(u) for u in urls if domain(u)))
+              tiers=sorted(set(tier(d) for d in domains))
+              issues=guid_issues.get(r['guid'],[])
+              hard=[x for x in issues if x['status'] in ('violation','warning','bad-parameters')]
+              status='KEEP'; reasons=[]
+              if r['snaktype']!='value':status='REVIEW';reasons.append('P101 main snak is not a concrete value')
+              if isinstance(r['value'],str) and r['value'] in missing:status='FIX_HIGH';reasons.append('P101 target is missing/deleted')
+              if len(value_map[r['value']])>1:status='REVIEW_DUPLICATE_VALUE';reasons.append('same P101 value occurs more than once')
+              if any(len(v)>1 for v in exact_map.values() if r['guid'] in v):status='REVIEW_EXACT_DUPLICATE';reasons.append('exact P101+rank+qualifier signature duplicated')
+              if hard:status='REVIEW_CONSTRAINT';reasons.append('native constraint checker: '+','.join(sorted(set(x['status'] for x in hard))))
+              if qdups:status='REVIEW_QUALIFIER_DUPLICATE';reasons.append('duplicate qualifier value within same statement')
+              missing_q=[]
+              intrinsic=[]
+              for p,vals in r['qualifiers'].items():
+                  for v in vals:
+                      if isinstance(v,str) and v.startswith('Q'):
+                          if v in missing:missing_q.append((p,v))
+                          if p in QUAL_PROPS and v in intrinsic_pairs(r['value'],p):intrinsic.append((p,v))
+                          qualifier_rows.append({'p101_guid':r['guid'],'p101_value':r['value'],'p101_label':label(r['value']) if isinstance(r['value'],str) else '', 'qualifier_property':p,'qualifier_value':v,'qualifier_label':label(v),'target_missing':v in missing,'also_intrinsic_on_object':v in intrinsic_pairs(r['value'],p) if p in QUAL_PROPS else False})
+              if missing_q:status='FIX_HIGH';reasons.append('qualifier target missing/deleted')
+              matrix.append({**r,'value_label':label(r['value']) if isinstance(r['value'],str) and r['value'].startswith('Q') else None,'value_description':desc(r['value']) if isinstance(r['value'],str) and r['value'].startswith('Q') else None,'constraint_issues':issues,'reference_domains':domains,'reference_tiers':tiers,'duplicate_same_value':len(value_map[r['value']])>1,'duplicate_qualifiers':qdups,'missing_qualifier_targets':missing_q,'intrinsic_overlap':intrinsic,'machine_status':status,'machine_reasons':reasons})
+          # Coverage matrix for the four historically requested contextual dimensions + P518.
+          coverage=[]
+          for m in matrix:
+              coverage.append({'guid':m['guid'],'value':m['value'],'label':m['value_label'],'P2283_uses':len(m['qualifiers'].get('P2283',[])),'P2175_treats':len(m['qualifiers'].get('P2175',[])),'P366_use':len(m['qualifiers'].get('P366',[])),'P927_anatomical_location':len(m['qualifiers'].get('P927',[])),'P518_applies_to_part':len(m['qualifiers'].get('P518',[])),'reference_count':len(m['references']),'status':m['machine_status']})
+          # Aggregate qualifier counts.
+          qcounts=collections.Counter()
+          for r in rows:
+              for p,vals in r['qualifiers'].items():qcounts[p]+=len(vals)
+          summary={'entity':Q,'lastrevid':ent.get('lastrevid'),'modified':ent.get('modified'),'p101_statement_count':len(rows),'unique_p101_values':len(set(r['value'] for r in rows)),'qualifier_counts':dict(qcounts),'status_counts':dict(collections.Counter(m['machine_status'] for m in matrix)),'native_issue_statement_count':sum(1 for m in matrix if m['constraint_issues']),'missing_main_targets':sorted({m['value'] for m in matrix if isinstance(m['value'],str) and m['value'] in missing}),'missing_qualifier_targets':sorted({v for m in matrix for p,v in m['missing_qualifier_targets']}),'sha256':hashlib.sha256(json.dumps(matrix,sort_keys=True,ensure_ascii=False).encode()).hexdigest()}
+          json.dump(matrix,open(OUT+'/p101_matrix.json','w'),ensure_ascii=False,indent=2)
+          json.dump(qualifier_rows,open(OUT+'/qualifier_matrix.json','w'),ensure_ascii=False,indent=2)
+          json.dump(coverage,open(OUT+'/coverage.json','w'),ensure_ascii=False,indent=2)
+          json.dump(summary,open(OUT+'/summary.json','w'),ensure_ascii=False,indent=2)
+          with open(OUT+'/p101_matrix.tsv','w',newline='') as f:
+              w=csv.writer(f,delimiter='\t');w.writerow(['GUID','value','label','rank','refs','P2283','P2175','P366','P927','P518','tiers','constraints','status','reasons'])
+              for m in matrix:w.writerow([m['guid'],m['value'],m['value_label'],m['rank'],len(m['references']),len(m['qualifiers'].get('P2283',[])),len(m['qualifiers'].get('P2175',[])),len(m['qualifiers'].get('P366',[])),len(m['qualifiers'].get('P927',[])),len(m['qualifiers'].get('P518',[])),','.join(m['reference_tiers']),','.join(i['status'] for i in m['constraint_issues']),m['machine_status'],'; '.join(m['machine_reasons'])])
+          print(json.dumps(summary,ensure_ascii=False,indent=2))
+          print('\n=== NON-KEEP ===')
+          for m in matrix:
+              if m['machine_status']!='KEEP':print(m['value'],m['value_label'],m['guid'],m['machine_status'],m['machine_reasons'],m['constraint_issues'])
+          print('\n=== COVERAGE ===')
+          for x in coverage:print(json.dumps(x,ensure_ascii=False))
+          PY
+      - name: Upload Batch 2 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: wikidata-batch2-p101-audit
+          path: /tmp/batch2/*
+          retention-days: 7
