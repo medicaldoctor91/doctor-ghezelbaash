@@ -1,0 +1,269 @@
+name: Repair Zenodo uploads and finish Kaggle convergence
+
+on:
+  push:
+    branches:
+      - ops/solo-practice-convergence-20261016
+    paths:
+      - .github/workflows/zenodo-kaggle-repair-final-20261016.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-zenodo-kaggle-repair-final
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      TARGET_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+      HF_REVISION: bdb6f229f121b02684bad0ccebd6cf767f1debd7
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 62cd2dd0432790916467c0c25d8264c20ba103cd
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install exact build and publication dependencies
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check \
+            'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' \
+            'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+
+      - name: Rebuild target and verify successful HF revision
+        run: |
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          npm run build
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          from huggingface_hub import snapshot_download
+          root=Path('/tmp/platform-repair');root.mkdir(parents=True,exist_ok=True)
+          hf=root/'hf'
+          snapshot_download('doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',repo_type='dataset',revision=os.environ['HF_REVISION'],token=os.environ['HF_TOKEN'],local_dir=hf)
+          graph=json.loads((hf/'graph.jsonld').read_text())
+          person='https://www.ghezelbaash.ir/#saeed-ghezelbash';clinic='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          nodes={n.get('@id'):n for n in graph.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
+          def ids(v):
+              vals=v if isinstance(v,list) else ([] if v is None else [v]);return [x.get('@id') if isinstance(x,dict) else x for x in vals]
+          p=nodes[person];c=nodes[clinic]
+          assert not ids(p.get('worksFor')) and clinic not in ids(p.get('affiliation')) and not ids(c.get('employee'))
+          assert clinic in ids(p.get('owns')) and clinic in ids(p.get('practicesAt'))
+          assert person in ids(c.get('owner')) and person in ids(c.get('founder'))
+          assert json.loads((hf/'release-provenance.json').read_text())['sourceCommit']==os.environ['TARGET_SHA']
+          print('HF_REUSE_VERIFIED',os.environ['HF_REVISION'])
+          PY
+
+      - name: Repair both Zenodo records in place and finish Kaggle
+        env:
+          GITHUB_SHA: 62cd2dd0432790916467c0c25d8264c20ba103cd
+        run: |
+          python - <<'PY'
+          import hashlib, importlib.util, json, os, re, shutil, subprocess, sys, time, urllib.parse, urllib.request, urllib.error, zipfile
+          from pathlib import Path
+
+          sys.path.insert(0,str(Path('.github/scripts').resolve()))
+          import platform_publish as pp
+          from platform_bundle import build_zenodo, build_kaggle, context, load, dump, sha, KAGGLE_REF
+          from huggingface_hub import snapshot_download
+
+          BASE='https://zenodo.org/api'
+          ROOT=Path('/tmp/platform-repair')
+          ROOT.mkdir(parents=True,exist_ok=True)
+          hf=ROOT/'hf'
+          if not (hf/'graph.jsonld').is_file():
+              snapshot_download('doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',repo_type='dataset',revision=os.environ['HF_REVISION'],token=os.environ['HF_TOKEN'],local_dir=hf)
+          ctx=context(os.environ['TARGET_SHA'],os.environ['GITHUB_RUN_ID'])
+          ctx['hf_revision']=os.environ['HF_REVISION']
+          report={'sourceCommit':ctx['source_commit'],'publicationRun':ctx['run_url'],'hfRevision':os.environ['HF_REVISION'],'hfReused':True}
+          dump(ROOT/'context.json',ctx);dump(ROOT/'publication-report.json',report)
+
+          def request(method,url,payload=None,token=None,allowed=(200,201,202,204)):
+              headers={'User-Agent':'doctor-ghezelbaash-zenodo-kaggle-repair/1.0','Accept':'application/json'}
+              if token:headers['Authorization']='Bearer '+token
+              data=None
+              if payload is not None:
+                  data=json.dumps(payload,ensure_ascii=False).encode();headers['Content-Type']='application/json'
+              elif method in {'POST','PUT','PATCH'}:data=b''
+              req=urllib.request.Request(url,data=data,method=method,headers=headers)
+              try:
+                  with urllib.request.urlopen(req,timeout=180) as r:
+                      body=r.read();assert r.status in allowed,(method,url,r.status)
+                      return r.status,(json.loads(body) if body and 'json' in r.headers.get('Content-Type','') else body)
+              except urllib.error.HTTPError as e:
+                  body=e.read().decode(errors='replace')
+                  if token:body=body.replace(token,'[redacted]')
+                  raise RuntimeError(f'HTTP {e.code} {method} {url}: {body[:1200]}') from e
+
+          def curl_upload(url,path,token):
+              cmd=['curl','--fail-with-body','--silent','--show-error','--retry','5','--retry-all-errors','--retry-delay','5','--connect-timeout','30','--max-time','1200',
+                   '-X','PUT','-H','Authorization: Bearer '+token,'-H','Content-Type: application/octet-stream','--data-binary','@'+str(path),url]
+              subprocess.run(cmd,check=True)
+
+          def md5(path):
+              h=hashlib.md5()
+              with Path(path).open('rb') as f:
+                  for chunk in iter(lambda:f.read(1024*1024),b''):h.update(chunk)
+              return h.hexdigest()
+
+          def fetch_record_files(rec,out):
+              _,listing=request('GET',f'{BASE}/records/{rec}/files',token=os.environ['ZENODO_TOKEN'])
+              out=Path(out);out.mkdir(parents=True,exist_ok=True)
+              for entry in listing['entries']:
+                  key=entry['key'];path=out/key;path.parent.mkdir(parents=True,exist_ok=True)
+                  req=urllib.request.Request(f'{BASE}/records/{rec}/files/{urllib.parse.quote(key,safe="")}/content',headers={'User-Agent':'doctor-ghezelbaash-zenodo-kaggle-repair/1.0'})
+                  with urllib.request.urlopen(req,timeout=180) as r:path.write_bytes(r.read())
+                  assert md5(path)==entry['checksum'].removeprefix('md5:')
+              return listing['entries']
+
+          def ensure_no_draft(rec):
+              try:request('GET',f'{BASE}/records/{rec}/draft',token=os.environ['ZENODO_TOKEN'])
+              except RuntimeError as e:
+                  if 'HTTP 404' in str(e):return
+                  raise
+              raise RuntimeError(f'Record {rec} unexpectedly has a draft; refusing to overwrite')
+
+          def robust_correct_zenodo(rec,desired,hf_revision,source_archive=False):
+              desired=Path(desired);token=os.environ['ZENODO_TOKEN']
+              _,original=request('GET',f'{BASE}/records/{rec}',token=token)
+              doi=original.get('doi') or original['pids']['doi']['identifier'];version=original['metadata'].get('version')
+              _,old_files=request('GET',f'{BASE}/records/{rec}/files',token=token)
+              old={e['key']:e['checksum'].removeprefix('md5:') for e in old_files['entries']}
+              incoming={p.relative_to(desired).as_posix():p for p in desired.rglob('*') if p.is_file()}
+              assert set(incoming)==set(old),(rec,'Existing DOI file keys must stay unchanged',set(incoming)^set(old))
+              changed={k:p for k,p in incoming.items() if md5(p)!=old[k]}
+              ensure_no_draft(rec)
+              if changed:
+                  request('POST',f'{BASE}/records/{rec}/draft',token=token)
+                  published=False
+                  try:
+                      status,_=request('POST',f'{BASE}/records/{rec}/file-modification',payload={'reason':'correction','comment':'Correct solo-practice semantic projection and converge verified canonical source '+ctx['source_commit']+' while preserving the existing DOI, version and filenames.'},token=token)
+                      if status!=200:raise RuntimeError(f'Zenodo file correction for {rec} requires platform approval')
+                      for key in changed:request('DELETE',f'{BASE}/records/{rec}/draft/files/{urllib.parse.quote(key,safe="")}',token=token)
+                      request('POST',f'{BASE}/records/{rec}/draft/files',payload=[{'key':k} for k in changed],token=token)
+                      for key,path in changed.items():
+                          q=urllib.parse.quote(key,safe='')
+                          curl_upload(f'{BASE}/records/{rec}/draft/files/{q}/content',path,token)
+                          request('POST',f'{BASE}/records/{rec}/draft/files/{q}/commit',token=token)
+                      request('POST',f'{BASE}/records/{rec}/draft/actions/publish',token=token);published=True
+                  finally:
+                      if not published:
+                          try:request('DELETE',f'{BASE}/records/{rec}/draft',token=token)
+                          except Exception:pass
+              dep=f'{BASE}/deposit/depositions/{rec}';_,draft=request('GET',dep,token=token);md=draft['metadata']
+              desc=md.get('description','')
+              desc=re.sub(r'<p><strong>Publication convergence — 2026-10-(?:12|16):</strong>.*?</p>','',desc,flags=re.S)
+              desc+=('<p><strong>Publication convergence — 2026-10-16:</strong> Existing DOI '+doi+' and version '+str(version)+' remain unchanged. '
+                     +'This record received an in-place maintenance correction aligning the public package with the physician-owned solo-practice model. '
+                     +'Verified source commit: '+ctx['source_commit']+'. Publication run: <a href="'+ctx['run_url']+'">'+ctx['run_url']+'</a>. '
+                     +'Hugging Face revision: <a href="'+ctx['hf']+'/tree/'+hf_revision+'">'+hf_revision+'</a>. '
+                     +'Website: <a href="'+ctx['website']+'">canonical website</a>; Kaggle: <a href="'+ctx['kaggle']+'">current distribution</a>. '
+                     +('The source ZIP contains the corrected current canonical source; its existing source-release filename/version is retained.' if source_archive else
+                       'The preserved dataset file set is synchronized to the corrected canonical graph and provenance.')+'</p>')
+              md['description']=desc
+              related=list(md.get('related_identifiers',[]));known={r.get('identifier') for r in related}
+              for u in [ctx['website'],ctx['hf']+'/tree/'+hf_revision,ctx['kaggle'],ctx['wikidata'],ctx['run_url'],'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+ctx['source_commit']]:
+                  if u not in known:related.append({'identifier':u,'scheme':'url','relation':'isSupplementTo'})
+              md['related_identifiers']=related
+              if draft.get('submitted'):request('POST',dep+'/actions/edit',token=token)
+              request('PUT',dep,payload={'metadata':md},token=token)
+              request('POST',dep+'/actions/publish',token=token)
+              _,final=request('GET',f'{BASE}/records/{rec}',token=token)
+              final_doi=final.get('doi') or final['pids']['doi']['identifier']
+              assert final_doi==doi and final['metadata'].get('version')==version,(rec,'DOI/version changed')
+              _,files=request('GET',f'{BASE}/records/{rec}/files',token=token)
+              final_hashes={f['key']:f['checksum'].removeprefix('md5:') for f in files['entries']}
+              assert final_hashes=={k:md5(p) for k,p in incoming.items()},(rec,'Published file hashes differ')
+              ensure_no_draft(rec)
+              return {'record':rec,'doi':doi,'version':version,'files':len(incoming),'changed':len(changed),'DOI_unchanged':True}
+
+          # Source record: same file key, same DOI/version, corrected current source bytes.
+          source_before=ROOT/'zenodo-source-before';entries=fetch_record_files('23289009',source_before)
+          assert len(entries)==1 and entries[0]['key'].endswith('.zip')
+          source_after=ROOT/'zenodo-source';key=entries[0]['key'];out=source_after/key;out.parent.mkdir(parents=True,exist_ok=True)
+          subprocess.run(['git','archive','--format=zip','--prefix=doctor-ghezelbaash-source-final-2026-10-10/','-o',str(out),os.environ['TARGET_SHA']],check=True)
+          with zipfile.ZipFile(out) as z:
+              assert z.testzip() is None
+              src=z.read(next(n for n in z.namelist() if n.endswith('src/canonical/source.mjs'))).decode(errors='ignore')
+              assert 'Medical Director / مدیر پزشکی' not in src
+              assert 'worksFor: [{ "@id": CLINIC_IRI }]' not in src
+          report['zenodoSource']=robust_correct_zenodo('23289009',source_after,os.environ['HF_REVISION'],True);dump(ROOT/'publication-report.json',report)
+          print('ZENODO_SOURCE_REPAIRED',report['zenodoSource'],flush=True)
+
+          # Dataset DOI: rebuild its exact preserved key set from the already-published HF revision.
+          zen_before=ROOT/'zenodo-before';fetch_record_files('22838416',zen_before)
+          zen=ROOT/'zenodo';build_zenodo(hf,zen_before,zen,ctx);pp.validate(zen,reader=False)
+          report['zenodoDataset']=robust_correct_zenodo('22838416',zen,os.environ['HF_REVISION']);dump(ROOT/'publication-report.json',report)
+          print('ZENODO_DATASET_REPAIRED',report['zenodoDataset'],flush=True)
+
+          # Kaggle: continue from current public version using the successful HF revision as upstream.
+          previous=ROOT/'kaggle-before';previous.mkdir(exist_ok=True)
+          subprocess.run(['kaggle','datasets','download',KAGGLE_REF,'-p',str(previous),'--unzip','--force'],check=True,stdout=subprocess.DEVNULL)
+          subprocess.run(['kaggle','datasets','metadata',KAGGLE_REF,'-p',str(previous)],check=True,stdout=subprocess.DEVNULL)
+          _,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)
+          version=int(view['currentVersionNumber'])+1
+          kg=ROOT/'kaggle';description=build_kaggle(hf,previous,kg,ctx,version,os.environ['HF_REVISION'])
+          control=load(kg/'dataset-metadata.json');target=dict(control.get('info') or control);target['id']=KAGGLE_REF;target['description']=description;dump(kg/'dataset-metadata.json',target)
+          pp.validate(kg,reader=False)
+          subprocess.run(['kaggle','datasets','version','-p',str(kg),'-m','Align public package with verified physician-owned solo-practice semantics','--dir-mode','zip'],check=True)
+          final=ROOT/'kaggle-live'
+          for attempt in range(30):
+              shutil.rmtree(final,ignore_errors=True);final.mkdir()
+              subprocess.run(['kaggle','datasets','download',KAGGLE_REF,'-p',str(final),'--unzip','--force'],check=True,stdout=subprocess.DEVNULL)
+              if (final/'kaggle-manifest.json').is_file() and load(final/'kaggle-manifest.json').get('desired_kaggle_version')==version:break
+              time.sleep(10)
+          else:raise RuntimeError('Kaggle published package not visible yet')
+          pp.validate(final,reader=False)
+          subprocess.run(['kaggle','datasets','metadata',KAGGLE_REF,'-p',str(kg),'--update'],check=True)
+          for line in (final/'checksums.sha256').read_text().splitlines():
+              digest,name=line.split('  ',1);assert sha(final/name)==digest,name
+          report['kaggle']={'version':version,'files':sum(p.is_file() for p in final.rglob('*')),'query_bindings':'PASS','checksums':'PASS'}
+          dump(ROOT/'publication-report.json',report)
+
+          # Final semantic assertions across public-package materializations.
+          person='https://www.ghezelbaash.ir/#saeed-ghezelbash';clinic='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          def graph_ok(path):
+              g=json.loads(Path(path).read_text());nodes={n.get('@id'):n for n in g.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
+              def ids(v):
+                  vals=v if isinstance(v,list) else ([] if v is None else [v]);return [x.get('@id') if isinstance(x,dict) else x for x in vals]
+              p=nodes[person];c=nodes[clinic]
+              assert not ids(p.get('worksFor'));assert clinic not in ids(p.get('affiliation'));assert not ids(c.get('employee'))
+              assert clinic in ids(p.get('owns')) and clinic in ids(p.get('practicesAt'));assert person in ids(c.get('owner')) and person in ids(c.get('founder'))
+          graph_ok(hf/'graph.jsonld');graph_ok(zen/'graph.jsonld')
+          if (final/'graph.jsonld').is_file():graph_ok(final/'graph.jsonld')
+          _,latest=request('GET',BASE+'/records/22857496/versions/latest');assert str(latest['id'])=='23289009'
+          assert report['zenodoSource']['doi']=='10.5281/zenodo.23289009' and report['zenodoSource']['version']=='source-final-2026-10-10'
+          assert report['zenodoDataset']['doi']=='10.5281/zenodo.22838416' and report['zenodoDataset']['version']=='1.3.3'
+          print(json.dumps(report,ensure_ascii=False,indent=2),flush=True)
+          print('ZENODO_KAGGLE_REPAIR_FINAL_PASS',flush=True)
+          PY
+
+      - name: Save repaired publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenodo-kaggle-repair-final-evidence
+          path: |
+            /tmp/platform-repair/context.json
+            /tmp/platform-repair/publication-report.json
+          if-no-files-found: warn
+          overwrite: true
