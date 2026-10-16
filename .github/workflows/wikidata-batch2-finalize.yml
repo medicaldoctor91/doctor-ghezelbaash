@@ -1,4 +1,4 @@
-name: Wikidata Batch 6 API-only finalizer
+name: Wikidata comprehensive SPARQL final graph audit
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,88 +6,234 @@ on:
 permissions:
   contents: read
 jobs:
-  audit:
+  sparql-audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 6
+    timeout-minutes: 14
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Verify Batch 5 and publication graph from live API
+      - name: Run one comprehensive WDQS query and API cross-check
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, urllib.parse, urllib.request, urllib.error, time
-          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch6-final/1.0 (read-only)'
-          WORKS=['Q36942316','Q140298431','Q140306302','Q141099455','Q141131757','Q141129555']
-          def api(p,retries=8):
-              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
+          import json, urllib.parse, urllib.request, urllib.error, time, collections
+          Q='Q140287622'
+          WDQS='https://query.wikidata.org/sparql'
+          API='https://www.wikidata.org/w/api.php'
+          UA='Q140287622-comprehensive-sparql-audit/1.0 (read-only; github.com/medicaldoctor91/doctor-ghezelbaash)'
+          query=r'''
+          SELECT ?check ?subject ?parentProperty ?edgeProperty ?statement ?value ?count WHERE {
+            {
+              BIND("inbound_direct" AS ?check)
+              ?subject ?direct wd:Q140287622 .
+              ?edgeProperty wikibase:directClaim ?direct .
+              BIND(wd:Q140287622 AS ?value)
+            }
+            UNION
+            {
+              BIND("outbound_direct" AS ?check)
+              wd:Q140287622 ?direct ?value .
+              ?edgeProperty wikibase:directClaim ?direct .
+              BIND(wd:Q140287622 AS ?subject)
+            }
+            UNION
+            {
+              BIND("inbound_main_statement" AS ?check)
+              ?parentProperty wikibase:claim ?claimPred ; wikibase:statementProperty ?statementPred .
+              ?subject ?claimPred ?statement .
+              ?statement ?statementPred wd:Q140287622 .
+              BIND(?parentProperty AS ?edgeProperty)
+              BIND(wd:Q140287622 AS ?value)
+            }
+            UNION
+            {
+              BIND("inbound_qualifier" AS ?check)
+              ?parentProperty wikibase:claim ?claimPred .
+              ?subject ?claimPred ?statement .
+              ?statement ?qualPred wd:Q140287622 .
+              ?edgeProperty wikibase:qualifier ?qualPred .
+              BIND(wd:Q140287622 AS ?value)
+            }
+            UNION
+            {
+              BIND("inbound_reference" AS ?check)
+              ?parentProperty wikibase:claim ?claimPred .
+              ?subject ?claimPred ?statement .
+              ?statement prov:wasDerivedFrom ?ref .
+              ?ref ?refPred wd:Q140287622 .
+              ?edgeProperty wikibase:reference ?refPred .
+              BIND(wd:Q140287622 AS ?value)
+            }
+            UNION
+            {
+              BIND("person_qualifier_topology" AS ?check)
+              ?parentProperty wikibase:claim ?claimPred .
+              wd:Q140287622 ?claimPred ?statement .
+              ?statement ?qualPred ?value .
+              ?edgeProperty wikibase:qualifier ?qualPred .
+              BIND(wd:Q140287622 AS ?subject)
+            }
+            UNION
+            {
+              BIND("person_reference_topology" AS ?check)
+              ?parentProperty wikibase:claim ?claimPred .
+              wd:Q140287622 ?claimPred ?statement .
+              ?statement prov:wasDerivedFrom ?ref .
+              ?ref ?refPred ?value .
+              ?edgeProperty wikibase:reference ?refPred .
+              BIND(wd:Q140287622 AS ?subject)
+            }
+            UNION
+            {
+              BIND("known_work_authorship" AS ?check)
+              VALUES ?subject { wd:Q36942316 wd:Q140298431 wd:Q140306302 wd:Q141099455 wd:Q141129555 wd:Q141131757 }
+              ?subject wdt:P50 wd:Q140287622 .
+              BIND(wd:P50 AS ?edgeProperty)
+              BIND(wd:Q140287622 AS ?value)
+            }
+            UNION
+            {
+              BIND("identifier_collision" AS ?check)
+              VALUES (?edgeProperty ?direct ?value) {
+                (wd:P496   wdt:P496   "0009-0001-9346-8475")
+                (wd:P10283 wdt:P10283 "A5146521397")
+                (wd:P10283 wdt:P10283 "A5064828898")
+                (wd:P1960  wdt:P1960  "BcWBirUAAAAJ")
+                (wd:P4012  wdt:P4012  "3786699")
+              }
+              ?subject ?direct ?value .
+              FILTER(?subject != wd:Q140287622)
+            }
+            UNION
+            {
+              BIND("deleted_clinic_qid_person_direct" AS ?check)
+              wd:Q140287622 ?direct wd:Q140288589 .
+              ?edgeProperty wikibase:directClaim ?direct .
+              BIND(wd:Q140287622 AS ?subject)
+              BIND(wd:Q140288589 AS ?value)
+            }
+            UNION
+            {
+              BIND("deleted_clinic_qid_person_qualifier" AS ?check)
+              ?parentProperty wikibase:claim ?claimPred .
+              wd:Q140287622 ?claimPred ?statement .
+              ?statement ?qualPred wd:Q140288589 .
+              ?edgeProperty wikibase:qualifier ?qualPred .
+              BIND(wd:Q140287622 AS ?subject)
+              BIND(wd:Q140288589 AS ?value)
+            }
+            UNION
+            {
+              SELECT ("duplicate_main_value" AS ?check) (wd:Q140287622 AS ?subject) ?parentProperty ?value (COUNT(?statement) AS ?count) WHERE {
+                ?parentProperty wikibase:claim ?claimPred ; wikibase:statementProperty ?statementPred .
+                wd:Q140287622 ?claimPred ?statement .
+                ?statement ?statementPred ?value .
+              }
+              GROUP BY ?parentProperty ?value
+              HAVING(COUNT(?statement) > 1)
+            }
+          }
+          '''
+          def get_json(url,retries=6):
+              last=None
               for i in range(retries):
                   try:
-                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
-                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                      req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'application/sparql-results+json, application/json'})
+                      with urllib.request.urlopen(req,timeout=120) as r:return json.load(r)
                   except urllib.error.HTTPError as e:
                       last=e
-                      if e.code!=429: raise
-                      time.sleep(min(16,2**i))
+                      if e.code==429:
+                          wait=65 if i<4 else 90
+                          print(f'WDQS_429 attempt={i+1} sleep={wait}', flush=True)
+                          time.sleep(wait); continue
+                      raise
+                  except Exception as e:
+                      last=e; time.sleep(min(30,5*(i+1)))
               raise last
-          def val(s):
-              if s.get('snaktype')!='value': return s.get('snaktype')
+          url=WDQS+'?'+urllib.parse.urlencode({'query':query,'format':'json'})
+          data=get_json(url)
+          rows=[]
+          for b in data.get('results',{}).get('bindings',[]):
+              r={k:v.get('value') for k,v in b.items()}
+              for k in ['subject','parentProperty','edgeProperty','value']:
+                  if isinstance(r.get(k),str) and r[k].startswith('http://www.wikidata.org/entity/'):
+                      r[k]=r[k].rsplit('/',1)[-1]
+              if isinstance(r.get('statement'),str): r['statement']=r['statement'].rsplit('/',1)[-1]
+              rows.append(r)
+          by=collections.defaultdict(list)
+          for r in rows: by[r.get('check')].append(r)
+
+          # Live API snapshot and missing/deleted target check remain authoritative for item state.
+          def api(params):
+              params={'format':'json','formatversion':'2',**params}
+              u=API+'?'+urllib.parse.urlencode(params)
+              req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+              with urllib.request.urlopen(req,timeout=90) as resp:return json.load(resp)
+          ent=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
+          claims=ent.get('claims',{})
+          target_qids=[]
+          def walk_snak(s):
+              if s.get('snaktype')!='value': return
               v=s.get('datavalue',{}).get('value')
-              if isinstance(v,dict) and 'id' in v:return v['id']
-              if isinstance(v,dict) and 'text' in v:return {'text':v['text'],'language':v.get('language')}
-              if isinstance(v,dict) and 'time' in v:return {'time':v['time'],'precision':v.get('precision')}
-              return v
-          def sval(s):
-              v=val(s); return v if isinstance(v,str) else None
-          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; c=e.get('claims',{})
-          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'batch5':{},'person':{},'works':{},'constraints':{}}
-          # Batch 5 live assertions.
-          imurl='https://www.imcas.com/en/profile/dr-saeed-ghezelbash'
-          ims=[x for x in c.get('P973',[]) if sval(x['mainsnak'])==imurl]
-          out['batch5']['imcas']=[{'guid':x['id'],'qualifiers':{p:[val(s) for s in ss] for p,ss in x.get('qualifiers',{}).items()}} for x in ims]
-          p1325={sval(x['mainsnak']):x['id'] for x in c.get('P1325',[]) if sval(x['mainsnak'])}
-          out['batch5']['p1325_values']=sorted(p1325)
-          assert len(ims)==1 and 'Q1860' in [val(s) for s in ims[0].get('qualifiers',{}).get('P407',[])], 'IMCAS P407 not verified'
-          assert 'https://doi.org/10.5281/zenodo.18765169' not in p1325, 'old v1.0.0 P1325 still present'
-          assert 'https://zenodo.org/records/22651268' not in p1325, 'old v1.2.6 P1325 still present'
-          assert 'https://doi.org/10.5281/zenodo.18765168' in p1325, 'concept DOI missing'
-          assert 'https://doi.org/10.5281/zenodo.22838416' in p1325, 'current v1.3.3 DOI missing'
-          # Exact current high-value properties.
-          focus=['P31','P106','P69','P512','P1416','P463','P511','P10611','P937','P1830','P121','P800','P3919','P496','P10283','P1960','P4012','P1153','P2038','P856','P373']
-          for p in focus:
-              out['person'][p]=[{'guid':x['id'],'value':val(x['mainsnak']),'rank':x['rank'],'qualifiers':{qp:[val(s) for s in ss] for qp,ss in x.get('qualifiers',{}).items()},'refs':len(x.get('references',[]))} for x in c.get(p,[])]
-          # Work items and reciprocal authorship.
-          ents=api({'action':'wbgetentities','ids':'|'.join(WORKS),'props':'claims|labels|info'})['entities']
-          for w in WORKS:
-              x=ents[w]; wc=x.get('claims',{})
-              out['works'][w]={
-                'label':x.get('labels',{}).get('en',{}).get('value') or x.get('labels',{}).get('fa',{}).get('value'),
-                'P50':[val(z['mainsnak']) for z in wc.get('P50',[])],
-                'P356':[val(z['mainsnak']) for z in wc.get('P356',[])],
-                'P698':[val(z['mainsnak']) for z in wc.get('P698',[])],
-                'P577':[val(z['mainsnak']) for z in wc.get('P577',[])],
-                'P1433':[val(z['mainsnak']) for z in wc.get('P1433',[])],
-                'P921':[val(z['mainsnak']) for z in wc.get('P921',[])]}
-          # Native constraints only.
-          try:
-              cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
-              hits=[]
-              def walk(x):
-                  if isinstance(x,dict):
-                      if isinstance(x.get('status'),str):hits.append({'status':x.get('status'),'property':x.get('property'),'claim':x.get('claim'),'message':x.get('message-html')})
-                      for v in x.values():walk(v)
-                  elif isinstance(x,list):
-                      for v in x:walk(v)
-              walk(cc);out['constraints']['hits']=hits
-          except Exception as ex:out['constraints']['error']=repr(ex)
-          # Deterministic flags.
-          p3919={r['value'] for r in out['person']['P3919']}; p800={r['value'] for r in out['person']['P800']}
-          flags=[]
-          for w,d in out['works'].items():
-              if Q not in d['P50']:flags.append({'type':'MISSING_P50','work':w})
-              if Q in d['P50'] and w not in p3919:flags.append({'type':'MISSING_FORWARD_CONTRIBUTED_TO','work':w})
-          out['flags']=flags
-          print(json.dumps(out,ensure_ascii=False,indent=2,default=str))
-          print('BATCH6_API_FINAL_PASS')
+              if isinstance(v,dict) and isinstance(v.get('id'),str) and v['id'].startswith('Q'): target_qids.append(v['id'])
+          for arr in claims.values():
+              for c in arr:
+                  walk_snak(c.get('mainsnak',{}))
+                  for ss in c.get('qualifiers',{}).values():
+                      for s in ss: walk_snak(s)
+                  for ref in c.get('references',[]):
+                      for ss in ref.get('snaks',{}).values():
+                          for s in ss: walk_snak(s)
+          missing=[]
+          ids=sorted(set(target_qids))
+          for i in range(0,len(ids),50):
+              z=api({'action':'wbgetentities','ids':'|'.join(ids[i:i+50]),'props':'info'})['entities']
+              missing += [qid for qid,obj in z.items() if obj.get('missing') is True]
+
+          # Deterministic summaries.
+          inbound_direct={(r.get('subject'),r.get('edgeProperty')) for r in by['inbound_direct']}
+          inbound_main={(r.get('subject'),r.get('parentProperty')) for r in by['inbound_main_statement']}
+          works={'Q36942316','Q140298431','Q140306302','Q141099455','Q141129555','Q141131757'}
+          p50_works={r.get('subject') for r in by['known_work_authorship']}
+          collisions=[r for r in by['identifier_collision']]
+          stale=[r for k,v in by.items() if k.startswith('deleted_clinic_qid_') for r in v]
+          dups=by['duplicate_main_value']
+
+          # Clinic qualifier matrix from SPARQL topology.
+          clinic={p:[] for p in ['P937','P1830','P121']}
+          for r in by['person_qualifier_topology']:
+              pp=r.get('parentProperty')
+              if pp in clinic: clinic[pp].append({'qualifier':r.get('edgeProperty'),'value':r.get('value'),'statement':r.get('statement')})
+          # P101 qualifier matrix summary.
+          p101=[r for r in by['person_qualifier_topology'] if r.get('parentProperty')=='P101']
+          p101_qual_counts=collections.Counter(r.get('edgeProperty') for r in p101)
+
+          report={
+            'wdqs_row_count':len(rows),
+            'checks':{k:len(v) for k,v in sorted(by.items())},
+            'lastrevid':ent.get('lastrevid'),'modified':ent.get('modified'),
+            'inbound_direct':sorted(inbound_direct),
+            'inbound_main_statement':sorted(inbound_main),
+            'inbound_qualifier_count':len(by['inbound_qualifier']),
+            'inbound_reference_count':len(by['inbound_reference']),
+            'known_work_p50_found':sorted(p50_works),
+            'known_work_p50_complete':p50_works==works,
+            'identifier_collisions':collisions,
+            'deleted_clinic_qid_hits':stale,
+            'duplicate_main_values':dups,
+            'api_missing_qid_targets':sorted(set(missing)),
+            'clinic_qualifier_matrix':clinic,
+            'p101_qualifier_counts':dict(sorted(p101_qual_counts.items())),
+          }
+          print('SPARQL_FINAL_REPORT_BEGIN')
+          print(json.dumps(report,ensure_ascii=False,indent=2,default=str))
+          print('SPARQL_FINAL_REPORT_END')
+
+          # Hard invariants: no collision, no stale deleted clinic QID, all six known works link back by P50, no missing API target.
+          assert p50_works==works, f'Known P50 mismatch: expected={sorted(works)} found={sorted(p50_works)}'
+          assert not collisions, f'Identifier collision(s): {collisions}'
+          assert not stale, f'Deleted clinic QID still appears on person graph: {stale}'
+          assert not missing, f'Missing QID target(s) in live entity: {missing}'
+          print('COMPREHENSIVE_SPARQL_AUDIT_PASS')
           PY
