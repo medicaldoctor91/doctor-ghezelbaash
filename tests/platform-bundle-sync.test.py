@@ -84,6 +84,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         (self.baseline / "README.md").write_text(FRONT_MATTER + f"\nSource `{OLD_COMMIT}`.\n- **entity_facts**: 22142 RDF statements.\n\n## Publication convergence — 2026-10-12\n\nOld maintenance receipt.\n")
         card=(self.baseline / 'README.md').read_text()
         paragraph='The **archived v1.3.3 snapshot** remains available at [the frozen tag](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/v1.3.3) and DOI [10.5281/zenodo.22838416](https://doi.org/10.5281/zenodo.22838416). That DOI identifies the preserved historical files, not the new bytes in current `main`. Cite the current distribution with its Hugging Face revision and website source commit; cite the historical DOI when using its frozen snapshot.\n\n'
+        paragraph+='These current access points are separate from the frozen DOI archive.\n\n'
         (self.baseline / 'README.md').write_text(card.replace('\nSource `','\n'+paragraph+'Source `'))
         return originals
 
@@ -106,6 +107,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn('/tree/v1.3.3', (out / 'README.md').read_text())
         self.assertNotIn('That DOI identifies the preserved historical files', (out / 'README.md').read_text())
         self.assertNotIn('cite the historical DOI when using its frozen snapshot', (out / 'README.md').read_text())
+        self.assertNotIn('frozen DOI archive', (out / 'README.md').read_text())
+        self.assertIn('in-place maintenance corrections', (out / 'README.md').read_text())
 
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()

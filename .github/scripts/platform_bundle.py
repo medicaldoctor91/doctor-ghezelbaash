@@ -111,6 +111,8 @@ def build_hf(dist,baseline,out,ctx):
     if ctx['archived_snapshots_updated']:
         md=re.sub(r'(\[the frozen tag\]\([^\n)]+/tree/v1[.]3[.]3\)) and DOI \[[^\]]+\]\([^)]+\)[.] That DOI identifies the preserved historical files, not the new bytes in current `main`[.]',r'\1.',md)
         md=md.replace('; cite the historical DOI when using its frozen snapshot.','.')
+        md=md.replace('These current access points are separate from the frozen DOI archive.',
+                      'The existing Zenodo DOI records receive in-place maintenance corrections; consult their recorded source commit and publication receipt when combining distributions.')
     previous=load(baseline/'viewer/packaging.json')['sourceCommit']
     md=md.replace(previous,ctx['source_commit']).replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
     md=re.sub(r'\n\n## (?:Publication convergence|Machine-readable package maintenance) — \d{4}-\d{2}-\d{2}\n.*\Z','',md,flags=re.S)
