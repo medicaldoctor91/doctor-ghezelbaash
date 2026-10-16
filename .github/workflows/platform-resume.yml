@@ -32,14 +32,14 @@ jobs:
           kaggle datasets status "$KAGGLE_REF" --format json | tee /tmp/kaggle-status-current.json
           rm -rf /tmp/kaggle-current && mkdir -p /tmp/kaggle-current
           kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-current --unzip --force
-      - name: Verify version 11 payload and solo-practice graph
+      - name: Verify current payload and solo-practice graph
         run: |
           python - <<'PY'
           import hashlib,json,os,pathlib,urllib.request
           root=pathlib.Path('/tmp/kaggle-current')
           status=json.loads(pathlib.Path('/tmp/kaggle-status-current.json').read_text())
           assert status['status']=='ready', status
-          assert int(status['current_version_number'])==11, status
+          current=int(status['current_version_number'])
           actual={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
           assert 'datapackage.json' not in actual
           assert 'frictionless-datapackage.json' in actual
@@ -51,11 +51,11 @@ jobs:
               assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest,name
           alias=(root/'frictionless-datapackage.json').read_bytes()
           url='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/'+os.environ['TARGET_HF_REVISION']+'/datapackage.json?download=true'
-          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-current-state-verify/1.0'})
+          req=urllib.request.Request(url,headers={'User-Agent':'kaggle-current-state-verify/2.0'})
           canonical=urllib.request.urlopen(req,timeout=60).read()
           assert alias==canonical
           manifest=json.loads((root/'kaggle-manifest.json').read_text())
-          assert int(manifest['desired_kaggle_version'])==11
+          assert int(manifest['desired_kaggle_version'])==current, (manifest['desired_kaggle_version'],current)
           assert manifest['website_source_commit']==os.environ['TARGET_SOURCE_COMMIT']
           assert manifest['upstream_revision']==os.environ['TARGET_HF_REVISION']
           paths={item['path'] for item in manifest.get('original_files',[]) if isinstance(item,dict) and item.get('path')}
@@ -68,7 +68,7 @@ jobs:
           assert 'employee' not in clinic
           assert person.get('owns') and person.get('practicesAt') and person.get('workLocation')
           assert clinic.get('owner')
-          report={'status':'PASS','kaggleVersion':11,'payloadFiles':len(actual),'sourceCommit':manifest['website_source_commit'],'hfRevision':manifest['upstream_revision'],'checksums':'PASS','frictionlessAlias':'PASS','soloPracticeGraph':'PASS'}
+          report={'status':'PASS','kaggleVersion':current,'payloadFiles':len(actual),'sourceCommit':manifest['website_source_commit'],'hfRevision':manifest['upstream_revision'],'checksums':'PASS','frictionlessAlias':'PASS','soloPracticeGraph':'PASS'}
           pathlib.Path('/tmp/kaggle-current-state.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
