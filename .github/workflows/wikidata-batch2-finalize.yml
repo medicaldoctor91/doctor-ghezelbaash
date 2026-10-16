@@ -1,4 +1,4 @@
-name: Wikidata Batch 6 final graph validation
+name: Wikidata Batch 6 API-only finalizer
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -8,116 +8,86 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 6
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Verify Batch 5 and audit final graph
+      - name: Verify Batch 5 and publication graph from live API
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, urllib.parse, urllib.request, urllib.error, time, collections
-          API='https://www.wikidata.org/w/api.php'; SPARQL='https://query.wikidata.org/sparql'; Q='Q140287622'; UA='Q140287622-batch6/1.0 (read-only)'
-          KNOWN_WORKS=['Q36942316','Q140298431','Q140306302','Q141099455','Q141131757','Q141129555']
-          def get_json(url, retries=8):
-              last=None
+          import json, urllib.parse, urllib.request, urllib.error, time
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch6-final/1.0 (read-only)'
+          WORKS=['Q36942316','Q140298431','Q140306302','Q141099455','Q141131757','Q141129555']
+          def api(p,retries=8):
+              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
               for i in range(retries):
                   try:
-                      req=urllib.request.Request(url,headers={'User-Agent':UA,'Accept':'application/json'})
-                      with urllib.request.urlopen(req,timeout=90) as r:return json.load(r)
-                  except Exception as e:
-                      last=e; time.sleep(min(20,2**i))
+                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(16,2**i))
               raise last
-          def api(p):
-              p={'format':'json','formatversion':'2',**p}
-              return get_json(API+'?'+urllib.parse.urlencode(p))
-          def qid(s):
-              if s.get('snaktype')!='value': return None
-              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
-          def sval(s):
-              if s.get('snaktype')!='value': return None
-              v=s.get('datavalue',{}).get('value'); return v if isinstance(v,str) else None
           def val(s):
-              return qid(s) or sval(s) or (s.get('datavalue',{}).get('value') if s.get('snaktype')=='value' else s.get('snaktype'))
-          def claim_values(claims,p): return [val(c['mainsnak']) for c in claims.get(p,[])]
-          e=api({'action':'wbgetentities','ids':Q,'props':'claims|labels|descriptions|info'})['entities'][Q]; c=e.get('claims',{})
-          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'batch5_verify':{},'person':{},'works':{},'inbound':{},'constraints':{},'identity_uniqueness':{}}
-          # Batch 5 verification
-          im_url='https://www.imcas.com/en/profile/dr-saeed-ghezelbash'
-          ims=[x for x in c.get('P973',[]) if sval(x['mainsnak'])==im_url]
-          out['batch5_verify']['imcas_count']=len(ims)
-          out['batch5_verify']['imcas_p407']=[[qid(s) for s in x.get('qualifiers',{}).get('P407',[])] for x in ims]
-          p1325=set(sval(x['mainsnak']) for x in c.get('P1325',[]))
-          out['batch5_verify']['stale_18765169_absent']='https://doi.org/10.5281/zenodo.18765169' not in p1325
-          out['batch5_verify']['stale_22651268_absent']='https://zenodo.org/records/22651268' not in p1325
-          out['batch5_verify']['concept_present']='https://doi.org/10.5281/zenodo.18765168' in p1325
-          out['batch5_verify']['current_22838416_present']='https://doi.org/10.5281/zenodo.22838416' in p1325
-          assert len(ims)==1 and any(qid(s)=='Q1860' for s in ims[0].get('qualifiers',{}).get('P407',[])), 'Batch 5 IMCAS replacement not verified'
-          assert out['batch5_verify']['stale_18765169_absent'] and out['batch5_verify']['stale_22651268_absent'], 'Batch 5 Zenodo cleanup not verified'
-          assert out['batch5_verify']['concept_present'] and out['batch5_verify']['current_22838416_present'], 'Canonical/current Zenodo anchor missing'
-          # Current forward graph of high-value properties
-          for p in ['P31','P106','P69','P512','P1416','P463','P511','P10611','P937','P1830','P121','P800','P3919','P496','P10283','P1960','P4012','P1153','P2038','P856','P373']:
-              out['person'][p]=[{'guid':x['id'],'value':val(x['mainsnak']),'rank':x.get('rank'),'qualifiers':{qp:[val(s) for s in ss] for qp,ss in x.get('qualifiers',{}).items()},'reference_count':len(x.get('references',[]))} for x in c.get(p,[])]
-          # Known publication/work items: verify reciprocal P50 and core scholarly identifiers.
-          ents=api({'action':'wbgetentities','ids':'|'.join(KNOWN_WORKS),'props':'claims|labels|descriptions|info'})['entities']
-          for w in KNOWN_WORKS:
-              x=ents.get(w,{}); wc=x.get('claims',{})
+              if s.get('snaktype')!='value': return s.get('snaktype')
+              v=s.get('datavalue',{}).get('value')
+              if isinstance(v,dict) and 'id' in v:return v['id']
+              if isinstance(v,dict) and 'text' in v:return {'text':v['text'],'language':v.get('language')}
+              if isinstance(v,dict) and 'time' in v:return {'time':v['time'],'precision':v.get('precision')}
+              return v
+          def sval(s):
+              v=val(s); return v if isinstance(v,str) else None
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; c=e.get('claims',{})
+          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'batch5':{},'person':{},'works':{},'constraints':{}}
+          # Batch 5 live assertions.
+          imurl='https://www.imcas.com/en/profile/dr-saeed-ghezelbash'
+          ims=[x for x in c.get('P973',[]) if sval(x['mainsnak'])==imurl]
+          out['batch5']['imcas']=[{'guid':x['id'],'qualifiers':{p:[val(s) for s in ss] for p,ss in x.get('qualifiers',{}).items()}} for x in ims]
+          p1325={sval(x['mainsnak']):x['id'] for x in c.get('P1325',[]) if sval(x['mainsnak'])}
+          out['batch5']['p1325_values']=sorted(p1325)
+          assert len(ims)==1 and 'Q1860' in [val(s) for s in ims[0].get('qualifiers',{}).get('P407',[])], 'IMCAS P407 not verified'
+          assert 'https://doi.org/10.5281/zenodo.18765169' not in p1325, 'old v1.0.0 P1325 still present'
+          assert 'https://zenodo.org/records/22651268' not in p1325, 'old v1.2.6 P1325 still present'
+          assert 'https://doi.org/10.5281/zenodo.18765168' in p1325, 'concept DOI missing'
+          assert 'https://doi.org/10.5281/zenodo.22838416' in p1325, 'current v1.3.3 DOI missing'
+          # Exact current high-value properties.
+          focus=['P31','P106','P69','P512','P1416','P463','P511','P10611','P937','P1830','P121','P800','P3919','P496','P10283','P1960','P4012','P1153','P2038','P856','P373']
+          for p in focus:
+              out['person'][p]=[{'guid':x['id'],'value':val(x['mainsnak']),'rank':x['rank'],'qualifiers':{qp:[val(s) for s in ss] for qp,ss in x.get('qualifiers',{}).items()},'refs':len(x.get('references',[]))} for x in c.get(p,[])]
+          # Work items and reciprocal authorship.
+          ents=api({'action':'wbgetentities','ids':'|'.join(WORKS),'props':'claims|labels|info'})['entities']
+          for w in WORKS:
+              x=ents[w]; wc=x.get('claims',{})
               out['works'][w]={
                 'label':x.get('labels',{}).get('en',{}).get('value') or x.get('labels',{}).get('fa',{}).get('value'),
-                'missing':x.get('missing') is True,
-                'P50':claim_values(wc,'P50'),'P356':claim_values(wc,'P356'),'P698':claim_values(wc,'P698'),'P577':claim_values(wc,'P577'),'P1433':claim_values(wc,'P1433'),'P921':claim_values(wc,'P921')}
-          # Inbound direct graph from WDQS, then verify returned subjects via API existence.
-          query='SELECT ?item ?prop WHERE { ?item ?p wd:Q140287622 . ?prop wikibase:directClaim ?p . }'
-          try:
-              js=get_json(SPARQL+'?'+urllib.parse.urlencode({'query':query,'format':'json'}),retries=5)
-              rows=[]
-              for b in js.get('results',{}).get('bindings',[]):
-                  item=b.get('item',{}).get('value','').rsplit('/',1)[-1]; prop=b.get('prop',{}).get('value','').rsplit('/',1)[-1]
-                  if item and prop: rows.append((item,prop))
-              out['inbound']['wdqs']=sorted(set(rows))
-              ids=sorted(set(i for i,p in rows if i.startswith('Q')))
-              verified=[]
-              for i in range(0,len(ids),50):
-                  z=api({'action':'wbgetentities','ids':'|'.join(ids[i:i+50]),'props':'info'})['entities']
-                  verified += [k for k,v in z.items() if not v.get('missing')]
-              out['inbound']['api_existing_items']=sorted(verified)
-          except Exception as ex: out['inbound']['error']=repr(ex)
-          # Current native constraints.
+                'P50':[val(z['mainsnak']) for z in wc.get('P50',[])],
+                'P356':[val(z['mainsnak']) for z in wc.get('P356',[])],
+                'P698':[val(z['mainsnak']) for z in wc.get('P698',[])],
+                'P577':[val(z['mainsnak']) for z in wc.get('P577',[])],
+                'P1433':[val(z['mainsnak']) for z in wc.get('P1433',[])],
+                'P921':[val(z['mainsnak']) for z in wc.get('P921',[])]}
+          # Native constraints only.
           try:
               cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'})
               hits=[]
-              def walk(x,path=''):
+              def walk(x):
                   if isinstance(x,dict):
-                      if isinstance(x.get('status'),str): hits.append({'status':x.get('status'),'property':x.get('property'),'claim':x.get('claim'),'message':x.get('message-html')})
-                      for k,v in x.items(): walk(v,path+'/'+str(k))
+                      if isinstance(x.get('status'),str):hits.append({'status':x.get('status'),'property':x.get('property'),'claim':x.get('claim'),'message':x.get('message-html')})
+                      for v in x.values():walk(v)
                   elif isinstance(x,list):
-                      for v in x: walk(v,path)
-              walk(cc); out['constraints']['hits']=hits
-          except Exception as ex: out['constraints']['error']=repr(ex)
-          # Identity uniqueness in WDQS for stable scholarly identifiers; API remains source of truth for local values.
-          id_specs=[]
-          for p in ['P496','P10283','P1960','P4012']:
-              for x in c.get(p,[]):
-                  s=sval(x['mainsnak'])
-                  if s:id_specs.append((p,s))
-          dupe=[]
-          for p,s in id_specs:
-              q=f'SELECT ?item WHERE {{ ?item wdt:{p} {json.dumps(s)} . FILTER(?item != wd:{Q}) }} LIMIT 20'
-              try:
-                  js=get_json(SPARQL+'?'+urllib.parse.urlencode({'query':q,'format':'json'}),retries=4)
-                  others=[b['item']['value'].rsplit('/',1)[-1] for b in js.get('results',{}).get('bindings',[])]
-              except Exception as ex: others=['ERROR:'+repr(ex)]
-              dupe.append({'property':p,'value':s,'other_items':others})
-          out['identity_uniqueness']['checks']=dupe
-          # Derived review flags; do not auto-edit.
+                      for v in x:walk(v)
+              walk(cc);out['constraints']['hits']=hits
+          except Exception as ex:out['constraints']['error']=repr(ex)
+          # Deterministic flags.
+          p3919={r['value'] for r in out['person']['P3919']}; p800={r['value'] for r in out['person']['P800']}
           flags=[]
           for w,d in out['works'].items():
-              if Q not in d['P50']: flags.append({'type':'MISSING_RECIPROCAL_P50','work':w})
-          p3919_vals={x['value'] for x in out['person']['P3919']}; p800_vals={x['value'] for x in out['person']['P800']}
-          for w in KNOWN_WORKS:
-              if Q in out['works'][w]['P50'] and w not in p3919_vals: flags.append({'type':'P50_WITHOUT_P3919','work':w})
-          out['review_flags']=flags
+              if Q not in d['P50']:flags.append({'type':'MISSING_P50','work':w})
+              if Q in d['P50'] and w not in p3919:flags.append({'type':'MISSING_FORWARD_CONTRIBUTED_TO','work':w})
+          out['flags']=flags
           print(json.dumps(out,ensure_ascii=False,indent=2,default=str))
-          print('BATCH6_AUDIT_PASS')
+          print('BATCH6_API_FINAL_PASS')
           PY
