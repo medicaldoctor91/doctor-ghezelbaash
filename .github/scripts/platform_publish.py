@@ -28,7 +28,9 @@ def publish_source_bucket(rec,changed,token):
     assert len(changed)==1 and next(iter(changed)).endswith('.zip')
     dep=f'{BASE}/deposit/depositions/{rec}'
     _,draft=request('GET',dep,token=token)
-    assert draft.get('submitted') is False
+    # An already-published record retains submitted=True during an approved
+    # in-place correction. Its editable draft is identified by inprogress.
+    assert draft.get('state')=='inprogress','Zenodo source is not an editable correction draft'
     files_url=draft.get('links',{}).get('files') or dep+'/files'
     publish_url=draft.get('links',{}).get('publish') or dep+'/actions/publish'
     bucket=draft.get('links',{}).get('bucket','')
@@ -56,7 +58,8 @@ def publish_source_bucket(rec,changed,token):
 
 
 def request(method,url,payload=None,raw=None,token=None,allowed=(200,201,202,204),raw_response=False):
-    headers={'User-Agent':'doctor-ghezelbaash-platform-convergence/1.0','Accept':'application/json'}
+    headers={'User-Agent':'doctor-ghezelbaash-platform-convergence/1.0','Accept':'application/json',
+             'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache'}
     if token:headers['Authorization']='Bearer '+token
     data=None
     if raw is not None:data=raw;headers['Content-Type']='application/octet-stream'
