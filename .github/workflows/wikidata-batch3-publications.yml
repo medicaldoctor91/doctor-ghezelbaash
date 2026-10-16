@@ -1,0 +1,65 @@
+name: Wikidata Batch 3 publication graph audit
+on:
+  push:
+    branches: [audit/wikidata-batch1-20261016]
+    paths: [.github/workflows/wikidata-batch3-publications.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Audit P50 inbound vs P800/P3919 outbound
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.parse, urllib.request, urllib.error, time
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch3/1.0 read-only'
+          def api(p,retries=8):
+              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
+              for i in range(retries):
+                  try:
+                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(30,2**i))
+              raise last
+          def qid(s):
+              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
+          def vals(c,p): return [qid(s) for s in c.get('qualifiers',{}).get(p,[]) if qid(s)]
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|labels|info','languages':'en'})['entities'][Q]
+          outsets={p:[(qid(c['mainsnak']),c['id'],vals(c,'P2868')) for c in e.get('claims',{}).get(p,[]) if qid(c['mainsnak'])] for p in ['P800','P3919']}
+          # CirrusSearch inbound exact-property discovery; avoids WDQS dependency.
+          inbound={}
+          for prop in ['P50','P710']:
+              r=api({'action':'query','list':'search','srsearch':f'haswbstatement:{prop}={Q}','srnamespace':'0','srlimit':'500'})
+              inbound[prop]=[x['title'] for x in r.get('query',{}).get('search',[])]
+          ids=sorted(set(inbound['P50']+inbound['P710']+[x[0] for v in outsets.values() for x in v]))
+          entities={}
+          for i in range(0,len(ids),40):
+              chunk=ids[i:i+40]
+              entities.update(api({'action':'wbgetentities','ids':'|'.join(chunk),'props':'claims|labels|descriptions|info','languages':'en'})['entities'])
+              time.sleep(0.5)
+          works={}
+          for w in ids:
+              x=entities.get(w,{})
+              lbl=(x.get('labels',{}).get('en') or {}).get('value',w)
+              desc=(x.get('descriptions',{}).get('en') or {}).get('value','')
+              p50=[]
+              for c in x.get('claims',{}).get('P50',[]):
+                  v=qid(c['mainsnak'])
+                  if v: p50.append({'author':v,'guid':c['id'],'ordinal':[s.get('datavalue',{}).get('value') for s in c.get('qualifiers',{}).get('P1545',[])]})
+              idsmap={p:[] for p in ['P356','P698','P932','P577','P31','P921']}
+              for p in idsmap:
+                  for c in x.get('claims',{}).get(p,[]):
+                      v=c['mainsnak'].get('datavalue',{}).get('value')
+                      if isinstance(v,dict) and 'id' in v:v=v['id']
+                      idsmap[p].append(v)
+              works[w]={'label':lbl,'description':desc,'p50':p50,**idsmap}
+          report={'person_lastrevid':e.get('lastrevid'),'P800':outsets['P800'],'P3919':outsets['P3919'],'inbound':inbound,'works':works}
+          print(json.dumps(report,ensure_ascii=False,indent=2,default=str))
+          PY
