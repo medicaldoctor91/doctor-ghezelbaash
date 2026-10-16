@@ -1,0 +1,52 @@
+name: Align source-record creator metadata with solo practice
+on:
+  push:
+    branches: [ops/solo-practice-final-convergence-20261016]
+    paths: [.github/workflows/zenodo-creator-maintenance.yml]
+permissions:
+  contents: read
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: a1125c05f298cf10f1f171a1d8584bd8288ad33a, persist-credentials: false}
+      - name: Correct only the stale clinic affiliation while preserving published identity and bytes
+        run: |
+          python - <<'PY'
+          import copy,json,os,sys,time
+          sys.path.insert(0,'.github/scripts')
+          import platform_publish as pub
+          token=os.environ['ZENODO_TOKEN'];rec='23289009'
+          url=pub.BASE+'/records/'+rec
+          _,before=pub.request('GET',url+'?_audit='+str(time.time_ns()),token=token)
+          assert before['doi']=='10.5281/zenodo.23289009' and before['metadata']['version']=='source-final-2026-10-10'
+          assert '38951515251' in before['metadata']['description'],'Source publication must finish its metadata first'
+          original_files={e['key']:e['checksum'] for e in before['files']}
+          assert list(original_files.values())==['md5:e08349e68fe11716d5dcce83cbd01615']
+          try:pub.request('GET',url+'/draft',token=token)
+          except RuntimeError as e:
+              if 'HTTP 404' not in str(e):raise
+          else:raise RuntimeError('An existing draft prevents concurrent metadata editing')
+          dep=pub.BASE+'/deposit/depositions/'+rec
+          _,value=pub.request('GET',dep,token=token)
+          md=copy.deepcopy(value['metadata']);creators=copy.deepcopy(md['creators'])
+          edits=0
+          for creator in md['creators']:
+              if creator.get('name')=='Dr. Saeed Ghezelbash | دکتر سعید قزلباش' and creator.get('affiliation')=='کلینیک زیبایی دکتر قزلباش کرمانشاه':
+                  del creator['affiliation'];edits+=1
+          assert edits==1
+          assert [c['name'] for c in creators]==[c['name'] for c in md['creators']]
+          pub.request('POST',dep+'/actions/edit',token=token)
+          pub.request('PUT',dep,payload={'metadata':md},token=token)
+          pub.request('POST',dep+'/actions/publish',token=token)
+          _,after=pub.request('GET',url+'?_audit='+str(time.time_ns()),token=token)
+          assert after['doi']==before['doi'] and after['metadata']['version']==before['metadata']['version']
+          assert {e['key']:e['checksum'] for e in after['files']}==original_files
+          assert not after['metadata']['creators'][0].get('affiliation')
+          assert [c['name'] for c in before['metadata']['creators']]==[c['name'] for c in after['metadata']['creators']]
+          print(json.dumps({'status':'PASS','record':rec,'creatorAffiliation':'removed stale clinic affiliation','authorsUnchanged':True,'DOIUnchanged':True,'versionUnchanged':True,'fileChecksumsUnchanged':True},ensure_ascii=False))
+          PY
