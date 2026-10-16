@@ -20,6 +20,23 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def normalize_kaggle_metadata(value: dict, dataset_ref: str) -> dict:
+    """Return the flat metadata object accepted by ``kaggle datasets version``.
+
+    ``kaggle datasets metadata`` may return a wrapper containing ``info`` and
+    ancillary API fields. The version command expects the dataset id/slug at
+    the top level, so retain only the actual metadata payload and pin its id to
+    the existing dataset rather than allowing creation of another dataset.
+    """
+    if not isinstance(value, dict):
+        raise TypeError("Kaggle metadata must be a JSON object")
+    info = value.get("info")
+    target = dict(info) if isinstance(info, dict) else dict(value)
+    target["id"] = dataset_ref
+    target.pop("ref", None)
+    return target
+
+
 def normalize_kaggle_payload(root: str | Path, descriptor: bytes) -> dict:
     root = Path(root)
     manifest_path = root / "kaggle-manifest.json"
