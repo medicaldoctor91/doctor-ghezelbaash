@@ -1,0 +1,70 @@
+name: Strengthen Wikidata Batch 2 scar hub
+on:
+  push:
+    branches: [audit/wikidata-batch1-20261016]
+    paths: [.github/workflows/wikidata-batch2-strengthen-scar.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Inspect scar statement and emit strengthening proposal
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.parse, urllib.request, urllib.error, time
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; SCAR='Q206060'
+          UA='Q140287622-batch2-scar-strengthener/1.0 (read-only)'
+          def api(p,retries=7):
+              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
+              for i in range(retries):
+                  try:
+                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(20,2**i))
+              raise last
+          def qid(s):
+              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
+          def sval(s):
+              v=s.get('datavalue',{}).get('value')
+              if isinstance(v,str): return v
+              if isinstance(v,dict) and 'text' in v:return v['text']
+              return None
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
+          scar=[c for c in e['claims']['P101'] if qid(c['mainsnak'])==SCAR]
+          assert len(scar)==1, f'Expected one scar P101, got {len(scar)}'
+          c=scar[0]
+          uses=sorted({qid(s) for s in c.get('qualifiers',{}).get('P2283',[]) if qid(s)})
+          locs=sorted({qid(s) for s in c.get('qualifiers',{}).get('P927',[]) if qid(s)})
+          refs=[]
+          for r in c.get('references',[]):
+              urls=[]
+              for s in r.get('snaks',{}).get('P854',[]):
+                  x=sval(s)
+                  if x: urls.append(x)
+              refs.extend(urls)
+          refs=sorted(set(refs))
+          expected_uses=sorted(['Q16949888','Q17081562','Q3267987','Q613879','Q851186'])
+          assert uses==expected_uses, f'Unexpected scar uses: {uses}'
+          assert locs, 'Scar P101 unexpectedly has no anatomical-location qualifier'
+          candidate_urls=[
+            'https://www.ghezelbaash.ir/acne-scars',
+            'https://www.ghezelbaash.ir/subcision-for-tethered-acne-scars',
+            'https://www.ghezelbaash.ir/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling'
+          ]
+          missing=[u for u in candidate_urls if u not in refs]
+          out={
+            'lastrevid':e.get('lastrevid'),'guid':c['id'],'uses':uses,'anatomical_locations':locs,
+            'existing_reference_urls':refs,'missing_candidate_urls':missing,
+            'proposal':[
+              f'{Q}|P101|{SCAR}|S854|"{u}"|S813|+2026-10-16T00:00:00Z/11' for u in missing
+            ]
+          }
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
