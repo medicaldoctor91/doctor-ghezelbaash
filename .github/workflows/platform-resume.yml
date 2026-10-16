@@ -1,4 +1,4 @@
-name: Canonical legacy literal read-only diagnostic
+name: Visible-text layer read-only audit
 
 on:
   push:
@@ -9,35 +9,118 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
+  audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      KAGGLE_REF: saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Locate exact legacy literals in current main canonical source
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install Kaggle client
+        run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
+      - name: Download current Kaggle payload
         run: |
-          git show origin/main:src/canonical/source.mjs > /tmp/source.mjs
+          rm -rf /tmp/kaggle-current && mkdir -p /tmp/kaggle-current
+          kaggle datasets download "$KAGGLE_REF" -p /tmp/kaggle-current --unzip --force >/dev/null
+      - name: Audit public visible text and projections
+        run: |
           python - <<'PY'
-          import json,pathlib
-          p=pathlib.Path('/tmp/source.mjs')
-          lines=p.read_text(errors='replace').splitlines()
-          needles=['worksFor','Medical Director','مدیر پزشکی','employee','affiliation']
-          out={}
-          for needle in needles:
-              hits=[]
-              for i,line in enumerate(lines,1):
-                  if needle in line:
-                      hits.append({'line':i,'text':line.strip()[:500]})
-              out[needle]=hits
-          pathlib.Path('/tmp/canonical-legacy-literals.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps(out,ensure_ascii=False,indent=2))
+          import html,json,os,pathlib,re,subprocess,urllib.request
+
+          needles=['Medical Director','مدیر پزشکی','works for','worksFor','employer','employee']
+          report={}
+
+          def get(url, timeout=120):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'visible-text-audit/1.0'})
+              return urllib.request.urlopen(req,timeout=timeout).read()
+          def txt(url, timeout=120): return get(url,timeout).decode('utf-8','replace')
+          def contexts(text, needles=needles, radius=180):
+              out={}
+              low=text.lower()
+              for n in needles:
+                  hits=[]; start=0; nl=n.lower()
+                  while True:
+                      i=low.find(nl,start)
+                      if i<0: break
+                      hits.append(re.sub(r'\s+',' ',text[max(0,i-radius):min(len(text),i+len(n)+radius)]))
+                      start=i+len(n)
+                      if len(hits)>=20: break
+                  if hits: out[n]=hits
+              return out
+
+          # Website live HTML / human-visible page
+          website_url='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah?_cb=visible-text-audit'
+          website_html=txt(website_url)
+          report['websiteClinicPage']={'url':website_url,'hits':contexts(html.unescape(re.sub(r'<[^>]+>',' ',website_html)))}
+
+          # Current main repository: locate all exact legacy role phrases in tracked text files.
+          grep={}
+          for n in ['Medical Director','مدیر پزشکی']:
+              p=subprocess.run(['git','grep','-n','-I','-F',n,'origin/main','--'],text=True,capture_output=True)
+              grep[n]=p.stdout.splitlines()[:100]
+          report['githubMainExactRoleLiterals']=grep
+
+          # Hugging Face current card / README and current text projections available by raw endpoints.
+          hf_info=json.loads(txt('https://huggingface.co/api/datasets/'+os.environ['HF_REPO']))
+          hf_rev=hf_info['sha']
+          hf_readme=txt(f'https://huggingface.co/datasets/{os.environ["HF_REPO"]}/resolve/{hf_rev}/README.md?download=true')
+          report['huggingFace']={'revision':hf_rev,'readmeHits':contexts(hf_readme)}
+          for fname in ['README.md','full-text.txt','llms.txt','clinical-passages.jsonl','answer-corpus.jsonl','entity-facts.csv']:
+              try:
+                  data=txt(f'https://huggingface.co/datasets/{os.environ["HF_REPO"]}/resolve/{hf_rev}/{fname}?download=true',300)
+                  h=contexts(data)
+                  if h: report['huggingFace'].setdefault('projectionHits',{})[fname]=h
+              except Exception as e:
+                  report['huggingFace'].setdefault('unavailable',{})[fname]=type(e).__name__
+
+          # Kaggle current payload: scan all decodable files, excluding known validation/schema guard files from semantic flagging.
+          kroot=pathlib.Path('/tmp/kaggle-current')
+          khits={}
+          for p in kroot.rglob('*'):
+              if not p.is_file() or p.stat().st_size>30_000_000: continue
+              try: s=p.read_text(errors='strict')
+              except Exception: continue
+              h=contexts(s)
+              if h: khits[p.relative_to(kroot).as_posix()]=h
+          report['kaggle']={'payloadFiles':sum(1 for p in kroot.rglob('*') if p.is_file()),'textHits':khits}
+
+          # Zenodo public records: metadata descriptions + every reasonably-sized text file in dataset record.
+          for rid,label in [(22838416,'zenodoDataset'),(23289009,'zenodoSource')]:
+              rec=json.loads(txt(f'https://zenodo.org/api/records/{rid}'))
+              md=rec.get('metadata',{})
+              z={'doi':rec.get('doi') or rec.get('pids',{}).get('doi',{}).get('identifier'),'title':md.get('title'),'descriptionHits':contexts(html.unescape(re.sub(r'<[^>]+>',' ',md.get('description') or ''))),'fileHits':{}}
+              for f in rec.get('files',[]):
+                  key=f.get('key','')
+                  size=f.get('size') or 0
+                  if size>30_000_000: continue
+                  url=(f.get('links') or {}).get('content')
+                  if not url: continue
+                  if not re.search(r'\.(json|jsonld|txt|md|csv|ttl|rdf|xml|shacl|yaml|yml|zip)$',key,re.I): continue
+                  try:
+                      b=get(url,300)
+                      if key.lower().endswith('.zip'):
+                          continue
+                      s=b.decode('utf-8','strict')
+                      h=contexts(s)
+                      if h: z['fileHits'][key]=h
+                  except Exception:
+                      pass
+              report[label]=z
+
+          pathlib.Path('/tmp/visible-text-audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: canonical-legacy-literals
-          path: /tmp/canonical-legacy-literals.json
+          name: visible-text-audit
+          path: /tmp/visible-text-audit.json
           if-no-files-found: warn
           overwrite: true
