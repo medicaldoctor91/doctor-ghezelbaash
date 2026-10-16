@@ -22,8 +22,15 @@ def context(source_commit,run_id,maintenance_date=None):
             'publication_scope':['hf','kaggle','zenodo_dataset','zenodo_source'],'archived_snapshots_updated':True,
             'website':'https://www.ghezelbaash.ir/','wikidata':'https://www.wikidata.org/wiki/Q140287622',
             'hf':'https://huggingface.co/datasets/'+HF_REPO,'kaggle':'https://www.kaggle.com/datasets/'+KAGGLE_REF,
-            'zenodo_dataset':'https://doi.org/10.5281/zenodo.22838416','zenodo_source':'https://doi.org/10.5281/zenodo.18765168',
+            'zenodo_dataset':'https://doi.org/10.5281/zenodo.22838416','zenodo_source':'https://doi.org/10.5281/zenodo.23289009',
             'canonical_dataset_iri':DATASET,'openalex':'A5146521397','orcid':'0009-0001-9346-8475'}
+
+
+def sync_table_counts(text,tables):
+    for name,spec in tables.items():
+        pattern=r'(\*\*'+re.escape(name)+r':?\*\*:?\s*)([\d,]+)'
+        text=re.sub(pattern,lambda match:match[1]+(format(spec['rows'],',d') if ',' in match[2] else str(spec['rows'])),text)
+    return text
 
 
 def common_release(root,ctx):
@@ -100,6 +107,10 @@ def build_hf(dist,baseline,out,ctx):
     migration['currentSourceCommit']=ctx['source_commit']
     dump(out/'viewer/iri-migration.json',migration)
     md=(out/'README.md').read_text()
+    md=sync_table_counts(md,packaging['tables'])
+    if ctx['archived_snapshots_updated']:
+        md=re.sub(r'(\[the frozen tag\]\([^\n)]+/tree/v1[.]3[.]3\)) and DOI \[[^\]]+\]\([^)]+\)[.] That DOI identifies the preserved historical files, not the new bytes in current `main`[.]',r'\1.',md)
+        md=md.replace('; cite the historical DOI when using its frozen snapshot.','.')
     previous=load(baseline/'viewer/packaging.json')['sourceCommit']
     md=md.replace(previous,ctx['source_commit']).replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
     md=re.sub(r'\n\n## (?:Publication convergence|Machine-readable package maintenance) — \d{4}-\d{2}-\d{2}\n.*\Z','',md,flags=re.S)
@@ -142,13 +153,26 @@ def build_zenodo(hf,previous,out,ctx):
 def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     hf,previous,out=map(Path,[hf,previous,out]);shutil.copytree(previous,out,dirs_exist_ok=True)
     manifest=load(out/'kaggle-manifest.json')
+    # The Frictionless descriptor is data; Kaggle reserves its canonical name
+    # for legacy control metadata. Preserve its exact bytes under an alias.
+    alias='frictionless-datapackage.json'
+    for item in manifest['original_files']:
+        if item['path']=='datapackage.json':item['path']=alias
+    reserved=out/'datapackage.json'
+    if reserved.exists():reserved.unlink()
     known={item['path'] for item in manifest['original_files']}
     # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.
-    for name in ['datapackage.json','release-attestation.json']:
+    for name in [alias,'release-attestation.json']:
         if name not in known:manifest['original_files'].append({'path':name})
     for item in manifest['original_files']:
-        dest=out/item['path'];dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(hf/item['path'],dest)
+        source_name='datapackage.json' if item['path']==alias else item['path']
+        dest=out/item['path'];dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(hf/source_name,dest)
         item.update(bytes=dest.stat().st_size,sha256=sha(dest))
+    packaging=load(hf/'viewer/packaging.json')
+    manifest['tables']={name:spec['rows'] for name,spec in packaging['tables'].items()}
+    manifest['frictionless_descriptor']={'canonical_name':'datapackage.json','kaggle_downloadable_name':alias,
+        'reason':'Kaggle CLI reserves datapackage.json as legacy dataset metadata',
+        'bytes':(hf/'datapackage.json').stat().st_size,'sha256':sha(hf/'datapackage.json')}
     manifest.update(packaging_revision=version,desired_kaggle_version=version,packaging_date=ctx['maintenance_date'],
        canonical_dataset_iri=DATASET,upstream_revision=hf_revision,website_source_commit=ctx['source_commit'],
        package_publication_run_id=int(ctx['run_id']),package_publication_run_url=ctx['run_url'],
@@ -158,7 +182,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         manifest['website_release_run_id']=int(ctx['website_publication_run_url'].rstrip('/').rsplit('/',1)[-1])
     else:
         manifest.pop('website_release_run_id',None);manifest.pop('website_release_run_url',None)
-    manifest['kaggle_payload_note']='dataset-metadata.json is Kaggle control metadata and is not part of the downloadable payload. datapackage.json and release-attestation.json are included; website-only descriptor URLs remain canonical remote representations.'
+    manifest['kaggle_payload_note']='dataset-metadata.json is Kaggle control metadata and is not part of the downloadable payload. frictionless-datapackage.json preserves the canonical datapackage.json bytes; release-attestation.json retains canonical resource names. Website-only descriptor URLs remain canonical remote representations.'
     dump(out/'kaggle-manifest.json',manifest)
     # The public notebook reconstructs CSV and Parquet into these same JSONL rows.
     with (previous/'query-matrix.csv').open(newline='') as handle:
@@ -174,6 +198,8 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
             writer.writerow(dst)
     old=load(previous/'kaggle-manifest.json')
     readme=(previous/'README.md').read_text()
+    readme=sync_table_counts(readme,packaging['tables'])
+    readme=re.sub(r'((?:Current DOI-versioned website source|DOI-versioned website source|Archived DOI-versioned website source):\s*)https://doi[.]org/10[.]5281/zenodo[.]\d+',lambda match:match[1]+ctx['zenodo_source'],readme)
     for key,replacement in [('website_source_commit',ctx['source_commit']),('upstream_revision',hf_revision)]:
         if old.get(key):readme=readme.replace(old[key],replacement)
     readme=re.sub(r'(Kaggle packaging revision and dataset version \*\*)\d+(\*\*; maintenance \*\*)\d{4}-\d{2}-\d{2}(\*\*)',
@@ -203,7 +229,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='Package publication run: '+ctx['run_url']+'.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
     readme+='\nCroissant, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
-    readme+='The package includes `datapackage.json` and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '
+    readme+='The package includes `frictionless-datapackage.json` (the exact canonical `datapackage.json` bytes) and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '
     readme+='All four Parquet tables preserve source rows and JSON/omitted-field semantics. `checksums.sha256` covers all {checksum_count} other downloadable files.\n'
     if ctx['archived_snapshots_updated']:
         readme+='\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. Their DOI identifiers are retained; consult per-platform receipts for final files and provenance.\n'

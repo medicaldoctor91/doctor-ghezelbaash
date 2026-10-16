@@ -6,6 +6,55 @@ from platform_bundle import *
 
 BASE='https://zenodo.org/api'
 
+def download_bytes(url,attempts=30,delay=10):
+    for attempt in range(attempts):
+        try:
+            req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'ghezelbaash-public-byte-verification/1.0'})
+            with urllib.request.urlopen(req,timeout=180) as response:return response.read()
+        except (urllib.error.URLError,TimeoutError):
+            if attempt==attempts-1:raise
+            time.sleep(delay)
+
+
+def bucket_upload_command(path,url,token):
+    if not url.startswith(BASE+'/files/'):raise ValueError('Untrusted Zenodo bucket')
+    return ['curl','--fail-with-body','--silent','--show-error','--retry','4','--retry-all-errors',
+            '--retry-delay','2','--retry-max-time','900','--connect-timeout','20','--max-time','600',
+            '--speed-time','90','--speed-limit','1024','--http1.1','--expect100-timeout','5',
+            '-H','Content-Type: application/zip','-H','Authorization: Bearer '+token,'--upload-file',path,url]
+
+
+def publish_source_bucket(rec,changed,token):
+    assert len(changed)==1 and next(iter(changed)).endswith('.zip')
+    dep=f'{BASE}/deposit/depositions/{rec}'
+    _,draft=request('GET',dep,token=token)
+    assert draft.get('submitted') is False
+    files_url=draft.get('links',{}).get('files') or dep+'/files'
+    publish_url=draft.get('links',{}).get('publish') or dep+'/actions/publish'
+    bucket=draft.get('links',{}).get('bucket','')
+    assert bucket.startswith(BASE+'/files/'),'Trusted bucket is missing'
+    assert files_url.startswith(dep+'/') and publish_url.startswith(dep+'/')
+    _,entries=request('GET',files_url,token=token)
+    entries=entries if isinstance(entries,list) else entries['entries']
+    key,body=next(iter(changed.items()))
+    matching=[entry for entry in entries if (entry.get('filename') or entry.get('name') or entry.get('key'))==key]
+    assert len(matching)==1 and matching[0].get('id')
+    request('DELETE',files_url.rstrip('/')+'/'+str(matching[0]['id']),token=token)
+    with tempfile.TemporaryDirectory() as directory:
+        path=Path(directory)/'source.zip';path.write_bytes(body)
+        try:
+            result=subprocess.run(bucket_upload_command(str(path),bucket.rstrip('/')+'/'+urllib.parse.quote(key,safe=''),token),
+                                  capture_output=True,text=True,timeout=1000)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError('Zenodo source bucket upload exceeded its time limit') from None
+        if result.returncode:
+            raise RuntimeError((result.stderr or result.stdout).replace(token,'[redacted]')[:1200])
+        uploaded=json.loads(result.stdout)
+        assert uploaded['key']==key and int(uploaded['size'])==len(body)
+        assert uploaded['checksum']=='md5:'+hashlib.md5(body).hexdigest()
+    request('POST',publish_url,token=token)
+
+
 def request(method,url,payload=None,raw=None,token=None,allowed=(200,201,202,204),raw_response=False):
     headers={'User-Agent':'doctor-ghezelbaash-platform-convergence/1.0','Accept':'application/json'}
     if token:headers['Authorization']='Bearer '+token
@@ -62,13 +111,17 @@ def correct_zenodo_record(rec,desired,token,ctx,hf_revision,source_archive=False
             status,_=request('POST',f'{BASE}/records/{rec}/file-modification',payload={'reason':'correction',
               'comment':'Correct stale source identity and legacy retrieval bindings; preserve every existing DOI, version and filename. Align files with verified canonical source '+ctx['source_commit']+'.'},token=token)
             if status!=200:raise RuntimeError(f'Zenodo file correction for {rec} requires platform approval; no DOI was changed')
-            for key in changed:request('DELETE',f'{BASE}/records/{rec}/draft/files/{urllib.parse.quote(key,safe="")}',token=token)
-            request('POST',f'{BASE}/records/{rec}/draft/files',payload=[{'key':k} for k in changed],token=token)
-            for key,body in changed.items():
-                key=urllib.parse.quote(key,safe='')
-                request('PUT',f'{BASE}/records/{rec}/draft/files/{key}/content',raw=body,token=token)
-                request('POST',f'{BASE}/records/{rec}/draft/files/{key}/commit',token=token)
-            request('POST',f'{BASE}/records/{rec}/draft/actions/publish',token=token);published=True
+            if source_archive:
+                publish_source_bucket(rec,changed,token)
+            else:
+                for key in changed:request('DELETE',f'{BASE}/records/{rec}/draft/files/{urllib.parse.quote(key,safe="")}',token=token)
+                request('POST',f'{BASE}/records/{rec}/draft/files',payload=[{'key':k} for k in changed],token=token)
+                for key,body in changed.items():
+                    key=urllib.parse.quote(key,safe='')
+                    request('PUT',f'{BASE}/records/{rec}/draft/files/{key}/content',raw=body,token=token)
+                    request('POST',f'{BASE}/records/{rec}/draft/files/{key}/commit',token=token)
+                request('POST',f'{BASE}/records/{rec}/draft/actions/publish',token=token)
+            published=True
         finally:
             if not published:
                 try:request('DELETE',f'{BASE}/records/{rec}/draft',token=token)
@@ -77,8 +130,8 @@ def correct_zenodo_record(rec,desired,token,ctx,hf_revision,source_archive=False
     dep=f'{BASE}/deposit/depositions/{rec}';_,draft=request('GET',dep,token=token);md=draft['metadata']
     desc=md.get('description','')
     desc=desc.replace('A5064828898','A5146521397').replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
-    desc=re.sub(r'<p><strong>Publication convergence — 2026-10-12:</strong>.*?</p>','',desc,flags=re.S)
-    desc+=('<p><strong>Publication convergence — 2026-10-12:</strong> Existing DOI '+doi+' and version '+str(version)
+    desc=re.sub(r'<p><strong>Publication convergence — \d{4}-\d{2}-\d{2}:</strong>.*?</p>','',desc,flags=re.S)
+    desc+=('<p><strong>Publication convergence — '+ctx['maintenance_date']+':</strong> Existing DOI '+doi+' and version '+str(version)
        +' remain unchanged. This record received a documented in-place maintenance correction. Canonical OpenAlex: A5146521397; ORCID: 0009-0001-9346-8475; Wikidata: Q140287622. '
        +'Canonical dataset IRI: '+DATASET+'. Verified source commit: '+ctx['source_commit']+'. '
        +'Publication run: <a href="'+ctx['run_url']+'">'+ctx['run_url']+'</a>. '
@@ -119,9 +172,14 @@ def main():
     from huggingface_hub import HfApi,CommitOperationAdd,CommitOperationDelete,hf_hub_download
     parser=argparse.ArgumentParser();parser.add_argument('--root',default='/tmp/platform-publish');args=parser.parse_args()
     root=Path(args.root);root.mkdir(parents=True,exist_ok=True)
-    ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID']);dump(root/'context.json',ctx)
+    ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)
     token=os.environ['HF_TOKEN'];api=HfApi(token=token)
     info=api.dataset_info(HF_REPO,files_metadata=True);parent=info.sha
+    if os.environ.get('EXPECTED_HF_REVISION'):
+        assert parent==os.environ['EXPECTED_HF_REVISION'],'HF changed since preflight'
+    _,initial_kaggle=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)
+    if os.environ.get('EXPECTED_KAGGLE_VERSION'):
+        assert int(initial_kaggle['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed since preflight'
     baseline=root/'hf-before';baseline.mkdir(exist_ok=True)
     dist_files={p.relative_to('dist').as_posix() for p in Path('dist').rglob('*') if p.is_file()}
     needed=[s.rfilename for s in info.siblings if s.rfilename not in dist_files and not re.match(r'assets/guide(?:-meta)?\.',s.rfilename)]
@@ -131,6 +189,8 @@ def main():
     hf=root/'hf';build_hf('dist',baseline,hf,ctx)
     # Also preserve current dataset controls such as the card's declared viewer configs.
     validate(hf)
+    subprocess.run([sys.executable,'tests/validate_platform_sync.py',str(hf),'--platform','hf',
+                    '--source-commit',ctx['source_commit'],'--report',str(root/'hf-validation.json')],check=True)
     print('PREPARED_HF_PASS',flush=True)
     operations=[CommitOperationAdd(path_in_repo=p.relative_to(hf).as_posix(),path_or_fileobj=str(p)) for p in hf.rglob('*') if p.is_file()]
     current={s.rfilename for s in info.siblings}
@@ -178,15 +238,26 @@ def main():
     target['description']=description
     dump(kg/'dataset-metadata.json',target)
     validate(kg,reader=False)
+    subprocess.run([sys.executable,'tests/validate_platform_sync.py',str(kg),'--platform','kaggle',
+                    '--source-commit',ctx['source_commit'],'--canonical-root',str(hf),
+                    '--report',str(root/'kaggle-staged-validation.json')],check=True)
     subprocess.run(['kaggle','datasets','version','-p',str(kg),'-m','Converge canonical IRIs, typed provenance, release proof and complete version metadata','--dir-mode','zip'],check=True)
     final=root/'kaggle-live'
     for attempt in range(30):
         shutil.rmtree(final,ignore_errors=True);final.mkdir()
-        subprocess.run(['kaggle','datasets','download',KAGGLE_REF,'-p',str(final),'--unzip','--force'],check=True,stdout=subprocess.DEVNULL)
+        archive=download_bytes('https://www.kaggle.com/api/v1/datasets/download/'+KAGGLE_REF+'?datasetVersionNumber='+str(version))
+        import io
+        with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
+            for name in zipped.namelist():assert (final/name).resolve().is_relative_to(final.resolve()),name
+            assert zipped.testzip() is None
+            zipped.extractall(final)
         if (final/'kaggle-manifest.json').is_file() and load(final/'kaggle-manifest.json').get('desired_kaggle_version')==version:break
         time.sleep(10)
     else:raise RuntimeError('Kaggle published package not visible yet')
     validate(final,reader=False)
+    subprocess.run([sys.executable,'tests/validate_platform_sync.py',str(final),'--platform','kaggle',
+                    '--source-commit',ctx['source_commit'],'--canonical-root',str(hf),
+                    '--report',str(root/'kaggle-public-validation.json')],check=True)
     subprocess.run(['kaggle','datasets','metadata',KAGGLE_REF,'-p',str(kg),'--update'],check=True)
     for line in (final/'checksums.sha256').read_text().splitlines():
         digest,name=line.split('  ',1);assert sha(final/name)==digest,name

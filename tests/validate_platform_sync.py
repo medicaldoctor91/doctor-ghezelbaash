@@ -32,7 +32,7 @@ PERSON = ORIGIN + '/#saeed-ghezelbash'
 DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')
 SPDX = rdflib.Namespace('http://spdx.org/rdf/terms#')
 EXPECTED_ROWS = {'clinical_passages': 3248, 'clinical_answers': 125,
-                 'entity_facts': 22142, 'query_matrix': 876}
+                 'entity_facts': 22139, 'query_matrix': 876}
 DEFERRED_DCAT = {'/dcat.ttl', '/datapackage.json', '/croissant.json'}
 ATTESTED_RESOURCES = {
     'graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
@@ -55,6 +55,13 @@ def local_path(root, name):
     root = Path(root).resolve()
     path = (root / name.lstrip('/')).resolve()
     assert path.is_relative_to(root), 'Unsafe package path: ' + name
+    return path
+
+
+def resource_path(root, name, platform):
+    path = local_path(root, name)
+    if platform == 'kaggle' and name.lstrip('/') == 'datapackage.json' and not path.is_file():
+        return local_path(root, 'frictionless-datapackage.json')
     return path
 
 
@@ -323,7 +330,7 @@ def validate_source_commit(root, platform, source_commit):
     assert set(attestation['verifiedResources']) == ATTESTED_RESOURCES, \
         'Release attestation must cover the exact maintained resource set'
     for name, sha in attestation['verifiedResources'].items():
-        assert measure(local_path(root, name))[1] == sha, ('Release attestation', name)
+        assert measure(resource_path(root, name, platform))[1] == sha, ('Release attestation', name)
     assert re.fullmatch(r'\d{4}-\d{2}-\d{2}', attestation['maintenanceDate'])
     assert matrix['publicationMaintenanceDate'] == attestation['maintenanceDate']
     if platform == 'kaggle':
@@ -340,7 +347,7 @@ def validate(root, *, platform, source_commit, canonical_root=None):
     canonical_root = Path(canonical_root).resolve() if canonical_root else None
 
     def lookup(name):
-        local = local_path(root, name)
+        local = resource_path(root, name, platform)
         if local.is_file():
             return local
         if platform == 'kaggle' and canonical_root:
@@ -359,8 +366,9 @@ def validate(root, *, platform, source_commit, canonical_root=None):
     result.update(validate_tables(root, source_commit))
     result.update(validate_inventories(root, platform, source_commit))
     result.update(validate_source_commit(root, platform, source_commit))
-    if platform == 'hf' or (root / 'datapackage.json').is_file():
-        package = load(root / 'datapackage.json')
+    descriptor = resource_path(root, 'datapackage.json', platform)
+    if descriptor.is_file():
+        package = load(descriptor)
         assert package['id'] == DATASET and package['profile'] == 'data-package'
         registry_by_path = {item['path']: item for item in registry}
         declared = {urlparse(item['path']).path for item in package['resources']}

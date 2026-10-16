@@ -81,13 +81,17 @@ class PackageMaintenanceTests(unittest.TestCase):
         (self.dist / "assets/guide.current.json").write_text('{"guide":"current"}')
         bundle.dump(self.baseline / "viewer/packaging.json", {"sourceCommit": OLD_COMMIT, "tables": tables})
         bundle.dump(self.baseline / "viewer/iri-migration.json", {"sourceRevision": "historical-revision", "sourceSha256": "historical-hash", "currentSourceCommit": OLD_COMMIT, "mapping": {"urn:old": "urn:new"}})
-        (self.baseline / "README.md").write_text(FRONT_MATTER + f"\nSource `{OLD_COMMIT}`.\n\n## Publication convergence — 2026-10-12\n\nOld maintenance receipt.\n")
+        (self.baseline / "README.md").write_text(FRONT_MATTER + f"\nSource `{OLD_COMMIT}`.\n- **entity_facts**: 22142 RDF statements.\n\n## Publication convergence — 2026-10-12\n\nOld maintenance receipt.\n")
+        card=(self.baseline / 'README.md').read_text()
+        paragraph='The **archived v1.3.3 snapshot** remains available at [the frozen tag](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/v1.3.3) and DOI [10.5281/zenodo.22838416](https://doi.org/10.5281/zenodo.22838416). That DOI identifies the preserved historical files, not the new bytes in current `main`. Cite the current distribution with its Hugging Face revision and website source commit; cite the historical DOI when using its frozen snapshot.\n\n'
+        (self.baseline / 'README.md').write_text(card.replace('\nSource `','\n'+paragraph+'Source `'))
         return originals
 
     def test_context_defaults_to_actual_utc_date(self):
         current = bundle.context(NEW_COMMIT, 54321)
         self.assertEqual(current.get("maintenance_date"), datetime.now(timezone.utc).date().isoformat())
         self.assertEqual(bundle.context(NEW_COMMIT, 54321, "2026-11-01")["maintenance_date"], "2026-11-01")
+        self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
 
     def test_legacy_broad_scope_does_not_claim_archives_unchanged(self):
         self.fixtures()
@@ -99,6 +103,9 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertTrue(matrix["archivedSnapshotsUpdated"])
         self.assertIn("zenodo_dataset", matrix["distributions"])
         self.assertNotIn("not updated", (out / "README.md").read_text())
+        self.assertIn('/tree/v1.3.3', (out / 'README.md').read_text())
+        self.assertNotIn('That DOI identifies the preserved historical files', (out / 'README.md').read_text())
+        self.assertNotIn('cite the historical DOI when using its frozen snapshot', (out / 'README.md').read_text())
 
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()
@@ -132,6 +139,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn("2026-10-14", readme)
         self.assertIn("archived", readme.lower())
         self.assertNotIn("Old maintenance receipt", readme)
+        self.assertIn("**entity_facts**: 2 RDF statements", readme)
         inventory = bundle.load(out / "dist-sha256.json")["files"]
         for name, entry in inventory.items():
             self.assertEqual(entry["sha256"], bundle.sha(out / name))
@@ -147,7 +155,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         before.mkdir()
         copied = ["graph.jsonld", "graph.ttl", "provenance.jsonld", "query-matrix.jsonl", "fact-map.json", "croissant.json", "shapes.ttl", "doctor.vcf", "clinic.vcf", "dcat.ttl", "current-release-matrix.json", "viewer/packaging.json"]
         bundle.dump(before / "kaggle-manifest.json", {"packaging_revision": 8, "original_files": [{"path": name} for name in copied], "tables": {"query_matrix": 2}, "zenodo_version_doi": "10.5281/zenodo.22838416"})
-        (before / "README.md").write_text("# Existing dataset\n\nCreator: Existing author introduction.\n")
+        (before / "README.md").write_text("# Existing dataset\n\nCreator: Existing author introduction.\n- **entity_facts:** 22,142 RDF statements.\n")
         (before / "CITATION.cff").write_text('cff-version: 1.2.0\nversion: "2026-10-12-kaggle-packaging-8"\ndate-released: "2026-10-12"\n' + AUTHORS + 'repository-code: "old"\nurl: "old"\n')
         spec = bundle.load(hf / "viewer/packaging.json")["tables"]["query_matrix"]
         with (before / "query-matrix.csv").open("w", newline="") as handle:
@@ -158,7 +166,12 @@ class PackageMaintenanceTests(unittest.TestCase):
         manifest = bundle.load(out / "kaggle-manifest.json")
         self.assertEqual(manifest["packaging_date"], "2026-10-14")
         self.assertEqual(manifest["packaging_revision"], 9)
-        self.assertEqual({item["path"] for item in manifest["original_files"]}, set(copied) | {"datapackage.json", "release-attestation.json"})
+        self.assertEqual({item["path"] for item in manifest["original_files"]}, set(copied) | {"frictionless-datapackage.json", "release-attestation.json"})
+        self.assertFalse((out / "datapackage.json").exists())
+        self.assertEqual((out / "frictionless-datapackage.json").read_bytes(), (hf / "datapackage.json").read_bytes())
+        self.assertEqual(manifest["tables"], {name: spec["rows"] for name, spec in bundle.load(hf / "viewer/packaging.json")["tables"].items()})
+        self.assertEqual(manifest["frictionless_descriptor"]["sha256"], bundle.sha(hf / "datapackage.json"))
+        self.assertIn("frictionless-datapackage.json", manifest["kaggle_payload_note"])
         self.assertEqual(manifest["package_publication_run_url"], self.ctx["run_url"])
         self.assertEqual(manifest["website_release_run_url"], self.ctx["website_publication_run_url"])
         self.assertEqual((out / "release-attestation.json").read_bytes(), (hf / "release-attestation.json").read_bytes())
@@ -172,6 +185,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn("2026-10-14", readme)
         self.assertIn("archived", readme.lower())
         self.assertNotIn("latest corrected source", readme)
+        self.assertIn("**entity_facts:** 2 RDF statements", readme)
+        self.assertIn("`frictionless-datapackage.json`", readme)
         self.assertEqual((out / "starter.ipynb").read_text(), '{"cells":[]}')
         checksums = dict(line.split("  ", 1)[::-1] for line in (out / "checksums.sha256").read_text().splitlines())
         self.assertEqual(set(checksums), {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file() and p.name != "checksums.sha256"})
