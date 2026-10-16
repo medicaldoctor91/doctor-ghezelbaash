@@ -1,0 +1,59 @@
+name: Finalize Wikidata Batch 3
+on:
+  push:
+    branches: [audit/wikidata-batch1-20261016]
+    paths: [.github/workflows/wikidata-batch3-finalize.yml]
+permissions:
+  contents: read
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Assert authorship graph and emit P800 normalization
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, urllib.parse, urllib.request, urllib.error, time
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; AUTHOR='Q482980'; ARTICLE='Q13442814'; UA='Q140287622-batch3-final/1.0'
+          def api(p,retries=8):
+              p={'format':'json','formatversion':'2',**p};u=API+'?'+urllib.parse.urlencode(p);last=None
+              for i in range(retries):
+                  try:
+                      with urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':UA}),timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(20,2**i))
+              raise last
+          def qid(s):
+              v=s.get('datavalue',{}).get('value');return v.get('id') if isinstance(v,dict) else None
+          p=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
+          p800={qid(c['mainsnak']):c for c in p['claims'].get('P800',[]) if qid(c['mainsnak'])}
+          p3919={qid(c['mainsnak']):c for c in p['claims'].get('P3919',[]) if qid(c['mainsnak'])}
+          r=api({'action':'query','list':'search','srsearch':f'haswbstatement:P50={Q}','srnamespace':'0','srlimit':'500'})
+          inbound={x['title'] for x in r['query']['search']}
+          assert set(p3919)==inbound, f'P3919 != inbound P50: {set(p3919)^inbound}'
+          assert set(p800)==inbound, f'Current P800 set != inbound authored works: {set(p800)^inbound}'
+          for w,c in p3919.items():
+              roles={qid(s) for s in c.get('qualifiers',{}).get('P2868',[]) if qid(s)}
+              assert AUTHOR in roles, f'{w} P3919 lacks author role'
+          es={}
+          ids=sorted(inbound)
+          for i in range(0,len(ids),50):
+              es.update(api({'action':'wbgetentities','ids':'|'.join(ids[i:i+50]),'props':'claims|labels','languages':'en'})['entities'])
+          keep=[]; remove=[]; details={}
+          for w in ids:
+              x=es[w]; claims=x.get('claims',{})
+              has_doi=bool(claims.get('P356')); has_pmid=bool(claims.get('P698'))
+              types={qid(c['mainsnak']) for c in claims.get('P31',[]) if qid(c['mainsnak'])}
+              indexed_article=has_doi and has_pmid and ARTICLE in types
+              label=(x.get('labels',{}).get('en') or {}).get('value',w)
+              details[w]={'label':label,'doi':has_doi,'pmid':has_pmid,'types':sorted(types),'indexed_article':indexed_article}
+              (keep if indexed_article else remove).append(w)
+          assert set(keep)=={'Q36942316','Q140298431'}, f'Unexpected P800 keep-set {keep}'
+          qs=[f'-STATEMENT|{p800[w]["id"]}' for w in remove]
+          print(json.dumps({'lastrevid':p.get('lastrevid'),'inbound_P50':sorted(inbound),'P3919_complete_with_author_role':True,'P800_keep':keep,'P800_remove':remove,'details':details,'quickstatements':qs},ensure_ascii=False,indent=2))
+          print('BATCH3_FINALIZER_PASS')
+          PY
