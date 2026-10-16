@@ -15,11 +15,12 @@ jobs:
       - name: Read transfer state without mutations
         run: |
           python - <<'PY'
-          import json,os,time,urllib.request,urllib.error
+          import json,os,time,urllib.request,urllib.error,urllib.parse
           for suffix in ['/draft/files','/files']:
               req=urllib.request.Request('https://zenodo.org/api/records/23289009'+suffix+'?_audit='+str(time.time_ns()),headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN'],'Cache-Control':'no-cache'})
               try:
                   with urllib.request.urlopen(req,timeout=90) as response:value=json.load(response)
                   print(suffix,[{k:e.get(k) for k in ['key','status','size','checksum','created','updated']} for e in value.get('entries',[])],flush=True)
+                  for entry in value.get('entries',[]):print('link_paths',{k:urllib.parse.urlparse(v).path for k,v in entry.get('links',{}).items() if isinstance(v,str)},flush=True)
               except urllib.error.HTTPError as error:print(suffix,error.code,flush=True)
           PY
