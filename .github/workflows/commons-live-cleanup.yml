@@ -10,20 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      WIKI_USER: ${{ secrets.WIKIMEDIA_USERNAME || secrets.WIKIMEDIA_BOT_USERNAME || secrets.MEDIAWIKI_USERNAME || secrets.COMMONS_USERNAME || secrets.WIKI_USERNAME }}
-      WIKI_PASS: ${{ secrets.WIKIMEDIA_BOT_PASSWORD || secrets.WIKIMEDIA_PASSWORD || secrets.MEDIAWIKI_BOT_PASSWORD || secrets.COMMONS_BOT_PASSWORD || secrets.WIKI_BOT_PASSWORD || secrets.WIKI_PASSWORD }}
+      WIKI_USER: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKI_PASS: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
       - name: Apply exact, idempotent Commons fixes without touching uploaded binaries
         shell: bash
         run: |
           python - <<'PY'
-          import os, json, re, sys, urllib.parse, urllib.request, http.cookiejar
+          import os, json, re, urllib.parse, urllib.request, http.cookiejar
 
           API='https://commons.wikimedia.org/w/api.php'
-          USER=os.environ.get('WIKI_USER') or 'Medicaldoctor91'
+          USER=os.environ.get('WIKI_USER') or ''
           PASS=os.environ.get('WIKI_PASS') or ''
-          if not PASS:
-              raise SystemExit('No Wikimedia password/BotPassword secret was bound to any supported secret name.')
+          if not USER or not PASS:
+              raise SystemExit('Existing Wikimedia BotPassword secret binding is unavailable to this workflow.')
 
           jar=http.cookiejar.CookieJar()
           opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
@@ -41,15 +41,16 @@ jobs:
                   raise RuntimeError('MediaWiki API error: '+json.dumps(obj['error'],ensure_ascii=False))
               return obj
 
-          # Login using a BotPassword/password already stored as a GitHub Secret.
           token=request({'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
           login=request({'action':'login','lgname':USER,'lgpassword':PASS,'lgtoken':token},post=True)
           if login.get('login',{}).get('result')!='Success':
               raise RuntimeError('Wikimedia login failed: '+json.dumps(login.get('login',{}),ensure_ascii=False))
 
           ui=request({'action':'query','meta':'userinfo','uiprop':'groups|rights|blockinfo'})['query']['userinfo']
-          if ui.get('anon') or ui.get('blockedby') or ui.get('blockid'):
-              raise RuntimeError('Authenticated account is anonymous or blocked: '+json.dumps({k:ui.get(k) for k in ['name','blockedby','blockid','blockreason']},ensure_ascii=False))
+          if ui.get('anon'):
+              raise RuntimeError('Authenticated session is anonymous')
+          if ui.get('blockedby') or ui.get('blockid'):
+              raise RuntimeError('Authenticated account/IP is blocked from editing Commons: '+json.dumps({k:ui.get(k) for k in ['name','blockedby','blockid','blockreason','blockexpiry']},ensure_ascii=False))
           print('Authenticated Wikimedia account:',ui.get('name'))
 
           csrf=request({'action':'query','meta':'tokens','type':'csrf'})['query']['tokens']['csrftoken']
@@ -60,28 +61,21 @@ jobs:
               if page.get('missing'):
                   raise RuntimeError('Missing target page: '+title)
               rev=page['revisions'][0]
-              content=rev['slots']['main']['content']
-              return page, rev['timestamp'], content
+              return rev['timestamp'], rev['slots']['main']['content']
 
           def edit_page_exact(title, transform, summary):
-              page, basets, old=get_page(title)
+              basets, old=get_page(title)
               new=transform(old)
               if new==old:
                   print('NOOP page:',title)
-                  return False
+                  return
               res=request({'action':'edit','title':title,'text':new,'summary':summary,'token':csrf,'assert':'user','nocreate':'1','basetimestamp':basets},post=True)
               if res.get('edit',{}).get('result')!='Success':
                   raise RuntimeError('Edit failed for '+title+': '+json.dumps(res,ensure_ascii=False))
               print('EDITED page:',title,'newrevid=',res['edit'].get('newrevid'))
-              return True
 
-          # 1) Clinic category: remove only the three building-category assertions.
           cat_title='Category:Dr. Saeed Ghezelbash Aesthetic Clinic'
-          remove_cats=[
-              'Buildings in Kermanshah by name',
-              'Buildings in District 1, Kermanshah',
-              'Buildings in Kermanshah uncategorized by street',
-          ]
+          remove_cats=['Buildings in Kermanshah by name','Buildings in District 1, Kermanshah','Buildings in Kermanshah uncategorized by street']
           def clean_category(text):
               out=text
               for c in remove_cats:
@@ -89,54 +83,44 @@ jobs:
               return out
           edit_page_exact(cat_title, clean_category, 'Remove building categories from solo medical practice category; clinic is not the building itself')
 
-          # 2) File-page credit text: replace only the exact stale combined attribution string.
-          files=[
-              'File:Saeed-Ghezelbaash-physician-portrait.jpg',
-              'File:Saeed-Ghezelbaash-in-clinical-office.jpg',
-              'File:Saeed-Ghezelbaash-with-clinical-team.jpg',
-          ]
+          files=['File:Saeed-Ghezelbaash-physician-portrait.jpg','File:Saeed-Ghezelbaash-in-clinical-office.jpg','File:Saeed-Ghezelbaash-with-clinical-team.jpg']
           old_credit='Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic'
           new_credit='Saeed Ghezelbash'
           for title in files:
-              edit_page_exact(title, lambda t, old=old_credit, new=new_credit: t.replace(old,new), 'Normalize attribution to the individual creator/copyright holder; preserve clinic as location/practice')
+              edit_page_exact(title, lambda t: t.replace(old_credit,new_credit), 'Normalize attribution to the individual creator/copyright holder; preserve clinic as location/practice')
 
-          # 3) Structured Data on Commons: remove depicts=physician from portrait only.
           portrait=files[0]
           q=request({'action':'query','prop':'info','titles':portrait})
           page=q['query']['pages'][0]
-          if page.get('missing'):
-              raise RuntimeError('Portrait file missing')
-          entity_id='M'+str(page['pageid'])
-          entity=request({'action':'wbgetentities','ids':entity_id,'props':'claims'})['entities'][entity_id]
+          eid='M'+str(page['pageid'])
+          ent=request({'action':'wbgetentities','ids':eid,'props':'claims'})['entities'][eid]
           remove_guids=[]
-          for claim in entity.get('claims',{}).get('P180',[]):
+          for claim in ent.get('claims',{}).get('P180',[]):
               dv=claim.get('mainsnak',{}).get('datavalue',{}).get('value')
               if isinstance(dv,dict) and dv.get('id')=='Q39631':
                   remove_guids.append(claim['id'])
           if remove_guids:
-              res=request({'action':'wbremoveclaims','claim':'|'.join(remove_guids),'token':csrf,'assert':'user','summary':'Remove redundant depicts=physician; the depicted person already carries the occupation on Wikidata'},post=True)
+              request({'action':'wbremoveclaims','claim':'|'.join(remove_guids),'token':csrf,'assert':'user','summary':'Remove redundant depicts=physician; depicted person already carries occupation on Wikidata'},post=True)
               print('REMOVED P180 physician claims:',len(remove_guids))
           else:
               print('NOOP SDC: portrait has no depicts=physician claim')
 
-          # 4) Structured Data exact-string normalization, only when the exact combined credit appears as a main string/monolingual value.
           for title in files:
               q=request({'action':'query','prop':'info','titles':title})
               page=q['query']['pages'][0]
               eid='M'+str(page['pageid'])
               ent=request({'action':'wbgetentities','ids':eid,'props':'claims'})['entities'][eid]
               changed=0
-              for prop,claims in ent.get('claims',{}).items():
+              for claims in ent.get('claims',{}).values():
                   for claim in claims:
-                      ms=claim.get('mainsnak',{})
-                      dv=ms.get('datavalue',{}).get('value')
-                      value_payload=None
+                      dv=claim.get('mainsnak',{}).get('datavalue',{}).get('value')
+                      value=None
                       if dv==old_credit:
-                          value_payload=new_credit
+                          value=new_credit
                       elif isinstance(dv,dict) and dv.get('text')==old_credit and dv.get('language'):
-                          value_payload={'text':new_credit,'language':dv['language']}
-                      if value_payload is not None:
-                          request({'action':'wbsetclaimvalue','claim':claim['id'],'snaktype':'value','value':json.dumps(value_payload,ensure_ascii=False),'token':csrf,'assert':'user','summary':'Normalize attribution to Saeed Ghezelbash'},post=True)
+                          value={'text':new_credit,'language':dv['language']}
+                      if value is not None:
+                          request({'action':'wbsetclaimvalue','claim':claim['id'],'snaktype':'value','value':json.dumps(value,ensure_ascii=False),'token':csrf,'assert':'user','summary':'Normalize attribution to Saeed Ghezelbash'},post=True)
                           changed+=1
               print('SDC exact-credit replacements for',title,':',changed)
 
