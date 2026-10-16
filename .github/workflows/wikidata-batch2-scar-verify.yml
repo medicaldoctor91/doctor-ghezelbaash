@@ -15,32 +15,44 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import json, urllib.parse, urllib.request, collections
-          API='https://www.wikidata.org/w/api.php'; UA='Q140287622-batch2-scar-verifier/1.0'
-          def api(p):
+          import json, urllib.parse, urllib.request, urllib.error, time
+          API='https://www.wikidata.org/w/api.php'; UA='Q140287622-batch2-scar-verifier/1.1 (read-only)'
+          def api(p,retries=7):
               p={'format':'json','formatversion':'2',**p};u=API+'?'+urllib.parse.urlencode(p)
-              with urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':UA}),timeout=60) as r:return json.load(r)
+              last=None
+              for i in range(retries):
+                  try:
+                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(30,2**i))
+                  except Exception as e:
+                      last=e; time.sleep(min(20,2**i))
+              raise last
           def val(s):
               v=s.get('datavalue',{}).get('value');return v.get('id') if isinstance(v,dict) and 'id' in v else v
           root='Q206060'; health='Q2057971'
-          seen=set(); frontier=[root]; edges=[]; depth=0
+          seen=set(); frontier=[root]; edges=[]; depth=0; labels={}
           while frontier and depth<8:
               nxt=[]
-              for i in range(0,len(frontier),50):
-                  ids=frontier[i:i+50]
+              for i in range(0,len(frontier),20):
+                  ids=frontier[i:i+20]
                   es=api({'action':'wbgetentities','ids':'|'.join(ids),'props':'claims|labels|descriptions','languages':'en'})['entities']
                   for q,e in es.items():
-                      seen.add(q)
+                      seen.add(q); labels[q]=(e.get('labels',{}).get('en') or {}).get('value',q)
                       for p in ('P31','P279'):
                           for c in e.get('claims',{}).get(p,[]):
                               v=val(c.get('mainsnak',{}))
                               if isinstance(v,str) and v.startswith('Q'):
                                   edges.append((q,p,v))
                                   if v not in seen:nxt.append(v)
-              frontier=sorted(set(nxt));depth+=1
+              frontier=sorted(set(nxt)); depth+=1; time.sleep(1)
           searches={}
           for term in ['acne scar','atrophic acne scar','scar','acne scarring']:
-              searches[term]=api({'action':'wbsearchentities','search':term,'language':'en','type':'item','limit':'20'}).get('search',[])
-          out={'root':root,'health_problem':health,'reaches_health_problem':health in seen,'visited':sorted(seen),'edges':edges,'searches':searches}
+              searches[term]=api({'action':'wbsearchentities','search':term,'language':'en','type':'item','limit':'10'}).get('search',[])
+              time.sleep(2)
+          out={'root':root,'root_label':labels.get(root),'health_problem':health,'reaches_health_problem':health in seen,'visited':sorted(seen),'labels':labels,'edges':edges,'searches':searches}
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
