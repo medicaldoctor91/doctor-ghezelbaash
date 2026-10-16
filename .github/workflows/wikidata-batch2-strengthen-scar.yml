@@ -1,4 +1,4 @@
-name: Lightweight Wikidata Batch 4 snapshot
+name: Wikidata Batch 5 integrity scan
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,39 +6,171 @@ on:
 permissions:
   contents: read
 jobs:
-  inspect:
+  audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Fetch exact live claims
+      - name: Scan duplicates ranks references stale targets
         shell: bash
         run: |
+          set -euo pipefail
           python - <<'PY'
-          import json, urllib.parse, urllib.request
-          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch4-lite/1.0 (read-only)'
-          def api(p):
-              p={'format':'json','formatversion':'2',**p}
-              req=urllib.request.Request(API+'?'+urllib.parse.urlencode(p),headers={'User-Agent':UA,'Accept':'application/json'})
-              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
-          def val(s):
-              if s.get('snaktype')!='value': return s.get('snaktype')
+          import json, urllib.parse, urllib.request, urllib.error, time, collections, re
+          from urllib.parse import urlparse
+          API='https://www.wikidata.org/w/api.php'; Q='Q140287622'; UA='Q140287622-batch5-integrity/1.0 (read-only)'
+          def api(p,retries=8):
+              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
+              for i in range(retries):
+                  try:
+                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+                      with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+                  except urllib.error.HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+                      time.sleep(min(20,2**i))
+              raise last
+          def norm(x):
+              if x is None: return None
+              if isinstance(x,(str,int,float,bool)): return x
+              if isinstance(x,list): return tuple(norm(i) for i in x)
+              if isinstance(x,dict):
+                  if 'id' in x:return ('id',x['id'])
+                  if 'text' in x and 'language' in x:return ('mono',x['language'],x['text'])
+                  if 'time' in x:return ('time',x.get('time'),x.get('precision'),x.get('calendarmodel'))
+                  if 'latitude' in x:return ('coord',round(x.get('latitude'),8),round(x.get('longitude'),8),x.get('globe'))
+                  if 'amount' in x:return ('quantity',x.get('amount'),x.get('unit'),x.get('lowerBound'),x.get('upperBound'))
+                  return tuple(sorted((k,norm(v)) for k,v in x.items()))
+              return repr(x)
+          def snak_norm(s):
+              st=s.get('snaktype')
+              if st!='value': return (st,None)
+              return ('value',norm(s.get('datavalue',{}).get('value')))
+          def snak_qid(s):
+              if s.get('snaktype')!='value': return None
               v=s.get('datavalue',{}).get('value')
-              if isinstance(v,dict) and 'id' in v:return v['id']
-              if isinstance(v,dict) and 'text' in v:return v['text']
-              return v
-          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; claims=e.get('claims',{})
-          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'claims':{}}
-          for pid in ['P39','P108','P1830','P121','P937','P496','P10283','P1960','P4012','P2037','P12201','P6634','P11079','P1153']:
-              rows=[]
-              for c in claims.get(pid,[]):
-                  refs=[]
+              return v.get('id') if isinstance(v,dict) else None
+          def snak_str(s):
+              if s.get('snaktype')!='value': return None
+              v=s.get('datavalue',{}).get('value')
+              return v if isinstance(v,str) else None
+          def ref_sig(r):
+              return tuple(sorted((p,tuple(sorted(snak_norm(s) for s in ss))) for p,ss in r.get('snaks',{}).items()))
+          e=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]
+          claims=e.get('claims',{})
+          out={'lastrevid':e.get('lastrevid'),'modified':e.get('modified'),'statement_count':sum(len(v) for v in claims.values()),'property_count':len(claims)}
+
+          # exact duplicate main values
+          dup_main=[]
+          for p,cs in claims.items():
+              g=collections.defaultdict(list)
+              for c in cs:g[snak_norm(c['mainsnak'])].append(c['id'])
+              for k,guids in g.items():
+                  if len(guids)>1: dup_main.append({'property':p,'normalized_value':repr(k),'guids':guids})
+          out['exact_duplicate_main_values']=dup_main
+
+          # duplicate qualifier values + exact duplicate reference nodes
+          dup_quals=[]; dup_refs=[]; no_refs=[]; all_domains=collections.Counter(); domain_by_prop=collections.defaultdict(collections.Counter)
+          for p,cs in claims.items():
+              for c in cs:
+                  if not c.get('references'): no_refs.append({'property':p,'guid':c['id'],'value':repr(snak_norm(c['mainsnak'])),'rank':c.get('rank')})
+                  for qp,ss in c.get('qualifiers',{}).items():
+                      gg=collections.Counter(snak_norm(s) for s in ss)
+                      for k,n in gg.items():
+                          if n>1:dup_quals.append({'guid':c['id'],'property':p,'qualifier':qp,'value':repr(k),'count':n})
+                  rg=collections.defaultdict(list)
+                  for idx,r in enumerate(c.get('references',[])):
+                      rg[ref_sig(r)].append(idx)
+                      for s in r.get('snaks',{}).get('P854',[]):
+                          u=snak_str(s)
+                          if u:
+                              try:d=urlparse(u).netloc.lower().removeprefix('www.')
+                              except:d=''
+                              if d: all_domains[d]+=1;domain_by_prop[p][d]+=1
+                  for sig,idxs in rg.items():
+                      if len(idxs)>1:dup_refs.append({'guid':c['id'],'property':p,'reference_indexes':idxs,'count':len(idxs)})
+          out['duplicate_qualifiers']=dup_quals;out['duplicate_reference_nodes']=dup_refs;out['statements_without_references']=no_refs
+
+          # rank checks
+          deprecated_missing_reason=[]; preferred_counts={}
+          for p,cs in claims.items():
+              pref=[c['id'] for c in cs if c.get('rank')=='preferred']
+              if len(pref)>1: preferred_counts[p]=pref
+              for c in cs:
+                  if c.get('rank')=='deprecated' and 'P2241' not in c.get('qualifiers',{}):
+                      deprecated_missing_reason.append({'property':p,'guid':c['id']})
+          out['multiple_preferred_by_property']=preferred_counts
+          out['deprecated_without_P2241']=deprecated_missing_reason
+
+          # collect all entity QIDs from mains, qualifiers, references and test missing/deleted targets
+          targets=collections.defaultdict(list)
+          for p,cs in claims.items():
+              for c in cs:
+                  q=snak_qid(c['mainsnak'])
+                  if q: targets[q].append({'where':'main','property':p,'guid':c['id']})
+                  for qp,ss in c.get('qualifiers',{}).items():
+                      for s in ss:
+                          q=snak_qid(s)
+                          if q:targets[q].append({'where':'qualifier','property':qp,'parent_property':p,'guid':c['id']})
                   for r in c.get('references',[]):
-                      rr={p:[val(x) for x in ss] for p,ss in r.get('snaks',{}).items()}
-                      refs.append(rr)
-                  rows.append({'guid':c['id'],'value':val(c['mainsnak']),'rank':c['rank'],'qualifiers':{p:[val(x) for x in ss] for p,ss in c.get('qualifiers',{}).items()},'references':refs})
-              out['claims'][pid]=rows
-          print(json.dumps(out,ensure_ascii=False,indent=2,default=str))
-          print('BATCH4_LITE_PASS')
+                      for rp,ss in r.get('snaks',{}).items():
+                          for s in ss:
+                              q=snak_qid(s)
+                              if q:targets[q].append({'where':'reference','property':rp,'parent_property':p,'guid':c['id']})
+          missing=[]; ids=sorted(targets)
+          for i in range(0,len(ids),50):
+              chunk=ids[i:i+50]
+              ents=api({'action':'wbgetentities','ids':'|'.join(chunk),'props':'info'})['entities']
+              for q in chunk:
+                  x=ents.get(q,{})
+                  if x.get('missing') is True: missing.append({'qid':q,'occurrences':targets[q]})
+          out['missing_deleted_entity_targets']=missing
+
+          # stale clinic QID literal occurrence anywhere
+          blob=json.dumps(e,ensure_ascii=False)
+          out['Q140288589_occurrences']=blob.count('Q140288589')
+
+          # external URL properties of special interest
+          def main_strings(pid):
+              z=[]
+              for c in claims.get(pid,[]):
+                  s=snak_str(c['mainsnak'])
+                  z.append({'guid':c['id'],'value':s,'rank':c.get('rank'),'reference_count':len(c.get('references',[]))})
+              return z
+          out['P973']=main_strings('P973'); out['P1325']=main_strings('P1325'); out['P968']=main_strings('P968')
+          out['reference_domains_top']=all_domains.most_common(40)
+          out['reference_domains_P973']=domain_by_prop['P973'].most_common()
+          out['reference_domains_P1325']=domain_by_prop['P1325'].most_common()
+
+          # native constraint result summarized by affected property + status (avoid giant payload)
+          try:
+              cc=api({'action':'wbcheckconstraints','id':Q,'status':'violation|warning|suggestion|bad-parameters','uselang':'en'},retries=5)
+              statuses=collections.Counter(); prop_hits=collections.Counter()
+              def walk(x):
+                  if isinstance(x,dict):
+                      if 'status' in x and isinstance(x.get('status'),str): statuses[x['status']]+=1
+                      for k,v in x.items():
+                          if isinstance(k,str) and re.fullmatch(r'P\d+',k): prop_hits[k]+=1
+                          walk(v)
+                  elif isinstance(x,list):
+                      for y in x:walk(y)
+                  elif isinstance(x,str):
+                      for m in re.findall(r'\bP\d+\b',x):prop_hits[m]+=1
+              walk(cc)
+              out['constraint_status_counts']=dict(statuses);out['constraint_property_mentions']=prop_hits.most_common(30)
+          except Exception as ex:
+              out['constraint_error']=repr(ex)
+
+          # high-level machine flags, not automatic edits
+          flags=[]
+          if dup_main:flags.append('EXACT_DUPLICATE_MAIN_VALUES')
+          if dup_quals:flags.append('DUPLICATE_QUALIFIERS')
+          if dup_refs:flags.append('DUPLICATE_REFERENCE_NODES')
+          if missing:flags.append('MISSING_DELETED_TARGETS')
+          if deprecated_missing_reason:flags.append('DEPRECATED_WITHOUT_REASON')
+          if out['Q140288589_occurrences']:flags.append('STALE_CLINIC_QID')
+          out['machine_flags']=flags
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          print('BATCH5_INTEGRITY_SCAN_PASS')
           PY
