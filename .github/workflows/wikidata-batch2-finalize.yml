@@ -1,4 +1,4 @@
-name: Wikidata QLever SPARQL final audit
+name: Wikidata SPARQL-discovered inverse edge check
 on:
   push:
     branches: [audit/wikidata-batch1-20261016]
@@ -6,181 +6,38 @@ on:
 permissions:
   contents: read
 jobs:
-  qlever-audit:
+  inspect:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 5
     steps:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Run comprehensive SPARQL audit on QLever and cross-check live API
+      - name: Inspect Q140307274 P710 and person P1344 via live API
         shell: bash
         run: |
-          set -euo pipefail
           python - <<'PY'
-          import json, urllib.parse, urllib.request, urllib.error, collections, time
-          Q='Q140287622'; ENDPOINT='https://qlever.dev/api/wikidata'; API='https://www.wikidata.org/w/api.php'
-          UA='Q140287622-qlever-final-audit/1.0 (read-only; github.com/medicaldoctor91/doctor-ghezelbaash)'
-          PREFIX='''
-          PREFIX wd: <http://www.wikidata.org/entity/>
-          PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-          PREFIX wikibase: <http://wikiba.se/ontology#>
-          PREFIX p: <http://www.wikidata.org/prop/>
-          PREFIX ps: <http://www.wikidata.org/prop/statement/>
-          PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
-          PREFIX pr: <http://www.wikidata.org/prop/reference/>
-          PREFIX prov: <http://www.w3.org/ns/prov#>
-          '''
-          qs={
-          'inbound': PREFIX+r'''
-            SELECT ?kind ?subject ?parentProperty ?edgeProperty ?statement WHERE {
-              { BIND("direct" AS ?kind) ?subject ?p wd:Q140287622 . ?edgeProperty wikibase:directClaim ?p . }
-              UNION {
-                BIND("main_statement" AS ?kind)
-                ?parentProperty wikibase:claim ?claimPred ; wikibase:statementProperty ?statementPred .
-                ?subject ?claimPred ?statement . ?statement ?statementPred wd:Q140287622 .
-                BIND(?parentProperty AS ?edgeProperty)
-              }
-              UNION {
-                BIND("qualifier" AS ?kind)
-                ?parentProperty wikibase:claim ?claimPred . ?subject ?claimPred ?statement .
-                ?statement ?qualPred wd:Q140287622 . ?edgeProperty wikibase:qualifier ?qualPred .
-              }
-              UNION {
-                BIND("reference" AS ?kind)
-                ?parentProperty wikibase:claim ?claimPred . ?subject ?claimPred ?statement .
-                ?statement prov:wasDerivedFrom ?ref . ?ref ?refPred wd:Q140287622 .
-                ?edgeProperty wikibase:reference ?refPred .
-              }
-            }
-          ''',
-          'topology': PREFIX+r'''
-            SELECT ?kind ?parentProperty ?edgeProperty ?statement ?value ?count WHERE {
-              { BIND("outbound_direct" AS ?kind) wd:Q140287622 ?p ?value . ?edgeProperty wikibase:directClaim ?p . }
-              UNION {
-                BIND("targeted_qualifier" AS ?kind)
-                VALUES (?parentProperty ?claimPred) { (wd:P101 p:P101) (wd:P937 p:P937) (wd:P1830 p:P1830) (wd:P121 p:P121) }
-                wd:Q140287622 ?claimPred ?statement . ?statement ?qualPred ?value . ?edgeProperty wikibase:qualifier ?qualPred .
-              }
-              UNION {
-                SELECT ("duplicate_main" AS ?kind) ?parentProperty ?value (COUNT(?statement) AS ?count) WHERE {
-                  ?parentProperty wikibase:claim ?claimPred ; wikibase:statementProperty ?statementPred .
-                  wd:Q140287622 ?claimPred ?statement . ?statement ?statementPred ?value .
-                } GROUP BY ?parentProperty ?value HAVING(COUNT(?statement) > 1)
-              }
-            }
-          ''',
-          'publications': PREFIX+r'''
-            SELECT ?kind ?work ?doi ?pmid WHERE {
-              { BIND("inbound_P50" AS ?kind) ?work wdt:P50 wd:Q140287622 . OPTIONAL { ?work wdt:P356 ?doi } OPTIONAL { ?work wdt:P698 ?pmid } }
-              UNION { BIND("forward_P3919" AS ?kind) wd:Q140287622 wdt:P3919 ?work . OPTIONAL { ?work wdt:P356 ?doi } OPTIONAL { ?work wdt:P698 ?pmid } }
-              UNION { BIND("notable_P800" AS ?kind) wd:Q140287622 wdt:P800 ?work . OPTIONAL { ?work wdt:P356 ?doi } OPTIONAL { ?work wdt:P698 ?pmid } }
-              UNION { BIND("participant_P710" AS ?kind) ?work wdt:P710 wd:Q140287622 . }
-            }
-          ''',
-          'identifiers': PREFIX+r'''
-            SELECT ?kind ?property ?value ?item WHERE {
-              {
-                BIND("collision" AS ?kind)
-                VALUES (?property ?direct ?value) {
-                  (wd:P496 wdt:P496 "0009-0001-9346-8475")
-                  (wd:P10283 wdt:P10283 "A5146521397")
-                  (wd:P10283 wdt:P10283 "A5064828898")
-                  (wd:P1960 wdt:P1960 "BcWBirUAAAAJ")
-                  (wd:P4012 wdt:P4012 "3786699")
-                }
-                ?item ?direct ?value . FILTER(?item != wd:Q140287622)
-              }
-              UNION {
-                BIND("deleted_clinic_direct" AS ?kind)
-                wd:Q140287622 ?direct wd:Q140288589 . ?property wikibase:directClaim ?direct .
-                BIND(wd:Q140288589 AS ?value) BIND(wd:Q140287622 AS ?item)
-              }
-              UNION {
-                BIND("deleted_clinic_qualifier" AS ?kind)
-                ?parent wikibase:claim ?claimPred . wd:Q140287622 ?claimPred ?st .
-                ?st ?qualPred wd:Q140288589 . ?property wikibase:qualifier ?qualPred .
-                BIND(wd:Q140288589 AS ?value) BIND(wd:Q140287622 AS ?item)
-              }
-            }
-          '''}
-          def run(name,q):
-              u=ENDPOINT+'?'+urllib.parse.urlencode({'query':q})
-              req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/sparql-results+json'})
-              with urllib.request.urlopen(req,timeout=180) as r:data=json.load(r)
-              rows=[]
-              for b in data.get('results',{}).get('bindings',[]):
-                  if b is None: continue
-                  row={k:v.get('value') for k,v in b.items()}
-                  for k,v in list(row.items()):
-                      if isinstance(v,str) and v.startswith('http://www.wikidata.org/entity/'):
-                          row[k]=v.rsplit('/',1)[-1]
-                      elif isinstance(v,str) and v.startswith('http://www.wikidata.org/entity/statement/'):
-                          row[k]=v.rsplit('/',1)[-1]
-                  rows.append(row)
-              print(f'QLEVER_{name}_PASS rows={len(rows)}',flush=True); return rows
-          results={k:run(k,v) for k,v in qs.items()}
-
-          def api(p,retries=6):
-              p={'format':'json','formatversion':'2',**p}; u=API+'?'+urllib.parse.urlencode(p); last=None
-              for i in range(retries):
-                  try:
-                      req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
-                      with urllib.request.urlopen(req,timeout=90) as r:return json.load(r)
-                  except urllib.error.HTTPError as e:
-                      last=e
-                      if e.code!=429:raise
-                      time.sleep(min(20,2**i))
-              raise last
-          ent=api({'action':'wbgetentities','ids':Q,'props':'claims|info'})['entities'][Q]; claims=ent.get('claims',{})
-          def qval(s):
-              if s.get('snaktype')!='value':return None
-              v=s.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
-          qids=[]
-          for arr in claims.values():
-              for c in arr:
-                  x=qval(c.get('mainsnak',{}));
-                  if x:qids.append(x)
-                  for ss in c.get('qualifiers',{}).values():
-                      for s in ss:
-                          x=qval(s)
-                          if x:qids.append(x)
-                  for ref in c.get('references',[]):
-                      for ss in ref.get('snaks',{}).values():
-                          for s in ss:
-                              x=qval(s)
-                              if x:qids.append(x)
-          missing=[]
-          ids=sorted(set(qids))
-          for i in range(0,len(ids),50):
-              z=api({'action':'wbgetentities','ids':'|'.join(ids[i:i+50]),'props':'info'})['entities']
-              missing += [k for k,v in z.items() if v.get('missing') is True]
-
-          inbound=results['inbound']; topo=results['topology']; pubs=results['publications']; idsrows=results['identifiers']
-          direct=sorted({(r.get('subject'),r.get('edgeProperty')) for r in inbound if r.get('kind')=='direct'})
-          main=sorted({(r.get('subject'),r.get('parentProperty')) for r in inbound if r.get('kind')=='main_statement'})
-          qin=[r for r in inbound if r.get('kind')=='qualifier']; rin=[r for r in inbound if r.get('kind')=='reference']
-          p101=[r for r in topo if r.get('kind')=='targeted_qualifier' and r.get('parentProperty')=='P101']
-          clinic={p:[r for r in topo if r.get('kind')=='targeted_qualifier' and r.get('parentProperty')==p] for p in ['P937','P1830','P121']}
-          dups=[r for r in topo if r.get('kind')=='duplicate_main']
-          bypub=collections.defaultdict(set)
-          for r in pubs:bypub[r.get('kind')].add(r.get('work'))
-          collisions=[r for r in idsrows if r.get('kind')=='collision']; stale=[r for r in idsrows if str(r.get('kind','')).startswith('deleted_clinic_')]
-          expected={'Q36942316','Q140298431','Q140306302','Q141099455','Q141129555','Q141131757'}
-          report={
-            'backend':'QLever Wikidata','lastrevid':ent.get('lastrevid'),'modified':ent.get('modified'),
-            'row_counts':{k:len(v) for k,v in results.items()},
-            'inbound_summary':dict(collections.Counter(r.get('kind') for r in inbound)),
-            'direct_inbound':direct,'main_statement_inbound':main,'qualifier_inbound':qin,'reference_inbound':rin,
-            'p101_qualifier_count':len(p101),'p101_qualifier_properties':dict(collections.Counter(r.get('edgeProperty') for r in p101)),
-            'clinic_qualifiers':clinic,'duplicate_main_values':dups,
-            'publication_sets':{k:sorted(v) for k,v in bypub.items()},
-            'identifier_collisions':collisions,'deleted_clinic_hits':stale,'api_missing_qid_targets':sorted(set(missing))}
-          print('QLEVER_SPARQL_FINAL_REPORT_BEGIN'); print(json.dumps(report,ensure_ascii=False,indent=2,default=str)); print('QLEVER_SPARQL_FINAL_REPORT_END')
-          assert bypub['inbound_P50']==expected, f'P50 set mismatch {bypub["inbound_P50"]}'
-          assert bypub['forward_P3919']==expected, f'P3919 set mismatch {bypub["forward_P3919"]}'
-          assert bypub['notable_P800']=={'Q36942316','Q140298431'}, f'P800 mismatch {bypub["notable_P800"]}'
-          assert not collisions, f'identifier collision: {collisions}'
-          assert not stale, f'deleted clinic QID hit: {stale}'
-          assert not missing, f'missing API targets: {missing}'
-          print('QLEVER_COMPREHENSIVE_SPARQL_AUDIT_PASS')
+          import json,urllib.parse,urllib.request
+          API='https://www.wikidata.org/w/api.php'; UA='Q140287622-P710-inverse-check/1.0'
+          def api(p):
+              p={'format':'json','formatversion':'2',**p};u=API+'?'+urllib.parse.urlencode(p)
+              req=urllib.request.Request(u,headers={'User-Agent':UA,'Accept':'application/json'})
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          def val(s):
+              if s.get('snaktype')!='value': return s.get('snaktype')
+              v=s.get('datavalue',{}).get('value')
+              if isinstance(v,dict) and 'id' in v:return v['id']
+              if isinstance(v,dict) and 'time' in v:return {'time':v['time'],'precision':v.get('precision')}
+              if isinstance(v,dict) and 'text' in v:return {'text':v['text'],'language':v.get('language')}
+              return v
+          ents=api({'action':'wbgetentities','ids':'Q140287622|Q140307274','props':'claims|labels|descriptions|info'})['entities']
+          p=ents['Q140287622']; e=ents['Q140307274']
+          p1344=[{'guid':c['id'],'value':val(c['mainsnak']),'rank':c['rank'],'qualifiers':{k:[val(s) for s in ss] for k,ss in c.get('qualifiers',{}).items()},'refs':[{k:[val(s) for s in ss] for k,ss in r.get('snaks',{}).items()} for r in c.get('references',[])]} for c in p.get('claims',{}).get('P1344',[])]
+          p710=[]
+          for c in e.get('claims',{}).get('P710',[]):
+              if val(c['mainsnak'])=='Q140287622':
+                  p710.append({'guid':c['id'],'rank':c['rank'],'qualifiers':{k:[val(s) for s in ss] for k,ss in c.get('qualifiers',{}).items()},'refs':[{k:[val(s) for s in ss] for k,ss in r.get('snaks',{}).items()} for r in c.get('references',[])]})
+          out={'person_lastrevid':p.get('lastrevid'),'event_lastrevid':e.get('lastrevid'),'event_label':e.get('labels',{}).get('en',{}).get('value') or e.get('labels',{}).get('fa',{}).get('value'),'event_description':e.get('descriptions',{}).get('en',{}).get('value') or e.get('descriptions',{}).get('fa',{}).get('value'),'event_P31':[val(c['mainsnak']) for c in e.get('claims',{}).get('P31',[])],'event_P577':[val(c['mainsnak']) for c in e.get('claims',{}).get('P577',[])],'event_P710_target':p710,'person_P1344':p1344}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          assert len(p710)==1,'Expected one P710 edge to person'
+          print('P710_INVERSE_INSPECTION_PASS')
           PY
