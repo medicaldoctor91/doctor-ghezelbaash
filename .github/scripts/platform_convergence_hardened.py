@@ -38,3 +38,21 @@ def verify_reviewed_origin(args):
     release_after = json.loads(sync.fetch(sync.ORIGIN + '/release-provenance.json'))
     assert release_after.get('sourceCommit') == args.website_commit, 'Website changed during snapshot download'
     return ctx, control
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root', default='/tmp/platform-convergence-hardened')
+    parser.add_argument('--prepare-only', action='store_true')
+    parsed = parser.parse_args()
+    args = reviewed_args(parsed.root, parsed.prepare_only)
+    verify_reviewed_origin(args)
+    if not args.prepare_only:
+        raise RuntimeError('Publication remains gated until all hardening checks are implemented')
+    print(json.dumps({'status': 'PREPARED', 'websiteSourceCommit': args.website_commit,
+                      'hfRevisionReviewed': args.hf_revision,
+                      'kaggleVersionReviewed': args.kaggle_version}, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    main()
