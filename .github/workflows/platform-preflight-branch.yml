@@ -7,6 +7,8 @@ on:
       - .github/scripts/sync_platform_machine_resources.py
       - .github/scripts/platform_bundle.py
       - .github/workflows/platform-preflight-branch.yml
+      - src/lib/machine-output.mjs
+      - build/materialize-machine-resources.mjs
       - tests/**
 permissions:
   contents: read
