@@ -1,4 +1,5 @@
 """Regression contract for preserving and reconciling positioning enrichment."""
+import csv
 import importlib.util
 import json
 import tempfile
@@ -10,9 +11,9 @@ SPEC = importlib.util.spec_from_file_location("platform_publish_positioning", RO
 positioning = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(positioning)
 
-VALIDATOR_SPEC = importlib.util.spec_from_file_location("platform_sync_validator", ROOT / "tests/validate_platform_sync.py")
-sync_validator = importlib.util.module_from_spec(VALIDATOR_SPEC)
-VALIDATOR_SPEC.loader.exec_module(sync_validator)
+SYNC_SPEC = importlib.util.spec_from_file_location("sync_platform_validator_contract", ROOT / ".github/scripts/sync_platform_validator_contract.py")
+validator_sync = importlib.util.module_from_spec(SYNC_SPEC)
+SYNC_SPEC.loader.exec_module(validator_sync)
 
 OLD_DATASET = "https://www.ghezelbaash.ir/graph.jsonld#dataset"
 HISTORICAL_DOI = "10.5281/zenodo.21910785"
@@ -80,20 +81,33 @@ class PositioningRecoveryTests(unittest.TestCase):
         self.assertEqual(calls[2][3], b"abc")
         self.assertEqual(calls[2][4], "secret")
 
-    def test_platform_validator_derives_row_contract_from_packaging(self):
-        self.assertTrue(hasattr(sync_validator, "package_table_rows"), "platform validator still freezes row counts")
+    def test_platform_validator_row_contract_is_measured_from_canonical_dist(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "viewer").mkdir()
-            (root / "viewer/packaging.json").write_text(json.dumps({
-                "tables": {
-                    "clinical_passages": {"rows": 3248},
-                    "clinical_answers": {"rows": 125},
-                    "entity_facts": {"rows": 22138},
-                    "query_matrix": {"rows": 876},
-                }
-            }), encoding="utf-8")
-            self.assertEqual(sync_validator.package_table_rows(root)["entity_facts"], 22138)
+            (root / "clinical-passages.jsonl").write_text("{}\n{}\n", encoding="utf-8")
+            (root / "query-matrix.jsonl").write_text("{}\n", encoding="utf-8")
+            (root / "fact-map.json").write_text(json.dumps({"records": [{}, {}, {}]}), encoding="utf-8")
+            with (root / "entity-facts.csv").open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["subject", "predicate", "object"])
+                writer.writeheader(); writer.writerows([
+                    {"subject": "s1", "predicate": "p", "object": "o"},
+                    {"subject": "s2", "predicate": "p", "object": "o"},
+                    {"subject": "s3", "predicate": "p", "object": "o"},
+                    {"subject": "s4", "predicate": "p", "object": "o"},
+                ])
+            contract = validator_sync.canonical_row_contract(root)
+            self.assertEqual(contract, {
+                "clinical_passages": 2,
+                "clinical_answers": 3,
+                "entity_facts": 4,
+                "query_matrix": 1,
+            })
+            validator = root / "validator.py"
+            validator.write_text("EXPECTED_ROWS = {'clinical_passages': 1, 'clinical_answers': 1,\n                 'entity_facts': 9, 'query_matrix': 1}\n", encoding="utf-8")
+            validator_sync.patch_validator(validator, contract)
+            patched = validator.read_text(encoding="utf-8")
+            self.assertIn("'entity_facts': 4", patched)
+            self.assertNotIn("'entity_facts': 9", patched)
 
 
 if __name__ == "__main__":
