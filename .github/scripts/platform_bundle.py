@@ -33,6 +33,21 @@ def sync_table_counts(text,tables):
     return text
 
 
+def kaggle_control_metadata(control,tables,description,ctx,hf_revision):
+    target=dict(control.get('info') or control)
+    count=lambda name:format(tables[name]['rows'],',d')
+    target['id']=KAGGLE_REF
+    target['description']=description
+    target['subtitle']=(count('entity_facts')+' facts, '+count('clinical_passages')+' clinical passages, '
+                        +count('query_matrix')+' queries and '+count('clinical_answers')+' source-linked answers')
+    sources=target.get('userSpecifiedSources')
+    if isinstance(sources,str):
+        sources=sources.replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
+        sources=re.sub(re.escape(ctx['hf'])+r'(?: at commit |/tree/)[0-9a-f]{40}',ctx['hf']+'/tree/'+hf_revision,sources)
+        target['userSpecifiedSources']=sources
+    return target
+
+
 def common_release(root,ctx):
     scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
     publication={'verifiedPublicationRun':ctx['run_url'],'publicationScope':scope}

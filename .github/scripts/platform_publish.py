@@ -1,10 +1,53 @@
 """Publish verified maintenance corrections; all current Zenodo DOIs stay unchanged."""
-import argparse, hashlib, importlib.util, json, os, re, shutil, subprocess, sys, tempfile, time
+import argparse, copy, hashlib, importlib.util, io, json, os, re, shutil, subprocess, sys, tempfile, time, zipfile
 import urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 from platform_bundle import *
 
 BASE='https://zenodo.org/api'
+
+def guard_hf_publication(ctx,current,expected,receipt):
+    if current==expected:return False
+    assert receipt and receipt.get('sourceCommit')==ctx['source_commit'] and receipt.get('publicationRun')==ctx['run_url'],'HF changed outside this publication'
+    return True
+
+
+def guard_kaggle_publication(ctx,current,expected,manifest,hf_revision):
+    if current==expected:return False
+    assert current==expected+1 and manifest,'Kaggle changed outside this publication'
+    assert manifest.get('website_source_commit')==ctx['source_commit'] and manifest.get('package_publication_run_url')==ctx['run_url'],'Kaggle belongs to another publication'
+    assert manifest.get('desired_kaggle_version')==current and manifest.get('upstream_revision')==hf_revision,'Kaggle revision bindings differ'
+    return True
+
+
+def public_kaggle_manifest(version):
+    body=download_bytes('https://www.kaggle.com/api/v1/datasets/download/'+KAGGLE_REF+'?datasetVersionNumber='+str(version))
+    with zipfile.ZipFile(io.BytesIO(body)) as archive:return json.loads(archive.read('kaggle-manifest.json'))
+
+
+def wait_for_public_metadata(url,accept,attempts=12,delay=5):
+    for attempt in range(attempts):
+        try:
+            separator='&' if '?' in url else '?'
+            _,value=request('GET',url+separator+'_publication_verify='+str(time.time_ns()))
+            if accept(value):return value
+        except (RuntimeError,urllib.error.URLError,TimeoutError):
+            if attempt==attempts-1:raise
+        if attempt<attempts-1:time.sleep(delay)
+    raise RuntimeError('Public metadata did not converge: '+url)
+
+
+def zenodo_metadata_matches(final,original,expected):
+    current=final.get('metadata',{});before=original['metadata']
+    license_id=lambda value:value.get('id') if isinstance(value,dict) else value
+    normalized=lambda value:re.sub(r'\s+',' ',value or '').strip()
+    pairs=lambda items:{(entry.get('identifier'),entry.get('relation')) for entry in items}
+    return (final.get('doi')==original.get('doi') and current.get('version')==before.get('version')
+            and current.get('creators')==before.get('creators')
+            and license_id(current.get('license'))==license_id(before.get('license'))
+            and normalized(current.get('description'))==normalized(expected.get('description'))
+            and pairs(expected.get('related_identifiers',[]))<=pairs(current.get('related_identifiers',[])))
+
 
 def download_bytes(url,attempts=30,delay=10):
     for attempt in range(attempts):
@@ -31,30 +74,29 @@ def publish_source_bucket(rec,changed,token):
     # An already-published record retains submitted=True during an approved
     # in-place correction. Its editable draft is identified by inprogress.
     assert draft.get('state')=='inprogress','Zenodo source is not an editable correction draft'
-    files_url=draft.get('links',{}).get('files') or dep+'/files'
-    publish_url=draft.get('links',{}).get('publish') or dep+'/actions/publish'
-    bucket=draft.get('links',{}).get('bucket','')
-    assert bucket.startswith(BASE+'/files/'),'Trusted bucket is missing'
-    assert files_url.startswith(dep+'/') and publish_url.startswith(dep+'/')
-    _,entries=request('GET',files_url,token=token)
-    entries=entries if isinstance(entries,list) else entries['entries']
+    root=f'{BASE}/records/{rec}/draft'
+    files_url=root+'/files'
     key,body=next(iter(changed.items()))
-    matching=[entry for entry in entries if (entry.get('filename') or entry.get('name') or entry.get('key'))==key]
-    assert len(matching)==1 and matching[0].get('id')
-    request('DELETE',files_url.rstrip('/')+'/'+str(matching[0]['id']),token=token)
+    encoded=urllib.parse.quote(key,safe='')
+    request('DELETE',files_url+'/'+encoded,token=token)
+    request('POST',files_url,payload=[{'key':key}],token=token)
     with tempfile.TemporaryDirectory() as directory:
         path=Path(directory)/'source.zip';path.write_bytes(body)
+        command=['curl','--fail-with-body','--silent','--show-error','--retry','4','--retry-all-errors',
+                 '--retry-delay','2','--connect-timeout','20','--max-time','600','--http1.1',
+                 '-H','Content-Type: application/octet-stream','-H','Authorization: Bearer '+token,
+                 '--upload-file',str(path),files_url+'/'+encoded+'/content']
         try:
-            result=subprocess.run(bucket_upload_command(str(path),bucket.rstrip('/')+'/'+urllib.parse.quote(key,safe=''),token),
-                                  capture_output=True,text=True,timeout=1000)
+            result=subprocess.run(command,capture_output=True,text=True,timeout=1000)
         except subprocess.TimeoutExpired:
             raise RuntimeError('Zenodo source bucket upload exceeded its time limit') from None
         if result.returncode:
             raise RuntimeError((result.stderr or result.stdout).replace(token,'[redacted]')[:1200])
-        uploaded=json.loads(result.stdout)
-        assert uploaded['key']==key and int(uploaded['size'])==len(body)
-        assert uploaded['checksum']=='md5:'+hashlib.md5(body).hexdigest()
-    request('POST',publish_url,token=token)
+    request('POST',files_url+'/'+encoded+'/commit',token=token)
+    _,listing=request('GET',files_url,token=token)
+    uploaded=next(entry for entry in listing['entries'] if entry['key']==key)
+    assert int(uploaded['size'])==len(body) and uploaded['checksum']=='md5:'+hashlib.md5(body).hexdigest()
+    request('POST',root+'/actions/publish',token=token)
 
 
 def request(method,url,payload=None,raw=None,token=None,allowed=(200,201,202,204),raw_response=False):
@@ -93,6 +135,46 @@ def validate(root,reader=True):
     return mod.validate(root,reader=reader,rdf=True)
 
 
+def build_zenodo_metadata(metadata,doi,ctx,hf_revision,source_archive=False):
+    md=copy.deepcopy(metadata)
+    desc=md.get('description','').replace('A5064828898','A5146521397')
+    desc=desc.replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
+    desc=re.sub(r'<p><strong>Archive and current-distribution scope:</strong>.*?</p>','',desc,flags=re.S)
+    desc=re.sub(r'<p><strong>Publication convergence — \d{4}-\d{2}-\d{2}:</strong>.*?</p>','',desc,flags=re.S)
+    desc=desc.replace('This record preserves a fixed 24-file research-data snapshot',
+                      'This DOI identifies a selected 24-file research-data distribution with documented in-place maintenance')
+    current_hf=ctx['hf']+'/tree/'+hf_revision
+    current_source='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+ctx['source_commit']
+    desc+=('<p><strong>Publication convergence — '+ctx['maintenance_date']+':</strong> Existing DOI '+doi
+       +' and version '+str(md.get('version'))+' remain unchanged. This record received a documented in-place maintenance correction. '
+       +'Canonical OpenAlex: A5146521397; ORCID: 0009-0001-9346-8475; Wikidata: Q140287622. '
+       +'Canonical dataset IRI: '+DATASET+'. Verified source commit: '+ctx['source_commit']+'. '
+       +'Publication run: <a href="'+ctx['run_url']+'">'+ctx['run_url']+'</a>. '
+       +'Hugging Face revision: <a href="'+current_hf+'">'+hf_revision+'</a>. '
+       +'Website: <a href="'+ctx['website']+'">canonical website</a>; Kaggle: <a href="'+ctx['kaggle']+'">current distribution</a>. '
+       +('The source ZIP contains the corrected current canonical source; its existing filename/version is retained. ' if source_archive else
+         'This is the selected 24-file dataset distribution; its matching resources share the verified website/Hub bytes. ')
+       +'Dataset DOI: <a href="'+ctx['zenodo_dataset']+'">'+ctx['zenodo_dataset']+'</a>; '
+       +'website-source DOI: <a href="'+ctx['zenodo_source']+'">'+ctx['zenodo_source']+'</a>. '
+       +'The concept DOI 10.5281/zenodo.18765168 is a release-family pointer and may resolve to a website-source record; use the explicit dataset DOI when citing data. '
+       +'Earlier pinned source/Hub links in the related identifiers are historical references, not the current maintenance state.</p>')
+    md['description']=desc
+    related=md.get('related_identifiers',[])
+    current={current_hf,current_source,ctx['run_url']}
+    prefixes=(ctx['hf']+'/tree/','https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/',
+              'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/')
+    for entry in related:
+        identifier=entry.get('identifier','')
+        if identifier.startswith(prefixes) and identifier not in current:entry['relation']='references'
+    known={entry.get('identifier') for entry in related}
+    for url in [ctx['website'],current_hf,ctx['kaggle'],ctx['wikidata'],ctx['run_url'],current_source]:
+        if url not in known:
+            related.append({'identifier':url,'scheme':'url','relation':'isSupplementTo'})
+            known.add(url)
+    md['related_identifiers']=related
+    return md
+
+
 def correct_zenodo_record(rec,desired,token,ctx,hf_revision,source_archive=False):
     _,original=request('GET',f'{BASE}/records/{rec}',token=token)
     doi=original.get('doi') or original['pids']['doi']['identifier'];version=original['metadata'].get('version')
@@ -129,29 +211,13 @@ def correct_zenodo_record(rec,desired,token,ctx,hf_revision,source_archive=False
             if not published:
                 try:request('DELETE',f'{BASE}/records/{rec}/draft',token=token)
                 except Exception:pass
-    # Metadata keeps the original DOI/version and all original creator/license information.
-    dep=f'{BASE}/deposit/depositions/{rec}';_,draft=request('GET',dep,token=token);md=draft['metadata']
-    desc=md.get('description','')
-    desc=desc.replace('A5064828898','A5146521397').replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',DATASET)
-    desc=re.sub(r'<p><strong>Publication convergence — \d{4}-\d{2}-\d{2}:</strong>.*?</p>','',desc,flags=re.S)
-    desc+=('<p><strong>Publication convergence — '+ctx['maintenance_date']+':</strong> Existing DOI '+doi+' and version '+str(version)
-       +' remain unchanged. This record received a documented in-place maintenance correction. Canonical OpenAlex: A5146521397; ORCID: 0009-0001-9346-8475; Wikidata: Q140287622. '
-       +'Canonical dataset IRI: '+DATASET+'. Verified source commit: '+ctx['source_commit']+'. '
-       +'Publication run: <a href="'+ctx['run_url']+'">'+ctx['run_url']+'</a>. '
-       +'Hugging Face revision: <a href="'+ctx['hf']+'/tree/'+hf_revision+'">'+hf_revision+'</a>. '
-       +'Website: <a href="'+ctx['website']+'">canonical website</a>; Kaggle: <a href="'+ctx['kaggle']+'">current distribution</a>. '
-       +('The source ZIP contains the corrected current canonical source; the base source release filename/version is retained.' if source_archive else
-         'Graph and query bindings use current canonical IRIs and the same bytes as the verified website/Hub resources; this is the selected 24-file preservation subset.')+'</p>')
-    md['description']=desc
-    related=list(md.get('related_identifiers',[]));known={r.get('identifier') for r in related}
-    for u in [ctx['website'],ctx['hf']+'/tree/'+hf_revision,ctx['kaggle'],ctx['wikidata'],ctx['run_url'],
-              'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+ctx['source_commit']]:
-        if u not in known:related.append({'identifier':u,'scheme':'url','relation':'isSupplementTo'})
-    md['related_identifiers']=related
+    # Preserve creator/license fields while producing one unambiguous current receipt.
+    dep=f'{BASE}/deposit/depositions/{rec}';_,draft=request('GET',dep,token=token)
+    md=build_zenodo_metadata(draft['metadata'],doi,ctx,hf_revision,source_archive)
     if draft.get('submitted'):request('POST',dep+'/actions/edit',token=token)
     request('PUT',dep,payload={'metadata':md},token=token)
     request('POST',dep+'/actions/publish',token=token)
-    _,final=request('GET',f'{BASE}/records/{rec}',token=token)
+    final=wait_for_public_metadata(f'{BASE}/records/{rec}',lambda value:zenodo_metadata_matches(value,original,md))
     final_doi=final.get('doi') or final['pids']['doi']['identifier']
     assert final_doi==doi and final['metadata'].get('version')==version,(rec,'DOI/version changed')
     _,files=request('GET',f'{BASE}/records/{rec}/files',token=token)
@@ -175,14 +241,23 @@ def main():
     from huggingface_hub import HfApi,CommitOperationAdd,CommitOperationDelete,hf_hub_download
     parser=argparse.ArgumentParser();parser.add_argument('--root',default='/tmp/platform-publish');args=parser.parse_args()
     root=Path(args.root);root.mkdir(parents=True,exist_ok=True)
-    ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)
+    ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'))
+    if os.environ.get('WEBSITE_PUBLICATION_RUN_URL'):ctx['website_publication_run_url']=os.environ['WEBSITE_PUBLICATION_RUN_URL']
+    dump(root/'context.json',ctx)
     token=os.environ['HF_TOKEN'];api=HfApi(token=token)
     info=api.dataset_info(HF_REPO,files_metadata=True);parent=info.sha
+    hf_resume=False
     if os.environ.get('EXPECTED_HF_REVISION'):
-        assert parent==os.environ['EXPECTED_HF_REVISION'],'HF changed since preflight'
+        receipt=None
+        if parent!=os.environ['EXPECTED_HF_REVISION']:
+            receipt=load(hf_hub_download(HF_REPO,filename='release-attestation.json',repo_type='dataset',revision=parent,token=token))
+        hf_resume=guard_hf_publication(ctx,parent,os.environ['EXPECTED_HF_REVISION'],receipt)
     _,initial_kaggle=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)
+    kaggle_resume=False
     if os.environ.get('EXPECTED_KAGGLE_VERSION'):
-        assert int(initial_kaggle['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed since preflight'
+        current=int(initial_kaggle['currentVersionNumber']);expected=int(os.environ['EXPECTED_KAGGLE_VERSION'])
+        manifest=public_kaggle_manifest(current) if current!=expected else None
+        kaggle_resume=guard_kaggle_publication(ctx,current,expected,manifest,parent)
     baseline=root/'hf-before';baseline.mkdir(exist_ok=True)
     dist_files={p.relative_to('dist').as_posix() for p in Path('dist').rglob('*') if p.is_file()}
     needed=[s.rfilename for s in info.siblings if s.rfilename not in dist_files and not re.match(r'assets/guide(?:-meta)?\.',s.rfilename)]
@@ -199,10 +274,15 @@ def main():
     current={s.rfilename for s in info.siblings}
     old_assets=[n for n in current if re.match(r'assets/guide(?:-meta)?\.',n) and not (hf/n).exists()]
     operations.extend(CommitOperationDelete(path_in_repo=n) for n in old_assets)
-    result=api.create_commit(HF_REPO,repo_type='dataset',revision='main',parent_commit=parent,operations=operations,
-       commit_message='Restore complete reader and converge canonical provenance and query bindings',
-       commit_description='Verified source '+ctx['source_commit']+'; existing Zenodo DOIs preserved. Publication '+ctx['run_url'])
-    revision=result.oid;ctx['hf_revision']=revision;dump(root/'context.json',ctx)
+    if hf_resume:
+        assert sha(hf/'dist-sha256.json')==sha(baseline/'dist-sha256.json'),'Previously published HF bytes differ from this exact candidate'
+        revision=parent
+    else:
+        result=api.create_commit(HF_REPO,repo_type='dataset',revision='main',parent_commit=parent,operations=operations,
+           commit_message='Align canonical DOI roles, release metadata and measured dataset counts',
+           commit_description='Verified source '+ctx['source_commit']+'; existing Zenodo DOIs preserved. Publication '+ctx['run_url'])
+        revision=result.oid
+    ctx['hf_revision']=revision;dump(root/'context.json',ctx)
     for name in ['graph.jsonld','provenance.jsonld','integrity-manifest.json','viewer/packaging.json']:
         live=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=revision,token=token,force_download=True)
         assert sha(live)==sha(hf/name),('HF live hash',name)
@@ -233,18 +313,19 @@ def main():
     subprocess.run(['kaggle','datasets','download',KAGGLE_REF,'-p',str(previous),'--unzip','--force'],check=True,stdout=subprocess.DEVNULL)
     subprocess.run(['kaggle','datasets','metadata',KAGGLE_REF,'-p',str(previous)],check=True,stdout=subprocess.DEVNULL)
     _,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)
-    version=int(view['currentVersionNumber'])+1
+    version=int(view['currentVersionNumber'])+(0 if kaggle_resume else 1)
     kg=root/'kaggle';description=build_kaggle(hf,previous,kg,ctx,version,revision)
     control=load(kg/'dataset-metadata.json')
-    target=dict(control.get('info') or control)
-    target['id']=KAGGLE_REF
-    target['description']=description
+    target=kaggle_control_metadata(control,load(hf/'viewer/packaging.json')['tables'],description,ctx,revision)
     dump(kg/'dataset-metadata.json',target)
     validate(kg,reader=False)
     subprocess.run([sys.executable,'tests/validate_platform_sync.py',str(kg),'--platform','kaggle',
                     '--source-commit',ctx['source_commit'],'--canonical-root',str(hf),
                     '--report',str(root/'kaggle-staged-validation.json')],check=True)
-    subprocess.run(['kaggle','datasets','version','-p',str(kg),'-m','Converge canonical IRIs, typed provenance, release proof and complete version metadata','--dir-mode','zip'],check=True)
+    if kaggle_resume:
+        assert (kg/'checksums.sha256').read_bytes()==(previous/'checksums.sha256').read_bytes(),'Previously published Kaggle bytes differ from this exact candidate'
+    else:
+        subprocess.run(['kaggle','datasets','version','-p',str(kg),'-m','Align DOI roles, release metadata and measured dataset counts','--dir-mode','zip'],check=True)
     final=root/'kaggle-live'
     for attempt in range(30):
         shutil.rmtree(final,ignore_errors=True);final.mkdir()
@@ -262,6 +343,9 @@ def main():
                     '--source-commit',ctx['source_commit'],'--canonical-root',str(hf),
                     '--report',str(root/'kaggle-public-validation.json')],check=True)
     subprocess.run(['kaggle','datasets','metadata',KAGGLE_REF,'-p',str(kg),'--update'],check=True)
+    public_metadata=wait_for_public_metadata('https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF,
+        lambda value:value.get('currentVersionNumber')==version and value.get('subtitle')==target['subtitle']
+                     and value.get('description','').strip()==target['description'].strip())
     for line in (final/'checksums.sha256').read_text().splitlines():
         digest,name=line.split('  ',1);assert sha(final/name)==digest,name
     report['kaggle']={'version':version,'files':sum(p.is_file() for p in final.rglob('*')),'query_bindings':'PASS','checksums':'PASS'}
