@@ -8,8 +8,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
-import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -127,6 +125,23 @@ def _hf_download(repo: str, filename: str, revision: str, token: str) -> Path:
     return Path(hf_hub_download(repo, filename=filename, repo_type="dataset", revision=revision, token=token, force_download=True))
 
 
+def assert_kaggle_version_lock(view: dict, expected: str | int | None) -> int:
+    current = int(view["currentVersionNumber"])
+    if expected not in (None, "") and current != int(expected):
+        raise AssertionError(f"Kaggle changed since preflight: expected {expected}, got {current}")
+    versions = view.get("versions") or []
+    if versions:
+        matching = [v for v in versions if int(v.get("versionNumber", -1)) == current]
+        if matching and matching[0].get("status") not in {None, "Ready"}:
+            raise AssertionError(f"Kaggle v{current} is not Ready: {matching[0].get('status')}")
+    return current
+
+
+def preflight_kaggle() -> int:
+    _, view = publisher.request("GET", "https://www.kaggle.com/api/v1/datasets/view/" + KAGGLE_REF)
+    return assert_kaggle_version_lock(view, os.environ.get("EXPECTED_KAGGLE_VERSION"))
+
+
 def preflight_zenodo(token: str) -> dict:
     expected = {
         "22838416": ("10.5281/zenodo.22838416", "1.3.3", 24),
@@ -150,6 +165,22 @@ def preflight_zenodo(token: str) -> dict:
             raise RuntimeError(f"Zenodo record {rec} already has an unpublished draft; publication aborted")
         out[rec] = {"doi": doi, "version": version, "files": count, "draft": "none"}
     return out
+
+
+def publish_source_via_record_draft(rec: str, changed: dict[str, bytes], token: str, request_fn=publisher.request) -> None:
+    """Replace the single source ZIP through the current records/draft file API and publish the same record."""
+    if len(changed) != 1:
+        raise AssertionError("Zenodo source correction must contain exactly one ZIP")
+    key, body = next(iter(changed.items()))
+    if not key.endswith(".zip"):
+        raise AssertionError("Zenodo source correction file key must remain a ZIP")
+    encoded = urllib.parse.quote(key, safe="")
+    base = f"{publisher.BASE}/records/{rec}/draft"
+    request_fn("DELETE", f"{base}/files/{encoded}", token=token)
+    request_fn("POST", f"{base}/files", payload=[{"key": key}], token=token)
+    request_fn("PUT", f"{base}/files/{encoded}/content", raw=body, token=token)
+    request_fn("POST", f"{base}/files/{encoded}/commit", token=token)
+    request_fn("POST", f"{base}/actions/publish", token=token)
 
 
 def prepare_hf_positioning(token: str) -> str:
@@ -176,10 +207,7 @@ def prepare_hf_positioning(token: str) -> str:
         readme = root / "README.md"
         shutil.copyfile(readme_src, readme)
         update_dataset_card_for_positioning(readme)
-        ops = [
-            CommitOperationAdd(path_in_repo=name, path_or_fileobj=str(root / name))
-            for name in POSITIONING_ENRICHMENT_FILES
-        ]
+        ops = [CommitOperationAdd(path_in_repo=name, path_or_fileobj=str(root / name)) for name in POSITIONING_ENRICHMENT_FILES]
         ops.extend([
             CommitOperationAdd(path_in_repo=POSITIONING_PARQUET, path_or_fileobj=str(root / POSITIONING_PARQUET)),
             CommitOperationAdd(path_in_repo="README.md", path_or_fileobj=str(readme)),
@@ -292,10 +320,12 @@ def main() -> None:
     if provenance.get("sourceCommit") != canonical:
         raise AssertionError(("live website source commit drift", provenance.get("sourceCommit"), canonical))
     zenodo = preflight_zenodo(os.environ["ZENODO_TOKEN"])
-    print(json.dumps({"ZENODO_PREFLIGHT": zenodo}, ensure_ascii=False), flush=True)
+    kaggle_version = preflight_kaggle()
+    print(json.dumps({"ZENODO_PREFLIGHT": zenodo, "KAGGLE_PREFLIGHT": kaggle_version}, ensure_ascii=False), flush=True)
     hf_revision = prepare_hf_positioning(os.environ["HF_TOKEN"])
     os.environ["EXPECTED_HF_REVISION"] = hf_revision
     os.environ["GITHUB_SHA"] = canonical
+    publisher.publish_source_bucket = publish_source_via_record_draft
     _with_positioning_kaggle_builder()
     publisher.main()
     result = verify_public_positioning(Path("/tmp/platform-publish"))
