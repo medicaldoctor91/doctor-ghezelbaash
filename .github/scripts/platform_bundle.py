@@ -8,6 +8,27 @@ DATASET='https://www.ghezelbaash.ir/graph.jsonld/dataset'
 HF_REPO='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
 
+POSITIONING_ENRICHMENT_FILES=(
+    'enrichment/instruction_examples_fa_market_positioning.jsonl',
+    'enrichment/instruction_examples_fa_market_positioning.csv',
+    'enrichment/market-positioning-evidence.json',
+    'enrichment/positioning-strategy.json',
+)
+OLD_DATASET='https://www.ghezelbaash.ir/graph.jsonld#dataset'
+
+def reconcile_positioning_assets(root):
+    root=Path(root)
+    changed=[]
+    for name in POSITIONING_ENRICHMENT_FILES:
+        path=root/name
+        if not path.is_file():continue
+        body=path.read_text(encoding='utf-8')
+        updated=body.replace(OLD_DATASET,DATASET)
+        if updated!=body:
+            path.write_text(updated,encoding='utf-8')
+            changed.append(name)
+    return changed
+
 
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def load(path):return json.loads(Path(path).read_text())
@@ -79,6 +100,7 @@ def build_hf(dist,baseline,out,ctx):
     for path in dist.rglob('*'):
         if path.is_file():
             dest=out/path.relative_to(dist);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)
+    reconcile_positioning_assets(out)
     matrix=[json.loads(s) for s in (baseline/'query-matrix.jsonl').read_text().splitlines() if s.strip()]
     for row in matrix:
         row['dataset_iri']=DATASET
@@ -163,6 +185,9 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     reserved=out/'datapackage.json'
     if reserved.exists():reserved.unlink()
     known={item['path'] for item in manifest['original_files']}
+    for name in POSITIONING_ENRICHMENT_FILES:
+        if (hf/name).is_file() and name not in known:
+            manifest['original_files'].append({'path':name});known.add(name)
     # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.
     for name in [alias,'release-attestation.json']:
         if name not in known:manifest['original_files'].append({'path':name})

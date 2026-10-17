@@ -189,6 +189,14 @@ def main():
     for name in needed:
         src=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=parent,token=token)
         dest=baseline/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest)
+    recovery_revision='e9f45a0fbb55b23847d53f9bc070418670cddbdb'
+    recovered=[]
+    for name in POSITIONING_ENRICHMENT_FILES:
+        dest=baseline/name
+        if dest.is_file():continue
+        src=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=recovery_revision,token=token)
+        dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest);recovered.append(name)
+    reconciled=reconcile_positioning_assets(baseline)
     hf=root/'hf';build_hf('dist',baseline,hf,ctx)
     # Also preserve current dataset controls such as the card's declared viewer configs.
     validate(hf)
@@ -197,7 +205,7 @@ def main():
     print('PREPARED_HF_PASS',flush=True)
     operations=[CommitOperationAdd(path_in_repo=p.relative_to(hf).as_posix(),path_or_fileobj=str(p)) for p in hf.rglob('*') if p.is_file()]
     current={s.rfilename for s in info.siblings}
-    old_assets=[n for n in current if re.match(r'assets/guide(?:-meta)?\.',n) and not (hf/n).exists()]
+    old_assets=[n for n in current if (re.match(r'assets/guide(?:-meta)?\.',n) and not (hf/n).exists()) or n=='_headers.content-digest.pending']
     operations.extend(CommitOperationDelete(path_in_repo=n) for n in old_assets)
     result=api.create_commit(HF_REPO,repo_type='dataset',revision='main',parent_commit=parent,operations=operations,
        commit_message='Restore complete reader and converge canonical provenance and query bindings',
@@ -207,7 +215,9 @@ def main():
         live=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=revision,token=token,force_download=True)
         assert sha(live)==sha(hf/name),('HF live hash',name)
     print('PUBLISHED_HF',revision,flush=True)
-    report={'sourceCommit':ctx['source_commit'],'publicationRun':ctx['run_url'],'hfRevision':revision}
+    report={'sourceCommit':ctx['source_commit'],'publicationRun':ctx['run_url'],'hfRevision':revision,
+            'positioningRecoveryRevision':recovery_revision,'positioningRecovered':recovered,
+            'positioningReconciled':reconciled}
     dump(root/'publication-report.json',report)
     try:report['hfOrg']=update_hf_org(token)
     except Exception as e:report['hfOrg']={'requires_followup':str(e)}
