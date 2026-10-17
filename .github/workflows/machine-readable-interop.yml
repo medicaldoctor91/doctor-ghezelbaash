@@ -34,15 +34,18 @@ jobs:
       - name: Deploy validated website
         run: |
           npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-message='Repair machine-readable interoperability' --commit-dirty=false
-      - name: Verify published representations
+      - name: Verify published representations and Content-Digest
         run: |
           python - <<'PY'
           import hashlib,json,os,time,urllib.request
           from pathlib import Path
           origin='https://www.ghezelbaash.ir/'
+          def open_live(path):
+              req=urllib.request.Request(origin+path.lstrip('/'),headers={'Cache-Control':'no-cache','Pragma':'no-cache','Accept-Encoding':'identity'})
+              return urllib.request.urlopen(req,timeout=60)
           def fetch(path):
-              req=urllib.request.Request(origin+path,headers={'Cache-Control':'no-cache'})
-              return urllib.request.urlopen(req,timeout=30).read()
+              with open_live(path) as response:
+                  return response.read()
           for attempt in range(24):
               live=json.loads(fetch('release-provenance.json?verify='+os.environ['GITHUB_SHA']+'-'+str(attempt)))
               if live.get('sourceCommit')==os.environ['GITHUB_SHA']:break
@@ -53,5 +56,22 @@ jobs:
           response=urllib.request.urlopen(origin+'data-catalog',timeout=30)
           assert response.status==200 and response.headers.get_content_type()=='application/ld+json'
           assert hashlib.sha256(response.read()).digest()==hashlib.sha256((Path('dist')/'graph.jsonld').read_bytes()).digest()
-          print('Published machine resources and catalog route match this validated build')
+          eligibility=json.loads((Path('dist')/'content-digest-eligibility.json').read_text())
+          assert eligibility['status']=='configured-for-cloudflare-pages'
+          assert eligibility['algorithm']=='sha-256'
+          assert len(eligibility['eligible'])<=100
+          verified=0
+          for resource,expected in eligibility['eligible'].items():
+              with open_live(resource) as response:
+                  actual_header=response.headers.get('Content-Digest')
+                  assert actual_header==expected['contentDigest'],(resource,actual_header,expected['contentDigest'])
+                  digest=hashlib.sha256();size=0
+                  while True:
+                      chunk=response.read(1024*1024)
+                      if not chunk:break
+                      size+=len(chunk);digest.update(chunk)
+              assert size==expected['bytes'],(resource,size,expected['bytes'])
+              assert digest.hexdigest()==expected['sha256'],resource
+              verified+=1
+          print(f'Published machine resources match this build; verified {verified} live Content-Digest headers and byte identities')
           PY
