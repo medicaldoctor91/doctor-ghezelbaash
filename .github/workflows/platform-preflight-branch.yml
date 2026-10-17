@@ -1,0 +1,48 @@
+name: Read-only platform convergence preflight
+on:
+  push:
+    branches: [ops/platform-convergence-hardening-20261017-red]
+    paths:
+      - .github/scripts/platform_convergence_hardened.py
+      - .github/scripts/sync_platform_machine_resources.py
+      - .github/scripts/platform_bundle.py
+      - .github/workflows/platform-preflight-branch.yml
+      - tests/**
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      EXPECTED_WEBSITE_COMMIT: ba0eb04b3b43b1316de009c46cdf5bb81024292a
+      EXPECTED_HF_REVISION: 81db5d14bf98342a07ae273967be06016a64f9aa
+      EXPECTED_KAGGLE_VERSION: '4'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install deterministic validation dependencies
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+      - name: Build and run read-only convergence preflight
+        run: |
+          npm run build
+          python .github/scripts/platform_convergence_hardened.py --prepare-only
+      - name: Save read-only preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-convergence-readonly-preflight
+          path: |
+            /tmp/platform-convergence-hardened/context.json
+            /tmp/platform-convergence-hardened/hf-validation.json
+            /tmp/platform-convergence-hardened/hf-validation-hardened.json
+            /tmp/platform-convergence-hardened/kaggle-preview-validation.json
+            /tmp/platform-convergence-hardened/website-file-sources.json
+            /tmp/platform-convergence-hardened/hf-platform-only-lint.json
+          if-no-files-found: warn
