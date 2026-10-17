@@ -81,12 +81,9 @@ class PositioningRecoveryTests(unittest.TestCase):
         self.assertEqual(calls[2][3], b"abc")
         self.assertEqual(calls[2][4], "secret")
 
-    def test_platform_validator_row_contract_is_measured_from_canonical_dist(self):
+    def test_platform_validator_entity_fact_contract_is_measured_from_canonical_dist(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "clinical-passages.jsonl").write_text("{}\n{}\n", encoding="utf-8")
-            (root / "query-matrix.jsonl").write_text("{}\n", encoding="utf-8")
-            (root / "fact-map.json").write_text(json.dumps({"records": [{}, {}, {}]}), encoding="utf-8")
             with (root / "entity-facts.csv").open("w", newline="", encoding="utf-8") as handle:
                 writer = csv.DictWriter(handle, fieldnames=["subject", "predicate", "object"])
                 writer.writeheader(); writer.writerows([
@@ -95,19 +92,15 @@ class PositioningRecoveryTests(unittest.TestCase):
                     {"subject": "s3", "predicate": "p", "object": "o"},
                     {"subject": "s4", "predicate": "p", "object": "o"},
                 ])
-            contract = validator_sync.canonical_row_contract(root)
-            self.assertEqual(contract, {
-                "clinical_passages": 2,
-                "clinical_answers": 3,
-                "entity_facts": 4,
-                "query_matrix": 1,
-            })
+            count = validator_sync.canonical_entity_fact_count(root)
+            self.assertEqual(count, 4)
             validator = root / "validator.py"
             validator.write_text("EXPECTED_ROWS = {'clinical_passages': 1, 'clinical_answers': 1,\n                 'entity_facts': 9, 'query_matrix': 1}\n", encoding="utf-8")
-            validator_sync.patch_validator(validator, contract)
+            validator_sync.patch_validator(validator, count)
             patched = validator.read_text(encoding="utf-8")
             self.assertIn("'entity_facts': 4", patched)
             self.assertNotIn("'entity_facts': 9", patched)
+            self.assertIn("'query_matrix': 1", patched)
 
 
 if __name__ == "__main__":
