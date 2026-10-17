@@ -1,0 +1,26 @@
+name: Verify current HF positioning asset presence
+on:
+  push:
+    branches: [ops/platform-convergence-clean-20261017]
+    paths: [.github/workflows/hf-positioning-presence-check.yml]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect exact current Hub inventory
+        run: |
+          python - <<'PY'
+          import json,urllib.request
+          repo='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          req=urllib.request.Request('https://huggingface.co/api/datasets/'+repo,headers={'Cache-Control':'no-cache, no-store','Pragma':'no-cache','User-Agent':'ghezelbaash-hf-inventory-check/1.0'})
+          with urllib.request.urlopen(req,timeout=60) as r:data=json.load(r)
+          names=sorted(x['rfilename'] for x in data.get('siblings',[]))
+          target='instruction_examples_fa_market_positioning.jsonl'
+          positioning=[n for n in names if 'position' in n.lower() or 'instruction' in n.lower() or 'market' in n.lower()]
+          print(json.dumps({'sha':data.get('sha'),'fileCount':len(names),'targetPresent':target in names,'positioningLikeFiles':positioning},ensure_ascii=False))
+          if target not in names:
+              print('TARGET_MISSING_FROM_CURRENT_HF_MAIN')
+          PY
