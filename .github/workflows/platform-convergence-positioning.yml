@@ -1,0 +1,75 @@
+name: Publish locked platform convergence with positioning
+on:
+  push:
+    branches: [maintenance/positioning-recovery-20261017]
+    paths: [.github/workflows/platform-convergence-positioning.yml]
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-platform-convergence
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      CANONICAL_WEBSITE_COMMIT: 8edb4d6f2e224886132297ac5f380bee26cb53cb
+      EXPECTED_HF_BEFORE: 81db5d14bf98342a07ae273967be06016a64f9aa
+      EXPECTED_KAGGLE_VERSION: '13'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Pin workspace to verified canonical website source
+        run: |
+          cp .github/scripts/platform_publish_positioning.py /tmp/platform_publish_positioning.py
+          cp tests/platform-positioning-recovery.test.py /tmp/platform-positioning-recovery.test.py
+          git checkout --detach "$CANONICAL_WEBSITE_COMMIT"
+          cp /tmp/platform_publish_positioning.py .github/scripts/platform_publish_positioning.py
+          cp /tmp/platform-positioning-recovery.test.py tests/platform-positioning-recovery.test.py
+          test "$(git rev-parse HEAD)" = "$CANONICAL_WEBSITE_COMMIT"
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Check publication credentials without exposing values
+        run: |
+          python - <<'PY'
+          import os
+          required=['HF_TOKEN','ZENODO_TOKEN','KAGGLE_API_TOKEN']
+          missing=[key for key in required if not os.environ.get(key)]
+          assert not missing, 'Missing publication bindings: '+str(missing)
+          print('Publication credential bindings present')
+          PY
+      - name: Install locked validation and publication dependencies
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check \
+            'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' \
+            'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant>=1.0.22,<2' 'pyyaml>=6,<7'
+      - name: Verify canonical source before any platform write
+        run: |
+          node --test tests/*.test.mjs
+          for test in tests/*.test.py; do python "$test"; done
+          npm run build
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/platform-positioning-recovery.test.py
+          python -m py_compile .github/scripts/platform_bundle.py .github/scripts/platform_publish.py .github/scripts/platform_publish_positioning.py
+      - name: Publish HF, Zenodo in-place and Kaggle with public verification
+        run: python .github/scripts/platform_publish_positioning.py
+      - name: Save publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-convergence-positioning-evidence
+          path: |
+            /tmp/platform-publish/context.json
+            /tmp/platform-publish/publication-report.json
+            /tmp/platform-publish/hf-validation.json
+            /tmp/platform-publish/kaggle-staged-validation.json
+            /tmp/platform-publish/kaggle-public-validation.json
+          if-no-files-found: warn
+          overwrite: true
