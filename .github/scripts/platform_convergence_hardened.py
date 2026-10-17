@@ -12,10 +12,36 @@ EXPECTED_WEBSITE_COMMIT = 'EXPECTED_' + 'WEBSITE_COMMIT'
 EXPECTED_HF_REVISION = 'EXPECTED_' + 'HF_REVISION'
 EXPECTED_KAGGLE_VERSION = 'EXPECTED_' + 'KAGGLE_VERSION'
 
+STALE_PLATFORM_ANCHORS = {
+    'old-openalex': 'A5064828898',
+    'old-dataset-iri': 'https://www.ghezelbaash.ir/graph.jsonld#dataset',
+    'stale-place-id': 'ChIJBTOYDOTt-j8RD-7mAPy6Zas',
+    'obsolete-doi': '10.5281/zenodo.18765169',
+}
+TEXT_SUFFIXES = {'.txt', '.md', '.json', '.jsonl', '.csv', '.xml', '.ttl', '.html', '.yml', '.yaml'}
+
 
 def exact_revision(value, label):
     assert re.fullmatch(r'[0-9a-f]{40}', value or ''), label + ' must be an exact 40-character revision'
     return value
+
+
+def is_obsolete_hf_asset(name):
+    return name == '_headers.content-digest.pending'
+
+
+def semantic_lint_platform_only(root, names):
+    root = Path(root)
+    violations = []
+    for name in sorted(names):
+        path = root / name
+        if not path.is_file() or path.suffix.lower() not in TEXT_SUFFIXES:
+            continue
+        text = path.read_text(encoding='utf-8', errors='replace')
+        for code, anchor in STALE_PLATFORM_ANCHORS.items():
+            if anchor in text:
+                violations.append({'file': name, 'code': code, 'anchor': anchor})
+    return violations
 
 
 def reviewed_args(root, prepare_only):
