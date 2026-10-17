@@ -1,0 +1,45 @@
+name: Read-only Kaggle v14 state and download diagnostic
+on:
+  push:
+    branches: [maintenance/platform-convergence-20261012]
+    paths: [.github/workflows/kaggle-v14-readonly-verify.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install Kaggle CLI
+        run: python -m pip install --disable-pip-version-check 'kaggle==2.2.4'
+      - name: Inspect exact-version download API and current public state
+        run: |
+          python - <<'PY'
+          import inspect, json
+          from kaggle.api.kaggle_api_extended import KaggleApi
+          ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+          api=KaggleApi();api.authenticate()
+          for name in ['dataset_view','dataset_download_files','dataset_list_files','dataset_metadata']:
+              fn=getattr(api,name,None)
+              print('SIGNATURE',name,inspect.signature(fn) if fn else 'missing')
+          view=api.dataset_view(ref)
+          def clean(value):
+              if hasattr(value,'to_dict'): return clean(value.to_dict())
+              if isinstance(value,dict): return {str(k):clean(v) for k,v in value.items()}
+              if isinstance(value,(list,tuple)): return [clean(v) for v in value]
+              if hasattr(value,'__dict__'): return {k:clean(v) for k,v in vars(value).items() if not k.startswith('_')}
+              if isinstance(value,(str,int,float,bool)) or value is None:return value
+              return str(value)
+          data=clean(view)
+          keys=['currentVersionNumber','current_version_number','id','title','isPrivate','is_private']
+          print('VIEW_CORE',json.dumps({k:data.get(k) for k in keys if k in data},ensure_ascii=False))
+          versions=data.get('versions') or []
+          print('VERSIONS',json.dumps(versions,ensure_ascii=False)[:12000])
+          PY
+      - name: Show CLI exact-version help
+        run: kaggle datasets download --help
