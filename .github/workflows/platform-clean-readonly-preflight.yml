@@ -2,7 +2,10 @@ name: Clean read-only external convergence preflight
 on:
   push:
     branches: [ops/platform-convergence-clean-20261017]
-    paths: [.github/workflows/platform-clean-readonly-preflight.yml]
+    paths:
+      - .github/workflows/platform-clean-readonly-preflight.yml
+      - .github/scripts/platform_convergence_hardened.py
+      - tests/hf-platform-assets.test.py
 permissions:
   contents: read
 jobs:
