@@ -1,4 +1,4 @@
-name: External distribution convergence from verified website commit
+name: Resume external convergence after verified Hugging Face publication
 on:
   push:
     branches: [maintenance/platform-convergence-20261012]
@@ -15,6 +15,8 @@ jobs:
     timeout-minutes: 75
     env:
       EXPECTED_WEBSITE_COMMIT: 8edb4d6f2e224886132297ac5f380bee26cb53cb
+      REUSE_HF_REVISION: e0c33aa565ed1495d3ed78d907cf37f86e73489a
+      EXPECTED_KAGGLE_VERSION: '13'
       HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
       ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
@@ -40,41 +42,47 @@ jobs:
         run: |
           npm ci
           python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
-      - name: Freeze live external state and verify Zenodo correction eligibility
+      - name: Verify partial state and correction eligibility
         run: |
           python - <<'PY'
           import json, os, urllib.error, urllib.request
+          from huggingface_hub import HfApi
           def get(url, token=None):
-              headers={'Cache-Control':'no-cache, no-store','Pragma':'no-cache','User-Agent':'ghezelbaash-external-preflight/1.0'}
+              headers={'Cache-Control':'no-cache, no-store','Pragma':'no-cache','User-Agent':'ghezelbaash-resume-preflight/1.0'}
               if token: headers['Authorization']='Bearer '+token
               req=urllib.request.Request(url,headers=headers)
               with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
-          website=get('https://www.ghezelbaash.ir/release-provenance.json?preflight='+os.environ['GITHUB_RUN_ID'])
-          assert website['sourceCommit']==os.environ['EXPECTED_WEBSITE_COMMIT'], ('Website changed',website['sourceCommit'])
-          hf=get('https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data')
+          website=get('https://www.ghezelbaash.ir/release-provenance.json?resume='+os.environ['GITHUB_RUN_ID'])
+          assert website['sourceCommit']==os.environ['EXPECTED_WEBSITE_COMMIT']
+          info=HfApi(token=os.environ['HF_TOKEN']).dataset_info('doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',files_metadata=True)
+          assert info.sha==os.environ['REUSE_HF_REVISION'], ('HF changed after successful partial publication',info.sha)
+          names={s.rfilename for s in info.siblings}
+          required={
+            'enrichment/instruction_examples_fa_market_positioning.jsonl',
+            'enrichment/instruction_examples_fa_market_positioning.csv',
+            'enrichment/market-positioning-evidence.json',
+            'enrichment/positioning-strategy.json',
+          }
+          assert required <= names, ('Missing positioning assets',sorted(required-names))
+          assert '_headers.content-digest.pending' not in names, 'Stale pending header artifact still exists on HF'
           kaggle=get('https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data')
-          current=int(kaggle['currentVersionNumber'])
-          version=next(v for v in kaggle['versions'] if int(v['versionNumber'])==current)
-          assert version['status']=='Ready' and not kaggle.get('isPrivate')
-          assert not hf.get('private') and not hf.get('gated')
-          expected={'22838416':('10.5281/zenodo.22838416','1.3.3',24),'23289009':('10.5281/zenodo.23289009','source-final-2026-10-10',1)}
+          assert int(kaggle['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION'])
+          current=next(v for v in kaggle['versions'] if int(v['versionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']))
+          assert current['status']=='Ready'
           token=os.environ['ZENODO_TOKEN']
+          expected={'22838416':('10.5281/zenodo.22838416','1.3.3',24),'23289009':('10.5281/zenodo.23289009','source-final-2026-10-10',1)}
           for rec,(doi,ver,count) in expected.items():
               record=get('https://zenodo.org/api/records/'+rec)
-              actual_doi=record.get('doi') or record['pids']['doi']['identifier']
-              assert actual_doi==doi and record['metadata'].get('version')==ver
+              actual=record.get('doi') or record['pids']['doi']['identifier']
+              assert actual==doi and record['metadata'].get('version')==ver
               files=get('https://zenodo.org/api/records/'+rec+'/files')
               assert len(files['entries'])==count
               try:get('https://zenodo.org/api/records/'+rec+'/draft',token)
-              except urllib.error.HTTPError as e:
-                  assert e.code==404, (rec,e.code)
-              else:raise RuntimeError('Existing unpublished Zenodo draft for '+rec)
-          with open(os.environ['GITHUB_ENV'],'a') as f:
-              f.write('EXPECTED_HF_REVISION='+hf['sha']+'\n')
-              f.write('EXPECTED_KAGGLE_VERSION='+str(current)+'\n')
-          print(json.dumps({'website':website['sourceCommit'],'hf':hf['sha'],'kaggle':current,'zenodo':'same DOI/version/file-key correction eligible'}))
+              except urllib.error.HTTPError as e: assert e.code==404,(rec,e.code)
+              else: raise RuntimeError('Failed correction draft was not discarded for '+rec)
+          print(json.dumps({'website':website['sourceCommit'],'hf':info.sha,'kaggle':kaggle['currentVersionNumber'],'zenodoDrafts':'none','zenodoDois':'unchanged'}))
           PY
-      - name: Apply runtime source-commit, canonical-count and race guards
+      - name: Patch publisher for immutable-HF resume and current Zenodo draft file API
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -82,17 +90,21 @@ jobs:
           old="ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)"
           new="source_commit=os.environ.get('EXPECTED_WEBSITE_COMMIT') or os.environ['GITHUB_SHA'];ctx=context(source_commit,os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)"
           assert old in text;text=text.replace(old,new,1)
+          old="""            if source_archive:\n                publish_source_bucket(rec,changed,token)\n            else:\n                for key in changed:request('DELETE',f'{BASE}/records/{rec}/draft/files/{urllib.parse.quote(key,safe=\"\")}',token=token)\n                request('POST',f'{BASE}/records/{rec}/draft/files',payload=[{'key':k} for k in changed],token=token)\n                for key,body in changed.items():\n                    key=urllib.parse.quote(key,safe='')\n                    request('PUT',f'{BASE}/records/{rec}/draft/files/{key}/content',raw=body,token=token)\n                    request('POST',f'{BASE}/records/{rec}/draft/files/{key}/commit',token=token)\n                request('POST',f'{BASE}/records/{rec}/draft/actions/publish',token=token)\n"""
+          new="""            for key in changed:request('DELETE',f'{BASE}/records/{rec}/draft/files/{urllib.parse.quote(key,safe=\"\")}',token=token)\n            request('POST',f'{BASE}/records/{rec}/draft/files',payload=[{'key':k} for k in changed],token=token)\n            for key,body in changed.items():\n                key=urllib.parse.quote(key,safe='')\n                request('PUT',f'{BASE}/records/{rec}/draft/files/{key}/content',raw=body,token=token)\n                request('POST',f'{BASE}/records/{rec}/draft/files/{key}/commit',token=token)\n            request('POST',f'{BASE}/records/{rec}/draft/actions/publish',token=token)\n"""
+          assert old in text;text=text.replace(old,new,1)
+          start="""    operations=[CommitOperationAdd(path_in_repo=p.relative_to(hf).as_posix(),path_or_fileobj=str(p)) for p in hf.rglob('*') if p.is_file()]\n"""
+          end="""    print('PUBLISHED_HF',revision,flush=True)\n"""
+          i=text.index(start);j=text.index(end,i)+len(end)
+          replacement="""    reuse=os.environ.get('REUSE_HF_REVISION')\n    assert reuse and parent==reuse,'HF resume revision changed'\n    current={s.rfilename for s in info.siblings}\n    assert '_headers.content-digest.pending' not in current\n    assert set(POSITIONING_ENRICHMENT_FILES) <= current\n    revision=parent;ctx['hf_revision']=revision;dump(root/'context.json',ctx)\n    for name in ['graph.jsonld','provenance.jsonld','integrity-manifest.json','viewer/packaging.json']:\n        live=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=revision,token=os.environ['HF_TOKEN'],force_download=True)\n        assert sha(live)==sha(hf/name),('Reused HF bytes',name)\n    print('REUSED_HF',revision,flush=True)\n"""
+          text=text[:i]+replacement+text[j:]
           old="_,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)\n    version=int(view['currentVersionNumber'])+1"
-          new="_,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)\n    if os.environ.get('EXPECTED_KAGGLE_VERSION'):assert int(view['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed before publication'\n    version=int(view['currentVersionNumber'])+1"
+          new="_,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)\n    assert int(view['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed before publication'\n    version=int(view['currentVersionNumber'])+1"
           assert old in text;text=text.replace(old,new,1)
           p.write_text(text)
-          v=Path('tests/validate_platform_sync.py');body=v.read_text()
-          old="'entity_facts': 22139"
-          assert old in body
-          body=body.replace(old,"'entity_facts': 22138",1)
-          v.write_text(body)
+          v=Path('tests/validate_platform_sync.py');body=v.read_text();old="'entity_facts': 22139";assert old in body;v.write_text(body.replace(old,"'entity_facts': 22138",1))
           PY
-      - name: Build and exhaustively validate canonical website and positioning contract
+      - name: Rebuild canonical source and verify reused HF package contract
         run: |
           node --test tests/*.test.mjs
           python tests/platform-positioning-recovery.test.py
@@ -101,7 +113,7 @@ jobs:
           python tests/validate_canonical_invariants.py dist
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python -m py_compile .github/scripts/platform_bundle.py .github/scripts/platform_publish.py tests/validate_platform_sync.py
-      - name: Verify live website is still exact canonical upstream
+      - name: Verify website lock immediately before mutation
         run: |
           python - <<'PY'
           import hashlib,json,os,urllib.request
@@ -110,17 +122,16 @@ jobs:
           assert live['sourceCommit']==os.environ['EXPECTED_WEBSITE_COMMIT']
           for name in ['graph.jsonld','provenance.jsonld','integrity-manifest.json','llms.txt']:
               body=urllib.request.urlopen(urllib.request.Request('https://www.ghezelbaash.ir/'+name+'?lock='+os.environ['GITHUB_RUN_ID'],headers={'Cache-Control':'no-cache'}),timeout=60).read()
-              local=(Path('dist')/name).read_bytes()
-              assert hashlib.sha256(body).digest()==hashlib.sha256(local).digest(),name
+              assert hashlib.sha256(body).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
           print('Website lock PASS',os.environ['EXPECTED_WEBSITE_COMMIT'])
           PY
-      - name: Publish HF, correct both Zenodo records in-place, publish and verify exact Kaggle version
+      - name: Resume Zenodo in-place corrections and create exactly Kaggle v14
         run: python .github/scripts/platform_publish.py
       - name: Save publication and validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: external-convergence-evidence
+          name: external-convergence-resume-evidence
           path: |
             /tmp/platform-publish/context.json
             /tmp/platform-publish/publication-report.json
