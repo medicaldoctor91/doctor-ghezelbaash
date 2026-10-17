@@ -1,4 +1,5 @@
 name: Canonicalize HF organization card
+# One-time safe update of the public organization card only.
 on:
   push:
     branches: [maintenance/positioning-recovery-20261017]
