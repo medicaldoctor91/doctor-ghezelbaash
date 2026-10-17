@@ -23,6 +23,23 @@ AUTHORS = 'authors:\n  - family-names: "Ghezelbash"\n    given-names: "Saeed"\n 
 
 
 class PackageMaintenanceTests(unittest.TestCase):
+    def test_kaggle_control_uses_measured_counts_and_the_exact_hub_revision(self):
+        ctx=bundle.context(NEW_COMMIT,54321,'2026-10-17')
+        old_revision='a'*40
+        old={'title':'Existing title','subtitle':'22,142 facts, stale summary','licenses':[{'name':'CC-BY-4.0'}],
+             'collaborators':[{'name':'Existing collaborator'}],
+             'userSpecifiedSources':'Canonical '+bundle.DATASET+'; Hub '+ctx['hf']+'/tree/'+old_revision}
+        tables={name:{'rows':count} for name,count in [('entity_facts',22139),('clinical_passages',3248),('query_matrix',876),('clinical_answers',125)]}
+        result=bundle.kaggle_control_metadata({'info':old},tables,'Current description',ctx,'b'*40)
+        self.assertEqual(result['subtitle'],'22,139 facts, 3,248 clinical passages, 876 queries and 125 source-linked answers')
+        self.assertEqual(result['title'],old['title'])
+        self.assertEqual(result['licenses'],old['licenses'])
+        self.assertEqual(result['collaborators'],old['collaborators'])
+        self.assertIn('/tree/'+'b'*40,result['userSpecifiedSources'])
+        self.assertNotIn(old_revision,result['userSpecifiedSources'])
+        self.assertEqual(result['description'],'Current description')
+        self.assertEqual(old['subtitle'],'22,142 facts, stale summary')
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

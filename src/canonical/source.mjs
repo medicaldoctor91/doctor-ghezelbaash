@@ -10089,7 +10089,7 @@ export const SOURCE = {
           "@value": "2026-09-30",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "description": "Version-controlled source project for Version 1.3.3 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
+        "description": "Version-controlled source project for Version 1.3.3 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo preserves DOI-identified releases with documented in-place maintenance, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
         "author": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10602,7 +10602,7 @@ export const SOURCE = {
             "@id": "https://www.ghezelbaash.ir/project-github-source"
           }
         ],
-        "description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, Hugging Face is its AI/retrieval distribution layer, and Kaggle is its data-science and notebook distribution layer; these access points are related resources, not identity-equivalent entities.",
+        "description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo preserves DOI-identified releases with documented in-place maintenance, Hugging Face is its AI/retrieval distribution layer, and Kaggle is its data-science and notebook distribution layer; these access points are related resources, not identity-equivalent entities.",
         "mentions": [
           {
             "@id": "https://www.ghezelbaash.ir/evidence-irimc"
@@ -10920,7 +10920,7 @@ export const SOURCE = {
         },
         "sdLicense": "https://creativecommons.org/licenses/by/4.0/",
         "dcterms:title": "Dr. Saeed Ghezelbash Public Knowledge Graph",
-        "dcterms:description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, Hugging Face is its AI/retrieval distribution layer, and Kaggle is its data-science and notebook distribution layer; these access points are related resources, not identity-equivalent entities.",
+        "dcterms:description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo preserves DOI-identified releases with documented in-place maintenance, Hugging Face is its AI/retrieval distribution layer, and Kaggle is its data-science and notebook distribution layer; these access points are related resources, not identity-equivalent entities.",
         "dcterms:creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10935,7 +10935,7 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:modified": {
-          "@value": "2026-10-04",
+          "@value": "2026-10-10",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:identifier": [
@@ -37315,7 +37315,7 @@ export const SOURCE = {
           "https://orcid.org/0009-0001-9346-8475",
           "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
           "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
-          "https://doi.org/10.5281/zenodo.18765168",
+          "https://doi.org/10.5281/zenodo.22838416",
           "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
           "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
           "https://www.google.com/search?kgmid=/g/11nqdfk76c",
