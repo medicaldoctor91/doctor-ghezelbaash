@@ -4,10 +4,8 @@ on:
     branches: [maintenance/positioning-recovery-20261017]
     paths:
       - .github/workflows/positioning-recovery-ci.yml
-      - .github/scripts/platform_bundle.py
-      - .github/scripts/platform_publish.py
+      - .github/scripts/platform_publish_positioning.py
       - tests/platform-positioning-recovery.test.py
-      - tests/platform-bundle-sync.test.py
 permissions:
   contents: read
 jobs:
@@ -19,6 +17,6 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Install test dependencies
-        run: python -m pip install --disable-pip-version-check 'pyarrow>=18,<23'
+        run: python -m pip install --disable-pip-version-check 'pyarrow>=18,<23' 'pyyaml>=6,<7'
       - name: Positioning recovery regression
         run: python tests/platform-positioning-recovery.test.py
