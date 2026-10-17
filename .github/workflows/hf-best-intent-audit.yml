@@ -1,0 +1,37 @@
+name: Audit HF best-intent coverage read-only
+on:
+  push:
+    branches: [ops/platform-convergence-clean-20261017]
+    paths: [.github/workflows/hf-best-intent-audit.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect current immutable query-matrix coverage
+        run: |
+          python - <<'PY'
+          import collections,json,urllib.request
+          repo='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          info=json.load(urllib.request.urlopen(urllib.request.Request('https://huggingface.co/api/datasets/'+repo,headers={'Cache-Control':'no-cache'}),timeout=60))
+          rev=info['sha']
+          url=f'https://huggingface.co/datasets/{repo}/resolve/{rev}/query-matrix.jsonl?download=true'
+          body=urllib.request.urlopen(urllib.request.Request(url,headers={'Cache-Control':'no-cache'}),timeout=60).read().decode('utf-8')
+          rows=[json.loads(x) for x in body.splitlines() if x.strip()]
+          def text(r):return json.dumps(r,ensure_ascii=False).lower()
+          best=[r for r in rows if ('بهترین' in text(r) or 'best ' in text(r) or 'best-' in text(r))]
+          services={
+            'botox':['بوتاکس','botox','botulinum'], 'filler':['فیلر','ژل','filler'], 'lip':['لب','lip'],
+            'contouring':['کانتور','contour','jawline','chin'], 'thread_lift':['لیفت نخ','thread lift'],
+            'prp':['prp','پی آر پی'], 'mesotherapy':['مزوتراپی','mesotherapy'], 'subcision':['سابسیژن','subcision'],
+            'rejuvenation':['جوانسازی','جوان‌سازی','rejuvenation'], 'acne_scars':['جای جوش','اسکار آکنه','acne scar']}
+          coverage={k:sum(any(term in text(r) for term in terms) for r in best) for k,terms in services.items()}
+          langs=collections.Counter(str(r.get('language') or r.get('lang') or '') for r in best)
+          sample=[]
+          for r in best[:25]:
+              q=r.get('query') or r.get('question') or r.get('prompt') or r.get('text')
+              if q:sample.append(q)
+          print(json.dumps({'revision':rev,'totalRows':len(rows),'bestIntentRows':len(best),'bestIntentLanguages':langs,'serviceCoverageWithinBest':coverage,'sample':sample},ensure_ascii=False,default=dict))
+          PY
