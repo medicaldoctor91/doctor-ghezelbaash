@@ -57,7 +57,6 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
 
           path = Path('src/canonical/source.mjs')
           text = path.read_text(encoding='utf-8')
@@ -71,35 +70,23 @@ jobs:
               ''
           )
 
-          clinic = 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
-          node_pattern = re.compile(
-              r'(\n      \{\n        "@id": "' + re.escape(clinic) +
-              r'",\n        "@type": \[\n)(.*?)(\n        \],)',
-              re.S,
-          )
-          match = node_pattern.search(text)
-          if not match:
-              raise RuntimeError('Top-level canonical clinic/practice definition not found')
-          type_block = match.group(2)
-          type_block, removed_type = re.subn(
-              r'\n\s*"(?:https://schema\.org/)?MedicalClinic"\s*,?', '', type_block, count=1
-          )
-          if removed_type != 1:
-              raise RuntimeError('Expected exactly one MedicalClinic type in canonical practice definition')
-          text = text[:match.start(2)] + type_block + text[match.end(2):]
+          lines = text.splitlines(keepends=True)
+          graph_type_indexes = [
+              i for i, line in enumerate(lines)
+              if line.strip().rstrip(',') in {'"MedicalClinic"', '"https://schema.org/MedicalClinic"'}
+          ]
+          if len(graph_type_indexes) != 1:
+              raise RuntimeError(f'Expected exactly one literal MedicalClinic type line; found {len(graph_type_indexes)}')
+          removed_graph_line = lines.pop(graph_type_indexes[0]).strip()
 
-          shape_start = text.find('ex:ClinicAssetShape a sh:NodeShape')
-          shape_end = text.find('ex:WebPageDominanceShape a sh:NodeShape', shape_start)
-          if shape_start < 0 or shape_end < 0:
-              raise RuntimeError('ClinicAssetShape block not found')
-          shape = text[shape_start:shape_end]
-          shape, removed_shacl = re.subn(
-              r'  sh:property \[ sh:path rdf:type ; sh:hasValue schema:MedicalClinic \] ;\\n',
-              '', shape, count=1
-          )
-          if removed_shacl != 1:
-              raise RuntimeError('Expected exactly one MedicalClinic requirement in ClinicAssetShape')
-          text = text[:shape_start] + shape + text[shape_end:]
+          shacl_indexes = [
+              i for i, line in enumerate(lines)
+              if 'sh:path rdf:type ; sh:hasValue schema:MedicalClinic' in line
+          ]
+          if len(shacl_indexes) != 1:
+              raise RuntimeError(f'Expected exactly one MedicalClinic SHACL line; found {len(shacl_indexes)}')
+          removed_shacl_line = lines.pop(shacl_indexes[0]).strip()
+          text = ''.join(lines)
 
           if 'A5064828898' in text:
               raise RuntimeError('Stale OpenAlex ID still present in canonical source')
@@ -111,8 +98,13 @@ jobs:
               raise RuntimeError('Canonical source unexpectedly required no repair')
 
           path.write_text(text, encoding='utf-8')
+          print('Removed graph type:', removed_graph_line)
+          print('Removed SHACL requirement:', removed_shacl_line)
           print('Canonical source repaired directly')
           PY
+
+      - name: GREEN - prove corrected solo-practice source before commit
+        run: node --test tests/solo-practice-semantics.test.mjs
 
       - name: Remove one-time workflow and commit repaired source
         run: |
@@ -125,7 +117,7 @@ jobs:
           git push origin HEAD:main
           echo "FINAL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
-      - name: GREEN - validate source, build final dist, then validate projections
+      - name: Validate source, build final dist, then validate projections
         run: |
           node --test tests/*.test.mjs
           npm run build
