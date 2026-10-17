@@ -3,6 +3,8 @@ import argparse
 import json
 import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -90,6 +92,19 @@ def apply_hf_asset_policy(root, source_commit):
     return report
 
 
+def validate_frozen_package(root, platform, source_commit, report, canonical_root=None):
+    command = [
+        sys.executable,
+        str(sync.REPOSITORY / 'tests/validate_platform_sync_frozen.py'),
+        str(root), '--platform', platform,
+        '--source-commit', source_commit,
+        '--report', str(report),
+    ]
+    if canonical_root is not None:
+        command.extend(['--canonical-root', str(canonical_root)])
+    subprocess.run(command, check=True, cwd=sync.REPOSITORY)
+
+
 def reviewed_args(root, prepare_only):
     website_commit = exact_revision(os.environ.get(EXPECTED_WEBSITE_COMMIT), 'website commit')
     hf_revision = exact_revision(os.environ.get(EXPECTED_HF_REVISION), 'HF revision')
@@ -105,10 +120,16 @@ def verify_reviewed_origin(args):
     release_before = json.loads(sync.fetch(sync.ORIGIN + '/release-provenance.json'))
     assert release_before.get('sourceCommit') == args.website_commit, 'Reviewed website commit is no longer live'
     manifest_before = sync.fetch(sync.ORIGIN + '/integrity-manifest.json')
-    ctx, control = sync.prepare(args)
+    original_validator = sync.validate_package
+    sync.validate_package = validate_frozen_package
+    try:
+        ctx, control = sync.prepare(args)
+    finally:
+        sync.validate_package = original_validator
     policy = apply_hf_asset_policy(args.root, args.website_commit)
     assert not policy['semanticViolations'], 'HF-only semantic drift: ' + json.dumps(policy['semanticViolations'], ensure_ascii=False)
-    sync.validate_package(args.root / 'hf', 'hf', args.website_commit, args.root / 'hf-validation-hardened.json')
+    validate_frozen_package(args.root / 'hf', 'hf', args.website_commit,
+                            args.root / 'hf-validation-hardened.json')
     assert sync.fetch(sync.ORIGIN + '/integrity-manifest.json') == manifest_before, 'Website changed during snapshot download'
     release_after = json.loads(sync.fetch(sync.ORIGIN + '/release-provenance.json'))
     assert release_after.get('sourceCommit') == args.website_commit, 'Website changed during snapshot download'
