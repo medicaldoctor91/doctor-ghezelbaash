@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildCroissant, buildDcatTurtle, buildVCard} from '../src/lib/machine-output.mjs';
+import {buildCroissant, buildDcatTurtle, buildKnowledgeXml, buildVCard} from '../src/lib/machine-output.mjs';
 
 const origin = 'https://example.test';
 const physicianId = origin + '/#saeed-ghezelbash';
@@ -21,6 +21,16 @@ const sourceFixture = () => ({
     {path: '/graph.jsonld', mediaType: 'application/ld+json', distributionIri: origin + '/graph.jsonld/download'},
   ],
 });
+
+const soloPracticeFixture = () => {
+  const source = sourceFixture();
+  const person = source.graph['@graph'][0];
+  const clinic = source.graph['@graph'][1];
+  clinic['@type'] = ['PhysiciansOffice', 'LocalBusiness'];
+  person.owns = {'@id': clinicId};
+  person.practicesAt = {'@id': clinicId};
+  return source;
+};
 
 const unfoldVCard = card => card.replace(/\r\n[ \t]/g, '').split('\r\n').filter(Boolean);
 
@@ -44,6 +54,20 @@ test('clinic vCard declares organization kind and normalizes its single email ad
   assert.ok(lines.includes('KIND:org'));
   assert.ok(lines.includes('EMAIL:clinic@example.test'));
   assert.ok(lines.includes('ORG:Example Clinic'));
+});
+
+test('solo-practice clinic vCard resolves PhysiciansOffice through the physician relationship', () => {
+  const lines = unfoldVCard(buildVCard(soloPracticeFixture(), 'clinic'));
+  assert.ok(lines.includes('KIND:org'));
+  assert.ok(lines.includes('FN:Example Clinic'));
+  assert.ok(lines.includes('ORG:Example Clinic'));
+  assert.ok(lines.includes('UID:' + clinicId));
+});
+
+test('knowledge XML resolves the solo-practice PhysiciansOffice without MedicalClinic typing', () => {
+  const xml = buildKnowledgeXml(soloPracticeFixture());
+  assert.ok(xml.includes('<clinic id="' + clinicId + '"><name>Example Clinic</name></clinic>'));
+  assert.ok(!xml.includes('<clinic id=""><name></name></clinic>'));
 });
 
 test('vCard folds long Unicode content at 75 UTF-8 octets without corrupting unfolded values', () => {
