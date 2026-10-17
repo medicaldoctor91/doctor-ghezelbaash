@@ -180,11 +180,22 @@ export function htmlToPlainText(html) {
     .split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
 }
 
+function clinicNode(source) {
+  const nodes = source.graph['@graph'];
+  const person = nodes.find((node) => node['@id'] === source.canonicalOrigin + '/#saeed-ghezelbash');
+  const relationIds = [...values(person?.owns), ...values(person?.practicesAt)]
+    .map((value) => typeof value === 'string' ? value : value?.['@id'])
+    .filter(Boolean);
+  return relationIds.map((id) => nodes.find((node) => node['@id'] === id)).find(Boolean)
+    ?? nodes.find((node) => values(node['@type']).includes('PhysiciansOffice'))
+    ?? nodes.find((node) => values(node['@type']).includes('MedicalClinic'));
+}
+
 const xmlEscape = (value) => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');
 export function buildKnowledgeXml(source) {
   const nodes = source.graph['@graph'];
   const person = nodes.find((node) => node['@id'] === source.canonicalOrigin + '/#saeed-ghezelbash');
-  const clinic = nodes.find((node) => values(node['@type']).includes('MedicalClinic'));
+  const clinic = clinicNode(source);
   const services = nodes.filter((node) => values(node['@type']).includes('Service'));
   const videos = nodes.filter((node) => values(node['@type']).includes('VideoObject'));
   const questions = nodes.filter((node) => values(node['@type']).includes('Question'));
@@ -221,7 +232,7 @@ const refId = (value) => typeof value === 'string' ? value : value?.['@id'];
 export function buildVCard(source, kind) {
   const nodes = source.graph['@graph'];
   const person = nodes.find((node) => node['@id'] === source.canonicalOrigin + '/#saeed-ghezelbash');
-  const clinic = nodes.find((node) => values(node['@type']).includes('MedicalClinic'));
+  const clinic = clinicNode(source);
   const entity = kind === 'physician' ? person : clinic;
   const address = entity?.address && typeof entity.address === 'object' && !entity.address['@id'] ? entity.address : nodes.find((node) => node['@id'] === refId(entity?.address));
   const lines = ['BEGIN:VCARD','VERSION:4.0',`UID:${vEscape(entity?.['@id'])}`];
