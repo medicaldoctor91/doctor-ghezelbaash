@@ -51,6 +51,31 @@ class PositioningRecoveryTests(unittest.TestCase):
         self.assertEqual(set(positioning.POSITIONING_ENRICHMENT_FILES), expected)
         self.assertEqual(positioning.POSITIONING_SOURCE_REVISION, "e9f45a0fbb55b23847d53f9bc070418670cddbdb")
 
+    def test_kaggle_version_lock_fails_before_any_publish_on_drift(self):
+        self.assertEqual(positioning.assert_kaggle_version_lock({"currentVersionNumber": 13}, "13"), 13)
+        with self.assertRaises(AssertionError):
+            positioning.assert_kaggle_version_lock({"currentVersionNumber": 14}, "13")
+
+    def test_source_zip_uses_current_records_draft_file_api(self):
+        calls = []
+        def fake_request(method, url, payload=None, raw=None, token=None, **kwargs):
+            calls.append((method, url, payload, raw, token))
+            return 200, {}
+        positioning.publish_source_via_record_draft(
+            "23289009", {"source.zip": b"abc"}, "secret", request_fn=fake_request
+        )
+        suffixes = [(method, url.removeprefix(positioning.publisher.BASE)) for method, url, *_ in calls]
+        self.assertEqual(suffixes, [
+            ("DELETE", "/records/23289009/draft/files/source.zip"),
+            ("POST", "/records/23289009/draft/files"),
+            ("PUT", "/records/23289009/draft/files/source.zip/content"),
+            ("POST", "/records/23289009/draft/files/source.zip/commit"),
+            ("POST", "/records/23289009/draft/actions/publish"),
+        ])
+        self.assertEqual(calls[1][2], [{"key": "source.zip"}])
+        self.assertEqual(calls[2][3], b"abc")
+        self.assertEqual(calls[2][4], "secret")
+
 
 if __name__ == "__main__":
     unittest.main()
