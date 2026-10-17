@@ -17,7 +17,7 @@ jobs:
       ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
       CANONICAL_WEBSITE_COMMIT: 8edb4d6f2e224886132297ac5f380bee26cb53cb
-      EXPECTED_HF_BEFORE: 81db5d14bf98342a07ae273967be06016a64f9aa
+      EXPECTED_HF_BEFORE: e0c33aa565ed1495d3ed78d907cf37f86e73489a
       EXPECTED_KAGGLE_VERSION: '13'
     steps:
       - uses: actions/checkout@v4
