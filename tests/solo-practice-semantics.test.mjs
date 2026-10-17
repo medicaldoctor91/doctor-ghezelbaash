@@ -14,18 +14,22 @@ const person = nodes.find((node) => node?.['@id'] === PERSON);
 const clinic = nodes.find((node) => node?.['@id'] === CLINIC);
 const sourceText = readFileSync(new URL('../src/canonical/source.mjs', import.meta.url), 'utf8');
 
-test('solo practice uses ownership and practice-location relations, not employment or affiliation', () => {
+test('solo practice uses ownership and practice-location relations, not employment, affiliation, or independent-clinic typing', () => {
   assert.ok(person, 'canonical physician node must exist');
-  assert.ok(clinic, 'canonical clinic node must exist');
+  assert.ok(clinic, 'canonical clinic/practice node must exist');
 
-  assert.deepEqual(refIds(person.worksFor), [], 'physician must not be modeled as working for the dependent clinic');
-  assert.ok(!refIds(person.affiliation).includes(CLINIC), 'clinic must not be modeled as a physician affiliation');
-  assert.deepEqual(refIds(clinic.employee), [], 'physician must not be modeled as an employee of the clinic');
+  assert.deepEqual(refIds(person.worksFor), [], 'physician must not be modeled as working for the dependent practice');
+  assert.ok(!refIds(person.affiliation).includes(CLINIC), 'practice must not be modeled as a physician affiliation');
+  assert.deepEqual(refIds(clinic.employee), [], 'physician must not be modeled as an employee of the practice');
+
+  const clinicTypes = values(clinic['@type']);
+  assert.ok(!clinicTypes.includes('MedicalClinic') && !clinicTypes.includes('https://schema.org/MedicalClinic'), 'dependent solo practice must not be typed as an independent MedicalClinic');
+  assert.ok(clinicTypes.some((type) => String(type).endsWith('PhysiciansOffice')), 'solo practice must retain PhysiciansOffice typing');
 
   assert.ok(refIds(person.owns).includes(CLINIC), 'physician ownership relation must remain');
   assert.ok(refIds(person.practicesAt).includes(CLINIC), 'physician practice-location relation must remain');
-  assert.ok(refIds(clinic.owner).includes(PERSON), 'clinic owner relation must remain');
-  assert.ok(refIds(clinic.founder).includes(PERSON), 'clinic founder relation must remain');
+  assert.ok(refIds(clinic.owner).includes(PERSON), 'practice owner relation must remain');
+  assert.ok(refIds(clinic.founder).includes(PERSON), 'practice founder relation must remain');
 
   const providerEdges = nodes.flatMap((node) => refIds(node?.provider));
   assert.ok(providerEdges.includes(PERSON), 'person-centered service provider relations must remain');
@@ -33,6 +37,7 @@ test('solo practice uses ownership and practice-location relations, not employme
 
 test('SHACL validates the corrected solo-practice model', () => {
   const shacl = SOURCE.validation.shaclSupplement;
+  assert.ok(!shacl.includes('sh:path rdf:type ; sh:hasValue schema:MedicalClinic'), 'SHACL must not require independent MedicalClinic typing');
   assert.ok(shacl.includes('sh:path schema:owns ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'));
   assert.ok(shacl.includes('sh:path schema:practicesAt ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'));
   assert.ok(shacl.includes('sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash>'));
@@ -40,7 +45,7 @@ test('SHACL validates the corrected solo-practice model', () => {
   assert.ok(shacl.includes('sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash>'));
 });
 
-test('visible canonical copy removes only the clinic medical-director row', () => {
+test('visible canonical copy removes the clinic medical-director row while retaining ownership and physician facts', () => {
   assert.ok(!sourceText.includes('Medical Director / مدیر پزشکی'));
   for (const retained of [
     'Founder / بنیان‌گذار',
