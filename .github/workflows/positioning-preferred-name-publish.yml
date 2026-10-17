@@ -22,8 +22,10 @@ jobs:
       - name: Pin website code while preserving narrow maintenance script
         run: |
           cp .github/scripts/positioning_preferred_name_maintenance.py /tmp/positioning_preferred_name_maintenance.py
+          cp .github/scripts/sync_platform_validator_contract.py /tmp/sync_platform_validator_contract.py
           git checkout --detach "$CANONICAL_WEBSITE_COMMIT"
           cp /tmp/positioning_preferred_name_maintenance.py .github/scripts/positioning_preferred_name_maintenance.py
+          cp /tmp/sync_platform_validator_contract.py .github/scripts/sync_platform_validator_contract.py
           test "$(git rev-parse HEAD)" = "$CANONICAL_WEBSITE_COMMIT"
       - uses: actions/setup-node@v4
         with: {node-version-file: .nvmrc, cache: npm}
@@ -59,6 +61,7 @@ jobs:
           PY
           node --test tests/*.test.mjs
           npm run build
+          python .github/scripts/sync_platform_validator_contract.py dist tests/validate_platform_sync.py
           python tests/validate_canonical_invariants.py dist
       - name: Publish HF name correction and exact Kaggle version with public verification
         run: python .github/scripts/positioning_preferred_name_maintenance.py
