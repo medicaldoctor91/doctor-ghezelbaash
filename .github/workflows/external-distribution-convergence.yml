@@ -74,7 +74,7 @@ jobs:
               f.write('EXPECTED_KAGGLE_VERSION='+str(current)+'\n')
           print(json.dumps({'website':website['sourceCommit'],'hf':hf['sha'],'kaggle':current,'zenodo':'same DOI/version/file-key correction eligible'}))
           PY
-      - name: Apply runtime source-commit and race guards to reviewed publisher
+      - name: Apply runtime source-commit, canonical-count and race guards
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -86,6 +86,11 @@ jobs:
           new="_,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)\n    if os.environ.get('EXPECTED_KAGGLE_VERSION'):assert int(view['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed before publication'\n    version=int(view['currentVersionNumber'])+1"
           assert old in text;text=text.replace(old,new,1)
           p.write_text(text)
+          v=Path('tests/validate_platform_sync.py');body=v.read_text()
+          old="'entity_facts': 22139"
+          assert old in body
+          body=body.replace(old,"'entity_facts': 22138",1)
+          v.write_text(body)
           PY
       - name: Build and exhaustively validate canonical website and positioning contract
         run: |
