@@ -1,0 +1,124 @@
+name: External distribution convergence from verified website commit
+on:
+  push:
+    branches: [maintenance/platform-convergence-20261012]
+    paths: [.github/workflows/external-distribution-convergence.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-external-convergence
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      EXPECTED_WEBSITE_COMMIT: 8edb4d6f2e224886132297ac5f380bee26cb53cb
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Preserve reviewed publication tooling and checkout canonical website source
+        run: |
+          mkdir -p /tmp/convergence-tools/.github/scripts /tmp/convergence-tools/tests
+          cp .github/scripts/platform_bundle.py /tmp/convergence-tools/.github/scripts/
+          cp .github/scripts/platform_publish.py /tmp/convergence-tools/.github/scripts/
+          cp tests/platform-positioning-recovery.test.py /tmp/convergence-tools/tests/
+          git checkout --detach "$EXPECTED_WEBSITE_COMMIT"
+          cp /tmp/convergence-tools/.github/scripts/platform_bundle.py .github/scripts/platform_bundle.py
+          cp /tmp/convergence-tools/.github/scripts/platform_publish.py .github/scripts/platform_publish.py
+          cp /tmp/convergence-tools/tests/platform-positioning-recovery.test.py tests/platform-positioning-recovery.test.py
+          test "$(git rev-parse HEAD)" = "$EXPECTED_WEBSITE_COMMIT"
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install complete validation and publication dependencies
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+      - name: Freeze live external state and verify Zenodo correction eligibility
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          def get(url, token=None):
+              headers={'Cache-Control':'no-cache, no-store','Pragma':'no-cache','User-Agent':'ghezelbaash-external-preflight/1.0'}
+              if token: headers['Authorization']='Bearer '+token
+              req=urllib.request.Request(url,headers=headers)
+              with urllib.request.urlopen(req,timeout=60) as r:return json.load(r)
+          website=get('https://www.ghezelbaash.ir/release-provenance.json?preflight='+os.environ['GITHUB_RUN_ID'])
+          assert website['sourceCommit']==os.environ['EXPECTED_WEBSITE_COMMIT'], ('Website changed',website['sourceCommit'])
+          hf=get('https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data')
+          kaggle=get('https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data')
+          current=int(kaggle['currentVersionNumber'])
+          version=next(v for v in kaggle['versions'] if int(v['versionNumber'])==current)
+          assert version['status']=='Ready' and not kaggle.get('isPrivate')
+          assert not hf.get('private') and not hf.get('gated')
+          expected={'22838416':('10.5281/zenodo.22838416','1.3.3',24),'23289009':('10.5281/zenodo.23289009','source-final-2026-10-10',1)}
+          token=os.environ['ZENODO_TOKEN']
+          for rec,(doi,ver,count) in expected.items():
+              record=get('https://zenodo.org/api/records/'+rec)
+              actual_doi=record.get('doi') or record['pids']['doi']['identifier']
+              assert actual_doi==doi and record['metadata'].get('version')==ver
+              files=get('https://zenodo.org/api/records/'+rec+'/files')
+              assert len(files['entries'])==count
+              try:get('https://zenodo.org/api/records/'+rec+'/draft',token)
+              except urllib.error.HTTPError as e:
+                  assert e.code==404, (rec,e.code)
+              else:raise RuntimeError('Existing unpublished Zenodo draft for '+rec)
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('EXPECTED_HF_REVISION='+hf['sha']+'\n')
+              f.write('EXPECTED_KAGGLE_VERSION='+str(current)+'\n')
+          print(json.dumps({'website':website['sourceCommit'],'hf':hf['sha'],'kaggle':current,'zenodo':'same DOI/version/file-key correction eligible'}))
+          PY
+      - name: Apply runtime source-commit and race guards to reviewed publisher
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/scripts/platform_publish.py');text=p.read_text()
+          old="ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)"
+          new="source_commit=os.environ.get('EXPECTED_WEBSITE_COMMIT') or os.environ['GITHUB_SHA'];ctx=context(source_commit,os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)"
+          assert old in text;text=text.replace(old,new,1)
+          old="_,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)\n    version=int(view['currentVersionNumber'])+1"
+          new="_,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)\n    if os.environ.get('EXPECTED_KAGGLE_VERSION'):assert int(view['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed before publication'\n    version=int(view['currentVersionNumber'])+1"
+          assert old in text;text=text.replace(old,new,1)
+          p.write_text(text)
+          PY
+      - name: Build and exhaustively validate canonical website and positioning contract
+        run: |
+          node --test tests/*.test.mjs
+          python tests/platform-positioning-recovery.test.py
+          python tests/platform-bundle-sync.test.py
+          npm run build
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python -m py_compile .github/scripts/platform_bundle.py .github/scripts/platform_publish.py tests/validate_platform_sync.py
+      - name: Verify live website is still exact canonical upstream
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,urllib.request
+          from pathlib import Path
+          live=json.load(urllib.request.urlopen(urllib.request.Request('https://www.ghezelbaash.ir/release-provenance.json?lock='+os.environ['GITHUB_RUN_ID'],headers={'Cache-Control':'no-cache'}),timeout=30))
+          assert live['sourceCommit']==os.environ['EXPECTED_WEBSITE_COMMIT']
+          for name in ['graph.jsonld','provenance.jsonld','integrity-manifest.json','llms.txt']:
+              body=urllib.request.urlopen(urllib.request.Request('https://www.ghezelbaash.ir/'+name+'?lock='+os.environ['GITHUB_RUN_ID'],headers={'Cache-Control':'no-cache'}),timeout=60).read()
+              local=(Path('dist')/name).read_bytes()
+              assert hashlib.sha256(body).digest()==hashlib.sha256(local).digest(),name
+          print('Website lock PASS',os.environ['EXPECTED_WEBSITE_COMMIT'])
+          PY
+      - name: Publish HF, correct both Zenodo records in-place, publish and verify exact Kaggle version
+        run: python .github/scripts/platform_publish.py
+      - name: Save publication and validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-convergence-evidence
+          path: |
+            /tmp/platform-publish/context.json
+            /tmp/platform-publish/publication-report.json
+            /tmp/platform-publish/*validation.json
+          if-no-files-found: warn
+          overwrite: true
