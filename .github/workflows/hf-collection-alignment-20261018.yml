@@ -49,10 +49,7 @@ jobs:
           assert fixed==live,'Organization README public revision mismatch'
           print('HF_ORG_README_PASS',target_revision,'changed',fixed!=content,flush=True)
 
-          owned=list(api.get_user_collections('Ghezelbaash'))
-          matching=[c for c in owned if 'dr-saeed-ghezelbash-entity-knowledge-graph' in c.slug]
-          assert len(matching)==1,('Collection not unambiguously found', [(c.slug,c.title) for c in owned])
-          slug=matching[0].slug
+          slug='Ghezelbaash/dr-saeed-ghezelbash-entity-knowledge-graph'
           c=api.get_collection(slug)
           records=[item for item in c.items if item.item_id=='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data']
           assert len(records)==1,('Matching collection dataset item',len(records))
