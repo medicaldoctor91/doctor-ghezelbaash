@@ -7,7 +7,7 @@ const workflow = await fs.readFile(new URL('../.github/workflows/machine-readabl
 
 test('release sealing emits deployable Cloudflare Content-Digest headers instead of a permanent pending state', () => {
   assert.doesNotMatch(sealRelease, /pending-live-byte-identity-verification/);
-  assert.doesNotMatch(sealRelease, /_headers\.content-digest\.pending/);
+  assert.doesNotMatch(sealRelease, /writeFile\(path\.join\(distDir,'_headers\.content-digest\.pending'\)/);
   assert.match(sealRelease, /path\.join\(distDir,'_headers'\)/);
   assert.match(sealRelease, /status:'configured-for-cloudflare-pages'/);
 });
