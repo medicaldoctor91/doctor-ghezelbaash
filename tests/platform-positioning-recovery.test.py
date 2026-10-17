@@ -10,6 +10,10 @@ SPEC = importlib.util.spec_from_file_location("platform_publish_positioning", RO
 positioning = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(positioning)
 
+VALIDATOR_SPEC = importlib.util.spec_from_file_location("platform_sync_validator", ROOT / "tests/validate_platform_sync.py")
+sync_validator = importlib.util.module_from_spec(VALIDATOR_SPEC)
+VALIDATOR_SPEC.loader.exec_module(sync_validator)
+
 OLD_DATASET = "https://www.ghezelbaash.ir/graph.jsonld#dataset"
 HISTORICAL_DOI = "10.5281/zenodo.21910785"
 
@@ -75,6 +79,21 @@ class PositioningRecoveryTests(unittest.TestCase):
         self.assertEqual(calls[1][2], [{"key": "source.zip"}])
         self.assertEqual(calls[2][3], b"abc")
         self.assertEqual(calls[2][4], "secret")
+
+    def test_platform_validator_derives_row_contract_from_packaging(self):
+        self.assertTrue(hasattr(sync_validator, "package_table_rows"), "platform validator still freezes row counts")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "viewer").mkdir()
+            (root / "viewer/packaging.json").write_text(json.dumps({
+                "tables": {
+                    "clinical_passages": {"rows": 3248},
+                    "clinical_answers": {"rows": 125},
+                    "entity_facts": {"rows": 22138},
+                    "query_matrix": {"rows": 876},
+                }
+            }), encoding="utf-8")
+            self.assertEqual(sync_validator.package_table_rows(root)["entity_facts"], 22138)
 
 
 if __name__ == "__main__":
