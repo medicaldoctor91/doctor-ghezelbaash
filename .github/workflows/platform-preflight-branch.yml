@@ -17,7 +17,7 @@ jobs:
     env:
       EXPECTED_WEBSITE_COMMIT: ba0eb04b3b43b1316de009c46cdf5bb81024292a
       EXPECTED_HF_REVISION: 81db5d14bf98342a07ae273967be06016a64f9aa
-      EXPECTED_KAGGLE_VERSION: '4'
+      EXPECTED_KAGGLE_VERSION: '13'
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
