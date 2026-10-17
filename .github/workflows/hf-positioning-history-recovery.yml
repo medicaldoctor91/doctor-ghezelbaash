@@ -16,32 +16,26 @@ jobs:
       - name: Search immutable Hub history without mutation
         run: |
           python - <<'PY'
-          import hashlib,json,os
+          import json,re
           from pathlib import Path
-          from huggingface_hub import HfApi,hf_hub_download
+          from huggingface_hub import HfApi
           repo='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
-          target='instruction_examples_fa_market_positioning.jsonl'
-          api=HfApi()
-          commits=api.list_repo_commits(repo,repo_type='dataset')
-          found=[]
-          for c in commits[:80]:
+          api=HfApi(); commits=api.list_repo_commits(repo,repo_type='dataset')
+          exact='instruction_examples_fa_market_positioning.jsonl'
+          candidates={}; exact_revisions=[]
+          for c in commits[:120]:
               try:names=set(api.list_repo_files(repo,repo_type='dataset',revision=c.commit_id))
               except Exception:continue
-              if target not in names:continue
-              path=hf_hub_download(repo,filename=target,repo_type='dataset',revision=c.commit_id)
-              body=Path(path).read_bytes()
-              entry={'revision':c.commit_id,'title':getattr(c,'title',None),'created_at':str(getattr(c,'created_at',None)),'bytes':len(body),'sha256':hashlib.sha256(body).hexdigest()}
-              found.append(entry)
-              out=Path('/tmp/hf-positioning-history');out.mkdir(exist_ok=True)
-              (out/target).write_bytes(body)
-              (out/'history.json').write_text(json.dumps({'target':target,'found':found},ensure_ascii=False,indent=2)+'\n')
-              print('FOUND='+json.dumps(entry,ensure_ascii=False))
-              print('CONTENT_BEGIN')
-              print(body.decode('utf-8',errors='replace'))
-              print('CONTENT_END')
-              break
-          if not found:
-              raise RuntimeError('Positioning asset not found in first 80 Hub commits')
+              if exact in names:exact_revisions.append(c.commit_id)
+              for name in names:
+                  low=name.lower()
+                  if any(k in low for k in ('position','market','instruction','recommend','best-doctor','best_doctor','query-intent','intent')):
+                      candidates.setdefault(name,[]).append(c.commit_id)
+          result={'commitsScanned':min(120,len(commits)),'exactTarget':exact,'exactRevisions':exact_revisions,
+                  'positioningLikeFiles':{k:v[:5] for k,v in sorted(candidates.items())}}
+          out=Path('/tmp/hf-positioning-history');out.mkdir(exist_ok=True)
+          (out/'history.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(result,ensure_ascii=False))
           PY
       - uses: actions/upload-artifact@v4
         with:
