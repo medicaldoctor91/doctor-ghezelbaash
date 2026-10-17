@@ -1,0 +1,62 @@
+name: Apply positioning recovery implementation
+on:
+  push:
+    branches: [maintenance/positioning-recovery-20261017]
+    paths: [.github/workflows/apply-positioning-recovery.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Apply exact guarded patches
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          bundle = Path('.github/scripts/platform_bundle.py')
+          text = bundle.read_text()
+          assert 'POSITIONING_ENRICHMENT_FILES' not in text
+          anchor = "KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'\n"
+          insert = '''\nPOSITIONING_ENRICHMENT_FILES=(\n    'enrichment/instruction_examples_fa_market_positioning.jsonl',\n    'enrichment/instruction_examples_fa_market_positioning.csv',\n    'enrichment/market-positioning-evidence.json',\n    'enrichment/positioning-strategy.json',\n)\nOLD_DATASET='https://www.ghezelbaash.ir/graph.jsonld#dataset'\n\ndef reconcile_positioning_assets(root):\n    root=Path(root)\n    changed=[]\n    for name in POSITIONING_ENRICHMENT_FILES:\n        path=root/name\n        if not path.is_file():continue\n        body=path.read_text(encoding='utf-8')\n        updated=body.replace(OLD_DATASET,DATASET)\n        if updated!=body:\n            path.write_text(updated,encoding='utf-8')\n            changed.append(name)\n    return changed\n'''
+          assert anchor in text
+          text = text.replace(anchor, anchor + insert, 1)
+
+          old = """    for path in dist.rglob('*'):\n        if path.is_file():\n            dest=out/path.relative_to(dist);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)\n    matrix=[json.loads(s) for s in (baseline/'query-matrix.jsonl').read_text().splitlines() if s.strip()]\n"""
+          new = """    for path in dist.rglob('*'):\n        if path.is_file():\n            dest=out/path.relative_to(dist);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)\n    reconcile_positioning_assets(out)\n    matrix=[json.loads(s) for s in (baseline/'query-matrix.jsonl').read_text().splitlines() if s.strip()]\n"""
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = """    known={item['path'] for item in manifest['original_files']}\n    # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.\n    for name in [alias,'release-attestation.json']:\n"""
+          new = """    known={item['path'] for item in manifest['original_files']}\n    for name in POSITIONING_ENRICHMENT_FILES:\n        if (hf/name).is_file() and name not in known:\n            manifest['original_files'].append({'path':name});known.add(name)\n    # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.\n    for name in [alias,'release-attestation.json']:\n"""
+          assert old in text
+          text = text.replace(old, new, 1)
+          bundle.write_text(text)
+
+          publisher = Path('.github/scripts/platform_publish.py')
+          text = publisher.read_text()
+          old = """    for name in needed:\n        src=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=parent,token=token)\n        dest=baseline/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest)\n    hf=root/'hf';build_hf('dist',baseline,hf,ctx)\n"""
+          new = """    for name in needed:\n        src=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=parent,token=token)\n        dest=baseline/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest)\n    recovery_revision='e9f45a0fbb55b23847d53f9bc070418670cddbdb'\n    recovered=[]\n    for name in POSITIONING_ENRICHMENT_FILES:\n        dest=baseline/name\n        if dest.is_file():continue\n        src=hf_hub_download(HF_REPO,filename=name,repo_type='dataset',revision=recovery_revision,token=token)\n        dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(src,dest);recovered.append(name)\n    reconciled=reconcile_positioning_assets(baseline)\n    hf=root/'hf';build_hf('dist',baseline,hf,ctx)\n"""
+          assert old in text
+          text = text.replace(old, new, 1)
+          old = """    old_assets=[n for n in current if re.match(r'assets/guide(?:-meta)?\\.',n) and not (hf/n).exists()]\n"""
+          new = """    old_assets=[n for n in current if (re.match(r'assets/guide(?:-meta)?\\.',n) and not (hf/n).exists()) or n=='_headers.content-digest.pending']\n"""
+          assert old in text
+          text = text.replace(old, new, 1)
+          old = """    report={'sourceCommit':ctx['source_commit'],'publicationRun':ctx['run_url'],'hfRevision':revision}\n"""
+          new = """    report={'sourceCommit':ctx['source_commit'],'publicationRun':ctx['run_url'],'hfRevision':revision,\n            'positioningRecoveryRevision':recovery_revision,'positioningRecovered':recovered,\n            'positioningReconciled':reconciled}\n"""
+          assert old in text
+          text = text.replace(old, new, 1)
+          publisher.write_text(text)
+          PY
+      - name: Commit implementation
+        run: |
+          git config user.name 'Dr. Saeed Ghezelbash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add .github/scripts/platform_bundle.py .github/scripts/platform_publish.py
+          git diff --cached --check
+          git commit -m 'Recover and reconcile positioning enrichment across platforms'
+          git push origin HEAD:maintenance/platform-convergence-20261012
