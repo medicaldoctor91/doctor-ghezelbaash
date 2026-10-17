@@ -63,47 +63,43 @@ jobs:
           text = path.read_text(encoding='utf-8')
           original = text
 
-          # Canonical identity cleanup: current source/output must expose only the
-          # merged OpenAlex author and the slash-form Dataset IRI.
           text = text.replace('A5064828898', 'A5146521397')
           text = text.replace('https://www.ghezelbaash.ir/graph.jsonld#dataset',
                               'https://www.ghezelbaash.ir/graph.jsonld/dataset')
+          text = text.replace(
+              '<dt><strong>Medical Director / مدیر پزشکی</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd>',
+              ''
+          )
 
-          # Remove only the obsolete clinic-specific visible management row.
-          legacy_row = '<dt><strong>Medical Director / مدیر پزشکی</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd>'
-          text = text.replace(legacy_row, '')
-
-          # Keep the clinic/practice entity and its identifiers/location, but stop
-          # typing the physician-owned solo practice as a generic MedicalClinic.
-          marker = '"@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"'
-          start = text.find(marker)
-          if start < 0:
-              raise RuntimeError('Canonical clinic/practice node not found')
-          end = text.find('\n      {', start + len(marker))
-          if end < 0:
-              end = min(len(text), start + 20000)
-          window = text[start:end]
-          before_window = window
-          window, removed_type = re.subn(
-              r'"(?:https://schema\.org/)?MedicalClinic"\s*,\s*', '', window, count=1
+          clinic = 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          node_pattern = re.compile(
+              r'(\n      \{\n        "@id": "' + re.escape(clinic) +
+              r'",\n        "@type": \[\n)(.*?)(\n        \],)',
+              re.S,
+          )
+          match = node_pattern.search(text)
+          if not match:
+              raise RuntimeError('Top-level canonical clinic/practice definition not found')
+          type_block = match.group(2)
+          type_block, removed_type = re.subn(
+              r'\n\s*"(?:https://schema\.org/)?MedicalClinic"\s*,?', '', type_block, count=1
           )
           if removed_type != 1:
-              raise RuntimeError('Expected exactly one MedicalClinic type on the canonical practice node')
-          text = text[:start] + window + text[end:]
+              raise RuntimeError('Expected exactly one MedicalClinic type in canonical practice definition')
+          text = text[:match.start(2)] + type_block + text[match.end(2):]
 
-          # The authored SHACL supplement must validate the same semantics.
-          shacl_patterns = [
+          shape_start = text.find('ex:ClinicAssetShape a sh:NodeShape')
+          shape_end = text.find('ex:WebPageDominanceShape a sh:NodeShape', shape_start)
+          if shape_start < 0 or shape_end < 0:
+              raise RuntimeError('ClinicAssetShape block not found')
+          shape = text[shape_start:shape_end]
+          shape, removed_shacl = re.subn(
               r'  sh:property \[ sh:path rdf:type ; sh:hasValue schema:MedicalClinic \] ;\\n',
-              r'sh:property \[ sh:path rdf:type ; sh:hasValue schema:MedicalClinic \] ;\\n',
-          ]
-          removed_shacl = 0
-          for pattern in shacl_patterns:
-              text, n = re.subn(pattern, '', text, count=1)
-              removed_shacl += n
-              if n:
-                  break
+              '', shape, count=1
+          )
           if removed_shacl != 1:
-              raise RuntimeError('Expected exactly one MedicalClinic SHACL requirement')
+              raise RuntimeError('Expected exactly one MedicalClinic requirement in ClinicAssetShape')
+          text = text[:shape_start] + shape + text[shape_end:]
 
           if 'A5064828898' in text:
               raise RuntimeError('Stale OpenAlex ID still present in canonical source')
@@ -118,7 +114,7 @@ jobs:
           print('Canonical source repaired directly')
           PY
 
-      - name: Remove this one-time workflow from the final tree and commit source repair
+      - name: Remove one-time workflow and commit repaired source
         run: |
           rm .github/workflows/one-time-canonical-dist-repair.yml
           git config user.name 'Dr. Saeed Ghezelbash | canonical repair'
@@ -157,7 +153,7 @@ jobs:
           print('Dist legacy sweep: clean')
           PY
 
-      - name: Deploy the validated dist to Cloudflare Pages
+      - name: Deploy validated dist to Cloudflare Pages
         run: |
           npx --yes wrangler@4 pages deploy dist \
             --project-name=doctor-ghezelbaash \
@@ -166,7 +162,7 @@ jobs:
             --commit-message='Finalize canonical identity and solo-practice model' \
             --commit-dirty=false
 
-      - name: Verify production converged to this exact validated dist
+      - name: Verify production converged to exact validated dist
         run: |
           python - <<'PY'
           import hashlib, json, os, time, urllib.request
@@ -198,14 +194,19 @@ jobs:
 
           llms=fetch('llms.txt?verify='+sha).decode('utf-8')
           html=fetch('?verify='+sha).decode('utf-8')
-          graph=fetch('graph.jsonld?verify='+sha).decode('utf-8')
-          for body,label in [(llms,'llms.txt'),(html,'homepage'),(graph,'graph.jsonld')]:
+          graph_text=fetch('graph.jsonld?verify='+sha).decode('utf-8')
+          for body,label in [(llms,'llms.txt'),(html,'homepage'),(graph_text,'graph.jsonld')]:
               if 'A5064828898' in body: raise RuntimeError(label+' still exposes stale OpenAlex')
               if 'https://www.ghezelbaash.ir/graph.jsonld#dataset' in body: raise RuntimeError(label+' still exposes historical Dataset IRI')
           if 'A5146521397' not in llms: raise RuntimeError('llms.txt missing canonical OpenAlex')
           if 'Medical Director / مدیر پزشکی' in html: raise RuntimeError('homepage still exposes legacy clinic role')
-          if 'MedicalClinic' in json.dumps(json.loads(graph),ensure_ascii=False):
-              # This build intentionally has no MedicalClinic type anywhere in the canonical graph.
-              raise RuntimeError('graph.jsonld still contains MedicalClinic semantics')
+
+          data=json.loads(graph_text)
+          clinic_id='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          clinic=next(n for n in data['@graph'] if n.get('@id')==clinic_id)
+          types=clinic.get('@type',[])
+          if not isinstance(types,list): types=[types]
+          if 'MedicalClinic' in types or 'https://schema.org/MedicalClinic' in types:
+              raise RuntimeError('canonical practice is still typed MedicalClinic')
           print(json.dumps({'production':'VERIFIED','sourceCommit':sha,'openAlex':'A5146521397','datasetIri':'https://www.ghezelbaash.ir/graph.jsonld/dataset','soloPractice':True},sort_keys=True))
           PY
