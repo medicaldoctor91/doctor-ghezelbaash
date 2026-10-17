@@ -16,3 +16,4 @@ jobs:
         run: |
           python tests/platform-hardening.test.py
           python tests/platform-origin-binding.test.py
+          python tests/hf-platform-assets.test.py
