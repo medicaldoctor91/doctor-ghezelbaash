@@ -1,0 +1,53 @@
+name: Canonicalize HF organization card
+on:
+  push:
+    branches: [maintenance/positioning-recovery-20261017]
+    paths: [.github/workflows/hf-org-card-canonicalize.yml]
+permissions:
+  contents: read
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1'
+      - name: Update org card with optimistic lock and verify public bytes
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,tempfile
+          from pathlib import Path
+          from huggingface_hub import HfApi,CommitOperationAdd,hf_hub_download
+          repo='doctor-ghezelbaash/README'
+          api=HfApi(token=os.environ['HF_TOKEN'])
+          info=api.space_info(repo,files_metadata=True)
+          parent=info.sha
+          src=Path(hf_hub_download(repo,filename='README.md',repo_type='space',revision=parent,token=os.environ['HF_TOKEN'],force_download=True))
+          text=src.read_text(encoding='utf-8')
+          text=text.replace('https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah')
+          text=text.replace('https://www.ghezelbaash.ir/graph.jsonld#dataset','https://www.ghezelbaash.ir/graph.jsonld/dataset')
+          text=text.replace('A5064828898','A5146521397')
+          if 'Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld/dataset' not in text:
+              anchor='JSON-LD entity graph: https://www.ghezelbaash.ir/graph.jsonld'
+              text=text.replace(anchor,anchor+'\nDataset IRI: https://www.ghezelbaash.ir/graph.jsonld/dataset')
+          if 'OpenAlex: https://openalex.org/A5146521397' not in text:
+              anchor='ORCID: https://orcid.org/0009-0001-9346-8475'
+              text=text.replace(anchor,anchor+'\nOpenAlex: https://openalex.org/A5146521397')
+          assert 'graph.jsonld#dataset' not in text
+          assert 'A5064828898' not in text
+          assert 'Medical Director' not in text and 'مدیر پزشکی' not in text
+          assert 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah' in text
+          with tempfile.TemporaryDirectory() as d:
+              path=Path(d)/'README.md';path.write_text(text,encoding='utf-8')
+              result=api.create_commit(repo,repo_type='space',revision='main',parent_commit=parent,
+                operations=[CommitOperationAdd(path_in_repo='README.md',path_or_fileobj=str(path))],
+                commit_message='Align organization card with canonical physician and solo-practice graph')
+              live=Path(hf_hub_download(repo,filename='README.md',repo_type='space',revision=result.oid,token=os.environ['HF_TOKEN'],force_download=True))
+              assert hashlib.sha256(live.read_bytes()).hexdigest()==hashlib.sha256(path.read_bytes()).hexdigest()
+              overview=api.get_organization_overview('doctor-ghezelbaash')
+              details=getattr(overview,'details',None)
+              print(json.dumps({'HF_ORG_CARD':'PASS','revision':result.oid,'overview_details':details},ensure_ascii=False,default=str))
+          PY
