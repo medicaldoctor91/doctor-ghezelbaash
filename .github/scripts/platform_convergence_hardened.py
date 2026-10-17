@@ -44,6 +44,52 @@ def semantic_lint_platform_only(root, names):
     return violations
 
 
+def package_files(root, exclude=()):
+    root = Path(root)
+    excluded = set(exclude)
+    return {path.relative_to(root).as_posix() for path in root.rglob('*')
+            if path.is_file() and path.relative_to(root).as_posix() not in excluded}
+
+
+def rebuild_hf_inventory(stage, source_commit):
+    stage = Path(stage)
+    files = {}
+    for name in sorted(package_files(stage, {'dist-sha256.json'})):
+        path = stage / name
+        files[name] = {'bytes': path.stat().st_size, 'sha256': sync.sha(path)}
+    sync.dump(stage / 'dist-sha256.json', {
+        'algorithm': 'sha256',
+        'canonicalDatasetIri': sync.DATASET,
+        'sourceCommit': source_commit,
+        'websiteIntegrityManifestSha256': sync.sha(stage / 'integrity-manifest.json'),
+        'files': files,
+    })
+
+
+def apply_hf_asset_policy(root, source_commit):
+    root = Path(root)
+    stage = root / 'hf'
+    website = root / 'website'
+    website_names = package_files(website)
+    stage_names = package_files(stage, {'dist-sha256.json'})
+    platform_only = stage_names - website_names
+    removed = []
+    for name in sorted(platform_only):
+        if is_obsolete_hf_asset(name):
+            (stage / name).unlink()
+            removed.append(name)
+    platform_only = package_files(stage, {'dist-sha256.json'}) - website_names
+    violations = semantic_lint_platform_only(stage, platform_only)
+    rebuild_hf_inventory(stage, source_commit)
+    report = {
+        'platformOnlyFiles': sorted(platform_only),
+        'removedObsolete': removed,
+        'semanticViolations': violations,
+    }
+    sync.dump(root / 'hf-platform-only-lint.json', report)
+    return report
+
+
 def reviewed_args(root, prepare_only):
     website_commit = exact_revision(os.environ.get(EXPECTED_WEBSITE_COMMIT), 'website commit')
     hf_revision = exact_revision(os.environ.get(EXPECTED_HF_REVISION), 'HF revision')
@@ -60,6 +106,9 @@ def verify_reviewed_origin(args):
     assert release_before.get('sourceCommit') == args.website_commit, 'Reviewed website commit is no longer live'
     manifest_before = sync.fetch(sync.ORIGIN + '/integrity-manifest.json')
     ctx, control = sync.prepare(args)
+    policy = apply_hf_asset_policy(args.root, args.website_commit)
+    assert not policy['semanticViolations'], 'HF-only semantic drift: ' + json.dumps(policy['semanticViolations'], ensure_ascii=False)
+    sync.validate_package(args.root / 'hf', 'hf', args.website_commit, args.root / 'hf-validation-hardened.json')
     assert sync.fetch(sync.ORIGIN + '/integrity-manifest.json') == manifest_before, 'Website changed during snapshot download'
     release_after = json.loads(sync.fetch(sync.ORIGIN + '/release-provenance.json'))
     assert release_after.get('sourceCommit') == args.website_commit, 'Website changed during snapshot download'
