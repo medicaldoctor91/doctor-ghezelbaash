@@ -50,12 +50,16 @@ def text_files(root: Path):
             yield path, path.read_text(encoding="utf-8", errors="strict")
 
 
-def bundle(nodes_by_id, node):
-    related = [node]
+def identity_bundle(nodes_by_id, node):
+    """Serialize only identity-bearing fields, excluding topical Wikidata links."""
+    identifier_nodes = []
     for ref in ref_ids(node.get("identifier")):
-        if ref in nodes_by_id:
-            related.append(nodes_by_id[ref])
-    return json.dumps(related, ensure_ascii=False, sort_keys=True)
+        identifier_nodes.append(nodes_by_id.get(ref, {"@id": ref}))
+    payload = {
+        "sameAs": values(node.get("sameAs")),
+        "identifier": identifier_nodes,
+    }
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True)
 
 
 def assert_exact_domain_id(text: str, pattern: str, expected: str, label: str):
@@ -72,8 +76,7 @@ def validate(root: Path):
     files = list(text_files(root))
     combined = "\n".join(text for _, text in files)
 
-    # Global current-output bans. Historical identifiers belong in archived releases,
-    # not in the current first-party website build.
+    # Historical identifiers are allowed in archived releases, not in the current site build.
     assert OLD_OPENALEX not in combined, f"stale OpenAlex ID remains in {root}"
     assert OLD_DATASET not in combined, f"historical Dataset IRI remains in {root}"
 
@@ -100,14 +103,16 @@ def validate(root: Path):
     assert person is not None, "canonical physician node missing"
     assert clinic is not None, "canonical clinic/practice node missing"
 
-    person_bundle = bundle(by_id, person)
-    clinic_bundle = bundle(by_id, clinic)
+    # Scope uniqueness to sameAs and identifier PropertyValues. The physician also
+    # links to many legitimate topical Wikidata entities elsewhere in the graph.
+    person_identity = identity_bundle(by_id, person)
+    clinic_identity = identity_bundle(by_id, clinic)
 
-    assert_exact_domain_id(person_bundle, r"wikidata\.org/(?:wiki|entity)/(Q\d+)", QID, "Wikidata person QID")
-    assert_exact_domain_id(person_bundle, r"orcid\.org/([0-9X-]{19})", ORCID, "ORCID")
-    assert_exact_domain_id(person_bundle, r"openalex\.org/(A\d+)", OPENALEX, "OpenAlex person ID")
-    assert PERSON_KG in person_bundle, "person Google KG ID missing"
-    assert IRIMC in person_bundle, "IRIMC code missing"
+    assert_exact_domain_id(person_identity, r"wikidata\.org/(?:wiki|entity)/(Q\d+)", QID, "Wikidata person QID")
+    assert_exact_domain_id(person_identity, r"orcid\.org/([0-9X-]{19})", ORCID, "ORCID")
+    assert_exact_domain_id(person_identity, r"openalex\.org/(A\d+)", OPENALEX, "OpenAlex person ID")
+    assert PERSON_KG in person_identity, "person Google KG ID missing"
+    assert IRIMC in person_identity, "IRIMC code missing"
 
     for expected, label in [
         (CLINIC_KG, "clinic Google KG ID"),
@@ -115,7 +120,7 @@ def validate(root: Path):
         (CLINIC_PLACE, "clinic Google Place ID"),
         (CLINIC_OSM, "clinic OpenStreetMap node ID"),
     ]:
-        assert expected in clinic_bundle, f"{label} missing"
+        assert expected in clinic_identity, f"{label} missing"
 
     # The practice remains a distinct place/practice entity, but not an independent
     # multi-provider MedicalClinic employing or directing the physician.
