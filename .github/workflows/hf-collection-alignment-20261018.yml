@@ -51,6 +51,7 @@ jobs:
 
           slug='Ghezelbaash/dr-saeed-ghezelbash-entity-knowledge-graph'
           c=api.get_collection(slug)
+          slug=c.slug
           records=[item for item in c.items if item.item_id=='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data']
           assert len(records)==1,('Matching collection dataset item',len(records))
           item=records[0]
