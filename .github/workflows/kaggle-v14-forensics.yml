@@ -1,0 +1,66 @@
+name: Kaggle v14 read-only forensics
+on:
+  push:
+    branches: [maintenance/positioning-recovery-20261017]
+    paths: [.github/workflows/kaggle-v14-forensics.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install Kaggle client
+        run: python -m pip install --disable-pip-version-check 'kaggle>=2.2,<3'
+      - name: Inspect v14 without mutation
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/kaggle-v14
+          kaggle datasets download saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data -p /tmp/kaggle-v14 --unzip --force >/dev/null
+          python - <<'PY'
+          import hashlib,json,os,urllib.request
+          from pathlib import Path
+          ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+          view=json.load(urllib.request.urlopen(urllib.request.Request('https://www.kaggle.com/api/v1/datasets/view/'+ref,headers={'User-Agent':'ghezelbaash-kaggle-forensics/1.0','Cache-Control':'no-cache'}),timeout=60))
+          current=int(view['currentVersionNumber'])
+          assert current==14,current
+          version=next(v for v in view.get('versions',[]) if int(v['versionNumber'])==14)
+          root=Path('/tmp/kaggle-v14')
+          def load(name): return json.loads((root/name).read_text(encoding='utf-8'))
+          manifest=load('kaggle-manifest.json')
+          matrix=load('current-release-matrix.json') if (root/'current-release-matrix.json').exists() else {}
+          files=sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file())
+          positioning=[name for name in files if 'positioning' in name.lower() or name.startswith('enrichment/')]
+          old=[]
+          for p in root.rglob('*'):
+              if not p.is_file() or p.suffix.lower() not in {'.json','.jsonl','.csv','.md','.txt','.yaml','.yml','.ttl','.jsonld','.xml','.cff'}: continue
+              text=p.read_text(encoding='utf-8',errors='ignore')
+              if 'graph.jsonld#dataset' in text or 'A5064828898' in text: old.append(p.relative_to(root).as_posix())
+          checks='UNKNOWN'
+          if (root/'checksums.sha256').exists():
+              checks='PASS'
+              for line in (root/'checksums.sha256').read_text().splitlines():
+                  digest,name=line.split('  ',1)
+                  if hashlib.sha256((root/name).read_bytes()).hexdigest()!=digest:
+                      checks='FAIL:'+name;break
+          print(json.dumps({
+            'currentVersionNumber':current,
+            'versionStatus':version.get('status'),
+            'versionCreated':version.get('creationDate') or version.get('lastUpdated'),
+            'versionNotes':version.get('description') or version.get('versionNotes') or version.get('title'),
+            'files':len(files),
+            'manifest_source_commit':manifest.get('source_commit') or manifest.get('canonical_source_commit') or manifest.get('sourceCommit'),
+            'manifest_hf_revision':manifest.get('hf_revision') or manifest.get('hugging_face_revision') or manifest.get('hfRevision'),
+            'desired_kaggle_version':manifest.get('desired_kaggle_version'),
+            'matrix_source_commit':matrix.get('sourceCommit') or matrix.get('source_commit'),
+            'matrix_hf_revision':matrix.get('hfRevision') or matrix.get('hf_revision'),
+            'positioning_files':positioning,
+            'stale_identity_files':old,
+            'checksums':checks,
+          },ensure_ascii=False,indent=2))
+          PY
