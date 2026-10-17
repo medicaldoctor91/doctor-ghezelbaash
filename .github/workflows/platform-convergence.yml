@@ -1,22 +1,32 @@
-name: Correct platform convergence with unchanged Zenodo DOIs
+name: Prepare hardened external platform convergence
 on:
-  push:
-    branches: [maintenance/platform-convergence-20261012]
-    paths: [.github/workflows/platform-convergence.yml, .github/scripts/platform_bundle.py, .github/scripts/platform_publish.py, src/lib/retrieval-output.mjs, tests/**]
   workflow_dispatch:
+    inputs:
+      website_commit:
+        description: Exact reviewed live website source commit
+        required: true
+        type: string
+      hf_revision:
+        description: Exact reviewed Hugging Face main revision
+        required: true
+        type: string
+      kaggle_version:
+        description: Exact reviewed current Kaggle version
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
   group: doctor-ghezelbaash-platform-convergence
   cancel-in-progress: false
 jobs:
-  publish:
+  prepare:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
-      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
+      EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
+      EXPECTED_KAGGLE_VERSION: ${{ inputs.kaggle_version }}
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
@@ -24,34 +34,25 @@ jobs:
         with: {node-version-file: .nvmrc, cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Check existing publication credentials without exposing values
-        run: |
-          python - <<'PY'
-          import os
-          required=['HF_TOKEN','ZENODO_TOKEN','KAGGLE_API_TOKEN']
-          missing=[k for k in required if not os.environ.get(k)]
-          assert not missing, 'Missing existing credential bindings: '+str(missing)
-          print('All three external publication bindings are present')
-          PY
-      - name: Install locked build and publication dependencies
+      - name: Install build and platform validation dependencies
         run: |
           npm ci
-          python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' 'rdflib>=7,<8' 'pyshacl>=0.30,<1'
-      - name: Validate actual RDF dates and build one canonical release
+          python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle>=2.2,<3' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+      - name: Validate source and prepare immutable-origin platform packages
         run: |
-          node --test tests/platform-provenance.test.mjs
+          node --test tests/*.test.mjs
           npm run build
           python tests/validate_platform_bundle.py dist --no-query --rdf
-          python -m py_compile .github/scripts/platform_bundle.py .github/scripts/platform_publish.py
-      - name: Publish complete HF, correct both existing Zenodo records and update Kaggle
-        run: python .github/scripts/platform_publish.py
-      - name: Save public publication evidence
+          python -m py_compile .github/scripts/platform_bundle.py .github/scripts/sync_platform_machine_resources.py .github/scripts/platform_convergence_hardened.py
+          python .github/scripts/platform_convergence_hardened.py --prepare-only
+      - name: Save staged validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: platform-convergence-evidence
+          name: platform-convergence-preflight
           path: |
-            /tmp/platform-publish/context.json
-            /tmp/platform-publish/publication-report.json
+            /tmp/platform-convergence-hardened/context.json
+            /tmp/platform-convergence-hardened/hf-validation.json
+            /tmp/platform-convergence-hardened/kaggle-preview-validation.json
+            /tmp/platform-convergence-hardened/website-file-sources.json
           if-no-files-found: warn
-          overwrite: true
