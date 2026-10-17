@@ -1,0 +1,76 @@
+name: Audit historical HF enrichment assets read-only
+on:
+  push:
+    branches: [ops/platform-convergence-clean-20261017]
+    paths: [.github/workflows/hf-enrichment-content-audit.yml]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1'
+      - name: Download and inspect immutable enrichment assets
+        run: |
+          python - <<'PY'
+          import csv,hashlib,json,re,shutil
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          repo='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          rev='e9f45a0fbb55b23847d53f9bc070418670cddbdb'
+          names=[
+            'enrichment/instruction_examples_fa_market_positioning.jsonl',
+            'enrichment/instruction_examples_fa_market_positioning.csv',
+            'enrichment/market-positioning-evidence.json',
+            'enrichment/positioning-strategy.json',
+          ]
+          out=Path('/tmp/hf-enrichment-audit');out.mkdir(parents=True,exist_ok=True)
+          report={'revision':rev,'files':{},'staleAnchors':{},'querySignals':{}}
+          anchors={
+            'oldOpenAlex':'A5064828898',
+            'oldDatasetIri':'https://www.ghezelbaash.ir/graph.jsonld#dataset',
+            'stalePlaceId':'ChIJBTOYDOTt-j8RD-7mAPy6Zas',
+            'obsoleteDoi':'10.5281/zenodo.18765169',
+            'currentOpenAlex':'A5146521397',
+            'currentDatasetIri':'https://www.ghezelbaash.ir/graph.jsonld/dataset',
+            'currentPlaceId':'ChIJBT0YDOTt-j8RD-7mAPy6Zas',
+            'currentDatasetDoi':'10.5281/zenodo.22838416',
+            'currentSourceDoi':'10.5281/zenodo.23289009',
+          }
+          for name in names:
+            src=Path(hf_hub_download(repo,filename=name,repo_type='dataset',revision=rev))
+            dest=out/Path(name).name;shutil.copyfile(src,dest)
+            body=dest.read_bytes(); text=body.decode('utf-8',errors='replace')
+            info={'bytes':len(body),'sha256':hashlib.sha256(body).hexdigest(),'lines':len(text.splitlines())}
+            if name.endswith('.jsonl'):
+              rows=[json.loads(x) for x in text.splitlines() if x.strip()]
+              info['rows']=len(rows); info['keys']=sorted({k for r in rows if isinstance(r,dict) for k in r})
+              info['sampleRows']=rows[:5]
+            elif name.endswith('.csv'):
+              rows=list(csv.DictReader(text.splitlines()));info['rows']=len(rows);info['columns']=list(rows[0].keys()) if rows else [];info['sampleRows']=rows[:5]
+            else:
+              data=json.loads(text);info['topLevelType']=type(data).__name__;info['topLevelKeys']=sorted(data.keys()) if isinstance(data,dict) else []
+              info['content']=data
+            report['files'][name]=info
+            report['staleAnchors'][name]={k:text.count(v) for k,v in anchors.items() if text.count(v)}
+            low=text.lower()
+            report['querySignals'][name]={
+              'behtarin':low.count('بهترین'),'best':len(re.findall(r'\bbest\b',low)),
+              'botox':low.count('بوتاکس')+low.count('botox'),'filler':low.count('فیلر')+low.count('filler'),
+              'lip':low.count('لب')+len(re.findall(r'\blip\b',low)),'contour':low.count('کانتور')+low.count('contour'),
+              'threadLift':low.count('لیفت نخ')+low.count('thread lift'),'prp':low.count('prp')+low.count('پی آر پی'),
+              'mesotherapy':low.count('مزوتراپی')+low.count('mesotherapy'),'subcision':low.count('سابسیژن')+low.count('subcision'),
+              'rejuvenation':low.count('جوانسازی')+low.count('جوان‌سازی')+low.count('rejuvenation'),
+              'acneScar':low.count('جای جوش')+low.count('اسکار آکنه')+low.count('acne scar'),
+            }
+          (out/'audit-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hf-enrichment-audit-readonly
+          path: /tmp/hf-enrichment-audit
+          if-no-files-found: error
