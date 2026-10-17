@@ -25,6 +25,25 @@ jobs:
         with: {node-version-file: .nvmrc, cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
+      - name: Snapshot current public platform locks
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          def get(url):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache, no-store','Pragma':'no-cache','User-Agent':'ghezelbaash-platform-preflight/2.0'})
+              with urllib.request.urlopen(req,timeout=60) as response:
+                  return json.load(response)
+          kaggle=get('https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data')
+          hf=get('https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data')
+          website=get('https://www.ghezelbaash.ir/release-provenance.json?lock_snapshot=1')
+          versions=[{'versionNumber':v.get('versionNumber'),'status':v.get('status')} for v in kaggle.get('versions',[])]
+          print('PUBLIC_LOCK_SNAPSHOT='+json.dumps({
+              'kaggleVersion':kaggle.get('currentVersionNumber'),
+              'kaggleVersions':versions,
+              'hfRevision':hf.get('sha'),
+              'websiteSourceCommit':website.get('sourceCommit')
+          },sort_keys=True))
+          PY
       - name: Install deterministic validation dependencies
         run: |
           npm ci
