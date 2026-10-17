@@ -21,6 +21,7 @@ STALE_PLATFORM_ANCHORS = {
     'obsolete-doi': '10.5281/zenodo.18765169',
 }
 TEXT_SUFFIXES = {'.txt', '.md', '.json', '.jsonl', '.csv', '.xml', '.ttl', '.html', '.yml', '.yaml'}
+GENERATED_GUIDE_ASSET = re.compile(r'^assets/guide(?:-meta)?\.[0-9a-f]+\.json$')
 
 
 def exact_revision(value, label):
@@ -29,7 +30,7 @@ def exact_revision(value, label):
 
 
 def is_obsolete_hf_asset(name):
-    return name == '_headers.content-digest.pending'
+    return name == '_headers.content-digest.pending' or bool(GENERATED_GUIDE_ASSET.fullmatch(name))
 
 
 def semantic_lint_platform_only(root, names):
