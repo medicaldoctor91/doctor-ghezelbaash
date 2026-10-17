@@ -27,3 +27,14 @@ def reviewed_args(root, prepare_only):
                            hf_revision=hf_revision, kaggle_version=kaggle_version,
                            website_commit=website_commit, website_run_url='',
                            prepare_only=prepare_only)
+
+
+def verify_reviewed_origin(args):
+    release_before = json.loads(sync.fetch(sync.ORIGIN + '/release-provenance.json'))
+    assert release_before.get('sourceCommit') == args.website_commit, 'Reviewed website commit is no longer live'
+    manifest_before = sync.fetch(sync.ORIGIN + '/integrity-manifest.json')
+    ctx, control = sync.prepare(args)
+    assert sync.fetch(sync.ORIGIN + '/integrity-manifest.json') == manifest_before, 'Website changed during snapshot download'
+    release_after = json.loads(sync.fetch(sync.ORIGIN + '/release-provenance.json'))
+    assert release_after.get('sourceCommit') == args.website_commit, 'Website changed during snapshot download'
+    return ctx, control
