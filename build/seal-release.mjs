@@ -10,7 +10,7 @@ const execFileAsync=promisify(execFile);
 async function exists(file){try{await fs.access(file);return true;}catch{return false;}}
 async function walk(root){const out=[];async function visit(dir){for(const entry of (await fs.readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){const file=path.join(dir,entry.name);if(entry.isDirectory())await visit(file);else out.push(file);}}await visit(root);return out;}
 function publicPath(root,file){return '/'+path.relative(root,file).split(path.sep).join('/');}
-function mediaType(file){const registered=[...canonicalSource.machineResources,...(canonicalSource.delivery.releaseResources??[])].find(resource=>file.endsWith(resource.path));if(registered)return registered.mediaType;if(file.endsWith('/sbom.cdx.json'))return 'application/vnd.cyclonedx+json';if(file.endsWith('/_headers.content-digest.pending'))return 'text/plain';const ext=path.extname(file).toLowerCase();return ({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.jsonld':'application/ld+json','.ttl':'text/turtle','.xml':'application/xml','.txt':'text/plain','.md':'text/markdown','.csv':'text/csv','.avif':'image/avif','.webp':'image/webp','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.mp4':'video/mp4','.webm':'video/webm','.woff2':'font/woff2','.ico':'image/x-icon'}[ext]??'application/octet-stream');}
+function mediaType(file){const registered=[...canonicalSource.machineResources,...(canonicalSource.delivery.releaseResources??[])].find(resource=>file.endsWith(resource.path));if(registered)return registered.mediaType;const ext=path.extname(file).toLowerCase();return ({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.jsonld':'application/ld+json','.ttl':'text/turtle','.xml':'application/xml','.txt':'text/plain','.md':'text/markdown','.csv':'text/csv','.avif':'image/avif','.webp':'image/webp','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.mp4':'video/mp4','.webm':'video/webm','.woff2':'font/woff2','.ico':'image/x-icon'}[ext]??'application/octet-stream');}
 function setIntegrity(tag,value){if(/\sintegrity=(?:"[^"]*"|'[^']*')/i.test(tag))return tag.replace(/(\sintegrity=)(?:"[^"]*"|'[^']*')/i,`$1"${value}"`);return tag.replace(/>$/,` integrity="${value}">`);}
 function attr(tag,name){const m=new RegExp(`\\s${name}=(?:"([^"]*)"|'([^']*)')`,'i').exec(tag);return m?.[1]??m?.[2];}
 async function sriForReference(root,href){if(!href?.startsWith('/')||href.startsWith('//'))throw new Error(`SRI only supports same-origin absolute paths: ${href}`);const file=path.join(root,href.slice(1));if(!(await exists(file)))throw new Error(`SRI target missing: ${href}`);return sha384Sri(await fs.readFile(file));}
@@ -23,17 +23,21 @@ export async function sealRelease({distDir,projectRoot,releaseDate}){
   const sbom=await generateSbom(projectRoot,distDir);
   const eligible={};
   for(const file of await walk(distDir)){if(!digestEligible(file))continue;const bytes=await fs.readFile(file);eligible[publicPath(distDir,file)]={bytes:bytes.length,sha256:sha256Hex(bytes),contentDigest:contentDigestSha256(bytes)};}
-  await fs.writeFile(path.join(distDir,'content-digest-eligibility.json'),JSON.stringify({status:'pending-live-byte-identity-verification',eligible},null,2)+'\n');
-  const pending=Object.entries(eligible).sort(([a],[b])=>a.localeCompare(b)).map(([url,data])=>`${url}\n  Content-Digest: ${data.contentDigest}`).join('\n\n')+'\n';
-  await fs.writeFile(path.join(distDir,'_headers.content-digest.pending'),pending);
+  const eligibleCount=Object.keys(eligible).length;
+  if(eligibleCount>100)throw new Error(`Cloudflare Pages _headers supports at most 100 rules; found ${eligibleCount} Content-Digest resources`);
+  const digestMetadata={status:'configured-for-cloudflare-pages',algorithm:'sha-256',headerRulesPath:'/_headers',liveVerification:'required-after-deploy',eligible};
+  await fs.writeFile(path.join(distDir,'content-digest-eligibility.json'),JSON.stringify(digestMetadata,null,2)+'\n');
+  const headers=Object.entries(eligible).sort(([a],[b])=>a.localeCompare(b)).map(([url,data])=>`${url}\n  Content-Digest: ${data.contentDigest}`).join('\n\n')+'\n';
+  await fs.writeFile(path.join(distDir,'_headers'),headers);
+  await fs.rm(path.join(distDir,'_headers.content-digest.pending'),{force:true});
   const lockBytes=await fs.readFile(path.join(projectRoot,'package-lock.json'));
   const {stdout:commit}=await execFileAsync('git',['rev-parse','HEAD'],{cwd:projectRoot});
-  const provenance={sourceCommit:commit.trim(),releaseDate,packageLockSha256:sha256Hex(lockBytes),node:process.versions.node,sbom:{path:'/sbom.cdx.json',format:sbom.bomFormat,specVersion:sbom.specVersion},contentDigest:'pending-live-byte-identity-verification'};
+  const provenance={sourceCommit:commit.trim(),releaseDate,packageLockSha256:sha256Hex(lockBytes),node:process.versions.node,sbom:{path:'/sbom.cdx.json',format:sbom.bomFormat,specVersion:sbom.specVersion},contentDigest:{status:'configured-for-cloudflare-pages',algorithm:'sha-256',eligibleResources:eligibleCount,headerRulesPath:'/_headers',liveVerification:'release-workflow'}};
   await fs.writeFile(path.join(distDir,'release-provenance.json'),JSON.stringify(provenance,null,2)+'\n');
   const files={};
-  for(const file of await walk(distDir)){if(publicPath(distDir,file)==='/integrity-manifest.json')continue;const bytes=await fs.readFile(file);files[publicPath(distDir,file)]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}
+  for(const file of await walk(distDir)){const publishedPath=publicPath(distDir,file);if(publishedPath==='/integrity-manifest.json'||publishedPath==='/_headers')continue;const bytes=await fs.readFile(file);files[publishedPath]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}
   await fs.writeFile(path.join(distDir,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate,files},null,2)+'\n');
-  return {manifestFiles:Object.keys(files).length,sbomComponents:sbom.components?.length??0,contentDigestEligible:Object.keys(eligible).length};
+  return {manifestFiles:Object.keys(files).length,sbomComponents:sbom.components?.length??0,contentDigestEligible:eligibleCount};
 }
 
 if(process.argv[1]===fileURLToPath(import.meta.url)){
