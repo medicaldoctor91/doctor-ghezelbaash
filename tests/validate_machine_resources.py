@@ -74,6 +74,10 @@ def validate(root):
     graph.parse(root / 'void.ttl', format='turtle')
     # Validate the full canonical RDF union, including Croissant's shared Dataset IRI.
     graph.parse(root / 'croissant.json', format='json-ld')
+    # Shared Dataset URL must be one RDF IRI, not an IRI plus an xsd:anyURI literal.
+    dataset_iri = rdflib.URIRef(origin + '/graph.jsonld/dataset')
+    url_iri = rdflib.URIRef('https://schema.org/url')
+    assert set(graph.objects(dataset_iri, url_iri)) == {rdflib.URIRef(origin + '/')}, 'Inconsistent Dataset URL RDF terms'
     conforms, _, report = shacl_validate(graph, shacl_graph=shapes, inference='none', advanced=True)
     assert conforms, report
 
