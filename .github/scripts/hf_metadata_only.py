@@ -96,7 +96,8 @@ def main():
     token = os.environ.get("HF_TOKEN")
     assert token, "Existing HF publication binding is missing"
     writer, reader = HfApi(token=token), HfApi(token=False)
-    writer.auth_check(REPO, repo_type="dataset", write=True)
+    # 0.36.0 checks repository access here; create_commit enforces write permission.
+    writer.auth_check(REPO, repo_type="dataset")
     before = reader.dataset_info(REPO, revision="main", files_metadata=True)
     assert before.sha == BASE, "HF HEAD changed; review before publishing"
     updates = build_updates(public_bytes("README.md", BASE), json.loads(public_bytes("dist-sha256.json", BASE)))
