@@ -4,7 +4,9 @@ import os
 import pathlib
 import sys
 import threading
+import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -14,6 +16,27 @@ import sync_platform_machine_resources as sync
 
 
 class PublicationTransportTests(unittest.TestCase):
+    def test_existing_verification_records_owner_state_before_public_drift_rejection(self):
+        import json
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            args = SimpleNamespace(root=root, website_run_url='reviewed-run', website_commit='a' * 40,
+                                   hf_revision='b' * 40, kaggle_version=18)
+            def metadata(dataset, target):
+                pathlib.Path(target, 'dataset-metadata.json').write_text(json.dumps({
+                    'description': 'published card', 'userSpecifiedSources': 'reviewed sources'}))
+            with patch.object(sync, 'verify_website_run'), patch.object(sync, 'kaggle_client') as client, \
+                    patch.object(sync, 'guard', side_effect=AssertionError('public revision still differs')):
+                client.return_value.dataset_metadata.side_effect = metadata
+                client.return_value.dataset_status.return_value = json.dumps({'status': 'ready', 'current_version_number': 18})
+                with self.assertRaisesRegex(AssertionError, 'public revision still differs'):
+                    sync.verify_existing(args)
+                report = json.loads((root / 'publication-report.json').read_text())
+                self.assertEqual(report['kaggleOwnerState']['current_version_number'], 18)
+                self.assertEqual(report['ownerSourceMetadata'], 'reviewed sources')
+                client.return_value.dataset_metadata_update.assert_not_called()
+                client.return_value.dataset_create_version.assert_not_called()
+
     def test_source_metadata_pins_both_current_hf_and_website_without_rewriting_archives(self):
         hub = 'https://huggingface.co/datasets/' + sync.HF_REPO
         value = (sync.DATASET + '; Data distribution: ' + hub + '/tree/' + 'a' * 40

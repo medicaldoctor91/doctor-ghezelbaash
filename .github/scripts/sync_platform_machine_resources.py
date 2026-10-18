@@ -389,9 +389,21 @@ def publish(args, ctx, control):
 def verify_existing(args):
     """Finish byte/metadata verification without another HF commit or Kaggle version."""
     verify_website_run(args.website_run_url, args.website_commit)
-    _, overview, _ = guard(args)
     root = args.root
     root.mkdir(parents=True, exist_ok=True)
+    client = kaggle_client()
+    control_dir = root / 'kaggle-owner-metadata'
+    control_dir.mkdir(exist_ok=True)
+    client.dataset_metadata(KAGGLE_REF, str(control_dir))
+    wrapped = load(control_dir / 'dataset-metadata.json')
+    control = dict(wrapped.get('info') or wrapped)
+    report = {'websiteSourceCommit': args.website_commit, 'hfRevision': args.hf_revision,
+              'reviewedKaggleVersion': args.kaggle_version, 'phase': 'read-only preflight',
+              'kaggleOwnerState': json.loads(client.dataset_status(KAGGLE_REF, format='json(status,current_version_number)')),
+              'ownerSourceMetadata': control.get('userSpecifiedSources'),
+              'ownerDescriptionSha256': hashlib.sha256(control['description'].strip().encode()).hexdigest()}
+    dump(root / 'publication-report.json', report)
+    _, overview, _ = guard(args)
     manifest_body = fetch(ORIGIN + '/integrity-manifest.json')
     website_files = json.loads(manifest_body)['files']
     payload = root / 'kaggle-published'
@@ -408,18 +420,11 @@ def verify_existing(args):
         assert digest == inventory[source]['sha256'], ('Kaggle/HF byte mismatch', name)
         if '/' + source in website_files:
             assert digest == website_files['/' + source]['sha256'], ('Kaggle/website byte mismatch', name)
-    client = kaggle_client()
-    control_dir = root / 'kaggle-owner-metadata'
-    control_dir.mkdir(exist_ok=True)
-    client.dataset_metadata(KAGGLE_REF, str(control_dir))
-    wrapped = load(control_dir / 'dataset-metadata.json')
-    control = dict(wrapped.get('info') or wrapped)
-    report = {'websiteSourceCommit': args.website_commit, 'hfRevision': args.hf_revision,
-              'packagePublicationRun': package['package_publication_run_url'],
+    report.update({'packagePublicationRun': package['package_publication_run_url'], 'phase': 'payload verified',
               'verificationRun': context(args.website_commit, os.environ.get('GITHUB_RUN_ID', '0'))['run_url'],
               'kaggle': {'version': args.kaggle_version, 'payloadVerified': True, 'mirroredFiles': len(mirrored)},
               'kaggleOverviewVersionNumber': int(overview['currentVersionNumber']),
-              'ownerDescriptionMatchesPayload': control['description'].strip() == (payload / 'README.md').read_text().strip()}
+              'ownerDescriptionMatchesPayload': control['description'].strip() == (payload / 'README.md').read_text().strip()})
     dump(root / 'publication-report.json', report)
     assert report['ownerDescriptionMatchesPayload'], 'Owner description differs from the published payload; do not overwrite independent metadata'
     guard(args)
