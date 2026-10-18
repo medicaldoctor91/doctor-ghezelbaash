@@ -108,6 +108,10 @@ jobs:
           assert 'https://www.ghezelbaash.ir/media-license' in fetch('media-license').decode()
           response=urllib.request.urlopen(origin+'data-catalog',timeout=30)
           assert response.status==200 and response.headers.get_content_type()=='application/ld+json'
+          for alias in ['procedure-botulinum-toxin-chronic-migraine','service-botulinum-toxin-chronic-migraine']:
+              with open_live(alias) as response:
+                  assert response.status==200 and response.headers.get_content_type()=='application/ld+json'
+                  assert response.read()==(Path('dist')/'graph.jsonld').read_bytes(),alias
           assert hashlib.sha256(response.read()).digest()==hashlib.sha256((Path('dist')/'graph.jsonld').read_bytes()).digest()
           eligibility=json.loads((Path('dist')/'content-digest-eligibility.json').read_text())
           assert eligibility['status']=='configured-for-cloudflare-pages'

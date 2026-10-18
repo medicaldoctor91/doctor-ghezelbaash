@@ -63398,7 +63398,9 @@ export const SOURCE = {
           "/webpage",
           "/website",
           "/data-catalog",
-          "/medical-specialty-aesthetic-medicine"
+          "/medical-specialty-aesthetic-medicine",
+          "/procedure-botulinum-toxin-chronic-migraine",
+          "/service-botulinum-toxin-chronic-migraine"
         ],
         "graphSubjectPrefixes": [
           "/graph.jsonld/",

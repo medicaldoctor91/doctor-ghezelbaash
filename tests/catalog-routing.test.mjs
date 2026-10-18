@@ -28,3 +28,12 @@ test('the data catalog graph alias carries the machine representation headers', 
   assert.match(block,/^  X-Robots-Tag: noindex, follow$/m);
   assert.match(block,/^  Link: <\/graph\.jsonld>; rel=describedby; type="application\/ld\+json"$/m);
 });
+
+
+test('active migraine therapy and service IRIs resolve to the graph representation', () => {
+  const rows=deriveRoutingRows(SOURCE,SOURCE.graph);
+  for(const path of ['/procedure-botulinum-toxin-chronic-migraine','/service-botulinum-toxin-chronic-migraine']) {
+    assert.ok(SOURCE.graph['@graph'].some(n=>n['@id']===SOURCE.canonicalOrigin+path));
+    assert.deepEqual(rows.find(row=>row.source===path),{source:path,target:'/graph.jsonld',statusCode:200});
+  }
+});
