@@ -273,4 +273,55 @@ def main():
     assert str(latest['id'])=='23289009','Zenodo source latest target changed unexpectedly'
     dump(root/'publication-report.json',report);print(json.dumps(report,ensure_ascii=False),flush=True)
 
-if __name__=='__main__':main()
+def correct_zenodo_metadata(spec,token):
+    """Edit only mutable metadata on the existing deposition; never touch file APIs."""
+    record=spec['record'];url=BASE+'/records/'+record
+    _,before=request('GET',url,token=token)
+    assert before['revision']==spec['expected_revision'],'Zenodo revision changed since review'
+    assert before['doi']==spec['doi'] and before['metadata']['version']==spec['version']
+    files=lambda value:{f['key']:(f['checksum'],f['size']) for f in value['files']}
+    original_files=files(before)
+    dep=BASE+'/deposit/depositions/'+record
+    _,draft=request('GET',dep,token=token)
+    assert draft.get('submitted'),'An unpublished Zenodo draft already exists; do not overwrite it'
+    md=draft['metadata'];old={k:v for k,v in md.items() if k not in {'description','related_identifiers'}}
+    md['description']=spec['description']
+    related=list(md.get('related_identifiers',[]));known={r['identifier'] for r in related}
+    for link in ['https://www.ghezelbaash.ir/','https://www.ghezelbaash.ir/graph.jsonld',
+                 'https://huggingface.co/datasets/'+HF_REPO,'https://www.kaggle.com/datasets/'+KAGGLE_REF]:
+        if link not in known:related.append({'identifier':link,'scheme':'url','relation':'isSupplementTo'})
+    md['related_identifiers']=related
+    _,current=request('GET',url,token=token)
+    assert current['revision']==before['revision'],'Zenodo metadata changed before edit'
+    assert files(current)==original_files
+    request('POST',dep+'/actions/edit',token=token)
+    request('PUT',dep,payload={'metadata':md},token=token)
+    request('POST',dep+'/actions/publish',token=token)
+    _,after=request('GET',url,token=token)
+    assert after['doi']==before['doi'] and after['conceptdoi']==before['conceptdoi']
+    assert after['metadata']['version']==spec['version'] and files(after)==original_files
+    assert after['metadata']['description']==spec['description']
+    _,published=request('GET',dep,token=token)
+    assert {k:v for k,v in published['metadata'].items() if k not in {'description','related_identifiers'}}==old,'Unrelated metadata changed'
+    return {'record':record,'beforeRevision':before['revision'],'afterRevision':after['revision'],
+            'doi':after['doi'],'version':spec['version'],'filesUnchanged':True,'metadataVerified':True}
+
+
+def maintain_zenodo_metadata():
+    parser=argparse.ArgumentParser();parser.add_argument('--zenodo-metadata-only',action='store_true');parser.add_argument('--report',type=Path,required=True)
+    args=parser.parse_args();report={'scope':'metadata-only','newReleaseCreated':False,'newDoiCreated':False,'records':[]}
+    token=os.environ.get('ZENODO_TOKEN')
+    if not token:report.update(status='blocked',reason='No existing authenticated Zenodo binding is available')
+    else:
+        specs=load(Path(__file__).resolve().parents[2]/'src/canonical/platforms/zenodo-metadata.json')['records']
+        for spec in specs:
+            try:report['records'].append(correct_zenodo_metadata(spec,token))
+            except (RuntimeError,AssertionError) as error:
+                report['records'].append({'record':spec['record'],'status':'blocked','reason':str(error)[:1200]})
+        report['status']='verified' if all(r.get('metadataVerified') for r in report['records']) else 'partial-or-blocked'
+    dump(args.report,report);print(json.dumps(report),flush=True)
+
+
+if __name__=='__main__':
+    if '--zenodo-metadata-only' in sys.argv:maintain_zenodo_metadata()
+    else:main()

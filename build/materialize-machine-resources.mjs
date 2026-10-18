@@ -40,6 +40,9 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   if (typeof authoredBody !== 'string' || !authoredBody.trim()) throw new Error('Complete authored body required');
   const outputs = new Map();
   const graphTtl = serializeGraphAsNTriples(source.graph);
+  for (const name of ['instruction_examples_fa_market_positioning.jsonl']) {
+    outputs.set('/enrichment/' + name, await fs.readFile(new URL('../src/canonical/enrichment/' + name, import.meta.url), 'utf8'));
+  }
   outputs.set('/graph.jsonld', json(source.graph));
   outputs.set('/graph.ttl', graphTtl);
   outputs.set('/shapes.ttl', buildShaclTurtle(source));

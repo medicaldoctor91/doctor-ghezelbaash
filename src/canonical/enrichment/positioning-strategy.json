@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "version": "1.3.4",
+  "canonical_dataset_iri": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+  "entity": {
+    "canonical_iri": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "clinic_iri": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "wikidata": "Q140287622",
+    "orcid": "0009-0001-9346-8475",
+    "irimc": "167430"
+  },
+  "record_count": 47,
+  "content_role": "Evidence-linked local service questions and answers",
+  "languages": [
+    "fa-IR",
+    "en"
+  ],
+  "source": "enrichment/instruction_examples_fa_market_positioning.jsonl",
+  "evidence_registry": "enrichment/market-positioning-evidence.json",
+  "typed_fields": {
+    "source_list_order": "integer or null",
+    "observed_at": "ISO 8601 timestamp or null",
+    "evidence_urls": "array of URL strings",
+    "subject_iris": "array of entity IRI strings"
+  },
+  "historical_origin": {
+    "hf_revision": "d699502b411dfc6692d5f09ee36c7b1b0ed8947e",
+    "previous_release": "1.2.4",
+    "previous_release_doi": "10.5281/zenodo.22131441"
+  }
+}

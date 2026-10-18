@@ -92,6 +92,38 @@ class PublicationTransportTests(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     sync.verify_website_run(url, commit)
 
+    def test_branch_receipt_must_match_the_dispatched_reviewed_branch(self):
+        import json
+        branch='codex/p0-semantic-integrity-20261018'
+        run={'head_sha':'a'*40,'head_branch':branch,'status':'completed','conclusion':'success','path':'.github/workflows/machine-readable-interop.yml'}
+        with patch.dict(os.environ,{'GITHUB_REF_NAME':branch}),patch.object(sync,'fetch',return_value=json.dumps(run).encode()):
+            sync.verify_website_run('https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345','a'*40)
+        with patch.dict(os.environ,{'GITHUB_REF_NAME':'unreviewed'}),patch.object(sync,'fetch',return_value=json.dumps(run).encode()):
+            with self.assertRaises(AssertionError):sync.verify_website_run('https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345','a'*40)
+
+    def test_zenodo_metadata_path_never_calls_file_or_new_version_apis(self):
+        from copy import deepcopy
+        before={'revision':33,'doi':'10.5281/zenodo.22838416','conceptdoi':'10.5281/zenodo.18765168',
+                'files':[{'key':'graph.jsonld','checksum':'md5:abc','size':12}],
+                'metadata':{'version':'1.3.3','description':'before'}}
+        spec={'record':'22838416','expected_revision':33,'doi':before['doi'],'version':'1.3.3','description':'verified archive description'}
+        md={'version':'1.3.3','description':'before','creators':[{'name':'Original creator'}],'related_identifiers':[]}
+        stored=deepcopy(md);calls=[]
+        def request(method,url,payload=None,**kwargs):
+            calls.append((method,url))
+            self.assertNotIn('/files',url);self.assertNotIn('newversion',url)
+            if url.endswith('/records/22838416'):
+                obj=deepcopy(before)
+                if any(v[0]=='PUT' for v in calls):obj['revision']=34;obj['metadata']['description']=spec['description']
+                return 200,obj
+            if method=='PUT':stored.update(payload['metadata'])
+            return 200,{'submitted':True,'metadata':deepcopy(stored)}
+        with patch.object(publication,'request',side_effect=request):result=publication.correct_zenodo_metadata(spec,'redacted-token')
+        self.assertTrue(result['filesUnchanged'] and result['metadataVerified'])
+        self.assertEqual(result['version'],'1.3.3')
+        with patch.object(publication,'request',return_value=(200,{**before,'revision':34})):
+            with self.assertRaisesRegex(AssertionError,'revision changed'):publication.correct_zenodo_metadata(spec,'redacted-token')
+
     def test_download_retries_temporary_404_without_publishing(self):
         class Handler(BaseHTTPRequestHandler):
             reads = 0

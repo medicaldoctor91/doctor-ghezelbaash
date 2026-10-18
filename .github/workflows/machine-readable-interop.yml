@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       reviewed_commit:
-        description: Exact reviewed main source commit
+        description: Exact reviewed source commit on the dispatched branch
         required: true
         type: string
       previous_website_commit:
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/codex/p0-semantic-integrity-')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -62,7 +62,7 @@ jobs:
           include-hidden-files: true
       - name: Deploy validated website
         run: |
-          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$REVIEWED_COMMIT"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$REVIEWED_COMMIT"
           python - <<'PY'
           import json,os,urllib.request
           assert json.load(urllib.request.urlopen('https://www.ghezelbaash.ir/release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']

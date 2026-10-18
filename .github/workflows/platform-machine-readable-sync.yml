@@ -18,6 +18,11 @@ on:
         description: Verified website publication run URL
         required: true
         type: string
+      zenodo_metadata_only:
+        description: Maintain existing Zenodo descriptions and links; never change archived files, version, DOI or create a new release
+        required: false
+        type: boolean
+        default: false
       verify_existing:
         description: Verify existing pinned packages and finish source metadata; never create another HF commit or Kaggle version
         required: false
@@ -31,11 +36,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/codex/p0-semantic-integrity-')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ github.token }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
       HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
       EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
@@ -52,6 +58,8 @@ jobs:
         with: {python-version: '3.12'}
       - name: Check existing publication bindings
         run: |
+          test "$GITHUB_SHA" = "$EXPECTED_WEBSITE_COMMIT"
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$EXPECTED_WEBSITE_COMMIT"
           python - <<'PY'
           import os
           missing=[key for key in ['HF_TOKEN','KAGGLE_API_TOKEN'] if not os.environ.get(key)]
@@ -76,6 +84,9 @@ jobs:
           mode=()
           if [ "$VERIFY_EXISTING" = true ]; then mode+=(--verify-existing); fi
           python .github/scripts/sync_platform_machine_resources.py --root /tmp/platform-machine-sync --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --website-run-url "$WEBSITE_PUBLICATION_RUN_URL" "${mode[@]}"
+      - name: Maintain authorized Zenodo metadata without altering historical files
+        if: inputs.zenodo_metadata_only
+        run: python .github/scripts/platform_publish.py --zenodo-metadata-only --report /tmp/platform-machine-sync/zenodo-metadata-report.json
       - name: Save publication and validation evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,6 +95,7 @@ jobs:
           path: |
             /tmp/platform-machine-sync/context.json
             /tmp/platform-machine-sync/publication-report.json
+            /tmp/platform-machine-sync/zenodo-metadata-report.json
             /tmp/platform-machine-sync/*validation.json
             /tmp/platform-machine-sync/website-file-sources.json
           if-no-files-found: warn

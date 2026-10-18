@@ -94,3 +94,20 @@ print('solo-practice relationship mutations rejected')
 `], { input: JSON.stringify({graph: SOURCE.graph, shapes: buildShaclTurtle(SOURCE)}), encoding: 'utf8', timeout: 60000, maxBuffer: 16 * 1024 * 1024 });
   assert.equal(result.status, 0, result.stderr || result.stdout);
 });
+
+
+test('personally provided migraine therapy has a separate correctly scoped access Service', () => {
+  const therapyId='https://www.ghezelbaash.ir/procedure-botulinum-toxin-chronic-migraine';
+  const serviceId='https://www.ghezelbaash.ir/service-botulinum-toxin-chronic-migraine';
+  const therapy=nodes.find(n=>n['@id']===therapyId), service=nodes.find(n=>n['@id']===serviceId);
+  assert.equal(therapy['@type'],'MedicalTherapy');
+  assert.equal(service['@type'],'Service');
+  assert.deepEqual(refIds(therapy.provider),[]);
+  assert.deepEqual(refIds(therapy.availableChannel),[]);
+  assert.deepEqual(refIds(service.provider),[PERSON]);
+  assert.ok(refIds(service['dcterms:subject']).includes(therapyId));
+  assert.ok(refIds(service.availableChannel).includes('https://www.ghezelbaash.ir/in-person-clinic-service-channel'));
+  assert.ok(refIds(person.availableService).includes(therapyId));
+  assert.ok(refIds(clinic.availableService).includes(therapyId));
+  assert.ok(refIds(nodes.find(n=>n['@id'].endsWith('/in-person-clinic-service-channel')).providesService).includes(serviceId));
+});
