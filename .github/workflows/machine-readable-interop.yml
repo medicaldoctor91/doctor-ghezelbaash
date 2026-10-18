@@ -90,6 +90,9 @@ jobs:
           targets={path.lstrip('/') for path,metadata in manifest['files'].items() if metadata['sha256']!=before['files'].get(path,{}).get('sha256')}
           targets|={urllib.parse.urlparse(resource['path']).path.lstrip('/') for resource in json.loads((Path('dist')/'datapackage.json').read_text())['resources']}
           targets|={'index.html','media-license.html','integrity-manifest.json','release-provenance.json'}
+          # Pages consumes these deployment controls; they are not public URLs.
+          # Verify their applied routing below through the data-catalog alias.
+          targets-={'_redirects','_headers'}
           for name in sorted(targets):
               public_path='' if name=='index.html' else name[:-5] if name.endswith('.html') else name
               try: body=fetch(public_path)
