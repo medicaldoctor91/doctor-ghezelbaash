@@ -1,5 +1,6 @@
 """Exercise publication transport boundaries without contacting external accounts."""
 import importlib.util
+import os
 import pathlib
 import sys
 import threading
@@ -13,6 +14,30 @@ import sync_platform_machine_resources as sync
 
 
 class PublicationTransportTests(unittest.TestCase):
+    def test_verify_existing_never_prepares_or_republishes_packages(self):
+        command = ['sync', '--root', '/tmp/reviewed-verification', '--hf-revision', 'b' * 40,
+                   '--kaggle-version', '17', '--website-commit', 'a' * 40,
+                   '--website-run-url', 'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345',
+                   '--verify-existing']
+        with patch.object(sys, 'argv', command), patch.dict(os.environ, {'HF_TOKEN': 'test', 'KAGGLE_API_TOKEN': 'test'}), \
+                patch.object(sync, 'verify_existing', create=True) as verify, \
+                patch.object(sync, 'prepare', side_effect=AssertionError('must not prepare another release')), \
+                patch.object(sync, 'publish', side_effect=AssertionError('must not create another revision or version')):
+            sync.main()
+        verify.assert_called_once()
+
+    def test_ready_version_guard_uses_version_inventory_when_overview_is_stale(self):
+        value = {'currentVersionNumber': 16, 'versions': [
+            {'versionNumber': 17, 'status': 'Ready'}, {'versionNumber': 16, 'status': 'Ready'}]}
+        sync.guard_kaggle_version(value, 17)
+        for expected, changed in [(16, value), (18, value),
+                                  (17, {**value, 'currentVersionNumber': 18}),
+                                  (17, {**value, 'versions': [{'versionNumber': 17, 'status': 'Processing'}]}),
+                                  (17, {**value, 'versions': [*value['versions'], {'versionNumber': 18, 'status': 'Processing'}]})]:
+            with self.subTest(expected=expected, changed=changed):
+                with self.assertRaises(AssertionError):
+                    sync.guard_kaggle_version(changed, expected)
+
     def test_website_receipt_requires_successful_reviewed_deployment_run(self):
         import json
         url = 'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345'

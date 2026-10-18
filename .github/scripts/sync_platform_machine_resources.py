@@ -51,7 +51,9 @@ def public_state():
 
 
 def guard_kaggle_version(kaggle, expected_version):
-    assert int(kaggle['currentVersionNumber']) == expected_version, 'Kaggle changed since review'
+    # The public overview can lag after a version is Ready and downloadable.
+    # Reject newer overview/inventory versions; require the exact Ready entry.
+    assert 0 < int(kaggle['currentVersionNumber']) <= expected_version, 'Kaggle changed since review'
     versions = kaggle.get('versions', [])
     current = next((version for version in versions if int(version['versionNumber']) == expected_version), None)
     assert current is not None and current['status'] == 'Ready', 'Reviewed Kaggle version is not Ready'
@@ -322,9 +324,10 @@ def publish(args, ctx, control):
     verified = None
     for attempt in range(30):
         view = json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF))
-        version = int(view['currentVersionNumber'])
-        assert version <= desired_version, 'A newer external Kaggle version appeared during verification'
-        if version == desired_version:
+        assert int(view['currentVersionNumber']) <= desired_version, 'A newer external Kaggle version appeared during verification'
+        assert not any(int(item['versionNumber']) > desired_version for item in view.get('versions', [])), 'A newer Kaggle version appeared during verification'
+        ready = any(int(item['versionNumber']) == desired_version and item['status'] == 'Ready' for item in view.get('versions', []))
+        if ready:
             candidate = root / ('kaggle-live-' + str(attempt))
             try:
                 download_kaggle(desired_version, candidate, root / ('kaggle-live-' + str(attempt) + '.zip'))
@@ -355,6 +358,53 @@ def publish(args, ctx, control):
     print(json.dumps(report), flush=True)
 
 
+def verify_existing(args):
+    """Finish byte/metadata verification without another HF commit or Kaggle version."""
+    verify_website_run(args.website_run_url, args.website_commit)
+    _, overview, _ = guard(args)
+    root = args.root
+    root.mkdir(parents=True, exist_ok=True)
+    manifest_body = fetch(ORIGIN + '/integrity-manifest.json')
+    website_files = json.loads(manifest_body)['files']
+    payload = root / 'kaggle-published'
+    download_kaggle(args.kaggle_version, payload, root / 'kaggle-published.zip')
+    package = load(payload / 'kaggle-manifest.json')
+    assert package['upstream_revision'] == args.hf_revision, 'Published Kaggle pins a different HF revision'
+    validate_package(payload, 'kaggle', args.website_commit, root / 'kaggle-live-validation.json')
+    inventory = json.loads(fetch('https://huggingface.co/datasets/' + HF_REPO + '/resolve/' + args.hf_revision + '/dist-sha256.json'))['files']
+    mirrored = {item['path'] for item in package['original_files']}
+    mirrored |= {item['file'] for item in load(payload / 'viewer/packaging.json')['tables'].values()}
+    for name in mirrored:
+        source = 'datapackage.json' if name == 'frictionless-datapackage.json' else name
+        digest = sha(payload / relative_path(name))
+        assert digest == inventory[source]['sha256'], ('Kaggle/HF byte mismatch', name)
+        if '/' + source in website_files:
+            assert digest == website_files['/' + source]['sha256'], ('Kaggle/website byte mismatch', name)
+    client = kaggle_client()
+    control_dir = root / 'kaggle-owner-metadata'
+    control_dir.mkdir(exist_ok=True)
+    client.dataset_metadata(KAGGLE_REF, str(control_dir))
+    wrapped = load(control_dir / 'dataset-metadata.json')
+    control = dict(wrapped.get('info') or wrapped)
+    report = {'websiteSourceCommit': args.website_commit, 'hfRevision': args.hf_revision,
+              'packagePublicationRun': package['package_publication_run_url'],
+              'verificationRun': context(args.website_commit, os.environ.get('GITHUB_RUN_ID', '0'))['run_url'],
+              'kaggle': {'version': args.kaggle_version, 'payloadVerified': True, 'mirroredFiles': len(mirrored)},
+              'kaggleOverviewVersionNumber': int(overview['currentVersionNumber']),
+              'ownerDescriptionMatchesPayload': control['description'].strip() == (payload / 'README.md').read_text().strip()}
+    dump(root / 'publication-report.json', report)
+    assert report['ownerDescriptionMatchesPayload'], 'Owner description differs from the published payload; do not overwrite independent metadata'
+    guard(args)
+    assert fetch(ORIGIN + '/integrity-manifest.json') == manifest_body, 'Website changed during verification'
+    report['kaggleSourceMetadata'] = correct_kaggle_sources(client, root, control, args.hf_revision, args.kaggle_version)
+    _, final_overview, _ = guard(args)
+    assert fetch(ORIGIN + '/integrity-manifest.json') == manifest_body, 'Website changed during metadata verification'
+    report['kaggleOverviewVersionNumber'] = int(final_overview['currentVersionNumber'])
+    report['verified'] = True
+    dump(root / 'publication-report.json', report)
+    print(json.dumps(report), flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
@@ -364,16 +414,21 @@ def main():
     parser.add_argument('--website-commit', required=True)
     parser.add_argument('--website-run-url', default='')
     parser.add_argument('--prepare-only', action='store_true')
+    parser.add_argument('--verify-existing', action='store_true')
     args = parser.parse_args()
     for value in [args.hf_revision, args.website_commit]:
         assert re.fullmatch(r'[0-9a-f]{40}', value), 'Expected an exact 40-character revision'
     if args.website_run_url:
         assert re.fullmatch(r'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/\d+', args.website_run_url)
     assert args.kaggle_version > 0
+    assert not (args.prepare_only and args.verify_existing)
     if not args.prepare_only:
         assert args.website_run_url, 'Publishing requires the verified website deployment run'
         missing = [name for name in ['HF_TOKEN', 'KAGGLE_API_TOKEN'] if not os.environ.get(name)]
         assert not missing, 'Missing existing publication bindings: ' + ', '.join(missing)
+    if args.verify_existing:
+        verify_existing(args)
+        return
     ctx, control = prepare(args)
     if not args.prepare_only:
         publish(args, ctx, control)

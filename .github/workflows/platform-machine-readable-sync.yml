@@ -18,6 +18,11 @@ on:
         description: Verified website publication run URL
         required: true
         type: string
+      verify_existing:
+        description: Verify existing pinned packages and finish source metadata; never create another HF commit or Kaggle version
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -35,6 +40,7 @@ jobs:
       EXPECTED_KAGGLE_VERSION: ${{ inputs.kaggle_version }}
       EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
       WEBSITE_PUBLICATION_RUN_URL: ${{ inputs.website_run_url }}
+      VERIFY_EXISTING: ${{ inputs.verify_existing }}
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
@@ -52,17 +58,22 @@ jobs:
           PY
       - name: Install build and platform validation dependencies
         run: |
-          npm ci
+          if [ "$VERIFY_EXISTING" != true ]; then npm ci; fi
           python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4'
       - name: Verify source and generate candidate website resources
         run: |
-          node --test tests/*.test.mjs
+          if [ "$VERIFY_EXISTING" != true ]; then
+            node --test tests/*.test.mjs
+            npm run build
+          fi
           python tests/platform-bundle-sync.test.py
-          npm run build
+          python tests/platform-publication.test.py
           python -m py_compile .github/scripts/sync_platform_machine_resources.py tests/validate_platform_sync.py
       - name: Validate both packages, publish and verify public bytes
         run: |
-          python .github/scripts/sync_platform_machine_resources.py --root /tmp/platform-machine-sync --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --website-run-url "$WEBSITE_PUBLICATION_RUN_URL"
+          mode=()
+          if [ "$VERIFY_EXISTING" = true ]; then mode+=(--verify-existing); fi
+          python .github/scripts/sync_platform_machine_resources.py --root /tmp/platform-machine-sync --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --website-run-url "$WEBSITE_PUBLICATION_RUN_URL" "${mode[@]}"
       - name: Save publication and validation evidence
         if: always()
         uses: actions/upload-artifact@v4
