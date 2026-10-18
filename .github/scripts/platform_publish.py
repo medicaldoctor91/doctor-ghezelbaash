@@ -177,7 +177,9 @@ def main():
     from huggingface_hub import HfApi,CommitOperationAdd,CommitOperationDelete,hf_hub_download
     parser=argparse.ArgumentParser();parser.add_argument('--root',default='/tmp/platform-publish');args=parser.parse_args()
     root=Path(args.root);root.mkdir(parents=True,exist_ok=True)
-    ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'));dump(root/'context.json',ctx)
+    ctx=context(os.environ['GITHUB_SHA'],os.environ['GITHUB_RUN_ID'],os.environ.get('PUBLICATION_MAINTENANCE_DATE'))
+    ctx.update(publication_scope=['hf','kaggle','zenodo_dataset','zenodo_source'],archived_snapshots_updated=True)
+    dump(root/'context.json',ctx)
     token=os.environ['HF_TOKEN'];api=HfApi(token=token)
     info=api.dataset_info(HF_REPO,files_metadata=True);parent=info.sha
     if os.environ.get('EXPECTED_HF_REVISION'):

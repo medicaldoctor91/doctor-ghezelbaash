@@ -10100,7 +10100,7 @@ export const SOURCE = {
           "@value": "2026-10-18",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "description": "Version-controlled source project for Version 1.3.3 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
+        "description": "Version-controlled source project for Version 1.3.4 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
         "author": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10280,7 +10280,7 @@ export const SOURCE = {
         "publisher": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
-        "description": "Version-controlled GitHub source for Version 1.3.3 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
+        "description": "Version-controlled GitHub source for Version 1.3.4 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
         "dateModified": {
           "@value": "2026-10-18",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10315,7 +10315,7 @@ export const SOURCE = {
         "provider": {
           "@id": "https://www.ghezelbaash.ir/distribution-platform-hugging-face"
         },
-        "description": "AI and retrieval distribution of Version 1.3.3 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
+        "description": "AI and retrieval distribution of Version 1.3.4 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
         "encodingFormat": [
           "application/ld+json",
           "text/turtle",
