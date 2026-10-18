@@ -373,7 +373,7 @@ export function buildCroissant(source) {
   return {
     '@context': {
       ...croissantContext, prov: PROV,
-      url: {'@id': 'sc:url', '@type': 'http://www.w3.org/2001/XMLSchema#anyURI'},
+      url: {'@id': 'sc:url', '@type': '@id'},
       datePublished: {'@id': 'sc:datePublished', '@type': 'http://www.w3.org/2001/XMLSchema#date'},
       dateModified: {'@id': 'sc:dateModified', '@type': 'http://www.w3.org/2001/XMLSchema#date'},
       identifier: {'@id': 'sc:identifier', '@language': null},
