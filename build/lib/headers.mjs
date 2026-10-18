@@ -94,3 +94,23 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
   const output=blocks.join('\n\n')+'\n';for(const line of output.split('\n'))if(line.length>2000)throw new Error(`Cloudflare _headers line limit exceeded: ${line.length}`);assertValidLinkTypes(output);return output;
 }
 export function generateSecurityTxt({origin,email,expires}){if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');if(!/^[^@\s]+@[^@\s]+$/.test(email))throw new Error('Invalid security contact email');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(expires))throw new Error('Expires must be an RFC3339 UTC timestamp');return `Contact: mailto:${email}\nExpires: ${expires}\nPreferred-Languages: fa, en\nCanonical: ${origin}/.well-known/security.txt\n`;}
+
+export function sealHeaders({headers,eligible,resourcePaths}){
+  // The 61 per-asset digests and every HTML preload/identity-alias rule cannot
+  // fit together in Pages' 100-rule budget. Retain the registered representation
+  // policies and shared static/security/preview policies. HTML already embeds
+  // its discovery links and preloads; _redirects owns the identity aliases.
+  const retained=new Set([...resourcePaths,'/*','/assets/*','/assets/guide*','/media/*','/fonts/*',
+    'https://:project.pages.dev/*','https://:version.:project.pages.dev/*']);
+  const blocks=new Map(headers.trim().split(/\n\s*\n/).filter(Boolean).map(block=>{
+    const [pattern,...lines]=block.split('\n');return [pattern,lines];
+  }).filter(([pattern])=>retained.has(pattern)));
+  for(const [url,data] of Object.entries(eligible).sort(([a],[b])=>a.localeCompare(b))){
+    const lines=(blocks.get(url)??[]).filter(line=>!/^\s*Content-Digest:/i.test(line));
+    blocks.set(url,[...lines,`  Content-Digest: ${data.contentDigest}`]);
+  }
+  if(blocks.size>100)throw new Error(`Cloudflare _headers rule limit exceeded after sealing: ${blocks.size}`);
+  const output=[...blocks].map(([pattern,lines])=>[pattern,...lines].join('\n')).join('\n\n')+'\n';
+  for(const line of output.split('\n'))if(line.length>2000)throw new Error(`Cloudflare _headers line limit exceeded: ${line.length}`);
+  assertValidLinkTypes(output);return output;
+}

@@ -4,6 +4,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 PERSON='https://www.ghezelbaash.ir/#saeed-ghezelbash'
+CLINIC='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
 DATASET='https://www.ghezelbaash.ir/graph.jsonld/dataset'
 HF_REPO='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
@@ -71,6 +72,47 @@ def reconstruct(row,json_fields):
             for k,v in row.items() if k!='_source_omitted_fields' and k not in omitted}
 
 
+def sync_positioning(root):
+    """Correct current enrichment pointers without relabeling historical observations."""
+    root=Path(root);directory=root/'enrichment'
+    strategy_path=directory/'positioning-strategy.json'
+    if not strategy_path.is_file():return
+    strategy=load(strategy_path)
+    assert strategy['version']=='1.2.4' and strategy['release_version_doi']=='10.5281/zenodo.22131441', 'Review the positioning archive binding before changing it'
+    strategy['entity'].update(canonical_iri=PERSON,clinic_iri=CLINIC)
+    dump(strategy_path,strategy)
+    evidence_path=directory/'market-positioning-evidence.json'
+    evidence=load(evidence_path)
+    # Q140288589 no longer exists in Wikidata. The physician QID is separate.
+    if evidence['entity'].get('clinic_wikidata')=='Q140288589':
+        del evidence['entity']['clinic_wikidata']
+    evidence['entity']['clinic_iri']=CLINIC
+    dump(evidence_path,evidence)
+    path=directory/'instruction_examples_fa_market_positioning.jsonl'
+    examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    for row in examples:
+        if row.get('release')!=strategy['version']:continue
+        previous=row['release_version_doi'];row['release_version_doi']=strategy['release_version_doi']
+        for message in row['messages']:
+            if message['role']=='system':
+                message['content']=message['content'].replace('Zenodo DOI https://doi.org/'+previous,
+                    'Zenodo Dataset archive (v'+strategy['version']+'): https://doi.org/'+strategy['release_version_doi'])
+    path.write_text(''.join(json.dumps(row,ensure_ascii=False,separators=(',',':'))+'\n' for row in examples))
+    csv_path=path.with_suffix('.csv')
+    with csv_path.open(newline='') as handle:fields=csv.DictReader(handle).fieldnames
+    table_rows=[]
+    for row in examples:
+        table_rows.append({key:(json.dumps(row[key],ensure_ascii=False) if isinstance(row.get(key),(dict,list)) else
+                         '' if row.get(key) is None else str(row[key])) for key in fields})
+    with csv_path.open('w',newline='') as handle:
+        writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader();writer.writerows(table_rows)
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    parquet=root/'viewer/positioning-examples.parquet';schema=pq.read_schema(parquet)
+    pq.write_table(pa.Table.from_pylist(table_rows,schema=schema),parquet,compression='zstd')
+    assert pq.read_table(parquet).to_pylist()==table_rows, 'Positioning Parquet changed the CSV projection'
+
+
 def build_hf(dist,baseline,out,ctx):
     import pyarrow as pa
     import pyarrow.parquet as pq
@@ -80,6 +122,7 @@ def build_hf(dist,baseline,out,ctx):
     for path in dist.rglob('*'):
         if path.is_file():
             dest=out/path.relative_to(dist);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)
+    sync_positioning(out)
     matrix=[json.loads(s) for s in (baseline/'query-matrix.jsonl').read_text().splitlines() if s.strip()]
     for row in matrix:
         row['dataset_iri']=DATASET
@@ -127,6 +170,7 @@ def build_hf(dist,baseline,out,ctx):
     md += 'Croissant creator/publisher types, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
     md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and all four Viewer tables are rebuilt without changing their source-row semantics.\n\n'
     md += 'Package publication run: '+ctx['run_url']+'.\n'
+    md += '\nPositioning enrichment retains its historical release labels and observation dates. Its release DOIs identify those archived releases, not the bytes of current `main`; the clinic resolves to its separate canonical website IRI.\n'
     if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
     if ctx['archived_snapshots_updated']:
         md += '\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
@@ -182,7 +226,8 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     manifest['frictionless_descriptor']={'canonical_name':'datapackage.json','kaggle_downloadable_name':alias,
         'reason':'Kaggle CLI reserves datapackage.json as legacy dataset metadata',
         'bytes':(hf/'datapackage.json').stat().st_size,'sha256':sha(hf/'datapackage.json')}
-    manifest.update(packaging_revision=version,desired_kaggle_version=version,packaging_date=ctx['maintenance_date'],
+    manifest.update(source_release=release['version'],edition=release['edition'],
+       packaging_revision=version,desired_kaggle_version=version,packaging_date=ctx['maintenance_date'],
        canonical_dataset_iri=DATASET,upstream_revision=hf_revision,website_source_commit=ctx['source_commit'],
        package_publication_run_id=int(ctx['run_id']),package_publication_run_url=ctx['run_url'],
        archived_files_are_current_dist=False)
@@ -213,7 +258,8 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         previous_label=f"Source release **{previous_release['sourceVersion']}**, edition **{previous_release['edition']}**."
         assert previous_label in readme, 'Kaggle current release description differs from its receipt'
         readme=readme.replace(previous_label,f"Source release **{release['version']}**, edition **{release['edition']}**.")
-    readme=re.sub(r'((?:Current DOI-versioned website source|DOI-versioned website source|Archived DOI-versioned website source):\s*)https://doi[.]org/10[.]5281/zenodo[.]\d+',lambda match:match[1]+ctx['zenodo_source'],readme)
+    readme=re.sub(r'(?:Current DOI-versioned website source|DOI-versioned website source|Archived DOI-versioned website source):\s*https://doi[.]org/10[.]5281/zenodo[.]\d+',
+                  'Archived website source snapshot (not the current release bytes): '+ctx['zenodo_source'],readme)
     for key,replacement in [('website_source_commit',ctx['source_commit']),('upstream_revision',hf_revision)]:
         if old.get(key):readme=readme.replace(old[key],replacement)
     readme=re.sub(r'(Kaggle packaging revision and dataset version \*\*)\d+(\*\*; maintenance \*\*)\d{4}-\d{2}-\d{2}(\*\*)',
@@ -224,6 +270,10 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     if not ctx['archived_snapshots_updated']:
         readme=readme.replace('Zenodo dataset version:','Archived Zenodo dataset snapshot:')
         readme=readme.replace('Current DOI-versioned website source:','Archived DOI-versioned website source:')
+        readme=readme.replace('The publication scope includes the existing Zenodo distributions. Consult per-platform receipts for the final files and provenance.',
+                              'Zenodo DOI links identify archived snapshots with their own recorded provenance. Those archives were not updated by this Hugging Face/Kaggle maintenance publication.')
+        readme=readme.replace('نسخه‌ها و فراداده‌های زنودو در رسیدهای انتشار همان پلتفرم ثبت می‌شوند.',
+                              'آرشیوهای زنودو، نسخه‌های ثبت‌شدهٔ خود را حفظ می‌کنند و در این انتشار به‌روزرسانی نشده‌اند.')
         readme=re.sub(r'The Zenodo dataset record documents its current corrected files and maintenance date\..*?(?=\n\n|\Z)',
                       'Zenodo DOI links identify archived snapshots with their own recorded provenance. Those archives were not updated by this Hugging Face/Kaggle maintenance publication.',readme,flags=re.S)
         readme=readme.replace('زیرمجموعهٔ ۲۴فایلی زنودو نیز با همان گراف، منابع و پرس‌وجوهای اصلاح‌شده هماهنگ است.',
@@ -241,6 +291,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
     readme+='Package publication run: '+ctx['run_url']+'.\n'
+    readme+='\nPositioning enrichment retains its historical release labels and observation dates. Its release DOIs identify those archived releases, not the current Kaggle payload; the clinic resolves to its separate canonical website IRI.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
     readme+='\nCroissant, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
     readme+='The package includes `frictionless-datapackage.json` (the exact canonical `datapackage.json` bytes) and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '

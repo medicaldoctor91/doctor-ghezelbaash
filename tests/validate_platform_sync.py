@@ -293,6 +293,32 @@ def payload_files(root, exclude):
             path.relative_to(root).as_posix() not in exclude}
 
 
+def validate_positioning(root):
+    directory=root/'enrichment'
+    strategy=load(directory/'positioning-strategy.json')
+    evidence=load(directory/'market-positioning-evidence.json')
+    clinic=ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+    assert strategy['entity']['canonical_iri']==PERSON and strategy['entity']['clinic_iri']==clinic
+    assert evidence['entity']['canonical_iri']==PERSON and evidence['entity']['clinic_iri']==clinic
+    assert evidence['entity']['wikidata']=='Q140287622' and 'clinic_wikidata' not in evidence['entity']
+    assert (evidence['release'],evidence['zenodo_version_doi'])==('1.2.1','10.5281/zenodo.21910785')
+    assert (strategy['version'],strategy['release_version_doi'])==('1.2.4','10.5281/zenodo.22131441')
+    path=directory/'instruction_examples_fa_market_positioning.jsonl'
+    examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    with path.with_suffix('.csv').open(newline='') as handle:projection=list(csv.DictReader(handle))
+    assert len(examples)==len(projection)==47
+    for row,projected in zip(examples,projection):
+        assert row['canonical_dataset_iri']==DATASET and row['entity_wikidata']=='Q140287622'
+        assert row['release']==strategy['version'] and row['release_version_doi']==strategy['release_version_doi']
+        assert all('Zenodo DOI https://doi.org/10.5281/zenodo.21910785' not in message['content'] for message in row['messages'])
+        for key,value in projected.items():
+            original=row.get(key)
+            if isinstance(original,(dict,list)):assert json.loads(value)==original,(row['example_id'],key)
+            else:assert value==('' if original is None else str(original)),(row['example_id'],key)
+    assert pq.read_table(root/'viewer/positioning-examples.parquet').to_pylist()==projection
+    return {'positioning_rows':len(examples),'positioning_release_doi':'10.5281/zenodo.22131441','clinic_iri':clinic}
+
+
 def validate_inventories(root, platform, source_commit):
     if platform == 'hf':
         inventory = load(root / 'dist-sha256.json')
@@ -309,6 +335,9 @@ def validate_inventories(root, platform, source_commit):
             assert measure(local_path(root, name)) == (metadata['bytes'], metadata['sha256']), name
         return {'inventory_files': len(inventory['files']), 'website_integrity_files': len(manifest['files'])}
     manifest = load(root / 'kaggle-manifest.json')
+    release = load(resource_path(root, 'datapackage.json', platform))
+    assert (manifest['source_release'], manifest['edition']) == (release['version'], release['edition']), \
+        'Kaggle manifest release metadata differs from canonical Data Package'
     assert manifest['website_source_commit'] == source_commit
     assert manifest['canonical_dataset_iri'] == DATASET
     assert manifest['packaging_revision'] == manifest['desired_kaggle_version']
@@ -386,6 +415,7 @@ def validate(root, *, platform, source_commit, canonical_root=None):
     result.update(validate_croissant(root, lookup, registry))
     result.update(validate_vcards(root))
     result.update(validate_tables(root, source_commit))
+    result.update(validate_positioning(root))
     result.update(validate_inventories(root, platform, source_commit))
     result.update(validate_source_commit(root, platform, source_commit))
     descriptor = resource_path(root, 'datapackage.json', platform)

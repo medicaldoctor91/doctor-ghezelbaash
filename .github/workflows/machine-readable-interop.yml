@@ -87,6 +87,7 @@ jobs:
           else:raise RuntimeError('Published release did not converge to the deployed commit')
           before=json.loads(Path(os.environ['RUNNER_TEMP'],'website-before-manifest.json').read_text())
           manifest=json.loads((Path('dist')/'integrity-manifest.json').read_text())
+          media_types={urllib.parse.urlparse(resource['path']).path.lstrip('/'):resource['mediatype'] for resource in json.loads((Path('dist')/'datapackage.json').read_text())['resources']}
           targets={path.lstrip('/') for path,metadata in manifest['files'].items() if metadata['sha256']!=before['files'].get(path,{}).get('sha256')}
           targets|={urllib.parse.urlparse(resource['path']).path.lstrip('/') for resource in json.loads((Path('dist')/'datapackage.json').read_text())['resources']}
           targets|={'index.html','media-license.html','integrity-manifest.json','release-provenance.json'}
@@ -95,7 +96,11 @@ jobs:
           targets-={'_redirects','_headers'}
           for name in sorted(targets):
               public_path='' if name=='index.html' else name[:-5] if name.endswith('.html') else name
-              try: body=fetch(public_path)
+              try:
+                  with open_live(public_path) as response:
+                      body=response.read()
+                      if name in media_types:
+                          assert response.headers.get_content_type()==media_types[name],(name,response.headers.get('Content-Type'),media_types[name])
               except urllib.error.HTTPError as error:
                   if name!='404.html' or error.code!=404:raise
                   body=error.read()

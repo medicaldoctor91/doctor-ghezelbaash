@@ -57,6 +57,8 @@ test('Croissant preserves canonical Dataset RDF terms without language-tagging n
   dataset.dateModified = {'@value': source.edition, '@type': 'http://www.w3.org/2001/XMLSchema#date'};
   const result = spawnSync(process.env.PYTHON ?? 'python', ['-c', `
 import json,sys,rdflib,mlcroissant
+from pyld import jsonld
+from rdflib.compare import isomorphic
 from rdflib.namespace import XSD
 value=json.load(sys.stdin)
 g=rdflib.Graph().parse(data=json.dumps(value['source']),format='json-ld')
@@ -67,6 +69,8 @@ assert set(g.objects(dataset,schema.license))=={rdflib.URIRef('https://creativec
 for prop,date in [(schema.datePublished,'2026-07-25'),(schema.dateModified,'2026-10-14')]:
     assert set(g.objects(dataset,prop))=={rdflib.Literal(date,datatype=XSD.date)},str(prop)
 croissant=rdflib.Graph().parse(data=json.dumps(value['croissant']),format='json-ld',publicID='${origin}/croissant.json')
+expanded=jsonld.expand(value['croissant'],{'base':'${origin}/croissant.json'})
+assert isomorphic(croissant,rdflib.Graph().parse(data=json.dumps(expanded),format='json-ld')),'PyLD expansion must preserve the Croissant RDF graph'
 nonlinguistic={schema.url,schema.license,schema.identifier,schema.version,schema.propertyID,schema.value,schema.contentUrl,schema.encodingFormat,rdflib.URIRef('http://purl.org/dc/terms/conformsTo')}
 assert not [(s,p,o) for s,p,o in croissant if p in nonlinguistic and isinstance(o,rdflib.Literal) and o.language],'Nonlinguistic metadata must not have a language tag'
 for distribution in value['croissant']['distribution']:

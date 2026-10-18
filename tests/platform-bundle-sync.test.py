@@ -96,6 +96,39 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(bundle.context(NEW_COMMIT, 54321, "2026-11-01")["maintenance_date"], "2026-11-01")
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
 
+    def test_positioning_preserves_historical_dates_and_fixes_the_release_and_clinic_pointers(self):
+        root=self.baseline
+        strategy={'version':'1.2.4','release_version_doi':'10.5281/zenodo.22131441','last_updated':'2026-08-27','entity':{}}
+        evidence={'release':'1.2.1','zenodo_version_doi':'10.5281/zenodo.21910785','observed_at':'2026-08-13',
+                  'entity':{'canonical_iri':bundle.PERSON,'wikidata':'Q140287622','clinic_wikidata':'Q140288589'}}
+        bundle.dump(root/'enrichment/positioning-strategy.json',strategy)
+        bundle.dump(root/'enrichment/market-positioning-evidence.json',evidence)
+        rows=[{'example_id':'example','release':'1.2.4','release_version_doi':'10.5281/zenodo.21910785',
+               'messages':[{'role':'system','content':'Zenodo DOI https://doi.org/10.5281/zenodo.21910785.'},
+                           {'role':'assistant','content':'متن بدون تغییر'}]}]
+        path=root/'enrichment/instruction_examples_fa_market_positioning.jsonl'
+        path.write_text(json.dumps(rows[0],ensure_ascii=False)+'\n')
+        fields=[*rows[0],'optional']
+        with path.with_suffix('.csv').open('w',newline='') as handle:csv.DictWriter(handle,fieldnames=fields).writeheader()
+        table=root/'viewer/positioning-examples.parquet';table.parent.mkdir(exist_ok=True)
+        pq.write_table(pa.Table.from_pylist([],schema=pa.schema([(field,pa.string()) for field in fields])),table)
+        bundle.sync_positioning(root)
+        current=json.loads(path.read_text())
+        self.assertEqual(current['release'],'1.2.4')
+        self.assertEqual(current['release_version_doi'],strategy['release_version_doi'])
+        self.assertIn('archive (v1.2.4): https://doi.org/'+strategy['release_version_doi'],current['messages'][0]['content'])
+        self.assertEqual(current['messages'][1],rows[0]['messages'][1])
+        self.assertEqual(bundle.load(root/'enrichment/market-positioning-evidence.json')['observed_at'],'2026-08-13')
+        self.assertEqual(bundle.load(root/'enrichment/market-positioning-evidence.json')['zenodo_version_doi'],evidence['zenodo_version_doi'])
+        self.assertEqual(bundle.load(root/'enrichment/market-positioning-evidence.json')['entity']['clinic_iri'],bundle.CLINIC)
+        self.assertNotIn('clinic_wikidata',bundle.load(root/'enrichment/market-positioning-evidence.json')['entity'])
+        with path.with_suffix('.csv').open(newline='') as handle:projection=list(csv.DictReader(handle))
+        self.assertEqual(pq.read_table(table).to_pylist(),projection)
+        self.assertEqual(json.loads(projection[0]['messages']),current['messages'])
+        before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()}
+        bundle.sync_positioning(root)
+        self.assertEqual(before,{p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()},'A repeated build must be idempotent')
+
     def test_receipts_do_not_claim_unpublished_archive_changes(self):
         self.fixtures()
         broad = bundle.context(NEW_COMMIT, 54321)
@@ -172,6 +205,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         manifest = bundle.load(out / "kaggle-manifest.json")
         self.assertEqual(manifest["packaging_date"], "2026-10-14")
         self.assertEqual(manifest["packaging_revision"], 9)
+        self.assertEqual(manifest["source_release"], "9.8.7")
+        self.assertEqual(manifest["edition"], "2027-01-02")
         self.assertEqual({item["path"] for item in manifest["original_files"]}, set(copied) | {"frictionless-datapackage.json", "release-attestation.json"})
         self.assertFalse((out / "datapackage.json").exists())
         self.assertEqual((out / "frictionless-datapackage.json").read_bytes(), (hf / "datapackage.json").read_bytes())

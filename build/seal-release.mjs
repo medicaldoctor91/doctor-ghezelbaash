@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { sha256Hex, sha384Sri, contentDigestSha256 } from './lib/hash.mjs';
+import {sealHeaders} from './lib/headers.mjs';
 const execFileAsync=promisify(execFile);
 
 async function exists(file){try{await fs.access(file);return true;}catch{return false;}}
@@ -27,7 +28,9 @@ export async function sealRelease({distDir,projectRoot,releaseDate}){
   if(eligibleCount>100)throw new Error(`Cloudflare Pages _headers supports at most 100 rules; found ${eligibleCount} Content-Digest resources`);
   const digestMetadata={status:'configured-for-cloudflare-pages',algorithm:'sha-256',headerRulesPath:'/_headers',liveVerification:'required-after-deploy',eligible};
   await fs.writeFile(path.join(distDir,'content-digest-eligibility.json'),JSON.stringify(digestMetadata,null,2)+'\n');
-  const headers=Object.entries(eligible).sort(([a],[b])=>a.localeCompare(b)).map(([url,data])=>`${url}\n  Content-Digest: ${data.contentDigest}`).join('\n\n')+'\n';
+  const resourcePaths=[...canonicalSource.machineResources,...canonicalSource.delivery.releaseResources]
+    .map(resource=>resource.path).filter(name=>name!=='/_headers.content-digest.pending');
+  const headers=sealHeaders({headers:await fs.readFile(path.join(distDir,'_headers'),'utf8'),eligible,resourcePaths});
   await fs.writeFile(path.join(distDir,'_headers'),headers);
   await fs.rm(path.join(distDir,'_headers.content-digest.pending'),{force:true});
   const lockBytes=await fs.readFile(path.join(projectRoot,'package-lock.json'));
@@ -35,7 +38,7 @@ export async function sealRelease({distDir,projectRoot,releaseDate}){
   const provenance={sourceCommit:commit.trim(),releaseDate,packageLockSha256:sha256Hex(lockBytes),node:process.versions.node,sbom:{path:'/sbom.cdx.json',format:sbom.bomFormat,specVersion:sbom.specVersion},contentDigest:{status:'configured-for-cloudflare-pages',algorithm:'sha-256',eligibleResources:eligibleCount,headerRulesPath:'/_headers',liveVerification:'release-workflow'}};
   await fs.writeFile(path.join(distDir,'release-provenance.json'),JSON.stringify(provenance,null,2)+'\n');
   const files={};
-  for(const file of await walk(distDir)){const publishedPath=publicPath(distDir,file);if(publishedPath==='/integrity-manifest.json'||publishedPath==='/_headers')continue;const bytes=await fs.readFile(file);files[publishedPath]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}
+  for(const file of await walk(distDir)){const publishedPath=publicPath(distDir,file);if(publishedPath==='/integrity-manifest.json')continue;const bytes=await fs.readFile(file);files[publishedPath]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}
   await fs.writeFile(path.join(distDir,'integrity-manifest.json'),JSON.stringify({algorithm:'sha256',releaseDate,files},null,2)+'\n');
   return {manifestFiles:Object.keys(files).length,sbomComponents:sbom.components?.length??0,contentDigestEligible:eligibleCount};
 }
