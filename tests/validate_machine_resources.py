@@ -71,7 +71,10 @@ def validate(root):
     assert measured > 0
     graph.parse(root / 'provenance.jsonld', format='json-ld')
     graph += dcat
-    conforms, _, report = shacl_validate(graph, shacl_graph=shapes, inference='none')
+    graph.parse(root / 'void.ttl', format='turtle')
+    # Validate the full canonical RDF union, including Croissant's shared Dataset IRI.
+    graph.parse(root / 'croissant.json', format='json-ld')
+    conforms, _, report = shacl_validate(graph, shacl_graph=shapes, inference='none', advanced=True)
     assert conforms, report
 
     package = json.loads((root / 'datapackage.json').read_text())
