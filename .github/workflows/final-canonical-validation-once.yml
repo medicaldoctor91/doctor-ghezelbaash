@@ -1,0 +1,58 @@
+name: One-time final canonical validation (no publication)
+on:
+  push:
+    branches: [fix/o5-canonical-service-types-20261018]
+    paths: ['.github/workflows/final-canonical-validation-once.yml']
+permissions:
+  contents: write
+jobs:
+  verify-and-remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and validate canonical files, Croissant RDF union and extracted records
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+          node --test tests/*.test.mjs
+          npm run build
+          python tests/validate_machine_resources.py dist
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import rdflib
+          home='https://www.ghezelbaash.ir/'
+          dataset=rdflib.URIRef(home+'graph.jsonld/dataset')
+          pred=rdflib.URIRef('https://schema.org/url')
+          cr=json.loads(Path('dist/croissant.json').read_text())
+          assert cr['@context']['url']['@type']=='@id'
+          graph=rdflib.Graph()
+          for file,fmt in [('graph.jsonld','json-ld'),('provenance.jsonld','json-ld'),('dcat.ttl','turtle'),('void.ttl','turtle'),('croissant.json','json-ld')]:
+              graph.parse(Path('dist')/file,format=fmt)
+          assert set(graph.objects(dataset,pred))=={rdflib.URIRef(home)}
+          assert Path('dist/media-license.html').exists()
+          assert Path('dist/media-license.html').read_text().count('<li>')==5
+          assert len(list(Path('dist').glob('*.html')))>0
+          print('Final full-union Dataset URL term, canonical media-license page: PASS')
+          PY
+      - name: Remove temporary validation workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/final-canonical-validation-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/final-canonical-validation-once.yml
+          git commit -m 'chore: remove final one-shot validator [skip ci]'
+          git push origin HEAD:refs/heads/fix/o5-canonical-service-types-20261018
