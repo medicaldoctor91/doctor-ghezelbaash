@@ -30,8 +30,9 @@ def relative_path(name):
     return value
 
 
-def fetch(url):
-    request = urllib.request.Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'ghezelbaash-machine-resource-sync/1.0'})
+def fetch(url, *, headers=None):
+    request = urllib.request.Request(url, headers={
+        'Cache-Control': 'no-cache', 'User-Agent': 'ghezelbaash-machine-resource-sync/1.0', **(headers or {})})
     # Retry reads only; publication writes have their own explicit race guards.
     for attempt in range(3):
         try:
@@ -70,7 +71,9 @@ def guard(args):
 def verify_website_run(url, source_commit):
     match = re.fullmatch(r'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/(\d+)', url)
     assert match, 'Expected the reviewed website deployment run URL'
-    run = json.loads(fetch('https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/' + match[1]))
+    token = os.environ.get('GITHUB_TOKEN')
+    headers = {'Authorization': 'Bearer ' + token} if token else {}
+    run = json.loads(fetch('https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/' + match[1], headers=headers))
     assert run['head_sha'] == source_commit and run['head_branch'] == 'main', 'Website run has a different source revision'
     assert run['status'] == 'completed' and run['conclusion'] == 'success', 'Website deployment run did not complete successfully'
     assert run['path'] == '.github/workflows/machine-readable-interop.yml', 'Expected the scoped website deployment workflow'
