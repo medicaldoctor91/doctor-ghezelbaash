@@ -5,7 +5,9 @@ import json
 import re
 import subprocess
 import sys
+import urllib.request
 from email.headerregistry import Address
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -14,6 +16,93 @@ import rdflib
 from pyshacl import validate as shacl_validate
 from rdflib.compare import isomorphic
 from rdflib.namespace import RDF, SH, XSD
+from pyld import jsonld
+
+
+class HtmlDocument(HTMLParser):
+    def __init__(self, body):
+        super().__init__(convert_charrefs=True)
+        self.ids, self.references, self.canonicals, self.links, self.scripts = [], [], [], set(), []
+        self.h1 = 0
+        self.video = self.script = None
+        self.feed(body)
+
+    def handle_starttag(self, tag, attributes):
+        attrs = dict(attributes)
+        if 'id' in attrs:
+            self.ids.append(attrs['id'])
+        for name in ['aria-labelledby', 'aria-describedby', 'itemref', 'for']:
+            self.references.extend(attrs.get(name, '').split())
+        if tag == 'h1':
+            self.h1 += 1
+        if tag == 'a' and attrs.get('href'):
+            self.links.add(attrs['href'])
+        if tag == 'link' and attrs.get('rel') == 'canonical':
+            self.canonicals.append(attrs['href'])
+        if tag in {'video', 'audio'}:
+            self.video = 0
+        if tag == 'track' and 'default' in attrs:
+            self.video += 1
+            assert self.video <= 1, 'Multiple default media tracks'
+        assert not (tag == 'section' and 'footer-machine-resources-supplement' in attrs.get('class', '').split())
+        if attrs.get('id') == 'image-saeed-ghezelbash-portrait-master':
+            assert 'itemprop' not in attrs and 'itemscope' in attrs
+        if attrs.get('id') == 'google-maps-clinic-reputation-current':
+            assert '۵ از ۵' in attrs.get('aria-label', ''), 'Rating missing from link accessible name'
+        if 'hero-rating-seal__stars' in attrs.get('class', '').split():
+            assert attrs.get('aria-hidden') == 'true', 'Decorative stars must not duplicate the rating name'
+        if tag == 'script' and attrs.get('type') == 'application/ld+json':
+            self.script = ''
+
+    def handle_data(self, value):
+        if self.script is not None:
+            self.script += value
+
+    def handle_endtag(self, tag):
+        if tag in {'video', 'audio'}:
+            self.video = None
+        if tag == 'script' and self.script is not None:
+            self.scripts.append(json.loads(self.script))
+            self.script = None
+
+
+def validate_html(root, origin, graph):
+    documents = {}
+    context = None
+    def document_loader(url, options=None):
+        nonlocal context
+        assert url.rstrip('/') in {'https://schema.org', 'http://schema.org'}, url
+        if context is None:
+            with urllib.request.urlopen('https://schema.org/docs/jsonldcontext.json', timeout=30) as response:
+                context = json.load(response)
+        return {'contextUrl': None, 'documentUrl': url, 'document': context}
+    schema = rdflib.Namespace('https://schema.org/')
+    selected = {schema[key] for key in ['url', 'sameAs', 'dayOfWeek', 'additionalType', 'procedureType', 'eventAttendanceMode']}
+    checked = 0
+    for file in root.glob('*.html'):
+        if file.name == '404.html':
+            continue
+        body = file.read_text()
+        document = HtmlDocument(body)
+        expected = origin + '/' + ('' if file.name == 'index.html' else file.stem)
+        assert document.h1 == 1 and document.canonicals == [expected], file.name
+        assert len(document.ids) == len(set(document.ids)), ('Duplicate DOM ID', file.name)
+        assert set(document.references) <= set(document.ids), ('Broken DOM IDREF', file.name)
+        assert '</a>ِ' not in body, ('Detached Persian combining character', file.name)
+        for script in document.scripts:
+            expanded = jsonld.expand(script, {'base': expected, 'documentLoader': document_loader})
+            projection = rdflib.Graph().parse(data=json.dumps(expanded), format='json-ld')
+            for subject, predicate, obj in projection:
+                if predicate in selected and (subject, predicate, None) in graph:
+                    assert (subject, predicate, obj) in graph, ('Browser RDF term drift', file.name, subject, predicate, obj)
+                    checked += 1
+        documents[file.stem] = document
+    license_page = documents['media-license']
+    images = set(graph.subjects(schema.acquireLicensePage, rdflib.URIRef(origin + '/media-license')))
+    assert len(images) == 5
+    assert {str(url) for image in images for url in graph.objects(image, schema.contentUrl)} <= license_page.links
+    assert checked > 0
+    return {'html_documents': len(documents), 'browser_rdf_terms_checked': checked, 'license_images': len(images)}
 
 
 def validate(root):
@@ -37,6 +126,7 @@ def validate(root):
 
     graph = rdflib.Graph().parse(root / 'graph.jsonld', format='json-ld')
     assert isomorphic(graph, rdflib.Graph().parse(root / 'graph.ttl', format='turtle'))
+    html_result = validate_html(root, origin, graph)
     shapes = rdflib.Graph().parse(root / 'shapes.ttl', format='turtle')
     authored = set(graph.subjects(RDF.type, SH.NodeShape))
     published = set(shapes.subjects(RDF.type, SH.NodeShape))
@@ -74,6 +164,10 @@ def validate(root):
     graph.parse(root / 'void.ttl', format='turtle')
     # Validate the full canonical RDF union, including Croissant's shared Dataset IRI.
     graph.parse(root / 'croissant.json', format='json-ld')
+    schema = rdflib.Namespace('https://schema.org/')
+    dataset_id = rdflib.URIRef(origin + '/graph.jsonld/dataset')
+    assert set(graph.objects(dataset_id, schema.url)) == {rdflib.URIRef(origin + '/')}, 'Dataset URL must be one canonical IRI'
+    assert set(graph.objects(dataset_id, schema.license)) == {rdflib.URIRef('https://creativecommons.org/licenses/by/4.0/')}, 'Dataset license term drift'
     conforms, _, report = shacl_validate(graph, shacl_graph=shapes, inference='none', advanced=True)
     assert conforms, report
 
@@ -97,6 +191,7 @@ def validate(root):
         assert (file['contentSize'], file['sha256']) == (f'{size} B', sha), file['name']
         mapping[file['name']] = local
     dataset = mlcroissant.Dataset(jsonld=root / 'croissant.json', mapping=mapping)
+    assert not dataset.metadata.ctx.issues.errors and not dataset.metadata.ctx.issues.warnings
     records = list(dataset.records('entity-facts'))
     with (root / 'entity-facts.csv').open(newline='') as stream:
         expected = list(csv.DictReader(stream))
@@ -132,7 +227,7 @@ def validate(root):
     manifest = json.loads((root / 'integrity-manifest.json').read_text())
     for path, metadata in manifest['files'].items():
         assert (metadata['bytes'], metadata['sha256']) == measure(root / path.lstrip('/')), path
-    return {'node_shapes': len(published), 'dcat_measured_distributions': measured,
+    return {**html_result, 'node_shapes': len(published), 'dcat_measured_distributions': measured,
             'data_package_hashes': package_hashes, 'croissant_rows_read': len(records),
             'integrity_files': len(manifest['files']), 'catalog_route': 200}
 

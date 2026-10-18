@@ -31,8 +31,8 @@ DATASET = ORIGIN + '/graph.jsonld/dataset'
 PERSON = ORIGIN + '/#saeed-ghezelbash'
 DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')
 SPDX = rdflib.Namespace('http://spdx.org/rdf/terms#')
-EXPECTED_ROWS = {'clinical_passages': 3248, 'clinical_answers': 125,
-                 'entity_facts': 22139, 'query_matrix': 876}
+EXPECTED_ROWS = {'clinical_passages': 3248, 'clinical_answers': 125, 'query_matrix': 876}
+EXPECTED_TABLES = set(EXPECTED_ROWS) | {'entity_facts'}
 DEFERRED_DCAT = {'/dcat.ttl', '/datapackage.json', '/croissant.json'}
 ATTESTED_RESOURCES = {
     'graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
@@ -116,7 +116,18 @@ def validate_shapes_and_dcat(root, registry, lookup):
     assert isomorphic(graph, rdflib.Graph().parse(root / 'graph.ttl', format='turtle')), \
         'JSON-LD and Turtle changed graph semantics'
     graph_triples = len(graph)
-    assert graph_triples == EXPECTED_ROWS['entity_facts'], ('Canonical RDF triple count', graph_triples)
+    statements = rdflib.Graph()
+    with (root / 'entity-facts.csv').open(newline='', encoding='utf-8') as stream:
+        rows = list(csv.DictReader(stream))
+    def resource(value):
+        return rdflib.BNode(value[2:]) if value.startswith('_:') else rdflib.URIRef(value)
+    for row in rows:
+        obj = resource(row['object']) if row['object_kind'] != 'literal' else rdflib.Literal(
+            row['object'], lang=row['language'] or None,
+            datatype=rdflib.URIRef(row['datatype']) if row['datatype'] and not row['language'] else None)
+        statements.add((resource(row['subject']), rdflib.URIRef(row['predicate']), obj))
+    assert len(rows) == len(statements) == graph_triples and isomorphic(graph, statements), \
+        'CSV statements must reproduce the complete canonical RDF graph without duplicates'
     shapes = rdflib.Graph().parse(root / 'shapes.ttl', format='turtle')
     authored = set(graph.subjects(RDF.type, SH.NodeShape))
     published = set(shapes.subjects(RDF.type, SH.NodeShape))
@@ -161,7 +172,12 @@ def validate_shapes_and_dcat(root, registry, lookup):
         'Distribution checksum validation has no active target'
     graph.parse(root / 'provenance.jsonld', format='json-ld')
     graph += dcat
-    conforms, _, report = shacl_validate(graph, shacl_graph=shapes, inference='none')
+    graph.parse(lookup('/void.ttl'), format='turtle')
+    graph.parse(root / 'croissant.json', format='json-ld')
+    schema = rdflib.Namespace('https://schema.org/')
+    assert set(graph.objects(rdflib.URIRef(DATASET), schema.url)) == {rdflib.URIRef(ORIGIN + '/')}
+    assert set(graph.objects(rdflib.URIRef(DATASET), schema.license)) == {rdflib.URIRef('https://creativecommons.org/licenses/by/4.0/')}
+    conforms, _, report = shacl_validate(graph, shacl_graph=shapes, inference='none', advanced=True)
     assert conforms, report
     return {'graph_triples': graph_triples, 'node_shapes': len(published), 'authored_shapes': len(authored),
             'dcat_measured_distributions': measured}
@@ -193,7 +209,8 @@ def validate_croissant(root, lookup, registry=None):
     records = list(dataset.records('entity-facts'))
     with (root / 'entity-facts.csv').open(newline='', encoding='utf-8') as stream:
         expected = list(csv.DictReader(stream))
-    assert len(records) == len(expected) == EXPECTED_ROWS['entity_facts']
+    assert len(records) == len(expected) > 0
+    assert not dataset.metadata.ctx.issues.errors and not dataset.metadata.ctx.issues.warnings
     for actual, row in zip(records, expected):
         for field, value in row.items():
             cell = actual['entity-facts/' + field]
@@ -243,7 +260,7 @@ def validate_tables(root, source_commit):
     packaging = load(root / 'viewer/packaging.json')
     assert packaging['sourceCommit'] == source_commit
     assert packaging['canonicalDatasetIri'] == DATASET
-    assert set(packaging['tables']) == set(EXPECTED_ROWS)
+    assert set(packaging['tables']) == EXPECTED_TABLES
     results = {}
     for name, spec in packaging['tables'].items():
         table_file = local_path(root, spec['file'])
@@ -256,7 +273,9 @@ def validate_tables(root, source_commit):
         decoded = [bundle.reconstruct(row, set(spec.get('jsonEncodedFields', [])))
                    for row in table.to_pylist()]
         expected = bundle.rows(root, spec)
-        assert len(expected) == len(decoded) == spec['rows'] == EXPECTED_ROWS[name], name
+        assert len(expected) == len(decoded) == spec['rows'] > 0, name
+        if name in EXPECTED_ROWS:
+            assert len(expected) == EXPECTED_ROWS[name], name
         assert decoded == expected, ('Parquet changed source semantics', name)
         results[name] = len(decoded)
     if (root / 'query-matrix.csv').is_file():
@@ -293,7 +312,7 @@ def validate_inventories(root, platform, source_commit):
     assert manifest['website_source_commit'] == source_commit
     assert manifest['canonical_dataset_iri'] == DATASET
     assert manifest['packaging_revision'] == manifest['desired_kaggle_version']
-    assert manifest['tables'] == EXPECTED_ROWS
+    assert manifest['tables'] == {name: spec['rows'] for name, spec in load(root / 'viewer/packaging.json')['tables'].items()}
     names = [item['path'] for item in manifest['original_files']]
     assert len(names) == len(set(names)), 'Kaggle original-files inventory repeats a path'
     for item in manifest['original_files']:
@@ -322,7 +341,10 @@ def validate_source_commit(root, platform, source_commit):
     for row in [json.loads(line) for line in (root / 'query-matrix.jsonl').read_text().splitlines() if line.strip()]:
         if 'source_commit' in row:
             assert row['source_commit'] == source_commit, 'Stale query source commit'
-    assert matrix['sourceVersion'] == '1.3.3' and matrix['edition'] == '2026-10-10'
+    release = load(resource_path(root, 'datapackage.json', platform))
+    graph_dataset = next(node for node in load(root / 'graph.jsonld')['@graph'] if node['@id'] == DATASET)
+    assert matrix['sourceVersion'] == release['version'] == graph_dataset['version']
+    assert matrix['edition'] == release['edition'] == provenance['releaseDate']
     attestation = load(root / 'release-attestation.json')
     assert attestation['sourceCommit'] == source_commit
     assert attestation['canonicalDatasetIri'] == DATASET

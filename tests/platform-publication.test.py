@@ -9,9 +9,24 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / '.github/scripts'))
 import platform_publish as publication
+import sync_platform_machine_resources as sync
 
 
 class PublicationTransportTests(unittest.TestCase):
+    def test_website_receipt_requires_successful_reviewed_deployment_run(self):
+        import json
+        url = 'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345'
+        commit = 'a' * 40
+        run = {'head_sha': commit, 'head_branch': 'main', 'status': 'completed',
+               'conclusion': 'success', 'path': '.github/workflows/machine-readable-interop.yml'}
+        with patch.object(sync, 'fetch', return_value=json.dumps(run).encode()):
+            sync.verify_website_run(url, commit)
+        for changed in [{'head_sha': 'b' * 40}, {'conclusion': 'failure'},
+                        {'status': 'in_progress'}, {'path': '.github/workflows/platform-convergence.yml'}]:
+            with self.subTest(changed=changed), patch.object(sync, 'fetch', return_value=json.dumps({**run, **changed}).encode()):
+                with self.assertRaises(AssertionError):
+                    sync.verify_website_run(url, commit)
+
     def test_download_retries_temporary_404_without_publishing(self):
         class Handler(BaseHTTPRequestHandler):
             reads = 0

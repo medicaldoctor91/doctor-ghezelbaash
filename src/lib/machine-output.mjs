@@ -373,7 +373,7 @@ export function buildCroissant(source) {
   return {
     '@context': {
       ...croissantContext, prov: PROV,
-      url: {'@id': 'sc:url', '@type': 'http://www.w3.org/2001/XMLSchema#anyURI'},
+      license: {'@id': 'sc:license', '@type': '@id'},
       datePublished: {'@id': 'sc:datePublished', '@type': 'http://www.w3.org/2001/XMLSchema#date'},
       dateModified: {'@id': 'sc:dateModified', '@type': 'http://www.w3.org/2001/XMLSchema#date'},
       identifier: {'@id': 'sc:identifier', '@language': null},
@@ -384,11 +384,10 @@ export function buildCroissant(source) {
     name: literal(dataset.name),
     description: literal(dataset.description),
     conformsTo: 'http://mlcommons.org/croissant/1.1',
-    url: dataset.url,
     identifier: [dataset['@id'], {'@type': 'sc:PropertyValue', propertyID: 'Release edition', value: source.edition}],
     creator: contributor(dataset.creator),
     publisher: contributor(dataset.publisher),
-    license: dataset.license,
+    license: {'@id': refId(dataset.license), '@type': 'sc:CreativeWork'},
     citeAs: dataset['@id'],
     ...(dataset.datePublished ? {datePublished: literal(dataset.datePublished)} : {}),
     ...(dataset.dateModified ? {dateModified: literal(dataset.dateModified)} : {}),

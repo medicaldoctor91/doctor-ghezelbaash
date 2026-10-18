@@ -172,6 +172,8 @@ def update_hf_org(token):
 
 
 def main():
+    assert os.environ.get('ALLOW_LEGACY_IN_PLACE_ARCHIVE_CORRECTION') == 'true', \
+        'Legacy in-place archive corrections require explicit separate authorization; use scoped website/HF/Kaggle publication for a new release'
     from huggingface_hub import HfApi,CommitOperationAdd,CommitOperationDelete,hf_hub_download
     parser=argparse.ArgumentParser();parser.add_argument('--root',default='/tmp/platform-publish');args=parser.parse_args()
     root=Path(args.root);root.mkdir(parents=True,exist_ok=True)

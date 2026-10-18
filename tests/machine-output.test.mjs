@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
 import {buildCroissant, buildDcatTurtle, buildKnowledgeXml, buildVCard} from '../src/lib/machine-output.mjs';
 
 const origin = 'https://example.test';
@@ -42,6 +43,39 @@ test('Croissant contributor references carry the actual Person or Organization g
   assert.deepEqual(output.creator, {'@id': physicianId, '@type': 'https://schema.org/Person'});
   assert.deepEqual(output.publisher, {'@id': clinicId, '@type': 'https://schema.org/Organization'});
   assert.deepEqual(source, before, 'serialization must not alter the canonical graph');
+});
+
+test('Croissant preserves canonical Dataset RDF terms without language-tagging nonlinguistic metadata', () => {
+  const source = sourceFixture();
+  source.graph['@context'] = {
+    '@vocab': 'https://schema.org/',
+    url: {'@id': 'https://schema.org/url', '@type': '@id'},
+    license: {'@id': 'https://schema.org/license', '@type': '@id'},
+  };
+  const dataset = source.graph['@graph'][2];
+  dataset.datePublished = {'@value': '2026-07-25', '@type': 'http://www.w3.org/2001/XMLSchema#date'};
+  dataset.dateModified = {'@value': source.edition, '@type': 'http://www.w3.org/2001/XMLSchema#date'};
+  const result = spawnSync(process.env.PYTHON ?? 'python', ['-c', `
+import json,sys,rdflib,mlcroissant
+from rdflib.namespace import XSD
+value=json.load(sys.stdin)
+g=rdflib.Graph().parse(data=json.dumps(value['source']),format='json-ld')
+g.parse(data=json.dumps(value['croissant']),format='json-ld',publicID='${origin}/croissant.json')
+dataset=rdflib.URIRef('${origin}/graph.jsonld/dataset'); schema=rdflib.Namespace('https://schema.org/')
+assert set(g.objects(dataset,schema.url))=={rdflib.URIRef('${origin}/')},'Dataset URL must remain one canonical IRI'
+assert set(g.objects(dataset,schema.license))=={rdflib.URIRef('https://creativecommons.org/licenses/by/4.0/')},'License must remain the same IRI'
+for prop,date in [(schema.datePublished,'2026-07-25'),(schema.dateModified,'2026-10-14')]:
+    assert set(g.objects(dataset,prop))=={rdflib.Literal(date,datatype=XSD.date)},str(prop)
+croissant=rdflib.Graph().parse(data=json.dumps(value['croissant']),format='json-ld',publicID='${origin}/croissant.json')
+nonlinguistic={schema.url,schema.license,schema.identifier,schema.version,schema.propertyID,schema.value,schema.contentUrl,schema.encodingFormat,rdflib.URIRef('http://purl.org/dc/terms/conformsTo')}
+assert not [(s,p,o) for s,p,o in croissant if p in nonlinguistic and isinstance(o,rdflib.Literal) and o.language],'Nonlinguistic metadata must not have a language tag'
+for distribution in value['croissant']['distribution']:
+    distribution.update(sha256='0'*64,contentSize='1 B')
+reader=mlcroissant.Dataset(jsonld=value['croissant'])
+assert not reader.metadata.ctx.issues.errors and not reader.metadata.ctx.issues.warnings
+print('canonical Dataset terms preserved')
+`], {input: JSON.stringify({source: source.graph, croissant: buildCroissant(source)}), encoding: 'utf8', timeout: 30000});
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 });
 
 test('vCard preserves multiple email addresses as separate addr-spec values', () => {

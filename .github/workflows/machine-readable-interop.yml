@@ -1,10 +1,19 @@
 name: Validate and deploy machine-readable website fixes
 on:
   workflow_dispatch:
+    inputs:
+      reviewed_commit:
+        description: Exact reviewed main source commit
+        required: true
+        type: string
+      previous_website_commit:
+        description: Exact reviewed currently published source commit
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
-  group: doctor-ghezelbaash-machine-readable-deploy
+  group: doctor-ghezelbaash-publication
   cancel-in-progress: false
 jobs:
   deploy:
@@ -14,6 +23,8 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      PREVIOUS_WEBSITE_COMMIT: ${{ inputs.previous_website_commit }}
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
@@ -21,23 +32,46 @@ jobs:
         with: {node-version-file: .nvmrc, cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
+      - name: Check reviewed source and website revisions
+        run: |
+          test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+          python - <<'PY'
+          import json,os,re,urllib.request
+          from pathlib import Path
+          assert re.fullmatch(r'[0-9a-f]{40}',os.environ['PREVIOUS_WEBSITE_COMMIT'])
+          origin='https://www.ghezelbaash.ir/'
+          assert json.load(urllib.request.urlopen(origin+'release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
+          Path(os.environ['RUNNER_TEMP'],'website-before-manifest.json').write_bytes(urllib.request.urlopen(origin+'integrity-manifest.json').read())
+          PY
       - name: Install build and standards validators
         run: |
           npm ci
-          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4'
       - name: Validate source and complete built release
         run: |
           node --test tests/*.test.mjs
           npm run build
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+      - name: Save the validated release
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-validated-dist
+          path: dist/
+          include-hidden-files: true
       - name: Deploy validated website
         run: |
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$REVIEWED_COMMIT"
+          python - <<'PY'
+          import json,os,urllib.request
+          assert json.load(urllib.request.urlopen('https://www.ghezelbaash.ir/release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
+          PY
           npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-message='Repair machine-readable interoperability' --commit-dirty=false
       - name: Verify published representations and Content-Digest
         run: |
           python - <<'PY'
-          import hashlib,json,os,time,urllib.request
+          import hashlib,json,os,time,urllib.request,urllib.parse,urllib.error
           from pathlib import Path
           origin='https://www.ghezelbaash.ir/'
           def open_live(path):
@@ -51,8 +85,19 @@ jobs:
               if live.get('sourceCommit')==os.environ['GITHUB_SHA']:break
               time.sleep(5)
           else:raise RuntimeError('Published release did not converge to the deployed commit')
-          for name in ['graph.jsonld','graph.ttl','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json','croissant.json','integrity-manifest.json']:
-              assert hashlib.sha256(fetch(name)).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
+          before=json.loads(Path(os.environ['RUNNER_TEMP'],'website-before-manifest.json').read_text())
+          manifest=json.loads((Path('dist')/'integrity-manifest.json').read_text())
+          targets={path.lstrip('/') for path,metadata in manifest['files'].items() if metadata['sha256']!=before['files'].get(path,{}).get('sha256')}
+          targets|={urllib.parse.urlparse(resource['path']).path.lstrip('/') for resource in json.loads((Path('dist')/'datapackage.json').read_text())['resources']}
+          targets|={'index.html','media-license.html','integrity-manifest.json','release-provenance.json'}
+          for name in sorted(targets):
+              public_path='' if name=='index.html' else name[:-5] if name.endswith('.html') else name
+              try: body=fetch(public_path)
+              except urllib.error.HTTPError as error:
+                  if name!='404.html' or error.code!=404:raise
+                  body=error.read()
+              assert hashlib.sha256(body).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
+          assert 'https://www.ghezelbaash.ir/media-license' in fetch('media-license').decode()
           response=urllib.request.urlopen(origin+'data-catalog',timeout=30)
           assert response.status==200 and response.headers.get_content_type()=='application/ld+json'
           assert hashlib.sha256(response.read()).digest()==hashlib.sha256((Path('dist')/'graph.jsonld').read_bytes()).digest()
@@ -62,6 +107,7 @@ jobs:
           assert len(eligibility['eligible'])<=100
           verified=0
           for resource,expected in eligibility['eligible'].items():
+              if expected['sha256']==before['files'].get(resource,{}).get('sha256'):continue
               with open_live(resource) as response:
                   actual_header=response.headers.get('Content-Digest')
                   assert actual_header==expected['contentDigest'],(resource,actual_header,expected['contentDigest'])

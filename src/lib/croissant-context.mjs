@@ -1,8 +1,9 @@
-// Pinned MLCommons Croissant JSON-LD context (mlcroissant 1.1.1).
+// MLCommons Croissant JSON-LD terms (mlcroissant 1.1.1).
 // Source: https://github.com/mlcommons/croissant/blob/main/python/mlcroissant/mlcroissant/_src/core/rdf.py
 // MLCommons Association and contributors; Apache-2.0.
 export const croissantContext = {
-  "@language": "en",
+  // A global language would also tag identifiers, dates, URLs and MIME types.
+  "@language": null,
   "@vocab": "https://schema.org/",
   "citeAs": "cr:citeAs",
   "column": "cr:column",

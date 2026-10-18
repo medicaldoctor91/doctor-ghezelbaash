@@ -3262,7 +3262,7 @@ export function compileCanonicalSource() {
     /** Google-facing publication uses an intentionally pure Schema.org boundary. */
     function browserContextFor() {
       // Keep Google-facing Schema.org while preserving canonical IRI-valued predicates.
-      const keys = ['url', 'sameAs', 'dayOfWeek'];
+      const keys = ['url', 'sameAs', 'dayOfWeek', 'additionalType', 'procedureType', 'eventAttendanceMode'];
       return ['https://schema.org', Object.fromEntries(keys.map(key => [key, SOURCE.graph['@context'][key]]))];
     }
 

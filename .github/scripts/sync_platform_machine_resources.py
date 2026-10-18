@@ -67,6 +67,15 @@ def guard(args):
     return hf, kaggle, website
 
 
+def verify_website_run(url, source_commit):
+    match = re.fullmatch(r'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/(\d+)', url)
+    assert match, 'Expected the reviewed website deployment run URL'
+    run = json.loads(fetch('https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/' + match[1]))
+    assert run['head_sha'] == source_commit and run['head_branch'] == 'main', 'Website run has a different source revision'
+    assert run['status'] == 'completed' and run['conclusion'] == 'success', 'Website deployment run did not complete successfully'
+    assert run['path'] == '.github/workflows/machine-readable-interop.yml', 'Expected the scoped website deployment workflow'
+
+
 def extract_package(archive, root):
     root.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive) as zipped:
@@ -167,6 +176,8 @@ def correct_kaggle_sources(client, root, control, revision, expected_version):
 
 def prepare(args):
     from huggingface_hub import hf_hub_download
+    if args.website_run_url:
+        verify_website_run(args.website_run_url, args.website_commit)
     hf_info, kg_info, _ = guard(args)
     root = args.root
     root.mkdir(parents=True, exist_ok=True)
@@ -334,8 +345,13 @@ def publish(args, ctx, control):
                          'payloadFiles': sum(1 for path in verified.rglob('*') if path.is_file())}
     dump(root / 'publication-report.json', report)
     report['kaggleSourceMetadata'] = correct_kaggle_sources(client, root, control, revision, desired_version)
-    report['websiteUnchanged'] = json.loads(fetch(ORIGIN + '/release-provenance.json'))['sourceCommit'] == args.website_commit
+    report['websiteUnchanged'] = (
+        json.loads(fetch(ORIGIN + '/release-provenance.json'))['sourceCommit'] == args.website_commit
+        and fetch(ORIGIN + '/integrity-manifest.json') == (root / 'website/integrity-manifest.json').read_bytes())
     dump(root / 'publication-report.json', report)
+    assert report['websiteUnchanged'], 'Website changed during platform publication'
+    assert json.loads(fetch('https://huggingface.co/api/datasets/' + HF_REPO))['sha'] == revision, 'HF changed during platform publication'
+    guard_kaggle_version(json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF)), desired_version)
     print(json.dumps(report), flush=True)
 
 
@@ -355,6 +371,7 @@ def main():
         assert re.fullmatch(r'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/\d+', args.website_run_url)
     assert args.kaggle_version > 0
     if not args.prepare_only:
+        assert args.website_run_url, 'Publishing requires the verified website deployment run'
         missing = [name for name in ['HF_TOKEN', 'KAGGLE_API_TOKEN'] if not os.environ.get(name)]
         assert not missing, 'Missing existing publication bindings: ' + ', '.join(missing)
     ctx, control = prepare(args)

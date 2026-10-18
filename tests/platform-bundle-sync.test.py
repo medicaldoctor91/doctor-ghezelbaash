@@ -77,6 +77,7 @@ class PackageMaintenanceTests(unittest.TestCase):
                     (root / source).write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in source_rows))
         for name in ["graph.jsonld", "graph.ttl", "provenance.jsonld", "croissant.json", "shapes.ttl", "doctor.vcf", "clinic.vcf", "dcat.ttl", "void.ttl", "datapackage.json", "integrity-manifest.json"]:
             (self.dist / name).write_text("current-" + name)
+        bundle.dump(self.dist / 'datapackage.json', {'version': '9.8.7', 'edition': '2027-01-02'})
         (self.dist / "assets").mkdir()
         (self.dist / "assets/guide.current.json").write_text('{"guide":"current"}')
         bundle.dump(self.baseline / "viewer/packaging.json", {"sourceCommit": OLD_COMMIT, "tables": tables})
@@ -94,21 +95,19 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(bundle.context(NEW_COMMIT, 54321, "2026-11-01")["maintenance_date"], "2026-11-01")
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
 
-    def test_legacy_broad_scope_does_not_claim_archives_unchanged(self):
+    def test_receipts_do_not_claim_unpublished_archive_changes(self):
         self.fixtures()
         broad = bundle.context(NEW_COMMIT, 54321)
         out = self.root / "broad-hf"
         bundle.build_hf(self.dist, self.baseline, out, broad)
         matrix = bundle.load(out / "current-release-matrix.json")
-        self.assertEqual(matrix["publicationScope"], ["hf", "kaggle", "zenodo_dataset", "zenodo_source"])
-        self.assertTrue(matrix["archivedSnapshotsUpdated"])
-        self.assertIn("zenodo_dataset", matrix["distributions"])
-        self.assertNotIn("not updated", (out / "README.md").read_text())
+        self.assertEqual(matrix["publicationScope"], ["hf", "kaggle"])
+        self.assertFalse(matrix["archivedSnapshotsUpdated"])
+        self.assertIn("zenodo_dataset", matrix["archivedSnapshots"])
+        self.assertIn("not updated", (out / "README.md").read_text())
         self.assertIn('/tree/v1.3.3', (out / 'README.md').read_text())
-        self.assertNotIn('That DOI identifies the preserved historical files', (out / 'README.md').read_text())
-        self.assertNotIn('cite the historical DOI when using its frozen snapshot', (out / 'README.md').read_text())
-        self.assertNotIn('frozen DOI archive', (out / 'README.md').read_text())
-        self.assertIn('in-place maintenance corrections', (out / 'README.md').read_text())
+        self.assertIn('That DOI identifies the preserved historical files', (out / 'README.md').read_text())
+        self.assertNotIn('in-place maintenance corrections', (out / 'README.md').read_text())
 
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()
@@ -123,8 +122,8 @@ class PackageMaintenanceTests(unittest.TestCase):
             self.assertEqual(receipt["verifiedResources"][name], bundle.sha(out / name))
         matrix = bundle.load(out / "current-release-matrix.json")
         self.assertEqual(matrix["publicationMaintenanceDate"], "2026-10-14")
-        self.assertEqual(matrix["sourceVersion"], "1.3.3")
-        self.assertEqual(matrix["edition"], "2026-10-10")
+        self.assertEqual(matrix["sourceVersion"], "9.8.7")
+        self.assertEqual(matrix["edition"], "2027-01-02")
         self.assertEqual(set(matrix["distributions"]), {"website", "hf", "kaggle"})
         self.assertEqual(matrix["archivedSnapshots"]["zenodo_dataset"], self.ctx["zenodo_dataset"])
         for name, (_, _, original, encoded) in originals.items():

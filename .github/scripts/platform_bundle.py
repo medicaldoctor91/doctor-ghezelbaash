@@ -19,7 +19,7 @@ def context(source_commit,run_id,maintenance_date=None):
     date.fromisoformat(maintenance_date)
     return {'source_commit':source_commit,'run_id':str(run_id),'run_url':f'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/{run_id}',
             'maintenance_date':maintenance_date,
-            'publication_scope':['hf','kaggle','zenodo_dataset','zenodo_source'],'archived_snapshots_updated':True,
+            'publication_scope':['hf','kaggle'],'archived_snapshots_updated':False,
             'website':'https://www.ghezelbaash.ir/','wikidata':'https://www.wikidata.org/wiki/Q140287622',
             'hf':'https://huggingface.co/datasets/'+HF_REPO,'kaggle':'https://www.kaggle.com/datasets/'+KAGGLE_REF,
             'zenodo_dataset':'https://doi.org/10.5281/zenodo.22838416','zenodo_source':'https://doi.org/10.5281/zenodo.23289009',
@@ -34,13 +34,14 @@ def sync_table_counts(text,tables):
 
 
 def common_release(root,ctx):
+    release=load(root/'datapackage.json')
     scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
-    publication={'verifiedPublicationRun':ctx['run_url'],'publicationScope':scope}
+    publication={'publicationRun':ctx['run_url'],'publicationScope':scope}
     if ctx.get('website_publication_run_url'):publication['websitePublicationRun']=ctx['website_publication_run_url']
     if ctx.get('publication_commit'):publication['publicationCommit']=ctx['publication_commit']
     dump(root/'current-release-matrix.json',{
       'websiteSourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,'canonicalPersonIri':PERSON,
-      'edition':'2026-10-10','publicationMaintenanceDate':ctx['maintenance_date'],'sourceVersion':'1.3.3',
+      'edition':release['edition'],'publicationMaintenanceDate':ctx['maintenance_date'],'sourceVersion':release['version'],
       'activeOpenAlexAuthorId':ctx['openalex'],'orcid':ctx['orcid'],'wikidata':'Q140287622',
       **publication,'distributions':{k:ctx[k] for k in ['website',*scope]},
       'archivedSnapshots':{} if archives_updated else {k:ctx[k] for k in ['zenodo_dataset','zenodo_source']},
@@ -48,7 +49,7 @@ def common_release(root,ctx):
     verified_names=['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json',
                     'croissant.json','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json']
     att={'sourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,'publicationRun':ctx['run_url'],
-         'version':'1.3.3','maintenanceDate':ctx['maintenance_date'],'openalex':ctx['openalex'],
+         'version':release['version'],'maintenanceDate':ctx['maintenance_date'],'openalex':ctx['openalex'],
          'publicationScope':scope,'archivedSnapshotsUpdated':archives_updated,
          'verifiedResources':{n:sha(root/n) for n in verified_names if (root/n).is_file()}}
     if ctx.get('website_publication_run_url'):att['websitePublicationRun']=ctx['website_publication_run_url']
@@ -154,6 +155,7 @@ def build_zenodo(hf,previous,out,ctx):
 
 def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     hf,previous,out=map(Path,[hf,previous,out]);shutil.copytree(previous,out,dirs_exist_ok=True)
+    release=load(hf/'datapackage.json')
     manifest=load(out/'kaggle-manifest.json')
     # The Frictionless descriptor is data; Kaggle reserves its canonical name
     # for legacy control metadata. Preserve its exact bytes under an alias.
@@ -226,7 +228,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
                               'نسخه‌ها و فراداده‌های زنودو در رسیدهای انتشار همان پلتفرم ثبت می‌شوند.')
     readme=re.sub(r'\n\n## Machine-readable package maintenance — \d{4}-\d{2}-\d{2}\n.*\Z','',readme,flags=re.S)
     readme+='\n\n## Machine-readable package maintenance — '+ctx['maintenance_date']+'\n\n'
-    readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **1.3.3**, edition **2026-10-10**.\n\n'
+    readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
     readme+='Package publication run: '+ctx['run_url']+'.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
