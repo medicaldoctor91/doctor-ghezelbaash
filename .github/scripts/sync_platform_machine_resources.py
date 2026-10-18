@@ -127,17 +127,20 @@ def semantic_metadata(value):
     return value
 
 
-def source_metadata(sources, revision):
+def source_metadata(sources, revision, website_commit):
     assert isinstance(sources, str), 'Expected the reviewed Kaggle source text'
     result = sources.replace(ORIGIN + '/graph.jsonld#dataset', DATASET)
     hub = 'https://huggingface.co/datasets/' + HF_REPO
     result = re.sub(re.escape(hub) + r'(?: at commit |/tree/)[0-9a-f]{40}',
                     hub + '/tree/' + revision, result)
+    result = re.sub(r'(Website source commit:\s*)[0-9a-f]{40}',
+                    lambda match: match[1] + website_commit, result)
     assert DATASET in result and hub + '/tree/' + revision in result, 'Expected source pointers were not found'
+    assert 'Website source commit: ' + website_commit in result, 'Expected website source pointer was not found'
     return result
 
 
-def correct_kaggle_sources(client, root, control, revision, expected_version):
+def correct_kaggle_sources(client, root, control, revision, expected_version, website_commit):
     directory = root / 'kaggle-metadata-before'
     directory.mkdir(exist_ok=True)
     client.dataset_metadata(KAGGLE_REF, str(directory))
@@ -150,7 +153,7 @@ def correct_kaggle_sources(client, root, control, revision, expected_version):
             assert semantic_metadata(before.get(name)) == semantic_metadata(control[name]), ('Kaggle metadata changed independently', name)
     assert before['description'].strip() == control['description'].strip(), 'Kaggle description changed independently'
     assert before['userSpecifiedSources'] == control['userSpecifiedSources'], 'Kaggle sources changed independently'
-    desired = source_metadata(before['userSpecifiedSources'], revision)
+    desired = source_metadata(before['userSpecifiedSources'], revision, website_commit)
     target = dict(before)
     target['userSpecifiedSources'] = desired
     # No payload or cover-image files are present in this metadata-only directory.
@@ -170,8 +173,22 @@ def correct_kaggle_sources(client, root, control, revision, expected_version):
     assert after['userSpecifiedSources'] == desired, 'Source metadata update was not confirmed: ' + str(error)
     for name in preserved:
         assert semantic_metadata(before.get(name)) == semantic_metadata(after.get(name)), ('Unexpected metadata change', name)
-    return {'verified': True, 'canonicalDatasetIri': DATASET,
-            'pinnedHuggingFaceRevision': revision, 'preservedFields': preserved}
+    return {'verified': True, 'verificationScope': 'owner metadata settings', 'canonicalDatasetIri': DATASET,
+            'pinnedHuggingFaceRevision': revision, 'websiteSourceCommit': website_commit, 'preservedFields': preserved}
+
+
+def verify_public_kaggle_sources(revision, website_commit):
+    # Kaggle's documented GetDatasetMetadata RPC is a read-only POST.
+    owner, dataset = KAGGLE_REF.split('/')
+    request = urllib.request.Request('https://api.kaggle.com/v1/datasets.DatasetApiService/GetDatasetMetadata',
+        data=json.dumps({'ownerSlug': owner, 'datasetSlug': dataset}).encode(), method='POST',
+        headers={'Content-Type': 'application/json', 'Cache-Control': 'no-cache'})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        wrapped = json.load(response)
+    public = wrapped.get('info') or wrapped
+    sources = public['userSpecifiedSources']
+    assert sources == source_metadata(sources, revision, website_commit), 'Public Kaggle source metadata still differs from the published release'
+    return {'verified': True, 'pinnedHuggingFaceRevision': revision, 'websiteSourceCommit': website_commit}
 
 
 def prepare(args):
@@ -303,6 +320,14 @@ def publish(args, ctx, control):
     assert json.loads(fetch(ORIGIN + '/release-provenance.json'))['sourceCommit'] == args.website_commit
     assert fetch(ORIGIN + '/integrity-manifest.json') == (root / 'website/integrity-manifest.json').read_bytes(), 'Website changed before Kaggle publication'
     client = kaggle_client()
+    # The SDK version upload reads description/files but inherits source settings.
+    # Stage the verified source pointers before creating the immutable version.
+    baseline_control = load(root / 'kaggle-before/dataset-metadata.json')
+    report['kaggleSourceMetadataBeforeVersion'] = correct_kaggle_sources(
+        client, root, baseline_control, revision, args.kaggle_version, args.website_commit)
+    control['userSpecifiedSources'] = source_metadata(control['userSpecifiedSources'], revision, args.website_commit)
+    dump(kg_stage / 'dataset-metadata.json', control)
+    dump(root / 'publication-report.json', report)
     response = None
     ambiguous_error = None
     try:
@@ -345,7 +370,9 @@ def publish(args, ctx, control):
     report['kaggle'] = {'version': desired_version, 'verified': True,
                          'payloadFiles': sum(1 for path in verified.rglob('*') if path.is_file())}
     dump(root / 'publication-report.json', report)
-    report['kaggleSourceMetadata'] = correct_kaggle_sources(client, root, control, revision, desired_version)
+    report['kaggleSourceMetadata'] = correct_kaggle_sources(client, root, control, revision, desired_version, args.website_commit)
+    dump(root / 'publication-report.json', report)
+    report['kagglePublicSourceMetadata'] = verify_public_kaggle_sources(revision, args.website_commit)
     report['websiteUnchanged'] = (
         json.loads(fetch(ORIGIN + '/release-provenance.json'))['sourceCommit'] == args.website_commit
         and fetch(ORIGIN + '/integrity-manifest.json') == (root / 'website/integrity-manifest.json').read_bytes())
@@ -394,7 +421,9 @@ def verify_existing(args):
     assert report['ownerDescriptionMatchesPayload'], 'Owner description differs from the published payload; do not overwrite independent metadata'
     guard(args)
     assert fetch(ORIGIN + '/integrity-manifest.json') == manifest_body, 'Website changed during verification'
-    report['kaggleSourceMetadata'] = correct_kaggle_sources(client, root, control, args.hf_revision, args.kaggle_version)
+    report['kaggleSourceMetadata'] = correct_kaggle_sources(client, root, control, args.hf_revision, args.kaggle_version, args.website_commit)
+    dump(root / 'publication-report.json', report)
+    report['kagglePublicSourceMetadata'] = verify_public_kaggle_sources(args.hf_revision, args.website_commit)
     _, final_overview, _ = guard(args)
     assert fetch(ORIGIN + '/integrity-manifest.json') == manifest_body, 'Website changed during metadata verification'
     report['kaggleOverviewVersionNumber'] = int(final_overview['currentVersionNumber'])

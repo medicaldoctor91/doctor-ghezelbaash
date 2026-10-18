@@ -14,6 +14,18 @@ import sync_platform_machine_resources as sync
 
 
 class PublicationTransportTests(unittest.TestCase):
+    def test_source_metadata_pins_both_current_hf_and_website_without_rewriting_archives(self):
+        hub = 'https://huggingface.co/datasets/' + sync.HF_REPO
+        value = (sync.DATASET + '; Data distribution: ' + hub + '/tree/' + 'a' * 40
+                 + ' ; Website source commit: ' + 'b' * 40
+                 + ' ; Archived website source DOI: https://doi.org/10.5281/zenodo.23289009')
+        result = sync.source_metadata(value, 'c' * 40, 'd' * 40)
+        self.assertIn(hub + '/tree/' + 'c' * 40, result)
+        self.assertIn('Website source commit: ' + 'd' * 40, result)
+        self.assertNotIn('a' * 40, result)
+        self.assertNotIn('b' * 40, result)
+        self.assertIn('https://doi.org/10.5281/zenodo.23289009', result)
+
     def test_verify_existing_never_prepares_or_republishes_packages(self):
         command = ['sync', '--root', '/tmp/reviewed-verification', '--hf-revision', 'b' * 40,
                    '--kaggle-version', '17', '--website-commit', 'a' * 40,
