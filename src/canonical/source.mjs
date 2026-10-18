@@ -4259,7 +4259,10 @@ export const SOURCE = {
       },
       {
         "@id": "https://www.ghezelbaash.ir/procedure-rhinoplasty",
-        "@type": "MedicalProcedure",
+        "@type": [
+          "MedicalProcedure",
+          "Service"
+        ],
         "name": [
           {
             "@value": "رینوپلاستی",
@@ -4308,7 +4311,10 @@ export const SOURCE = {
       },
       {
         "@id": "https://www.ghezelbaash.ir/procedure-facelift",
-        "@type": "MedicalProcedure",
+        "@type": [
+          "MedicalProcedure",
+          "Service"
+        ],
         "name": [
           {
             "@value": "فیس‌لیفت",
@@ -4352,7 +4358,10 @@ export const SOURCE = {
       },
       {
         "@id": "https://www.ghezelbaash.ir/procedure-neck-lift",
-        "@type": "MedicalProcedure",
+        "@type": [
+          "MedicalProcedure",
+          "Service"
+        ],
         "name": [
           {
             "@value": "لیفت گردن",
@@ -4396,7 +4405,10 @@ export const SOURCE = {
       },
       {
         "@id": "https://www.ghezelbaash.ir/procedure-body-aesthetic-surgery",
-        "@type": "MedicalProcedure",
+        "@type": [
+          "MedicalProcedure",
+          "Service"
+        ],
         "name": [
           {
             "@value": "جراحی‌های زیبایی بدن",
@@ -14787,6 +14799,7 @@ export const SOURCE = {
         "@id": "https://www.ghezelbaash.ir/procedure-hand-fat-grafting",
         "@type": [
           "SurgicalProcedure",
+          "Service",
           "MedicalProcedure"
         ],
         "name": [
