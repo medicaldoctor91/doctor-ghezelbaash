@@ -284,6 +284,11 @@ def validate_tables(root, source_commit):
             csv_rows = [bundle.reconstruct(row, set(spec['jsonEncodedFields']))
                         for row in csv.DictReader(stream)]
         assert csv_rows == bundle.rows(root, spec), 'Kaggle CSV query round trip changed rows'
+    descriptor=root/'datapackage.json' if (root/'datapackage.json').is_file() else root/'frictionless-datapackage.json'
+    release=load(descriptor)
+    for row in bundle.rows(root,packaging['tables']['query_matrix']):
+        assert row['release']==release['version'] and row['edition']==release['edition'],'Current query corpus has stale release metadata'
+        assert row.get('source_commit')==source_commit,'Current query source commit differs'
     return {'parquet_rows': results}
 
 

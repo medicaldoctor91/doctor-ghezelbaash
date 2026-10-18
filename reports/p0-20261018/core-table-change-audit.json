@@ -31,6 +31,8 @@
     "beforeRows": 876,
     "afterRows": 876,
     "changedFields": {
+      "edition": 876,
+      "release": 876,
       "source_commit": 876,
       "service_ids": 3
     }
