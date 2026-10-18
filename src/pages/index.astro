@@ -3260,7 +3260,11 @@ export function compileCanonicalSource() {
     const schemaType = (type) => typeof type === "string" && !type.includes(":") && !/^https?:\/\//.test(type);
 
     /** Google-facing publication uses an intentionally pure Schema.org boundary. */
-    function browserContextFor() { return "https://schema.org"; }
+    function browserContextFor() {
+      // Keep Google-facing Schema.org while preserving canonical IRI-valued predicates.
+      const keys = ['url', 'sameAs', 'dayOfWeek'];
+      return ['https://schema.org', Object.fromEntries(keys.map(key => [key, SOURCE.graph['@context'][key]]))];
+    }
 
     function localizedText(value, language = "fa-IR") {
       const literals = values(value).filter((entry) => entry && typeof entry === "object" && "@value" in entry);
@@ -5031,6 +5035,15 @@ export function compileCanonicalSource() {
       for(const node of rating)node.parentNode=parent;
       firstHeading.childNodes=parseFragment(escape(record.title)).childNodes;
       for(const node of firstHeading.childNodes)node.parentNode=firstHeading;
+    }
+    // A focused topic is already an article. Its introductory section, when
+    // labelled by the promoted H1, need not create a second sectioning root.
+    // Preserve its id, content and classes; the article owns the heading label.
+    for (let ancestor = firstHeading.parentNode; ancestor && ancestor !== primary; ancestor = ancestor.parentNode) {
+      if (ancestor.tagName !== 'section' || attr(ancestor, 'aria-labelledby') !== attr(firstHeading, 'id')) continue;
+      ancestor.tagName = ancestor.nodeName = 'div';
+      ancestor.attrs = attributes(ancestor).filter(attribute => attribute.name !== 'aria-labelledby');
+      break;
     }
     const headingDelta = 1 - Number(firstHeading.tagName.slice(1));
     let visualHeadingLevel = 1;
