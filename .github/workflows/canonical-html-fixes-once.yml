@@ -1,0 +1,101 @@
+name: One-time canonical HTML corrections (no deploy)
+on:
+  push:
+    branches: [fix/o5-canonical-service-types-20261018]
+    paths: ['.github/workflows/canonical-html-fixes-once.yml']
+permissions:
+  contents: write
+jobs:
+  edit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply five minimal authored HTML corrections
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          
+          path = Path("src/canonical/source.mjs")
+          original = path.read_text(encoding="utf-8")
+          text = original
+          def replace_one(old, new, label):
+              global text
+              count = text.count(old)
+              assert count == 1, f"{label}: expected one canonical occurrence, got {count}"
+              text = text.replace(old, new)
+          
+          replace_one('id="image-saeed-ghezelbash-portrait-master" itemprop="primaryImageOfPage" itemscope=""',
+                      'id="image-saeed-ghezelbash-portrait-master" itemscope=""', "D3 orphan Microdata")
+          replace_one('<span aria-label="5 out of 5 stars" class="hero-rating-seal__stars">',
+                      '<span role="img" aria-label="5 out of 5 stars" class="hero-rating-seal__stars">', "D5 rating ARIA")
+          replace_one('<section class="footer-machine-resources-supplement" data-nosnippet="">',
+                      '<div class="footer-machine-resources-supplement" data-nosnippet="">', "O1 footer container")
+          replace_one('</details></section> </footer>',
+                      '</details></div> </footer>', "O1 footer closure")
+          replace_one('پوست</a>ِ اضافه', 'پوستِ</a> اضافه', "O2 Persian ezafe")
+          chapter_before='<track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/'
+          chapter_after='<track kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/'
+          assert text.count(chapter_before) == 3, "D4 requires exactly three authored education video chapter tracks"
+          text = text.replace(chapter_before, chapter_after)
+          assert text.count('<track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/testimonials/') == 1, "Leave the standalone Kurdish review chapter track unchanged"
+          
+          def source_object(value):
+              begin = value.index("export const SOURCE = ") + len("export const SOURCE = ")
+              end = value.index(";\nexport const AUTHORED_BODY")
+              return json.loads(value[begin:end])
+          
+          before, after = source_object(original), source_object(text)
+          assert before == after, "D3-D5/O1-O2 must not change canonical graph or route policy"
+          assert text.count('itemprop="primaryImageOfPage"') == 0
+          assert text.count('role="img" aria-label="5 out of 5 stars"') == 1
+          assert text.count('<div class="footer-machine-resources-supplement"') == 1
+          assert text.count('پوستِ</a> اضافه') == 1
+          assert len(before["graph"]["@graph"]) == 1592
+          path.write_text(text, encoding="utf-8")
+          print("Canonical HTML edits PASSED: D3 D4 D5 O1 O2, exact-source invariants intact")
+          
+          PY
+      - name: Validate source and generated dist without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/canonical/source.mjs
+          npm ci
+          node --test tests/*.test.mjs
+          npm run build
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+          python tests/validate_machine_resources.py dist
+          test -f dist/media-license.html
+          python - <<'PY'
+          from pathlib import Path
+          html=Path('dist/media-license.html').read_text()
+          assert html.count('Creative Commons Attribution 4.0')==1
+          assert html.count('<li>')==5
+          assert '<link rel="canonical" href="https://www.ghezelbaash.ir/media-license"' in html
+          home=Path('dist/index.html').read_text()
+          assert 'itemprop="primaryImageOfPage"' not in home
+          assert 'role="img" aria-label="5 out of 5 stars"' in home
+          assert '<div class="footer-machine-resources-supplement"' in home
+          assert 'kind="chapters"' in home
+          print('D2+D3+D4+D5+O1+O2 built output checks PASSED')
+          PY
+      - name: Commit only reviewed canonical source edits and remove temporary runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/canonical-html-fixes-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/canonical/source.mjs .github/workflows/canonical-html-fixes-once.yml
+          git commit -m 'fix(html): repair microdata, video tracks, aria, footer and Persian ezafe [skip ci]'
+          git push origin HEAD:refs/heads/fix/o5-canonical-service-types-20261018
