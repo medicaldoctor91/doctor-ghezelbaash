@@ -1,89 +1,59 @@
-name: Synchronize validated Hugging Face and Kaggle machine resources
+name: HF Dataset Card metadata-only maintenance
 on:
   workflow_dispatch:
     inputs:
       hf_revision:
-        description: Exact reviewed Hugging Face revision
+        description: Exact reviewed Hugging Face data revision
         required: true
         type: string
       kaggle_version:
-        description: Current reviewed Kaggle version
+        description: Preserved Kaggle version (no Kaggle write)
         required: true
         type: string
       website_commit:
-        description: Current published website source commit
+        description: Preserved website commit (no build or deployment)
         required: true
         type: string
       website_run_url:
-        description: Verified website publication run URL
+        description: Existing website publication receipt
         required: true
         type: string
       verify_existing:
-        description: Verify existing pinned packages and finish source metadata; never create another HF commit or Kaggle version
+        description: Confirm metadata-only HF maintenance with unchanged data
         required: false
         type: boolean
         default: false
 permissions:
   contents: read
-  actions: read
 concurrency:
   group: doctor-ghezelbaash-publication
   cancel-in-progress: false
 jobs:
-  publish:
-    if: github.ref == 'refs/heads/main'
+  metadata-only:
+    if: github.ref == 'refs/heads/maintenance/hf-discoverability-20261019' && inputs.verify_existing
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
-      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
-      EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
-      EXPECTED_KAGGLE_VERSION: ${{ inputs.kaggle_version }}
-      EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
-      WEBSITE_PUBLICATION_RUN_URL: ${{ inputs.website_run_url }}
-      VERIFY_EXISTING: ${{ inputs.verify_existing }}
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0, persist-credentials: false}
-      - uses: actions/setup-node@v4
-        with: {node-version-file: .nvmrc, cache: npm}
+        with: {persist-credentials: false}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Check existing publication bindings
-        run: |
-          python - <<'PY'
-          import os
-          missing=[key for key in ['HF_TOKEN','KAGGLE_API_TOKEN'] if not os.environ.get(key)]
-          assert not missing, 'Missing existing publication bindings: '+str(missing)
-          print('Both existing publication bindings are present')
-          PY
-      - name: Install build and platform validation dependencies
-        run: |
-          if [ "$VERIFY_EXISTING" != true ]; then npm ci; fi
-          python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4'
-      - name: Verify source and generate candidate website resources
-        run: |
-          if [ "$VERIFY_EXISTING" != true ]; then
-            node --test tests/*.test.mjs
-            npm run build
-          fi
-          python tests/platform-bundle-sync.test.py
-          python tests/platform-publication.test.py
-          python -m py_compile .github/scripts/sync_platform_machine_resources.py tests/validate_platform_sync.py
-      - name: Validate both packages, publish and verify public bytes
-        run: |
-          mode=()
-          if [ "$VERIFY_EXISTING" = true ]; then mode+=(--verify-existing); fi
-          python .github/scripts/sync_platform_machine_resources.py --root /tmp/platform-machine-sync --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --website-run-url "$WEBSITE_PUBLICATION_RUN_URL" "${mode[@]}"
-      - name: Save publication and validation evidence
+      - name: Install only metadata dependencies
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.36.0' 'PyYAML==6.0.3'
+      - name: Test metadata boundaries without credentials
+        run: python tests/hf-metadata-only.test.py
+      - name: Publish only the card and its checksum in one guarded commit
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
+          EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
+          VERIFY_EXISTING: ${{ inputs.verify_existing }}
+        run: python .github/scripts/hf_metadata_only.py
+      - name: Save public receipt only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: platform-machine-sync-evidence
-          path: |
-            /tmp/platform-machine-sync/context.json
-            /tmp/platform-machine-sync/publication-report.json
-            /tmp/platform-machine-sync/*validation.json
-            /tmp/platform-machine-sync/website-file-sources.json
+          name: hf-metadata-only-receipt
+          path: /tmp/hf-discoverability/receipt.json
           if-no-files-found: warn
