@@ -109,6 +109,11 @@ def build_hf(dist,baseline,out,ctx):
     dump(out/'viewer/iri-migration.json',migration)
     md=(out/'README.md').read_text()
     md=sync_table_counts(md,packaging['tables'])
+    if 'Website source version ' in md:
+        previous_release=load(baseline/'current-release-matrix.json');release=load(out/'datapackage.json')
+        previous_label=f"Website source version {previous_release['sourceVersion']}; edition {previous_release['edition']}."
+        assert previous_label in md, 'HF current release description differs from its receipt'
+        md=md.replace(previous_label,f"Website source version {release['version']}; edition {release['edition']}.")
     if ctx['archived_snapshots_updated']:
         md=re.sub(r'(\[the frozen tag\]\([^\n)]+/tree/v1[.]3[.]3\)) and DOI \[[^\]]+\]\([^)]+\)[.] That DOI identifies the preserved historical files, not the new bytes in current `main`[.]',r'\1.',md)
         md=md.replace('; cite the historical DOI when using its frozen snapshot.','.')
@@ -203,6 +208,11 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     old=load(previous/'kaggle-manifest.json')
     readme=(previous/'README.md').read_text()
     readme=sync_table_counts(readme,packaging['tables'])
+    if 'Source release **' in readme:
+        previous_release=load(previous/'current-release-matrix.json')
+        previous_label=f"Source release **{previous_release['sourceVersion']}**, edition **{previous_release['edition']}**."
+        assert previous_label in readme, 'Kaggle current release description differs from its receipt'
+        readme=readme.replace(previous_label,f"Source release **{release['version']}**, edition **{release['edition']}**.")
     readme=re.sub(r'((?:Current DOI-versioned website source|DOI-versioned website source|Archived DOI-versioned website source):\s*)https://doi[.]org/10[.]5281/zenodo[.]\d+',lambda match:match[1]+ctx['zenodo_source'],readme)
     for key,replacement in [('website_source_commit',ctx['source_commit']),('upstream_revision',hf_revision)]:
         if old.get(key):readme=readme.replace(old[key],replacement)

@@ -81,8 +81,9 @@ class PackageMaintenanceTests(unittest.TestCase):
         (self.dist / "assets").mkdir()
         (self.dist / "assets/guide.current.json").write_text('{"guide":"current"}')
         bundle.dump(self.baseline / "viewer/packaging.json", {"sourceCommit": OLD_COMMIT, "tables": tables})
+        bundle.dump(self.baseline / "current-release-matrix.json", {"sourceVersion": "1.3.3", "edition": "2026-10-10"})
         bundle.dump(self.baseline / "viewer/iri-migration.json", {"sourceRevision": "historical-revision", "sourceSha256": "historical-hash", "currentSourceCommit": OLD_COMMIT, "mapping": {"urn:old": "urn:new"}})
-        (self.baseline / "README.md").write_text(FRONT_MATTER + f"\nSource `{OLD_COMMIT}`.\n- **entity_facts**: 22142 RDF statements.\n\n## Publication convergence — 2026-10-12\n\nOld maintenance receipt.\n")
+        (self.baseline / "README.md").write_text(FRONT_MATTER + f"\nSource `{OLD_COMMIT}`. Website source version 1.3.3; edition 2026-10-10.\n- **entity_facts**: 22142 RDF statements.\n\n## Publication convergence — 2026-10-12\n\nOld maintenance receipt.\n")
         card=(self.baseline / 'README.md').read_text()
         paragraph='The **archived v1.3.3 snapshot** remains available at [the frozen tag](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/v1.3.3) and DOI [10.5281/zenodo.22838416](https://doi.org/10.5281/zenodo.22838416). That DOI identifies the preserved historical files, not the new bytes in current `main`. Cite the current distribution with its Hugging Face revision and website source commit; cite the historical DOI when using its frozen snapshot.\n\n'
         paragraph+='These current access points are separate from the frozen DOI archive.\n\n'
@@ -142,6 +143,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn("archived", readme.lower())
         self.assertNotIn("Old maintenance receipt", readme)
         self.assertIn("**entity_facts**: 2 RDF statements", readme)
+        self.assertIn("Website source version 9.8.7; edition 2027-01-02.", readme)
+        self.assertNotIn("Website source version 1.3.3;", readme)
         inventory = bundle.load(out / "dist-sha256.json")["files"]
         for name, entry in inventory.items():
             self.assertEqual(entry["sha256"], bundle.sha(out / name))
@@ -157,7 +160,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         before.mkdir()
         copied = ["graph.jsonld", "graph.ttl", "provenance.jsonld", "query-matrix.jsonl", "fact-map.json", "croissant.json", "shapes.ttl", "doctor.vcf", "clinic.vcf", "dcat.ttl", "current-release-matrix.json", "viewer/packaging.json"]
         bundle.dump(before / "kaggle-manifest.json", {"packaging_revision": 8, "original_files": [{"path": name} for name in copied], "tables": {"query_matrix": 2}, "zenodo_version_doi": "10.5281/zenodo.22838416"})
-        (before / "README.md").write_text("# Existing dataset\n\nCreator: Existing author introduction.\n- **entity_facts:** 22,142 RDF statements.\n")
+        bundle.dump(before / "current-release-matrix.json", {"sourceVersion": "1.3.3", "edition": "2026-10-10"})
+        (before / "README.md").write_text("# Existing dataset\n\nSource release **1.3.3**, edition **2026-10-10**.\nCreator: Existing author introduction.\n- **entity_facts:** 22,142 RDF statements.\n")
         (before / "CITATION.cff").write_text('cff-version: 1.2.0\nversion: "2026-10-12-kaggle-packaging-8"\ndate-released: "2026-10-12"\n' + AUTHORS + 'repository-code: "old"\nurl: "old"\n')
         spec = bundle.load(hf / "viewer/packaging.json")["tables"]["query_matrix"]
         with (before / "query-matrix.csv").open("w", newline="") as handle:
@@ -188,6 +192,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn("archived", readme.lower())
         self.assertNotIn("latest corrected source", readme)
         self.assertIn("**entity_facts:** 2 RDF statements", readme)
+        self.assertIn("Source release **9.8.7**, edition **2027-01-02**.", readme)
+        self.assertNotIn("Source release **1.3.3**", readme)
         self.assertIn("`frictionless-datapackage.json`", readme)
         self.assertEqual((out / "starter.ipynb").read_text(), '{"cells":[]}')
         checksums = dict(line.split("  ", 1)[::-1] for line in (out / "checksums.sha256").read_text().splitlines())
