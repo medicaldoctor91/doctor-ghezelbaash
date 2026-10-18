@@ -26,11 +26,12 @@ class PublicationTransportTests(unittest.TestCase):
             sync.main()
         verify.assert_called_once()
 
-    def test_ready_version_guard_uses_version_inventory_when_overview_is_stale(self):
-        value = {'currentVersionNumber': 16, 'versions': [
+    def test_ready_version_guard_requires_current_version_and_rejects_newer_inventory(self):
+        value = {'currentVersionNumber': 17, 'versions': [
             {'versionNumber': 17, 'status': 'Ready'}, {'versionNumber': 16, 'status': 'Ready'}]}
         sync.guard_kaggle_version(value, 17)
         for expected, changed in [(16, value), (18, value),
+                                  (17, {**value, 'currentVersionNumber': 16}),
                                   (17, {**value, 'currentVersionNumber': 18}),
                                   (17, {**value, 'versions': [{'versionNumber': 17, 'status': 'Processing'}]}),
                                   (17, {**value, 'versions': [*value['versions'], {'versionNumber': 18, 'status': 'Processing'}]})]:

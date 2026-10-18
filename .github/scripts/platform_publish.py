@@ -184,7 +184,7 @@ def main():
     info=api.dataset_info(HF_REPO,files_metadata=True);parent=info.sha
     if os.environ.get('EXPECTED_HF_REVISION'):
         assert parent==os.environ['EXPECTED_HF_REVISION'],'HF changed since preflight'
-    _,initial_kaggle=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)
+    _,initial_kaggle=request('GET','https://api.kaggle.com/v1/datasets/view/'+KAGGLE_REF)
     if os.environ.get('EXPECTED_KAGGLE_VERSION'):
         assert int(initial_kaggle['currentVersionNumber'])==int(os.environ['EXPECTED_KAGGLE_VERSION']),'Kaggle changed since preflight'
     baseline=root/'hf-before';baseline.mkdir(exist_ok=True)
@@ -236,7 +236,7 @@ def main():
     previous=root/'kaggle-before';previous.mkdir(exist_ok=True)
     subprocess.run(['kaggle','datasets','download',KAGGLE_REF,'-p',str(previous),'--unzip','--force'],check=True,stdout=subprocess.DEVNULL)
     subprocess.run(['kaggle','datasets','metadata',KAGGLE_REF,'-p',str(previous)],check=True,stdout=subprocess.DEVNULL)
-    _,view=request('GET','https://www.kaggle.com/api/v1/datasets/view/'+KAGGLE_REF)
+    _,view=request('GET','https://api.kaggle.com/v1/datasets/view/'+KAGGLE_REF)
     version=int(view['currentVersionNumber'])+1
     kg=root/'kaggle';description=build_kaggle(hf,previous,kg,ctx,version,revision)
     control=load(kg/'dataset-metadata.json')

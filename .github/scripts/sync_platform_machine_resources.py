@@ -45,15 +45,13 @@ def fetch(url):
 
 def public_state():
     hf = json.loads(fetch('https://huggingface.co/api/datasets/' + HF_REPO))
-    kaggle = json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF))
+    kaggle = json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF))
     website = json.loads(fetch(ORIGIN + '/release-provenance.json'))
     return hf, kaggle, website
 
 
 def guard_kaggle_version(kaggle, expected_version):
-    # The public overview can lag after a version is Ready and downloadable.
-    # Reject newer overview/inventory versions; require the exact Ready entry.
-    assert 0 < int(kaggle['currentVersionNumber']) <= expected_version, 'Kaggle changed since review'
+    assert int(kaggle['currentVersionNumber']) == expected_version, 'Kaggle changed since review'
     versions = kaggle.get('versions', [])
     current = next((version for version in versions if int(version['versionNumber']) == expected_version), None)
     assert current is not None and current['status'] == 'Ready', 'Reviewed Kaggle version is not Ready'
@@ -157,7 +155,7 @@ def correct_kaggle_sources(client, root, control, revision, expected_version):
     target['userSpecifiedSources'] = desired
     # No payload or cover-image files are present in this metadata-only directory.
     dump(directory / 'dataset-metadata.json', target)
-    guard_kaggle_version(json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF)), expected_version)
+    guard_kaggle_version(json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF)), expected_version)
     error = None
     if desired != before['userSpecifiedSources']:
         try:
@@ -300,7 +298,7 @@ def publish(args, ctx, control):
     control['description'] = description
     dump(kg_stage / 'dataset-metadata.json', control)
     validate_package(kg_stage, 'kaggle', args.website_commit, root / 'kaggle-validation.json')
-    kaggle = json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF))
+    kaggle = json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF))
     guard_kaggle_version(kaggle, args.kaggle_version)
     assert json.loads(fetch(ORIGIN + '/release-provenance.json'))['sourceCommit'] == args.website_commit
     assert fetch(ORIGIN + '/integrity-manifest.json') == (root / 'website/integrity-manifest.json').read_bytes(), 'Website changed before Kaggle publication'
@@ -323,11 +321,11 @@ def publish(args, ctx, control):
     desired_version = args.kaggle_version + 1
     verified = None
     for attempt in range(30):
-        view = json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF))
+        view = json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF))
         assert int(view['currentVersionNumber']) <= desired_version, 'A newer external Kaggle version appeared during verification'
         assert not any(int(item['versionNumber']) > desired_version for item in view.get('versions', [])), 'A newer Kaggle version appeared during verification'
         ready = any(int(item['versionNumber']) == desired_version and item['status'] == 'Ready' for item in view.get('versions', []))
-        if ready:
+        if ready and int(view['currentVersionNumber']) == desired_version:
             candidate = root / ('kaggle-live-' + str(attempt))
             try:
                 download_kaggle(desired_version, candidate, root / ('kaggle-live-' + str(attempt) + '.zip'))
@@ -354,7 +352,7 @@ def publish(args, ctx, control):
     dump(root / 'publication-report.json', report)
     assert report['websiteUnchanged'], 'Website changed during platform publication'
     assert json.loads(fetch('https://huggingface.co/api/datasets/' + HF_REPO))['sha'] == revision, 'HF changed during platform publication'
-    guard_kaggle_version(json.loads(fetch('https://www.kaggle.com/api/v1/datasets/view/' + KAGGLE_REF)), desired_version)
+    guard_kaggle_version(json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF)), desired_version)
     print(json.dumps(report), flush=True)
 
 
