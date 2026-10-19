@@ -338,7 +338,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     citation=(previous/'CITATION.cff').read_text()
     for key,value in [('version',DOI_POLICY['currentArchive']['packagingVersion']),
                       ('date-released',ctx['maintenance_date']),('repository-code',ctx['hf']+'/tree/'+hf_revision),
-                      ('url',DOI_POLICY['currentArchive']['url']),('message','Exact snapshot citation: '+DOI_POLICY['currentArchive']['doi']+'; archive '+DOI_POLICY['currentArchive']['packagingVersion']+'. Current Kaggle distribution version '+str(version)+' pins Hugging Face revision '+hf_revision+' and has separate platform descriptors/receipts.')]:
+                      ('url',DOI_POLICY['currentArchive']['url']),('message','Exact snapshot citation: '+DOI_POLICY['currentArchive']['doi']+'; archive '+DOI_POLICY['currentArchive']['packagingVersion']+'. Content baseline '+release['version']+', edition '+release['edition']+'. Current Kaggle distribution version '+str(version)+' pins Hugging Face revision '+hf_revision+' and has separate platform descriptors/receipts.')]:
         line=key+': '+json.dumps(value)+'\n'
         if re.search(r'^'+re.escape(key)+r':.*$',citation,flags=re.M):
             citation=re.sub(r'^'+re.escape(key)+r':.*(?:\n|$)',lambda _:line,citation,flags=re.M)
