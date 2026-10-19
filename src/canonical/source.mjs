@@ -22665,7 +22665,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/identifier-project-doi",
         "@type": "PropertyValue",
-        "name": "Current preserved release DOI (1.3.3)",
+        "name": "Historical preserved release DOI (1.3.3)",
         "propertyID": "DOI",
         "value": "10.5281/zenodo.22838416",
         "url": "https://doi.org/10.5281/zenodo.22838416"

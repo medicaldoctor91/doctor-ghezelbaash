@@ -21,6 +21,10 @@ def validate_policy(root, *, archive=False):
 
     def walk(value, path, file):
         if isinstance(value, dict):
+            label=str(value.get('name',''))
+            direct=' '.join(str(v) for v in value.values() if isinstance(v,str))
+            if re.search(r'\bcurrent\b',label,re.I) and not re.search(r'\bhistorical\b',label,re.I):
+                assert not any(doi in history for doi in PATTERN.findall(direct)), (file,path,'historical DOI labelled current')
             for key in ['archive_version_doi', 'zenodo_version_doi']:
                 if key in value:
                     assert value[key] == exact, (file, path + '/' + key, 'historical DOI used as current')
