@@ -1,0 +1,70 @@
+name: Read only final notebook execution and Hub owner metadata
+on:
+  push:
+    branches: [codex/doi-23474664-owner-proof]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests 'kaggle==2.2.4'
+      - uses: actions/download-artifact@v4
+        with:
+          name: frozen-coordinated-candidate
+          run-id: 39284481189
+          github-token: ${{ github.token }}
+          path: /tmp/frozen-input
+      - name: Read authenticated settings and exact notebook execution proof
+        run: |
+          python - <<'PY'
+          import os,sys,json,tarfile,hashlib
+          from pathlib import Path
+          import requests
+          sys.path.insert(0,'.github/scripts')
+          from sync_platform_machine_resources import kaggle_client
+          from coordinated_doi_release import notebook_identity,check_frozen
+          root=Path('/tmp/owner-proof');root.mkdir()
+          def dump(name,value): (root/name).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+          def read(url,auth=None):
+              r=requests.get(url,headers={'Cache-Control':'no-cache',**({'Authorization':'Bearer '+auth} if auth else {})},timeout=60)
+              r.raise_for_status();return r.json()
+          hf='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          info=read('https://huggingface.co/api/datasets/'+hf,os.environ['HF_TOKEN'])
+          # Save only this repo's settings, not credentials or token metadata.
+          dump('hf-owner-repo-settings.json',{k:info.get(k) for k in ['id','sha','private','gated','disabled','cardData','config','pipeline_tag']})
+          assert info['sha']=='47699e7fc8bad2df2c6d90dcfb9da72278aba28d'
+          with tarfile.open('/tmp/frozen-input/candidate.tar.gz') as t:t.extractall('/tmp',filter='data')
+          frozen=Path('/tmp/coordinated-release');check_frozen(frozen)
+          assert hashlib.sha256((frozen/'frozen-sha256.json').read_bytes()).hexdigest()=='f938501db42f6a60261c4bf3d511d1b48333234333b105ca8550c2dd39d886db'
+          nb='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
+          url='https://www.kaggle.com/api/v1/kernels/pull/'+nb
+          client=kaggle_client();before=read(url);status=str(client.kernels_status(nb).status)
+          dump('notebook-status.json',{'version':before['metadata']['currentVersionNumber'],'status':status})
+          outputs=root/'outputs';outputs.mkdir()
+          client.kernels_output(nb,str(outputs),file_pattern='doi-release-execution.json',force=True,quiet=True)
+          evidence=json.loads((outputs/'doi-release-execution.json').read_text())
+          assert 'complete' in status.lower(),status
+          notebook_identity(frozen,before,evidence)
+          after=read(url);notebook_identity(frozen,after,evidence)
+          source=json.loads(after['blob'].get('source') or after['blob'].get('sourceNullable'))
+          dump('public-notebook-source.json',source)
+          dump('identity-proof.json',{'status':'PASS','notebookVersion':9,'executionStatus':status,'sameVersionAndSourceBeforeAfter':True,'frozenManifestSha256':'f938501db42f6a60261c4bf3d511d1b48333234333b105ca8550c2dd39d886db','executionEvidence':evidence})
+          check_frozen(frozen)
+          print('READONLY NOTEBOOK IDENTITY PROOF PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owner-notebook-proof-readonly
+          path: /tmp/owner-proof/
