@@ -215,11 +215,32 @@ def main():
             assert semantic_metadata(before.get(key)) == semantic_metadata(after.get(key)), ('Unrelated metadata changed', key)
         report = {'scope': 'Kaggle source link metadata only', 'kaggleVersion': args.kaggle_version,
                   'sourceMetadataVerified': True, 'otherMetadataPreserved': True,
-                  'writeResponse': update_evidence,
-                  'publicSources': verify_public_kaggle_sources(args.hf_revision, args.website_commit)}
+                  'writeResponse': update_evidence, 'publicVerification': 'pending'}
         dump(root / 'report.json', report)
         print(json.dumps(report), flush=True)
-        return
+        # Owner settings and immutable v22 bytes are already verified. Poll the
+        # public cache without submitting another version or metadata update.
+        pinned = zipfile.ZipFile(io.BytesIO(get('https://www.kaggle.com/api/v1/datasets/download/' + KG + '?datasetVersionNumber=' + str(args.kaggle_version))))
+        expected_checksums = pinned.read('checksums.sha256')
+        for attempt in range(60):
+            view = json.loads(get('https://api.kaggle.com/v1/datasets/view/' + KG))
+            report['publicDefaultVersion'] = view['currentVersionNumber']
+            try:
+                report['publicSources'] = verify_public_kaggle_sources(args.hf_revision, args.website_commit)
+            except AssertionError:
+                report['publicSources'] = {'verified': False, 'state': 'cached previous revision'}
+            if view['currentVersionNumber'] == args.kaggle_version and report['publicSources']['verified']:
+                public = zipfile.ZipFile(io.BytesIO(get('https://www.kaggle.com/api/v1/datasets/download/' + KG)))
+                if public.read('checksums.sha256') == expected_checksums:
+                    report['publicVerification'] = 'verified'
+                    dump(root / 'report.json', report)
+                    print(json.dumps(report), flush=True)
+                    return
+            dump(root / 'report.json', report)
+            if attempt % 2 == 0:
+                print(json.dumps({'publicDefaultVersion': report['publicDefaultVersion'], 'publicSourcesCurrent': report['publicSources']['verified']}), flush=True)
+            time.sleep(30)
+        raise RuntimeError('Owner settings and version files verified; public cache remains pending. No repeated publication was submitted.')
     if args.verify_only:
         import pyarrow.parquet as pq
         from sync_platform_machine_resources import kaggle_client
