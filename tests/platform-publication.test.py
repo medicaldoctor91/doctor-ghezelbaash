@@ -146,6 +146,26 @@ class PublicationTransportTests(unittest.TestCase):
         with patch.object(publication,'request',return_value=(200,{**before,'revision':34})):
             with self.assertRaisesRegex(AssertionError,'revision changed'):publication.correct_zenodo_metadata(spec,'redacted-token')
 
+    def test_zenodo_already_published_metadata_is_read_only_and_accepts_apostrophe_typography(self):
+        links=['https://www.ghezelbaash.ir/','https://www.ghezelbaash.ir/graph.jsonld',
+               'https://huggingface.co/datasets/'+publication.HF_REPO,
+               'https://www.kaggle.com/datasets/'+publication.KAGGLE_REF]
+        current={'revision':34,'doi':'10.5281/zenodo.22838416',
+                 'metadata':{'version':'1.3.3','description':"This record's preserved archive.",
+                             'related_identifiers':[{'identifier':url} for url in links]}}
+        spec={'record':'22838416','expected_revision':33,'doi':current['doi'],
+              'version':'1.3.3','description':'This record’s preserved archive.'}
+        with patch.object(publication,'request',return_value=(200,current)) as request:
+            result=publication.correct_zenodo_metadata(spec,'redacted-token')
+        self.assertTrue(result['metadataVerified'])
+        self.assertFalse(result['writePerformed'] or result['filesTouched'])
+        request.assert_called_once_with('GET',publication.BASE+'/records/22838416',token='redacted-token')
+        for description in ['A different claim.', 'This record’s updated archive.']:
+            with self.subTest(description=description), patch.object(publication,'request',return_value=(200,current)) as request:
+                with self.assertRaisesRegex(AssertionError,'revision changed'):
+                    publication.correct_zenodo_metadata({**spec,'description':description},'redacted-token')
+                self.assertEqual(request.call_count,1)
+
     def test_download_retries_temporary_404_without_publishing(self):
         class Handler(BaseHTTPRequestHandler):
             reads = 0

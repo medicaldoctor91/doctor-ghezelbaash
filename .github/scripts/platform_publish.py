@@ -277,8 +277,18 @@ def correct_zenodo_metadata(spec,token):
     """Edit only mutable metadata on the existing deposition; never touch file APIs."""
     record=spec['record'];url=BASE+'/records/'+record
     _,before=request('GET',url,token=token)
-    assert before['revision']==spec['expected_revision'],'Zenodo revision changed since review'
     assert before['doi']==spec['doi'] and before['metadata']['version']==spec['version']
+    links=['https://www.ghezelbaash.ir/','https://www.ghezelbaash.ir/graph.jsonld',
+           'https://huggingface.co/datasets/'+HF_REPO,'https://www.kaggle.com/datasets/'+KAGGLE_REF]
+    # Zenodo may serialize a typographic apostrophe as ASCII in prose. This
+    # comparison changes no data and leaves every other character significant.
+    description=lambda value:value.replace('\u2019',"'")
+    existing_links={r['identifier'] for r in before['metadata'].get('related_identifiers',[])}
+    if description(before['metadata']['description'])==description(spec['description']) and set(links)<=existing_links:
+        return {'record':record,'beforeRevision':before['revision'],'afterRevision':before['revision'],
+                'doi':before['doi'],'version':spec['version'],'metadataVerified':True,
+                'status':'already-current','writePerformed':False,'filesTouched':False}
+    assert before['revision']==spec['expected_revision'],'Zenodo revision changed since review'
     files=lambda value:{f['key']:(f['checksum'],f['size']) for f in value['files']}
     original_files=files(before)
     dep=BASE+'/deposit/depositions/'+record
@@ -287,8 +297,7 @@ def correct_zenodo_metadata(spec,token):
     md=draft['metadata'];old={k:v for k,v in md.items() if k not in {'description','related_identifiers'}}
     md['description']=spec['description']
     related=list(md.get('related_identifiers',[]));known={r['identifier'] for r in related}
-    for link in ['https://www.ghezelbaash.ir/','https://www.ghezelbaash.ir/graph.jsonld',
-                 'https://huggingface.co/datasets/'+HF_REPO,'https://www.kaggle.com/datasets/'+KAGGLE_REF]:
+    for link in links:
         if link not in known:related.append({'identifier':link,'scheme':'url','relation':'isSupplementTo'})
     md['related_identifiers']=related
     _,current=request('GET',url,token=token)
@@ -300,11 +309,11 @@ def correct_zenodo_metadata(spec,token):
     _,after=request('GET',url,token=token)
     assert after['doi']==before['doi'] and after['conceptdoi']==before['conceptdoi']
     assert after['metadata']['version']==spec['version'] and files(after)==original_files
-    assert after['metadata']['description']==spec['description']
+    assert description(after['metadata']['description'])==description(spec['description']),'Zenodo description differs beyond apostrophe typography'
     _,published=request('GET',dep,token=token)
     assert {k:v for k,v in published['metadata'].items() if k not in {'description','related_identifiers'}}==old,'Unrelated metadata changed'
     return {'record':record,'beforeRevision':before['revision'],'afterRevision':after['revision'],
-            'doi':after['doi'],'version':spec['version'],'filesUnchanged':True,'metadataVerified':True}
+            'doi':after['doi'],'version':spec['version'],'filesUnchanged':True,'metadataVerified':True,'writePerformed':True}
 
 
 def maintain_zenodo_metadata():
@@ -317,7 +326,8 @@ def maintain_zenodo_metadata():
         for spec in specs:
             try:report['records'].append(correct_zenodo_metadata(spec,token))
             except (RuntimeError,AssertionError) as error:
-                report['records'].append({'record':spec['record'],'status':'blocked','reason':str(error)[:1200]})
+                report['records'].append({'record':spec['record'],'status':'blocked',
+                                          'reason':type(error).__name__+': '+(str(error) or 'Validation assertion failed')[:1200]})
         report['status']='verified' if all(r.get('metadataVerified') for r in report['records']) else 'partial-or-blocked'
     dump(args.report,report);print(json.dumps(report),flush=True)
 
