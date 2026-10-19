@@ -46,11 +46,13 @@ def build_archive(hf, previous_archive, output, source_commit):
         shutil.copyfile(hf / name, target)
     upstream = output / 'upstream'
     upstream.mkdir(exist_ok=True)
-    # These are exact, explicitly historical inputs from published 23463840.
+    # These are exact, explicitly historical inputs from the previous published archive.
     # No DOI or download URL inside these preserved receipts is rewritten.
     if (previous_archive / 'upstream').is_dir():
         shutil.copytree(previous_archive / 'upstream', upstream, dirs_exist_ok=True)
-    shutil.copyfile(previous_archive / 'archive-provenance.json', upstream / 'previous-zenodo-archive-provenance.json')
+    parent_provenance=load(previous_archive/'archive-provenance.json')
+    parent_record=parent_provenance['zenodoDOI'].rsplit('.',1)[-1]
+    shutil.copyfile(previous_archive / 'archive-provenance.json', upstream / ('zenodo-'+parent_record+'-archive-provenance.json'))
     current = DOI_POLICY['currentArchive']
     text = '# Dr. Saeed Ghezelbash — DOI-policy aligned Dataset archive\n\n'
     text += 'Public collection and latest version: '+DOI_POLICY['concept']['url']+'\n\n'
@@ -129,7 +131,9 @@ def build_archive(hf, previous_archive, output, source_commit):
     (output / 'checksums.sha256').write_text(''.join(sha(output / name)+'  '+name+'\n' for name in names))
     zip_path = output.parent / Path(DOI_POLICY['downloadBindings']['bundle']).name
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as zipped:
-        for name in sorted(names + ['checksums.sha256']):zipped.write(output / name, name)
+        for name in sorted(names + ['checksums.sha256']):
+            item=zipfile.ZipInfo(name,date_time=(2026,10,19,0,0,0));item.compress_type=zipfile.ZIP_DEFLATED;item.external_attr=0o100644 << 16
+            zipped.writestr(item,(output/name).read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
     standalone_paths=[path for path in output.rglob('*') if path.is_file() and not path.relative_to(output).as_posix().startswith(('viewer/', 'upstream/'))]
     assert len(standalone_paths)==len({file_key(path.relative_to(output)) for path in standalone_paths}), 'Standalone output collision'
     files = {file_key(path.relative_to(output)): path for path in standalone_paths}

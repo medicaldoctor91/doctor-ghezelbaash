@@ -113,6 +113,8 @@ def download_kaggle(version, root, archive):
 
 
 def validate_package(root, platform, source_commit, report):
+    from doi_validation import validate_policy
+    dump(Path(report).with_name(platform+'-doi-policy-validation.json'),validate_policy(root))
     subprocess.run([sys.executable, str(REPOSITORY / 'tests/validate_platform_sync.py'),
                     str(root), '--platform', platform, '--source-commit', source_commit,
                     '--report', str(report)], check=True, cwd=REPOSITORY)
@@ -151,6 +153,9 @@ def source_metadata(sources, revision, website_commit):
                     lambda match: match[1] + website_commit, result)
     assert DATASET in result and hub + '/tree/' + revision in result, 'Expected source pointers were not found'
     assert 'Website source commit: ' + website_commit in result, 'Expected website source pointer was not found'
+    from platform_bundle import DOI_POLICY
+    marker=' ; DOI policy: '
+    result=result.split(marker)[0]+marker+'Public collection/latest version '+DOI_POLICY['concept']['url']+' ; Exact reproducible archive '+DOI_POLICY['currentArchive']['packagingVersion']+' '+DOI_POLICY['currentArchive']['url']
     return result
 
 

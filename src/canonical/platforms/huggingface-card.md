@@ -1,4 +1,5 @@
 ---
+doi: "{{doi.concept_doi}}"
 pretty_name: Dr. Saeed Ghezelbash — Persian Clinical Knowledge Graph & RAG Dataset
 language:
 - fa

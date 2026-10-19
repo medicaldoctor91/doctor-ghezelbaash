@@ -108,6 +108,8 @@ def prepare(previous, work):
 
 def publish(previous, work):
     from platform_bundle import dump
+    from doi_validation import validate_policy
+    validate_policy(work/'archive',archive=True)
     p=policy();payload=json.loads((work/'payload.json').read_text());record=p['currentArchive']['recordId']
     assert record==payload['record'] and record!=previous
     session=requests.Session();session.headers['Authorization']='Bearer '+os.environ['ZENODO_TOKEN']

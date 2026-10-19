@@ -13,7 +13,7 @@
       "file": "docs/doi-policy.md",
       "line": 8,
       "column": 19,
-      "doi": "10.5281/zenodo.23473947",
+      "doi": "10.5281/zenodo.23474664",
       "role": "current_exact",
       "scope": "source"
     },
@@ -2933,7 +2933,7 @@
       "file": "src/canonical/doi-policy.json",
       "line": 12,
       "column": 13,
-      "doi": "10.5281/zenodo.23473947",
+      "doi": "10.5281/zenodo.23474664",
       "role": "current_exact",
       "scope": "source"
     },
@@ -2941,7 +2941,7 @@
       "file": "src/canonical/doi-policy.json",
       "line": 13,
       "column": 29,
-      "doi": "10.5281/zenodo.23473947",
+      "doi": "10.5281/zenodo.23474664",
       "role": "current_exact",
       "scope": "source"
     },
@@ -3166,6 +3166,22 @@
       "line": 116,
       "column": 31,
       "doi": "10.5281/zenodo.23463840",
+      "role": "historical",
+      "scope": "source"
+    },
+    {
+      "file": "src/canonical/doi-policy.json",
+      "line": 124,
+      "column": 15,
+      "doi": "10.5281/zenodo.23473947",
+      "role": "historical",
+      "scope": "source"
+    },
+    {
+      "file": "src/canonical/doi-policy.json",
+      "line": 125,
+      "column": 31,
+      "doi": "10.5281/zenodo.23473947",
       "role": "historical",
       "scope": "source"
     },
@@ -4493,7 +4509,7 @@
       "file": "tests/doi-policy.test.mjs",
       "line": 6,
       "column": 32,
-      "doi": "10.5281/zenodo.23473947",
+      "doi": "10.5281/zenodo.23474664",
       "role": "current_exact",
       "scope": "historical_evidence_or_fixture"
     },
