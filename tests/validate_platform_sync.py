@@ -314,7 +314,9 @@ def validate_positioning(root):
     spec=load(root/'viewer/packaging.json')['tables']['market_positioning']
     with path.with_suffix('.csv').open(newline='') as handle:projection=list(csv.DictReader(handle))
     decoded=[{k:json.loads(v) if k in spec['csvJsonEncodedFields'] else v for k,v in r.items()} for r in projection]
-    assert examples==decoded==pq.read_table(root/spec['file']).to_pylist()
+    parquet_rows=[{key:json.loads(value) if key in spec.get('jsonEncodedFields',[]) and value is not None else value
+                   for key,value in row.items()} for row in pq.read_table(root/spec['file']).to_pylist()]
+    assert examples==decoded==parquet_rows
     for row in examples:
         assert row['canonical_dataset_iri']==DATASET and row['release']=='1.3.4'
         assert row['entity_wikidata']=='Q140287622' and row['evidence_urls'] and row['query'] and row['answer']

@@ -93,15 +93,18 @@ def sync_positioning(root):
     with path.with_suffix('.csv').open('w',newline='') as handle:
         writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader()
         writer.writerows({k:json.dumps(v,ensure_ascii=False,separators=(',',':')) if k in encoded else v for k,v in row.items()} for row in examples)
-    types={'messages':pa.list_(pa.struct([pa.field('role',pa.string()),pa.field('content',pa.string())])),'subject_iris':pa.list_(pa.string()),'evidence_urls':pa.list_(pa.string()),'query_aliases':pa.list_(pa.string()),'source_list_order':pa.int64()}
+    # HF statistics fails on the 2/3-length native messages histogram. Keep the
+    # source JSONL intact and encode only this viewer column losslessly.
+    types={'subject_iris':pa.list_(pa.string()),'evidence_urls':pa.list_(pa.string()),'query_aliases':pa.list_(pa.string()),'source_list_order':pa.int64()}
     schema=pa.schema([(field,types.get(field,pa.string())) for field in fields])
     dest=root/'viewer/positioning-examples.parquet';dest.parent.mkdir(parents=True,exist_ok=True)
-    pq.write_table(pa.Table.from_pylist(examples,schema=schema),dest,compression='zstd')
-    assert pq.read_table(dest).to_pylist()==examples,'Positioning typed Parquet changed canonical rows'
+    projected=[{**row,'messages':json.dumps(row['messages'],ensure_ascii=False,separators=(',',':'))} for row in examples]
+    pq.write_table(pa.Table.from_pylist(projected,schema=schema),dest,compression='zstd')
+    assert [reconstruct(row,{'messages'}) for row in pq.read_table(dest).to_pylist()]==examples,'Positioning typed Parquet changed canonical rows'
     return {'source':path.relative_to(root).as_posix(),'file':dest.relative_to(root).as_posix(),
-            'rows':len(examples),'fields':fields,'sourceFields':fields,'jsonEncodedFields':[],
+            'rows':len(examples),'fields':fields,'sourceFields':fields,'jsonEncodedFields':['messages'],
             'csvJsonEncodedFields':sorted(encoded),'nativeTypes':True,
-            'sourceSha256':sha(path),'sha256':sha(dest),'nestedEncoding':'Native lists; nullable integer source_list_order; explicit null observed_at'}
+            'sourceSha256':sha(path),'sha256':sha(dest),'nestedEncoding':'Native string lists and nullable scalars; messages are lossless JSON strings for viewer statistics compatibility'}
 
 
 def build_hf(dist,baseline,out,ctx):

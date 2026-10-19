@@ -107,10 +107,9 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(spec['rows'],60)
         native=pq.read_table(root/spec['file'])
         self.assertTrue(pa.types.is_int64(native.schema.field('source_list_order').type))
-        self.assertTrue(pa.types.is_list(native.schema.field('messages').type))
-        self.assertTrue(pa.types.is_struct(native.schema.field('messages').type.value_type))
+        self.assertTrue(pa.types.is_string(native.schema.field('messages').type))
         self.assertTrue(pa.types.is_list(native.schema.field('evidence_urls').type))
-        self.assertEqual(native.to_pylist(),original)
+        self.assertEqual([bundle.reconstruct(row, spec['jsonEncodedFields']) for row in native.to_pylist()],original)
         self.assertTrue(any(r['source_list_order'] is None for r in original))
         self.assertTrue(any(r['source_list_order']==1 for r in original))
         with (root/spec['source']).with_suffix('.csv').open(newline='') as handle:
