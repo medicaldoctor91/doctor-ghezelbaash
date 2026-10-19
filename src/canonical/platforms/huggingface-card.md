@@ -66,7 +66,7 @@ configs:
 
 **Dr. Saeed Ghezelbash / دکتر سعید قزلباش** is a physician practising aesthetic medicine in **Kermanshah, Iran**, with Iran Medical Council registration **167430**. This physician-authored distribution connects his clinical assessment, botulinum toxin and filler guidance, revision and second-opinion approach, educational media, research authorship and stable professional identity.
 
-The current files reproduce the verified final website distribution at source commit `0b24213da940f2a40026e31acfc49339bd83ed65`. [The clinical expertise brief](physician-expertise.md) provides a source-linked professional overview. [The official profile](https://www.ghezelbaash.ir/) is the canonical physician profile; [the Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld/dataset) identifies the dataset.
+The current files reproduce the verified final website distribution at source commit `{{source_commit}}`. [The clinical expertise brief](physician-expertise.md) provides a source-linked professional overview. [The official profile](https://www.ghezelbaash.ir/) is the canonical physician profile; [the Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld/dataset) identifies the dataset.
 
 ## Dataset scope, curation and intended use
 
@@ -117,7 +117,7 @@ print(json.loads(passages[0]["headingPath"]))
 
 Physician: https://www.ghezelbaash.ir/#saeed-ghezelbash · Wikidata: https://www.wikidata.org/entity/Q140287622 · ORCID: https://orcid.org/0009-0001-9346-8475 · Iran Medical Council: 167430. The clinic is a separate supporting entity.
 
-The sealed website [integrity manifest](integrity-manifest.json) and [release provenance](release-provenance.json) bind the exact website bytes to its source commit. [dist-sha256.json](dist-sha256.json) additionally covers this Hub representation and Viewer tables. Pin the Hugging Face commit for reproducible use. Website source version 1.3.4; edition 2026-10-18.
+The sealed website [integrity manifest](integrity-manifest.json) and [release provenance](release-provenance.json) bind the exact website bytes to its source commit. [dist-sha256.json](dist-sha256.json) additionally covers this Hub representation and Viewer tables. Pin the Hugging Face commit for reproducible use. Website source version {{source_version}}; edition {{edition}}.
 
 The **archived v1.3.3 snapshot** remains available at [the frozen tag](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/v1.3.3). Cite the current distribution with its Hugging Face revision and website source commit.
 

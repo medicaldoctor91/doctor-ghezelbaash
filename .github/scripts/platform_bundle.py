@@ -148,8 +148,11 @@ def build_hf(dist,baseline,out,ctx):
     dump(out/'viewer/iri-migration.json',migration)
     card=Path(__file__).resolve().parents[2]/'src/canonical/platforms/huggingface-card.md'
     md=(card if positioning else out/'README.md').read_text()
+    if positioning:
+        release=load(out/'datapackage.json')
+        for key,value in {'source_commit':ctx['source_commit'],'source_version':release['version'],'edition':release['edition']}.items():md=md.replace('{{'+key+'}}',value)
     md=sync_table_counts(md,packaging['tables'])
-    if 'Website source version ' in md:
+    if not positioning and 'Website source version ' in md:
         previous_release=load(baseline/'current-release-matrix.json');release=load(out/'datapackage.json')
         previous_label=f"Website source version {previous_release['sourceVersion']}; edition {previous_release['edition']}."
         assert previous_label in md, 'HF current release description differs from its receipt'
@@ -253,8 +256,10 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     old=load(previous/'kaggle-manifest.json')
     card=Path(__file__).resolve().parents[2]/'src/canonical/platforms/kaggle-card.md'
     readme=(card if 'market_positioning' in packaging['tables'] else previous/'README.md').read_text()
+    if 'market_positioning' in packaging['tables']:
+        for key,value in {'source_commit':ctx['source_commit'],'source_version':release['version'],'edition':release['edition'],'hf_revision':hf_revision,'website_run_url':ctx.get('website_publication_run_url','')}.items():readme=readme.replace('{{'+key+'}}',value)
     readme=sync_table_counts(readme,packaging['tables'])
-    if 'Source release **' in readme:
+    if 'market_positioning' not in packaging['tables'] and 'Source release **' in readme:
         previous_release=load(previous/'current-release-matrix.json')
         previous_label=f"Source release **{previous_release['sourceVersion']}**, edition **{previous_release['edition']}**."
         assert previous_label in readme, 'Kaggle current release description differs from its receipt'

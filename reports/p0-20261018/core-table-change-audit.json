@@ -3,10 +3,10 @@
     "schemaUnchanged": true,
     "beforeRows": 3248,
     "afterRows": 3249,
-    "unchangedRows": 3242,
+    "unchangedRows": 3240,
     "changedRowsWithSameId": 3,
-    "addedRowIds": 4,
-    "removedRowIds": 3
+    "addedRowIds": 6,
+    "removedRowIds": 5
   },
   "clinical_answers": {
     "schemaUnchanged": true,
