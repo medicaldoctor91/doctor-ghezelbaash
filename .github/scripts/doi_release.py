@@ -29,19 +29,28 @@ def reserve(previous, output):
     entries = deposits.json()
     assert isinstance(entries, list)
     pending = [d for d in entries if str(d.get('conceptrecid')) == '18765168' and not d.get('submitted')]
-    assert not pending, 'An existing family draft must be inspected before creating another version: ' + str([d['id'] for d in pending])
-    response = session.post(base + 'records/' + str(previous) + '/versions', json={}, timeout=90)
-    response.raise_for_status()
-    draft = response.json()
+    if pending:
+        assert len(pending) == 1, 'Multiple family drafts require inspection'
+        draft = pending[0]
+        assert draft['metadata'].get('version') == public['metadata']['version'], 'Existing draft has independent metadata changes'
+    else:
+        response = session.post(base + 'records/' + str(previous) + '/versions', json={}, timeout=90)
+        response.raise_for_status()
+        draft = response.json()
     record = draft['id']
-    doi = (draft.get('pids', {}).get('doi') or {}).get('identifier')
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps({'reservedRecord': record, 'phase': 'draft created or recovered'}) + '\n')
+    print(json.dumps({'reservedRecord': record, 'phase': 'draft created or recovered', 'responseKeys': list(draft), 'metadataKeys': list(draft.get('metadata', {}))}), flush=True)
+    def extract(value):
+        return value.get('doi') or value.get('metadata', {}).get('prereserve_doi', {}).get('doi') or (value.get('pids', {}).get('doi') or {}).get('identifier')
+    doi = extract(draft)
     if not doi:
         response = session.post(base + 'records/' + str(record) + '/draft/pids/doi', json={}, timeout=60)
         response.raise_for_status()
         draft_response = session.get(base + 'records/' + str(record) + '/draft', timeout=60)
         draft_response.raise_for_status()
         draft = draft_response.json()
-        doi = (draft.get('pids', {}).get('doi') or {}).get('identifier')
+        doi = extract(draft)
     assert doi and doi.startswith('10.5281/zenodo.')
     result = {'previousRecord': previous, 'reservedRecord': record, 'reservedDoi': doi,
               'conceptDoi': p['concept']['doi'], 'published': False,
