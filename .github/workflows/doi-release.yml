@@ -1,0 +1,38 @@
+name: Reserve and publish one coherent DOI-policy release
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [reserve]
+        required: true
+      previous_record:
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      OPERATION: ${{ inputs.operation }}
+      PREVIOUS_RECORD: ${{ inputs.previous_record }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install 'requests>=2,<3'
+      - name: Reserve the necessary real DOI once
+        run: python .github/scripts/doi_release.py "$OPERATION" --previous-record "$PREVIOUS_RECORD"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doi-release-evidence
+          path: /tmp/doi-release/
+          if-no-files-found: warn

@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "1.0",
+  "canonicalDatasetIri": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+  "concept": {
+    "doi": "10.5281/zenodo.18765168",
+    "url": "https://doi.org/10.5281/zenodo.18765168",
+    "recordId": 18765168,
+    "role": "general",
+    "meaning": "Persistent public collection and latest-version entry point"
+  },
+  "currentArchive": {
+    "doi": "10.5281/zenodo.23463840",
+    "url": "https://doi.org/10.5281/zenodo.23463840",
+    "recordId": 23463840,
+    "packagingVersion": "1.3.4+zenodo.1",
+    "contentBaseline": "1.3.4",
+    "edition": "2026-10-18",
+    "sourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+    "upstreamHfRevision": "20c95d9ca4a759ee659884e05826a1dc3b1da852",
+    "role": "current_exact",
+    "meaning": "Latest verified immutable archive; current mutable distributions retain their own source SHA and package receipts"
+  },
+  "historical": [
+    {
+      "doi": "10.5281/zenodo.18765169",
+      "url": "https://doi.org/10.5281/zenodo.18765169",
+      "version": "1.0.0",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-0-0"
+    },
+    {
+      "doi": "10.5281/zenodo.21905312",
+      "url": "https://doi.org/10.5281/zenodo.21905312",
+      "version": "1.2.0",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-0"
+    },
+    {
+      "doi": "10.5281/zenodo.21910785",
+      "url": "https://doi.org/10.5281/zenodo.21910785",
+      "version": "1.2.1",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-1"
+    },
+    {
+      "doi": "10.5281/zenodo.21930954",
+      "url": "https://doi.org/10.5281/zenodo.21930954",
+      "version": "1.2.2",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-2"
+    },
+    {
+      "doi": "10.5281/zenodo.22032822",
+      "url": "https://doi.org/10.5281/zenodo.22032822",
+      "version": "1.2.3",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-3"
+    },
+    {
+      "doi": "10.5281/zenodo.22131441",
+      "url": "https://doi.org/10.5281/zenodo.22131441",
+      "version": "1.2.4",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-4"
+    },
+    {
+      "doi": "10.5281/zenodo.22216583",
+      "url": "https://doi.org/10.5281/zenodo.22216583",
+      "version": "1.2.5",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-5"
+    },
+    {
+      "doi": "10.5281/zenodo.22651268",
+      "url": "https://doi.org/10.5281/zenodo.22651268",
+      "version": "1.2.6",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-2-6"
+    },
+    {
+      "doi": "10.5281/zenodo.22663811",
+      "url": "https://doi.org/10.5281/zenodo.22663811",
+      "version": "1.3.0",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-0"
+    },
+    {
+      "doi": "10.5281/zenodo.22832007",
+      "url": "https://doi.org/10.5281/zenodo.22832007",
+      "version": "1.3.1",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-1"
+    },
+    {
+      "doi": "10.5281/zenodo.22837575",
+      "url": "https://doi.org/10.5281/zenodo.22837575",
+      "version": "1.3.2",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-2"
+    },
+    {
+      "doi": "10.5281/zenodo.22838416",
+      "url": "https://doi.org/10.5281/zenodo.22838416",
+      "version": "1.3.3",
+      "role": "historical",
+      "entityIri": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-3"
+    },
+    {
+      "doi": "10.5281/zenodo.23289009",
+      "url": "https://doi.org/10.5281/zenodo.23289009",
+      "version": "source-final-2026-10-10",
+      "role": "historical_software_source"
+    }
+  ],
+  "relations": {
+    "general": "dcterms:relation; public links use concept.url",
+    "current_exact": "dcterms:isVersionOf concept.url; citation pins snapshot DOI and its own version",
+    "historical": "citation / prov:wasDerivedFrom with explicit historical version scope",
+    "download_binding": "Immutable record-specific file URLs and checksums; never rewrite to concept or mutable website",
+    "identity": "No DOI sameAs on Person, Clinic or canonical Dataset IRI"
+  },
+  "downloadBindings": {
+    "recordId": 23463840,
+    "publicPrefix": "https://zenodo.org/records/23463840/files/",
+    "apiPrefix": "https://zenodo.org/api/records/23463840/files/",
+    "bundle": "https://zenodo.org/records/23463840/files/dr-saeed-ghezelbash-dataset-1.3.4-zenodo.1.zip",
+    "role": "download_binding"
+  },
+  "archiveMutationPolicy": "Published payload and upstream/ receipts remain immutable. Metadata-only DOI introduction alignment never creates a new version. A necessary payload release must reserve its real DOI before generating record-bound descriptors."
+}
