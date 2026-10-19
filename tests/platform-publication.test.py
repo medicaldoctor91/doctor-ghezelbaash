@@ -37,6 +37,28 @@ class PublicationTransportTests(unittest.TestCase):
                 client.return_value.dataset_metadata_update.assert_not_called()
                 client.return_value.dataset_create_version.assert_not_called()
 
+    def test_coordinated_source_update_uses_authenticated_guard_not_public_default(self):
+        import json
+        from unittest.mock import Mock
+        with tempfile.TemporaryDirectory() as directory:
+            root=pathlib.Path(directory)
+            sources=(sync.DATASET+'; Data distribution: https://huggingface.co/datasets/'+sync.HF_REPO+'/tree/'+'a'*40+' ; Website source commit: '+'b'*40)
+            control={'description':'unchanged card','userSpecifiedSources':sources}
+            client=Mock();calls=[]
+            desired=sync.source_metadata(sources,'c'*40,'d'*40)
+            def metadata(dataset,target):
+                value=dict(control)
+                if calls:value['userSpecifiedSources']=desired
+                calls.append(target)
+                pathlib.Path(target,'dataset-metadata.json').write_text(json.dumps(value))
+            client.dataset_metadata.side_effect=metadata
+            owner_guard=Mock()
+            with patch.object(sync,'fetch',side_effect=AssertionError('stale public default must not guard writes')):
+                sync.correct_kaggle_sources(client,root,control,'c'*40,23,'d'*40,version_guard=owner_guard)
+            owner_guard.assert_called_once()
+            client.dataset_metadata_update.assert_called_once()
+            client.dataset_create_version.assert_not_called()
+
     def test_source_metadata_pins_both_current_hf_and_website_without_rewriting_archives(self):
         hub = 'https://huggingface.co/datasets/' + sync.HF_REPO
         value = (sync.DATASET + '; Data distribution: ' + hub + '/tree/' + 'a' * 40

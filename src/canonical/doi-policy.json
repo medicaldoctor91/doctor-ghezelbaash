@@ -18,7 +18,7 @@
     "role": "current_exact",
     "meaning": "Exact release binding reserved before publication; archive availability is verified by external publication receipts. Mutable distributions record their own revisions.",
     "sourceCommitReference": "archive-provenance.json#/sourceCommit",
-    "inputBaselineHfRevision": "5d9cdf066a6cb63b59fc27c4d2ef70a44bceed06",
+    "inputBaselineHfRevision": "81313ecc23260723812703fee445d729c979567d",
     "bindingStatus": "reserved-before-publication"
   },
   "historical": [
@@ -143,5 +143,17 @@
     "bundle": "https://zenodo.org/records/23474664/files/dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip",
     "role": "download_binding"
   },
-  "archiveMutationPolicy": "Published payload and upstream/ receipts remain immutable. Metadata-only DOI introduction alignment never creates a new version. A necessary payload release must reserve its real DOI before generating record-bound descriptors."
+  "archiveMutationPolicy": "Published payload and upstream/ receipts remain immutable. Metadata-only DOI introduction alignment never creates a new version. A necessary payload release must reserve its real DOI before generating record-bound descriptors.",
+  "coordinatedRelease": {
+    "hfParent": "81313ecc23260723812703fee445d729c979567d",
+    "websiteBaselineCommit": "650e0c2e9d44e44f3dba8085378bcbe218ffbb94",
+    "kaggleBaselineVersion": 23,
+    "kaggleTargetVersion": 24,
+    "notebookBaselineVersion": 8,
+    "notebookTargetVersion": 9,
+    "previousZenodoRecord": 23473947,
+    "expectedGraphNodes": 1600,
+    "expectedGraphTriples": 22220,
+    "baselineAuthority": "Authenticated Kaggle owner ready state; public default is recorded separately and must converge before Zenodo publication"
+  }
 }

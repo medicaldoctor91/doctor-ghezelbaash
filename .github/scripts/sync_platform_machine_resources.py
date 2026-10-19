@@ -159,7 +159,7 @@ def source_metadata(sources, revision, website_commit):
     return result
 
 
-def correct_kaggle_sources(client, root, control, revision, expected_version, website_commit):
+def correct_kaggle_sources(client, root, control, revision, expected_version, website_commit, version_guard=None):
     directory = root / 'kaggle-metadata-before'
     directory.mkdir(exist_ok=True)
     client.dataset_metadata(KAGGLE_REF, str(directory))
@@ -177,7 +177,8 @@ def correct_kaggle_sources(client, root, control, revision, expected_version, we
     target['userSpecifiedSources'] = desired
     # No payload or cover-image files are present in this metadata-only directory.
     dump(directory / 'dataset-metadata.json', target)
-    guard_kaggle_version(json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF)), expected_version)
+    if version_guard is not None:version_guard()
+    else:guard_kaggle_version(json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF)), expected_version)
     error = None
     if desired != before['userSpecifiedSources']:
         try:

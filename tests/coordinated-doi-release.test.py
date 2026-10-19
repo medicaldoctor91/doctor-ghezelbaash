@@ -8,14 +8,71 @@ class Guards(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);(root/'notebook').mkdir();(root/'kaggle').mkdir()
    notebook={'cells':[{'cell_type':'code','source':['new code']} ]};release.dump(root/'notebook/starter.ipynb',notebook);(root/'kaggle/checksums.sha256').write_text('new inputs')
-   plan={'notebookVersion':9,'kaggleVersion':23,'hfRevision':'a'*40,'sourceCommit':'b'*40};release.dump(root/'release-plan.json',plan)
+   plan={'notebookVersion':9,'kaggleVersion':24,'hfRevision':'a'*40,'sourceCommit':'b'*40};release.dump(root/'release-plan.json',plan)
    public={'metadata':{'currentVersionNumber':9},'blob':{'source':json.dumps(notebook)}}
-   evidence={'status':'PASS','kaggle_version':22,'upstream_revision':'c'*40,'source_commit':'d'*40,'input_checksums_sha256':'old','exact_doi':'10.5281/zenodo.22838416'}
+   evidence={'status':'PASS','kaggle_version':23,'upstream_revision':'c'*40,'source_commit':'d'*40,'input_checksums_sha256':'old','exact_doi':'10.5281/zenodo.22838416'}
    with self.assertRaises(AssertionError):release.notebook_identity(root,public,evidence)
-   evidence.update(kaggle_version=23,upstream_revision='a'*40,source_commit='b'*40,input_checksums_sha256=release.sha(root/'kaggle/checksums.sha256'),exact_doi=release.P['currentArchive']['doi'])
+   evidence.update(kaggle_version=24,upstream_revision='a'*40,source_commit='b'*40,input_checksums_sha256=release.sha(root/'kaggle/checksums.sha256'),exact_doi=release.P['currentArchive']['doi'])
    self.assertTrue(release.notebook_identity(root,public,evidence))
    public['metadata']['currentVersionNumber']=8
    with self.assertRaises(AssertionError):release.notebook_identity(root,public,evidence)
+ def test_owner_baseline_is_not_stale_public_default(self):
+  from unittest.mock import Mock
+  client=Mock();client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':23})
+  self.assertEqual(release.guard_owner(client,23),{'version':23,'status':'ready'})
+  for state in [{'status':'ready','current_version_number':22},{'status':'processing','current_version_number':23},{'status':'ready','current_version_number':24}]:
+   client.dataset_status.return_value=json.dumps(state)
+   with self.assertRaises(AssertionError):release.guard_owner(client,23)
+  client.dataset_create_version.assert_not_called()
+ def test_inspect_separates_authenticated_owner_and_public_default(self):
+  from unittest.mock import patch,Mock
+  with tempfile.TemporaryDirectory() as folder:
+   client=Mock();client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':23})
+   def response(url,**kwargs):
+    value=({'id':23474664,'conceptrecid':'18765168','metadata':{'prereserve_doi':{'doi':'10.5281/zenodo.23474664'}},'submitted':False,'files':[]} if '/deposit/' in url else {'currentVersionNumber':22} if 'kaggle.com' in url else {'sha':release.COHORT['hfParent']} if 'huggingface.co' in url else {'sourceCommit':release.COHORT['websiteBaselineCommit']})
+    result=Mock();result.json.return_value=value;return result
+   with patch('sync_platform_machine_resources.kaggle_client',return_value=client),patch.object(release.requests,'get',side_effect=response),patch.dict(os.environ,{'ZENODO_TOKEN':'unit-test'}):
+    state=release.inspect(Path(folder))
+   self.assertEqual(state['kaggleOwnerVersion'],23)
+   self.assertEqual(state['kagglePublicDefaultVersion'],22)
+   self.assertEqual(state['kaggleOwnerStatus'],'ready')
+   client.dataset_metadata.assert_called_once()
+   client.dataset_metadata_update.assert_not_called();client.dataset_create_version.assert_not_called()
+ def test_reviewed_plan_rejects_old_target_and_manifest_protects_plan(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);c=release.COHORT
+   plan={'candidateSchema':3,'sourceCommit':'f'*40,'hfParent':c['hfParent'],'sitePreviousSource':c['websiteBaselineCommit'],'kagglePreviousVersion':c['kaggleBaselineVersion'],'kaggleVersion':c['kaggleTargetVersion'],'notebookPreviousVersion':c['notebookBaselineVersion'],'notebookVersion':c['notebookTargetVersion']}
+   release.dump(root/'release-plan.json',plan);release.require_reviewable_candidate(root)
+   release.dump(root/'frozen-sha256.json',{'controls':{'release-plan.json':release.sha(root/'release-plan.json')}});release.check_frozen(root)
+   plan['kaggleVersion']=23;release.dump(root/'release-plan.json',plan)
+   with self.assertRaises(AssertionError):release.require_reviewable_candidate(root)
+   with self.assertRaises(AssertionError):release.check_frozen(root)
+ def test_public_default_must_converge_even_when_owner_target_is_ready(self):
+  from unittest.mock import patch,Mock
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);release.dump(root/'release-plan.json',{'kaggleVersion':24})
+   response=Mock();response.json.return_value={'currentVersionNumber':22}
+   with patch.object(release,'get',return_value=response) as read:
+    with self.assertRaisesRegex(AssertionError,'public default has not converged'):release.verify_kaggle(root)
+   self.assertEqual(read.call_count,1)
+   self.assertEqual(json.loads((root/'kaggle-public-observation.json').read_text())['publicDefaultVersion'],22)
+ def test_default_zip_cannot_remain_old_when_versioned_zip_is_correct(self):
+  import io,zipfile
+  from unittest.mock import patch,Mock
+  def zipped(value):
+   output=io.BytesIO()
+   with zipfile.ZipFile(output,'w') as z:z.writestr('graph.jsonld',value)
+   return output.getvalue()
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);(root/'kaggle').mkdir();(root/'kaggle/graph.jsonld').write_text('new')
+   release.dump(root/'release-plan.json',{'kaggleVersion':24})
+   def get(url):
+    result=Mock()
+    if '/view/' in url:result.json.return_value={'currentVersionNumber':24}
+    else:result.content=zipped('new' if 'datasetVersionNumber=24' in url else 'old')
+    return result
+   with patch.object(release,'get',side_effect=get):
+    with self.assertRaisesRegex(AssertionError,'default ZIP differs'):release.verify_kaggle(root)
  def test_frozen_bytes_cannot_change_after_preflight(self):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);(root/'candidate').mkdir();file=root/'candidate/file.txt';file.write_text('frozen');release.dump(root/'frozen-sha256.json',{'candidate':release.inventory(root/'candidate')});release.check_frozen(root);file.write_text('changed')

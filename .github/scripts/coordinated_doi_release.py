@@ -4,6 +4,8 @@ from pathlib import Path
 import requests
 ROOT=Path(__file__).resolve().parents[2]
 P=json.loads((ROOT/'src/canonical/doi-policy.json').read_text())
+COHORT=P['coordinatedRelease']
+assert COHORT['hfParent']==P['currentArchive']['inputBaselineHfRevision']
 HF='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KG='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
 NB='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
@@ -13,7 +15,20 @@ def dump(path,value):
 def get(url):
  r=requests.get(url,timeout=180,headers={'Cache-Control':'no-cache'});r.raise_for_status();return r
 
+def owner_state(client):
+ state=json.loads(client.dataset_status(KG,format='json(status,current_version_number)'))
+ return {'version':state['current_version_number'],'status':state['status'].lower()}
+
+def guard_owner(client,expected):
+ state=owner_state(client)
+ assert state=={'version':expected,'status':'ready'}, ('Kaggle authenticated owner baseline changed',state,expected)
+ return state
+
 def inspect(work):
+ from sync_platform_machine_resources import kaggle_client
+ client=kaggle_client();owner=owner_state(client)
+ metadata=work/'owner-metadata';metadata.mkdir(exist_ok=True)
+ client.dataset_metadata(KG,str(metadata))
  assert P['currentArchive']['recordId']==23474664 and P['currentArchive']['doi']=='10.5281/zenodo.23474664'
  r=requests.get('https://zenodo.org/api/deposit/depositions/23474664',headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN']},timeout=60);r.raise_for_status();d=r.json()
  doi=d.get('doi') or d.get('metadata',{}).get('prereserve_doi',{}).get('doi')
@@ -21,7 +36,8 @@ def inspect(work):
  result={'record':d['id'],'reservedDoi':doi,'submitted':d.get('submitted'),'state':d.get('state'),'files':len(d.get('files',[])),
  'siteSource':get(SITE+'release-provenance.json').json()['sourceCommit'],
  'hfRevision':get('https://huggingface.co/api/datasets/'+HF).json()['sha'],
- 'kaggleVersion':get('https://api.kaggle.com/v1/datasets/view/'+KG).json()['currentVersionNumber']}
+ 'kaggleOwnerVersion':owner['version'],'kaggleOwnerStatus':owner['status'],
+ 'kagglePublicDefaultVersion':get('https://api.kaggle.com/v1/datasets/view/'+KG).json()['currentVersionNumber']}
  dump(work/'inspection.json',result);print(json.dumps(result),flush=True);return result
 
 def main():
@@ -41,7 +57,9 @@ def require_reviewable_candidate(work):
  plan=json.loads((work/'release-plan.json').read_text())
  assert plan.get('candidateSchema')==CANDIDATE_SCHEMA, 'Superseded candidate: rebuild with complete homepage inline graph preservation'
  assert plan['sourceCommit']!='14304eb2ed06d8d87563a2979df2175407399da0', 'Rejected superseded source'
- assert plan['hfParent']==P['currentArchive']['inputBaselineHfRevision']
+ assert plan['hfParent']==COHORT['hfParent']
+ assert plan['sitePreviousSource']==COHORT['websiteBaselineCommit']
+ for key,value in [('kagglePreviousVersion',COHORT['kaggleBaselineVersion']),('kaggleVersion',COHORT['kaggleTargetVersion']),('notebookPreviousVersion',COHORT['notebookBaselineVersion']),('notebookVersion',COHORT['notebookTargetVersion'])]:assert plan[key]==value, ('Frozen plan differs from reviewed cohort',key)
  return plan
 
 def check_frozen(work):
@@ -58,10 +76,11 @@ def preflight(work):
  auth=requests.get('https://huggingface.co/api/whoami-v2',headers={'Authorization':'Bearer '+os.environ['HF_TOKEN']},timeout=60);auth.raise_for_status()
  cf=requests.get('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/pages/projects/doctor-ghezelbaash',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']},timeout=60);cf.raise_for_status();assert cf.json()['success']
  dump(work/'read-only-publication-bindings.json',{'hfAuthenticated':True,'cloudflareProjectAccessible':True,'zenodoReservedDraftAccessible':True})
- assert state['kaggleVersion']==22
+ assert state['kaggleOwnerVersion']==COHORT['kaggleBaselineVersion'] and state['kaggleOwnerStatus']=='ready'
+ assert state['siteSource']==COHORT['websiteBaselineCommit']
  source=os.environ['GITHUB_SHA'];os.environ['CANDIDATE_RUN_ID']='0'
  # Stable build provenance points to actual source, not a future run receipt.
- prepare(23473947,work)
+ prepare(COHORT['previousZenodoRecord'],work)
  shutil.copytree(ROOT/'dist',work/'website',dirs_exist_ok=True)
  hf=work/'hf-stage';repo=work/'hf-git'
  env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'}
@@ -89,16 +108,20 @@ def preflight(work):
  revision=run(['git','rev-parse','HEAD'],cwd=repo)
  # This is the actual local Git commit object which will be pushed unchanged.
  assert run(['git','cat-file','-t',revision],cwd=repo)=='commit'
- before=work/'kaggle-before';archive=work/'kaggle-before.zip';archive.write_bytes(get('https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber=22').content);extract_package(archive,before)
+ before=work/'kaggle-before';archive=work/'kaggle-before.zip';archive.write_bytes(get('https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber='+str(COHORT['kaggleBaselineVersion'])).content);extract_package(archive,before)
+ baseline_manifest=json.loads((before/'kaggle-manifest.json').read_text())
+ assert baseline_manifest['desired_kaggle_version']==COHORT['kaggleBaselineVersion'], 'Kaggle baseline ZIP version differs'
+ for line in (before/'checksums.sha256').read_text().splitlines():
+  digest,name=line.split('  ',1);assert sha(before/name)==digest, ('Kaggle baseline checksum',name)
  client=kaggle_client();client.dataset_metadata(KG,str(before));wrapped=json.loads((before/'dataset-metadata.json').read_text());control=dict(wrapped.get('info') or wrapped);control['id']=KG;dump(before/'dataset-metadata.json',control)
  ctx=context(source,'0',maintenance_date='2026-10-19');ctx['coordinated_release']=True;ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source
- kg=work/'kaggle';description=build_kaggle(hf,before,kg,ctx,23,revision)
+ kg=work/'kaggle';description=build_kaggle(hf,before,kg,ctx,COHORT['kaggleTargetVersion'],revision)
  control['subtitle']=', '.join([format(json.loads((hf/'viewer/packaging.json').read_text())['tables'][name]['rows'],',')+' '+label for name,label in [('entity_facts','facts'),('clinical_passages','clinical passages'),('query_matrix','queries'),('clinical_answers','source-linked answers')]])
  control['description']=description;control['userSpecifiedSources']=source_metadata(control['userSpecifiedSources'],revision,source);dump(kg/'dataset-metadata.json',control)
  notebook=work/'notebook';notebook.mkdir(exist_ok=True);client.kernels_pull(NB,str(notebook),metadata=True,quiet=True)
  public=get('https://www.kaggle.com/api/v1/kernels/pull/'+NB).json();nb_version=public['metadata']['currentVersionNumber']+1
- assert nb_version==9, 'Public notebook baseline is no longer version 8'
- meta=json.loads((notebook/'kernel-metadata.json').read_text());meta.update(id=NB,code_file='starter.ipynb',dataset_sources=[KG+'/23'],enable_internet=True);dump(notebook/'kernel-metadata.json',meta);shutil.copyfile(kg/'starter.ipynb',notebook/'starter.ipynb')
+ assert nb_version==COHORT['notebookTargetVersion'] and nb_version-1==COHORT['notebookBaselineVersion'], 'Public notebook baseline differs from reviewed cohort'
+ meta=json.loads((notebook/'kernel-metadata.json').read_text());meta.update(id=NB,code_file='starter.ipynb',dataset_sources=[KG+'/'+str(COHORT['kaggleTargetVersion'])],enable_internet=True);dump(notebook/'kernel-metadata.json',meta);shutil.copyfile(kg/'starter.ipynb',notebook/'starter.ipynb')
  # Full validators execute every final notebook cell against these exact inputs.
  os.environ['RELEASE_EXECUTION_REPORT']=str(work/'local-notebook-execution.json')
  for folder,platform in [(hf,'hf'),(kg,'kaggle')]:
@@ -123,13 +146,13 @@ def preflight(work):
  differences={name:items for name,items in variants.items() if len(set(items.values()))>1}
  assert set(differences)<=allowed, ('Undocumented byte differences',set(differences)-allowed)
  dump(work/'intentional-platform-differences.json',{'differences':differences,'reason':'Platform cards/receipts, immutable archive descriptors and inventories are scoped; all other shared originals are byte-identical.','identicalSharedFiles':sum(len(v)>1 and len(set(v.values()))==1 for v in variants.values())})
- dump(work/'release-plan.json',{'candidateSchema':CANDIDATE_SCHEMA,'sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':22,'kaggleVersion':23,'notebookPreviousVersion':nb_version-1,'notebookVersion':nb_version,'sitePreviousSource':state['siteSource'],'record':23474664})
+ dump(work/'release-plan.json',{'candidateSchema':CANDIDATE_SCHEMA,'sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':COHORT['kaggleBaselineVersion'],'kaggleVersion':COHORT['kaggleTargetVersion'],'notebookPreviousVersion':nb_version-1,'notebookVersion':nb_version,'sitePreviousSource':state['siteSource'],'kagglePublicDefaultAtPreflight':state['kagglePublicDefaultVersion'],'record':P['currentArchive']['recordId']})
  r=requests.get('https://zenodo.org/api/deposit/depositions/23474664',headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN']},timeout=60);r.raise_for_status();md=r.json()['metadata']
  md.update(upload_type='dataset',version=P['currentArchive']['packagingVersion'],doi=P['currentArchive']['doi'])
- md['description']='<p>Public collection and latest version: <a href="'+P['concept']['url']+'">'+P['concept']['doi']+'</a>.</p><p>Exact reproducible Dataset snapshot: <a href="'+P['currentArchive']['url']+'">'+P['currentArchive']['doi']+'</a>; packaging '+P['currentArchive']['packagingVersion']+'; content baseline 1.3.4, edition 2026-10-18.</p><p>Source commit '+source+'. Frozen Hugging Face revision '+revision+'; Kaggle dataset version 23; pinned notebook version '+str(nb_version)+'. The source commit identifies build inputs; publication/execution receipts are external and do not modify the frozen files.</p><p>The five root archive descriptors use this record’s own immutable file URLs and measured checksums. Person, Clinic and canonical Dataset IRI '+P['canonicalDatasetIri']+' are distinct from collection/archive DOI entities. Files under upstream/ retain explicitly historical input receipts; older releases retain their own immutable payloads.</p>'
- md['related_identifiers']=[{'identifier':P['concept']['doi'],'scheme':'doi','relation':'isVersionOf','resource_type':'dataset'}, {'identifier':'10.5281/zenodo.23473947','scheme':'doi','relation':'isNewVersionOf','resource_type':'dataset'}, {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,'scheme':'url','relation':'isDerivedFrom','resource_type':'software'}, {'identifier':'https://huggingface.co/datasets/'+HF+'/tree/'+revision,'scheme':'url','relation':'isSupplementedBy','resource_type':'dataset'}, {'identifier':'https://www.kaggle.com/datasets/'+KG+'/versions/23','scheme':'url','relation':'isSupplementedBy','resource_type':'dataset'}, {'identifier':SITE,'scheme':'url','relation':'isDescribedBy'}, {'identifier':'https://www.kaggle.com/code/'+NB,'scheme':'url','relation':'references','resource_type':'software-computationalnotebook'}]
+ md['description']='<p>Public collection and latest version: <a href="'+P['concept']['url']+'">'+P['concept']['doi']+'</a>.</p><p>Exact reproducible Dataset snapshot: <a href="'+P['currentArchive']['url']+'">'+P['currentArchive']['doi']+'</a>; packaging '+P['currentArchive']['packagingVersion']+'; content baseline 1.3.4, edition 2026-10-18.</p><p>Source commit '+source+'. Frozen Hugging Face revision '+revision+'; Kaggle dataset version '+str(COHORT['kaggleTargetVersion'])+'; pinned notebook version '+str(nb_version)+'. The source commit identifies build inputs; publication/execution receipts are external and do not modify the frozen files.</p><p>The five root archive descriptors use this record’s own immutable file URLs and measured checksums. Person, Clinic and canonical Dataset IRI '+P['canonicalDatasetIri']+' are distinct from collection/archive DOI entities. Files under upstream/ retain explicitly historical input receipts; older releases retain their own immutable payloads.</p>'
+ md['related_identifiers']=[{'identifier':P['concept']['doi'],'scheme':'doi','relation':'isVersionOf','resource_type':'dataset'}, {'identifier':'10.5281/zenodo.'+str(COHORT['previousZenodoRecord']),'scheme':'doi','relation':'isNewVersionOf','resource_type':'dataset'}, {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,'scheme':'url','relation':'isDerivedFrom','resource_type':'software'}, {'identifier':'https://huggingface.co/datasets/'+HF+'/tree/'+revision,'scheme':'url','relation':'isSupplementedBy','resource_type':'dataset'}, {'identifier':'https://www.kaggle.com/datasets/'+KG+'/versions/'+str(COHORT['kaggleTargetVersion']),'scheme':'url','relation':'isSupplementedBy','resource_type':'dataset'}, {'identifier':SITE,'scheme':'url','relation':'isDescribedBy'}, {'identifier':'https://www.kaggle.com/code/'+NB,'scheme':'url','relation':'references','resource_type':'software-computationalnotebook'}]
  dump(work/'zenodo-metadata.json',md)
- dump(work/'frozen-sha256.json',{**{name:inventory(folder) for name,folder in roots.items()},'controls':{'zenodo-metadata.json':sha(work/'zenodo-metadata.json')}})
+ dump(work/'frozen-sha256.json',{**{name:inventory(folder) for name,folder in roots.items()},'controls':{name:sha(work/name) for name in ['zenodo-metadata.json','release-plan.json']}})
  dump(work/'preflight-report.json',{'status':'PASS','draft':state,'plan':json.loads((work/'release-plan.json').read_text()),'localNotebookExecution':local,'intentionalDifferences':sorted(differences),'frozenManifestSha256':sha(work/'frozen-sha256.json'),'publicationReceiptsOutsidePayload':True})
  check_frozen(work);print('ALL PLATFORM CANDIDATES FROZEN AND VALIDATED',flush=True)
 
@@ -215,15 +238,20 @@ def verify_hf(work):
 def verify_kaggle(work):
  from sync_platform_machine_resources import extract_package,verify_public_kaggle_sources
  from doi_validation import validate_policy
- plan=json.loads((work/'release-plan.json').read_text());info=get('https://api.kaggle.com/v1/datasets/view/'+KG).json();assert info['currentVersionNumber']==plan['kaggleVersion']
- z=work/'kaggle-live.zip';z.write_bytes(get('https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber=23').content)
+ plan=json.loads((work/'release-plan.json').read_text());info=get('https://api.kaggle.com/v1/datasets/view/'+KG).json()
+ dump(work/'kaggle-public-observation.json',{'publicDefaultVersion':info['currentVersionNumber'],'requiredVersion':plan['kaggleVersion'],'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())})
+ assert info['currentVersionNumber']==plan['kaggleVersion'], ('Kaggle public default has not converged',info['currentVersionNumber'],plan['kaggleVersion'])
+ z=work/'kaggle-live.zip';z.write_bytes(get('https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber='+str(plan['kaggleVersion'])).content)
  live=work/'kaggle-live';extract_package(z,live)
+ default_zip=work/'kaggle-default-live.zip';default_zip.write_bytes(get('https://www.kaggle.com/api/v1/datasets/download/'+KG).content)
+ default_live=work/'kaggle-default-live';extract_package(default_zip,default_live)
  controls={'dataset-metadata.json','kernel-metadata.json'}
  expected={k:v for k,v in inventory(work/'kaggle').items() if k not in controls};assert inventory(live)==expected,'Public Kaggle ZIP differs from frozen candidate'
+ assert inventory(default_live)==expected,'Public Kaggle default ZIP differs from frozen candidate'
  owner,slug=KG.split('/');r=requests.post('https://api.kaggle.com/v1/datasets.DatasetApiService/GetDatasetMetadata',json={'ownerSlug':owner,'datasetSlug':slug},timeout=60);r.raise_for_status();public=r.json();public=public.get('info') or public
  control=json.loads((work/'kaggle/dataset-metadata.json').read_text());assert public['subtitle']==control['subtitle'],'Public Kaggle subtitle differs';assert public['description'].strip()==control['description'].strip(),'Public Kaggle description differs';assert public['userSpecifiedSources']==control['userSpecifiedSources'],'Public Kaggle sources differ'
  validate_policy(live)
- return {'version':23,'publicMetadataVerified':True,'publicZipSha256':sha(z),'filesSha256Matched':len(expected)}
+ return {'version':plan['kaggleVersion'],'publicMetadataVerified':True,'publicZipSha256':sha(z),'publicDefaultZipSha256':sha(default_zip),'filesSha256Matched':len(expected)}
 
 def notebook_identity(work,public,evidence):
  plan=json.loads((work/'release-plan.json').read_text());blob=public['blob'];source=json.loads(blob.get('source') or blob.get('sourceNullable'))
@@ -246,14 +274,14 @@ def publish_notebook(work,client):
   client.kernels_output(NB,str(out),file_pattern='doi-release-execution.json',force=True,quiet=True)
   evidence=json.loads((out/'doi-release-execution.json').read_text());notebook_identity(work,public,evidence)
   after=get('https://www.kaggle.com/api/v1/kernels/pull/'+NB).json();notebook_identity(work,after,evidence)
-  return {'version':plan['notebookVersion'],'status':status,'publicSourceVerified':True,'executionEvidence':evidence,'inputDataset':KG+'/23'}
+  return {'version':plan['notebookVersion'],'status':status,'publicSourceVerified':True,'executionEvidence':evidence,'inputDataset':KG+'/'+str(plan['kaggleVersion'])}
  return retry(work,'notebook',proof,attempts=90)
 
 def publish_all(work):
- from sync_platform_machine_resources import kaggle_client,correct_kaggle_sources,guard_kaggle_version
+ from sync_platform_machine_resources import kaggle_client,correct_kaggle_sources
  from doi_release import publish as publish_zenodo
  plan=require_reviewable_candidate(work);check_frozen(work)
- state=inspect(work);assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']} and state['kaggleVersion'] in {22,23} and state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']}
+ state=inspect(work);assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']} and state['kaggleOwnerVersion'] in {plan['kagglePreviousVersion'],plan['kaggleVersion']} and state['kaggleOwnerStatus']=='ready' and state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']}
  # The preflight report and checksums exist before this first payload publication.
  assert json.loads((work/'preflight-report.json').read_text())['status']=='PASS'
  askpass=work/'git-askpass.py';askpass.write_text('#!/usr/bin/env python3\nimport os,sys\nprint(os.environ["HF_TOKEN"] if "password" in sys.argv[1].lower() else "hf_user")\n');askpass.chmod(0o700)
@@ -266,23 +294,23 @@ def publish_all(work):
  if state['siteSource']==plan['sitePreviousSource']:subprocess.run(['npx','--yes','wrangler@4','pages','deploy',str(work/'website'),'--project-name=doctor-ghezelbaash','--branch=main','--commit-hash='+plan['sourceCommit'],'--commit-message=Frozen DOI-policy coordinated release','--commit-dirty=false'],cwd=ROOT,check=True)
  retry(work,'site',lambda:verify_site(work),attempts=18)
  client=kaggle_client();old=json.loads((work/'kaggle-before/dataset-metadata.json').read_text())
- if state['kaggleVersion']==22:
+ if state['kaggleOwnerVersion']==plan['kagglePreviousVersion']:
   # Metadata settings may have converged before an ambiguous version response.
   owner=work/'kaggle-resume-owner';owner.mkdir(exist_ok=True);client.dataset_metadata(KG,str(owner));wrapped=json.loads((owner/'dataset-metadata.json').read_text());current=dict(wrapped.get('info') or wrapped)
   frozen=json.loads((work/'kaggle/dataset-metadata.json').read_text())
   assert current['description'].strip()==old['description'].strip()
   assert current['userSpecifiedSources'] in [old['userSpecifiedSources'],frozen['userSpecifiedSources']]
-  correct_kaggle_sources(client,work,current,plan['hfRevision'],22,plan['sourceCommit'])
-  guard_kaggle_version(get('https://api.kaggle.com/v1/datasets/view/'+KG).json(),22)
+  correct_kaggle_sources(client,work,current,plan['hfRevision'],plan['kagglePreviousVersion'],plan['sourceCommit'],version_guard=lambda:guard_owner(client,plan['kagglePreviousVersion']))
+  guard_owner(client,plan['kagglePreviousVersion'])
   check_frozen(work)
   # Never retry a dataset version write or compensate for cache with a new version.
-  result=client.dataset_create_version(str(work/'kaggle'),version_notes='Frozen DOI 10.5281/zenodo.23474664; validated website/HF/Parquet/notebook alignment',quiet=True,convert_to_csv=False,delete_old_versions=False,dir_mode='zip')
-  dump(work/'kaggle-submission.json',{'status':str(getattr(result,'status','submitted')),'version':23})
+  result=client.dataset_create_version(str(work/'kaggle'),version_notes='Frozen DOI '+P['currentArchive']['doi']+'; validated website/HF/Parquet/notebook alignment',quiet=True,convert_to_csv=False,delete_old_versions=False,dir_mode='zip')
+  dump(work/'kaggle-submission.json',{'status':str(getattr(result,'status','submitted')),'version':plan['kaggleVersion']})
  retry(work,'kaggle',lambda:verify_kaggle(work),attempts=120)
  publish_notebook(work,client)
  retry(work,'hf',lambda:verify_hf(work),attempts=90)
  # Zenodo is published last, after every platform candidate and live user flow.
- check_frozen(work);publish_zenodo(23473947,work);check_frozen(work)
+ check_frozen(work);publish_zenodo(COHORT['previousZenodoRecord'],work);check_frozen(work)
  report={'status':'PASS','sourceCommit':plan['sourceCommit'],'publicationToolCommit':os.environ['GITHUB_SHA'],'plan':plan,'frozenManifestSha256':sha(work/'frozen-sha256.json'),'noPostPublicationPayloadChanges':True,'completedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
  dump(work/'coordinated-publication-report.json',report);print(json.dumps(report),flush=True)
 
