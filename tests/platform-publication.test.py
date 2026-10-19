@@ -80,15 +80,16 @@ class PublicationTransportTests(unittest.TestCase):
         commit = 'a' * 40
         run = {'head_sha': commit, 'head_branch': 'main', 'status': 'completed',
                'conclusion': 'success', 'path': '.github/workflows/machine-readable-interop.yml'}
-        with patch.dict(os.environ, {'GITHUB_TOKEN': 'read-only-receipt-token'}), \
+        with patch.dict(os.environ, {'GITHUB_TOKEN': 'read-only-receipt-token', 'GITHUB_REF_NAME': 'main'}), \
                 patch.object(sync, 'fetch', return_value=json.dumps(run).encode()) as fetch:
             sync.verify_website_run(url, commit)
             fetch.assert_called_once_with(
                 'https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345',
                 headers={'Authorization': 'Bearer read-only-receipt-token'})
-        for changed in [{'head_sha': 'b' * 40}, {'conclusion': 'failure'},
+        for changed in [{'head_sha': 'b' * 40}, {'head_branch': 'unreviewed'}, {'conclusion': 'failure'},
                         {'status': 'in_progress'}, {'path': '.github/workflows/platform-convergence.yml'}]:
-            with self.subTest(changed=changed), patch.object(sync, 'fetch', return_value=json.dumps({**run, **changed}).encode()):
+            with self.subTest(changed=changed), patch.dict(os.environ, {'GITHUB_REF_NAME': 'main'}), \
+                    patch.object(sync, 'fetch', return_value=json.dumps({**run, **changed}).encode()):
                 with self.assertRaises(AssertionError):
                     sync.verify_website_run(url, commit)
 
