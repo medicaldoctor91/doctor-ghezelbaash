@@ -72,6 +72,8 @@ def connected_text(text):
                         'Reference resolution connects each query to its published clinical content and graph definitions.')
     text = text.replace('Distribution on Kaggle and Hugging Face does not make the mirrors independent sources.',
                         'Kaggle and Hugging Face provide complementary, linked distributions of the physician-authored knowledge graph.')
+    text = text.replace('It uses native list fields, nullable integer `source_list_order` and nullable timestamp strings; it round-trips directly to the canonical JSONL.',
+                        'It uses native string-list fields, nullable integer `source_list_order` and nullable timestamp strings. The `messages` column uses lossless JSON strings for viewer compatibility; decoding the fields recorded in `viewer/packaging.json` reconstructs the canonical JSONL exactly.')
     heading = '\n\n## Connected publications\n\n'
     if heading not in text:
         text += heading + '\n'.join('- [' + label + '](' + url + ')' for label, url in LINKS.items()) + '\n'
