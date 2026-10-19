@@ -1,0 +1,11 @@
+[
+  {
+    "priority": "P1",
+    "url": "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+    "defect": "Default public payload remains v19 although v20 is Ready",
+    "evidence": "final-public-state.json; kaggle-default-version-proof.json",
+    "rootCause": "Observed platform current-version selection state; internal Kaggle cause is unproven. Explicit v20 payload is valid.",
+    "requiredFix": "Promote the already published v20 through supported owner/platform controls; do not create v21 as a retry.",
+    "verification": "Unversioned API and default ZIP select v20; manifest pins HF 96975d60b8a4a8a24b84bf892bdbb11321a89553 and website 5e45873a95c63aa6206317d7f429d4d055f58f5c; all 46 payload checksums match verified v20."
+  }
+]

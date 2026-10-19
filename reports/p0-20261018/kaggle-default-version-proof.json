@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "default",
+    "url": "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+    "status": 200,
+    "sha256": "a611c91c850654922430e26d06b904fe22d06383ead4fcc72954b9e3c70a74ca",
+    "desiredVersion": 19,
+    "hfRevision": "d7b8191565820b50e7da1aeb52609dbb9b03cc90",
+    "websiteSourceCommit": "0b24213da940f2a40026e31acfc49339bd83ed65",
+    "observedAt": "2026-10-19T00:28:34.503377+00:00"
+  },
+  {
+    "kind": "v20",
+    "url": "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data?datasetVersionNumber=20",
+    "status": 200,
+    "sha256": "8fe01c1a4fd582feaedd38f92adec4d63532e4f492fe5f662841310fac230824",
+    "desiredVersion": 20,
+    "hfRevision": "96975d60b8a4a8a24b84bf892bdbb11321a89553",
+    "websiteSourceCommit": "5e45873a95c63aa6206317d7f429d4d055f58f5c",
+    "observedAt": "2026-10-19T00:28:34.722759+00:00"
+  }
+]

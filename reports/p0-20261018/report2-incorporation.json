@@ -1,0 +1,14 @@
+{
+  "readAt": "2026-10-18T23:45:58.138430+00:00",
+  "sha256": "fa886046778596ba784037ac7a8be468d22e5e17bc909a7050d1515596a56b46",
+  "equalsPreviouslyCachedAudit": true,
+  "findings": {
+    "historicalZenodo6": "Preserve archive files/DOI/version; independently retain violation evidence; metadata current-access clarification only.",
+    "historicalZenodo16And7": "Preserve snapshot; current data distributed with exact versioned HF/Kaggle receipts; do not claim old default URLs fixed.",
+    "migraineO5": "Resolved by physician confirmation; separate Service/MedicalTherapy and matching projections.",
+    "optionalSchema44": "All 44 canonical property cases corrected; 11 Role reification cases preserved.",
+    "47HistoricalPositioning": "All IDs and training messages retained and strengthened per later explicit user direction; current labels and typed/null roundtrip repaired.",
+    "algorithmicClaims": "No unsupported engine ranking or clinical-superiority claim; direct publisher list observations only.",
+    "identitiesAndPubmed": "Canonical identifiers and existing scholarly links preserved; precise coauthorship verified."
+  }
+}

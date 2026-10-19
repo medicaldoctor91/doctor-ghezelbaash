@@ -1,0 +1,290 @@
+[
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/dist-sha256.json",
+    "status": 200,
+    "sha256": "e12b0dc9f0839503f6b82cf77a11f6b830bceb42bc888bba6582210fdf206471",
+    "observedAt": "2026-10-19T00:31:52.332454+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/viewer/packaging.json",
+    "status": 200,
+    "sha256": "5318365e5aae3ad0d2179340c46034350639f9e3100308cf3298a66149b9e0c9",
+    "observedAt": "2026-10-19T00:31:53.189125+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/README.md",
+    "status": 200,
+    "sha256": "298db02888fccf650757567b8ddcf030356c7468e1f181fe821d04ec15eb2330",
+    "observedAt": "2026-10-19T00:31:53.588324+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/current-release-matrix.json",
+    "status": 200,
+    "sha256": "35989b07154722a5effa81b0e810e5777ab562ba57f8e3b05917ef44dcbd6139",
+    "path": "/workspace/ghezelbaash-p0-execution/live-after/hf/current-release-matrix.json",
+    "observedAt": "2026-10-19T00:26:56.425100+00:00",
+    "cachedPinnedPublicGet": true
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/answers.txt",
+    "status": 200,
+    "sha256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4",
+    "observedAt": "2026-10-19T00:31:53.657316+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/clinic.vcf",
+    "status": 200,
+    "sha256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf",
+    "observedAt": "2026-10-19T00:31:53.827627+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/croissant.json",
+    "status": 200,
+    "sha256": "5773593e761059fcd9139812b9eed26bb3742f7049e547cc2393392d89c4963c",
+    "observedAt": "2026-10-19T00:31:53.957618+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/clinical-passages.jsonl",
+    "status": 200,
+    "sha256": "8552cbd6862d604dca68cdb28a3b9f7b289cca1f50f5cb39a2626b90e05fc09e",
+    "observedAt": "2026-10-19T00:31:54.157469+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/enrichment/instruction_examples_fa_market_positioning.jsonl",
+    "status": 200,
+    "sha256": "f0fdb151be6bd080954c8f2bac86f198cfa2a54db12c5087295a91f6877706e5",
+    "path": "/workspace/ghezelbaash-p0-execution/live-after/hf/enrichment/instruction_examples_fa_market_positioning.jsonl",
+    "observedAt": "2026-10-19T00:26:56.444420+00:00",
+    "cachedPinnedPublicGet": true
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/datapackage.json",
+    "status": 200,
+    "sha256": "2cc623544ecf973aeafb295a911f06eb53949d6dc9b49301f85d48fb1ac6ca14",
+    "observedAt": "2026-10-19T00:31:54.178339+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/dcat.ttl",
+    "status": 200,
+    "sha256": "7896e72e361b12a81f9b7ec7992ba499faa456167de15b662d0c24ae3a57c399",
+    "observedAt": "2026-10-19T00:31:54.212330+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/doctor.vcf",
+    "status": 200,
+    "sha256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5",
+    "observedAt": "2026-10-19T00:31:54.644840+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/enrichment/instruction_examples_fa_market_positioning.csv",
+    "status": 200,
+    "sha256": "97eaad1ff6f2ba220fc3b29d0f591d6ff1be7412f6e7ea98dd0b5b0065a0feaa",
+    "observedAt": "2026-10-19T00:31:54.648154+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/enrichment/market-positioning-evidence.json",
+    "status": 200,
+    "sha256": "4cbec47130fba11599bc013bfff74f44acfab1c3dffa504c9b1f6942d4bfa98e",
+    "observedAt": "2026-10-19T00:31:54.767352+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/enrichment/positioning-strategy.json",
+    "status": 200,
+    "sha256": "cac68b704b0ca89725fe68297534ea7b3af2ff3e89094dd2479ca5fc41739624",
+    "observedAt": "2026-10-19T00:31:54.773629+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/entity-facts.csv",
+    "status": 200,
+    "sha256": "1a37f432e8037a607d7a47d7cfcab2ab3cc7f89f52f0855e1a6386d2087a0e35",
+    "observedAt": "2026-10-19T00:31:54.958722+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/evidence-snapshot.json",
+    "status": 200,
+    "sha256": "0d9925d0ddb470b7c4ad1f8da4ea6e3a6ca310e63c8da7c763fbe1054c8b18ec",
+    "observedAt": "2026-10-19T00:31:55.157315+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/entity-facts.csv-metadata.json",
+    "status": 200,
+    "sha256": "e3a851e373ff583e99d049766792cb1c9a3b94a2200fd81146bd227f1ac03438",
+    "observedAt": "2026-10-19T00:31:55.225448+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/fact-map.json",
+    "status": 200,
+    "sha256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15",
+    "observedAt": "2026-10-19T00:31:55.370973+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/graph.jsonld",
+    "status": 200,
+    "sha256": "d21caf4b717c7ec958d4c6c4584e4b11211f4cc8a88b876a3df47bcd84f6fef8",
+    "observedAt": "2026-10-19T00:31:55.669246+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/integrity-manifest.json",
+    "status": 200,
+    "sha256": "97737d5a34482b9a71492d1dbab45d11c1f416b753a7eeaab0434b284895b143",
+    "observedAt": "2026-10-19T00:31:55.794448+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/index.md",
+    "status": 200,
+    "sha256": "537c98d4866cb577641d732438435ee9b52164b3c8721c019bed8471424d4873",
+    "observedAt": "2026-10-19T00:31:55.842144+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/graph.ttl",
+    "status": 200,
+    "sha256": "934b08368c7c98556396724586ad86c11ed5b43bf3098db5818361c4f3aad16d",
+    "observedAt": "2026-10-19T00:31:56.101457+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/knowledge.xml",
+    "status": 200,
+    "sha256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf",
+    "observedAt": "2026-10-19T00:31:56.103128+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/linkset.json",
+    "status": 200,
+    "sha256": "b2ae2dea202eb8ec45c1036c303b5822a54e5d8869d02e7f3145510a210a3f01",
+    "observedAt": "2026-10-19T00:31:56.124954+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/llms-full.txt",
+    "status": 200,
+    "sha256": "a6348e1e25d63755d8252a1307ecad9e46ac8a129101342ad6be06b55bb70628",
+    "observedAt": "2026-10-19T00:31:56.286299+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/llms.txt",
+    "status": 200,
+    "sha256": "7b18c0758a0e9d36a8aa903ec9417ccaea0cefd4fa051aa8ac93a9a206c6f40b",
+    "observedAt": "2026-10-19T00:31:56.480329+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/physician-expertise.md",
+    "status": 200,
+    "sha256": "11c2a77115e15b9afa762c0346a9ad14206eeb1e57a3775979a69acc1d4ff34f",
+    "observedAt": "2026-10-19T00:31:56.571086+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/release-provenance.json",
+    "status": 200,
+    "sha256": "42f3f42596134292420190a869b6f4b0d35df828ce459d13d2134f2131563159",
+    "observedAt": "2026-10-19T00:31:56.666202+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/release-attestation.json",
+    "status": 200,
+    "sha256": "698e25de41d149d1599d5a116a962315f1247fc165518de9e338018531e8b647",
+    "observedAt": "2026-10-19T00:31:56.730914+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/provenance.jsonld",
+    "status": 200,
+    "sha256": "3b080a3a69d9df00c0ce010ae12cbd9ecb61819971219a99e799564dc5230c66",
+    "observedAt": "2026-10-19T00:31:56.775973+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/query-matrix.jsonl",
+    "status": 200,
+    "sha256": "7d83da8035bb5032e83328fc562c21d6937a57417f4c631bb18e7eec35913f21",
+    "observedAt": "2026-10-19T00:31:56.801760+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/shapes.ttl",
+    "status": 200,
+    "sha256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51",
+    "observedAt": "2026-10-19T00:31:57.034355+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/robots.txt",
+    "status": 200,
+    "sha256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda",
+    "observedAt": "2026-10-19T00:31:57.035521+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/site.webmanifest",
+    "status": 200,
+    "sha256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05",
+    "observedAt": "2026-10-19T00:31:57.083345+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/viewer/positioning-examples.parquet",
+    "status": 200,
+    "sha256": "603b940e487d18969e0eb8121dc272228028333974c7558c0ad933208776a607",
+    "path": "/workspace/ghezelbaash-p0-execution/live-after/hf/viewer/positioning-examples.parquet",
+    "observedAt": "2026-10-19T00:26:56.641140+00:00",
+    "cachedPinnedPublicGet": true
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/viewer/clinical-answers.parquet",
+    "status": 200,
+    "sha256": "e4ab988fad12d9d73684d2d8c8ca34b44f042bc2e49387329ea563c90fa55d18",
+    "observedAt": "2026-10-19T00:31:57.366417+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/sitemap.xml",
+    "status": 200,
+    "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+    "observedAt": "2026-10-19T00:31:57.450915+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/viewer/entity-facts.parquet",
+    "status": 200,
+    "sha256": "2be979007f2bebdc7b3ec46cd8e3f3ca0c469ffa4784fda1487fff7a3340b6e8",
+    "observedAt": "2026-10-19T00:31:57.676843+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/viewer/query-matrix.parquet",
+    "status": 200,
+    "sha256": "4b227fcddc63623209d38422179624d1212dc3099f0a14ac274ef168ee7330a1",
+    "observedAt": "2026-10-19T00:31:57.690812+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/viewer/clinical-passages.parquet",
+    "status": 200,
+    "sha256": "f13cea58d3638df37de914b01d3029cedfd22d6363cafa5bbdff79cb9f11ba62",
+    "observedAt": "2026-10-19T00:31:57.750074+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/96975d60b8a4a8a24b84bf892bdbb11321a89553/void.ttl",
+    "status": 200,
+    "sha256": "add013b8352e91e666de7b1f4cc60aef5d877bf1a765eb82214258dfe909ce19",
+    "observedAt": "2026-10-19T00:31:57.764213+00:00"
+  },
+  {
+    "kind": "v20",
+    "url": "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data?datasetVersionNumber=20",
+    "status": 200,
+    "sha256": "8fe01c1a4fd582feaedd38f92adec4d63532e4f492fe5f662841310fac230824",
+    "desiredVersion": 20,
+    "hfRevision": "96975d60b8a4a8a24b84bf892bdbb11321a89553",
+    "websiteSourceCommit": "5e45873a95c63aa6206317d7f429d4d055f58f5c",
+    "observedAt": "2026-10-19T00:28:34.722759+00:00",
+    "path": "/workspace/ghezelbaash-p0-execution/kaggle-v20-independent.zip",
+    "cachedPinnedPublicGet": true
+  },
+  {
+    "url": "https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+    "status": 200,
+    "sha256": "1df7cb0073237a5af0b441c376a290cc05a4a1e67c590a64b9b6aebf0f7629d4",
+    "observedAt": "2026-10-19T00:32:01.753758+00:00"
+  },
+  {
+    "url": "https://zenodo.org/api/records/22838416",
+    "status": 200,
+    "sha256": "e05f3cfc25688d763f08ca91aee94e2e4f855e69ff803fb8ef7ffdb549ac964d",
+    "observedAt": "2026-10-19T00:32:02.825165+00:00"
+  },
+  {
+    "url": "https://zenodo.org/api/records/23289009",
+    "status": 200,
+    "sha256": "c46a9fba2840b4c23ddb5e03d119d6ab606c50ffa9884f45a094eaee7f5cae09",
+    "observedAt": "2026-10-19T00:32:03.599149+00:00"
+  }
+]

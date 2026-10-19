@@ -1,0 +1,38 @@
+[
+  {
+    "record": "22838416",
+    "revisionBefore": 33,
+    "revisionAfter": 34,
+    "rawDescriptionEqual": false,
+    "filesUnchanged": true,
+    "creatorsUnchanged": true,
+    "licenseUnchanged": true,
+    "doiUnchanged": true,
+    "conceptDoiUnchanged": true,
+    "versionUnchanged": true,
+    "descriptionEqualWithOnlyApostropheNormalization": true,
+    "allOtherMetadataUnchanged": true,
+    "historicalRelatedIdentifiersPreserved": true,
+    "independentOutcome": "verified; no second update performed",
+    "preApostropheNormalizationEqual": false,
+    "descriptionSemanticAndLinksEqual": true
+  },
+  {
+    "record": "23289009",
+    "revisionBefore": 21,
+    "revisionAfter": 22,
+    "rawDescriptionEqual": false,
+    "filesUnchanged": true,
+    "creatorsUnchanged": true,
+    "licenseUnchanged": true,
+    "doiUnchanged": true,
+    "conceptDoiUnchanged": true,
+    "versionUnchanged": true,
+    "descriptionEqualWithOnlyApostropheNormalization": true,
+    "allOtherMetadataUnchanged": true,
+    "historicalRelatedIdentifiersPreserved": true,
+    "independentOutcome": "verified; no second update performed",
+    "preApostropheNormalizationEqual": false,
+    "descriptionSemanticAndLinksEqual": true
+  }
+]

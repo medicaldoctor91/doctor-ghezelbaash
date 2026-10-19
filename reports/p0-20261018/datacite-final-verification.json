@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-19T00:40:08.890150+00:00",
+  "records": [
+    {
+      "doi": "10.5281/zenodo.22838416",
+      "state": "findable",
+      "version": "1.3.3",
+      "resourceType": "Dataset",
+      "updated": "2026-10-19T00:34:24.000Z",
+      "creatorsUnchanged": true,
+      "rightsUnchanged": true,
+      "sha256": "763d55d9a7d468c7e29ecad65e33898db2dac401e3bdc8d8a6f3aeb3fa595d2b",
+      "abstractMatchesCanonical": true,
+      "currentBaseline1_3_4Present": true,
+      "comparison": "HTML paragraph text, collapsed whitespace, typographic apostrophe equivalent",
+      "currentAccessRelatedLinksPresent": true,
+      "sharedConceptIsVersionOfCorrect": true
+    },
+    {
+      "doi": "10.5281/zenodo.23289009",
+      "state": "findable",
+      "version": "source-final-2026-10-10",
+      "resourceType": "Software",
+      "updated": "2026-10-19T00:34:28.000Z",
+      "creatorsUnchanged": true,
+      "rightsUnchanged": true,
+      "sha256": "5c4bf7167c643a75989ea6504021c3da1a8e03056309faa6d56655b8d3287c2d",
+      "abstractMatchesCanonical": true,
+      "currentBaseline1_3_4Present": true,
+      "comparison": "HTML paragraph text, collapsed whitespace, typographic apostrophe equivalent",
+      "currentAccessRelatedLinksPresent": true,
+      "sharedConceptIsVersionOfCorrect": true
+    },
+    {
+      "doi": "10.5281/zenodo.18765168",
+      "state": "findable",
+      "version": "source-final-2026-10-10",
+      "resourceType": "Software",
+      "updated": "2026-10-19T00:34:28.000Z",
+      "creatorsUnchanged": true,
+      "rightsUnchanged": true,
+      "sha256": "b8bbe6a37b40e2722a8a7e1081129a33fcebf8be9b3a0eb4581e3255757e7f0e",
+      "abstractMatchesCanonical": true,
+      "currentBaseline1_3_4Present": true,
+      "comparison": "HTML paragraph text, collapsed whitespace, typographic apostrophe equivalent",
+      "currentAccessRelatedLinksPresent": true,
+      "bothHistoricalRecordsInLineage": true
+    }
+  ]
+}

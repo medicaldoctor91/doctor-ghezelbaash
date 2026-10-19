@@ -1,0 +1,31 @@
+{
+  "website": {
+    "url": "https://www.ghezelbaash.ir/release-provenance.json",
+    "observedAt": "2026-10-19T00:44:33.196567+00:00",
+    "sourceCommit": "5e45873a95c63aa6206317d7f429d4d055f58f5c"
+  },
+  "hf": {
+    "url": "https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+    "observedAt": "2026-10-19T00:44:32.872701+00:00",
+    "revision": "96975d60b8a4a8a24b84bf892bdbb11321a89553"
+  },
+  "kaggle": {
+    "url": "https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+    "observedAt": "2026-10-19T00:51:20.779315+00:00",
+    "defaultVersion": 19,
+    "latestReady": 20,
+    "defaultZip": {
+      "url": "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "sha256": "a611c91c850654922430e26d06b904fe22d06383ead4fcc72954b9e3c70a74ca",
+      "manifestVersion": 19,
+      "hfRevision": "d7b8191565820b50e7da1aeb52609dbb9b03cc90",
+      "websiteSourceCommit": "0b24213da940f2a40026e31acfc49339bd83ed65",
+      "observedAt": "2026-10-19T00:44:33.058272+00:00"
+    }
+  },
+  "main": {
+    "url": "https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/branches/main",
+    "observedAt": "2026-10-19T00:44:33.169781+00:00",
+    "head": "0f40420a0092218fc2318601184dcd3db7dffe47"
+  }
+}
