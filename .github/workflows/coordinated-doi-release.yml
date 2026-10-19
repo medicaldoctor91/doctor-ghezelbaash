@@ -1,0 +1,40 @@
+name: Preflight and publish frozen reserved DOI release
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [inspect]
+        required: true
+      reviewed_commit: {type: string, required: true}
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  coordinated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      OPERATION: ${{ inputs.operation }}
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - run: test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests
+      - run: python .github/scripts/coordinated_doi_release.py "$OPERATION"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coordinated-release-evidence
+          path: /tmp/coordinated-release/
