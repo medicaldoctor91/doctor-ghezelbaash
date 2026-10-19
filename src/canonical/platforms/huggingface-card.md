@@ -90,7 +90,7 @@ For reproducible use, pin the exact Hugging Face data revision returned by the H
 
 ## Retrieval-ready clinical information
 
-- **clinical_passages** (default): 3248 authored paragraph-level passages with text, heading paths, language, exact source anchors, physician/topic entity IDs, explicit citation/evidence references, content hashes and review metadata.
+- **clinical_passages** (default): 3249 authored paragraph-level passages with text, heading paths, language, exact source anchors, physician/topic entity IDs, explicit citation/evidence references, content hashes and review metadata.
 - **clinical_answers**: 125 canonical question-answer records with stable source/passage/evidence bindings.
 - **entity_facts**: 22166 RDF statements. Seven fields preserve subject, predicate, object, object kind, datatype, language and stable row identity; graph/provenance resources retain the linked evidence context.
 - **query_matrix**: 876 multilingual retrieval aliases reconciled to the current graph IDs. Superlative query wording records a search intent and resolves to clinical selection criteria; it does not assert a comparative ranking.
