@@ -25,18 +25,20 @@ def batch(items):
 def js(p):return json.loads(pathlib.Path(p).read_text())
 def valid_bytes(p):return p.exists() and not p.read_bytes().startswith((b'<!DOCTYPE html>',b'<html'))
 # Only the built-in read-only GitHub token is used, solely for this repo's artifact.
-api='https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/artifacts/12191941291/zip'
+api='https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/artifacts/'+os.environ['AUDIT_CANDIDATE_ARTIFACT']+'/zip'
 r=requests.get(api,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'},timeout=(20,240));r.raise_for_status()
 with zipfile.ZipFile(io.BytesIO(r.content)) as z:
  assert z.testzip() is None and z.namelist()==['candidate.tar.gz'];tarbytes=z.read('candidate.tar.gz')
 with tarfile.open(fileobj=io.BytesIO(tarbytes),mode='r:gz') as t:
  members=[]
+ policy=json.loads(t.extractfile('coordinated-release/archive/doi-policy.json').read())
+ bundle_name=pathlib.PurePosixPath(urllib.parse.urlparse(policy['downloadBindings']['bundle']).path).name
  for m in t.getmembers():
   parts=pathlib.PurePosixPath(m.name).parts
   assert '..' not in parts and not m.name.startswith('/')
-  if len(parts)>=2 and parts[0]=='coordinated-release' and (parts[1] in {'website','hf-stage','archive','kaggle','notebook','frozen-sha256.json','release-plan.json','preflight-report.json','intentional-platform-differences.json','local-notebook-execution.json','zenodo-metadata.json'} or m.name=='coordinated-release/hf-git/.gitattributes'):members.append(m)
+  if len(parts)>=2 and parts[0]=='coordinated-release' and (parts[1] in {'website','hf-stage','archive','kaggle','notebook','frozen-sha256.json','release-plan.json','preflight-report.json','intentional-platform-differences.json','local-notebook-execution.json','zenodo-metadata.json','payload.json',bundle_name} or m.name=='coordinated-release/hf-git/.gitattributes'):members.append(m)
  t.extractall(F,members=members,filter='data')
-F=F/'coordinated-release';PLAN=js(F/'release-plan.json');frozen=js(F/'frozen-sha256.json');out('frozenPlan',PLAN)
+F=F/'coordinated-release';PLAN=js(F/'release-plan.json');frozen=js(F/'frozen-sha256.json');out('frozenPlan',PLAN);REV=PLAN['hfRevision'];assert PLAN.get('candidateSchema')==3
 # These metadata endpoints describe public state, not owner settings.
 batch([('api/hf.json','https://huggingface.co/api/datasets/'+HF,False),('api/kaggle.json','https://www.kaggle.com/api/v1/datasets/view/'+KG,False),('api/notebook.json','https://www.kaggle.com/api/v1/kernels/pull/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter',False),('api/wikidata.json','https://www.wikidata.org/wiki/Special:EntityData/Q140287622.json',True),('api/zenodo-target.json','https://zenodo.org/api/records/23474664',False)])
 hf=js(L/'api/hf.json');kg=js(L/'api/kaggle.json');out('publicVersions',{'HF':hf.get('sha'),'Kaggle':kg.get('currentVersionNumber'),'targetZenodoHTTP':next(x['status'] for x in LOG if x['key']=='api/zenodo-target.json'),'sourceCommitExpected':PLAN['sourceCommit']})
@@ -59,13 +61,14 @@ def compare(prefix,expected,base):
 sexpect={n:h for n,h in frozen['website'].items() if n not in CONTROL};out('siteBytes',compare('site',sexpect,'website'));out('siteQueryBytes',compare('site-query',sexpect,'website'));out('HFBytes',compare('hf',frozen['hf-stage'],'hf-stage'))
 out('excludedCloudflareControls',{'files':sorted(CONTROL&set(frozen['website'])),'reason':'Consumed by deployment; HTTP 404 does not imply missing public data. Frozen artifact bytes are retained.'})
 # Actual public Kaggle version and default download must be compared as extracted files.
-v=kg['currentVersionNumber'];batch([('kaggle-version.zip','https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber='+str(v),False),('kaggle-default.zip','https://www.kaggle.com/api/v1/datasets/download/'+KG,False)])
+v=PLAN['kaggleVersion'];batch([('kaggle-version.zip','https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber='+str(v),False),('kaggle-default.zip','https://www.kaggle.com/api/v1/datasets/download/'+KG,False)])
 for name in ['kaggle-version','kaggle-default']:
  with zipfile.ZipFile(L/(name+'.zip')) as z:
   assert z.testzip() is None
   for n in z.namelist():assert '..' not in pathlib.PurePosixPath(n).parts and not n.startswith('/')
   z.extractall(L/name)
 kroot=L/'kaggle-version'
+out('KaggleFrozenBytes',compare('kaggle-version',{n:h for n,h in frozen['kaggle'].items() if n not in {'dataset-metadata.json','kernel-metadata.json'}},'kaggle'))
 def kgchecks():
  a={str(p.relative_to(kroot)):sha(p.read_bytes()) for p in kroot.rglob('*') if p.is_file()};b={str(p.relative_to(L/'kaggle-default')):sha(p.read_bytes()) for p in (L/'kaggle-default').rglob('*') if p.is_file()};assert a==b,'Public default ZIP does not match explicit public version'
  for line in (kroot/'checksums.sha256').read_text().splitlines():
@@ -75,12 +78,33 @@ check('publicKaggleInternal',kgchecks)
 # Public metadata RPC is a read-only POST and is logged without credentials.
 try:
  owner,slug=KG.split('/');r=requests.post('https://api.kaggle.com/v1/datasets.DatasetApiService/GetDatasetMetadata',json={'ownerSlug':owner,'datasetSlug':slug},timeout=60);r.raise_for_status();dump('public-kaggle-metadata.json',r.json())
-except Exception as e:out('kaggleMetadataRPC',{'status':'UNKNOWN','error':repr(e)})
+ metadata=r.json().get('info') or r.json();control=js(F/'kaggle/dataset-metadata.json')
+ for field in ['title','subtitle','description','userSpecifiedSources']:assert metadata[field].strip()==control[field].strip(),('Public Kaggle metadata',field)
+ out('KaggleMetadataMatchesFrozen',{'status':'PASS','fields':['title','subtitle','description','userSpecifiedSources']})
+except AssertionError as e:out('KaggleMetadataMatchesFrozen',{'status':'FAIL','error':repr(e)})
+except Exception as e:out('KaggleMetadataMatchesFrozen',{'status':'UNKNOWN','error':repr(e)})
 import rdflib
 from rdflib.compare import isomorphic
 from pyshacl import validate
 import pyarrow.parquet as pq
 from lxml import html
+def viewer_exports():
+ body=public('api/viewer-parquet.json','https://datasets-server.huggingface.co/parquet?'+urllib.parse.urlencode({'dataset':HF}))
+ assert body is not None,'Viewer Parquet endpoint unavailable'
+ state=json.loads(body);packaging=js(F/'hf-stage/viewer/packaging.json');results={}
+ for config,spec in packaging['tables'].items():
+  shards=[item for item in state.get('parquet_files',[]) if item.get('config')==config and item.get('split')=='train']
+  if not shards:
+   results[config]={'status':'FAIL','reason':'No complete Viewer export','failed':[item for item in state.get('failed',[]) if item.get('config')==config],'pending':[item for item in state.get('pending',[]) if item.get('config')==config]};continue
+  tables=[]
+  for n,item in enumerate(shards):
+   data=public('viewer/'+config+'/'+str(n)+'.parquet',item['url']);assert data is not None,(config,'Viewer shard unavailable');tables.append(pq.read_table(io.BytesIO(data)))
+  import pyarrow as pa
+  expected=pq.read_table(F/'hf-stage'/spec['file']);actual=pa.concat_tables(tables).select(expected.column_names)
+  assert actual.to_pylist()==expected.to_pylist(),('Viewer logical data differs from frozen',config)
+  results[config]={'status':'PASS','rows':actual.num_rows,'completeLogicalRowsMatchFrozen':True}
+ return {'configs':results,'failed':state.get('failed',[]),'pending':state.get('pending',[]),'allFiveComplete':len(results)==5 and all(item['status']=='PASS' for item in results.values())}
+check('DatasetViewerCompleteExports',viewer_exports)
 G={}
 def rdfcheck(label,root):
  g=rdflib.Graph().parse(root/'graph.jsonld',format='json-ld');ttl=rdflib.Graph().parse(root/'graph.ttl',format='turtle');assert isomorphic(g,ttl)
@@ -134,6 +158,15 @@ def corpuscheck():
     if v:assert v in defined or v in pids,(k,v)
  return {'FAQGraphHTML':len(facts),'passageHashes':len(pas),'queriesResolved':len(queries)}
 check('corpusBindings',corpuscheck)
+def inline_graph_check(root):
+ tree=html.fromstring((root/'index.html').read_bytes());blocks=tree.xpath('//script[@type="application/ld+json"]/text()')
+ assert len(blocks)==1,'Expected one complete inline JSON-LD document'
+ inline=json.loads(blocks[0]);canonical=js(root/'graph.jsonld')
+ assert inline==canonical,'Homepage inline graph lost canonical entities, relations or literal values'
+ graph=rdflib.Graph().parse(data=json.dumps(inline),format='json-ld')
+ return {'completeCanonicalGraph':True,'entities':len(inline['@graph']),'rdfTriples':len(graph),'HTMLBytes':(root/'index.html').stat().st_size}
+for label,root in [('site',L/'site'),('site-query',L/'site-query'),('HF',L/'hf')]:check(label+'CompleteInlineGraph',lambda root=root:inline_graph_check(root))
+
 # Every retrieved text resource is syntax-checked; natural-language truth remains a separately reported scope.
 syntax=[];typ=collections.Counter()
 for root in [L/'site',L/'hf',kroot]:
@@ -163,16 +196,18 @@ dump('language-findings.json',findings)
 # Actual public notebook source and version; do not call an old COMPLETE proof current.
 def notebookcheck():
  nb=js(L/'api/notebook.json');source=json.loads(nb['blob'].get('source') or nb['blob'].get('sourceNullable'));dump('public-notebook-source.json',source)
+ assert nb['metadata']['currentVersionNumber']==PLAN['notebookVersion'], 'Public notebook version differs from frozen plan'
+ assert source['cells']==js(F/'notebook/starter.ipynb')['cells'], 'Public notebook source differs from frozen cells'
  return {'version':nb['metadata']['currentVersionNumber'],'plannedVersion':PLAN['notebookVersion'],'sourceMatchesFrozen':source['cells']==js(F/'notebook/starter.ipynb')['cells'],'executionStatus':'UNKNOWN in this read-only public-source check'}
 check('publicNotebook',notebookcheck)
 # Identity and large-HTML checks are measured, not inferred from syntax validation.
 raw=(L/'site/index.html').read_bytes();tree=html.fromstring(raw.decode());out('homepage',{'bytesUncompressed':len(raw),'headEnd':raw.find(b'</head>'),'JSONLDend':raw.find(b'</script>',raw.find(b'application/ld+json')),'canonical':tree.xpath('//link[@rel="canonical"]/@href'),'robots':tree.xpath('//meta[@name="robots"]/@content'),'exceeds2MiB':len(raw)>2*1024*1024})
 try:
- wd=js(L/'api/wikidata.json')['entities']['Q140287622'];out('WikidataReadOnly',{'lastrevid':wd['lastrevid'],'modified':wd['modified'],'ORCID':[(c['rank'],c['mainsnak'].get('datavalue',{}).get('value')) for c in wd['claims'].get('P496',[])],'OpenAlex':[(c['rank'],c['mainsnak'].get('datavalue',{}).get('value')) for c in wd['claims'].get('P10283',[])]})
+ wd=js(L/'api/wikidata.json')['entities']['Q140287622'];out('WikidataReadOnly',{'lastrevid':wd['lastrevid'],'modified':wd['modified'],'ORCID':[(c['rank'],c['mainsnak'].get('datavalue',{}).get('value')) for c in wd['claims'].get('P496',[])],'OpenAlex':[(c['rank'],c['mainsnak'].get('datavalue',{}).get('value')) for c in wd['claims'].get('P10283',[])],'DOIIdentifiersOnPerson':[(c['rank'],c['mainsnak'].get('datavalue',{}).get('value')) for c in wd['claims'].get('P356',[])],'instanceOf':[(c['rank'],c['mainsnak'].get('datavalue',{}).get('value')) for c in wd['claims'].get('P31',[])]})
 except Exception as e:out('WikidataReadOnly',{'status':'UNKNOWN','error':repr(e)})
-out('scopeAndLimits',{'productionWrites':0,'ZenodoPublication':False,'cacheProof':'No-cache/Pragma and distinct query requests recorded; equality to frozen cryptographic hashes and immutable HF revision establishes which release bytes were seen, not a claim that all CDN caches were bypassed.','clinicalClaimExternalTruth':'Not exhaustively independently verified; this audit tests corpus attribution, relations, consistency and technical delivery.','languageReview':'Exact excerpts are candidates for editorial judgment, not automatically false or weakening.','completedUTC':datetime.datetime.now(datetime.timezone.utc).isoformat()})
+out('scopeAndLimits',{'productionWrites':0,'ZenodoPublicationPerformedByThisAudit':False,'cacheProof':'No-cache/Pragma and distinct query requests recorded; equality to frozen cryptographic hashes and immutable HF revision establishes which release bytes were seen, not a claim that all CDN caches were bypassed.','clinicalClaimExternalTruth':'Not exhaustively independently verified; this audit tests corpus attribution, relations, consistency and technical delivery.','languageReview':'Exact excerpts are candidates for editorial judgment, not automatically false or weakening.','completedUTC':datetime.datetime.now(datetime.timezone.utc).isoformat()})
 dump('fetch-log.json',LOG)
-print('READ_ONLY_AUDIT_FINISHED',flush=True)
+print('CORE_READ_ONLY_AUDIT_FINISHED',flush=True)
 
 def advertised(root):
  results={}
@@ -185,10 +220,15 @@ def advertised(root):
    rows.append({'file':n,'advertised':h,'actual':sha(q.read_bytes()) if q.exists() else None})
   results['checksumLines']=len(rows);results['badChecksums']=[r for r in rows if r['advertised']!=r['actual']]
  p=root/'dist-sha256.json'
- if p.exists():results['distManifest']=js(p)
+ if p.exists():
+  manifest=js(p);rows=[]
+  for n,meta in manifest['files'].items():
+   q=root/n.lstrip('/');actual=sha(q.read_bytes()) if q.exists() else None
+   rows.append({'file':n,'expected':meta['sha256'],'actual':actual,'expectedBytes':meta['bytes'],'actualBytes':q.stat().st_size if q.exists() else None})
+  results['distFiles']=len(rows);results['badDistFiles']=[r for r in rows if r['expected']!=r['actual'] or r['expectedBytes']!=r['actualBytes']]
  return results
 for label,root in [('site',L/'site'),('HF',L/'hf'),('Kaggle',kroot)]:
- check(label+'AdvertisedIntegrity',lambda root=root:advertised(root))
+ result=advertised(root);out(label+'AdvertisedIntegrity',{'status':'FAIL' if result.get('badChecksums') or result.get('badDistFiles') else 'PASS','result':result})
 import yaml
 def documents(root):
  result={}
@@ -219,3 +259,46 @@ for scope,root in [('live-site',L/'site'),('live-HF',L/'hf'),('live-Kaggle',kroo
   if hits:dois.append({'scope':scope,'file':str(p.relative_to(root)),'fileSHA256':sha(p.read_bytes()),'DOIs':dict(hits)})
 dump('doi-inventory.json',dois);dump('fetch-log.json',LOG)
 out('finalReadOnlyAuditUTC',datetime.datetime.now(datetime.timezone.utc).isoformat())
+
+
+print('ALL_READ_ONLY_AUDIT_FINISHED',flush=True)
+
+# Independently download every newly published Zenodo file against the immutable candidate.
+def zenodo_published():
+ record=js(L/'api/zenodo-target.json');assert int(record['id'])==23474664
+ assert record['doi']==DOI and record['conceptdoi']==CONCEPT
+ assert record['metadata']['version']==policy['currentArchive']['packagingVersion']
+ payload=js(F/'payload.json');expected=payload['files'];entries={x['key']:x for x in record['files']}
+ assert set(entries)==set(expected), 'Published Zenodo file list differs from frozen candidate'
+ batch([('zenodo-files/'+n,x['links']['self'],False) for n,x in entries.items()])
+ files=[]
+ for n,spec in expected.items():
+  b=(L/'zenodo-files'/n).read_bytes();assert sha(b)==spec['sha256'],('Zenodo SHA256',n)
+  assert hashlib.md5(b).hexdigest()==spec['md5']==entries[n]['checksum'].removeprefix('md5:'),('Zenodo MD5',n)
+  assert len(b)==spec['bytes'],('Zenodo size',n)
+  files.append({'file':n,'sha256':sha(b),'bytes':len(b)})
+ with zipfile.ZipFile(L/'zenodo-files'/bundle_name) as z:
+  assert z.testzip() is None
+  actual={n:sha(z.read(n)) for n in z.namelist() if not n.endswith('/')}
+ assert actual==frozen['archive'], 'Zenodo ZIP files differ from frozen archive'
+ r=js(F/'zenodo-metadata.json')
+ for field in ['description','version','title']:assert record['metadata'][field]==r[field],('Zenodo metadata',field)
+ return {'status':'PASS','record':record['id'],'doi':DOI,'version':record['metadata']['version'],'files':files,'ZIPEntries':len(actual),'metadataMatchesFrozen':True}
+zenodo_http=next(item.get('status') for item in LOG if item['key']=='api/zenodo-target.json')
+if zenodo_http==404:
+ out('ZenodoPublishedIntegrity',{'status':'PENDING','record':23474664,'doi':DOI,'reason':'Reserved target is not published in this snapshot; publication is gated on complete platform verification.'})
+else:check('ZenodoPublishedIntegrity',zenodo_published)
+dump('fetch-log.json',LOG)
+
+# Resolve exact and collection DOI entry points separately from record APIs.
+batch([('doi/exact.html','https://doi.org/'+DOI,False),('doi/collection.html','https://doi.org/'+CONCEPT,False)])
+for key in ['doi/exact.html','doi/collection.html']:
+ item=next(x for x in LOG if x['key']==key)
+ out(key,{'status':'PASS' if item.get('status')==200 and '/records/23474664' in item.get('finalURL','') else 'UNKNOWN','http':item.get('status'),'finalURL':item.get('finalURL'),'sha256':item.get('sha256')})
+for n in ['hf.json','kaggle.json','notebook.json','wikidata.json','zenodo-target.json']:
+ source=L/'api'/n
+ if source.exists():
+  target=P/'documents'/'api'/n;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(source.read_bytes())
+dump('fetch-log.json',LOG)
+out('auditCompletedUTC',datetime.datetime.now(datetime.timezone.utc).isoformat())
+print('FINAL_INDEPENDENT_POST_PUBLICATION_AUDIT_FINISHED',flush=True)
