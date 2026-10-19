@@ -64,6 +64,7 @@ jobs:
           name: live-platform-maintenance-evidence
           path: |
             /tmp/live-platform-maintenance/report.json
+            /tmp/live-platform-maintenance/metadata-write-response.json
             /tmp/live-platform-maintenance/notebook-before.json
             /tmp/live-platform-maintenance/kaggle/notebook-verification.json
           if-no-files-found: warn

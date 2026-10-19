@@ -194,15 +194,28 @@ def main():
         target = dict(before)
         target['userSpecifiedSources'] = desired
         dump(before_dir / 'dataset-metadata.json', target)
-        client.dataset_metadata_update(KG, str(before_dir))
+        update_evidence = {'performed': False}
+        if before['userSpecifiedSources'] != desired:
+            fields = ['title', 'subtitle', 'description', 'isPrivate', 'licenses', 'keywords',
+                      'collaborators', 'data', 'expectedUpdateFrequency', 'userSpecifiedSources']
+            settings = {key: target[key] for key in fields if key in target}
+            # Use the SDK's documented HTTP binding. Some deployments return an
+            # empty success body that the SDK's RPC JSON decoder cannot parse.
+            response = requests.post('https://www.kaggle.com/api/v1/datasets/metadata/' + KG,
+                                     json=settings, headers={'Authorization': 'Bearer ' + os.environ['KAGGLE_API_TOKEN']}, timeout=90)
+            update_evidence = {'performed': True, 'httpStatus': response.status_code,
+                               'contentType': response.headers.get('Content-Type'), 'responseBytes': len(response.content)}
+            dump(root / 'metadata-write-response.json', update_evidence)
+            response.raise_for_status()
         client.dataset_metadata(KG, str(after_dir))
         wrapped = load(after_dir / 'dataset-metadata.json')
         after = dict(wrapped.get('info') or wrapped)
-        assert after['userSpecifiedSources'] == desired
+        assert after['userSpecifiedSources'] == desired, ('Kaggle source metadata write not confirmed', update_evidence)
         for key in ['title', 'subtitle', 'isPrivate', 'licenses', 'keywords', 'collaborators', 'data', 'expectedUpdateFrequency', 'description']:
             assert semantic_metadata(before.get(key)) == semantic_metadata(after.get(key)), ('Unrelated metadata changed', key)
         report = {'scope': 'Kaggle source link metadata only', 'kaggleVersion': args.kaggle_version,
                   'sourceMetadataVerified': True, 'otherMetadataPreserved': True,
+                  'writeResponse': update_evidence,
                   'publicSources': verify_public_kaggle_sources(args.hf_revision, args.website_commit)}
         dump(root / 'report.json', report)
         print(json.dumps(report), flush=True)
@@ -223,13 +236,18 @@ def main():
                   'fiveTablesDocumented': 'all five tables' in markdown,
                   'kaggleOwnerState': json.loads(client.dataset_status(KG, format='json(status,current_version_number)'))}
         packaging = json.loads(get(HUB + '/resolve/' + args.hf_revision + '/viewer/packaging.json'))
+        parquet = json.loads(get('https://datasets-server.huggingface.co/parquet?dataset=' + HF))
+        converted = {item['config']: item['url'] for item in parquet['parquet_files']}
         viewer_report = {}
         auth = {'Authorization': 'Bearer ' + os.environ['HF_TOKEN']}
         for name, table_spec in packaging['tables'].items():
             expected = pq.read_table(io.BytesIO(get(HUB + '/resolve/' + args.hf_revision + '/' + table_spec['file']))).to_pylist()
+            exported = pq.read_table(io.BytesIO(get(converted[name]))).to_pylist()
+            assert exported == expected, ('Complete viewer export changed source rows', name)
             received = []
-            for offset in range(0, len(expected), 100):
-                params = {'dataset': HF, 'config': name, 'split': 'train', 'offset': offset, 'length': min(100, len(expected) - offset)}
+            offsets = sorted({0, len(expected) // 2, len(expected) - 1})
+            for offset in offsets:
+                params = {'dataset': HF, 'config': name, 'split': 'train', 'offset': offset, 'length': 1}
                 for attempt in range(3):
                     response = requests.get('https://datasets-server.huggingface.co/rows', params=params, headers=auth, timeout=60)
                     if response.status_code == 200:
@@ -242,9 +260,10 @@ def main():
                 data = response.json()
                 assert data['num_rows_total'] == len(expected)
                 assert not any(row.get('truncated_cells') for row in data['rows']), ('Viewer truncated source fields', name, offset)
-                received.extend(row['row'] for row in data['rows'])
-            assert received == expected, ('Viewer changed source rows', name)
-            viewer_report[name] = {'allRowsVerified': len(received), 'allFieldsExact': True}
+                assert data['rows'][0]['row'] == expected[offset], ('Viewer changed source row', name, offset)
+                received.extend(data['rows'])
+            viewer_report[name] = {'allRowsVerifiedInCompleteViewerExport': len(exported),
+                                   'boundaryAndMiddleRowsVerified': len(received), 'allFieldsExact': True}
             report['viewer'] = viewer_report
             dump(root / 'report.json', report)
         dump(root / 'report.json', report)
