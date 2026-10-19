@@ -133,11 +133,18 @@ def retry(work,label,callback,attempts=60):
 def verify_site(work):
  from doi_validation import validate_policy
  expected=inventory(work/'website');live=work/'site-live';live.mkdir(exist_ok=True)
+ controls={'_headers','_redirects','_routes.json','_worker.js'}
+ for name in controls:
+  r=requests.get(SITE+name,timeout=60);assert r.status_code==404,('Deployment control unexpectedly public',name)
+  shutil.copyfile(work/'website'/name,live/name)
+ public={name:digest for name,digest in expected.items() if name not in controls}
  def fetch(item):
-  name,digest=item;r=get(SITE+requests.utils.quote(name,safe='/'));assert hashlib.sha256(r.content).hexdigest()==digest,('Site bytes',name)
+  name,digest=item;r=requests.get(SITE+requests.utils.quote(name,safe='/'),timeout=90,headers={'Cache-Control':'no-cache'});assert r.status_code==(404 if name=='404.html' else 200),('Site HTTP',name,r.status_code)
+  assert hashlib.sha256(r.content).hexdigest()==digest,('Site bytes',name)
   target=live/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(r.content)
- with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(fetch,expected.items()))
- assert json.loads((live/'release-provenance.json').read_text())['sourceCommit']==os.environ['GITHUB_SHA']
+ with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(fetch,public.items()))
+ source=json.loads((work/'release-plan.json').read_text())['sourceCommit']
+ assert json.loads((live/'release-provenance.json').read_text())['sourceCommit']==source
  validate_policy(live)
  subprocess.run([sys.executable,str(ROOT/'tests/validate_machine_resources.py'),str(live)],check=True)
  # Test the actual five-document union independently of archive bindings.
@@ -146,7 +153,7 @@ def verify_site(work):
  union=rdflib.Graph()
  for name,fmt in [('graph.jsonld','json-ld'),('provenance.jsonld','json-ld'),('dcat.ttl','turtle'),('void.ttl','turtle'),('croissant.json','json-ld')]:union.parse(live/name,format=fmt)
  conforms,_,report=validate(union,shacl_graph=rdflib.Graph().parse(live/'shapes.ttl',format='turtle'),advanced=True,inference='none');assert conforms,report
- return {'filesSha256Matched':len(expected),'advancedFiveDocumentUnion':True,'sourceCommit':os.environ['GITHUB_SHA']}
+ return {'publicFilesDownloadedAndSha256Matched':len(public),'nonPublicDeploymentControls':{name:{'sha256':expected[name],'publicHTTP':404,'bytesSource':'frozen deployment artifact'} for name in sorted(controls)},'advancedFiveDocumentUnion':True,'sourceCommit':source}
 
 def verify_hf(work):
  from urllib.parse import urlencode
@@ -198,8 +205,9 @@ def notebook_identity(work,public,evidence):
  return True
 
 def publish_notebook(work,client):
- plan=json.loads((work/'release-plan.json').read_text());before=get('https://www.kaggle.com/api/v1/kernels/pull/'+NB).json();assert before['metadata']['currentVersionNumber']==plan['notebookPreviousVersion']
- check_frozen(work);client.kernels_push(str(work/'notebook'))
+ plan=json.loads((work/'release-plan.json').read_text());before=get('https://www.kaggle.com/api/v1/kernels/pull/'+NB).json();assert before['metadata']['currentVersionNumber'] in {plan['notebookPreviousVersion'],plan['notebookVersion']}
+ check_frozen(work)
+ if before['metadata']['currentVersionNumber']==plan['notebookPreviousVersion']:client.kernels_push(str(work/'notebook'))
  def proof():
   public=get('https://www.kaggle.com/api/v1/kernels/pull/'+NB).json();assert public['metadata']['currentVersionNumber']==plan['notebookVersion']
   status=str(client.kernels_status(NB).status).lower();assert 'complete' in status,status
@@ -214,25 +222,31 @@ def publish_all(work):
  from sync_platform_machine_resources import kaggle_client,correct_kaggle_sources,guard_kaggle_version
  from doi_release import publish as publish_zenodo
  plan=json.loads((work/'release-plan.json').read_text());check_frozen(work)
- state=inspect(work);assert not state['submitted'] and state['hfRevision']==plan['hfParent'] and state['kaggleVersion']==22 and state['siteSource']==plan['sitePreviousSource']
+ state=inspect(work);assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']} and state['kaggleVersion'] in {22,23} and state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']}
  # The preflight report and checksums exist before this first payload publication.
  assert json.loads((work/'preflight-report.json').read_text())['status']=='PASS'
  askpass=work/'git-askpass.py';askpass.write_text('#!/usr/bin/env python3\nimport os,sys\nprint(os.environ["HF_TOKEN"] if "password" in sys.argv[1].lower() else "hf_user")\n');askpass.chmod(0o700)
  env={**os.environ,'GIT_ASKPASS':str(askpass),'GIT_TERMINAL_PROMPT':'0','GIT_LFS_SKIP_SMUDGE':'1'}
  assert run(['git','rev-parse','HEAD'],cwd=work/'hf-git')==plan['hfRevision']
  assert not run(['git','status','--porcelain'],cwd=work/'hf-git'), 'Frozen HF Git tree is dirty'
- run(['git','push','origin','HEAD:main'],cwd=work/'hf-git',env=env)
+ if state['hfRevision']==plan['hfParent']:run(['git','push','origin','HEAD:main'],cwd=work/'hf-git',env=env)
  assert get('https://huggingface.co/api/datasets/'+HF).json()['sha']==plan['hfRevision']
  check_frozen(work)
- subprocess.run(['npx','--yes','wrangler@4','pages','deploy',str(work/'website'),'--project-name=doctor-ghezelbaash','--branch=main','--commit-hash='+plan['sourceCommit'],'--commit-message=Frozen DOI-policy coordinated release','--commit-dirty=false'],cwd=ROOT,check=True)
+ if state['siteSource']==plan['sitePreviousSource']:subprocess.run(['npx','--yes','wrangler@4','pages','deploy',str(work/'website'),'--project-name=doctor-ghezelbaash','--branch=main','--commit-hash='+plan['sourceCommit'],'--commit-message=Frozen DOI-policy coordinated release','--commit-dirty=false'],cwd=ROOT,check=True)
  retry(work,'site',lambda:verify_site(work),attempts=18)
  client=kaggle_client();old=json.loads((work/'kaggle-before/dataset-metadata.json').read_text())
- correct_kaggle_sources(client,work,old,plan['hfRevision'],22,plan['sourceCommit'])
- guard_kaggle_version(get('https://api.kaggle.com/v1/datasets/view/'+KG).json(),22)
- check_frozen(work)
- # Never retry a dataset version write or compensate for cache with a new version.
- result=client.dataset_create_version(str(work/'kaggle'),version_notes='Frozen DOI 10.5281/zenodo.23474664; validated website/HF/Parquet/notebook alignment',quiet=True,convert_to_csv=False,delete_old_versions=False,dir_mode='zip')
- dump(work/'kaggle-submission.json',{'status':str(getattr(result,'status','submitted')),'version':23})
+ if state['kaggleVersion']==22:
+  # Metadata settings may have converged before an ambiguous version response.
+  owner=work/'kaggle-resume-owner';owner.mkdir(exist_ok=True);client.dataset_metadata(KG,str(owner));wrapped=json.loads((owner/'dataset-metadata.json').read_text());current=dict(wrapped.get('info') or wrapped)
+  frozen=json.loads((work/'kaggle/dataset-metadata.json').read_text())
+  assert current['description'].strip()==old['description'].strip()
+  assert current['userSpecifiedSources'] in {old['userSpecifiedSources'],frozen['userSpecifiedSources']}
+  correct_kaggle_sources(client,work,current,plan['hfRevision'],22,plan['sourceCommit'])
+  guard_kaggle_version(get('https://api.kaggle.com/v1/datasets/view/'+KG).json(),22)
+  check_frozen(work)
+  # Never retry a dataset version write or compensate for cache with a new version.
+  result=client.dataset_create_version(str(work/'kaggle'),version_notes='Frozen DOI 10.5281/zenodo.23474664; validated website/HF/Parquet/notebook alignment',quiet=True,convert_to_csv=False,delete_old_versions=False,dir_mode='zip')
+  dump(work/'kaggle-submission.json',{'status':str(getattr(result,'status','submitted')),'version':23})
  retry(work,'kaggle',lambda:verify_kaggle(work),attempts=120)
  publish_notebook(work,client)
  retry(work,'hf',lambda:verify_hf(work),attempts=90)

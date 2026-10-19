@@ -67,7 +67,9 @@ jobs:
           python - <<'PYGUARD'
           import json,os
           p=json.load(open('/tmp/coordinated-release/release-plan.json'))
-          assert p['sourceCommit']==os.environ['GITHUB_SHA']
+          import subprocess
+          subprocess.run(['git','merge-base','--is-ancestor',p['sourceCommit'],os.environ['GITHUB_SHA']],check=True)
+          subprocess.run(['git','diff','--quiet',p['sourceCommit'],os.environ['GITHUB_SHA'],'--','src','build','package.json','package-lock.json','astro.config.mjs','.nvmrc'],check=True)
           PYGUARD
       - run: python .github/scripts/coordinated_doi_release.py "$OPERATION"
       - name: Preserve the exact frozen candidate including its Git object
