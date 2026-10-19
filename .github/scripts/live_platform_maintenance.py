@@ -157,10 +157,19 @@ def main():
     parser.add_argument('--kaggle-version', type=int, required=True)
     parser.add_argument('--website-commit', required=True)
     parser.add_argument('--publish', action='store_true')
+    parser.add_argument('--zenodo-only', action='store_true')
     args = parser.parse_args()
     root = args.root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     hf_info = json.loads(get('https://huggingface.co/api/datasets/' + HF))
+    if args.zenodo_only:
+        assert hf_info['sha'] == args.hf_revision, 'HF changed since live review'
+        report = {'scope': 'Zenodo metadata only', 'hfRevision': args.hf_revision, 'zenodo': []}
+        for record in [22838416, 23289009]:
+            report['zenodo'].append(zenodo_metadata(record, args.hf_revision, os.environ['ZENODO_TOKEN']))
+            dump(root / 'report.json', report)
+        print(json.dumps(report), flush=True)
+        return
     kg_info = json.loads(get('https://api.kaggle.com/v1/datasets/view/' + KG))
     assert hf_info['sha'] == args.hf_revision, 'HF changed since live review'
     assert kg_info['currentVersionNumber'] == args.kaggle_version, 'Kaggle changed since live review'

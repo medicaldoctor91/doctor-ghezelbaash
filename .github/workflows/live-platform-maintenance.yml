@@ -11,10 +11,14 @@ on:
       website_commit:
         required: true
         type: string
+      zenodo_only:
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
-  group: doctor-ghezelbaash-publication
+  group: ${{ inputs.zenodo_only && 'doctor-ghezelbaash-archive-metadata' || 'doctor-ghezelbaash-publication' }}
   cancel-in-progress: false
 jobs:
   maintain:
@@ -27,6 +31,7 @@ jobs:
       EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
       EXPECTED_KAGGLE_VERSION: ${{ inputs.kaggle_version }}
       EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
+      ZENODO_ONLY: ${{ inputs.zenodo_only }}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -37,7 +42,10 @@ jobs:
       - name: Verify lossless viewer repair
         run: python tests/live-maintenance.test.py
       - name: Maintain exact fetched live data and refresh notebook
-        run: python .github/scripts/live_platform_maintenance.py --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --publish
+        run: |
+          mode=--publish
+          if [ "$ZENODO_ONLY" = true ]; then mode=--zenodo-only; fi
+          python .github/scripts/live_platform_maintenance.py --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" "$mode"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
