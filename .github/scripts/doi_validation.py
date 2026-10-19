@@ -78,7 +78,7 @@ def validate_policy(root, *, archive=False):
     graph = json.loads((root / 'graph.jsonld').read_text())
     nodes = {node['@id']: node for node in graph['@graph']}
     concept_url, exact_url = POLICY['concept']['url'], POLICY['currentArchive']['url']
-    assert nodes[concept_url]['dcat:hasCurrentVersion']['@id'] == exact_url
+    assert nodes[concept_url]['dcterms:hasVersion']['@id'] == exact_url
     assert nodes[exact_url]['dcterms:isVersionOf']['@id'] == concept_url
     assert nodes[exact_url]['version'] == POLICY['currentArchive']['packagingVersion']
     for entity in [POLICY['canonicalDatasetIri'], 'https://www.ghezelbaash.ir/#saeed-ghezelbash', 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah']:
@@ -119,7 +119,11 @@ def validate_archive(root, *, online=False):
             def handle_endtag(self, tag):
                 if tag == 'script' and self.capture:self.blocks.append(json.loads(''.join(self.text)));self.capture=False
         inline=Inline();inline.feed((root/'index.html').read_text())
-        assert any(isomorphic(g,rdflib.Graph().parse(data=json.dumps(block),format='json-ld')) for block in inline.blocks), 'Inline JSON-LD differs from graph.jsonld'
+        # A browser projection is intentionally smaller than the standalone graph.
+        # Every selected JSON-LD field/value must remain authored, and all local
+        # entity references must close within the projection.
+        from browser_projection import validate_home_projection
+        validate_home_projection(root/'graph.jsonld', inline.blocks, (root/'index.html').read_bytes())
     triples = len(g)
     g.parse(root / 'provenance.jsonld', format='json-ld')
     g.parse(root / 'dcat.ttl', format='turtle')

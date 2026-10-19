@@ -79,7 +79,7 @@ def prepare(previous, work):
     revision=p['currentArchive']['inputBaselineHfRevision']
     base='https://huggingface.co/datasets/'+repo+'/resolve/'+revision+'/'
     baseline=work/'hf-baseline';baseline.mkdir(exist_ok=True)
-    names=['README.md','datapackage.json','croissant.json','dcat.ttl','void.ttl','entity-facts.csv-metadata.json',
+    names=['.gitattributes','README.md','datapackage.json','croissant.json','dcat.ttl','void.ttl','entity-facts.csv-metadata.json',
            'current-release-matrix.json','release-attestation.json','release-provenance.json','integrity-manifest.json','dist-sha256.json']
     names+=['viewer/'+name for name in ['packaging.json','iri-migration.json','clinical-passages.parquet','clinical-answers.parquet','entity-facts.parquet','query-matrix.parquet','positioning-examples.parquet']]
     def download(name):

@@ -48,7 +48,9 @@ def sync_table_counts(text,tables):
 def common_release(root,ctx):
     release=load(root/'datapackage.json')
     scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
-    publication={'publicationRun':ctx['run_url'],'publicationScope':scope}
+    publication={'publicationScope':scope}
+    if not ctx.get('coordinated_release'):publication['publicationRun']=ctx['run_url']
+    else:publication.update(buildSource='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+ctx['source_commit'],releaseCohort=DOI_POLICY['currentArchive']['doi'],archiveBindingStatus='reserved release binding; availability is established by external publication receipts',historicalArchivesUnchanged=True)
     if ctx.get('website_publication_run_url'):publication['websitePublicationRun']=ctx['website_publication_run_url']
     if ctx.get('publication_commit'):publication['publicationCommit']=ctx['publication_commit']
     dump(root/'current-release-matrix.json',{
@@ -60,7 +62,7 @@ def common_release(root,ctx):
       'archivedSnapshotsUpdated':archives_updated})
     verified_names=['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json',
                     'croissant.json','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json']
-    att={'sourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,'publicationRun':ctx['run_url'],
+    att={'sourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,**publication,
          'version':release['version'],'maintenanceDate':ctx['maintenance_date'],'openalex':ctx['openalex'],'doiPolicy':DOI_POLICY,
          'publicationScope':scope,'archivedSnapshotsUpdated':archives_updated,
          'verifiedResources':{n:sha(root/n) for n in verified_names if (root/n).is_file()}}
@@ -102,7 +104,7 @@ def sync_positioning(root):
     # CSV JSON encodes nullable/list fields; this distinguishes null, empty string and empty list.
     encoded={'messages','subject_iris','evidence_urls','query_aliases','source_list_order','observed_at','historical_release','historical_release_doi'}
     with path.with_suffix('.csv').open('w',newline='') as handle:
-        writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader()
+        writer=csv.DictWriter(handle,fieldnames=fields,lineterminator="\n");writer.writeheader()
         writer.writerows({k:json.dumps(v,ensure_ascii=False,separators=(',',':')) if k in encoded else v for k,v in row.items()} for row in examples)
     # HF statistics fails on the 2/3-length native messages histogram. Keep the
     # source JSONL intact and encode only this viewer column losslessly.
@@ -185,7 +187,7 @@ def build_hf(dist,baseline,out,ctx):
     md += 'This package mirrors the published website source commit `'+ctx['source_commit']+'`. '
     md += 'Croissant creator/publisher types, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
     md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and the source-dependent Viewer tables are rebuilt without changing their source-row semantics.\n\n'
-    md += 'Package publication run: '+ctx['run_url']+'.\n'
+    md += ('Build source: ' if ctx.get('coordinated_release') else 'Package publication run: ')+ctx['run_url']+'.\n'
     if positioning:md += '\nThe '+str(positioning['rows'])+' competitive training examples include all 47 original message arrays unchanged plus additional source-linked examples, with typed nullable fields and current content baseline v1.3.4. The physician and practice keep distinct IRIs.\n'
     if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
     if ctx['archived_snapshots_updated']:
@@ -196,7 +198,14 @@ def build_hf(dist,baseline,out,ctx):
         md += 'They were not updated by this Hugging Face/Kaggle maintenance publication; use their own recorded provenance when citing those archives.\n'
     if ctx.get('coordinated_release'):
         md=md.replace('They were not updated by this Hugging Face/Kaggle maintenance publication; use their own recorded provenance when citing those archives.','The exact Dataset archive belongs to this coordinated release; the website source archive remains historical. Platform-specific descriptors and receipts retain their own measured bytes.')
+    if ctx.get('coordinated_release'):
+        md=md.replace('mirrors the published website source commit','is built from website source commit')
+        md=md.replace('Archived Zenodo snapshots are retained at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. ', 'Exact release binding: '+ctx['zenodo_dataset']+'. Historical software source: '+ctx['zenodo_source']+'. ')
     (out/'README.md').write_text(render_doi_text(md))
+    if (baseline/'.gitattributes').is_file():
+        attrs=(baseline/'.gitattributes').read_text()
+        if '*.vcf -text' not in attrs:attrs+='\n# Preserve RFC 6350 CRLF vCard bytes; CSV generators emit LF.\n*.vcf -text\n'
+        (out/'.gitattributes').write_text(attrs)
     # Preserve a explicitly named historical pointer, but the current inventory hashes exact bytes.
     inventory={p.relative_to(out).as_posix():{'bytes':p.stat().st_size,'sha256':sha(p)} for p in sorted(out.rglob('*')) if p.is_file() and p.name not in {'dist-sha256.json'} and '.git' not in p.parts}
     dump(out/'dist-sha256.json',{'algorithm':'sha256','canonicalDatasetIri':DATASET,'sourceCommit':ctx['source_commit'],
@@ -250,6 +259,9 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
        canonical_dataset_iri=DATASET,upstream_revision=hf_revision,website_source_commit=ctx['source_commit'],
        package_publication_run_id=int(ctx['run_id']),package_publication_run_url=ctx['run_url'],
        archived_files_are_current_dist=False)
+    if ctx.get('coordinated_release'):
+        manifest.pop('package_publication_run_id',None);manifest.pop('package_publication_run_url',None)
+        manifest.update(build_source_commit=ctx['source_commit'],build_source_url=ctx['run_url'],release_cohort=DOI_POLICY['currentArchive']['doi'],publication_receipts='external; not embedded in frozen payload')
     if ctx.get('website_publication_run_url'):
         manifest['website_release_run_url']=ctx['website_publication_run_url']
         manifest['website_release_run_id']=int(ctx['website_publication_run_url'].rstrip('/').rsplit('/',1)[-1])
@@ -263,7 +275,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     spec=load(hf/'viewer/packaging.json')['tables']['query_matrix']
     encoded=set(spec['jsonEncodedFields'])
     with (out/'query-matrix.csv').open('w',newline='') as handle:
-        writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader()
+        writer=csv.DictWriter(handle,fieldnames=fields,lineterminator="\n");writer.writeheader()
         for row in rows(hf,spec):
             dst={k:(json.dumps(row[k],ensure_ascii=False,separators=(',',':')) if k in encoded else row[k])
                  for k in fields if k in row}
@@ -324,7 +336,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='\n\n## Machine-readable package maintenance — '+ctx['maintenance_date']+'\n\n'
     readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
-    readme+='Package publication run: '+ctx['run_url']+'.\n'
+    readme+=('Build source: ' if ctx.get('coordinated_release') else 'Package publication run: ')+ctx['run_url']+'.\n'
     if 'market_positioning' in packaging['tables']:readme+='\nThe '+str(packaging['tables']['market_positioning']['rows'])+' competitive training examples preserve all 47 original message arrays and add source-linked examples, with content baseline v1.3.4 and lossless typed Parquet.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
     readme+='\nCroissant, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
@@ -334,6 +346,9 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         readme+='\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. Their DOI identifiers are retained; consult per-platform receipts for final files and provenance.\n'
     else:
         readme+='\nArchived Zenodo snapshots: '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. They were not updated in this publication.\n'
+    if ctx.get('coordinated_release'):
+        readme=readme.replace('Archived Zenodo snapshots: '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. They were not updated in this publication.', 'Exact release binding: '+ctx['zenodo_dataset']+'. Historical software source: '+ctx['zenodo_source']+'. Historical archives remain unchanged; publication availability is recorded in external receipts.')
+        readme=readme.replace('match the published website','match the website candidate')
     # Update only current release fields; keep every existing author and contributor verbatim.
     citation=(previous/'CITATION.cff').read_text()
     for key,value in [('version',DOI_POLICY['currentArchive']['packagingVersion']),

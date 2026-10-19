@@ -14,7 +14,7 @@ export function applyDoiPolicy(source) {
   const ref = id => ({'@id': id});
   const identifiers = [
     {'@id': source.canonicalOrigin + '/identifier-dataset-zenodo-concept', '@type': 'PropertyValue', propertyID: 'Zenodo Concept DOI', name: 'Public collection DOI and latest-version entry point', value: concept.doi, url: concept.url},
-    {'@id': source.canonicalOrigin + '/identifier-dataset-zenodo-current-archive', '@type': 'PropertyValue', propertyID: 'Zenodo Version DOI', name: 'Latest verified archive snapshot ' + archive.packagingVersion, value: archive.doi, url: archive.url},
+    {'@id': source.canonicalOrigin + '/identifier-dataset-zenodo-current-archive', '@type': 'PropertyValue', propertyID: 'Zenodo Version DOI', name: 'Exact release binding ' + archive.packagingVersion, value: archive.doi, url: archive.url},
   ];
   for (const node of identifiers) add(node);
   // Existing version-labelled historical identifiers and release history stay intact.
@@ -25,20 +25,20 @@ export function applyDoiPolicy(source) {
   add({'@id': concept.url, '@type': ['Dataset', 'dcat:DatasetSeries', 'prov:Collection'],
        name: 'Dr. Saeed Ghezelbash — Zenodo archive collection', identifier: concept.doi, url: concept.url,
        creator: person, license: dataset.license, about: ref(datasetIri),
-       'dcat:hasCurrentVersion': ref(archive.url), 'dcterms:hasVersion': ref(archive.url)});
+       'dcterms:hasVersion': ref(archive.url)});
   add({'@id': archive.url, '@type': ['Dataset', 'dcat:Dataset', 'prov:Entity'],
        name: 'Dr. Saeed Ghezelbash — exact Zenodo snapshot ' + archive.packagingVersion,
        identifier: archive.doi, version: archive.packagingVersion, url: archive.url,
        creator: person, license: dataset.license, about: ref(datasetIri),
-       description: 'Immutable archive of content baseline ' + archive.contentBaseline + '; source commit ' + archive.sourceCommit + '. Current website and platform distributions record their own source revisions.',
+       description: 'Exact archive binding, reserved before publication, for content baseline ' + archive.contentBaseline + '; source commit ' + archive.sourceCommit + '. Current website and platform distributions record their own source revisions.',
        'dcterms:isVersionOf': ref(concept.url), 'dcat:isVersionOf': ref(concept.url),
        'prov:wasDerivedFrom': ref('https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/' + archive.sourceCommit)});
   const distribution = source.canonicalOrigin + '/project-zenodo-current-release';
   add({'@id': distribution, '@type': ['DataDownload', 'dcat:Distribution'],
-       name: 'Zenodo latest verified archived snapshot ' + archive.packagingVersion,
+       name: 'Zenodo exact release binding ' + archive.packagingVersion,
        url: concept.url, identifier: 'DOI:' + archive.doi, version: archive.packagingVersion,
        creator: person, publisher: person, license: dataset.license,
-       'dcterms:title': 'Zenodo latest verified archived snapshot ' + archive.packagingVersion,
+       'dcterms:title': 'Zenodo exact release binding ' + archive.packagingVersion,
        isPartOf: ref(datasetIri), about: ref(archive.url),
        'dcat:isDistributionOf': ref(datasetIri), 'dcat:accessURL': ref(concept.url),
        'dcat:downloadURL': ref(DOI_POLICY.downloadBindings.bundle)});
@@ -62,7 +62,7 @@ export function applyDoiPolicy(source) {
   }
   source.head.headExtras = source.head.headExtras.filter(text => !text.includes('Zenodo preservation Version DOI'));
   source.head.headExtras.push(`<link href="${concept.url}" rel="related" title="Zenodo collection DOI — latest version">`);
-  source.head.headExtras.push(`<link href="${archive.url}" rel="related" title="Exact archived snapshot ${archive.packagingVersion}">`);
-  source.machineProjection.discoveryGuide += `\n\n## Zenodo collection and reproducible archive\n\n- [Zenodo collection — latest version](${concept.url}): public persistent collection DOI ${concept.doi}.\n- [Latest verified immutable snapshot ${archive.packagingVersion}](${archive.url}): exact archive DOI ${archive.doi}; source commit ${archive.sourceCommit}. Current platform packages retain their own commit-bound receipts.\n`;
+  source.head.headExtras.push(`<link href="${archive.url}" rel="related" title="Exact release binding ${archive.packagingVersion}">`);
+  source.machineProjection.discoveryGuide += `\n\n## Zenodo collection and reproducible archive\n\n- [Zenodo collection — latest version](${concept.url}): public persistent collection DOI ${concept.doi}.\n- [Exact release binding ${archive.packagingVersion}](${archive.url}): exact archive DOI ${archive.doi}; source commit ${archive.sourceCommit}. Current platform packages retain their own commit-bound receipts.\n`;
   return source;
 }

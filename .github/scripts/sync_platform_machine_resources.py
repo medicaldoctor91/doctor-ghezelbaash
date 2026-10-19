@@ -155,7 +155,7 @@ def source_metadata(sources, revision, website_commit):
     assert 'Website source commit: ' + website_commit in result, 'Expected website source pointer was not found'
     from platform_bundle import DOI_POLICY
     marker=' ; DOI policy: '
-    result=result.split(marker)[0]+marker+'Public collection/latest version '+DOI_POLICY['concept']['url']+' ; Exact reproducible archive '+DOI_POLICY['currentArchive']['packagingVersion']+' '+DOI_POLICY['currentArchive']['url']
+    result=result.split(marker)[0]+marker+'Public collection/latest version '+DOI_POLICY['concept']['url']+' ; Exact release binding (reserved before publication; availability verified by external receipts) '+DOI_POLICY['currentArchive']['packagingVersion']+' '+DOI_POLICY['currentArchive']['url']
     return result
 
 

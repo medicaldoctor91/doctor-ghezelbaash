@@ -74,7 +74,7 @@ The current files reproduce the verified final website distribution at source co
 
 Public collection and latest version: [{{doi.concept_doi}}]({{doi.concept_url}}).
 
-Exact archived snapshot **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. Historical DOI references below retain their stated versions.
+Exact release binding **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. The DOI is reserved before publication; availability is verified by external publication receipts, not asserted by this frozen card. Historical DOI references below retain their stated versions.
 
 ## Dataset scope, curation and intended use
 
@@ -200,7 +200,7 @@ Sorani Kurdish: https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq
 
 ## Identity, attribution and citation
 
-Public name: **Dr. Saeed Ghezelbash / دکتر سعید قزلباش**. Professional and scholarly records also use **Mohammad Saeed Ghezelbash**. Stable identifiers connect these name forms to the same physician:
+Public name: **Saeed Ghezelbash / سعید قزلباش**. Stable identifiers identify the physician:
 
 - Wikidata: https://www.wikidata.org/entity/Q140287622
 - ORCID: https://orcid.org/0009-0001-9346-8475

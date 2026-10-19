@@ -6,7 +6,7 @@ Source release **{{source_version}}**, edition **{{edition}}**. Kaggle packaging
 
 Canonical dataset: `https://www.ghezelbaash.ir/graph.jsonld/dataset`. Physician: `Q140287622`; ORCID `0009-0001-9346-8475`; OpenAlex `A5146521397`.
 
-Website source commit: `{{source_commit}}`. Verified website publication: {{website_run_url}}.
+Website build source commit: `{{source_commit}}`. Publication receipts are recorded separately from these frozen build inputs.
 Pinned Hugging Face revision: `{{hf_revision}}`.
 
 All copied resources retain the exact bytes of this Hub revision. Five Parquet tables reconstruct every original source row, including omitted fields, JSON arrays and typed training-message structures. Query references resolve against current graph and provenance nodes. `checksums.sha256` covers all 46 other downloadable files.
@@ -39,13 +39,13 @@ Zenodo DOI links identify archived snapshots with their own recorded provenance.
 
 Public collection and latest version: [{{doi.concept_doi}}]({{doi.concept_url}}).
 
-Exact archived snapshot **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. Historical DOI references below retain their stated versions.
+Exact release binding **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. The DOI is reserved before publication; availability is verified by external publication receipts, not asserted by this frozen card. Historical DOI references below retain their stated versions.
 
 ## فارسی
 
-این مجموعه، هویت حرفه‌ای دکتر سعید قزلباش، متن‌های آموزشی تألیفی، پاسخ‌های مستند، گراف دانش و پرس‌وجوهای چندزبانه را به شناسه‌ها و منابع دقیق متصل می‌کند. نسخهٔ جاری کاگل و هاگینگ‌فیس از فایل‌های یکسان استفاده می‌کنند؛ آرشیوهای زنودو، نسخه‌های ثبت‌شدهٔ خود را حفظ می‌کنند و در این انتشار به‌روزرسانی نشده‌اند. شخص پزشک، کلینیک و مجموعه‌داده شناسه‌های مستقل و ارتباط‌های روشن دارند. DOIهای فعلی زنودو ثابت مانده‌اند و نسخه‌های تاریخی محفوظ‌اند.
+این مجموعه، هویت حرفه‌ای دکتر سعید قزلباش، متن‌های آموزشی تألیفی، پاسخ‌های مستند، گراف دانش و پرس‌وجوهای چندزبانه را به شناسه‌ها و منابع دقیق متصل می‌کند. نسخهٔ جاری کاگل و هاگینگ‌فیس از فایل‌های یکسان استفاده می‌کنند؛ شناسهٔ دقیق این انتشار در بخش DOI آمده است؛ آرشیوهای تاریخی با فایل‌ها و سوابق اصلی خود محفوظ می‌مانند. شخص پزشک، کلینیک و مجموعه‌داده شناسه‌های مستقل و ارتباط‌های روشن دارند. DOI مجموعه، پیوند پایدار مجموعه است و DOI دقیق، شناسهٔ همین انتشار است.
 
 License: Creative Commons Attribution 4.0 International (CC BY 4.0). Preserve resource-level provenance and third-party attribution.
 
 
-Chronic migraine botulinum toxin treatment is personally provided by Dr. Saeed Ghezelbash after clinical assessment at his physician-owned Kermanshah practice. The clinical therapy and access service have distinct, linked IRIs. Content baseline remains **v1.3.4**; maintenance commits and platform packaging revisions identify these corrections without minting a new release or DOI.
+Chronic migraine botulinum toxin treatment is personally provided by Dr. Saeed Ghezelbash after clinical assessment at his physician-owned Kermanshah practice. The clinical therapy and access service have distinct, linked IRIs. Content baseline remains **v1.3.4**; the exact release DOI identifies this coordinated snapshot; historical records retain their own provenance.

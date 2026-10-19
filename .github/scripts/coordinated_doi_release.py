@@ -36,6 +36,14 @@ def run(args,**kwargs):
  return subprocess.check_output([str(x) for x in args],text=True,**kwargs).strip()
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def inventory(root):return {p.relative_to(root).as_posix():sha(p) for p in sorted(root.rglob('*')) if p.is_file() and '.git' not in p.relative_to(root).parts}
+CANDIDATE_SCHEMA=2
+def require_reviewable_candidate(work):
+ plan=json.loads((work/'release-plan.json').read_text())
+ assert plan.get('candidateSchema')==CANDIDATE_SCHEMA, 'Superseded candidate: rebuild with Git logical-byte validation'
+ assert plan['sourceCommit']!='14304eb2ed06d8d87563a2979df2175407399da0', 'Rejected superseded source'
+ assert plan['hfParent']==P['currentArchive']['inputBaselineHfRevision']
+ return plan
+
 def check_frozen(work):
  for platform,files in json.loads((work/'frozen-sha256.json').read_text()).items():
   actual=({name:sha(work/name) for name in files} if platform=='controls' else inventory(work/platform))
@@ -45,6 +53,7 @@ def preflight(work):
  from platform_bundle import build_kaggle,context
  from sync_platform_machine_resources import extract_package,kaggle_client,source_metadata
  from doi_validation import validate_policy,validate_archive
+ assert not (work/'frozen-sha256.json').exists(), 'Frozen candidate already exists; use a new work directory'
  state=inspect(work);assert not state['submitted'] and state['hfRevision']==P['currentArchive']['inputBaselineHfRevision']
  auth=requests.get('https://huggingface.co/api/whoami-v2',headers={'Authorization':'Bearer '+os.environ['HF_TOKEN']},timeout=60);auth.raise_for_status()
  cf=requests.get('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/pages/projects/doctor-ghezelbaash',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']},timeout=60);cf.raise_for_status();assert cf.json()['success']
@@ -58,6 +67,7 @@ def preflight(work):
  env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'}
  run(['git','clone','--depth','1','https://huggingface.co/datasets/'+HF,repo],env=env)
  assert run(['git','rev-parse','HEAD'],cwd=repo)==state['hfRevision']
+ assert '*.vcf -text' in (hf/'.gitattributes').read_text()
  for file in hf.rglob('*'):
   if file.is_file():
    dest=repo/file.relative_to(hf);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(file,dest)
@@ -72,6 +82,8 @@ def preflight(work):
  dump(work/'removed-obsolete-reader-assets.json',obsolete)
  run(['git','lfs','install','--local'],cwd=repo)
  run(['git','add','--all'],cwd=repo,env=env)
+ from git_payload import validate_index
+ dump(work/'hf-git-logical-bytes.json',validate_index(repo,hf))
  fixed={**env,'GIT_AUTHOR_NAME':'Dataset Release Automation','GIT_AUTHOR_EMAIL':'medicaldoctor91@users.noreply.github.com','GIT_COMMITTER_NAME':'Dataset Release Automation','GIT_COMMITTER_EMAIL':'medicaldoctor91@users.noreply.github.com','GIT_AUTHOR_DATE':'2026-10-19T00:00:00Z','GIT_COMMITTER_DATE':'2026-10-19T00:00:00Z'}
  run(['git','commit','-m','Frozen DOI 23474664; source '+source],cwd=repo,env=fixed)
  revision=run(['git','rev-parse','HEAD'],cwd=repo)
@@ -81,9 +93,11 @@ def preflight(work):
  client=kaggle_client();client.dataset_metadata(KG,str(before));wrapped=json.loads((before/'dataset-metadata.json').read_text());control=dict(wrapped.get('info') or wrapped);control['id']=KG;dump(before/'dataset-metadata.json',control)
  ctx=context(source,'0',maintenance_date='2026-10-19');ctx['coordinated_release']=True;ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source
  kg=work/'kaggle';description=build_kaggle(hf,before,kg,ctx,23,revision)
+ control['subtitle']=', '.join([format(json.loads((hf/'viewer/packaging.json').read_text())['tables'][name]['rows'],',')+' '+label for name,label in [('entity_facts','facts'),('clinical_passages','clinical passages'),('query_matrix','queries'),('clinical_answers','source-linked answers')]])
  control['description']=description;control['userSpecifiedSources']=source_metadata(control['userSpecifiedSources'],revision,source);dump(kg/'dataset-metadata.json',control)
  notebook=work/'notebook';notebook.mkdir(exist_ok=True);client.kernels_pull(NB,str(notebook),metadata=True,quiet=True)
  public=get('https://www.kaggle.com/api/v1/kernels/pull/'+NB).json();nb_version=public['metadata']['currentVersionNumber']+1
+ assert nb_version==9, 'Public notebook baseline is no longer version 8'
  meta=json.loads((notebook/'kernel-metadata.json').read_text());meta.update(id=NB,code_file='starter.ipynb',dataset_sources=[KG+'/23'],enable_internet=True);dump(notebook/'kernel-metadata.json',meta);shutil.copyfile(kg/'starter.ipynb',notebook/'starter.ipynb')
  # Full validators execute every final notebook cell against these exact inputs.
  os.environ['RELEASE_EXECUTION_REPORT']=str(work/'local-notebook-execution.json')
@@ -91,6 +105,8 @@ def preflight(work):
   dump(work/(platform+'-doi-policy.json'),validate_policy(folder))
   subprocess.run([sys.executable,str(ROOT/'tests/validate_platform_sync.py'),str(folder),'--platform',platform,'--source-commit',source,'--report',str(work/(platform+'-preflight.json'))],check=True)
  local=json.loads((work/'local-notebook-execution.json').read_text());assert local['status']=='PASS' and local['input_checksums_sha256']==sha(kg/'checksums.sha256')
+ from candidate_contract import validate_candidate
+ dump(work/'candidate-editorial-contract.json',validate_candidate(work))
  dump(work/'archive-five-union-preflight.json',validate_archive(work/'archive'))
  from archive_bundle import build_archive
  before_archive=inventory(work/'archive');before_zip=sha(work/Path(P['downloadBindings']['bundle']).name)
@@ -107,7 +123,7 @@ def preflight(work):
  differences={name:items for name,items in variants.items() if len(set(items.values()))>1}
  assert set(differences)<=allowed, ('Undocumented byte differences',set(differences)-allowed)
  dump(work/'intentional-platform-differences.json',{'differences':differences,'reason':'Platform cards/receipts, immutable archive descriptors and inventories are scoped; all other shared originals are byte-identical.','identicalSharedFiles':sum(len(v)>1 and len(set(v.values()))==1 for v in variants.values())})
- dump(work/'release-plan.json',{'sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':22,'kaggleVersion':23,'notebookPreviousVersion':nb_version-1,'notebookVersion':nb_version,'sitePreviousSource':state['siteSource'],'record':23474664})
+ dump(work/'release-plan.json',{'candidateSchema':CANDIDATE_SCHEMA,'sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':22,'kaggleVersion':23,'notebookPreviousVersion':nb_version-1,'notebookVersion':nb_version,'sitePreviousSource':state['siteSource'],'record':23474664})
  r=requests.get('https://zenodo.org/api/deposit/depositions/23474664',headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN']},timeout=60);r.raise_for_status();md=r.json()['metadata']
  md.update(upload_type='dataset',version=P['currentArchive']['packagingVersion'],doi=P['currentArchive']['doi'])
  md['description']='<p>Public collection and latest version: <a href="'+P['concept']['url']+'">'+P['concept']['doi']+'</a>.</p><p>Exact reproducible Dataset snapshot: <a href="'+P['currentArchive']['url']+'">'+P['currentArchive']['doi']+'</a>; packaging '+P['currentArchive']['packagingVersion']+'; content baseline 1.3.4, edition 2026-10-18.</p><p>Source commit '+source+'. Frozen Hugging Face revision '+revision+'; Kaggle dataset version 23; pinned notebook version '+str(nb_version)+'. The source commit identifies build inputs; publication/execution receipts are external and do not modify the frozen files.</p><p>The five root archive descriptors use this record’s own immutable file URLs and measured checksums. Person, Clinic and canonical Dataset IRI '+P['canonicalDatasetIri']+' are distinct from collection/archive DOI entities. Files under upstream/ retain explicitly historical input receipts; older releases retain their own immutable payloads.</p>'
@@ -130,6 +146,19 @@ def retry(work,label,callback,attempts=60):
    if attempt+1<attempts:time.sleep(10)
  raise RuntimeError(label+' not publicly converged: '+str(last))
 
+def validate_public_file(name,response,digest):
+ assert response.status_code==200, ('Site HTTP',name,response.status_code)
+ assert hashlib.sha256(response.content).hexdigest()==digest, ('Site bytes',name)
+ return True
+
+def validate_missing_route(response,expected):
+ assert response.status_code==404, ('Missing route must return 404',response.status_code)
+ assert response.content==expected, 'Missing route body differs from frozen 404 page'
+ assert b'noindex' in response.content.lower()
+ import re
+ assert not re.search(rb'<link[^>]+rel=["\']canonical["\']',response.content,re.I), 'Missing route has a canonical'
+ return True
+
 def verify_site(work):
  from doi_validation import validate_policy
  expected=inventory(work/'website');live=work/'site-live';live.mkdir(exist_ok=True)
@@ -139,10 +168,12 @@ def verify_site(work):
   shutil.copyfile(work/'website'/name,live/name)
  public={name:digest for name,digest in expected.items() if name not in controls}
  def fetch(item):
-  name,digest=item;r=requests.get(SITE+requests.utils.quote(name,safe='/'),timeout=90,headers={'Cache-Control':'no-cache'});assert r.status_code==(404 if name=='404.html' else 200),('Site HTTP',name,r.status_code)
-  assert hashlib.sha256(r.content).hexdigest()==digest,('Site bytes',name)
+  name,digest=item;r=requests.get(SITE+requests.utils.quote(name,safe='/'),timeout=90,headers={'Cache-Control':'no-cache'})
+  validate_public_file(name,r,digest)
   target=live/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(r.content)
  with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(fetch,public.items()))
+ missing=requests.get(SITE+'__release-audit-missing-'+str(time.time_ns()),timeout=60,headers={'Cache-Control':'no-cache'})
+ validate_missing_route(missing,(work/'website/404.html').read_bytes())
  source=json.loads((work/'release-plan.json').read_text())['sourceCommit']
  assert json.loads((live/'release-provenance.json').read_text())['sourceCommit']==source
  validate_policy(live)
@@ -190,7 +221,7 @@ def verify_kaggle(work):
  controls={'dataset-metadata.json','kernel-metadata.json'}
  expected={k:v for k,v in inventory(work/'kaggle').items() if k not in controls};assert inventory(live)==expected,'Public Kaggle ZIP differs from frozen candidate'
  owner,slug=KG.split('/');r=requests.post('https://api.kaggle.com/v1/datasets.DatasetApiService/GetDatasetMetadata',json={'ownerSlug':owner,'datasetSlug':slug},timeout=60);r.raise_for_status();public=r.json();public=public.get('info') or public
- control=json.loads((work/'kaggle/dataset-metadata.json').read_text());assert public['description'].strip()==control['description'].strip(),'Public Kaggle description differs';assert public['userSpecifiedSources']==control['userSpecifiedSources'],'Public Kaggle sources differ'
+ control=json.loads((work/'kaggle/dataset-metadata.json').read_text());assert public['subtitle']==control['subtitle'],'Public Kaggle subtitle differs';assert public['description'].strip()==control['description'].strip(),'Public Kaggle description differs';assert public['userSpecifiedSources']==control['userSpecifiedSources'],'Public Kaggle sources differ'
  validate_policy(live)
  return {'version':23,'publicMetadataVerified':True,'publicZipSha256':sha(z),'filesSha256Matched':len(expected)}
 
@@ -221,7 +252,7 @@ def publish_notebook(work,client):
 def publish_all(work):
  from sync_platform_machine_resources import kaggle_client,correct_kaggle_sources,guard_kaggle_version
  from doi_release import publish as publish_zenodo
- plan=json.loads((work/'release-plan.json').read_text());check_frozen(work)
+ plan=require_reviewable_candidate(work);check_frozen(work)
  state=inspect(work);assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']} and state['kaggleVersion'] in {22,23} and state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']}
  # The preflight report and checksums exist before this first payload publication.
  assert json.loads((work/'preflight-report.json').read_text())['status']=='PASS'
@@ -240,7 +271,7 @@ def publish_all(work):
   owner=work/'kaggle-resume-owner';owner.mkdir(exist_ok=True);client.dataset_metadata(KG,str(owner));wrapped=json.loads((owner/'dataset-metadata.json').read_text());current=dict(wrapped.get('info') or wrapped)
   frozen=json.loads((work/'kaggle/dataset-metadata.json').read_text())
   assert current['description'].strip()==old['description'].strip()
-  assert current['userSpecifiedSources'] in {old['userSpecifiedSources'],frozen['userSpecifiedSources']}
+  assert current['userSpecifiedSources'] in [old['userSpecifiedSources'],frozen['userSpecifiedSources']]
   correct_kaggle_sources(client,work,current,plan['hfRevision'],22,plan['sourceCommit'])
   guard_kaggle_version(get('https://api.kaggle.com/v1/datasets/view/'+KG).json(),22)
   check_frozen(work)

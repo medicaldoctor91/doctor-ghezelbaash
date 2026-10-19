@@ -10,6 +10,7 @@
 import { parse, parseFragment, serialize, serializeOuter } from "parse5";
 import { createHash } from "node:crypto";
 import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
+import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
 import {closeSearchReferences, renderMedicalTrust} from "../lib/search-contract.mjs";
 export const prerender = true;
@@ -4899,7 +4900,7 @@ export function compileCanonicalSource() {
     }
   }
   const bodyHtml = serialize(body);
-  const homeGraph = SOURCE.graph;
+  const homeGraph = projectHomeGraph(SOURCE.graph, base);
   const social = byId.get(base + '/image-saeed-ghezelbash-portrait-social-1200x630');
   const meta = (key,value) => `<meta ${key.startsWith('og:') || key.startsWith('profile:') ? 'property' : 'name'}="${escape(key)}" content="${escape(value)}">`;
   const contentType = resource => {

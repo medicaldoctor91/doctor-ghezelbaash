@@ -16,9 +16,10 @@
     "contentBaseline": "1.3.4",
     "edition": "2026-10-18",
     "role": "current_exact",
-    "meaning": "Latest verified immutable archive; current mutable distributions retain their own source SHA and package receipts",
+    "meaning": "Exact release binding reserved before publication; archive availability is verified by external publication receipts. Mutable distributions record their own revisions.",
     "sourceCommitReference": "archive-provenance.json#/sourceCommit",
-    "inputBaselineHfRevision": "20c95d9ca4a759ee659884e05826a1dc3b1da852"
+    "inputBaselineHfRevision": "5d9cdf066a6cb63b59fc27c4d2ef70a44bceed06",
+    "bindingStatus": "reserved-before-publication"
   },
   "historical": [
     {

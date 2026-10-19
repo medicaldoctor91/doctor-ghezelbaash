@@ -64,7 +64,7 @@ Sorani Kurdish: https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq
 
 ## Identity, attribution and citation
 
-Public name: **Dr. Saeed Ghezelbash / دکتر سعید قزلباش**. Professional and scholarly records also use **Mohammad Saeed Ghezelbash**. Stable identifiers connect these name forms to the same physician:
+Public name: **Saeed Ghezelbash / سعید قزلباش**. Stable identifiers identify the physician:
 
 - Wikidata: https://www.wikidata.org/entity/Q140287622
 - ORCID: https://orcid.org/0009-0001-9346-8475
