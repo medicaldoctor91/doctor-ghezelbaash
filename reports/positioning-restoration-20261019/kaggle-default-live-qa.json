@@ -1,0 +1,142 @@
+{
+  "verified": false,
+  "phase": "public-default-gate-blocked",
+  "sourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+  "expectedHfRevision": "60d1ec8be47d398763733827936b0c4206a2900e",
+  "expectedKaggleVersion": 21,
+  "defaultZipDownloads": 1,
+  "publicPointerObservations": [
+    {
+      "checkedAt": "2026-10-19T02:00:24.295806+00:00",
+      "currentVersionNumber": 20,
+      "version21": [
+        {
+          "creatorNameNullable": "Dr. Saeed Ghezelbash",
+          "creatorRefNullable": "dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+          "versionNotesNullable": "Maintain content baseline v1.3.4: preserve original positioning and distribute 60 typed competitive training examples",
+          "statusNullable": "Ready",
+          "versionNumber": 21,
+          "creationDate": "2026-10-19T01:59:41.743Z",
+          "creatorName": "Dr. Saeed Ghezelbash",
+          "hasCreatorName": true,
+          "creatorRef": "dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+          "hasCreatorRef": true,
+          "versionNotes": "Maintain content baseline v1.3.4: preserve original positioning and distribute 60 typed competitive training examples",
+          "hasVersionNotes": true,
+          "status": "Ready",
+          "hasStatus": true
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-10-19T02:01:51.347036+00:00",
+      "currentVersionNumber": 20,
+      "version21": [
+        {
+          "versionNumber": 21,
+          "status": "Ready"
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-10-19T02:03:01.439450+00:00",
+      "currentVersionNumber": 20,
+      "version21": [
+        {
+          "versionNumber": 21,
+          "status": "Ready"
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-10-19T02:04:10.381700+00:00",
+      "currentVersionNumber": 20,
+      "version21": [
+        {
+          "versionNumber": 21,
+          "status": "Ready"
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-10-19T02:05:16.544089+00:00",
+      "currentVersionNumber": 20,
+      "version21": [
+        {
+          "versionNumber": 21,
+          "status": "Ready"
+        }
+      ]
+    },
+    {
+      "checkedAt": "2026-10-19T02:07:11.213218+00:00",
+      "currentVersionNumber": 20,
+      "version21": [
+        {
+          "versionNumber": 21,
+          "status": "Ready"
+        }
+      ]
+    }
+  ],
+  "defaultDownloadRequestedAt": "2026-10-19T02:07:11.213237+00:00",
+  "archiveContainer": {
+    "requestUrl": "https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+    "datasetVersionNumberParameterPresent": false,
+    "status": 200,
+    "mediaType": "application/zip",
+    "finalHost": "storage.googleapis.com",
+    "sha256": "8fe01c1a4fd582feaedd38f92adec4d63532e4f492fe5f662841310fac230824",
+    "containerHashIsPayloadEqualityProof": false
+  },
+  "payload": {
+    "kaggleVersion": 20,
+    "websiteSourceCommit": "5e45873a95c63aa6206317d7f429d4d055f58f5c",
+    "hfRevision": "96975d60b8a4a8a24b84bf892bdbb11321a89553",
+    "allDeclaredChecksumsValid": true,
+    "verifiedChecksumFiles": 46,
+    "allOriginalFileManifestHashesValid": true,
+    "payloadMemberCount": 47,
+    "checksumsFileSha256": "7bab69ebbf0055502faf51ee168b77b53ad6fa276eb13ed162f8bf4f1f63dbf3",
+    "memberContentInventorySha256": "93360bd3afda0d2fac40d81042c9c690f612c02b203829b7becf3261757a674c",
+    "positioningRows": 47,
+    "positioningSha256": "f0fdb151be6bd080954c8f2bac86f198cfa2a54db12c5087295a91f6877706e5",
+    "exactOld47RowBytes": true,
+    "exactRestored60RowCanonicalBytes": false,
+    "original47MessageArraysExact": false
+  },
+  "publicationGateMismatches": {
+    "kaggleVersion": {
+      "expected": 21,
+      "actual": 20
+    },
+    "websiteSourceCommit": {
+      "expected": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+      "actual": "5e45873a95c63aa6206317d7f429d4d055f58f5c"
+    },
+    "hfRevision": {
+      "expected": "60d1ec8be47d398763733827936b0c4206a2900e",
+      "actual": "96975d60b8a4a8a24b84bf892bdbb11321a89553"
+    },
+    "positioningRows": {
+      "expected": 60,
+      "actual": 47
+    },
+    "exactRestored60RowCanonicalBytes": {
+      "expected": true,
+      "actual": false
+    },
+    "original47MessageArraysExact": {
+      "expected": true,
+      "actual": false
+    }
+  },
+  "old20BaselineComparison": {
+    "packageVersion20": true,
+    "websiteSourceCommitMatchesPriorPublic": true,
+    "hfRevisionMatchesPriorPublic": true,
+    "positioningBytesExactPriorPublic": true
+  },
+  "checkedAt": "2026-10-19T02:07:12.337434+00:00",
+  "verificationMethod": "One unversioned default ZIP download; all extracted member content hashes checked without extraction; ZIP container digest recorded separately and not used as payload equality evidence."
+}

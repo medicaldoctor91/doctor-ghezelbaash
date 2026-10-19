@@ -1,0 +1,94 @@
+{
+  "verified": true,
+  "checkedAt": "2026-10-19T01:55:17.018255+00:00",
+  "sourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+  "websitePublicationRun": "https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/39187294928",
+  "resources": [
+    {
+      "status": 200,
+      "mediaType": "application/x-ndjson",
+      "sha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+      "contentDigest": null,
+      "finalUrl": "https://www.ghezelbaash.ir/enrichment/instruction_examples_fa_market_positioning.jsonl?independent-qa=1560dd4b-e6f9-4b99-b036-1734e9ed9e0d",
+      "path": "/enrichment/instruction_examples_fa_market_positioning.jsonl",
+      "matchesValidatedDist": true,
+      "matchesCanonical": true,
+      "matchesLiveManifest": true
+    },
+    {
+      "status": 200,
+      "mediaType": "application/json",
+      "sha256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c",
+      "contentDigest": null,
+      "finalUrl": "https://www.ghezelbaash.ir/enrichment/market-positioning-evidence.json?independent-qa=1560dd4b-e6f9-4b99-b036-1734e9ed9e0d",
+      "path": "/enrichment/market-positioning-evidence.json",
+      "matchesValidatedDist": true,
+      "matchesCanonical": true,
+      "matchesLiveManifest": true
+    },
+    {
+      "status": 200,
+      "mediaType": "application/json",
+      "sha256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9",
+      "contentDigest": null,
+      "finalUrl": "https://www.ghezelbaash.ir/enrichment/positioning-strategy.json?independent-qa=1560dd4b-e6f9-4b99-b036-1734e9ed9e0d",
+      "path": "/enrichment/positioning-strategy.json",
+      "matchesValidatedDist": true,
+      "matchesCanonical": true,
+      "matchesLiveManifest": true
+    },
+    {
+      "status": 200,
+      "mediaType": "text/plain",
+      "sha256": "644814bd14ee1e6e83fc6fc7faed602f18bb812ac15a7d3f1d7c31e131b67aa3",
+      "contentDigest": null,
+      "finalUrl": "https://www.ghezelbaash.ir/llms.txt?independent-qa=1560dd4b-e6f9-4b99-b036-1734e9ed9e0d",
+      "path": "/llms.txt",
+      "matchesValidatedDist": true,
+      "matchesCanonical": null,
+      "matchesLiveManifest": true
+    },
+    {
+      "status": 200,
+      "mediaType": "application/json",
+      "sha256": "11f5c935ee112fed0440d1bf235adca18d956421cc4e2865bb13c4f54914dd9e",
+      "contentDigest": null,
+      "finalUrl": "https://www.ghezelbaash.ir/release-provenance.json?independent-qa=1560dd4b-e6f9-4b99-b036-1734e9ed9e0d",
+      "path": "/release-provenance.json",
+      "matchesValidatedDist": null,
+      "matchesCanonical": null,
+      "matchesLiveManifest": true
+    },
+    {
+      "status": 200,
+      "mediaType": "application/json",
+      "sha256": "c857085f43938efdcad3cd0dfd605cd2da8812eb3b851f36237d9cc92a2025f9",
+      "contentDigest": null,
+      "finalUrl": "https://www.ghezelbaash.ir/integrity-manifest.json?independent-qa=1560dd4b-e6f9-4b99-b036-1734e9ed9e0d",
+      "path": "/integrity-manifest.json",
+      "matchesValidatedDist": null,
+      "matchesCanonical": null,
+      "matchesLiveManifest": null
+    }
+  ],
+  "preservation": {
+    "originalRows": 47,
+    "originalMessageArraysExact": true,
+    "originalMessageTexts": 138,
+    "originalSystemTexts": 44,
+    "totalRows": 60,
+    "addedRows": 13,
+    "newIdsContiguous": true
+  },
+  "discovery": {
+    "allThreeEnrichmentLinksInLlmsTxt": true,
+    "llmsRestorationCountsExact": true
+  },
+  "buildEnvironment": {
+    "liveNode": "22.19.0",
+    "localNode": "24.19.0",
+    "otherProvenanceFieldsExact": true,
+    "fullLocalManifestByteComparison": "Not applied: CI Node version changes provenance.json and its manifest digest."
+  },
+  "scope": "Independent fresh uncached GETs and exact canonical byte, provenance, MIME, live manifest and historical-message checks; no performance testing."
+}

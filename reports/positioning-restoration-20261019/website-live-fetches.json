@@ -1,0 +1,290 @@
+[
+  {
+    "url": "https://www.ghezelbaash.ir/release-provenance.json",
+    "sha256": "11f5c935ee112fed0440d1bf235adca18d956421cc4e2865bb13c4f54914dd9e",
+    "path": "release-provenance.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:31.944597+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/integrity-manifest.json",
+    "sha256": "c857085f43938efdcad3cd0dfd605cd2da8812eb3b851f36237d9cc92a2025f9",
+    "path": "integrity-manifest.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:32.371370+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/datapackage.json",
+    "sha256": "49707e8fd4ab1ee00ceb26250f67f51f7b5cbeba41eb9ebc49a7301c6be92a8c",
+    "path": "datapackage.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:32.839332+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq",
+    "sha256": "00a06c2e90d6ee26d5a146a6d586b0aefd8141b1d4b4af0f41f973b41e2b578c",
+    "path": "aesthetic-guide-ar-iq",
+    "contentType": "text/html",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.215712+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/aesthetic-guide-en",
+    "sha256": "16fca1bcc7cf7090be23693b124c346f974d29e28ae2b6241a02f168a7030341",
+    "path": "aesthetic-guide-en",
+    "contentType": "text/html",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.235558+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/answers.txt",
+    "sha256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4",
+    "path": "answers.txt",
+    "contentType": "text/plain",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.287948+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq",
+    "sha256": "1c0d5164c02044fcab569fdb905c7498dea1fec4ba62b78cce78a05e93321203",
+    "path": "aesthetic-guide-ckb-iq",
+    "contentType": "text/html",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.291615+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/",
+    "sha256": "5bd382d6f3b2c130e4f928f5761fe7a4bf4551e8a7401de7fa3b36043f1e19c7",
+    "path": "index.html",
+    "contentType": "text/html",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.355796+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/clinic.vcf",
+    "sha256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf",
+    "path": "clinic.vcf",
+    "contentType": "text/vcard",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.514843+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/croissant.json",
+    "sha256": "f2f3ddc8e999ff9e7f8314ce9851e7635f44fbcd0ecee3290fcc0ec03b3fc0dd",
+    "path": "croissant.json",
+    "contentType": "application/ld+json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.517535+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions",
+    "sha256": "207d4741daf0bfc92b0a6a4528728bbcbaa21f095cac619e13fc80dc77ac2037",
+    "path": "botox-contraindications-and-precautions",
+    "contentType": "text/html",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.585243+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/clinical-passages.jsonl",
+    "sha256": "8552cbd6862d604dca68cdb28a3b9f7b289cca1f50f5cb39a2626b90e05fc09e",
+    "path": "clinical-passages.jsonl",
+    "contentType": "application/x-ndjson",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.699632+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/dcat.ttl",
+    "sha256": "4fbfa9d51780eb0daaf326d697382dd0b7a2180e3991357edd781148f385b05f",
+    "path": "dcat.ttl",
+    "contentType": "text/turtle",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.727794+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/enrichment/market-positioning-evidence.json",
+    "sha256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c",
+    "path": "enrichment/market-positioning-evidence.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.819812+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/enrichment/instruction_examples_fa_market_positioning.jsonl",
+    "sha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+    "path": "enrichment/instruction_examples_fa_market_positioning.jsonl",
+    "contentType": "application/x-ndjson",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.834294+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/doctor.vcf",
+    "sha256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5",
+    "path": "doctor.vcf",
+    "contentType": "text/vcard",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.891938+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/entity-facts.csv-metadata.json",
+    "sha256": "e3a851e373ff583e99d049766792cb1c9a3b94a2200fd81146bd227f1ac03438",
+    "path": "entity-facts.csv-metadata.json",
+    "contentType": "application/csvm+json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.914171+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/evidence-snapshot.json",
+    "sha256": "0d9925d0ddb470b7c4ad1f8da4ea6e3a6ca310e63c8da7c763fbe1054c8b18ec",
+    "path": "evidence-snapshot.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.968786+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/enrichment/positioning-strategy.json",
+    "sha256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9",
+    "path": "enrichment/positioning-strategy.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:33.977236+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/graph.jsonld",
+    "sha256": "d21caf4b717c7ec958d4c6c4584e4b11211f4cc8a88b876a3df47bcd84f6fef8",
+    "path": "graph.jsonld",
+    "contentType": "application/ld+json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.138284+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/entity-facts.csv",
+    "sha256": "1a37f432e8037a607d7a47d7cfcab2ab3cc7f89f52f0855e1a6386d2087a0e35",
+    "path": "entity-facts.csv",
+    "contentType": "text/csv",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.198763+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/fact-map.json",
+    "sha256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15",
+    "path": "fact-map.json",
+    "contentType": "application/json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.205445+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/index.md",
+    "sha256": "537c98d4866cb577641d732438435ee9b52164b3c8721c019bed8471424d4873",
+    "path": "index.md",
+    "contentType": "text/markdown",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.211113+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/graph.ttl",
+    "sha256": "934b08368c7c98556396724586ad86c11ed5b43bf3098db5818361c4f3aad16d",
+    "path": "graph.ttl",
+    "contentType": "text/turtle",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.276923+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/knowledge.xml",
+    "sha256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf",
+    "path": "knowledge.xml",
+    "contentType": "application/xml",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.397812+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/llms-full.txt",
+    "sha256": "a6348e1e25d63755d8252a1307ecad9e46ac8a129101342ad6be06b55bb70628",
+    "path": "llms-full.txt",
+    "contentType": "text/plain",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.418998+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/media-license",
+    "sha256": "415dfc5b5a16b74b210ea5a4181e1502f047c43ee16bc86ed9956151faf389a7",
+    "path": "media-license",
+    "contentType": "text/html",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.445842+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/linkset.json",
+    "sha256": "7f414b6b2fede728dfdc95ad280ac2139879488fc7219788ef595b83d4e68c03",
+    "path": "linkset.json",
+    "contentType": "application/linkset+json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.498634+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/llms.txt",
+    "sha256": "644814bd14ee1e6e83fc6fc7faed602f18bb812ac15a7d3f1d7c31e131b67aa3",
+    "path": "llms.txt",
+    "contentType": "text/plain",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.504260+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/physician-expertise.md",
+    "sha256": "11c2a77115e15b9afa762c0346a9ad14206eeb1e57a3775979a69acc1d4ff34f",
+    "path": "physician-expertise.md",
+    "contentType": "text/markdown",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.533172+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/provenance.jsonld",
+    "sha256": "3b080a3a69d9df00c0ce010ae12cbd9ecb61819971219a99e799564dc5230c66",
+    "path": "provenance.jsonld",
+    "contentType": "application/ld+json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.575130+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/robots.txt",
+    "sha256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda",
+    "path": "robots.txt",
+    "contentType": "text/plain",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.578098+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/site.webmanifest",
+    "sha256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05",
+    "path": "site.webmanifest",
+    "contentType": "application/manifest+json",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.629003+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/shapes.ttl",
+    "sha256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51",
+    "path": "shapes.ttl",
+    "contentType": "text/turtle",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.662124+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/sitemap.xml",
+    "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+    "path": "sitemap.xml",
+    "contentType": "application/xml",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.669095+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/void.ttl",
+    "sha256": "add013b8352e91e666de7b1f4cc60aef5d877bf1a765eb82214258dfe909ce19",
+    "path": "void.ttl",
+    "contentType": "text/turtle",
+    "status": 200,
+    "observedAt": "2026-10-19T01:54:34.692377+00:00"
+  }
+]

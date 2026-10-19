@@ -1,0 +1,122 @@
+{
+  "observedAt": "2026-10-19T02:09:03.294523+00:00",
+  "scope": "Authorized maintenance publication; v1.3.4 content baseline preserved",
+  "websiteSourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+  "mainAtPublication": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+  "contentVersion": "1.3.4",
+  "newContentReleaseCreated": false,
+  "newDoiCreated": false,
+  "website": {
+    "status": "published-and-independently-verified",
+    "run": 39187294928,
+    "runConclusion": "success",
+    "manifestSha256": "c857085f43938efdcad3cd0dfd605cd2da8812eb3b851f36237d9cc92a2025f9",
+    "manifestFiles": 186,
+    "positioningRows": 60,
+    "all47OriginalMessageArraysPreserved": true,
+    "originalMessages": 138,
+    "originalSystemMessages": 44,
+    "positioningSha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+    "rdfStatements": 22149,
+    "fullUnionShaclViolations": 0,
+    "croissantErrors": 0,
+    "croissantWarnings": 0,
+    "croissantRecordsExtracted": 22149
+  },
+  "huggingFace": {
+    "status": "published-and-independently-verified",
+    "revision": "60d1ec8be47d398763733827936b0c4206a2900e",
+    "configRows": {
+      "clinical_passages": 3249,
+      "clinical_answers": 125,
+      "entity_facts": 22149,
+      "query_matrix": 876,
+      "market_positioning": 60
+    },
+    "filesFetched": 42,
+    "siteMirrorsCompared": 30,
+    "all60ViewerRowsEqualCanonical": true,
+    "viewerRevision": "60d1ec8be47d398763733827936b0c4206a2900e"
+  },
+  "kaggle": {
+    "status": "version-submitted-public-download-blocked",
+    "submittedVersion": 21,
+    "listedStatus": "Ready",
+    "currentDefaultVersion": 20,
+    "actualDefaultPayloadVersion": 20,
+    "actualDefaultPositioningRows": 47,
+    "version21DownloadStatus": 404,
+    "version21DownloadError": "No gcs url found",
+    "newVersionsCreated": 1,
+    "retryPublicationWrites": 0,
+    "publicAcceptance": false
+  },
+  "platformWorkflow": {
+    "run": 39187536454,
+    "conclusion": "failure",
+    "failedGate": "Kaggle public confirmation; both staged packages validated and HF publication independently verified"
+  },
+  "zenodoDataCite": {
+    "status": "current-metadata-verified-historical-archives-preserved",
+    "recordRevisions": {
+      "22838416": 34,
+      "23289009": 22
+    },
+    "metadataOrFileWritesThisRun": 0,
+    "historicalKnownFindings": {
+      "shaclViolations": 6,
+      "urlHashDivergences": 16,
+      "missingCompanions": 7
+    }
+  },
+  "wikidata": {
+    "entity": "Q140287622",
+    "revision": 2557914725,
+    "status": "verified-no-edit-needed",
+    "writes": 0
+  },
+  "allFiveChannelsAccepted": false,
+  "freeze": {
+    "performed": false,
+    "reason": "Kaggle public download/default gate not accepted",
+    "tagCreated": false,
+    "branchProtectionEnforced": false,
+    "protectionReadStatus": 403
+  },
+  "evidenceSha256": {
+    "website-workflow-receipt.json": "af99c5be760433bc2b3113c9cf88748f385e83b3639974153338db922fe0b508",
+    "website-live-verification.json": "d25c456c30678aa748f6107d5da511965912d361ee0bf8a8ce4534427451cda4",
+    "website-live-fetches.json": "055cebe7b8186de8fcce8c094899ba30046584a718e41cb2a9f3adc68d06774f",
+    "wording-live-verification.json": "4a17a9f0ed394462e3ca590e3c16601bfd054382ef7d7cd3860089ea8fad3243",
+    "live-site-independent-qa.json": "cc3954ac6da475d3b33ccdb2a8fafcdf09b511b83292e18c3f952c9bb8163b29",
+    "hf-live-verification.json": "0b809732db2d6113c4fa569318d2e003e8c68b060e59a9a69834c2a5ebc3c006",
+    "hf-viewer-live-verification.json": "ea774a4b5a9d827a860eb09021f953a362a8f43388e5751686f813b91eebb50f",
+    "platform-workflow-receipt.json": "528db8afba06ff699ba330831dab2752655f553a433380329bd7667f810fcba4",
+    "kaggle-default-live-qa.json": "1f653daea38153387032c88775e025282bfa15e69c57373d27aa9b121e7d38ef",
+    "kaggle-v21-readiness.json": "b357b1850dfd4e381fd490740959b8831a747785638a3c4fb0f850652c4d036c",
+    "archive-identity-live-qa.json": "16c2b360b81be5b40ae397300d6e57e426b392649a2f5a24ee2f71112ba99b78",
+    "protection-live.json": "e2373c984773dfee141aed6665a6497c3d7ae4022e643d1c860ab01b710aa23a",
+    "notebook-readiness-verification.json": "31861ca8a043e94456bb92f22e76990ced00c282d6ba5c052e5e1ad835f3d75d",
+    "notebook-pull-current.json": "053c597b0732a87215f5e274bb1d2429419bca00a120b958adbde6d14837a357"
+  },
+  "kaggleNotebook": {
+    "url": "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+    "currentPublicVersion": 7,
+    "publicVersionChanged": false,
+    "canonicalNotebookSha256": "bc2917664c6922043c34dc303161fc5559e3119695584b20fc60ad9ce488a651",
+    "candidateAllCodeCellsPassed": true,
+    "candidateCodeCellsExecuted": [
+      1,
+      3,
+      5,
+      7
+    ],
+    "candidateTables": 5,
+    "candidatePositioningRows": 60,
+    "candidateSourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+    "candidateHfRevision": "60d1ec8be47d398763733827936b0c4206a2900e",
+    "candidateDataNote": "Locally reconstructed v21 candidate from independently verified immutable HF files; not a downloaded Kaggle21 payload",
+    "status": "prepared-and-locally-executed; live publication awaits dataset21 public gate",
+    "newNotebookCreated": false
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-19T02:11:28.419383+00:00",
+  "publicNotebook": "saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+  "currentPublicVersion": 7,
+  "canonicalTableCoverage": 5,
+  "canonicalPositioningRows": 60,
+  "codeCellsExecuted": [
+    1,
+    3,
+    5,
+    7
+  ],
+  "allCodeCellsPassed": true,
+  "canonicalNotebookSha256": "bc2917664c6922043c34dc303161fc5559e3119695584b20fc60ad9ce488a651",
+  "validationDatasetSourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+  "validationHfRevision": "60d1ec8be47d398763733827936b0c4206a2900e",
+  "validationDatasetVersion": 21,
+  "validationData": "Locally reconstructed v21 candidate from independently verified immutable HF files; not a downloaded Kaggle21 payload",
+  "missingImmutableHfFilesFetched": [
+    "viewer/iri-migration.json"
+  ],
+  "executionOutput": "Pinned Hugging Face revision: 60d1ec8be47d398763733827936b0c4206a2900e\nWebsite source commit: 904cd3b28cb99723274c3c04d3c598f30e2cce86\nExact upstream resources verified: 40\nclinical_passages 3249 exact source round-trips PASS\nclinical_answers 125 exact source round-trips PASS\nentity_facts 22149 exact source round-trips PASS\nquery_matrix 876 exact source round-trips PASS\nmarket_positioning 60 exact source round-trips PASS\nCSV query round-trips: 876\nQuery languages: {'fa': 712, 'en': 80, 'ar': 42, 'ckb': 42}\n60 training examples: native lists, integer/null, CSV and JSONL round-trips PASS\nExample query: بهترین دکتر بوتاکس\nRecorded evidence definitions: [[{'file': 'graph.jsonld', 'pointer': '/@graph/187', 'node': {'@id': 'https://www.ghezelbaash.ir/evidence-irimc', '@type': ['WebPage', 'prov:Entity', 'https://www.ghezelbaash.ir/ontology/EvidenceSource'], 'name': 'Iran Medical Council profile for Dr. Mohammad Saeed Ghezelbash', 'url': 'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e', 'inLanguage': 'fa-IR', 'mainEntity': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'about': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'identifier': 'IRIMC:167430', 'supports': [{'@id': 'https://www.ghezelbaash.ir/irimc-credential-167430'}, {'@id': 'https://www.ghezelbaash.ir/credential-doctor-of-medicine'}], 'contributesToAuthorityHub': [{'@id': 'https://www.ghezelbaash.ir/authority-credentials-evidence-hub-2026-10-03'}, {'@id': 'https://www.ghezelbaash.ir/authority-external-evidence-hub-2026-10-03'}], 'evidencesEntity': [{'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, {'@id': 'https://www.ghezelbaash.ir/irimc-credential-167430'}, {'@id': 'https://www.ghezelbaash.ir/credential-doctor-of-medicine'}], 'evidenceAnnotation': {'@id': 'https://www.ghezelbaash.ir/annotation/evidence/ccb21ad7bc9ac14b93c2'}}}, {'file': 'provenance.jsonld', 'pointer': '/@graph/1', 'node': {'@id': 'https://www.ghezelbaash.ir/evidence-irimc', '@type': ['WebPage', 'prov:Entity', 'https://www.ghezelbaash.ir/ontology/EvidenceSource'], 'name': 'Iran Medical Council profile for Dr. Mohammad Saeed Ghezelbash', 'url': 'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e', 'inLanguage': 'fa-IR', 'mainEntity': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'about': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'identifier': 'IRIMC:167430', 'supports': [{'@id': 'https://www.ghezelbaash.ir/irimc-credential-167430'}, {'@id': 'https://www.ghezelbaash.ir/credential-doctor-of-medicine'}], 'contributesToAuthorityHub': [{'@id': 'https://www.ghezelbaash.ir/authority-credentials-evidence-hub-2026-10-03'}, {'@id': 'https://www.ghezelbaash.ir/authority-external-evidence-hub-2026-10-03'}], 'evidencesEntity': [{'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, {'@id': 'https://www.ghezelbaash.ir/irimc-credential-167430'}, {'@id': 'https://www.ghezelbaash.ir/credential-doctor-of-medicine'}], 'evidenceAnnotation': {'@id': 'https://www.ghezelbaash.ir/annotation/evidence/ccb21ad7bc9ac14b93c2'}}}]]\nAll query references resolve; broken-reference negative test PASS\n{\n  \"status\": \"PASS\",\n  \"upstream_revision\": \"60d1ec8be47d398763733827936b0c4206a2900e\",\n  \"source_commit\": \"904cd3b28cb99723274c3c04d3c598f30e2cce86\",\n  \"tables\": {\n    \"clinical_passages\": 3249,\n    \"clinical_answers\": 125,\n    \"entity_facts\": 22149,\n    \"query_matrix\": 876,\n    \"market_positioning\": 60\n  },\n  \"unresolved_query_references\": 0,\n  \"all_table_rows_reconstructed\": true,\n  \"csv_query_roundtrips\": 876,\n  \"negative_reference_test\": true,\n  \"identity_separation\": true,\n  \"archived_doi\": \"10.5281/zenodo.22838416\"\n}\n",
+  "publicationCandidateDirectory": "/workspace/ghezelbaash-p0-execution/restoration-20261019/notebook-publication-candidate",
+  "publicationPerformed": false,
+  "requiredPublicationGate": "Public dataset21 download and default payload must resolve and match source904/HF60d before publishing existing notebook; do not bind version8 to old default20",
+  "newNotebookCreated": false,
+  "currentPublicDeclaredTableCoverage": 4,
+  "publicNotebookRuntimeThisTurnVerified": false,
+  "publicNotebookCoverageNote": "The public v7 introduction says four tables; its generic loop is not a hard four-table limit. It lacks the new explicit market-positioning CSV/message checks."
+}
