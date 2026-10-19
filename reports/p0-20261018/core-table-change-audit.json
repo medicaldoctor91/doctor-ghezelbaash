@@ -1,0 +1,40 @@
+{
+  "clinical_passages": {
+    "schemaUnchanged": true,
+    "beforeRows": 3248,
+    "afterRows": 3249,
+    "unchangedRows": 3240,
+    "changedRowsWithSameId": 3,
+    "addedRowIds": 6,
+    "removedRowIds": 5
+  },
+  "clinical_answers": {
+    "schemaUnchanged": true,
+    "beforeRows": 125,
+    "afterRows": 125,
+    "unchangedRows": 122,
+    "changedRowsWithSameId": 3,
+    "addedRowIds": 0,
+    "removedRowIds": 0
+  },
+  "entity_facts": {
+    "schemaUnchanged": true,
+    "beforeRows": 22166,
+    "afterRows": 22149,
+    "unchangedRows": 22086,
+    "changedRowsWithSameId": 0,
+    "addedRowIds": 63,
+    "removedRowIds": 80
+  },
+  "query_matrix": {
+    "schemaUnchanged": true,
+    "beforeRows": 876,
+    "afterRows": 876,
+    "changedFields": {
+      "edition": 876,
+      "release": 876,
+      "source_commit": 876,
+      "service_ids": 3
+    }
+  }
+}

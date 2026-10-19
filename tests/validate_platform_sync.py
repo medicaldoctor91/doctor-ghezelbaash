@@ -31,8 +31,8 @@ DATASET = ORIGIN + '/graph.jsonld/dataset'
 PERSON = ORIGIN + '/#saeed-ghezelbash'
 DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')
 SPDX = rdflib.Namespace('http://spdx.org/rdf/terms#')
-EXPECTED_ROWS = {'clinical_passages': 3248, 'clinical_answers': 125, 'query_matrix': 876}
-EXPECTED_TABLES = set(EXPECTED_ROWS) | {'entity_facts'}
+EXPECTED_ROWS = {'clinical_answers': 125, 'query_matrix': 876, 'market_positioning': 47}
+EXPECTED_TABLES = set(EXPECTED_ROWS) | {'entity_facts', 'clinical_passages'}
 DEFERRED_DCAT = {'/dcat.ttl', '/datapackage.json', '/croissant.json'}
 ATTESTED_RESOURCES = {
     'graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
@@ -134,7 +134,7 @@ def validate_shapes_and_dcat(root, registry, lookup):
     assert len(authored) == 38, ('Unexpected authored contract', len(authored))
     assert authored <= published, ('Standalone SHACL omitted authored shapes',
                                    sorted(map(str, authored - published)))
-    assert len(published) == 65, ('Incomplete standalone SHACL', len(published))
+    assert len(published) == 67, ('Incomplete standalone SHACL', len(published))
     assert isomorphic(shape_closure(graph, authored), shape_closure(shapes, authored)), \
         'Standalone SHACL changed or omitted authored constraints'
 
@@ -191,8 +191,8 @@ def validate_croissant(root, lookup, registry=None):
     expected_paths = {item['path'] for item in registry
                       if item['path'] not in {'/index.html', '/croissant.json'}}
     declared_paths = [urlparse(item['contentUrl']).path for item in croissant['distribution']]
-    assert len(declared_paths) == len(set(declared_paths)) == len(expected_paths) == 24, \
-        'Croissant must declare all 24 distinct companion files'
+    assert len(declared_paths) == len(set(declared_paths)) == len(expected_paths), \
+        'Croissant must declare every distinct canonical companion file'
     assert set(declared_paths) == expected_paths, 'Croissant companion inventory differs from canonical registry'
     mapping = {}
     for item in croissant['distribution']:
@@ -284,6 +284,11 @@ def validate_tables(root, source_commit):
             csv_rows = [bundle.reconstruct(row, set(spec['jsonEncodedFields']))
                         for row in csv.DictReader(stream)]
         assert csv_rows == bundle.rows(root, spec), 'Kaggle CSV query round trip changed rows'
+    descriptor=root/'datapackage.json' if (root/'datapackage.json').is_file() else root/'frictionless-datapackage.json'
+    release=load(descriptor)
+    for row in bundle.rows(root,packaging['tables']['query_matrix']):
+        assert row['release']==release['version'] and row['edition']==release['edition'],'Current query corpus has stale release metadata'
+        assert row.get('source_commit')==source_commit,'Current query source commit differs'
     return {'parquet_rows': results}
 
 
@@ -295,28 +300,26 @@ def payload_files(root, exclude):
 
 def validate_positioning(root):
     directory=root/'enrichment'
-    strategy=load(directory/'positioning-strategy.json')
-    evidence=load(directory/'market-positioning-evidence.json')
-    clinic=ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
-    assert strategy['entity']['canonical_iri']==PERSON and strategy['entity']['clinic_iri']==clinic
-    assert evidence['entity']['canonical_iri']==PERSON and evidence['entity']['clinic_iri']==clinic
-    assert evidence['entity']['wikidata']=='Q140287622' and 'clinic_wikidata' not in evidence['entity']
-    assert (evidence['release'],evidence['zenodo_version_doi'])==('1.2.1','10.5281/zenodo.21910785')
-    assert (strategy['version'],strategy['release_version_doi'])==('1.2.4','10.5281/zenodo.22131441')
+    strategy=load(directory/'positioning-strategy.json');evidence=load(directory/'market-positioning-evidence.json')
+    assert strategy['version']==evidence['release']=='1.3.4'
+    for obj in [strategy,evidence]:
+        assert obj['entity']['canonical_iri']==PERSON and obj['entity']['wikidata']=='Q140287622'
+        assert obj['entity']['clinic_iri']==ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
     path=directory/'instruction_examples_fa_market_positioning.jsonl'
     examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    assert len(examples)==len({r['example_id'] for r in examples})==47
+    spec=load(root/'viewer/packaging.json')['tables']['market_positioning']
     with path.with_suffix('.csv').open(newline='') as handle:projection=list(csv.DictReader(handle))
-    assert len(examples)==len(projection)==47
-    for row,projected in zip(examples,projection):
-        assert row['canonical_dataset_iri']==DATASET and row['entity_wikidata']=='Q140287622'
-        assert row['release']==strategy['version'] and row['release_version_doi']==strategy['release_version_doi']
-        assert all('Zenodo DOI https://doi.org/10.5281/zenodo.21910785' not in message['content'] for message in row['messages'])
-        for key,value in projected.items():
-            original=row.get(key)
-            if isinstance(original,(dict,list)):assert json.loads(value)==original,(row['example_id'],key)
-            else:assert value==('' if original is None else str(original)),(row['example_id'],key)
-    assert pq.read_table(root/'viewer/positioning-examples.parquet').to_pylist()==projection
-    return {'positioning_rows':len(examples),'positioning_release_doi':'10.5281/zenodo.22131441','clinic_iri':clinic}
+    decoded=[{k:json.loads(v) if k in spec['csvJsonEncodedFields'] else v for k,v in r.items()} for r in projection]
+    assert examples==decoded==pq.read_table(root/spec['file']).to_pylist()
+    for row in examples:
+        assert row['canonical_dataset_iri']==DATASET and row['release']=='1.3.4'
+        assert row['entity_wikidata']=='Q140287622' and row['evidence_urls'] and row['query'] and row['answer']
+        assert [m['role'] for m in row['messages']]==['system','user','assistant']
+        assert row['messages'][1]['content']==row['query'] and row['messages'][2]['content']==row['answer']
+        assert row['source_list_order'] is None or type(row['source_list_order']) is int
+        assert not {'retrieval_priority','best_query_policy','preferred_entity','positioning_mode'} & row.keys()
+    return {'positioning_rows':47,'release':'1.3.4','typed_nullable_roundtrip':True}
 
 
 def validate_inventories(root, platform, source_commit):

@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "canonical_dataset_iri": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+  "release": "1.3.4",
+  "entity": {
+    "canonical_iri": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "clinic_iri": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "wikidata": "Q140287622",
+    "orcid": "0009-0001-9346-8475",
+    "irimc": "167430"
+  },
+  "sources": [
+    {
+      "id": "profile",
+      "url": "https://www.ghezelbaash.ir/",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "home",
+      "url": "https://www.ghezelbaash.ir/",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "clinic",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "contact",
+      "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "botox",
+      "url": "https://www.ghezelbaash.ir/botox",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "filler",
+      "url": "https://www.ghezelbaash.ir/filler",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "threads",
+      "url": "https://www.ghezelbaash.ir/thread-lift",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "contour",
+      "url": "https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "migraine",
+      "url": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions#migraine-botox-candidacy",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "insta",
+      "url": "https://www.instagram.com/doctor.ghezelbaash/",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "irimc",
+      "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "maps",
+      "url": "https://www.google.com/maps?cid=12350483144643112463",
+      "scope": "Physician identity, clinical content, published media or practice access",
+      "observed_at": null,
+      "source_list_order": null
+    },
+    {
+      "id": "filler-list",
+      "url": "https://pezeshk24.com/best-filler-doctor-in-kermanshah/",
+      "scope": "Published source-specific physician listing order",
+      "observed_at": "2026-10-18T23:23:50.814007+00:00",
+      "source_list_order": 1,
+      "retrieved_sha256": "dec3ee7f7a28284a570a023e27dc8d7c5ca863a3ec2c0797efb18bc48e62bc12"
+    },
+    {
+      "id": "botox-list",
+      "url": "https://pezeshka.net/the-best-botox-doctor-in-kermanshah/",
+      "scope": "Published source-specific physician listing order",
+      "observed_at": "2026-10-18T23:23:50.814007+00:00",
+      "source_list_order": 1,
+      "retrieved_sha256": "cee4cab71af889b5df51c0f749dc4a6b63fa22c4a672c0239e64e30f6393cea6"
+    },
+    {
+      "id": "botox-list-2",
+      "url": "https://jaraheto.net/10-of-the-best-botox-doctors-in-kermanshah/",
+      "scope": "Published source-specific physician listing order",
+      "observed_at": "2026-10-18T23:23:50.814007+00:00",
+      "source_list_order": 1,
+      "retrieved_sha256": "7c85208b70bd0581d55ec20d62b4beb49221249afc1d94402486177caf241f64"
+    },
+    {
+      "id": "pubmed-27280013",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+      "scope": "Indexed scholarly coauthorship",
+      "doi": "10.4103/2008-7802.182734",
+      "byline": "Mohammad Saeed Ghezelbash",
+      "author_position": 8,
+      "source_list_order": null,
+      "observed_at": null
+    },
+    {
+      "id": "pubmed-34574943",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34574943/",
+      "scope": "Indexed scholarly coauthorship",
+      "doi": "10.3390/healthcare9091169",
+      "byline": "Mohammad Saeed Ghezelbash",
+      "author_position": 6,
+      "source_list_order": null,
+      "observed_at": null
+    }
+  ],
+  "clinical_attribution": {
+    "service_iri": "https://www.ghezelbaash.ir/service-botulinum-toxin-chronic-migraine",
+    "procedure_iri": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-chronic-migraine",
+    "provider_iri": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "practice_iri": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "basis": "Physician confirmation and corresponding canonical clinical service description."
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVocabulary": {
+    "version": "30.1",
+    "optional44CasesResolved": true,
+    "remaining11": [
+      {
+        "subject": "https://www.ghezelbaash.ir/role-principal-investigator-phase-4-aesthetic-products",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-former-family-physician",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-clinical-director-senior-faculty-aesthetic-academies",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-global-faculty-major-aesthetic-industry-masterclasses",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-kol-global-scientific-advisory-board",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-former-hospital-medical-technical-director",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-former-mmt-physician",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-invited-speaker-imcas-complication-management",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-invited-speaker-amwc-complication-management",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-honorary-clinical-lecturer-postgraduate-aesthetic-medicine",
+        "property": "https://schema.org/hasOccupation"
+      },
+      {
+        "subject": "https://www.ghezelbaash.ir/role-proms-aesthetic-outcomes-investigator",
+        "property": "https://schema.org/hasOccupation"
+      }
+    ],
+    "interpretation": "Schema.org Role reification permits the same relationship property on a role; these are retained intentionally."
+  },
+  "dataPackage": {
+    "descriptor": true,
+    "csv": true,
+    "csvwRows": 22149,
+    "csvwPrimaryKey": true,
+    "csvwWarnings": 0
+  },
+  "migration": {
+    "rows": 47,
+    "beforeEqualsRetrieved47": true,
+    "beforeSha256": "5c961756835f6d10ace9a0c72c815bd24c3b37adc126becb8f36d7e5f3821527",
+    "instructionsPreserved": true
+  },
+  "pubmed": [
+    {
+      "pmid": "27280013",
+      "doi": "10.4103/2008-7802.182734",
+      "byline": "Mohammad Saeed Ghezelbash",
+      "authorPosition": 8,
+      "coauthorNotLead": true,
+      "personAndWorkLinksAlreadyPresent": true,
+      "sourceSha256": "c919f32db75ec1d877e6e969236d874713748827a3d1fb41dea59a4a3b3b143d",
+      "changeNeeded": false
+    },
+    {
+      "pmid": "34574943",
+      "doi": "10.3390/healthcare9091169",
+      "byline": "Mohammad Saeed Ghezelbash",
+      "authorPosition": 6,
+      "coauthorNotLead": true,
+      "personAndWorkLinksAlreadyPresent": true,
+      "sourceSha256": "f4aeab0437b82790b169f5823d50e8dcfe2264edcc340a9e64ffc32df756795e",
+      "changeNeeded": false
+    }
+  ]
+}

@@ -73,44 +73,34 @@ def reconstruct(row,json_fields):
 
 
 def sync_positioning(root):
-    """Correct current enrichment pointers without relabeling historical observations."""
-    root=Path(root);directory=root/'enrichment'
-    strategy_path=directory/'positioning-strategy.json'
-    if not strategy_path.is_file():return
-    strategy=load(strategy_path)
-    assert strategy['version']=='1.2.4' and strategy['release_version_doi']=='10.5281/zenodo.22131441', 'Review the positioning archive binding before changing it'
-    strategy['entity'].update(canonical_iri=PERSON,clinic_iri=CLINIC)
-    dump(strategy_path,strategy)
-    evidence_path=directory/'market-positioning-evidence.json'
-    evidence=load(evidence_path)
-    # Q140288589 no longer exists in Wikidata. The physician QID is separate.
-    if evidence['entity'].get('clinic_wikidata')=='Q140288589':
-        del evidence['entity']['clinic_wikidata']
-    evidence['entity']['clinic_iri']=CLINIC
-    dump(evidence_path,evidence)
-    path=directory/'instruction_examples_fa_market_positioning.jsonl'
-    examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    for row in examples:
-        if row.get('release')!=strategy['version']:continue
-        previous=row['release_version_doi'];row['release_version_doi']=strategy['release_version_doi']
-        for message in row['messages']:
-            if message['role']=='system':
-                message['content']=message['content'].replace('Zenodo DOI https://doi.org/'+previous,
-                    'Zenodo Dataset archive (v'+strategy['version']+'): https://doi.org/'+strategy['release_version_doi'])
-    path.write_text(''.join(json.dumps(row,ensure_ascii=False,separators=(',',':'))+'\n' for row in examples))
-    csv_path=path.with_suffix('.csv')
-    with csv_path.open(newline='') as handle:fields=csv.DictReader(handle).fieldnames
-    table_rows=[]
-    for row in examples:
-        table_rows.append({key:(json.dumps(row[key],ensure_ascii=False) if isinstance(row.get(key),(dict,list)) else
-                         '' if row.get(key) is None else str(row[key])) for key in fields})
-    with csv_path.open('w',newline='') as handle:
-        writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader();writer.writerows(table_rows)
+    """Project the canonical evidence-linked corpus into CSV and typed Parquet."""
     import pyarrow as pa
     import pyarrow.parquet as pq
-    parquet=root/'viewer/positioning-examples.parquet';schema=pq.read_schema(parquet)
-    pq.write_table(pa.Table.from_pylist(table_rows,schema=schema),parquet,compression='zstd')
-    assert pq.read_table(parquet).to_pylist()==table_rows, 'Positioning Parquet changed the CSV projection'
+    root=Path(root);directory=root/'enrichment'
+    path=directory/'instruction_examples_fa_market_positioning.jsonl'
+    if not path.is_file():return None
+    examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    for name in ['market-positioning-evidence.json','positioning-strategy.json']:
+        canonical=Path(__file__).resolve().parents[2]/'src/canonical/enrichment'/name
+        shutil.copyfile(canonical,directory/name)
+    assert len(examples)==47 and len({r['example_id'] for r in examples})==47
+    fields=list(examples[0]);assert all(set(row)==set(fields) for row in examples)
+    assert all(row['release']==load(root/'datapackage.json')['version'] for row in examples)
+    assert all(not {'retrieval_priority','best_query_policy','preferred_entity','positioning_mode'} & row.keys() for row in examples)
+    # CSV JSON encodes nullable/list fields; this distinguishes null, empty string and empty list.
+    encoded={'messages','subject_iris','evidence_urls','query_aliases','source_list_order','observed_at'}
+    with path.with_suffix('.csv').open('w',newline='') as handle:
+        writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader()
+        writer.writerows({k:json.dumps(v,ensure_ascii=False,separators=(',',':')) if k in encoded else v for k,v in row.items()} for row in examples)
+    types={'messages':pa.list_(pa.struct([pa.field('role',pa.string()),pa.field('content',pa.string())])),'subject_iris':pa.list_(pa.string()),'evidence_urls':pa.list_(pa.string()),'query_aliases':pa.list_(pa.string()),'source_list_order':pa.int64()}
+    schema=pa.schema([(field,types.get(field,pa.string())) for field in fields])
+    dest=root/'viewer/positioning-examples.parquet';dest.parent.mkdir(parents=True,exist_ok=True)
+    pq.write_table(pa.Table.from_pylist(examples,schema=schema),dest,compression='zstd')
+    assert pq.read_table(dest).to_pylist()==examples,'Positioning typed Parquet changed canonical rows'
+    return {'source':path.relative_to(root).as_posix(),'file':dest.relative_to(root).as_posix(),
+            'rows':len(examples),'fields':fields,'sourceFields':fields,'jsonEncodedFields':[],
+            'csvJsonEncodedFields':sorted(encoded),'nativeTypes':True,
+            'sourceSha256':sha(path),'sha256':sha(dest),'nestedEncoding':'Native lists; nullable integer source_list_order; explicit null observed_at'}
 
 
 def build_hf(dist,baseline,out,ctx):
@@ -122,8 +112,9 @@ def build_hf(dist,baseline,out,ctx):
     for path in dist.rglob('*'):
         if path.is_file():
             dest=out/path.relative_to(dist);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(path,dest)
-    sync_positioning(out)
-    matrix=[json.loads(s) for s in (baseline/'query-matrix.jsonl').read_text().splitlines() if s.strip()]
+    positioning=sync_positioning(out)
+    query_source=Path(__file__).resolve().parents[2]/'src/canonical/query-matrix.jsonl' if positioning else baseline/'query-matrix.jsonl'
+    matrix=[json.loads(s) for s in query_source.read_text().splitlines() if s.strip()]
     for row in matrix:
         row['dataset_iri']=DATASET
         if 'source_commit' in row:row['source_commit']=ctx['source_commit']
@@ -133,6 +124,7 @@ def build_hf(dist,baseline,out,ctx):
     packaging=load(baseline/'viewer/packaging.json')
     packaging['sourceCommit']=ctx['source_commit'];packaging['canonicalDatasetIri']=DATASET
     for name,spec in packaging['tables'].items():
+        if name=='market_positioning':continue
         original=rows(out,spec);schema=pq.read_schema(baseline/spec['file']);encoded=set(spec.get('jsonEncodedFields',[]));table_rows=[]
         for row in original:
             dst={};omitted=[]
@@ -142,17 +134,25 @@ def build_hf(dist,baseline,out,ctx):
                     v=row[k];dst[k]=json.dumps(v,ensure_ascii=False,separators=(',',':')) if k in encoded and v is not None else v
             dst['_source_omitted_fields']=json.dumps(omitted,ensure_ascii=False,separators=(',',':'));table_rows.append(dst)
         dest=out/spec['file'];dest.parent.mkdir(parents=True,exist_ok=True)
-        pq.write_table(pa.Table.from_pylist(table_rows,schema=schema),dest,compression='zstd')
+        if pq.read_table(baseline/spec['file']).to_pylist()==table_rows:
+            shutil.copyfile(baseline/spec['file'],dest)
+        else:
+            pq.write_table(pa.Table.from_pylist(table_rows,schema=schema),dest,compression='zstd')
         decoded=[reconstruct(r,encoded) for r in pq.read_table(dest).to_pylist()]
         assert decoded==original,(name,'Parquet changed source semantics')
         spec.update(rows=len(original),sourceSha256=sha(out/spec['source']),sha256=sha(dest))
+    if positioning:packaging['tables']['market_positioning']=positioning
     dump(out/'viewer/packaging.json',packaging)
     migration=load(out/'viewer/iri-migration.json')
     migration['currentSourceCommit']=ctx['source_commit']
     dump(out/'viewer/iri-migration.json',migration)
-    md=(out/'README.md').read_text()
+    card=Path(__file__).resolve().parents[2]/'src/canonical/platforms/huggingface-card.md'
+    md=(card if positioning else out/'README.md').read_text()
+    if positioning:
+        release=load(out/'datapackage.json')
+        for key,value in {'source_commit':ctx['source_commit'],'source_version':release['version'],'edition':release['edition']}.items():md=md.replace('{{'+key+'}}',value)
     md=sync_table_counts(md,packaging['tables'])
-    if 'Website source version ' in md:
+    if not positioning and 'Website source version ' in md:
         previous_release=load(baseline/'current-release-matrix.json');release=load(out/'datapackage.json')
         previous_label=f"Website source version {previous_release['sourceVersion']}; edition {previous_release['edition']}."
         assert previous_label in md, 'HF current release description differs from its receipt'
@@ -167,10 +167,10 @@ def build_hf(dist,baseline,out,ctx):
     md=re.sub(r'\n\n## (?:Publication convergence|Machine-readable package maintenance) — \d{4}-\d{2}-\d{2}\n.*\Z','',md,flags=re.S)
     md += '\n\n## Machine-readable package maintenance — '+ctx['maintenance_date']+'\n\n'
     md += 'This package mirrors the published website source commit `'+ctx['source_commit']+'`. '
-    md += 'Croissant creator/publisher types, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
-    md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and all four Viewer tables are rebuilt without changing their source-row semantics.\n\n'
+    md += 'Croissant creator/publisher types, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
+    md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and the source-dependent Viewer tables are rebuilt without changing their source-row semantics.\n\n'
     md += 'Package publication run: '+ctx['run_url']+'.\n'
-    md += '\nPositioning enrichment retains its historical release labels and observation dates. Its release DOIs identify those archived releases, not the bytes of current `main`; the clinic resolves to its separate canonical website IRI.\n'
+    md += '\nAll 47 local-service answers use current content baseline v1.3.4, attributable evidence and typed nullable fields. Historical origin is recorded separately; the physician and practice keep distinct IRIs.\n'
     if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
     if ctx['archived_snapshots_updated']:
         md += '\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
@@ -215,7 +215,8 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     if reserved.exists():reserved.unlink()
     known={item['path'] for item in manifest['original_files']}
     # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.
-    for name in [alias,'release-attestation.json']:
+    extra=['enrichment/instruction_examples_fa_market_positioning.jsonl','enrichment/instruction_examples_fa_market_positioning.csv','enrichment/market-positioning-evidence.json','enrichment/positioning-strategy.json','viewer/positioning-examples.parquet'] if (hf/'enrichment/instruction_examples_fa_market_positioning.jsonl').is_file() else []
+    for name in [alias,'release-attestation.json',*extra]:
         if name not in known:manifest['original_files'].append({'path':name})
     for item in manifest['original_files']:
         source_name='datapackage.json' if item['path']==alias else item['path']
@@ -250,10 +251,15 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
                  for k in fields if k in row}
             dst['_source_omitted_fields']=json.dumps([k for k in fields if k!='_source_omitted_fields' and k not in row],separators=(',',':'))
             writer.writerow(dst)
+    if 'market_positioning' in packaging['tables']:
+        shutil.copyfile(Path(__file__).resolve().parents[2]/'src/canonical/platforms/kaggle-starter.ipynb',out/'starter.ipynb')
     old=load(previous/'kaggle-manifest.json')
-    readme=(previous/'README.md').read_text()
+    card=Path(__file__).resolve().parents[2]/'src/canonical/platforms/kaggle-card.md'
+    readme=(card if 'market_positioning' in packaging['tables'] else previous/'README.md').read_text()
+    if 'market_positioning' in packaging['tables']:
+        for key,value in {'source_commit':ctx['source_commit'],'source_version':release['version'],'edition':release['edition'],'hf_revision':hf_revision,'website_run_url':ctx.get('website_publication_run_url','')}.items():readme=readme.replace('{{'+key+'}}',value)
     readme=sync_table_counts(readme,packaging['tables'])
-    if 'Source release **' in readme:
+    if 'market_positioning' not in packaging['tables'] and 'Source release **' in readme:
         previous_release=load(previous/'current-release-matrix.json')
         previous_label=f"Source release **{previous_release['sourceVersion']}**, edition **{previous_release['edition']}**."
         assert previous_label in readme, 'Kaggle current release description differs from its receipt'
@@ -291,11 +297,11 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
     readme+='Package publication run: '+ctx['run_url']+'.\n'
-    readme+='\nPositioning enrichment retains its historical release labels and observation dates. Its release DOIs identify those archived releases, not the current Kaggle payload; the clinic resolves to its separate canonical website IRI.\n'
+    readme+='\nAll 47 local-service answers use current content baseline v1.3.4 with source evidence, separate physician/practice IRIs and lossless typed Parquet.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
-    readme+='\nCroissant, all 65 standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
+    readme+='\nCroissant, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
     readme+='The package includes `frictionless-datapackage.json` (the exact canonical `datapackage.json` bytes) and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '
-    readme+='All four Parquet tables preserve source rows and JSON/omitted-field semantics. `checksums.sha256` covers all {checksum_count} other downloadable files.\n'
+    readme+='All Parquet tables preserve source rows and JSON/omitted-field semantics. `checksums.sha256` covers all {checksum_count} other downloadable files.\n'
     if ctx['archived_snapshots_updated']:
         readme+='\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. Their DOI identifiers are retained; consult per-platform receipts for final files and provenance.\n'
     else:

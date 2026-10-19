@@ -96,38 +96,40 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(bundle.context(NEW_COMMIT, 54321, "2026-11-01")["maintenance_date"], "2026-11-01")
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
 
-    def test_positioning_preserves_historical_dates_and_fixes_the_release_and_clinic_pointers(self):
+    def test_positioning_47_typed_roundtrip_and_historical_migration(self):
+        import shutil
         root=self.baseline
-        strategy={'version':'1.2.4','release_version_doi':'10.5281/zenodo.22131441','last_updated':'2026-08-27','entity':{}}
-        evidence={'release':'1.2.1','zenodo_version_doi':'10.5281/zenodo.21910785','observed_at':'2026-08-13',
-                  'entity':{'canonical_iri':bundle.PERSON,'wikidata':'Q140287622','clinic_wikidata':'Q140288589'}}
-        bundle.dump(root/'enrichment/positioning-strategy.json',strategy)
-        bundle.dump(root/'enrichment/market-positioning-evidence.json',evidence)
-        rows=[{'example_id':'example','release':'1.2.4','release_version_doi':'10.5281/zenodo.21910785',
-               'messages':[{'role':'system','content':'Zenodo DOI https://doi.org/10.5281/zenodo.21910785.'},
-                           {'role':'assistant','content':'متن بدون تغییر'}]}]
-        path=root/'enrichment/instruction_examples_fa_market_positioning.jsonl'
-        path.write_text(json.dumps(rows[0],ensure_ascii=False)+'\n')
-        fields=[*rows[0],'optional']
-        with path.with_suffix('.csv').open('w',newline='') as handle:csv.DictWriter(handle,fieldnames=fields).writeheader()
-        table=root/'viewer/positioning-examples.parquet';table.parent.mkdir(exist_ok=True)
-        pq.write_table(pa.Table.from_pylist([],schema=pa.schema([(field,pa.string()) for field in fields])),table)
-        bundle.sync_positioning(root)
-        current=json.loads(path.read_text())
-        self.assertEqual(current['release'],'1.2.4')
-        self.assertEqual(current['release_version_doi'],strategy['release_version_doi'])
-        self.assertIn('archive (v1.2.4): https://doi.org/'+strategy['release_version_doi'],current['messages'][0]['content'])
-        self.assertEqual(current['messages'][1],rows[0]['messages'][1])
-        self.assertEqual(bundle.load(root/'enrichment/market-positioning-evidence.json')['observed_at'],'2026-08-13')
-        self.assertEqual(bundle.load(root/'enrichment/market-positioning-evidence.json')['zenodo_version_doi'],evidence['zenodo_version_doi'])
-        self.assertEqual(bundle.load(root/'enrichment/market-positioning-evidence.json')['entity']['clinic_iri'],bundle.CLINIC)
-        self.assertNotIn('clinic_wikidata',bundle.load(root/'enrichment/market-positioning-evidence.json')['entity'])
-        with path.with_suffix('.csv').open(newline='') as handle:projection=list(csv.DictReader(handle))
-        self.assertEqual(pq.read_table(table).to_pylist(),projection)
-        self.assertEqual(json.loads(projection[0]['messages']),current['messages'])
+        canonical=Path(__file__).resolve().parents[1]/'src/canonical/enrichment'
+        shutil.copytree(canonical,root/'enrichment')
+        bundle.dump(root/'datapackage.json',{'version':'1.3.4'})
+        original=[json.loads(line) for line in (canonical/'instruction_examples_fa_market_positioning.jsonl').read_text().splitlines()]
+        spec=bundle.sync_positioning(root)
+        self.assertEqual(spec['rows'],47)
+        native=pq.read_table(root/spec['file'])
+        self.assertTrue(pa.types.is_int64(native.schema.field('source_list_order').type))
+        self.assertTrue(pa.types.is_list(native.schema.field('messages').type))
+        self.assertTrue(pa.types.is_struct(native.schema.field('messages').type.value_type))
+        self.assertTrue(pa.types.is_list(native.schema.field('evidence_urls').type))
+        self.assertEqual(native.to_pylist(),original)
+        self.assertTrue(any(r['source_list_order'] is None for r in original))
+        self.assertTrue(any(r['source_list_order']==1 for r in original))
+        with (root/spec['source']).with_suffix('.csv').open(newline='') as handle:
+            decoded=[{k:json.loads(v) if k in spec['csvJsonEncodedFields'] else v for k,v in row.items()} for row in csv.DictReader(handle)]
+        self.assertEqual(decoded,original)
+        matrix=Path(__file__).resolve().parents[1]/'reports/p0-20261018/market-positioning-migration.jsonl'
+        migrations=[json.loads(line) for line in matrix.read_text().splitlines()]
+        self.assertEqual(len(migrations),47)
+        self.assertEqual([m['after'] for m in migrations],original)
+        self.assertEqual({m['example_id'] for m in migrations},{r['example_id'] for r in original})
+        for row in original:
+            self.assertTrue(row['query_aliases'] and row['evidence_urls'])
+            self.assertEqual([m['role'] for m in row['messages']],['system','user','assistant'])
+            self.assertIn('دکتر سعید قزلباش',row['messages'][0]['content'])
+            self.assertNotIn('retrieval_priority',row)
+            self.assertNotIn('best_query_policy',row)
         before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()}
         bundle.sync_positioning(root)
-        self.assertEqual(before,{p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()},'A repeated build must be idempotent')
+        self.assertEqual(before,{p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()})
 
     def test_receipts_do_not_claim_unpublished_archive_changes(self):
         self.fixtures()

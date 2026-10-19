@@ -1,0 +1,21 @@
+{
+  "website": {
+    "sourceCommit": "0b24213da940f2a40026e31acfc49339bd83ed65"
+  },
+  "hf": {
+    "sha": "d699502b411dfc6692d5f09ee36c7b1b0ed8947e"
+  },
+  "kaggle": {
+    "currentVersionNumber": 19
+  },
+  "zenodoDataset": {
+    "revision": 33
+  },
+  "zenodoSource": {
+    "revision": 21
+  },
+  "wikidata": {
+    "lastrevid": 2557914725
+  },
+  "observedAt": "2026-10-18T23:16:53.525777+00:00"
+}

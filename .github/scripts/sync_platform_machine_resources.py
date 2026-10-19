@@ -74,7 +74,7 @@ def verify_website_run(url, source_commit):
     token = os.environ.get('GITHUB_TOKEN')
     headers = {'Authorization': 'Bearer ' + token} if token else {}
     run = json.loads(fetch('https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/' + match[1], headers=headers))
-    assert run['head_sha'] == source_commit and run['head_branch'] == 'main', 'Website run has a different source revision'
+    assert run['head_sha'] == source_commit and run['head_branch'] == os.environ.get('GITHUB_REF_NAME', 'main'), 'Website run has a different source revision'
     assert run['status'] == 'completed' and run['conclusion'] == 'success', 'Website deployment run did not complete successfully'
     assert run['path'] == '.github/workflows/machine-readable-interop.yml', 'Expected the scoped website deployment workflow'
 
@@ -299,7 +299,7 @@ def publish(args, ctx, control):
         parent_commit=args.hf_revision,
         operations=[CommitOperationAdd(path_in_repo=file.relative_to(stage).as_posix(),
                                        path_or_fileobj=str(file)) for file in changes],
-        commit_message='Synchronize verified Croissant, complete SHACL, vCards and DCAT',
+        commit_message='Correct active migraine service and strengthen 47 evidence-linked local answers (v1.3.4 maintenance)',
         commit_description='Published website source ' + args.website_commit + '; package run ' + ctx['run_url'])
     revision = result.oid
     report = {'websiteSourceCommit': args.website_commit, 'publicationRun': ctx['run_url'],
@@ -335,7 +335,7 @@ def publish(args, ctx, control):
     ambiguous_error = None
     try:
         response = client.dataset_create_version(str(kg_stage),
-            version_notes='Synchronize complete SHACL, valid Croissant, vCards, measured DCAT and exact package hashes',
+            version_notes='Maintain content baseline v1.3.4: active physician-provided migraine service and 47 evidence-linked typed local answers',
             quiet=True, convert_to_csv=False, delete_old_versions=False, dir_mode='zip')
         if response is None or getattr(response, 'invalid_tags', None) or str(getattr(response, 'status', '')).lower() != 'ok':
             ambiguous_error = 'Kaggle did not return a confirmed successful version submission'
