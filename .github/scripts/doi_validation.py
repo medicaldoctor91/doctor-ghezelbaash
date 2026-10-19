@@ -119,9 +119,8 @@ def validate_archive(root, *, online=False):
             def handle_endtag(self, tag):
                 if tag == 'script' and self.capture:self.blocks.append(json.loads(''.join(self.text)));self.capture=False
         inline=Inline();inline.feed((root/'index.html').read_text())
-        # A browser projection is intentionally smaller than the standalone graph.
-        # Every selected JSON-LD field/value must remain authored, and all local
-        # entity references must close within the projection.
+        # The homepage retains the complete canonical inline graph, including
+        # every authored entity, relation and multilingual literal.
         from browser_projection import validate_home_projection
         validate_home_projection(root/'graph.jsonld', inline.blocks, (root/'index.html').read_bytes())
     triples = len(g)
@@ -191,3 +190,4 @@ def validate_archive(root, *, online=False):
     return {'status': 'PASS', 'rdfTriples': triples, 'rdfTurtleCsvIsomorphic': True, 'SHACLConforms': bool(conforms), 'SHACLAdvancedFiveDocumentUnion': True,
             'croissantRows': len(records), 'croissantDistributionFiles': len(mapping), 'croissantOnlineURLExtraction': online,
             'fiveParquetExactRoundtrips': table_counts}
+

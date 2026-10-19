@@ -36,10 +36,10 @@ def run(args,**kwargs):
  return subprocess.check_output([str(x) for x in args],text=True,**kwargs).strip()
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def inventory(root):return {p.relative_to(root).as_posix():sha(p) for p in sorted(root.rglob('*')) if p.is_file() and '.git' not in p.relative_to(root).parts}
-CANDIDATE_SCHEMA=2
+CANDIDATE_SCHEMA=3
 def require_reviewable_candidate(work):
  plan=json.loads((work/'release-plan.json').read_text())
- assert plan.get('candidateSchema')==CANDIDATE_SCHEMA, 'Superseded candidate: rebuild with Git logical-byte validation'
+ assert plan.get('candidateSchema')==CANDIDATE_SCHEMA, 'Superseded candidate: rebuild with complete homepage inline graph preservation'
  assert plan['sourceCommit']!='14304eb2ed06d8d87563a2979df2175407399da0', 'Rejected superseded source'
  assert plan['hfParent']==P['currentArchive']['inputBaselineHfRevision']
  return plan
@@ -287,3 +287,4 @@ def publish_all(work):
  dump(work/'coordinated-publication-report.json',report);print(json.dumps(report),flush=True)
 
 if __name__=='__main__':main()
+

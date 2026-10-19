@@ -1,0 +1,65 @@
+name: Verify complete homepage inline graph
+on:
+  push:
+    branches: [codex/doi-23474664-preserve-inline]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install build and validation dependencies
+        run: |
+          npm ci
+          python -m pip install requests 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4' PyYAML
+      - name: Validate complete source and built representations
+        run: |
+          node --test tests/*.test.mjs
+          npm run build
+          python tests/coordinated-doi-release.test.py
+          python tests/doi-validation.test.py
+          python tests/platform-bundle-sync.test.py
+          python tests/platform-publication.test.py
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python - <<'PY'
+          import hashlib,json,sys
+          from pathlib import Path
+          sys.path.insert(0,'.github/scripts')
+          from browser_projection import validate_home_projection
+          from doi_validation import validate_policy
+          from html.parser import HTMLParser
+          class Inline(HTMLParser):
+              def __init__(self):super().__init__();self.capture=False;self.text=[];self.blocks=[]
+              def handle_starttag(self,tag,attrs):
+                  if tag=='script' and dict(attrs).get('type')=='application/ld+json':self.capture=True;self.text=[]
+              def handle_data(self,text):
+                  if self.capture:self.text.append(text)
+              def handle_endtag(self,tag):
+                  if tag=='script' and self.capture:self.blocks.append(json.loads(''.join(self.text)));self.capture=False
+          root=Path('dist');body=(root/'index.html').read_bytes();inline=Inline();inline.feed(body.decode())
+          report=validate_home_projection(root/'graph.jsonld',inline.blocks,body)
+          report['htmlSha256']=hashlib.sha256(body).hexdigest()
+          report['graphSha256']=hashlib.sha256((root/'graph.jsonld').read_bytes()).hexdigest()
+          report['doiPolicy']=validate_policy(root)
+          Path('inline-preservation-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complete-home-inline-evidence
+          path: |
+            inline-preservation-report.json
+            dist/index.html
+            dist/graph.jsonld
+            dist/release-provenance.json
+

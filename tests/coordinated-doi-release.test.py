@@ -46,6 +46,17 @@ class Guards(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);release.dump(root/'release-plan.json',{'sourceCommit':'14304eb2ed06d8d87563a2979df2175407399da0'})
    with self.assertRaises(AssertionError):release.require_reviewable_candidate(root)
+ def test_compact_home_candidate_is_rejected(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);release.dump(root/'release-plan.json',{'candidateSchema':2,'sourceCommit':'650e0c2e9d44e44f3dba8085378bcbe218ffbb94','hfParent':release.P['currentArchive']['inputBaselineHfRevision']})
+   with self.assertRaises(AssertionError):release.require_reviewable_candidate(root)
+ def test_home_inline_must_preserve_entities_and_values(self):
+  from browser_projection import validate_home_projection
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);graph={'@context':'https://schema.org','@graph':[{'@id':'home','@type':'WebPage','name':'اصل'},{'@id':'answer','@type':'Answer','text':'پاسخ کامل'}]};release.dump(root/'graph.jsonld',graph)
+   self.assertTrue(validate_home_projection(root/'graph.jsonld',[graph],b'html')['completeCanonicalGraph'])
+   for compact in [dict(graph, **{'@graph':graph['@graph'][:1]}),dict(graph, **{'@graph':[dict(graph['@graph'][0],name='changed'),graph['@graph'][1]]})]:
+    with self.assertRaises(AssertionError):validate_home_projection(root/'graph.jsonld',[compact],b'html')
  def test_missing_route_is_not_literal_404_file(self):
   from types import SimpleNamespace
   body=b'<html><head><meta name="robots" content="noindex"></head></html>'
@@ -76,3 +87,4 @@ class Guards(unittest.TestCase):
    self.assertEqual(len(rows),60)
    self.assertEqual([json.loads(row['messages']) for row in rows],[row['messages'] for row in original])
 if __name__=='__main__':unittest.main()
+
