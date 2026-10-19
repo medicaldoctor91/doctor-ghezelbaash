@@ -79,7 +79,7 @@ def preflight(work):
  assert run(['git','cat-file','-t',revision],cwd=repo)=='commit'
  before=work/'kaggle-before';archive=work/'kaggle-before.zip';archive.write_bytes(get('https://www.kaggle.com/api/v1/datasets/download/'+KG+'?datasetVersionNumber=22').content);extract_package(archive,before)
  client=kaggle_client();client.dataset_metadata(KG,str(before));wrapped=json.loads((before/'dataset-metadata.json').read_text());control=dict(wrapped.get('info') or wrapped);control['id']=KG;dump(before/'dataset-metadata.json',control)
- ctx=context(source,'0',maintenance_date='2026-10-19');ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source
+ ctx=context(source,'0',maintenance_date='2026-10-19');ctx['coordinated_release']=True;ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source
  kg=work/'kaggle';description=build_kaggle(hf,before,kg,ctx,23,revision)
  control['description']=description;control['userSpecifiedSources']=source_metadata(control['userSpecifiedSources'],revision,source);dump(kg/'dataset-metadata.json',control)
  notebook=work/'notebook';notebook.mkdir(exist_ok=True);client.kernels_pull(NB,str(notebook),metadata=True,quiet=True)

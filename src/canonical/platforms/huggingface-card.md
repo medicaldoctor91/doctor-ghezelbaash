@@ -94,7 +94,7 @@ Clinical and professional text originates from the named physician's public webs
 
 ### Reproducible citation and update policy
 
-For reproducible use, pin the exact Hugging Face data revision returned by the Hub. The Kaggle manifest records its published Hugging Face revision and website source commit; publication receipts bind the current distributions to their actual checksums. Cite that revision, content baseline v1.3.4 and canonical Dataset IRI https://www.ghezelbaash.ir/graph.jsonld/dataset. Zenodo DOIs preserve their own historical snapshots. Maintenance commits update current distributions without minting another content release or DOI.
+For reproducible use, pin the exact Hugging Face data revision returned by the Hub. The Kaggle manifest records its published Hugging Face revision and website source commit; publication receipts bind the current distributions to their actual checksums. Cite that revision, content baseline v1.3.4 and canonical Dataset IRI https://www.ghezelbaash.ir/graph.jsonld/dataset. Zenodo DOIs preserve their own historical snapshots. This coordinated release uses the reserved exact Dataset DOI stated above; subsequent maintenance must respect the archived snapshot and platform revision boundaries.
 
 ## Retrieval-ready clinical information
 
@@ -129,7 +129,7 @@ The sealed website [integrity manifest](integrity-manifest.json) and [release pr
 
 The **archived v1.3.3 snapshot** remains available at [the frozen tag](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/v1.3.3). Cite the current distribution with its Hugging Face revision and website source commit.
 
-The related [Kaggle dataset](https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data) and [starter notebook](https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter) provide data-science access and reproducible examples. Their package provenance records the website source commit and Hugging Face revision; check those identifiers before combining distributions. The Zenodo DOIs preserve their historical v1.3.3 dataset and source archive payloads; current website and Hub revisions are cited separately.
+The related [Kaggle dataset](https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data) and [starter notebook](https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter) provide data-science access and reproducible examples. Their package provenance records the website source commit and Hugging Face revision; check those identifiers before combining distributions. The exact Zenodo Dataset snapshot for this release is {{doi.current_version}} ({{doi.current_doi}}). Historical v1.3.3 and source-code snapshots retain their own provenance; current website and Hub revisions are recorded separately.
 
 Clinical descriptions and educational passages are attributed to the physician. Registration records, publication authorship and external sources retain their source-specific evidence links.
 

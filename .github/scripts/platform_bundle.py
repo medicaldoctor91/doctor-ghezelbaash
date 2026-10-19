@@ -194,6 +194,8 @@ def build_hf(dist,baseline,out,ctx):
     else:
         md += '\nArchived Zenodo snapshots are retained at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
         md += 'They were not updated by this Hugging Face/Kaggle maintenance publication; use their own recorded provenance when citing those archives.\n'
+    if ctx.get('coordinated_release'):
+        md=md.replace('They were not updated by this Hugging Face/Kaggle maintenance publication; use their own recorded provenance when citing those archives.','The exact Dataset archive belongs to this coordinated release; the website source archive remains historical. Platform-specific descriptors and receipts retain their own measured bytes.')
     (out/'README.md').write_text(render_doi_text(md))
     # Preserve a explicitly named historical pointer, but the current inventory hashes exact bytes.
     inventory={p.relative_to(out).as_posix():{'bytes':p.stat().st_size,'sha256':sha(p)} for p in sorted(out.rglob('*')) if p.is_file() and p.name not in {'dist-sha256.json'} and '.git' not in p.parts}
@@ -373,6 +375,8 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     (out/'CITATION.cff').write_text(citation)
     controls={'dataset-metadata.json','kernel-metadata.json','checksums.sha256'}
     payload=[p for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls]
+    if ctx.get('coordinated_release'):
+        readme=readme.replace('They were not updated in this publication.','The exact Dataset archive belongs to this coordinated release; the software source archive remains historical.')
     checksum_count=str(len(payload)+int(not (out/'README.md').exists()))
     readme=re.sub(r'(`checksums\.sha256` covers all )\d+( other downloadable files)',lambda m:m[1]+checksum_count+m[2],readme)
     (out/'README.md').write_text(render_doi_text(readme.replace('{checksum_count}',checksum_count)))

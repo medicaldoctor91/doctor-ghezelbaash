@@ -96,7 +96,7 @@ def prepare(previous, work):
         zipped.extractall(previous_root)
     ctx=context(source_commit,os.environ.get('CANDIDATE_RUN_ID',os.environ.get('GITHUB_RUN_ID','0')),maintenance_date='2026-10-19')
     if os.environ.get('CANDIDATE_RUN_ID')=='0':ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source_commit
-    ctx.update(publication_scope=['zenodo_dataset'],archived_snapshots_updated=False)
+    ctx.update(publication_scope=(['hf','kaggle','zenodo_dataset'] if os.environ.get('CANDIDATE_RUN_ID')=='0' else ['zenodo_dataset']),archived_snapshots_updated=False,coordinated_release=os.environ.get('CANDIDATE_RUN_ID')=='0')
     stage=work/'hf-stage'
     packaging=build_hf(ROOT/'dist',baseline,stage,ctx)
     subprocess.run(['python',str(ROOT/'tests/validate_platform_bundle.py'),str(stage),'--rdf'],check=True)
