@@ -1,0 +1,23 @@
+name: Diagnose current Dataset Viewer without writes
+on:
+  push:
+    branches: [audit/cohort24-viewer-diagnostic]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests 'pyarrow==22.0.0'
+      - run: python .github/scripts/viewer_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: viewer-diagnostic-evidence
+          path: /tmp/viewer-diagnostic/
