@@ -178,7 +178,9 @@ def main():
     root.mkdir(parents=True, exist_ok=True)
     hf_info = json.loads(get('https://huggingface.co/api/datasets/' + HF))
     if args.verify_only:
+        import pyarrow.parquet as pq
         from sync_platform_machine_resources import kaggle_client
+        assert hf_info['sha'] == args.hf_revision, 'HF changed since live review'
         client = kaggle_client()
         status = client.kernels_status(NOTEBOOK)
         notebook = json.loads(get('https://www.kaggle.com/api/v1/kernels/pull/' + NOTEBOOK))
@@ -190,6 +192,31 @@ def main():
                   'oldMirrorWordingAbsent': 'does not make the mirrors independent sources' not in markdown,
                   'fiveTablesDocumented': 'all five tables' in markdown,
                   'kaggleOwnerState': json.loads(client.dataset_status(KG, format='json(status,current_version_number)'))}
+        packaging = json.loads(get(HUB + '/resolve/' + args.hf_revision + '/viewer/packaging.json'))
+        viewer_report = {}
+        auth = {'Authorization': 'Bearer ' + os.environ['HF_TOKEN']}
+        for name, table_spec in packaging['tables'].items():
+            expected = pq.read_table(io.BytesIO(get(HUB + '/resolve/' + args.hf_revision + '/' + table_spec['file']))).to_pylist()
+            received = []
+            for offset in range(0, len(expected), 100):
+                params = {'dataset': HF, 'config': name, 'split': 'train', 'offset': offset, 'length': min(100, len(expected) - offset)}
+                for attempt in range(3):
+                    response = requests.get('https://datasets-server.huggingface.co/rows', params=params, headers=auth, timeout=60)
+                    if response.status_code == 200:
+                        break
+                    if response.status_code == 429:
+                        time.sleep(min(60, max(1, int(response.headers.get('Retry-After', '30')))))
+                    else:
+                        time.sleep(3)
+                response.raise_for_status()
+                data = response.json()
+                assert data['num_rows_total'] == len(expected)
+                assert not any(row.get('truncated_cells') for row in data['rows']), ('Viewer truncated source fields', name, offset)
+                received.extend(row['row'] for row in data['rows'])
+            assert received == expected, ('Viewer changed source rows', name)
+            viewer_report[name] = {'allRowsVerified': len(received), 'allFieldsExact': True}
+            report['viewer'] = viewer_report
+            dump(root / 'report.json', report)
         dump(root / 'report.json', report)
         print(json.dumps(report), flush=True)
         return
@@ -296,7 +323,7 @@ def main():
     for attempt in range(90):
         info = json.loads(get('https://api.kaggle.com/v1/datasets/view/' + KG))
         if info['currentVersionNumber'] == next_version:
-            public = get('https://www.kaggle.com/api/v1/datasets/download/' + KG + '?datasetVersionNumber=' + str(next_version) + '&verify=' + str(attempt))
+            public = get('https://www.kaggle.com/api/v1/datasets/download/' + KG + '?datasetVersionNumber=' + str(next_version))
             with zipfile.ZipFile(io.BytesIO(public)) as zipped:
                 if zipped.read('checksums.sha256') == (stage / 'checksums.sha256').read_bytes():
                     for line in (stage / 'checksums.sha256').read_text().splitlines():
