@@ -18,7 +18,7 @@ jobs:
         with: {persist-credentials: false}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - run: python -m pip install requests 'kaggle==2.2.4'
+      - run: python -m pip install requests 'kaggle==2.2.4' 'pyarrow==22.0.0'
       - uses: actions/download-artifact@v4
         with:
           name: frozen-coordinated-candidate
@@ -28,7 +28,7 @@ jobs:
       - name: Read authenticated settings and exact notebook execution proof
         run: |
           python - <<'PY'
-          import os,sys,json,tarfile,hashlib
+          import os,sys,json,tarfile,hashlib,datetime
           from pathlib import Path
           import requests
           sys.path.insert(0,'.github/scripts')
@@ -50,6 +50,8 @@ jobs:
           nb='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
           url='https://www.kaggle.com/api/v1/kernels/pull/'+nb
           client=kaggle_client();before=read(url);status=str(client.kernels_status(nb).status)
+          dump('owner-check-UTC.json',{'UTC':datetime.datetime.now(datetime.timezone.utc).isoformat()})
+          dump('kaggle-owner-status.json',client.dataset_status('saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data',format='json(status,current_version_number)'))
           dump('notebook-status.json',{'version':before['metadata']['currentVersionNumber'],'status':status})
           outputs=root/'outputs';outputs.mkdir()
           client.kernels_output(nb,str(outputs),file_pattern='doi-release-execution.json',force=True,quiet=True)
@@ -63,6 +65,9 @@ jobs:
           check_frozen(frozen)
           print('READONLY NOTEBOOK IDENTITY PROOF PASS')
           PY
+      - name: Fetch all public prose and positioning files
+        if: always()
+        run: python .github/scripts/supplemental_live_prose.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

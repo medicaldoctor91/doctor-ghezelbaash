@@ -253,10 +253,21 @@ def verify_kaggle(work):
  validate_policy(live)
  return {'version':plan['kaggleVersion'],'publicMetadataVerified':True,'publicZipSha256':sha(z),'publicDefaultZipSha256':sha(default_zip),'filesSha256Matched':len(expected)}
 
+def notebook_cells_for_comparison(notebook):
+ cells=[]
+ for original in notebook['cells']:
+  cell=dict(original);source=cell.get('source')
+  assert isinstance(source,(str,list)), 'Invalid notebook cell source'
+  if isinstance(source,list):
+   assert all(isinstance(line,str) for line in source), 'Invalid notebook source lines'
+   cell['source']=''.join(source)
+  cells.append(cell)
+ return cells
+
 def notebook_identity(work,public,evidence):
  plan=json.loads((work/'release-plan.json').read_text());blob=public['blob'];source=json.loads(blob.get('source') or blob.get('sourceNullable'))
  assert public['metadata']['currentVersionNumber']==plan['notebookVersion'],'Notebook version has not converged'
- assert source['cells']==json.loads((work/'notebook/starter.ipynb').read_text())['cells'],'Public notebook source differs'
+ assert notebook_cells_for_comparison(source)==notebook_cells_for_comparison(json.loads((work/'notebook/starter.ipynb').read_text())),'Public notebook source differs'
  assert evidence['status']=='PASS' and evidence['kaggle_version']==plan['kaggleVersion']
  assert evidence['upstream_revision']==plan['hfRevision'] and evidence['source_commit']==plan['sourceCommit']
  assert evidence['input_checksums_sha256']==sha(work/'kaggle/checksums.sha256')
@@ -315,4 +326,5 @@ def publish_all(work):
  dump(work/'coordinated-publication-report.json',report);print(json.dumps(report),flush=True)
 
 if __name__=='__main__':main()
+
 
