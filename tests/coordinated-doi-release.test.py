@@ -16,6 +16,22 @@ class Guards(unittest.TestCase):
    self.assertTrue(release.notebook_identity(root,public,evidence))
    public['metadata']['currentVersionNumber']=8
    with self.assertRaises(AssertionError):release.notebook_identity(root,public,evidence)
+ def test_nbformat_source_string_and_line_array_are_equivalent(self):
+  frozen={'cells':[{'cell_type':'markdown','source':['عنوان\n','متن'],'metadata':{}},{'cell_type':'code','source':['print(1)\n','print(2)'],'execution_count':None,'outputs':[]}]}
+  public=json.loads(json.dumps(frozen))
+  for cell in public['cells']:cell['source']=''.join(cell['source'])
+  self.assertEqual(release.notebook_cells_for_comparison(frozen),release.notebook_cells_for_comparison(public))
+  self.assertIsInstance(frozen['cells'][0]['source'],list)
+ def test_notebook_comparison_preserves_exact_text_order_and_other_fields(self):
+  frozen={'cells':[{'cell_type':'code','source':['a=1\n','print(a)'],'metadata':{}}]}
+  canonical=release.notebook_cells_for_comparison(frozen)
+  for source in ['a=2\nprint(a)','a=1\nprint(a)\n','print(a)\na=1']:
+   changed={'cells':[{'cell_type':'code','source':source,'metadata':{}}]}
+   self.assertNotEqual(canonical,release.notebook_cells_for_comparison(changed))
+  for source in [None,42,['a',None]]:
+   with self.assertRaises(AssertionError):release.notebook_cells_for_comparison({'cells':[{'cell_type':'code','source':source}]})
+  changed={'cells':[{'cell_type':'markdown','source':'a=1\nprint(a)','metadata':{}}]}
+  self.assertNotEqual(canonical,release.notebook_cells_for_comparison(changed))
  def test_owner_baseline_is_not_stale_public_default(self):
   from unittest.mock import Mock
   client=Mock();client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':23})
