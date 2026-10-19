@@ -11,7 +11,7 @@
     },
     {
       "file": ".github/scripts/coordinated_doi_release.py",
-      "line": 111,
+      "line": 114,
       "column": 146,
       "doi": "10.5281/zenodo.23473947",
       "role": "historical",
@@ -19,7 +19,7 @@
     },
     {
       "file": ".github/scripts/coordinated_doi_release.py",
-      "line": 227,
+      "line": 234,
       "column": 84,
       "doi": "10.5281/zenodo.23474664",
       "role": "current_exact",

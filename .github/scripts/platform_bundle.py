@@ -334,9 +334,9 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         readme+='\nArchived Zenodo snapshots: '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. They were not updated in this publication.\n'
     # Update only current release fields; keep every existing author and contributor verbatim.
     citation=(previous/'CITATION.cff').read_text()
-    for key,value in [('version',ctx['maintenance_date']+'-kaggle-packaging-'+str(version)),
+    for key,value in [('version',DOI_POLICY['currentArchive']['packagingVersion']),
                       ('date-released',ctx['maintenance_date']),('repository-code',ctx['hf']+'/tree/'+hf_revision),
-                      ('url',ctx['kaggle']),('message','Cite this Kaggle version and its pinned Hugging Face revision; archived DOI snapshots have separate provenance.')]:
+                      ('url',DOI_POLICY['currentArchive']['url']),('message','Exact snapshot citation: '+DOI_POLICY['currentArchive']['doi']+'; archive '+DOI_POLICY['currentArchive']['packagingVersion']+'. Current Kaggle distribution version '+str(version)+' pins Hugging Face revision '+hf_revision+' and has separate platform descriptors/receipts.')]:
         line=key+': '+json.dumps(value)+'\n'
         if re.search(r'^'+re.escape(key)+r':.*$',citation,flags=re.M):
             citation=re.sub(r'^'+re.escape(key)+r':.*(?:\n|$)',lambda _:line,citation,flags=re.M)
@@ -357,6 +357,12 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
             following=re.search(r'^\S',citation[start+1:],flags=re.M)
             position=start+1+following.start() if following else len(citation)
             citation=citation[:position]+block+citation[position:]
+    if not any(ref.get('doi')==DOI_POLICY['concept']['doi'] for ref in citation_object.get('references',[])):
+        reference={'type':'dataset','title':'Public collection DOI and latest-version entry point (not a competing snapshot)',
+                   'doi':DOI_POLICY['concept']['doi'],'authors':citation_object.get('authors',[])}
+        block=''.join('  '+part+'\n' for part in yaml.safe_dump([reference],sort_keys=False,allow_unicode=True).splitlines())
+        # The exact-snapshot reference above has already established references.
+        citation+=block
     (out/'CITATION.cff').write_text(citation)
     controls={'dataset-metadata.json','kernel-metadata.json','checksums.sha256'}
     payload=[p for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls]

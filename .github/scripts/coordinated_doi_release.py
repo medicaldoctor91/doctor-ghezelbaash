@@ -46,6 +46,9 @@ def preflight(work):
  from sync_platform_machine_resources import extract_package,kaggle_client,source_metadata
  from doi_validation import validate_policy,validate_archive
  state=inspect(work);assert not state['submitted'] and state['hfRevision']==P['currentArchive']['inputBaselineHfRevision']
+ auth=requests.get('https://huggingface.co/api/whoami-v2',headers={'Authorization':'Bearer '+os.environ['HF_TOKEN']},timeout=60);auth.raise_for_status()
+ cf=requests.get('https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/pages/projects/doctor-ghezelbaash',headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']},timeout=60);cf.raise_for_status();assert cf.json()['success']
+ dump(work/'read-only-publication-bindings.json',{'hfAuthenticated':True,'cloudflareProjectAccessible':True,'zenodoReservedDraftAccessible':True})
  assert state['kaggleVersion']==22
  source=os.environ['GITHUB_SHA'];os.environ['CANDIDATE_RUN_ID']='0'
  # Stable build provenance points to actual source, not a future run receipt.
@@ -152,7 +155,9 @@ def verify_hf(work):
  expected=inventory(work/'hf-stage')
  def fetch(item):
   name,digest=item;r=get('https://huggingface.co/datasets/'+HF+'/resolve/'+revision+'/'+requests.utils.quote(name,safe='/'));assert hashlib.sha256(r.content).hexdigest()==digest,('HF bytes',name)
- with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:list(pool.map(fetch,expected.items()))
+ if not (work/'hf-bytes-verified.json').exists():
+  with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:list(pool.map(fetch,expected.items()))
+  dump(work/'hf-bytes-verified.json',{'revision':revision,'files':len(expected)})
  packaging=json.loads((work/'hf-stage/viewer/packaging.json').read_text());sizes=get('https://datasets-server.huggingface.co/size?'+urlencode({'dataset':HF})).json()
  counts={item['config']:item['num_rows'] for item in sizes['size']['configs']}
  evidence={}
@@ -214,6 +219,8 @@ def publish_all(work):
  assert json.loads((work/'preflight-report.json').read_text())['status']=='PASS'
  askpass=work/'git-askpass.py';askpass.write_text('#!/usr/bin/env python3\nimport os,sys\nprint(os.environ["HF_TOKEN"] if "password" in sys.argv[1].lower() else "hf_user")\n');askpass.chmod(0o700)
  env={**os.environ,'GIT_ASKPASS':str(askpass),'GIT_TERMINAL_PROMPT':'0','GIT_LFS_SKIP_SMUDGE':'1'}
+ assert run(['git','rev-parse','HEAD'],cwd=work/'hf-git')==plan['hfRevision']
+ assert not run(['git','status','--porcelain'],cwd=work/'hf-git'), 'Frozen HF Git tree is dirty'
  run(['git','push','origin','HEAD:main'],cwd=work/'hf-git',env=env)
  assert get('https://huggingface.co/api/datasets/'+HF).json()['sha']==plan['hfRevision']
  check_frozen(work)

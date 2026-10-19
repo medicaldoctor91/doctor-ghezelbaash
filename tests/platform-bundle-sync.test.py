@@ -223,7 +223,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertNotIn("integrity-manifest.json", {p.name for p in out.iterdir()})
         citation = (out / "CITATION.cff").read_text()
         self.assertIn(AUTHORS, citation)
-        self.assertIn('version: "2026-10-14-kaggle-packaging-9"', citation)
+        self.assertIn('version: '+json.dumps(bundle.DOI_POLICY['currentArchive']['packagingVersion']), citation)
         self.assertIn('date-released: "2026-10-14"', citation)
         readme = (out / "README.md").read_text()
         self.assertIn("Creator: Existing author introduction.", readme)
