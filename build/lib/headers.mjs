@@ -72,7 +72,7 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
   }else{
     for(const route of routes){requirePath(route,'route');const poster=watchPosters.get(route);if(poster)requirePath(poster,'poster');const cache=delivery?.html?.cacheControl??'public, max-age=0, must-revalidate';blocks.push(`${route}\n  Cache-Control: ${cache}\n  Link: ${linkValue(origin,cssPath,poster,{earlyHints})}`);}
   }
-  if(delivery&&machineResources.length){const resourceByPath=new Map(machineResources.map(r=>[r.path,r]));for(const resource of machineResources){requirePath(resource.path,'machine resource');blocks.push(machineBlock({origin,resource,resourceByPath,delivery,detachHtml:compact&&/^\/[a-z0-9._-]+$/i.test(resource.path)}));}}
+  if(delivery&&machineResources.length){const resourceByPath=new Map(machineResources.map(r=>[r.path,r]));for(const resource of machineResources){requirePath(resource.path,'machine resource');if(resource.httpHeaderPolicy==='static-json'){if(!resource.path.endsWith('.json')||resource.mediaType!=='application/json')throw new Error('Static JSON policy requires a JSON representation');continue;}blocks.push(machineBlock({origin,resource,resourceByPath,delivery,detachHtml:compact&&/^\/[a-z0-9._-]+$/i.test(resource.path)}));}}
   if(delivery?.routing?.graphIdentityRepresentations){
     const policy=delivery.routing.graphIdentityRepresentations;
     const patterns=[...policy.namedRootSubjects,...policy.graphSubjectPrefixes.map(prefix=>prefix+'*')];

@@ -15,7 +15,7 @@ All copied resources retain the exact bytes of this Hub revision. Five Parquet t
 - **clinical_answers:** 125 canonical answers with source and passage bindings.
 - **entity_facts:** 22,166 RDF statements preserving complete IRIs, datatypes and languages.
 - **query_matrix:** 876 multilingual retrieval aliases reconciled to the current graph; CSV, JSONL and Parquet reconstruct the same rows.
-- **market_positioning:** 47 evidence-linked physician-positive training examples with preserved system/user/assistant messages, multilingual query aliases and typed nullable fields.
+- **market_positioning:** 60 competitive physician-positive training examples: all 47 original message arrays unchanged plus 13 new examples, multilingual query aliases and typed nullable fields.
 
 `starter.ipynb` verifies resource hashes, reconstructs all five tables and CSV, resolves every query reference, and checks the distinct identities of physician, clinic and dataset. Nested fields and omitted values follow `viewer/packaging.json`. `physician-expertise.md` provides the recorded clinical approach, education, research and practice with source references; `clinical-passages.jsonl` supplies the corresponding authored educational material. Load both `graph.jsonld` and `provenance.jsonld` to retain their complete evidence definitions. These resources support Persian NLP, multilingual retrieval, entity resolution and evidence-grounded RAG.
 

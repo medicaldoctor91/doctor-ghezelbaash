@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "scope": "Locally built candidate, not a public release",
+  "checked_at": "2026-10-19T01:37:59.848178+00:00",
+  "input_parent_commit": "8e74bfa128221f00d08cf6f9647181ad55641ce4",
+  "node_tests": 24,
+  "platform_bundle_tests": 5,
+  "publication_transport_tests": 13,
+  "rdf_union_shacl": "PASS",
+  "jsonld_turtle_csv_isomorphism": "PASS",
+  "croissant_extracted_rows": 22149,
+  "machine_resources": {
+    "browser_rdf_terms_checked": 8277,
+    "catalog_route": 200,
+    "croissant_rows_read": 22149,
+    "data_package_hashes": 26,
+    "dcat_measured_distributions": 14,
+    "html_documents": 73,
+    "integrity_files": 186,
+    "license_images": 5,
+    "node_shapes": 67
+  },
+  "canonical_invariants": {
+    "clinic_cid": "12350483144643112463",
+    "clinic_google_kg": "/g/11r3rzdtb3",
+    "clinic_osm_node": "13530287096",
+    "clinic_place_id": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+    "dataset_iri": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+    "irimc": "167430",
+    "openalex": "A5146521397",
+    "orcid": "0009-0001-9346-8475",
+    "person_google_kg": "/g/11nqdfk76c",
+    "person_qid": "Q140287622",
+    "solo_practice": true,
+    "text_files_checked": 108
+  },
+  "nu_html_errors": 0,
+  "nu_target_pages": 5,
+  "content_version": "1.3.4",
+  "public_publication": false
+}

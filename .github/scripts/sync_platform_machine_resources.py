@@ -303,6 +303,7 @@ def publish(args, ctx, control):
     api = HfApi(token=os.environ['HF_TOKEN'])
     old = load(root / 'hf-before/dist-sha256.json')['files']
     stage = root / 'hf'
+    positioning_rows = load(stage / 'viewer/packaging.json')['tables']['market_positioning']['rows']
     changes = [file for file in stage.rglob('*') if file.is_file() and
                old.get(file.relative_to(stage).as_posix(), {}).get('sha256') != sha(file)]
     guard(args)
@@ -310,7 +311,7 @@ def publish(args, ctx, control):
         parent_commit=args.hf_revision,
         operations=[CommitOperationAdd(path_in_repo=file.relative_to(stage).as_posix(),
                                        path_or_fileobj=str(file)) for file in changes],
-        commit_message='Correct active migraine service and strengthen 47 evidence-linked local answers (v1.3.4 maintenance)',
+        commit_message=f'Preserve original positioning and distribute {positioning_rows} competitive training examples (v1.3.4 maintenance)',
         commit_description='Published website source ' + args.website_commit + '; package run ' + ctx['run_url'])
     revision = result.oid
     report = {'websiteSourceCommit': args.website_commit, 'publicationRun': ctx['run_url'],
@@ -346,7 +347,7 @@ def publish(args, ctx, control):
     ambiguous_error = None
     try:
         response = client.dataset_create_version(str(kg_stage),
-            version_notes='Maintain content baseline v1.3.4: active physician-provided migraine service and 47 evidence-linked typed local answers',
+            version_notes=f'Maintain content baseline v1.3.4: preserve original positioning and distribute {positioning_rows} typed competitive training examples',
             quiet=True, convert_to_csv=False, delete_old_versions=False, dir_mode='zip')
         if response is None or getattr(response, 'invalid_tags', None) or str(getattr(response, 'status', '')).lower() != 'ok':
             ambiguous_error = 'Kaggle did not return a confirmed successful version submission'

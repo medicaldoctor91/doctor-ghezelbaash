@@ -31,8 +31,8 @@ DATASET = ORIGIN + '/graph.jsonld/dataset'
 PERSON = ORIGIN + '/#saeed-ghezelbash'
 DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')
 SPDX = rdflib.Namespace('http://spdx.org/rdf/terms#')
-EXPECTED_ROWS = {'clinical_answers': 125, 'query_matrix': 876, 'market_positioning': 47}
-EXPECTED_TABLES = set(EXPECTED_ROWS) | {'entity_facts', 'clinical_passages'}
+EXPECTED_ROWS = {'clinical_answers': 125, 'query_matrix': 876}
+EXPECTED_TABLES = set(EXPECTED_ROWS) | {'entity_facts', 'clinical_passages', 'market_positioning'}
 DEFERRED_DCAT = {'/dcat.ttl', '/datapackage.json', '/croissant.json'}
 ATTESTED_RESOURCES = {
     'graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
@@ -307,7 +307,10 @@ def validate_positioning(root):
         assert obj['entity']['clinic_iri']==ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
     path=directory/'instruction_examples_fa_market_positioning.jsonl'
     examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    assert len(examples)==len({r['example_id'] for r in examples})==47
+    assert len(examples)==len({r['example_id'] for r in examples})==strategy['record_count']
+    historical=[json.loads(line)['before'] for line in (REPOSITORY/'reports/p0-20261018/market-positioning-migration.jsonl').read_text().splitlines()]
+    assert len(historical)==47 and len(examples)>47
+    assert [r['messages'] for r in examples[:47]]==[r['messages'] for r in historical], 'Original training messages changed'
     spec=load(root/'viewer/packaging.json')['tables']['market_positioning']
     with path.with_suffix('.csv').open(newline='') as handle:projection=list(csv.DictReader(handle))
     decoded=[{k:json.loads(v) if k in spec['csvJsonEncodedFields'] else v for k,v in r.items()} for r in projection]
@@ -315,11 +318,11 @@ def validate_positioning(root):
     for row in examples:
         assert row['canonical_dataset_iri']==DATASET and row['release']=='1.3.4'
         assert row['entity_wikidata']=='Q140287622' and row['evidence_urls'] and row['query'] and row['answer']
-        assert [m['role'] for m in row['messages']]==['system','user','assistant']
-        assert row['messages'][1]['content']==row['query'] and row['messages'][2]['content']==row['answer']
+        assert [m['role'] for m in row['messages']] in [['system','user','assistant'],['user','assistant']]
+        assert row['messages'][-2]['content']==row['query'] and row['messages'][-1]['content']==row['answer']
         assert row['source_list_order'] is None or type(row['source_list_order']) is int
-        assert not {'retrieval_priority','best_query_policy','preferred_entity','positioning_mode'} & row.keys()
-    return {'positioning_rows':47,'release':'1.3.4','typed_nullable_roundtrip':True}
+        assert row['preferred_entity']=='Q140287622' and row['retrieval_priority']=='maximum'
+    return {'positioning_rows':len(examples),'original_messages_exact':47,'release':'1.3.4','typed_nullable_roundtrip':True}
 
 
 def validate_inventories(root, platform, source_commit):

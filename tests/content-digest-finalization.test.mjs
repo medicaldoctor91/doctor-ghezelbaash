@@ -27,7 +27,13 @@ test('final release preserves every registered representation policy alongside a
   const sealed=sealHeaders({headers,eligible,resourcePaths:resources.map(r=>r.path)});
   const blocks=new Map(sealed.trim().split(/\n\s*\n/).map(block=>[block.split('\n')[0],block]));
   assert.ok(blocks.size<=100);
-  for(const resource of resources)assert.ok(blocks.get(resource.path).includes('  Content-Type: '+resource.mediaType),resource.path);
+  for(const resource of resources){
+    if(resource.httpHeaderPolicy==='static-json'){
+      assert.ok(resource.path.startsWith('/enrichment/')&&resource.path.endsWith('.json'));
+      assert.equal(resource.mediaType,'application/json');
+      assert.ok(blocks.has('/*'),'Native static JSON retains the shared security policy');
+    }else assert.ok(blocks.get(resource.path).includes('  Content-Type: '+resource.mediaType),resource.path);
+  }
   for(const [url,meta] of Object.entries(eligible))assert.ok(blocks.get(url).includes('  Content-Digest: '+meta.contentDigest));
   assert.match(blocks.get('/croissant.json'),/Access-Control-Allow-Origin: \*/);
   assert.match(blocks.get('/entity-facts.csv-metadata.json'),/Content-Type: application\/csvm\+json/);

@@ -1,0 +1,242 @@
+[
+  {
+    "url": "https://doi.org/10.5281/zenodo.22131441",
+    "status": 200,
+    "final_url": "https://zenodo.org/records/22131441",
+    "sha256": "b09a3096aeb5b637cfb81622a64a0a4cb67de0d5833b64a616c389b86a93ecec",
+    "cache": "b90c9096e0295de0.body",
+    "retrieved_at": "2026-10-19T01:26:25.611955+00:00"
+  },
+  {
+    "url": "https://doi.org/10.5281/zenodo.22838416",
+    "status": 200,
+    "final_url": "https://zenodo.org/records/22838416",
+    "sha256": "71bdf720c87966a5a665ffcd8b4e5e49e22b9670cb78d474be7e16c38f159f87",
+    "cache": "64d7b24aee7de2eb.body",
+    "retrieved_at": "2026-10-19T01:26:25.674494+00:00"
+  },
+  {
+    "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+    "status": 200,
+    "final_url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+    "sha256": "873a68f43ae278042dd958bf4e2849cd71b15a8aadde87ec66e04ebcbae58d0b",
+    "cache": "3c5406df43a63542.body",
+    "retrieved_at": "2026-10-19T01:26:24.108990+00:00"
+  },
+  {
+    "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+    "status": 200,
+    "final_url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+    "sha256": "1ba8179618a69b5cd4eac75ef429821562259f07dde189dd3693fcd4456e5ace",
+    "cache": "94ced4535958228a.body",
+    "retrieved_at": "2026-10-19T01:26:23.906959+00:00"
+  },
+  {
+    "url": "https://jaraheto.net/10-of-the-best-botox-doctors-in-kermanshah/",
+    "status": 200,
+    "final_url": "https://jaraheto.net/10-of-the-best-botox-doctors-in-kermanshah/",
+    "sha256": "7c85208b70bd0581d55ec20d62b4beb49221249afc1d94402486177caf241f64",
+    "cache": "212341fc1ff6632f.body",
+    "retrieved_at": "2026-10-19T01:26:25.768136+00:00"
+  },
+  {
+    "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+    "status": 200,
+    "final_url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+    "sha256": "1f79f153959c9d453917f29c5b11092eb6805878191c7457a9a8737c953df573",
+    "cache": "86295b511eeca3c4.body",
+    "retrieved_at": "2026-10-19T01:26:29.744695+00:00"
+  },
+  {
+    "url": "https://pezeshk24.com/best-filler-doctor-in-kermanshah/",
+    "status": 200,
+    "final_url": "https://pezeshk24.com/best-filler-doctor-in-kermanshah/",
+    "sha256": "dec3ee7f7a28284a570a023e27dc8d7c5ca863a3ec2c0797efb18bc48e62bc12",
+    "cache": "1094ae7aaeef2385.body",
+    "retrieved_at": "2026-10-19T01:26:26.201220+00:00"
+  },
+  {
+    "url": "https://pezeshka.net/the-best-botox-doctor-in-kermanshah/",
+    "status": 200,
+    "final_url": "https://pezeshka.net/the-best-botox-doctor-in-kermanshah/",
+    "sha256": "cee4cab71af889b5df51c0f749dc4a6b63fa22c4a672c0239e64e30f6393cea6",
+    "cache": "9ccda752c57c572d.body",
+    "retrieved_at": "2026-10-19T01:26:27.232807+00:00"
+  },
+  {
+    "url": "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+    "status": 203,
+    "final_url": "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+    "sha256": "2cc6b8b06db85abb8a603eeb9e60a785abe3b9b0f76e16081294e4fe615b2555",
+    "cache": "a1cfe50cf09a3f7e.body",
+    "retrieved_at": "2026-10-19T01:26:26.087507+00:00"
+  },
+  {
+    "url": "https://pubmed.ncbi.nlm.nih.gov/34574943/",
+    "status": 200,
+    "final_url": "https://pubmed.ncbi.nlm.nih.gov/34574943/",
+    "sha256": "a3c7faac618e903487784530eb6db9b242b82d515306043adf18b171a588c2ca",
+    "cache": "39cb4964d57150e4.body",
+    "retrieved_at": "2026-10-19T01:26:26.335716+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/",
+    "sha256": "38a07130e6c5c99c4afafa36008dbd4562ab717adc7b9a22656f460f43286409",
+    "cache": "1d72681e43fac593.body",
+    "retrieved_at": "2026-10-19T01:26:27.222854+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/botox",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/botox",
+    "sha256": "46a3df8785e39c78edc4bdfd9dbf3d9cd90d2d59aec95da52a91132a35dc0a77",
+    "cache": "63148f6fa67347eb.body",
+    "retrieved_at": "2026-10-19T01:26:26.748225+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions#migraine-botox-candidacy",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions",
+    "sha256": "c70023f6ccb8c33f9522aaf3f1476cc156183d647082389caa266c861fb340cd",
+    "cache": "6963d5c252da3fa2.body",
+    "retrieved_at": "2026-10-19T01:26:26.919945+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/botox-injection-kermanshah",
+    "status": 404,
+    "final_url": "https://www.ghezelbaash.ir/botox-injection-kermanshah",
+    "sha256": "2e00f55f4ec24014f7d3b93bddd4b523ebf9bd82e34320ff1d6def5dbe663387",
+    "cache": "f050cb03d2c9a16e.body",
+    "retrieved_at": "2026-10-19T01:26:26.983305+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring",
+    "sha256": "eeb4c065c5a9469a0182bb6cc6182ff92b9262319e2eaef2d5eaa91cdf2a876b",
+    "cache": "84bff921e36eb645.body",
+    "retrieved_at": "2026-10-19T01:26:27.311952+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "sha256": "7a84f4a096633da64cfa3d9a81898e7e977e7040febb01f4be675c0c3043052e",
+    "cache": "e06daa3dfecd0e31.body",
+    "retrieved_at": "2026-10-19T01:26:27.301462+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/filler",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/filler",
+    "sha256": "bfcdd54c3b4c766bdebf19d7a9375dcc5d2c2e01a688a660515c3e856e2db3e2",
+    "cache": "49d703b1b27c15f2.body",
+    "retrieved_at": "2026-10-19T01:26:27.415874+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/filler-injection-kermanshah",
+    "status": 404,
+    "final_url": "https://www.ghezelbaash.ir/filler-injection-kermanshah",
+    "sha256": "2e00f55f4ec24014f7d3b93bddd4b523ebf9bd82e34320ff1d6def5dbe663387",
+    "cache": "0429c4f1aabe8409.body",
+    "retrieved_at": "2026-10-19T01:26:27.757550+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+    "sha256": "d21caf4b717c7ec958d4c6c4584e4b11211f4cc8a88b876a3df47bcd84f6fef8",
+    "cache": "05c8311e01b05f6e.body",
+    "retrieved_at": "2026-10-19T01:26:27.743809+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location",
+    "sha256": "eb6b3d6eda0ba12b39c3694f90ed11ccb4597044a1baf1997b495aa730b5f82a",
+    "cache": "b5ae5408817d9e73.body",
+    "retrieved_at": "2026-10-19T01:26:27.616245+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/sitemap.xml",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/sitemap.xml",
+    "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+    "cache": "226ede98c63644e4.body",
+    "retrieved_at": "2026-10-19T01:26:27.729957+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/thread-lift",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/thread-lift",
+    "sha256": "888ccf4b2ceab41ce5f683a228932d15732b0ba27e6bc90ef758a4cbc4608fe6",
+    "cache": "0411bce00e004dd7.body",
+    "retrieved_at": "2026-10-19T01:26:27.907174+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah",
+    "status": 200,
+    "final_url": "https://www.ghezelbaash.ir/thread-lift",
+    "sha256": "888ccf4b2ceab41ce5f683a228932d15732b0ba27e6bc90ef758a4cbc4608fe6",
+    "cache": "241976e3871b6b3d.body",
+    "retrieved_at": "2026-10-19T01:26:28.242555+00:00"
+  },
+  {
+    "url": "https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+قزلباش+کرمانشاه&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+    "status": 200,
+    "final_url": "https://www.google.com/maps/search/?api=1&query=%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9+%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C+%D8%AF%DA%A9%D8%AA%D8%B1+%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4+%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+    "sha256": "e299e1f37d75cc01d8c0801b81c01f6a8c0c7388893c57f112499ff652ac248f",
+    "cache": "fa650d8986a03a79.body",
+    "retrieved_at": "2026-10-19T01:26:28.033562+00:00"
+  },
+  {
+    "url": "https://www.google.com/maps?cid=12350483144643112463",
+    "status": 200,
+    "final_url": "https://www.google.com/maps?cid=12350483144643112463",
+    "sha256": "e77055e451376cc20ade9ce7000268eea6bc84634cfd8827f0e029d8c34747ed",
+    "cache": "2cb48a913d456010.body",
+    "retrieved_at": "2026-10-19T01:26:27.992826+00:00"
+  },
+  {
+    "url": "https://www.instagram.com/doctor.ghezelbaash/",
+    "status": 200,
+    "final_url": "https://www.instagram.com/doctor.ghezelbaash/",
+    "sha256": "9f7aa8bc2d5e7dc0b6c0392bbd5a3e61d32b460bfab45de953b61b91dda8dfde",
+    "cache": "a635028a9238a610.body",
+    "retrieved_at": "2026-10-19T01:26:28.586187+00:00"
+  },
+  {
+    "url": "https://doctor.ghezelbaash.ir/",
+    "status": 200,
+    "final_url": "https://www.google.com/maps/search/?api=1&query=Dr.%20Saeed%20Ghezelbash%20Aesthetic%20Clinic&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+    "sha256": "7428133486cf1f3b3b273d7c147d2d7ea39a9245022009948617ffad701b664a",
+    "cache": "5850da2a8226eccd.body",
+    "retrieved_at": "2026-10-19T01:27:36.267112+00:00"
+  },
+  {
+    "url": "https://healifa.com/doctors/service/nasal-filler/city/kermanshah",
+    "status": 200,
+    "final_url": "https://healifa.com/doctors/service/nasal-filler/city/kermanshah",
+    "sha256": "cacc0a4a7c778127037cbbf93db713aade8e82d31daa23a38140820cbb7cdeab",
+    "cache": "328af20a337d8fd0.body",
+    "retrieved_at": "2026-10-19T01:27:37.491834+00:00"
+  },
+  {
+    "url": "https://www.ghezelbaash.ir/hf-market-positioning-evidence/v1",
+    "status": 404,
+    "final_url": "https://www.ghezelbaash.ir/hf-market-positioning-evidence/v1",
+    "sha256": "2e00f55f4ec24014f7d3b93bddd4b523ebf9bd82e34320ff1d6def5dbe663387",
+    "cache": "4fc7b58cab97c9aa.body",
+    "retrieved_at": "2026-10-19T01:27:36.152246+00:00"
+  },
+  {
+    "url": "https://www.instagram.com/doctor.ghezelbaash",
+    "status": 200,
+    "final_url": "https://www.instagram.com/doctor.ghezelbaash",
+    "sha256": "f933ab5714380087ac57f48805a1688ec49f0d005a40c5030883dd442765c7f3",
+    "cache": "33592501923a7258.body",
+    "retrieved_at": "2026-10-19T01:27:36.557018+00:00"
+  }
+]

@@ -83,12 +83,13 @@ def sync_positioning(root):
     for name in ['market-positioning-evidence.json','positioning-strategy.json']:
         canonical=Path(__file__).resolve().parents[2]/'src/canonical/enrichment'/name
         shutil.copyfile(canonical,directory/name)
-    assert len(examples)==47 and len({r['example_id'] for r in examples})==47
+    strategy=load(directory/'positioning-strategy.json')
+    assert len(examples)==len({r['example_id'] for r in examples})==strategy['record_count']
     fields=list(examples[0]);assert all(set(row)==set(fields) for row in examples)
     assert all(row['release']==load(root/'datapackage.json')['version'] for row in examples)
-    assert all(not {'retrieval_priority','best_query_policy','preferred_entity','positioning_mode'} & row.keys() for row in examples)
+    assert all(row['preferred_entity']=='Q140287622' and row['retrieval_priority']=='maximum' for row in examples)
     # CSV JSON encodes nullable/list fields; this distinguishes null, empty string and empty list.
-    encoded={'messages','subject_iris','evidence_urls','query_aliases','source_list_order','observed_at'}
+    encoded={'messages','subject_iris','evidence_urls','query_aliases','source_list_order','observed_at','historical_release','historical_release_doi'}
     with path.with_suffix('.csv').open('w',newline='') as handle:
         writer=csv.DictWriter(handle,fieldnames=fields);writer.writeheader()
         writer.writerows({k:json.dumps(v,ensure_ascii=False,separators=(',',':')) if k in encoded else v for k,v in row.items()} for row in examples)
@@ -170,7 +171,7 @@ def build_hf(dist,baseline,out,ctx):
     md += 'Croissant creator/publisher types, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
     md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and the source-dependent Viewer tables are rebuilt without changing their source-row semantics.\n\n'
     md += 'Package publication run: '+ctx['run_url']+'.\n'
-    md += '\nAll 47 local-service answers use current content baseline v1.3.4, attributable evidence and typed nullable fields. Historical origin is recorded separately; the physician and practice keep distinct IRIs.\n'
+    if positioning:md += '\nThe '+str(positioning['rows'])+' competitive training examples include all 47 original message arrays unchanged plus additional source-linked examples, with typed nullable fields and current content baseline v1.3.4. The physician and practice keep distinct IRIs.\n'
     if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
     if ctx['archived_snapshots_updated']:
         md += '\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
@@ -297,7 +298,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
     readme+='Package publication run: '+ctx['run_url']+'.\n'
-    readme+='\nAll 47 local-service answers use current content baseline v1.3.4 with source evidence, separate physician/practice IRIs and lossless typed Parquet.\n'
+    if 'market_positioning' in packaging['tables']:readme+='\nThe '+str(packaging['tables']['market_positioning']['rows'])+' competitive training examples preserve all 47 original message arrays and add source-linked examples, with content baseline v1.3.4 and lossless typed Parquet.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
     readme+='\nCroissant, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
     readme+='The package includes `frictionless-datapackage.json` (the exact canonical `datapackage.json` bytes) and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '

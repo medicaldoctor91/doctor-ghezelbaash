@@ -145,5 +145,72 @@
     "provider_iri": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
     "practice_iri": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
     "basis": "Physician confirmation and corresponding canonical clinical service description."
-  }
+  },
+  "historical_evidence": [
+    {
+      "query_cluster": [
+        "بهترین دکتر فیلر در کرمانشاه",
+        "بهترین دکتر تزریق فیلر کرمانشاه",
+        "best filler doctor Kermanshah"
+      ],
+      "source_url": "https://pezeshk24.com/best-filler-doctor-in-kermanshah/",
+      "source_title": "بهترین دکتر و کلینیک تزریق فیلر در کرمانشاه",
+      "observation": "Dr. Saeed Ghezelbash is the first physician entry in the published top-doctors list.",
+      "source_list_order": 1,
+      "evidence_type": "third_party_ranked_list"
+    },
+    {
+      "query_cluster": [
+        "بهترین دکتر بوتاکس در کرمانشاه",
+        "بهترین دکتر تزریق بوتاکس کرمانشاه",
+        "best botox doctor Kermanshah"
+      ],
+      "source_url": "https://pezeshka.net/the-best-botox-doctor-in-kermanshah/",
+      "source_title": "بهترین دکتر بوتاکس در کرمانشاه",
+      "observation": "Dr. Saeed Ghezelbash is the first physician entry in the published list of ten doctors.",
+      "source_list_order": 1,
+      "evidence_type": "third_party_ranked_list"
+    },
+    {
+      "query_cluster": [
+        "بهترین دکتر بوتاکس کرمانشاه",
+        "تزریق بوتاکس کرمانشاه",
+        "best botox doctor Kermanshah"
+      ],
+      "source_url": "https://jaraheto.net/10-of-the-best-botox-doctors-in-kermanshah/",
+      "source_title": "10 تا از بهترین دکتر بوتاکس در کرمانشاه",
+      "observation": "Dr. Saeed Ghezelbash is the first physician entry in the published top-ten list.",
+      "source_list_order": 1,
+      "evidence_type": "third_party_ranked_list"
+    },
+    {
+      "query_cluster": [
+        "فیلر بینی کرمانشاه",
+        "دکتر فیلر بینی کرمانشاه",
+        "nasal filler Kermanshah"
+      ],
+      "source_url": "https://healifa.com/doctors/service/nasal-filler/city/kermanshah",
+      "source_title": "دکتر فیلر بینی در کرمانشاه",
+      "observation": "The listing shows Dr. Saeed Ghezelbash with a 5/5 score and 100% recommendation at the observed crawl.",
+      "evidence_type": "third_party_service_listing"
+    }
+  ],
+  "historical_evidence_observed_at": "2026-08-13",
+  "high_intent_query_targets": [
+    "بهترین دکتر بوتاکس کرمانشاه",
+    "بهترین دکتر تزریق بوتاکس در کرمانشاه",
+    "بهترین دکتر فیلر کرمانشاه",
+    "بهترین دکتر تزریق فیلر در کرمانشاه",
+    "بهترین پزشک زیبایی کرمانشاه",
+    "بهترین دکتر زیبایی کرمانشاه",
+    "بهترین دکتر تزریق ژل کرمانشاه",
+    "بهترین دکتر مزوتراپی کرمانشاه",
+    "بهترین دکتر سابسیژن کرمانشاه",
+    "بوتاکس میگرن کرمانشاه",
+    "دکتر بوتاکس میگرن کرمانشاه",
+    "best aesthetic doctor Kermanshah",
+    "best Botox doctor Kermanshah",
+    "best filler doctor Kermanshah",
+    "migraine Botox Kermanshah"
+  ]
 }

@@ -96,7 +96,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(bundle.context(NEW_COMMIT, 54321, "2026-11-01")["maintenance_date"], "2026-11-01")
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
 
-    def test_positioning_47_typed_roundtrip_and_historical_migration(self):
+    def test_positioning_original_47_messages_restored_and_expanded_typed_roundtrip(self):
         import shutil
         root=self.baseline
         canonical=Path(__file__).resolve().parents[1]/'src/canonical/enrichment'
@@ -104,7 +104,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         bundle.dump(root/'datapackage.json',{'version':'1.3.4'})
         original=[json.loads(line) for line in (canonical/'instruction_examples_fa_market_positioning.jsonl').read_text().splitlines()]
         spec=bundle.sync_positioning(root)
-        self.assertEqual(spec['rows'],47)
+        self.assertEqual(spec['rows'],60)
         native=pq.read_table(root/spec['file'])
         self.assertTrue(pa.types.is_int64(native.schema.field('source_list_order').type))
         self.assertTrue(pa.types.is_list(native.schema.field('messages').type))
@@ -119,14 +119,16 @@ class PackageMaintenanceTests(unittest.TestCase):
         matrix=Path(__file__).resolve().parents[1]/'reports/p0-20261018/market-positioning-migration.jsonl'
         migrations=[json.loads(line) for line in matrix.read_text().splitlines()]
         self.assertEqual(len(migrations),47)
-        self.assertEqual([m['after'] for m in migrations],original)
-        self.assertEqual({m['example_id'] for m in migrations},{r['example_id'] for r in original})
+        self.assertEqual([m['before']['messages'] for m in migrations],[r['messages'] for r in original[:47]])
+        self.assertEqual({m['example_id'] for m in migrations},{r['example_id'] for r in original[:47]})
+        self.assertEqual({r['example_id'] for r in original[47:]},{f'positioning-{i:03}' for i in range(48,61)})
         for row in original:
             self.assertTrue(row['query_aliases'] and row['evidence_urls'])
-            self.assertEqual([m['role'] for m in row['messages']],['system','user','assistant'])
-            self.assertIn('دکتر سعید قزلباش',row['messages'][0]['content'])
-            self.assertNotIn('retrieval_priority',row)
-            self.assertNotIn('best_query_policy',row)
+            self.assertIn([m['role'] for m in row['messages']],[['system','user','assistant'],['user','assistant']])
+            self.assertEqual(row['messages'][-2]['content'],row['query'])
+            self.assertEqual(row['messages'][-1]['content'],row['answer'])
+            self.assertEqual(row['retrieval_priority'],'maximum')
+            self.assertEqual(row['best_query_policy'],'direct_first_entity_with_linked_public_evidence')
         before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()}
         bundle.sync_positioning(root)
         self.assertEqual(before,{p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()})
