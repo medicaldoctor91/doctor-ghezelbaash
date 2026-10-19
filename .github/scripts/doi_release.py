@@ -32,7 +32,11 @@ def reserve(previous, output):
     if pending:
         assert len(pending) == 1, 'Multiple family drafts require inspection'
         draft = pending[0]
-        assert draft['metadata'].get('version') == public['metadata']['version'], 'Existing draft has independent metadata changes'
+        print(json.dumps({'existingDraft': draft['id'], 'created': draft.get('created'), 'version': draft.get('metadata', {}).get('version'),
+                          'title': draft.get('metadata', {}).get('title'), 'doi': draft.get('doi'),
+                          'prereserve_doi': draft.get('metadata', {}).get('prereserve_doi'), 'responseKeys': list(draft)}, ensure_ascii=False), flush=True)
+        assert draft['metadata'].get('title') == public['metadata']['title'], 'Existing draft title differs from the reviewed parent'
+        assert draft['metadata'].get('description') == public['metadata']['description'], 'Existing draft description has independent changes'
     else:
         response = session.post(base + 'records/' + str(previous) + '/versions', json={}, timeout=90)
         response.raise_for_status()
