@@ -7,7 +7,7 @@ NOW=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 def dump(n,v):
  p=R/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v,ensure_ascii=False,indent=2)+'\n')
 def get(scope,name,url):
- url+=('&' if '?' in url else '?')+urllib.parse.urlencode({'_live_prose_audit':NOW})
+ if scope!='download':url+=('&' if '?' in url else '?')+urllib.parse.urlencode({'_live_prose_audit':NOW})
  r=requests.get(url,headers={'Cache-Control':'no-cache, max-age=0','Pragma':'no-cache','Accept-Encoding':'identity'},timeout=(20,90));b=r.content
  LOG.append({'scope':scope,'file':name,'url':url,'finalURL':r.url,'UTC':datetime.datetime.now(datetime.timezone.utc).isoformat(),'HTTP':r.status_code,'sha256':hashlib.sha256(b).hexdigest(),'bytes':len(b),'headers':{h:r.headers.get(h) for h in ['Date','Age','ETag','X-Repo-Commit','X-Revision','Content-Type']}})
  r.raise_for_status();p=R/'live-prose'/scope/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b);return b
