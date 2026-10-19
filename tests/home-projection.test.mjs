@@ -16,6 +16,12 @@ test('homepage schema preserves authored values and closes identity without copy
   }else assert.deepEqual(value,source);
  }
  for(const n of projected['@graph'])subset(n,truth.get(n['@id']));
- assert.ok(!projected['@graph'].some(n=>[n['@type']].flat().some(t=>['Dataset','Question','Answer','NodeShape','Service'].includes(t))));
+ assert.ok(!projected['@graph'].some(n=>[n['@type']].flat().some(t=>['Question','Answer','NodeShape','Service'].includes(t))));
+ const dataset=projected['@graph'].find(n=>n['@id']===SOURCE.canonicalOrigin+'/graph.jsonld/dataset');
+ assert.ok(dataset && dataset.name && dataset.description);
+ assert.ok([dataset['@type']].flat().includes('Dataset'));
+ for(const suffix of ['concept','current-archive'])assert.ok(projected['@graph'].some(n=>n['@id']===SOURCE.canonicalOrigin+'/identifier-dataset-zenodo-'+suffix));
+ assert.ok(projected['@graph'].some(n=>n.contentUrl===SOURCE.canonicalOrigin+'/entity-facts.csv'));
  assert.ok(SOURCE.graph['@graph'].some(n=>[n['@type']].flat().includes('Answer')));
 });
+

@@ -8,7 +8,7 @@ def validate_home_projection(graph_path, blocks, html):
     assert len(blocks)==1
     document=blocks[0];assert document['@context']==graph['@context']
     ids={n['@id'] for n in document['@graph']}
-    required={origin+'/webpage',origin+'/website',origin+'/#saeed-ghezelbash',origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'}
+    required={origin+'/webpage',origin+'/website',origin+'/#saeed-ghezelbash',origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',origin+'/graph.jsonld/dataset',origin+'/identifier-dataset-zenodo-concept',origin+'/identifier-dataset-zenodo-current-archive'}
     assert required<=ids
     def subset(actual,source):
         if isinstance(actual,dict):
@@ -31,4 +31,8 @@ def validate_home_projection(graph_path, blocks, html):
         subset(node,truth[node['@id']])
     page=next(n for n in document['@graph'] if n['@id']==origin+'/webpage')
     assert page['mainEntity']=={'@id':origin+'/#saeed-ghezelbash'}
+    dataset=next(n for n in document['@graph'] if n['@id']==origin+'/graph.jsonld/dataset')
+    assert dataset.get('name') and dataset.get('description'), 'Missing Google Dataset discovery metadata'
+    assert any(n.get('contentUrl')==origin+'/entity-facts.csv' for n in document['@graph']), 'Missing Dataset CSV distribution'
     return {'status':'PASS','nodes':len(ids),'htmlBytes':len(html),'authoredSubset':True}
+
