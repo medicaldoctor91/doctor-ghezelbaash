@@ -57,9 +57,15 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Check existing publication bindings
+        id: bindings
         run: |
-          test "$GITHUB_SHA" = "$EXPECTED_WEBSITE_COMMIT"
-          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$EXPECTED_WEBSITE_COMMIT"
+          if [ "$VERIFY_EXISTING" = true ] && [ "$GITHUB_REF_NAME" = main ]; then
+            git merge-base --is-ancestor "$EXPECTED_WEBSITE_COMMIT" "$GITHUB_SHA"
+            git diff --quiet "$EXPECTED_WEBSITE_COMMIT" "$GITHUB_SHA" -- . ':!.github' ':!tests' ':!reports'
+          else
+            test "$GITHUB_SHA" = "$EXPECTED_WEBSITE_COMMIT"
+          fi
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
           python - <<'PY'
           import os
           missing=[key for key in ['HF_TOKEN','KAGGLE_API_TOKEN'] if not os.environ.get(key)]
@@ -71,6 +77,7 @@ jobs:
           if [ "$VERIFY_EXISTING" != true ]; then npm ci; fi
           python -m pip install --disable-pip-version-check 'huggingface_hub>=0.34,<1' 'pyarrow>=18,<23' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4'
       - name: Verify source and generate candidate website resources
+        id: source
         run: |
           if [ "$VERIFY_EXISTING" != true ]; then
             node --test tests/*.test.mjs
@@ -80,12 +87,16 @@ jobs:
           python tests/platform-publication.test.py
           python -m py_compile .github/scripts/sync_platform_machine_resources.py tests/validate_platform_sync.py
       - name: Validate both packages, publish and verify public bytes
+        id: publication
         run: |
           mode=()
           if [ "$VERIFY_EXISTING" = true ]; then mode+=(--verify-existing); fi
           python .github/scripts/sync_platform_machine_resources.py --root /tmp/platform-machine-sync --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --website-run-url "$WEBSITE_PUBLICATION_RUN_URL" "${mode[@]}"
       - name: Maintain authorized Zenodo metadata without altering historical files
-        if: inputs.zenodo_metadata_only
+        # A verification-only recovery never republishes HF/Kaggle. Its
+        # independent archive-metadata gate can proceed when a public dataset
+        # pointer is blocked, after the source and bindings checks pass.
+        if: ${{ always() && inputs.zenodo_metadata_only && steps.bindings.outcome == 'success' && steps.source.outcome == 'success' && (steps.publication.outcome == 'success' || inputs.verify_existing) }}
         run: python .github/scripts/platform_publish.py --zenodo-metadata-only --report /tmp/platform-machine-sync/zenodo-metadata-report.json
       - name: Save publication and validation evidence
         if: always()

@@ -68,13 +68,24 @@ def guard(args):
     return hf, kaggle, website
 
 
-def verify_website_run(url, source_commit):
+def verify_website_run(url, source_commit, *, allow_promoted_source=False):
     match = re.fullmatch(r'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/(\d+)', url)
     assert match, 'Expected the reviewed website deployment run URL'
     token = os.environ.get('GITHUB_TOKEN')
     headers = {'Authorization': 'Bearer ' + token} if token else {}
     run = json.loads(fetch('https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/' + match[1], headers=headers))
-    assert run['head_sha'] == source_commit and run['head_branch'] == os.environ.get('GITHUB_REF_NAME', 'main'), 'Website run has a different source revision'
+    assert run['head_sha'] == source_commit, 'Website run has a different source revision'
+    branch = os.environ.get('GITHUB_REF_NAME', 'main')
+    if run['head_branch'] != branch:
+        assert allow_promoted_source and branch == 'main', 'Website run has a different source branch'
+        # Verification may follow an owner-approved promotion to main. The
+        # reviewed deployed commit must be an ancestor, with identical product
+        # inputs; only publication tooling, tests and evidence may differ.
+        assert subprocess.run(['git', 'merge-base', '--is-ancestor', source_commit, 'HEAD'],
+                              cwd=REPOSITORY, capture_output=True).returncode == 0, 'Deployed source is not on main'
+        assert subprocess.run(['git', 'diff', '--quiet', source_commit, 'HEAD', '--',
+                               '.', ':!.github', ':!tests', ':!reports'],
+                              cwd=REPOSITORY, capture_output=True).returncode == 0, 'Product inputs differ from deployed source'
     assert run['status'] == 'completed' and run['conclusion'] == 'success', 'Website deployment run did not complete successfully'
     assert run['path'] == '.github/workflows/machine-readable-interop.yml', 'Expected the scoped website deployment workflow'
 
@@ -388,7 +399,7 @@ def publish(args, ctx, control):
 
 def verify_existing(args):
     """Finish byte/metadata verification without another HF commit or Kaggle version."""
-    verify_website_run(args.website_run_url, args.website_commit)
+    verify_website_run(args.website_run_url, args.website_commit, allow_promoted_source=True)
     root = args.root
     root.mkdir(parents=True, exist_ok=True)
     client = kaggle_client()

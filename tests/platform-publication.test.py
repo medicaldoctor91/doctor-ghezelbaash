@@ -102,6 +102,27 @@ class PublicationTransportTests(unittest.TestCase):
         with patch.dict(os.environ,{'GITHUB_REF_NAME':'unreviewed'}),patch.object(sync,'fetch',return_value=json.dumps(run).encode()):
             with self.assertRaises(AssertionError):sync.verify_website_run('https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345','a'*40)
 
+    def test_verification_only_accepts_promoted_source_with_identical_product_inputs(self):
+        import json
+        run = {'head_sha': 'a' * 40, 'head_branch': 'codex/p0-semantic-integrity-20261018',
+               'status': 'completed', 'conclusion': 'success',
+               'path': '.github/workflows/machine-readable-interop.yml'}
+        url = 'https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/12345'
+        with patch.dict(os.environ, {'GITHUB_REF_NAME': 'main'}), \
+                patch.object(sync, 'fetch', return_value=json.dumps(run).encode()), \
+                patch.object(sync.subprocess, 'run', return_value=SimpleNamespace(returncode=0)) as git:
+            with self.assertRaisesRegex(AssertionError, 'different source branch'):
+                sync.verify_website_run(url, 'a' * 40)
+            git.assert_not_called()
+            sync.verify_website_run(url, 'a' * 40, allow_promoted_source=True)
+            self.assertEqual(git.call_count, 2)
+        for results, message in [([1], 'not on main'), ([0, 1], 'Product inputs differ')]:
+            with self.subTest(results=results), patch.dict(os.environ, {'GITHUB_REF_NAME': 'main'}), \
+                    patch.object(sync, 'fetch', return_value=json.dumps(run).encode()), \
+                    patch.object(sync.subprocess, 'run', side_effect=[SimpleNamespace(returncode=x) for x in results]):
+                with self.assertRaisesRegex(AssertionError, message):
+                    sync.verify_website_run(url, 'a' * 40, allow_promoted_source=True)
+
     def test_zenodo_metadata_path_never_calls_file_or_new_version_apis(self):
         from copy import deepcopy
         before={'revision':33,'doi':'10.5281/zenodo.22838416','conceptdoi':'10.5281/zenodo.18765168',
