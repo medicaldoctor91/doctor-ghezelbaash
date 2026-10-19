@@ -173,10 +173,40 @@ def main():
     parser.add_argument('--publish', action='store_true')
     parser.add_argument('--zenodo-only', action='store_true')
     parser.add_argument('--verify-only', action='store_true')
+    parser.add_argument('--kaggle-metadata-only', action='store_true')
     args = parser.parse_args()
     root = args.root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     hf_info = json.loads(get('https://huggingface.co/api/datasets/' + HF))
+    if args.kaggle_metadata_only:
+        from sync_platform_machine_resources import kaggle_client, source_metadata, semantic_metadata, verify_public_kaggle_sources
+        assert hf_info['sha'] == args.hf_revision, 'HF changed since live review'
+        client = kaggle_client()
+        state = json.loads(client.dataset_status(KG, format='json(status,current_version_number)'))
+        assert state['current_version_number'] == args.kaggle_version and state['status'] == 'ready'
+        before_dir, after_dir = root / 'metadata-before', root / 'metadata-after'
+        before_dir.mkdir(exist_ok=True)
+        after_dir.mkdir(exist_ok=True)
+        client.dataset_metadata(KG, str(before_dir))
+        wrapped = load(before_dir / 'dataset-metadata.json')
+        before = dict(wrapped.get('info') or wrapped)
+        desired = source_metadata(before['userSpecifiedSources'], args.hf_revision, args.website_commit)
+        target = dict(before)
+        target['userSpecifiedSources'] = desired
+        dump(before_dir / 'dataset-metadata.json', target)
+        client.dataset_metadata_update(KG, str(before_dir))
+        client.dataset_metadata(KG, str(after_dir))
+        wrapped = load(after_dir / 'dataset-metadata.json')
+        after = dict(wrapped.get('info') or wrapped)
+        assert after['userSpecifiedSources'] == desired
+        for key in ['title', 'subtitle', 'isPrivate', 'licenses', 'keywords', 'collaborators', 'data', 'expectedUpdateFrequency', 'description']:
+            assert semantic_metadata(before.get(key)) == semantic_metadata(after.get(key)), ('Unrelated metadata changed', key)
+        report = {'scope': 'Kaggle source link metadata only', 'kaggleVersion': args.kaggle_version,
+                  'sourceMetadataVerified': True, 'otherMetadataPreserved': True,
+                  'publicSources': verify_public_kaggle_sources(args.hf_revision, args.website_commit)}
+        dump(root / 'report.json', report)
+        print(json.dumps(report), flush=True)
+        return
     if args.verify_only:
         import pyarrow.parquet as pq
         from sync_platform_machine_resources import kaggle_client

@@ -19,10 +19,14 @@ on:
         required: false
         type: boolean
         default: false
+      kaggle_metadata_only:
+        required: false
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
-  group: ${{ inputs.zenodo_only && 'doctor-ghezelbaash-archive-metadata' || inputs.verify_only && 'doctor-ghezelbaash-live-verification' || 'doctor-ghezelbaash-publication' }}
+  group: ${{ (inputs.zenodo_only || inputs.kaggle_metadata_only) && 'doctor-ghezelbaash-archive-metadata' || inputs.verify_only && 'doctor-ghezelbaash-live-verification' || 'doctor-ghezelbaash-publication' }}
   cancel-in-progress: false
 jobs:
   maintain:
@@ -37,6 +41,7 @@ jobs:
       EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
       ZENODO_ONLY: ${{ inputs.zenodo_only }}
       VERIFY_ONLY: ${{ inputs.verify_only }}
+      KAGGLE_METADATA_ONLY: ${{ inputs.kaggle_metadata_only }}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -51,6 +56,7 @@ jobs:
           mode=--publish
           if [ "$ZENODO_ONLY" = true ]; then mode=--zenodo-only; fi
           if [ "$VERIFY_ONLY" = true ]; then mode=--verify-only; fi
+          if [ "$KAGGLE_METADATA_ONLY" = true ]; then mode=--kaggle-metadata-only; fi
           python .github/scripts/live_platform_maintenance.py --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" "$mode"
       - uses: actions/upload-artifact@v4
         if: always()
