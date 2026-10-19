@@ -1,4 +1,5 @@
 import {croissantContext} from './croissant-context.mjs';
+import {DOI_POLICY} from './doi-policy.mjs';
 export { buildEvidenceSnapshot } from './evidence-output.mjs';
 export { buildRetrievalRecords, serializeAnswersText, buildAnswersText, buildFactMap, buildProvenanceGraph } from './retrieval-output.mjs';
 import { createHash } from 'node:crypto';
@@ -257,6 +258,7 @@ export function buildLinkset(source) {
     about: [{ href: person['@id'] }],
     describedby: source.machineResources.filter((resource) => resource.discoverable && resource.rel === 'describedby').map((resource) => ({ href: source.canonicalOrigin + resource.path, type: resource.mediaType })),
     alternate: source.machineResources.filter((resource) => resource.discoverable && resource.rel === 'alternate').map((resource) => ({ href: source.canonicalOrigin + resource.path, type: resource.mediaType })),
+    related: [{href: DOI_POLICY.concept.url, title: 'Zenodo collection — latest version'}, {href: DOI_POLICY.currentArchive.url, title: 'Exact archived snapshot ' + DOI_POLICY.currentArchive.packagingVersion}],
     me: values(person.sameAs).map((href) => ({ href })),
   }] };
 }
@@ -265,7 +267,7 @@ const DCT = 'http://purl.org/dc/terms/';
 const PROV = 'http://www.w3.org/ns/prov#';
 const SCHEMA = 'https://schema.org/';
 const datasetNode = source => source.graph['@graph'].find(node => node['@id'] === source.canonicalOrigin + '/graph.jsonld/dataset');
-const projectionReferences = source => ['/answers.txt', '/fact-map.json', '/provenance.jsonld'].map(path => ({'@id': source.canonicalOrigin + path}));
+const projectionReferences = source => [...['/answers.txt', '/fact-map.json', '/provenance.jsonld'].map(path => ({'@id': source.canonicalOrigin + path})), {'@id': DOI_POLICY.concept.url}, {'@id': DOI_POLICY.currentArchive.url}];
 const factColumns = () => [
   {name: 'row_id', datatype: 'string', [DCT + 'description']: 'Stable SHA-256 identifier of the complete RDF statement tuple; the primary key of this unique-statement table.'},
   {name: 'subject', datatype: 'string', [DCT + 'description']: 'RDF subject IRI or deterministic blank-node identifier, preserving the canonical statement subject.'},
@@ -384,11 +386,11 @@ export function buildCroissant(source) {
     name: literal(dataset.name),
     description: literal(dataset.description),
     conformsTo: 'http://mlcommons.org/croissant/1.1',
-    identifier: [dataset['@id'], {'@type': 'sc:PropertyValue', propertyID: 'Release edition', value: source.edition}],
+    identifier: [dataset['@id'], {'@type': 'sc:PropertyValue', propertyID: 'Release edition', value: source.edition}, {'@type': 'sc:PropertyValue', propertyID: 'Zenodo Concept DOI', value: DOI_POLICY.concept.doi}, {'@type': 'sc:PropertyValue', propertyID: 'Latest archived snapshot DOI', value: DOI_POLICY.currentArchive.doi}],
     creator: contributor(dataset.creator),
     publisher: contributor(dataset.publisher),
     license: {'@id': refId(dataset.license), '@type': 'sc:CreativeWork'},
-    citeAs: dataset['@id'],
+    citeAs: DOI_POLICY.concept.url,
     ...(dataset.datePublished ? {datePublished: literal(dataset.datePublished)} : {}),
     ...(dataset.dateModified ? {dateModified: literal(dataset.dateModified)} : {}),
     ...(dataset.version ? {version: dataset.version} : {}),
@@ -427,6 +429,7 @@ export function buildDataPackage(source, fileStats = new Map()) {
     keywords: dataset.keywords,
     version: dataset.version,
     edition: source.edition,
+    'x-doi-policy': DOI_POLICY,
     ...(dataset.datePublished ? {datePublished: literal(dataset.datePublished)} : {}),
     ...(dataset.dateModified ? {dateModified: literal(dataset.dateModified)} : {}),
     contributors: [contributor(dataset.creator, 'author'), contributor(dataset.publisher, 'publisher')],

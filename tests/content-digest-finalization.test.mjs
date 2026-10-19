@@ -29,7 +29,7 @@ test('final release preserves every registered representation policy alongside a
   assert.ok(blocks.size<=100);
   for(const resource of resources){
     if(resource.httpHeaderPolicy==='static-json'){
-      assert.ok(resource.path.startsWith('/enrichment/')&&resource.path.endsWith('.json'));
+      assert.ok((resource.path.startsWith('/enrichment/')||resource.path==='/doi-policy.json')&&resource.path.endsWith('.json'));
       assert.equal(resource.mediaType,'application/json');
       assert.ok(blocks.has('/*'),'Native static JSON retains the shared security policy');
     }else assert.ok(blocks.get(resource.path).includes('  Content-Type: '+resource.mediaType),resource.path);

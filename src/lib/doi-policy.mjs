@@ -1,4 +1,7 @@
-import DOI_POLICY from '../canonical/doi-policy.json' with {type: 'json'};
+import policyTemplate from '../canonical/doi-policy.json' with {type: 'json'};
+import {execFileSync} from 'node:child_process';
+const DOI_POLICY = structuredClone(policyTemplate);
+DOI_POLICY.currentArchive.sourceCommit = process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
 export {DOI_POLICY};
 
 export function applyDoiPolicy(source) {
@@ -35,6 +38,7 @@ export function applyDoiPolicy(source) {
        name: 'Zenodo latest verified archived snapshot ' + archive.packagingVersion,
        url: concept.url, identifier: 'DOI:' + archive.doi, version: archive.packagingVersion,
        creator: person, publisher: person, license: dataset.license,
+       'dcterms:title': 'Zenodo latest verified archived snapshot ' + archive.packagingVersion,
        isPartOf: ref(datasetIri), about: ref(archive.url),
        'dcat:isDistributionOf': ref(datasetIri), 'dcat:accessURL': ref(concept.url),
        'dcat:downloadURL': ref(DOI_POLICY.downloadBindings.bundle)});
@@ -43,6 +47,19 @@ export function applyDoiPolicy(source) {
   historical.name = 'Historical Zenodo preservation distribution 1.3.3';
   historical['dcterms:title'] = historical.name;
   source.doiPolicy = DOI_POLICY;
+  if (!source.machineResources.some(resource => resource.path === '/doi-policy.json')) {
+    const resource = structuredClone(source.machineResources.find(resource => resource.path === '/evidence-snapshot.json'));
+    Object.assign(resource, {path: '/doi-policy.json', canonicalPath: '/doi-policy.json', title: 'DOI roles and immutable archive bindings',
+      distributionIri: source.canonicalOrigin + '/doi-policy.json/distribution', representation: 'doi-policy', publishInHttpHeader: false, httpHeaderPolicy: 'static-json'});
+    delete resource.footerLabel;
+    source.machineResources.push(resource);
+    add({'@id': resource.distributionIri, '@type': ['DataDownload', 'dcat:Distribution', 'prov:Entity'],
+         name: resource.title, contentUrl: source.canonicalOrigin + resource.path, encodingFormat: 'application/json',
+         'dcterms:title': resource.title,
+         isPartOf: ref(datasetIri), 'dcat:isDistributionOf': ref(datasetIri),
+         'dcat:accessURL': ref(source.canonicalOrigin + resource.path), 'dcat:downloadURL': ref(source.canonicalOrigin + resource.path)});
+    for (const key of ['distribution', 'dcat:distribution']) dataset[key].push(ref(resource.distributionIri));
+  }
   source.head.headExtras = source.head.headExtras.filter(text => !text.includes('Zenodo preservation Version DOI'));
   source.head.headExtras.push(`<link href="${concept.url}" rel="related" title="Zenodo collection DOI — latest version">`);
   source.head.headExtras.push(`<link href="${archive.url}" rel="related" title="Exact archived snapshot ${archive.packagingVersion}">`);

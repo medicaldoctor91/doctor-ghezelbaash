@@ -34,6 +34,13 @@ All copied resources retain the exact bytes of this Hub revision. Five Parquet t
 
 Zenodo DOI links identify archived snapshots with their own recorded provenance. Those archives were not updated by this Hugging Face/Kaggle maintenance publication.
 
+
+## Zenodo collection and exact snapshot
+
+Public collection and latest version: [{{doi.concept_doi}}]({{doi.concept_url}}).
+
+Exact archived snapshot **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. Historical DOI references below retain their stated versions.
+
 ## فارسی
 
 این مجموعه، هویت حرفه‌ای دکتر سعید قزلباش، متن‌های آموزشی تألیفی، پاسخ‌های مستند، گراف دانش و پرس‌وجوهای چندزبانه را به شناسه‌ها و منابع دقیق متصل می‌کند. نسخهٔ جاری کاگل و هاگینگ‌فیس از فایل‌های یکسان استفاده می‌کنند؛ آرشیوهای زنودو، نسخه‌های ثبت‌شدهٔ خود را حفظ می‌کنند و در این انتشار به‌روزرسانی نشده‌اند. شخص پزشک، کلینیک و مجموعه‌داده شناسه‌های مستقل و ارتباط‌های روشن دارند. DOIهای فعلی زنودو ثابت مانده‌اند و نسخه‌های تاریخی محفوظ‌اند.

@@ -68,6 +68,13 @@ configs:
 
 The current files reproduce the verified final website distribution at source commit `{{source_commit}}`. [The clinical expertise brief](physician-expertise.md) provides a source-linked professional overview. [The official profile](https://www.ghezelbaash.ir/) is the canonical physician profile; [the Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld/dataset) identifies the dataset.
 
+
+## Zenodo collection and exact snapshot
+
+Public collection and latest version: [{{doi.concept_doi}}]({{doi.concept_url}}).
+
+Exact archived snapshot **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. Historical DOI references below retain their stated versions.
+
 ## Dataset scope, curation and intended use
 
 This public, physician-authored **Persian clinical NLP and knowledge-graph dataset** supports multilingual information retrieval, source-attributed question answering, entity linking and evidence-grounded RAG. It connects **Dr. Saeed Ghezelbash / دکتر سعید قزلباش** and his authored educational material to explicit identifiers and provenance; the physician, clinic and dataset remain separate entities.

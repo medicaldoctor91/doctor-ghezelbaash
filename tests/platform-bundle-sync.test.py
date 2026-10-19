@@ -95,6 +95,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(current.get("maintenance_date"), datetime.now(timezone.utc).date().isoformat())
         self.assertEqual(bundle.context(NEW_COMMIT, 54321, "2026-11-01")["maintenance_date"], "2026-11-01")
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
+        self.assertEqual(current['zenodo_dataset'],bundle.DOI_POLICY['currentArchive']['url'])
 
     def test_positioning_original_47_messages_restored_and_expanded_typed_roundtrip(self):
         import shutil
@@ -162,7 +163,7 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(matrix["sourceVersion"], "9.8.7")
         self.assertEqual(matrix["edition"], "2027-01-02")
         self.assertEqual(set(matrix["distributions"]), {"website", "hf", "kaggle"})
-        self.assertEqual(matrix["archivedSnapshots"]["zenodo_dataset"], self.ctx["zenodo_dataset"])
+        self.assertEqual(matrix["archivedSnapshots"]["zenodo_dataset"], "https://doi.org/10.5281/zenodo.22838416")
         for name, (_, _, original, encoded) in originals.items():
             spec = packaging["tables"][name]
             reconstructed = [bundle.reconstruct(row, set(encoded)) for row in pq.read_table(out / spec["file"]).to_pylist()]

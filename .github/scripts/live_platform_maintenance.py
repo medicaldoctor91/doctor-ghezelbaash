@@ -18,10 +18,11 @@ NOTEBOOK = 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
 SITE = 'https://www.ghezelbaash.ir/'
 HUB = 'https://huggingface.co/datasets/' + HF
 KAGGLE = 'https://www.kaggle.com/datasets/' + KG
+DOI_POLICY = json.loads((Path(__file__).resolve().parents[2] / 'src/canonical/doi-policy.json').read_text())
 LINKS = {'Website': SITE, 'Hugging Face': HUB, 'Kaggle dataset': KAGGLE,
          'Kaggle notebook': 'https://www.kaggle.com/code/' + NOTEBOOK,
-         'Zenodo collection': 'https://doi.org/10.5281/zenodo.18765168',
-         'Zenodo dataset archive': 'https://doi.org/10.5281/zenodo.22838416',
+         'Zenodo collection': DOI_POLICY['concept']['url'],
+         'Zenodo dataset archive': DOI_POLICY['currentArchive']['url'],
          'Wikidata': 'https://www.wikidata.org/wiki/Q140287622'}
 
 
@@ -293,7 +294,7 @@ def main():
     if args.zenodo_only:
         assert hf_info['sha'] == args.hf_revision, 'HF changed since live review'
         report = {'scope': 'Zenodo metadata only', 'hfRevision': args.hf_revision, 'zenodo': []}
-        for record in [22838416, 23289009]:
+        for record in [DOI_POLICY['currentArchive']['recordId']]:
             report['zenodo'].append(zenodo_metadata(record, args.hf_revision, os.environ['ZENODO_TOKEN']))
             dump(root / 'report.json', report)
         print(json.dumps(report), flush=True)
@@ -407,7 +408,7 @@ def main():
     dump(root / 'report.json', report)
     report['zenodo'] = []
     if os.environ.get('ZENODO_TOKEN'):
-        for record in [22838416, 23289009]:
+        for record in [DOI_POLICY['currentArchive']['recordId']]:
             report['zenodo'].append(zenodo_metadata(record, revision, os.environ['ZENODO_TOKEN']))
             dump(root / 'report.json', report)
     for attempt in range(60):

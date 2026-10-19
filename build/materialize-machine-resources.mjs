@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import {DOI_POLICY} from '../src/lib/doi-policy.mjs';
 
 import {
   serializeGraphAsNTriples, serializeEntityFactsCsv, htmlToMarkdown, htmlToPlainText,
@@ -39,6 +40,7 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   if (!source?.graph?.['@graph'] || !Array.isArray(source.machineResources)) throw new Error('Canonical source and machine resource registry required');
   if (typeof authoredBody !== 'string' || !authoredBody.trim()) throw new Error('Complete authored body required');
   const outputs = new Map();
+  outputs.set('/doi-policy.json', json(DOI_POLICY));
   const graphTtl = serializeGraphAsNTriples(source.graph);
   for (const name of ['instruction_examples_fa_market_positioning.jsonl', 'market-positioning-evidence.json', 'positioning-strategy.json']) {
     outputs.set('/enrichment/' + name, await fs.readFile(new URL('../src/canonical/enrichment/' + name, import.meta.url), 'utf8'));
@@ -54,7 +56,7 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   outputs.set('/knowledge.xml', buildKnowledgeXml(source));
   outputs.set('/llms.txt', source.machineProjection.discoveryGuide.trimEnd() + '\n');
   outputs.set('/index.md', htmlToMarkdown(authoredBody));
-  outputs.set('/llms-full.txt', `Canonical entity: ${source.canonicalOrigin}/#saeed-ghezelbash\nCanonical page: ${source.canonicalOrigin}/\nEdition: ${source.edition}\n\n${htmlToPlainText(authoredBody)}\n`);
+  outputs.set('/llms-full.txt', `Canonical entity: ${source.canonicalOrigin}/#saeed-ghezelbash\nCanonical page: ${source.canonicalOrigin}/\nEdition: ${source.edition}\nZenodo collection (latest version): ${DOI_POLICY.concept.url}\nExact archived snapshot ${DOI_POLICY.currentArchive.packagingVersion}: ${DOI_POLICY.currentArchive.url}\n\n${htmlToPlainText(authoredBody)}\n`);
   outputs.set('/provenance.jsonld', json(buildProvenanceGraph(source, retrievalRecords)));
   outputs.set('/evidence-snapshot.json', json(buildEvidenceSnapshot(source)));
   let clinicalPassages = buildClinicalPassages(source, authoredBody);

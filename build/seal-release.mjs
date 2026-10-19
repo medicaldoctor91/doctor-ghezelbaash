@@ -1,4 +1,5 @@
 import {SOURCE as canonicalSource} from '../src/canonical/source.mjs';
+import {DOI_POLICY} from '../src/lib/doi-policy.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
@@ -36,6 +37,7 @@ export async function sealRelease({distDir,projectRoot,releaseDate}){
   const lockBytes=await fs.readFile(path.join(projectRoot,'package-lock.json'));
   const {stdout:commit}=await execFileAsync('git',['rev-parse','HEAD'],{cwd:projectRoot});
   const provenance={sourceCommit:commit.trim(),releaseDate,packageLockSha256:sha256Hex(lockBytes),node:process.versions.node,sbom:{path:'/sbom.cdx.json',format:sbom.bomFormat,specVersion:sbom.specVersion},contentDigest:{status:'configured-for-cloudflare-pages',algorithm:'sha-256',eligibleResources:eligibleCount,headerRulesPath:'/_headers',liveVerification:'release-workflow'}};
+  provenance.doiPolicy = DOI_POLICY;
   await fs.writeFile(path.join(distDir,'release-provenance.json'),JSON.stringify(provenance,null,2)+'\n');
   const files={};
   for(const file of await walk(distDir)){const publishedPath=publicPath(distDir,file);if(publishedPath==='/integrity-manifest.json')continue;const bytes=await fs.readFile(file);files[publishedPath]={bytes:bytes.length,mediaType:mediaType(file),sha256:sha256Hex(bytes)};}

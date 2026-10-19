@@ -172,6 +172,7 @@ def update_hf_org(token):
 
 
 def main():
+    raise RuntimeError('Retired in-place archive correction: use doi-release.yml to reserve and publish a new immutable version under the central DOI policy')
     assert os.environ.get('ALLOW_LEGACY_IN_PLACE_ARCHIVE_CORRECTION') == 'true', \
         'Legacy in-place archive corrections require explicit separate authorization; use scoped website/HF/Kaggle publication for a new release'
     from huggingface_hub import HfApi,CommitOperationAdd,CommitOperationDelete,hf_hub_download
@@ -299,6 +300,9 @@ def correct_zenodo_metadata(spec,token):
     related=list(md.get('related_identifiers',[]));known={r['identifier'] for r in related}
     for link in links:
         if link not in known:related.append({'identifier':link,'scheme':'url','relation':'isSupplementTo'})
+    for item in spec.get('related_identifiers',[]):
+        if item['identifier'] not in known:
+            related.append(item);known.add(item['identifier'])
     md['related_identifiers']=related
     _,current=request('GET',url,token=token)
     assert current['revision']==before['revision'],'Zenodo metadata changed before edit'
@@ -322,12 +326,14 @@ def maintain_zenodo_metadata():
     token=os.environ.get('ZENODO_TOKEN')
     if not token:report.update(status='blocked',reason='No existing authenticated Zenodo binding is available')
     else:
-        specs=load(Path(__file__).resolve().parents[2]/'src/canonical/platforms/zenodo-metadata.json')['records']
-        for spec in specs:
-            try:report['records'].append(correct_zenodo_metadata(spec,token))
-            except (RuntimeError,AssertionError) as error:
-                report['records'].append({'record':spec['record'],'status':'blocked',
-                                          'reason':type(error).__name__+': '+(str(error) or 'Validation assertion failed')[:1200]})
+        policy=load(Path(__file__).resolve().parents[2]/'src/canonical/doi-policy.json')
+        record=str(policy['currentArchive']['recordId'])
+        _,live=request('GET',BASE+'/records/'+record,token=token)
+        assert live['doi']==policy['currentArchive']['doi']
+        spec={'record':record,'doi':live['doi'],'version':live['metadata']['version'],
+              'expected_revision':live['revision'],'description':live['metadata']['description'],
+              'related_identifiers':[{'identifier':policy['concept']['doi'],'scheme':'doi','relation':'isVersionOf'}]}
+        report['records'].append(correct_zenodo_metadata(spec,token))
         report['status']='verified' if all(r.get('metadataVerified') for r in report['records']) else 'partial-or-blocked'
     dump(args.report,report);print(json.dumps(report),flush=True)
 

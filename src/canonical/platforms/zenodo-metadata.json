@@ -1,5 +1,5 @@
 {
-  "scope": "Existing descriptions and current-access links only; archived payloads and DOI/version unchanged",
+  "scope": "Historical metadata templates only; current Dataset policy and release metadata are generated from ../doi-policy.json by .github/scripts/doi_release.py. Published historical payloads are immutable.",
   "records": [
     {
       "record": "22838416",

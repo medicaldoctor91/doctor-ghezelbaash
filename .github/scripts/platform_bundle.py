@@ -1,5 +1,5 @@
 """Build deterministic platform bundles from one canonical website distribution."""
-import csv, hashlib, json, re, shutil
+import csv, hashlib, json, re, shutil, os, subprocess
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -8,6 +8,16 @@ CLINIC='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermansh
 DATASET='https://www.ghezelbaash.ir/graph.jsonld/dataset'
 HF_REPO='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+DOI_POLICY=json.loads((Path(__file__).resolve().parents[2]/'src/canonical/doi-policy.json').read_text())
+DOI_POLICY['currentArchive']['sourceCommit']=os.environ.get('GITHUB_SHA') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=Path(__file__).resolve().parents[2]).decode().strip()
+
+def render_doi_text(text):
+    mapping={'concept_url':DOI_POLICY['concept']['url'],'concept_doi':DOI_POLICY['concept']['doi'],
+             'current_url':DOI_POLICY['currentArchive']['url'],'current_doi':DOI_POLICY['currentArchive']['doi'],
+             'current_version':DOI_POLICY['currentArchive']['packagingVersion']}
+    for key,value in mapping.items():text=text.replace('{{doi.'+key+'}}',value)
+    return text
+
 
 
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -23,7 +33,8 @@ def context(source_commit,run_id,maintenance_date=None):
             'publication_scope':['hf','kaggle'],'archived_snapshots_updated':False,
             'website':'https://www.ghezelbaash.ir/','wikidata':'https://www.wikidata.org/wiki/Q140287622',
             'hf':'https://huggingface.co/datasets/'+HF_REPO,'kaggle':'https://www.kaggle.com/datasets/'+KAGGLE_REF,
-            'zenodo_dataset':'https://doi.org/10.5281/zenodo.22838416','zenodo_source':'https://doi.org/10.5281/zenodo.23289009',
+            'zenodo_dataset':DOI_POLICY['currentArchive']['url'],'zenodo_concept':DOI_POLICY['concept']['url'],
+            'zenodo_source':next(item['url'] for item in DOI_POLICY['historical'] if item['role']=='historical_software_source'),
             'canonical_dataset_iri':DATASET,'openalex':'A5146521397','orcid':'0009-0001-9346-8475'}
 
 
@@ -45,12 +56,12 @@ def common_release(root,ctx):
       'edition':release['edition'],'publicationMaintenanceDate':ctx['maintenance_date'],'sourceVersion':release['version'],
       'activeOpenAlexAuthorId':ctx['openalex'],'orcid':ctx['orcid'],'wikidata':'Q140287622',
       **publication,'distributions':{k:ctx[k] for k in ['website',*scope]},
-      'archivedSnapshots':{} if archives_updated else {k:ctx[k] for k in ['zenodo_dataset','zenodo_source']},
+      'doiPolicy':DOI_POLICY,'archivedSnapshots':{'zenodo_dataset':next(item['url'] for item in DOI_POLICY['historical'] if item['version']=='1.3.3'),'zenodo_source':ctx['zenodo_source'],**{item['version']:item['url'] for item in DOI_POLICY['historical']}},
       'archivedSnapshotsUpdated':archives_updated})
     verified_names=['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json',
                     'croissant.json','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json']
     att={'sourceCommit':ctx['source_commit'],'canonicalDatasetIri':DATASET,'publicationRun':ctx['run_url'],
-         'version':release['version'],'maintenanceDate':ctx['maintenance_date'],'openalex':ctx['openalex'],
+         'version':release['version'],'maintenanceDate':ctx['maintenance_date'],'openalex':ctx['openalex'],'doiPolicy':DOI_POLICY,
          'publicationScope':scope,'archivedSnapshotsUpdated':archives_updated,
          'verifiedResources':{n:sha(root/n) for n in verified_names if (root/n).is_file()}}
     if ctx.get('website_publication_run_url'):att['websitePublicationRun']=ctx['website_publication_run_url']
@@ -121,6 +132,7 @@ def build_hf(dist,baseline,out,ctx):
     matrix=[json.loads(s) for s in query_source.read_text().splitlines() if s.strip()]
     for row in matrix:
         row['dataset_iri']=DATASET
+        if 'archive_version_doi' in row:row['archive_version_doi']=DOI_POLICY['currentArchive']['doi']
         if 'source_commit' in row:row['source_commit']=ctx['source_commit']
     (out/'query-matrix.jsonl').write_text(''.join(json.dumps(r,ensure_ascii=False,separators=(',',':'))+'\n' for r in matrix))
     (out/'query-matrix.json-seq').write_bytes(b''.join(b'\x1e'+json.dumps(r,ensure_ascii=False,separators=(',',':')).encode()+b'\n' for r in matrix))
@@ -182,7 +194,7 @@ def build_hf(dist,baseline,out,ctx):
     else:
         md += '\nArchived Zenodo snapshots are retained at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
         md += 'They were not updated by this Hugging Face/Kaggle maintenance publication; use their own recorded provenance when citing those archives.\n'
-    (out/'README.md').write_text(md)
+    (out/'README.md').write_text(render_doi_text(md))
     # Preserve a explicitly named historical pointer, but the current inventory hashes exact bytes.
     inventory={p.relative_to(out).as_posix():{'bytes':p.stat().st_size,'sha256':sha(p)} for p in sorted(out.rglob('*')) if p.is_file() and p.name not in {'dist-sha256.json'} and '.git' not in p.parts}
     dump(out/'dist-sha256.json',{'algorithm':'sha256','canonicalDatasetIri':DATASET,'sourceCommit':ctx['source_commit'],
@@ -219,7 +231,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     if reserved.exists():reserved.unlink()
     known={item['path'] for item in manifest['original_files']}
     # Both are data descriptors/receipts; the website-wide integrity inventory stays on the Hub.
-    extra=['enrichment/instruction_examples_fa_market_positioning.jsonl','enrichment/instruction_examples_fa_market_positioning.csv','enrichment/market-positioning-evidence.json','enrichment/positioning-strategy.json','viewer/positioning-examples.parquet'] if (hf/'enrichment/instruction_examples_fa_market_positioning.jsonl').is_file() else []
+    extra=['doi-policy.json','enrichment/instruction_examples_fa_market_positioning.jsonl','enrichment/instruction_examples_fa_market_positioning.csv','enrichment/market-positioning-evidence.json','enrichment/positioning-strategy.json','viewer/positioning-examples.parquet'] if (hf/'enrichment/instruction_examples_fa_market_positioning.jsonl').is_file() else []
     for name in [alias,'release-attestation.json',*extra]:
         if name not in known:manifest['original_files'].append({'path':name})
     for item in manifest['original_files']:
@@ -231,7 +243,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     manifest['frictionless_descriptor']={'canonical_name':'datapackage.json','kaggle_downloadable_name':alias,
         'reason':'Kaggle CLI reserves datapackage.json as legacy dataset metadata',
         'bytes':(hf/'datapackage.json').stat().st_size,'sha256':sha(hf/'datapackage.json')}
-    manifest.update(source_release=release['version'],edition=release['edition'],
+    manifest.update(doi_policy=DOI_POLICY,zenodo_concept_doi=DOI_POLICY['concept']['doi'],zenodo_version_doi=DOI_POLICY['currentArchive']['doi'],source_release=release['version'],edition=release['edition'],
        packaging_revision=version,desired_kaggle_version=version,packaging_date=ctx['maintenance_date'],
        canonical_dataset_iri=DATASET,upstream_revision=hf_revision,website_source_commit=ctx['source_commit'],
        package_publication_run_id=int(ctx['run_id']),package_publication_run_url=ctx['run_url'],
@@ -256,7 +268,17 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
             dst['_source_omitted_fields']=json.dumps([k for k in fields if k!='_source_omitted_fields' and k not in row],separators=(',',':'))
             writer.writerow(dst)
     if 'market_positioning' in packaging['tables']:
-        shutil.copyfile(Path(__file__).resolve().parents[2]/'src/canonical/platforms/kaggle-starter.ipynb',out/'starter.ipynb')
+        (out/'starter.ipynb').write_text(render_doi_text((Path(__file__).resolve().parents[2]/'src/canonical/platforms/kaggle-starter.ipynb').read_text()))
+    notebook=load(out/'starter.ipynb')
+    for cell in notebook['cells']:
+        if cell['cell_type']=='code' and "manifest = json.loads" in ''.join(cell['source']):
+            text=''.join(cell['source'])
+            marker="manifest = json.loads((root / 'kaggle-manifest.json').read_text())\n"
+            pins=(f"assert manifest['desired_kaggle_version'] == {version}, 'Wrong Kaggle input version'\n"
+                  f"assert manifest['upstream_revision'] == {hf_revision!r}, 'Wrong HF revision'\n"
+                  f"assert manifest['website_source_commit'] == {ctx['source_commit']!r}, 'Wrong source commit'\n")
+            cell['source']=text.replace(marker,marker+pins).splitlines(keepends=True)
+    if 'market_positioning' in packaging['tables']:dump(out/'starter.ipynb',notebook)
     old=load(previous/'kaggle-manifest.json')
     card=Path(__file__).resolve().parents[2]/'src/canonical/platforms/kaggle-card.md'
     readme=(card if 'market_positioning' in packaging['tables'] else previous/'README.md').read_text()
@@ -319,12 +341,28 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         if re.search(r'^'+re.escape(key)+r':.*$',citation,flags=re.M):
             citation=re.sub(r'^'+re.escape(key)+r':.*(?:\n|$)',lambda _:line,citation,flags=re.M)
         else:citation+=line
+    import yaml
+    citation_object=yaml.safe_load(citation)
+    line='doi: '+json.dumps(DOI_POLICY['concept']['doi'])+'\n'
+    if re.search(r'^doi:.*$',citation,flags=re.M):citation=re.sub(r'^doi:.*(?:\n|$)',lambda _:line,citation,flags=re.M)
+    else:citation+='\n'+line
+    if not any(ref.get('doi')==DOI_POLICY['currentArchive']['doi'] for ref in citation_object.get('references',[])):
+        reference={'type':'dataset','title':'Exact archived snapshot '+DOI_POLICY['currentArchive']['packagingVersion'],
+                   'version':DOI_POLICY['currentArchive']['packagingVersion'],'doi':DOI_POLICY['currentArchive']['doi'],
+                   'authors':citation_object.get('authors',[])}
+        block=''.join('  '+part+'\n' for part in yaml.safe_dump([reference],sort_keys=False,allow_unicode=True).splitlines())
+        if 'references' not in citation_object:citation+='references:\n'+block
+        else:
+            start=citation.index('references:')+len('references:')
+            following=re.search(r'^\S',citation[start+1:],flags=re.M)
+            position=start+1+following.start() if following else len(citation)
+            citation=citation[:position]+block+citation[position:]
     (out/'CITATION.cff').write_text(citation)
     controls={'dataset-metadata.json','kernel-metadata.json','checksums.sha256'}
     payload=[p for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls]
     checksum_count=str(len(payload)+int(not (out/'README.md').exists()))
     readme=re.sub(r'(`checksums\.sha256` covers all )\d+( other downloadable files)',lambda m:m[1]+checksum_count+m[2],readme)
-    (out/'README.md').write_text(readme.replace('{checksum_count}',checksum_count))
+    (out/'README.md').write_text(render_doi_text(readme.replace('{checksum_count}',checksum_count)))
     payload=sorted(p.relative_to(out).as_posix() for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls)
     (out/'checksums.sha256').write_text(''.join(f'{sha(out/n)}  {n}\n' for n in payload))
     return (out/'README.md').read_text()

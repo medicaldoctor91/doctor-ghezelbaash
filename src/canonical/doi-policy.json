@@ -9,16 +9,16 @@
     "meaning": "Persistent public collection and latest-version entry point"
   },
   "currentArchive": {
-    "doi": "10.5281/zenodo.23463840",
-    "url": "https://doi.org/10.5281/zenodo.23463840",
-    "recordId": 23463840,
-    "packagingVersion": "1.3.4+zenodo.1",
+    "doi": "10.5281/zenodo.23473947",
+    "url": "https://doi.org/10.5281/zenodo.23473947",
+    "recordId": 23473947,
+    "packagingVersion": "1.3.4+zenodo.2",
     "contentBaseline": "1.3.4",
     "edition": "2026-10-18",
-    "sourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
-    "upstreamHfRevision": "20c95d9ca4a759ee659884e05826a1dc3b1da852",
     "role": "current_exact",
-    "meaning": "Latest verified immutable archive; current mutable distributions retain their own source SHA and package receipts"
+    "meaning": "Latest verified immutable archive; current mutable distributions retain their own source SHA and package receipts",
+    "sourceCommitReference": "archive-provenance.json#/sourceCommit",
+    "inputBaselineHfRevision": "20c95d9ca4a759ee659884e05826a1dc3b1da852"
   },
   "historical": [
     {
@@ -110,6 +110,15 @@
       "url": "https://doi.org/10.5281/zenodo.23289009",
       "version": "source-final-2026-10-10",
       "role": "historical_software_source"
+    },
+    {
+      "doi": "10.5281/zenodo.23463840",
+      "url": "https://doi.org/10.5281/zenodo.23463840",
+      "recordId": 23463840,
+      "version": "1.3.4+zenodo.1",
+      "sourceCommit": "904cd3b28cb99723274c3c04d3c598f30e2cce86",
+      "upstreamHfRevision": "20c95d9ca4a759ee659884e05826a1dc3b1da852",
+      "role": "historical"
     }
   ],
   "relations": {
@@ -120,10 +129,10 @@
     "identity": "No DOI sameAs on Person, Clinic or canonical Dataset IRI"
   },
   "downloadBindings": {
-    "recordId": 23463840,
-    "publicPrefix": "https://zenodo.org/records/23463840/files/",
-    "apiPrefix": "https://zenodo.org/api/records/23463840/files/",
-    "bundle": "https://zenodo.org/records/23463840/files/dr-saeed-ghezelbash-dataset-1.3.4-zenodo.1.zip",
+    "recordId": 23473947,
+    "publicPrefix": "https://zenodo.org/records/23473947/files/",
+    "apiPrefix": "https://zenodo.org/api/records/23473947/files/",
+    "bundle": "https://zenodo.org/records/23473947/files/dr-saeed-ghezelbash-dataset-1.3.4-zenodo.2.zip",
     "role": "download_binding"
   },
   "archiveMutationPolicy": "Published payload and upstream/ receipts remain immutable. Metadata-only DOI introduction alignment never creates a new version. A necessary payload release must reserve its real DOI before generating record-bound descriptors."
