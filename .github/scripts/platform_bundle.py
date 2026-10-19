@@ -361,8 +361,15 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         reference={'type':'dataset','title':'Public collection DOI and latest-version entry point (not a competing snapshot)',
                    'doi':DOI_POLICY['concept']['doi'],'authors':citation_object.get('authors',[])}
         block=''.join('  '+part+'\n' for part in yaml.safe_dump([reference],sort_keys=False,allow_unicode=True).splitlines())
-        # The exact-snapshot reference above has already established references.
-        citation+=block
+        # Insert into the existing references sequence without touching author text.
+        start=citation.index('references:')+len('references:')
+        following=re.search(r'^\S',citation[start+1:],flags=re.M)
+        position=start+1+following.start() if following else len(citation)
+        citation=citation[:position]+block+citation[position:]
+    parsed_citation=yaml.safe_load(citation)
+    assert parsed_citation['doi']==DOI_POLICY['currentArchive']['doi']
+    assert parsed_citation['version']==DOI_POLICY['currentArchive']['packagingVersion']
+    assert any(ref.get('doi')==DOI_POLICY['concept']['doi'] for ref in parsed_citation['references'])
     (out/'CITATION.cff').write_text(citation)
     controls={'dataset-metadata.json','kernel-metadata.json','checksums.sha256'}
     payload=[p for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls]
