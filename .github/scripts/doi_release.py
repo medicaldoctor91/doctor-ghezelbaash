@@ -98,6 +98,7 @@ def prepare(previous, work):
     ctx.update(publication_scope=['zenodo_dataset'],archived_snapshots_updated=False)
     stage=work/'hf-stage'
     packaging=build_hf(ROOT/'dist',baseline,stage,ctx)
+    subprocess.run(['python',str(ROOT/'tests/validate_platform_bundle.py'),str(stage),'--rdf'],check=True)
     files,result=build_archive(stage,previous_root,work/'archive',source_commit)
     dump(work/'payload.json',{'sourceCommit':source_commit,'record':p['currentArchive']['recordId'],
          'doi':p['currentArchive']['doi'],'files':{key:{'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'md5':hashlib.md5(path.read_bytes()).hexdigest(),'bytes':path.stat().st_size} for key,path in files.items()},

@@ -27,12 +27,12 @@ All copied resources retain the exact bytes of this Hub revision. Five Parquet t
 - ORCID: https://orcid.org/0009-0001-9346-8475
 - Active OpenAlex author: https://openalex.org/A5146521397
 - Current pinned Hub: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/{{hf_revision}}
-- Archived Zenodo dataset snapshot: https://doi.org/10.5281/zenodo.22838416
+- Historical Zenodo dataset snapshot **1.3.3**: https://doi.org/10.5281/zenodo.22838416
 - Archived website source snapshot (not the current release bytes): https://doi.org/10.5281/zenodo.23289009
 - Kaggle current distribution: https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data
 - Starter notebook: https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter
 
-Zenodo DOI links identify archived snapshots with their own recorded provenance. Those archives were not updated by this Hugging Face/Kaggle maintenance publication.
+Zenodo DOI links identify archived snapshots with their own recorded provenance. Historical archives retain their original files. The corrected exact archive is identified below; current platform distributions retain their own revision receipts.
 
 
 ## Zenodo collection and exact snapshot

@@ -4012,7 +4012,7 @@
     {
       "file": "src/canonical/platforms/kaggle-card.md",
       "line": 30,
-      "column": 53,
+      "column": 65,
       "doi": "10.5281/zenodo.22838416",
       "role": "historical",
       "scope": "source"
@@ -4044,7 +4044,7 @@
     {
       "file": "src/canonical/platforms/kaggle-starter.ipynb",
       "line": 7,
-      "column": 1503,
+      "column": 1520,
       "doi": "10.5281/zenodo.22838416",
       "role": "historical",
       "scope": "source"

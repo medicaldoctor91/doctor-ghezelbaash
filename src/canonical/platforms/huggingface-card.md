@@ -221,4 +221,4 @@ Provenance: https://www.ghezelbaash.ir/provenance.jsonld
 License: Creative Commons Attribution 4.0 — https://creativecommons.org/licenses/by/4.0/
 
 
-Chronic migraine botulinum toxin treatment is personally provided by Dr. Saeed Ghezelbash after clinical assessment at his physician-owned Kermanshah practice. The clinical therapy and access service have distinct, linked IRIs. Content baseline remains **v1.3.4**; maintenance commits and platform packaging revisions identify these corrections without minting a new release or DOI.
+Chronic migraine botulinum toxin treatment is personally provided by Dr. Saeed Ghezelbash after clinical assessment at his physician-owned Kermanshah practice. The clinical therapy and access service have distinct, linked IRIs. Content baseline remains **v1.3.4**; maintenance commits and platform packaging revisions identify these corrections while the necessary corrected Zenodo packaging has the exact DOI and version stated above.
