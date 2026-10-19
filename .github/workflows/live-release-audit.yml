@@ -1,0 +1,39 @@
+name: Read-only live release audit
+on:
+  push:
+    branches: ['audit/doi-23474664-live-review']
+    paths: ['.github/workflows/live-release-audit.yml', '.github/scripts/live_release_audit.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install read-only validators
+        run: python -m pip install requests 'pyarrow==22.0.0' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' PyYAML lxml
+      - name: Fetch and audit every public release file
+        run: python .github/scripts/live_release_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-release-audit-evidence
+          path: |
+            /tmp/live-release-audit/report.json
+            /tmp/live-release-audit/fetch-log.json
+            /tmp/live-release-audit/language-findings.json
+            /tmp/live-release-audit/doi-inventory.json
+            /tmp/live-release-audit/*-SHACL.txt
+            /tmp/live-release-audit/public-kaggle-metadata.json
+            /tmp/live-release-audit/public-notebook-source.json
+            /tmp/live-release-audit/documents/
