@@ -172,10 +172,27 @@ def main():
     parser.add_argument('--website-commit', required=True)
     parser.add_argument('--publish', action='store_true')
     parser.add_argument('--zenodo-only', action='store_true')
+    parser.add_argument('--verify-only', action='store_true')
     args = parser.parse_args()
     root = args.root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     hf_info = json.loads(get('https://huggingface.co/api/datasets/' + HF))
+    if args.verify_only:
+        from sync_platform_machine_resources import kaggle_client
+        client = kaggle_client()
+        status = client.kernels_status(NOTEBOOK)
+        notebook = json.loads(get('https://www.kaggle.com/api/v1/kernels/pull/' + NOTEBOOK))
+        source = json.loads(notebook['blob'].get('source') or notebook['blob']['sourceNullable'])
+        markdown = '\n'.join(''.join(cell['source']) for cell in source['cells'] if cell['cell_type'] == 'markdown')
+        report = {'scope': 'Read-only owner verification', 'hfRevision': hf_info['sha'],
+                  'notebookVersion': notebook['metadata']['currentVersionNumber'],
+                  'notebookStatus': str(status.status), 'notebookFailureMessage': status.failure_message,
+                  'oldMirrorWordingAbsent': 'does not make the mirrors independent sources' not in markdown,
+                  'fiveTablesDocumented': 'all five tables' in markdown,
+                  'kaggleOwnerState': json.loads(client.dataset_status(KG, format='json(status,current_version_number)'))}
+        dump(root / 'report.json', report)
+        print(json.dumps(report), flush=True)
+        return
     if args.zenodo_only:
         assert hf_info['sha'] == args.hf_revision, 'HF changed since live review'
         report = {'scope': 'Zenodo metadata only', 'hfRevision': args.hf_revision, 'zenodo': []}
