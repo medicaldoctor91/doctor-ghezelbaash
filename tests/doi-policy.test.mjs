@@ -18,3 +18,16 @@ test('public discovery uses concept DOI and archive is a distinct versioned enti
     assert.ok(!JSON.stringify(nodes.get(id)?.sameAs ?? []).includes('doi.org/10.5281/zenodo'));
   }
 });
+
+test('every immutable record binding agrees with the reserved DOI', () => {
+  const p = SOURCE.doiPolicy;
+  const record = p.currentArchive.recordId;
+  assert.equal(record, 23474664);
+  assert.equal(p.downloadBindings.recordId, record);
+  assert.equal(p.currentArchive.doi, `10.5281/zenodo.${record}`);
+  assert.equal(p.currentArchive.url, `https://doi.org/${p.currentArchive.doi}`);
+  assert.equal(p.downloadBindings.publicPrefix, `https://zenodo.org/records/${record}/files/`);
+  assert.equal(p.downloadBindings.apiPrefix, `https://zenodo.org/api/records/${record}/files/`);
+  assert.ok(p.downloadBindings.bundle.startsWith(p.downloadBindings.publicPrefix));
+  assert.ok(p.downloadBindings.bundle.endsWith('zenodo.3.zip'));
+});

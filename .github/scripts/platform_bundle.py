@@ -343,7 +343,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         else:citation+=line
     import yaml
     citation_object=yaml.safe_load(citation)
-    line='doi: '+json.dumps(DOI_POLICY['concept']['doi'])+'\n'
+    line='doi: '+json.dumps(DOI_POLICY['currentArchive']['doi'])+'\n'
     if re.search(r'^doi:.*$',citation,flags=re.M):citation=re.sub(r'^doi:.*(?:\n|$)',lambda _:line,citation,flags=re.M)
     else:citation+='\n'+line
     if not any(ref.get('doi')==DOI_POLICY['currentArchive']['doi'] for ref in citation_object.get('references',[])):

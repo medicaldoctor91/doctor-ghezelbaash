@@ -122,7 +122,10 @@ def validate_archive(root, *, online=False):
         assert any(isomorphic(g,rdflib.Graph().parse(data=json.dumps(block),format='json-ld')) for block in inline.blocks), 'Inline JSON-LD differs from graph.jsonld'
     triples = len(g)
     g.parse(root / 'provenance.jsonld', format='json-ld')
-    conforms, results, text = validate(g, shacl_graph=rdflib.Graph().parse(root / 'shapes.ttl', format='turtle'), inference='none')
+    g.parse(root / 'dcat.ttl', format='turtle')
+    g.parse(root / 'void.ttl', format='turtle')
+    g.parse(root / 'croissant.json', format='json-ld')
+    conforms, results, text = validate(g, shacl_graph=rdflib.Graph().parse(root / 'shapes.ttl', format='turtle'), inference='none',advanced=True)
     assert conforms, text
     prefix = POLICY['downloadBindings']['publicPrefix']
     croissant = json.loads((root / 'croissant.json').read_text())

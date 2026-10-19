@@ -2,6 +2,14 @@
   "policySource": "src/canonical/doi-policy.json",
   "occurrences": [
     {
+      "file": ".github/scripts/coordinated_doi_release.py",
+      "line": 17,
+      "column": 84,
+      "doi": "10.5281/zenodo.23474664",
+      "role": "current_exact",
+      "scope": "source"
+    },
+    {
       "file": "docs/doi-policy.md",
       "line": 7,
       "column": 13,

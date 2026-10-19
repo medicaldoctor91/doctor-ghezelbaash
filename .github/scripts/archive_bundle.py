@@ -78,6 +78,14 @@ def build_archive(hf, previous_archive, output, source_commit):
             if isinstance(obj, rdflib.URIRef) and str(obj).startswith(ORIGIN) and str(obj)[len(ORIGIN):] in standalone:
                 graph.remove((subject, predicate, obj))
                 graph.add((subject, predicate, rdflib.URIRef(public_url(str(obj)[len(ORIGIN):]))))
+        # Archive distributions are distinct from mutable website distributions.
+        # Keep canonical Person/Clinic/Dataset identities unchanged.
+        from rdflib.namespace import RDF
+        replacements={subject:rdflib.URIRef('https://zenodo.org/records/'+str(DOI_POLICY['currentArchive']['recordId'])+'#distribution-'+hashlib.sha256(str(subject).encode()).hexdigest()[:20])
+                      for subject in graph.subjects(RDF.type,DCAT.Distribution)}
+        for subject,predicate,obj in list(graph):
+            if subject in replacements or obj in replacements:
+                graph.remove((subject,predicate,obj));graph.add((replacements.get(subject,subject),predicate,replacements.get(obj,obj)))
         if name == 'dcat.ttl':
             spdx = rdflib.Namespace('http://spdx.org/rdf/terms#')
             for subject, url in list(graph.subject_objects(DCAT.downloadURL)):
