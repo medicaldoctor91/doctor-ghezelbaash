@@ -149,6 +149,7 @@ def publish(previous, work):
         related.append({'identifier':p['concept']['doi'],'scheme':'doi','relation':'isVersionOf','resource_type':'dataset'})
         related.append({'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+payload['sourceCommit'],'scheme':'url','relation':'isDerivedFrom','resource_type':'software'})
         md['related_identifiers']=related
+        if (work/'zenodo-metadata.json').is_file():md=json.loads((work/'zenodo-metadata.json').read_text())
         response=session.put(dep,json={'metadata':md},timeout=90);response.raise_for_status()
         # One publish request only. A later recovery verifies this same record.
         response=session.post(dep+'/actions/publish',json={},timeout=120);response.raise_for_status()

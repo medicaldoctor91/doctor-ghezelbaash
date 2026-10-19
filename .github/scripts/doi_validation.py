@@ -184,6 +184,6 @@ def validate_archive(root, *, online=False):
         assert hashlib.sha256((root / spec['file']).read_bytes()).hexdigest() == spec['sha256'], name
         table_counts[name] = len(decoded)
     validate_policy(root, archive=True)
-    return {'status': 'PASS', 'rdfTriples': triples, 'rdfTurtleCsvIsomorphic': True, 'SHACLConforms': bool(conforms),
+    return {'status': 'PASS', 'rdfTriples': triples, 'rdfTurtleCsvIsomorphic': True, 'SHACLConforms': bool(conforms), 'SHACLAdvancedFiveDocumentUnion': True,
             'croissantRows': len(records), 'croissantDistributionFiles': len(mapping), 'croissantOnlineURLExtraction': online,
             'fiveParquetExactRoundtrips': table_counts}

@@ -4,7 +4,7 @@ import json
 import shutil
 import zipfile
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 from platform_bundle import DOI_POLICY, dump, load, sha, render_doi_text
 
@@ -86,6 +86,18 @@ def build_archive(hf, previous_archive, output, source_commit):
         for subject,predicate,obj in list(graph):
             if subject in replacements or obj in replacements:
                 graph.remove((subject,predicate,obj));graph.add((replacements.get(subject,subject),predicate,replacements.get(obj,obj)))
+        from rdflib.namespace import DCTERMS
+        schema=rdflib.Namespace('https://schema.org/')
+        for subject in replacements.values():
+            if not any(graph.objects(subject,DCTERMS.title)):
+                download=next(graph.objects(subject,DCAT.downloadURL),None)
+                title=next(graph.objects(subject,schema.name),rdflib.Literal(Path(urlparse(str(download)).path).name if download else 'Archived distribution'))
+                graph.add((subject,DCTERMS.title,title))
+            graph.add((subject,DCTERMS.license,rdflib.URIRef('https://creativecommons.org/licenses/by/4.0/')))
+            graph.add((subject,DCAT.isDistributionOf,rdflib.URIRef(DOI_POLICY['canonicalDatasetIri'])))
+            if not any(graph.objects(subject,DCAT.accessURL)):
+                target=next(graph.objects(subject,DCAT.downloadURL),rdflib.URIRef(DOI_POLICY['currentArchive']['url']))
+                graph.add((subject,DCAT.accessURL,target))
         if name == 'dcat.ttl':
             spdx = rdflib.Namespace('http://spdx.org/rdf/terms#')
             for subject, url in list(graph.subject_objects(DCAT.downloadURL)):
@@ -96,7 +108,9 @@ def build_archive(hf, previous_archive, output, source_commit):
                     graph.set((checksum, spdx.checksumValue, rdflib.Literal(sha(local), datatype=XSD.hexBinary)))
                 if any(graph.objects(subject, DCAT.byteSize)):
                     graph.set((subject, DCAT.byteSize, rdflib.Literal(str(local.stat().st_size), datatype=XSD.decimal)))
-        graph.serialize(output / name, format='turtle')
+        from rdflib.compare import to_canonical_graph
+        canonical=to_canonical_graph(graph).serialize(format='nt')
+        (output/name).write_text('\n'.join(sorted(line for line in canonical.splitlines() if line.strip()))+'\n')
     package = rebind(load(output / 'datapackage.json'))
     for resource in package['resources']:
         name = next(name for name, url in standalone.items() if url == resource['path'])

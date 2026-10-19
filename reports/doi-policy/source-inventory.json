@@ -10,6 +10,22 @@
       "scope": "source"
     },
     {
+      "file": ".github/scripts/coordinated_doi_release.py",
+      "line": 111,
+      "column": 146,
+      "doi": "10.5281/zenodo.23473947",
+      "role": "historical",
+      "scope": "source"
+    },
+    {
+      "file": ".github/scripts/coordinated_doi_release.py",
+      "line": 227,
+      "column": 84,
+      "doi": "10.5281/zenodo.23474664",
+      "role": "current_exact",
+      "scope": "source"
+    },
+    {
       "file": "docs/doi-policy.md",
       "line": 7,
       "column": 13,
@@ -4504,6 +4520,14 @@
       "doi": "10.5281/zenodo.22838416",
       "role": "historical",
       "scope": "source"
+    },
+    {
+      "file": "tests/coordinated-doi-release.test.py",
+      "line": 13,
+      "column": 144,
+      "doi": "10.5281/zenodo.22838416",
+      "role": "historical",
+      "scope": "historical_evidence_or_fixture"
     },
     {
       "file": "tests/doi-policy.test.mjs",
