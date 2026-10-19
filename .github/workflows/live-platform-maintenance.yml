@@ -1,0 +1,49 @@
+name: Maintain fetched live platform packages and notebook
+on:
+  workflow_dispatch:
+    inputs:
+      hf_revision:
+        required: true
+        type: string
+      kaggle_version:
+        required: true
+        type: string
+      website_commit:
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      EXPECTED_HF_REVISION: ${{ inputs.hf_revision }}
+      EXPECTED_KAGGLE_VERSION: ${{ inputs.kaggle_version }}
+      EXPECTED_WEBSITE_COMMIT: ${{ inputs.website_commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install publication dependencies
+        run: python -m pip install 'requests>=2,<3' 'pyarrow>=18,<23' 'huggingface_hub>=0.34,<1' 'kaggle==2.2.4'
+      - name: Verify lossless viewer repair
+        run: python tests/live-maintenance.test.py
+      - name: Maintain exact fetched live data and refresh notebook
+        run: python .github/scripts/live_platform_maintenance.py --hf-revision "$EXPECTED_HF_REVISION" --kaggle-version "$EXPECTED_KAGGLE_VERSION" --website-commit "$EXPECTED_WEBSITE_COMMIT" --publish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-platform-maintenance-evidence
+          path: |
+            /tmp/live-platform-maintenance/report.json
+            /tmp/live-platform-maintenance/notebook-before.json
+            /tmp/live-platform-maintenance/kaggle/notebook-verification.json
+          if-no-files-found: warn
