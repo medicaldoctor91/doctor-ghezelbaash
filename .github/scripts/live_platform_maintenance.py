@@ -124,7 +124,19 @@ def zenodo_metadata(record, revision, token):
     response = session.get(dep, timeout=60)
     response.raise_for_status()
     draft = response.json()
-    assert draft.get('state') != 'inprogress', 'Existing Zenodo draft must not be overwritten'
+    assert draft.get('submitted'), 'An unpublished Zenodo deposit must not be overwritten'
+    # Legacy deposit state can be inprogress even for submitted records. Check
+    # the modern draft directly before deciding whether an edit is safe.
+    probe = session.get(base + 'records/' + str(record) + '/draft', timeout=60)
+    existing_draft = probe.status_code == 200
+    if existing_draft:
+        pending = probe.json()
+        assert pending['metadata'] == original['metadata'], 'Zenodo has unpublished metadata changes; preserve them'
+        pending_files = session.get(base + 'records/' + str(record) + '/draft/files', timeout=60)
+        pending_files.raise_for_status()
+        assert {f['key']: f['checksum'] for f in pending_files.json()['entries']} == before_files, 'Zenodo has unpublished file changes; preserve them'
+    else:
+        assert probe.status_code == 404, 'Could not establish Zenodo draft state'
     metadata = draft['metadata']
     description = metadata['description']
     description = re.sub(r'<p><strong>Connected publications — .*?</p>', '', description, flags=re.S)
@@ -140,7 +152,9 @@ def zenodo_metadata(record, revision, token):
     for url in [*LINKS.values(), HUB + '/tree/' + revision]:
         if url not in known and url != 'https://doi.org/' + original['doi']:
             related.append({'identifier': url, 'relation': 'isSupplementTo', 'scheme': 'url'})
-    for method, url, payload in [('POST', dep + '/actions/edit', None), ('PUT', dep, {'metadata': metadata}), ('POST', dep + '/actions/publish', None)]:
+    operations = [] if existing_draft else [('POST', dep + '/actions/edit', None)]
+    operations += [('PUT', dep, {'metadata': metadata}), ('POST', dep + '/actions/publish', None)]
+    for method, url, payload in operations:
         response = session.request(method, url, json=payload, timeout=90)
         response.raise_for_status()
     final = json.loads(get(base + 'records/' + str(record)))
