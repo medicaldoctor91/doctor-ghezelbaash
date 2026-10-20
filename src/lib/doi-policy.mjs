@@ -1,7 +1,5 @@
 import policyTemplate from '../canonical/doi-policy.json' with {type: 'json'};
-import {execFileSync} from 'node:child_process';
 const DOI_POLICY = structuredClone(policyTemplate);
-DOI_POLICY.currentArchive.sourceCommit = process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], {encoding: 'utf8'}).trim();
 export {DOI_POLICY};
 
 export function applyDoiPolicy(source) {

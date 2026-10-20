@@ -1,10 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {SOURCE, AUTHORED_BODY} from '../src/canonical/source.mjs';
 
 const concept = 'https://doi.org/10.5281/zenodo.18765168';
 const exact = 'https://doi.org/10.5281/zenodo.23474664';
 const datasetIri = 'https://www.ghezelbaash.ir/graph.jsonld/dataset';
+
+test('rebuilding the mutable website cannot relabel the frozen archive source revision', () => {
+  const result = execFileSync(process.execPath, ['--input-type=module', '-e', `
+    import {SOURCE} from './src/canonical/source.mjs';
+    const archive=SOURCE.graph['@graph'].find(n => n['@id']==='${exact}');
+    console.log(JSON.stringify([SOURCE.doiPolicy.currentArchive.sourceCommit, archive['prov:wasDerivedFrom']['@id']]));
+  `], {cwd: new URL('..', import.meta.url), env: {...process.env, GITHUB_SHA: '1111111111111111111111111111111111111111'}, encoding:'utf8'});
+  assert.deepEqual(JSON.parse(result), [
+    'b753b84011256f13c4badb21af888e92282565dd',
+    'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/b753b84011256f13c4badb21af888e92282565dd',
+  ]);
+});
 
 test('public discovery uses concept DOI and archive is a distinct versioned entity', () => {
   assert.match(AUTHORED_BODY, /href="https:\/\/doi.org\/10.5281\/zenodo.18765168"/);

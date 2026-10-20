@@ -18,6 +18,7 @@
     "role": "current_exact",
     "meaning": "Exact release binding reserved before publication; archive availability is verified by external publication receipts. Mutable distributions record their own revisions.",
     "sourceCommitReference": "archive-provenance.json#/sourceCommit",
+    "sourceCommit": "b753b84011256f13c4badb21af888e92282565dd",
     "inputBaselineHfRevision": "47699e7fc8bad2df2c6d90dcfb9da72278aba28d",
     "bindingStatus": "reserved-before-publication"
   },

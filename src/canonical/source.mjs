@@ -24484,7 +24484,10 @@ export const SOURCE = {
         "copyrightNotice": "© 2023 Saeed Ghezelbash",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "acquireLicensePage": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg",
-        "sameAs": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg",
+        "sameAs": [
+          "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg",
+          "https://commons.wikimedia.org/entity/M196320105"
+        ],
         "dateCreated": {
           "@value": "2023-05-29",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -24561,7 +24564,7 @@ export const SOURCE = {
         ],
         "version": "1.2.1",
         "dateModified": {
-          "@value": "2026-09-30",
+          "@value": "2026-10-20",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -24633,7 +24636,10 @@ export const SOURCE = {
         "copyrightNotice": "© 2023 Saeed Ghezelbash",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "acquireLicensePage": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg",
-        "sameAs": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg",
+        "sameAs": [
+          "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg",
+          "https://commons.wikimedia.org/entity/M196320111"
+        ],
         "dateCreated": {
           "@value": "2023-05-29",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -24692,7 +24698,7 @@ export const SOURCE = {
         ],
         "version": "1.2.1",
         "dateModified": {
-          "@value": "2026-09-30",
+          "@value": "2026-10-20",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -24764,7 +24770,10 @@ export const SOURCE = {
         "copyrightNotice": "© 2023 Saeed Ghezelbash",
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "acquireLicensePage": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg",
-        "sameAs": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg",
+        "sameAs": [
+          "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg",
+          "https://commons.wikimedia.org/entity/M196320110"
+        ],
         "dateCreated": {
           "@value": "2023-05-29",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -24823,7 +24832,7 @@ export const SOURCE = {
         ],
         "version": "1.2.1",
         "dateModified": {
-          "@value": "2026-09-30",
+          "@value": "2026-10-20",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
