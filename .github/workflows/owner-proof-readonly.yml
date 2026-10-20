@@ -68,6 +68,22 @@ jobs:
       - name: Fetch all public prose and positioning files
         if: always()
         run: python .github/scripts/supplemental_live_prose.py
+      - name: Audit live home identity and every positioning reference
+        if: always()
+        run: python .github/scripts/home_positioning_link_audit.py
+      - name: Diagnose current Viewer capabilities
+        if: always()
+        run: python .github/scripts/viewer_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: home-positioning-links-evidence
+          path: /tmp/home-positioning-links/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: current-viewer-diagnostic-evidence
+          path: /tmp/viewer-diagnostic/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
