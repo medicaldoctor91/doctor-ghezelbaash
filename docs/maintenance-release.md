@@ -28,7 +28,7 @@ Do not modify `src`, `public`, `build`, package/lock files, platform payloads or
 
 The first cleanup retained PR458 and ambiguous historical branches. The deeper cleanup reviewed them separately, preserved all 13 exact remaining tips, and closes the superseded PR458 without merging. The updated retention decisions are in [the second-pass inventory](maintenance/branch-retention-deep-20261020.json). No abandoned branch is merged into main. Historical reports and operation scripts remain evidence; they are not assertions of current live state.
 
-[Archived workflow snapshots](../.github/archive/workflows/2026-10-20/README.md) preserve six retired, superseded or one-time entrypoints with their original blobs and hashes. Current coordinated publication, validators and their tests remain available. Nothing in this cleanup adds a lock or changes Actions/environment permissions.
+[Archived workflow snapshots](../.github/archive/workflows/2026-10-20/README.md) preserve seven retired, superseded or one-time entrypoints with their original blobs and hashes. Current coordinated publication, validators and their tests remain available. Nothing in this cleanup adds a lock or changes Actions/environment permissions.
 
 ## No-build/no-deploy housekeeping check
 

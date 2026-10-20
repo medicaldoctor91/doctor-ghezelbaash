@@ -8,7 +8,7 @@
 python tools/audit/home_positioning_link_audit.py
 ```
 
-This checks full inline/standalone equality, homepage identity, positioning hashes and referenced URLs/IRIs. It is not owner-authenticated verification of a draft, execution output or all Dataset Viewer features. A proxy error, HTTP203 or a semantic graph IRI must be interpreted in context; it is not automatically a broken navigation link. This cleanup does not execute the audit or access public platform payloads.
+This checks full inline/standalone equality, homepage identity and referenced URLs/IRIs, and records positioning hashes. It does not itself compare those hashes against the frozen manifest; that requires a separate comparison with the verified frozen artifact. It is not owner-authenticated verification of a draft, execution output or all Dataset Viewer features. A proxy error, HTTP203 or a semantic graph IRI must be interpreted in context; it is not automatically a broken navigation link. This cleanup does not execute the audit or access public platform payloads.
 
 ## Recover the complete live-audit snapshot locally
 

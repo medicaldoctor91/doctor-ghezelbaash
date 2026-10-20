@@ -40,5 +40,12 @@
     "originalBlob": "d8ca0a79212860cb7adf04e186e702224aefdf25",
     "sha256": "dd7dc734376670710d0af6ef4eb97b90460520df7556342d77106833970e862b",
     "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  },
+  {
+    "originalPath": ".github/workflows/viewer-revision-guard.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/viewer-revision-guard.yml.txt",
+    "originalBlob": "6fff40456b2a3355084a3c316e7921264120c996",
+    "sha256": "ead55287b4663ba9075ca2add1e6bc03572bd481139fbda028bbcf6cbc461bef",
+    "originalCommit": "861230335d49c476d4a8f7d132e672638ea9d4c2"
   }
 ]
