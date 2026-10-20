@@ -1,0 +1,27 @@
+name: Read-only current Viewer feature audit
+on:
+  push:
+    branches: ['audit/doi-23474664-live-review']
+    paths: ['.github/workflows/current-viewer-features.yml', '.github/scripts/current_viewer_features.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  features:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install requests 'pyarrow==22.0.0'
+      - name: Check real text search, exact filters, statistics, pages and complete exports
+        run: python .github/scripts/current_viewer_features.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: current-viewer-features
+          path: /tmp/current-viewer-features/
