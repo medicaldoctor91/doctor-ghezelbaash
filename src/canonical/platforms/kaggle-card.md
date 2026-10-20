@@ -6,7 +6,7 @@ Source release **{{source_version}}**, edition **{{edition}}**. Kaggle packaging
 
 Canonical dataset: `https://www.ghezelbaash.ir/graph.jsonld/dataset`. Physician: `Q140287622`; ORCID `0009-0001-9346-8475`; OpenAlex `A5146521397`.
 
-Website build source commit: `{{source_commit}}`. Publication receipts are recorded separately from these frozen build inputs.
+Website build source commit: `{{source_commit}}`. Build inputs and publication receipts provide complementary provenance.
 Pinned Hugging Face revision: `{{hf_revision}}`.
 
 All copied resources retain the exact bytes of this Hub revision. Five Parquet tables reconstruct every original source row, including omitted fields, JSON arrays and typed training-message structures. Query references resolve against current graph and provenance nodes. `checksums.sha256` covers all 46 other downloadable files.
@@ -28,7 +28,7 @@ All copied resources retain the exact bytes of this Hub revision. Five Parquet t
 - Active OpenAlex author: https://openalex.org/A5146521397
 - Current pinned Hub: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/{{hf_revision}}
 - Historical Zenodo dataset snapshot **1.3.3**: https://doi.org/10.5281/zenodo.22838416
-- Archived website source snapshot (not the current release bytes): https://doi.org/10.5281/zenodo.23289009
+- Historical website source snapshot: https://doi.org/10.5281/zenodo.23289009
 - Kaggle current distribution: https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data
 - Starter notebook: https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter
 
@@ -39,7 +39,7 @@ Zenodo DOI links identify archived snapshots with their own recorded provenance.
 
 Public collection and latest version: [{{doi.concept_doi}}]({{doi.concept_url}}).
 
-Exact release binding **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. The DOI is reserved before publication; availability is verified by external publication receipts, not asserted by this frozen card. Historical DOI references below retain their stated versions.
+Exact release binding **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision and source commit to reproduce these distribution files. Use the assigned exact DOI to cite this coordinated archive. The Zenodo record and publication receipts document archive availability; historical DOI references retain their stated versions.
 
 ## فارسی
 

@@ -1,11 +1,26 @@
 """Reject known misleading current-release assertions in final candidate bytes."""
-import json
+import json,hashlib
 from pathlib import Path
 
 def validate_candidate(work):
     from platform_bundle import DOI_POLICY
     cohort=DOI_POLICY['coordinatedRelease']
     work=Path(work);checked=[]
+
+    # User-required freeze: preserve every positioning word and all derived representations.
+    protected={
+      'enrichment/instruction_examples_fa_market_positioning.jsonl':'f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4',
+      'enrichment/positioning-strategy.json':'e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9',
+      'enrichment/market-positioning-evidence.json':'8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c',
+      'enrichment/instruction_examples_fa_market_positioning.csv':'2791d935640702021dbeff4664890c674204200fb84954828193659b3f01ac8c',
+      'viewer/positioning-examples.parquet':'1c4458b2ae1645eeab6a940b0529f8a00ebabc7d6cb8bf67afba5c0b1ff1f408'}
+    for platform in ['website','hf-stage','kaggle','archive']:
+        for name,digest in protected.items():
+            target=work/platform/name
+            if platform=='website' and name.endswith(('.csv','.parquet')):continue
+            assert target.is_file(),('Protected positioning missing',platform,name)
+            assert hashlib.sha256(target.read_bytes()).hexdigest()==digest,('Protected positioning bytes changed',platform,name)
+
     import rdflib
     graph=json.loads((work/'website/graph.jsonld').read_text())
     assert len(graph['@graph'])==cohort['expectedGraphNodes']

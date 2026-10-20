@@ -74,7 +74,7 @@ The current files reproduce the verified final website distribution at source co
 
 Public collection and latest version: [{{doi.concept_doi}}]({{doi.concept_url}}).
 
-Exact release binding **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision/source commit for these current distribution bytes; use the exact archive DOI when reproducing that archive. The DOI is reserved before publication; availability is verified by external publication receipts, not asserted by this frozen card. Historical DOI references below retain their stated versions.
+Exact release binding **{{doi.current_version}}**: [{{doi.current_doi}}]({{doi.current_url}}). Pin the platform revision and source commit to reproduce these distribution files. Use the assigned exact DOI to cite this coordinated archive. The Zenodo record and publication receipts document archive availability; historical DOI references retain their stated versions.
 
 ## Dataset scope, curation and intended use
 
@@ -84,13 +84,13 @@ This public, physician-authored **Persian clinical NLP and knowledge-graph datas
 
 Clinical and professional text originates from the named physician's public website. Deterministic extraction, RDF serialization and Parquet packaging preserve linked sources and record-level attribution. Follow each record's source anchors, evidence references and review metadata. Search-intent and positioning examples are distinguished from clinical educational passages.
 
-### Appropriate uses and limitations
+### Research applications and evaluation design
 
 - Use for Persian/multilingual retrieval, cited QA prototypes, entity resolution, provenance tracing and RDF/Croissant interoperability tests.
-- This physician-centred educational corpus is intended for retrieval and entity-linking research; patient-cohort analysis, treatment-outcome estimation and clinical benchmarking require appropriately designed evaluation data. Language and topic coverage are unequal.
-- The `train` split is a loading convention, not a curated train/test separation. A valid downstream benchmark requires a separately designed evaluation and leakage controls.
+- This physician-centred educational corpus supports retrieval and entity-linking research. Use purpose-designed evaluation data for patient-cohort analysis, treatment-outcome estimation and clinical benchmarking; account for differences in language and topic coverage.
+- The `train` split provides access to the corpus. Construct a separate evaluation set with leakage controls for downstream benchmarking.
 - Query aliases describe search intent. Local-service answers cite clinical pages, identity records or source-specific directory entries; list position is reported only for the named source and observation date.
-- Preserve resource-level attribution and check third-party rights at the linked source. Public availability and CC BY 4.0 package metadata do not erase third-party rights or permit unsupported clinical claims.
+- The package uses CC BY 4.0. Preserve resource-level attribution and the rights and terms recorded by each third-party source; support clinical claims with their linked evidence.
 
 ### Reproducible citation and update policy
 
@@ -100,8 +100,8 @@ For reproducible use, pin the exact Hugging Face data revision returned by the H
 
 - **clinical_passages** (default): 3249 authored paragraph-level passages with text, heading paths, language, exact source anchors, physician/topic entity IDs, explicit citation/evidence references, content hashes and review metadata.
 - **clinical_answers**: 125 canonical question-answer records with stable source/passage/evidence bindings.
-- **entity_facts**: 22166 RDF statements. Seven fields preserve subject, predicate, object, object kind, datatype, language and stable row identity; graph/provenance resources retain the linked evidence context.
-- **query_matrix**: 876 multilingual retrieval aliases reconciled to the current graph IDs. Superlative query wording records a search intent and resolves to clinical selection criteria; it does not assert a comparative ranking.
+- **entity_facts**: 22220 RDF statements. Seven fields preserve subject, predicate, object, object kind, datatype, language and stable row identity; graph/provenance resources retain the linked evidence context.
+- **query_matrix**: 876 multilingual retrieval aliases reconciled to the current graph IDs. Superlative queries connect search intent with the physician, clinical selection criteria and source-specific evidence.
 
 - **market_positioning**: 60 competitive physician-positive training examples: the original 47 message arrays unchanged and 13 additional source-linked examples with explicit language, subject IRIs and source URLs; see `enrichment/positioning-strategy.json` and `enrichment/market-positioning-evidence.json` for scope and sources.
 

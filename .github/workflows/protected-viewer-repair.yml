@@ -1,0 +1,59 @@
+name: Preflight coordinated Viewer repair with protected home and positioning
+on:
+  push:
+    branches: [codex/preserve-home-positioning-viewer-repair]
+    paths-ignore: [.github/release-action.json]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  coordinated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      OPERATION: preflight
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Build and validate all coordinated inputs
+        run: |
+          npm ci
+          python -m pip install requests 'huggingface_hub>=0.34,<1' 'pyarrow==22.0.0' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4' PyYAML
+          node --test tests/*.test.mjs
+          npm run build
+          python tests/coordinated-doi-release.test.py
+          python tests/doi-validation.test.py
+          python tests/platform-bundle-sync.test.py
+          python tests/platform-publication.test.py
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python .github/scripts/coordinated_doi_release.py preflight
+      - name: Freeze validated candidate without publishing
+        run: tar -czf /tmp/candidate.tar.gz -C /tmp coordinated-release
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: frozen-coordinated-candidate
+          path: /tmp/candidate.tar.gz
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: protected-viewer-repair-preflight-evidence
+          path: |
+            /tmp/coordinated-release/*.json
+            /tmp/coordinated-release/*.log
