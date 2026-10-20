@@ -179,5 +179,29 @@ class Guards(unittest.TestCase):
   with self.assertRaises(AssertionError):
    release.assert_viewer_export_rows(pa.Table.from_pylist([{'x':True}]),pa.Table.from_pylist([{'x':1}]),'fixture')
 
+ def test_search_probe_uses_present_entity_text_instead_of_json_marker(self):
+  self.assertEqual(release.viewer_search_probe([{'citedUrls':'[]','datasetId':'https://www.ghezelbaash.ir/graph.jsonld/dataset'}],'clinical_passages'),'ghezelbaash')
+  self.assertEqual(release.viewer_search_probe([{'object':'https://schema.org/Patient'}],'entity_facts'),'Patient')
+  with self.assertRaises(AssertionError):release.viewer_search_probe([{'citedUrls':'[]'}],'clinical_passages')
+ def test_successful_http_with_empty_search_is_not_feature_success(self):
+  expected=[{'id':'a','text':'actual value'}]
+  for value in [{'rows':[],'partial':False},{'partial':False},{'rows':[{'row_idx':0,'row':expected[0]}],'partial':True},{'rows':[{'row_idx':0,'row':expected[0]}]}]:
+   with self.assertRaises(AssertionError):release.assert_viewer_result_rows(value,expected,'fixture','search')
+ def test_search_and_filter_results_must_return_untruncated_exact_source_rows(self):
+  import copy
+  expected=[{'id':'a','flag':1,'text':'اصل'},{'id':'b','flag':0,'text':'دوم'}]
+  valid={'partial':False,'rows':[{'row_idx':1,'row':expected[1],'truncated_cells':[]}]}
+  self.assertEqual(release.assert_viewer_result_rows(valid,expected,'fixture','search'),1)
+  self.assertEqual(release.assert_viewer_result_rows(valid,expected,'fixture','filter'),1)
+  for change in ['wrong_value','wrong_scalar_type','wrong_index','bool_index','truncated','missing_field']:
+   broken=copy.deepcopy(valid)
+   if change=='wrong_value':broken['rows'][0]['row']['text']='تغییر'
+   elif change=='wrong_scalar_type':broken['rows'][0]['row']['flag']=False
+   elif change=='wrong_index':broken['rows'][0]['row_idx']=2
+   elif change=='bool_index':broken['rows'][0]['row_idx']=True
+   elif change=='truncated':broken['rows'][0]['truncated_cells']=['text']
+   else:del broken['rows'][0]['row']['text']
+   with self.assertRaises(AssertionError):release.assert_viewer_result_rows(broken,expected,'fixture','search')
+
 if __name__=='__main__':unittest.main()
 

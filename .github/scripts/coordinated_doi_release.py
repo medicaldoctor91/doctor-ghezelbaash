@@ -220,6 +220,24 @@ def assert_viewer_export_rows(actual,expected,config):
  assert encode(actual.select(expected.column_names).to_pylist())==encode(expected.to_pylist()), ('Viewer complete export rows differ',config)
  return actual.num_rows
 
+def viewer_search_probe(expected,config):
+ # Use a meaningful token actually present in the frozen table. In particular,
+ # a JSON marker such as [] cannot establish that the search index works.
+ probes={'clinical_passages':'ghezelbaash','clinical_answers':'ghezelbaash','entity_facts':'Patient','query_matrix':'ghezelbaash','market_positioning':'positioning'}
+ query=probes[config]
+ assert any(query.lower() in value.lower() for row in expected for value in row.values() if isinstance(value,str)), ('Search probe absent from frozen table',config)
+ return query
+
+def assert_viewer_result_rows(result,expected,config,label):
+ assert result.get('partial') is False, ('Partial Viewer result',config,label)
+ rows=result.get('rows');assert isinstance(rows,list) and rows, ('Empty Viewer result',config,label)
+ encode=lambda value:json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':'))
+ for row in rows:
+  index=row.get('row_idx');assert type(index) is int and 0<=index<len(expected), ('Viewer result row index',config,label,index)
+  assert not row.get('truncated_cells'), ('Truncated Viewer result',config,label,index)
+  assert encode(row.get('row'))==encode(expected[index]), ('Viewer result differs from frozen row',config,label,index)
+ return len(rows)
+
 def verify_hf(work):
  from urllib.parse import urlencode
  plan=json.loads((work/'release-plan.json').read_text());revision=plan['hfRevision']
@@ -244,6 +262,7 @@ def verify_hf(work):
   shards=[x for x in exports.get('parquet_files',[]) if x.get('config')==config and x.get('split')=='train']
   assert shards,('No complete Viewer export',config)
   expected_table=pq.read_table(work/'hf-stage'/spec['file'])
+  expected_rows=expected_table.to_pylist()
   actual_table=pa.concat_tables([pq.read_table(io.BytesIO(get(x['url']).content)) for x in shards])
   converted_rows=assert_viewer_export_rows(actual_table,expected_table,config)
   params={'dataset':HF,'config':config,'split':'train'}
@@ -251,10 +270,14 @@ def verify_hf(work):
   rows=endpoint('rows',{**params,'offset':0,'length':2});assert rows['rows']
   stats=endpoint('statistics',params);assert 'statistics' in stats
   first=preview['rows'][0]['row'];field,value=next((k,v) for k,v in first.items() if isinstance(v,str) and v and len(v)<200)
-  search=endpoint('search',{**params,'query':value[:30]});assert 'rows' in search
+  query=viewer_search_probe(expected_rows,config)
+  search=endpoint('search',{**params,'query':query})
+  search_rows=assert_viewer_result_rows(search,expected_rows,config,'search')
   quoted=value.replace("'","''")
-  filtered=endpoint('filter',{**params,'where':'"'+field+'"=\''+quoted+'\''});assert filtered['rows'],('Viewer filter',config)
-  evidence[config]={'rows':counts[config],'completeConvertedRowsMatched':converted_rows,'responseRevisionVerified':True,'preview':True,'viewer':True,'search':True,'filter':True,'statistics':True}
+  filtered=endpoint('filter',{**params,'where':'"'+field+'"=\''+quoted+'\''})
+  filtered_rows=assert_viewer_result_rows(filtered,expected_rows,config,'filter')
+  assert all(item['row'][field]==value for item in filtered['rows']), ('Viewer filter predicate',config)
+  evidence[config]={'rows':counts[config],'completeConvertedRowsMatched':converted_rows,'responseRevisionVerified':True,'preview':True,'viewer':True,'search':True,'filter':True,'statistics':True,'searchProbe':query,'positiveSearchRowsVerified':search_rows,'positiveFilterRowsVerified':filtered_rows}
  return {'revision':revision,'filesSha256Matched':len(expected),'viewer':evidence}
 
 def verify_kaggle(work):
