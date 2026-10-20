@@ -97,6 +97,15 @@ def config_check(item):
     tokens = re.findall(r'[\u0621-\u063a\u0641-\u064a\u067e\u0686\u0698\u06a9\u06af\u06cc]{3,}', candidates[0])
     query = next((t for t in tokens if len(t) >= 4), tokens[0])
     check('textSearch', lambda: {'query': query, 'matchingRows': matching_rows(endpoint(config, 'search', query=query))})
+    # Probe an original Latin token as well: provider FTS tokenization can limit
+    # Persian retrieval independently of response health. Keep both results.
+    latin_tokens = [token for value in records[0].values() if isinstance(value, str)
+                    for token in re.findall(r'[a-zA-Z]{4,}', value)
+                    if token.lower() not in {'https', 'http', 'json', 'jsonld', 'www'}]
+    latin_query = latin_tokens[0]
+    check('latinSearch', lambda: {'query': latin_query, 'matchingRows': matching_rows(endpoint(config, 'search', query=latin_query))})
+    contains_where = '"' + text_field + '" LIKE \'%' + query.replace("'", "''") + '%\''
+    check('persianContainsFilter', lambda: {'query': query, 'matchingRows': matching_rows(endpoint(config, 'filter', where=contains_where))})
     first = records[0]
     id_field = {'clinical_passages': 'passageId', 'clinical_answers': 'answerId',
                 'entity_facts': 'row_id', 'query_matrix': 'query', 'market_positioning': 'example_id'}[config]
