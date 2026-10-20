@@ -26,7 +26,7 @@ Do not modify `src`, `public`, `build`, package/lock files, platform payloads or
 
 [Branch inventory and retention decisions](maintenance/branch-retention-20261020.json) record every original tip and reachability to the pre-cleanup main. Deleted temporary branches are first preserved as lightweight archival tags under `archive/cleanup-20261020/<original-branch>`. These are retention refs, not GitHub Releases or publication tags. Do not move or overwrite them. To recover a tip, inspect the recorded SHA and create a local branch from its tag; do not push it until its triggers and current authorization are checked.
 
-The open PR458 branch, current live-audit branch, separate Wikidata audit and ambiguous unmerged maintenance/fix work are retained. No abandoned branch is merged into main. Historical reports and operation scripts remain evidence; they are not assertions of current live state.
+The first cleanup retained PR458 and ambiguous historical branches. The deeper cleanup reviewed them separately, preserved all 13 exact remaining tips, and closes the superseded PR458 without merging. The updated retention decisions are in [the second-pass inventory](maintenance/branch-retention-deep-20261020.json). No abandoned branch is merged into main. Historical reports and operation scripts remain evidence; they are not assertions of current live state.
 
 [Archived workflow snapshots](../.github/archive/workflows/2026-10-20/README.md) preserve six retired, superseded or one-time entrypoints with their original blobs and hashes. Current coordinated publication, validators and their tests remain available. Nothing in this cleanup adds a lock or changes Actions/environment permissions.
 
@@ -38,8 +38,14 @@ The reviewed pre-cleanup main had no matching main-push, tag-push, create/delete
 
 Use `git diff --check`, compare protected Git trees before/after, verify archival refs and default/main, and compare Actions plus Cloudflare deployments after the push. Never change protection, rulesets, environments, reviewers, permissions or secrets as part of housekeeping.
 
-## What a future manual approval would mean
+## Deeper housekeeping checkpoint
 
-No approval lock is installed by this cleanup. A future GitHub Environment with the user as a required reviewer would pause only jobs that explicitly reference that environment. The user would inspect the candidate/source/hash and use GitHub's deployment review UI to approve that concrete job. A chat message alone does not implement that gate, and clicking “Run workflow” alone is not the same protection.
+Main is the sole remaining remote branch after this pass. All 29 original non-main tips from both passes remain in lightweight archival tags under `archive/cleanup-20261020/`. Original first-pass decisions remain historical in their own inventory; the second-pass inventory records the later review. A verified local Git bundle additionally preserves each pass. No GitHub Release or dataset version is created.
 
-Branch protection/required PR review controls changes to main; an environment approval controls execution of publication jobs. Neither automatically governs an independent Cloudflare Git integration or all uses of credentials. Any future configuration must be separately authorized, cover the actual publication path, and state applicable bypass/administrator behavior. Do not add it implicitly while cleaning up.
+PR458 was an older 2026-10-17 metadata patch based on source edition 2026-10-10 and a legacy mutable alignment workflow. The current edition 2026-10-18, central DOI policy, frozen source b753 and stricter coordinated guards supersede that route. Its exact head `23e488bc9885adab264d30b8f78daa8cef405fea` is retained before closing without a comment or merge. No old clinical/source changes are merged.
+
+The working publisher dependency closure remains at its original paths: coordinated_doi_release, doi_release, sync_platform_machine_resources, platform_bundle, archive_bundle, candidate_contract, git_payload, doi_validation and browser_projection. The other tested maintenance helpers remain because active workflows/tests still use them. Only the demonstrably orphaned doi_finish.py and doi_inventory.py are moved byte-for-byte to the documented scripts archive. Meaningful validators and historical receipt strings remain intact.
+
+The user does not want manual deployment approval. This cleanup does not introduce approval requirements, locks, protections, reviewers, environment changes, permissions changes or secret changes. Existing publication validation remains unchanged. Housekeeping remains separate from platform publication.
+
+See [local audit and historical recovery](maintenance/audit-recovery.md). GitHub workflow_dispatch requires a workflow on the default branch; preserving a tag does not by itself make a tag-only workflow directly dispatchable. No workflow is dispatched by this cleanup.

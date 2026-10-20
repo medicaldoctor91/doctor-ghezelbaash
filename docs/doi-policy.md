@@ -1,5 +1,7 @@
 # Dataset DOI roles and release procedure
 
+> Scope/status: this document includes the original release plans and their historical input baselines (including owner23 → planned24 and notebook8 → planned9). Those numbers are not current live-state claims. The actual frozen cohort is source b753 / HF83 / K25 / N10 under the same reserved DOI23474664; use [the maintenance checkpoint](maintenance-release.md) for its exact artifact/manifest and publication status. Historical plans, receipts and DOI roles below are preserved rather than relabelled.
+
 The sole policy source is `src/canonical/doi-policy.json`. Website graph/discovery generators, package cards, citations, release receipts, query projections, archive descriptors and publication tools read it. `src/lib/doi-policy.mjs` applies the policy before website generation; `.github/scripts/platform_bundle.py` renders platform projections.
 
 | Role | Identifier | Meaning |
