@@ -105,6 +105,8 @@ def viewer_exports():
   results[config]={'status':'PASS','rows':actual.num_rows,'completeLogicalRowsMatchFrozen':True}
  return {'configs':results,'failed':state.get('failed',[]),'pending':state.get('pending',[]),'allFiveComplete':len(results)==5 and all(item['status']=='PASS' for item in results.values())}
 check('DatasetViewerCompleteExports',viewer_exports)
+if RESULTS['DatasetViewerCompleteExports'].get('result',{}).get('allFiveComplete') is not True: RESULTS['DatasetViewerCompleteExports']['status']='FAIL'
+dump('report.json',RESULTS)
 G={}
 def rdfcheck(label,root):
  g=rdflib.Graph().parse(root/'graph.jsonld',format='json-ld');ttl=rdflib.Graph().parse(root/'graph.ttl',format='turtle');assert isomorphic(g,ttl)
@@ -194,10 +196,19 @@ for scope,root in [('live-HF',L/'hf'),('live-Kaggle',kroot),('frozen-HF',F/'hf-s
    dest=P/'documents'/scope/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_text(text)
 dump('language-findings.json',findings)
 # Actual public notebook source and version; do not call an old COMPLETE proof current.
+def normalized_cells(document):
+ cells=[]
+ for original in document['cells']:
+  cell=dict(original);source=cell.get('source');assert isinstance(source,(str,list))
+  if isinstance(source,list):assert all(isinstance(line,str) for line in source);source=''.join(source)
+  cell['source']=source;cells.append(cell)
+ return cells
+
 def notebookcheck():
+ public('api/notebook.json','https://www.kaggle.com/api/v1/kernels/pull/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter')
  nb=js(L/'api/notebook.json');source=json.loads(nb['blob'].get('source') or nb['blob'].get('sourceNullable'));dump('public-notebook-source.json',source)
  assert nb['metadata']['currentVersionNumber']==PLAN['notebookVersion'], 'Public notebook version differs from frozen plan'
- assert source['cells']==js(F/'notebook/starter.ipynb')['cells'], 'Public notebook source differs from frozen cells'
+ assert normalized_cells(source)==normalized_cells(js(F/'notebook/starter.ipynb')), 'Public notebook source differs from frozen cells'
  return {'version':nb['metadata']['currentVersionNumber'],'plannedVersion':PLAN['notebookVersion'],'sourceMatchesFrozen':source['cells']==js(F/'notebook/starter.ipynb')['cells'],'executionStatus':'UNKNOWN in this read-only public-source check'}
 check('publicNotebook',notebookcheck)
 # Identity and large-HTML checks are measured, not inferred from syntax validation.
@@ -261,8 +272,35 @@ dump('doi-inventory.json',dois);dump('fetch-log.json',LOG)
 out('finalReadOnlyAuditUTC',datetime.datetime.now(datetime.timezone.utc).isoformat())
 
 
+
+# Preserve the exact user-approved positioning words and their CSV/Parquet forms.
+def protected_positioning():
+ hashes={
+  'enrichment/instruction_examples_fa_market_positioning.jsonl':'f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4',
+  'enrichment/positioning-strategy.json':'e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9',
+  'enrichment/market-positioning-evidence.json':'8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c',
+  'enrichment/instruction_examples_fa_market_positioning.csv':'2791d935640702021dbeff4664890c674204200fb84954828193659b3f01ac8c',
+  'viewer/positioning-examples.parquet':'1c4458b2ae1645eeab6a940b0529f8a00ebabc7d6cb8bf67afba5c0b1ff1f408'}
+ checked=[]
+ for label,root in [('site',L/'site'),('HF',L/'hf'),('Kaggle',kroot)]:
+  for name,digest in hashes.items():
+   if label=='site' and name.endswith(('.csv','.parquet')):continue
+   assert sha((root/name).read_bytes())==digest,('Protected positioning changed',label,name)
+   checked.append(label+'/'+name)
+ return {'protectedFiles':checked,'allWordsUnchanged':True}
+check('protectedPositioningWords',protected_positioning)
+def home_identity():
+ graph=js(L/'site/graph.jsonld');node=next(n for n in graph['@graph'] if n['@id']=='https://www.ghezelbaash.ir/webpage')
+ assert set(node['@type'])=={'ProfilePage','MedicalWebPage'}
+ assert node['mainEntity']=={'@id':'https://www.ghezelbaash.ir/#saeed-ghezelbash'}
+ return {'types':node['@type'],'mainEntity':node['mainEntity'],'fullGraphEntities':len(graph['@graph'])}
+check('homeProfileArchitecture',home_identity)
+
 print('ALL_READ_ONLY_AUDIT_FINISHED',flush=True)
 
+# Re-fetch final public record state after the full platform audit.
+public('api/zenodo-target.json','https://zenodo.org/api/records/23474664')
+dump('fetch-log.json',LOG)
 # Independently download every newly published Zenodo file against the immutable candidate.
 def zenodo_published():
  record=js(L/'api/zenodo-target.json');assert int(record['id'])==23474664
@@ -284,7 +322,7 @@ def zenodo_published():
  r=js(F/'zenodo-metadata.json')
  for field in ['description','version','title']:assert record['metadata'][field]==r[field],('Zenodo metadata',field)
  return {'status':'PASS','record':record['id'],'doi':DOI,'version':record['metadata']['version'],'files':files,'ZIPEntries':len(actual),'metadataMatchesFrozen':True}
-zenodo_http=next(item.get('status') for item in LOG if item['key']=='api/zenodo-target.json')
+zenodo_http=next(item.get('status') for item in reversed(LOG) if item['key']=='api/zenodo-target.json')
 if zenodo_http==404:
  out('ZenodoPublishedIntegrity',{'status':'PENDING','record':23474664,'doi':DOI,'reason':'Reserved target is not published in this snapshot; publication is gated on complete platform verification.'})
 else:check('ZenodoPublishedIntegrity',zenodo_published)
