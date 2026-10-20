@@ -1,0 +1,44 @@
+[
+  {
+    "originalPath": ".github/workflows/doi-release.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/doi-release.yml.txt",
+    "originalBlob": "b47631c0689f8429e2b7e7ccc6b21ace1ba5ac27",
+    "sha256": "365641821794621b2ba43b9ea38964e5f43265afd9507ec5aee7eb5fc148e48b",
+    "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  },
+  {
+    "originalPath": ".github/workflows/doi-finish.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/doi-finish.yml.txt",
+    "originalBlob": "ba011b94d5a396d7b0a2722f03469044e45b3a7f",
+    "sha256": "be544a6d8422c112700c7f8af788761d3401fde1faf689458fe98fc0dc6c8f7f",
+    "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  },
+  {
+    "originalPath": ".github/workflows/platform-convergence.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/platform-convergence.yml.txt",
+    "originalBlob": "0de488d624d144c866cca0a2f2a33e983494f587",
+    "sha256": "a72f0e0a77f28047910dbb1007fce066de9a4a43cd82b01bfbed532a9db3a8c5",
+    "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  },
+  {
+    "originalPath": ".github/workflows/notebook-api-guard.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/notebook-api-guard.yml.txt",
+    "originalBlob": "7f28320317ecff27c4e85c01fd3745706c630338",
+    "sha256": "e3f5300c98440dd40c2809631003c20b6ca8195fc58118a8671f126a90174f30",
+    "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  },
+  {
+    "originalPath": ".github/workflows/preserve-home-inline.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/preserve-home-inline.yml.txt",
+    "originalBlob": "da46d4e4162304afa3220187e66a5d84672f70c6",
+    "sha256": "153c2f6dc25bac5d982044aef1df4d380cbd81bd08dfd8320e01dc67685fedb2",
+    "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  },
+  {
+    "originalPath": ".github/workflows/protected-viewer-repair.yml",
+    "archivedPath": ".github/archive/workflows/2026-10-20/protected-viewer-repair.yml.txt",
+    "originalBlob": "d8ca0a79212860cb7adf04e186e702224aefdf25",
+    "sha256": "dd7dc734376670710d0af6ef4eb97b90460520df7556342d77106833970e862b",
+    "originalCommit": "3db15e6635ca47f19f1b368c1c9f2d8a08f7f6a9"
+  }
+]
