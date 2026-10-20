@@ -2,7 +2,7 @@ name: Preflight coordinated Viewer repair with protected home and positioning
 on:
   push:
     branches: [codex/preserve-home-positioning-viewer-repair]
-    paths-ignore: [.github/release-action.json]
+    paths: [src/**, build/**, package.json, package-lock.json, astro.config.mjs, .nvmrc]
   workflow_dispatch:
 permissions:
   contents: read

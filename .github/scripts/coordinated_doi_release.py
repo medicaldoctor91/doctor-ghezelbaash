@@ -209,6 +209,17 @@ def verify_site(work):
  conforms,_,report=validate(union,shacl_graph=rdflib.Graph().parse(live/'shapes.ttl',format='turtle'),advanced=True,inference='none');assert conforms,report
  return {'publicFilesDownloadedAndSha256Matched':len(public),'nonPublicDeploymentControls':{name:{'sha256':expected[name],'publicHTTP':404,'bytesSource':'frozen deployment artifact'} for name in sorted(controls)},'advancedFiveDocumentUnion':True,'sourceCommit':source}
 
+def checked_viewer_json(response,revision,label):
+ assert response.status_code==200, ('Viewer HTTP',label,response.status_code)
+ assert response.headers.get('X-Revision')==revision, ('Viewer cache revision',label,response.headers.get('X-Revision'),revision)
+ return response.json()
+
+def assert_viewer_export_rows(actual,expected,config):
+ assert set(actual.column_names)==set(expected.column_names), ('Viewer export fields',config)
+ encode=lambda rows:json.dumps(rows,ensure_ascii=False,sort_keys=True,separators=(',',':'))
+ assert encode(actual.select(expected.column_names).to_pylist())==encode(expected.to_pylist()), ('Viewer complete export rows differ',config)
+ return actual.num_rows
+
 def verify_hf(work):
  from urllib.parse import urlencode
  plan=json.loads((work/'release-plan.json').read_text());revision=plan['hfRevision']
@@ -219,20 +230,31 @@ def verify_hf(work):
  if not (work/'hf-bytes-verified.json').exists():
   with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:list(pool.map(fetch,expected.items()))
   dump(work/'hf-bytes-verified.json',{'revision':revision,'files':len(expected)})
- packaging=json.loads((work/'hf-stage/viewer/packaging.json').read_text());sizes=get('https://datasets-server.huggingface.co/size?'+urlencode({'dataset':HF})).json()
+ import io,pyarrow as pa,pyarrow.parquet as pq
+ base='https://datasets-server.huggingface.co/'
+ def endpoint(name,params):
+  return checked_viewer_json(get(base+name+'?'+urlencode(params)),revision,name)
+ packaging=json.loads((work/'hf-stage/viewer/packaging.json').read_text());sizes=endpoint('size',{'dataset':HF})
+ exports=endpoint('parquet',{'dataset':HF})
+ assert not exports.get('failed') and not exports.get('pending') and exports.get('partial') is False, ('Viewer incomplete processing',exports)
  counts={item['config']:item['num_rows'] for item in sizes['size']['configs']}
  evidence={}
  for config,spec in packaging['tables'].items():
   assert counts[config]==spec['rows'],('Viewer row count',config,counts[config])
-  params={'dataset':HF,'config':config,'split':'train'};base='https://datasets-server.huggingface.co/'
-  preview=get(base+'first-rows?'+urlencode(params)).json();assert preview['rows'],('Empty viewer',config)
-  rows=get(base+'rows?'+urlencode({**params,'offset':0,'length':2})).json();assert rows['rows']
-  stats=get(base+'statistics?'+urlencode(params)).json();assert 'statistics' in stats
+  shards=[x for x in exports.get('parquet_files',[]) if x.get('config')==config and x.get('split')=='train']
+  assert shards,('No complete Viewer export',config)
+  expected_table=pq.read_table(work/'hf-stage'/spec['file'])
+  actual_table=pa.concat_tables([pq.read_table(io.BytesIO(get(x['url']).content)) for x in shards])
+  converted_rows=assert_viewer_export_rows(actual_table,expected_table,config)
+  params={'dataset':HF,'config':config,'split':'train'}
+  preview=endpoint('first-rows',params);assert preview['rows'],('Empty viewer',config)
+  rows=endpoint('rows',{**params,'offset':0,'length':2});assert rows['rows']
+  stats=endpoint('statistics',params);assert 'statistics' in stats
   first=preview['rows'][0]['row'];field,value=next((k,v) for k,v in first.items() if isinstance(v,str) and v and len(v)<200)
-  search=get(base+'search?'+urlencode({**params,'query':value[:30]})).json();assert 'rows' in search
+  search=endpoint('search',{**params,'query':value[:30]});assert 'rows' in search
   quoted=value.replace("'","''")
-  filtered=get(base+'filter?'+urlencode({**params,'where':'"'+field+'"=\''+quoted+'\''})).json();assert filtered['rows'],('Viewer filter',config)
-  evidence[config]={'rows':counts[config],'preview':True,'viewer':True,'search':True,'filter':True,'statistics':True}
+  filtered=endpoint('filter',{**params,'where':'"'+field+'"=\''+quoted+'\''});assert filtered['rows'],('Viewer filter',config)
+  evidence[config]={'rows':counts[config],'completeConvertedRowsMatched':converted_rows,'responseRevisionVerified':True,'preview':True,'viewer':True,'search':True,'filter':True,'statistics':True}
  return {'revision':revision,'filesSha256Matched':len(expected),'viewer':evidence}
 
 def verify_kaggle(work):
@@ -326,4 +348,5 @@ def publish_all(work):
  dump(work/'coordinated-publication-report.json',report);print(json.dumps(report),flush=True)
 
 if __name__=='__main__':main()
+
 

@@ -1,0 +1,17 @@
+name: Verify exact Viewer revision and complete export guard
+on:
+  push:
+    branches: [codex/preserve-home-positioning-viewer-repair]
+    paths: [.github/scripts/coordinated_doi_release.py, tests/coordinated-doi-release.test.py, .github/workflows/viewer-revision-guard.yml]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests 'pyarrow==22.0.0' PyYAML
+      - run: python tests/coordinated-doi-release.test.py

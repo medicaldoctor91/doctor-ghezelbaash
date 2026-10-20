@@ -159,5 +159,25 @@ class Guards(unittest.TestCase):
    original=[json.loads(line) for line in source.read_text().splitlines()]
    self.assertEqual(len(rows),60)
    self.assertEqual([json.loads(row['messages']) for row in rows],[row['messages'] for row in original])
+
+ def test_viewer_success_requires_current_response_revision(self):
+  from types import SimpleNamespace
+  revision='a'*40
+  response=SimpleNamespace(status_code=200,headers={'X-Revision':revision},json=lambda:{'rows':[]})
+  self.assertEqual(release.checked_viewer_json(response,revision,'rows'),{'rows':[]})
+  for status,headers in [(200,{}),(200,{'X-Revision':'b'*40}),(501,{'X-Revision':revision})]:
+   bad=SimpleNamespace(status_code=status,headers=headers,json=lambda:{'rows':[]})
+   with self.assertRaises(AssertionError):release.checked_viewer_json(bad,revision,'rows')
+ def test_complete_viewer_export_rejects_missing_or_changed_late_rows(self):
+  import pyarrow as pa
+  expected=pa.Table.from_pylist([{'id':'a','text':'first'},{'id':'b','text':'late value'}])
+  self.assertEqual(release.assert_viewer_export_rows(expected.select(['text','id']),expected,'fixture'),2)
+  for actual in [expected.slice(0,1),pa.Table.from_pylist([{'id':'a','text':'first'},{'id':'b','text':'changed'}]),expected.select(['id']),expected.take(pa.array([1,0]))]:
+   with self.assertRaises(AssertionError):release.assert_viewer_export_rows(actual,expected,'fixture')
+ def test_viewer_export_preserves_scalar_value_types(self):
+  import pyarrow as pa
+  with self.assertRaises(AssertionError):
+   release.assert_viewer_export_rows(pa.Table.from_pylist([{'x':True}]),pa.Table.from_pylist([{'x':1}]),'fixture')
+
 if __name__=='__main__':unittest.main()
 
