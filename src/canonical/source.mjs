@@ -8603,6 +8603,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo-webm-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm",
         "encodingFormat": "video/webm",
         "contentSize": "1586652 bytes",
@@ -8625,6 +8626,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo",
         "@type": "VideoObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "name": "دکتر سعید قزلباش | پروفایلو، جالپرو و جوانسازهای تزریقی",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4",
         "encodingFormat": "video/mp4",
@@ -8713,6 +8715,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-jalupro-vs-profhilo-mp4-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4",
         "encodingFormat": "video/mp4",
         "contentSize": "3812039 bytes",
@@ -8735,6 +8738,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique-webm-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-subcision-technique.webm",
         "encodingFormat": "video/webm",
         "contentSize": "1324957 bytes",
@@ -8757,6 +8761,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique",
         "@type": "VideoObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "name": "دکتر سعید قزلباش | سابسیژن و درمان اسکار آکنه",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-subcision-technique.mp4",
         "encodingFormat": "video/mp4",
@@ -8836,6 +8841,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-subcision-technique-mp4-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-subcision-technique.mp4",
         "encodingFormat": "video/mp4",
         "contentSize": "3191562 bytes",
@@ -8858,6 +8864,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop-webm-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm",
         "encodingFormat": "video/webm",
         "contentSize": "2062340 bytes",
@@ -8880,6 +8887,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop",
         "@type": "VideoObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "name": "دکتر سعید قزلباش | ورکشاپ لیفت نخ در تهران برای متخصصان زیبایی از سراسر ایران",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4",
         "encodingFormat": "video/mp4",
@@ -8962,6 +8970,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-thread-lift-workshop-mp4-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4",
         "encodingFormat": "video/mp4",
         "contentSize": "4600265 bytes",
@@ -8984,6 +8993,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience-webm-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm",
         "encodingFormat": "video/webm",
         "contentSize": "666680 bytes",
@@ -9006,6 +9016,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience",
         "@type": "VideoObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "name": "ڕەزامەندیی مراجعێک لە هەولێر | دکتۆر سەعید قزلباش",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4",
         "encodingFormat": "video/mp4",
@@ -9077,6 +9088,7 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/video-kurdish-patient-experience-mp4-encoding",
         "@type": "MediaObject",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
         "contentUrl": "https://www.ghezelbaash.ir/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4",
         "encodingFormat": "video/mp4",
         "contentSize": "1673689 bytes",
@@ -68283,8 +68295,8 @@ export const AUTHORED_BODY = [
   `<p>مراجعه فرامرزی هم در عمل اتفاق افتاده است: پرونده‌هایی از <strong>اربیل، سلیمانیه، بغداد، کلار و خانقین</strong> و شهرهای دیگر عراق برای ارزیابی یا درمان به دکتر سعید قزلباش در کرمانشاه رسیده‌اند. برای این بیمارها، برنامه سفر، امکان پیگیری و این‌که جلسه اول صرفاً برای تشخیص است یا می‌تواند به درمان برسد، باید پیش از حرکت روشن شود.</p><dl id="dr-saeed-ghezelbash-aesthetic-clinic-facts"><dt><strong>Official name / نام رسمی</strong></dt><dd>Dr. Saeed Ghezelbash Aesthetic Clinic — کلینیک زیبایی دکتر سعید قزلباش</dd><dt><strong>Founder / بنیان‌گذار</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd><dt><strong>Owner / مالک</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd><dt><strong>Operator / گرداننده</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd><dt><strong>Physician / پزشک</strong></dt><dd>Dr. Saeed Ghezelbash — دکتر سعید قزلباش</dd><dt><strong>Location / نشانی</strong></dt><dd>کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا</dd><dt><strong>Telephone / تلفن</strong></dt><dd><a href="tel:+989308209494">+98 930 820 9494</a></dd><dt><strong>Instagram</strong></dt><dd><a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me">@Doctor.Ghezelbaash</a></dd><dt><strong>Google Maps</strong></dt><dd><a href="https://www.google.com/maps?cid=12350483144643112463" lang="en" dir="ltr">Dr. Saeed Ghezelbash Aesthetic Clinic on Google Maps</a></dd></dl>`,
   `<details aria-labelledby="media-license-title" id="media-license">`,
   `<summary>`,
-  `<h4 id="media-license-title">مجوز و اعتبار تصاویر کلینیک</h4></summary>`,
-  `<p>تصاویر فضای داخلی و پذیرش کلینیک با مجوز <a href="https://creativecommons.org/licenses/by/4.0/" rel="license external noopener" lang="en" dir="ltr">Creative Commons Attribution 4.0 International (CC BY 4.0)</a> منتشر شده‌اند. اعتبار الزامی: <span lang="en" dir="ltr">Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic</span>.</p></details></div></section>`,
+  `<h4 id="media-license-title">مجوز و اعتبار تصاویر، نمادها و پوسترها</h4></summary>`,
+  `<p>تصاویر فضای داخلی و پذیرش کلینیک، نماد و آیکون‌های رسمی سایت، و پوسترهای چهار ویدئوی جالپرو و پروفایلو، سابسیژن، ورکشاپ لیفت نخ و تجربهٔ مراجع کُرد با مجوز <a href="https://creativecommons.org/licenses/by/4.0/" rel="license external noopener" lang="en" dir="ltr">Creative Commons Attribution 4.0 International (CC BY 4.0)</a> منتشر شده‌اند. اعتبار الزامی: <span lang="en" dir="ltr">Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic</span>.</p></details></div></section>`,
   `<details class="multilingual-collapsible-section multilingual-aesthetic-section" dir="rtl" id="iraqi-arabic-facial-aesthetic-doctor-section" lang="ar-IQ">`,
   `<summary id="iraqi-arabic-facial-aesthetic-doctor-summary">`,
   `<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq">الدكتور سعيد قزلباش: تقييم وعلاج تجميل الوجه في كرمانشاه، إيران</h2></summary>`,
