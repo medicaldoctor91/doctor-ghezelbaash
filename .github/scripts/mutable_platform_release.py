@@ -211,9 +211,33 @@ def publish(w):
  gates.retry(w,'hf',lambda:gates.verify_hf(w),attempts=18)
  guard_frozen(w);dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
 
+def complete_notebook(w):
+ """Only notebook may be written; independent runtime faults stay visible."""
+ plan=load(w/'release-plan.json');guard_frozen(w)
+ assert sha(w/'frozen-sha256.json')=='0a4eff9164fa8ba76604e2cd4588cf644b48beed0ba9084fe0eeb389dabfb5fd'
+ assert plan['sourceCommit']=='bbda1167e1ed05bda5e8a600b1ad4a9547629489'
+ assert plan['hfRevision']=='b3bf6162c411f924b1f70dee372e17c337397568'
+ assert plan['kaggleVersion']==26 and plan['notebookVersion']==11 and plan['archiveWrites'] is False
+ assert load(w/'preflight-report.json')['status']=='PASS'
+ state=snapshot(w/'notebook-before');client=kaggle_client()
+ assert state['siteSource']==plan['sourceCommit'] and state['hfRevision']==plan['hfRevision']
+ assert state['kaggleOwner']=={'version':26,'status':'ready'} and state['kagglePublicDefault']==26
+ assert state['notebookVersion'] in {10,11}
+ gates.get=fresh_viewer_reads(w,gates.get)
+ core={}
+ core['site']=gates.verify_site(w)
+ core['kaggle']=gates.verify_kaggle(w)
+ core['hf']=gates.verify_hf(w,runtime_features=False)
+ guard_frozen(w);dump(w/'notebook-core-preflight.json',core)
+ proof=gates.publish_notebook(w,client)
+ guard_frozen(w)
+ dump(w/'notebook-completion-report.json',{'status':'PASS','scope':'notebook completion and core alignment; not overall runtime health','proof':proof,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'mediaDelivery':'independent canonical partial digest defect; Cloudflare Rules access denied','searchFilter':'deferred per explicit user instruction'})
+ print('FROZEN NOTEBOOK COMPLETE; RUNTIME HEALTH REPORTED SEPARATELY',flush=True)
+
 def main():
- p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
+ p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','complete-notebook']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
  if a.operation=='inspect':snapshot(a.root)
  elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK'])})
+ elif a.operation=='complete-notebook':complete_notebook(a.root)
  else:publish(a.root)
 if __name__=='__main__':main()

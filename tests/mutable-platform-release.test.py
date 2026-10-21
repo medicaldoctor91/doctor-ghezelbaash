@@ -35,6 +35,23 @@ class Tests(unittest.TestCase):
   workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
   self.assertIn('Restore exact validated bytes without rebuild',workflow)
   self.assertNotIn('zenodo-only',workflow)
+class NotebookOnlyTests(unittest.TestCase):
+ def test_only_notebook_writer_is_reachable_directly(self):
+  tree=ast.parse((ROOT/'.github/scripts/mutable_platform_release.py').read_text())
+  fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='complete_notebook')
+  calls=[ast.unparse(n.func) for n in ast.walk(fn) if isinstance(n,ast.Call)]
+  for forbidden in ['publish','preflight','subprocess.run','client.dataset_create_version','client.dataset_metadata_update','verify_media']:
+   self.assertNotIn(forbidden,calls)
+  self.assertIn('gates.publish_notebook',calls)
+ def test_data_integrity_failure_blocks_notebook(self):
+  plan={'sourceCommit':'bbda1167e1ed05bda5e8a600b1ad4a9547629489','hfRevision':'b3bf6162c411f924b1f70dee372e17c337397568','kaggleVersion':26,'notebookVersion':11,'archiveWrites':False}
+  state={'siteSource':plan['sourceCommit'],'hfRevision':plan['hfRevision'],'kaggleOwner':{'version':26,'status':'ready'},'kagglePublicDefault':26,'notebookVersion':10}
+  with tempfile.TemporaryDirectory() as folder,patch.object(release,'load',side_effect=[plan,{'status':'PASS'}]),patch.object(release,'sha',return_value='0a4eff9164fa8ba76604e2cd4588cf644b48beed0ba9084fe0eeb389dabfb5fd'),patch.object(release,'guard_frozen'),patch.object(release,'snapshot',return_value=state),patch.object(release,'kaggle_client'),patch.object(release.gates,'verify_site',side_effect=AssertionError('bytes differ')),patch.object(release.gates,'publish_notebook') as push:
+   with self.assertRaisesRegex(AssertionError,'bytes differ'):release.complete_notebook(Path(folder))
+   push.assert_not_called()
+ def test_runtime_default_remains_strict(self):
+  import inspect
+  self.assertIs(inspect.signature(release.gates.verify_hf).parameters['runtime_features'].default,True)
 class FreshViewerTests(unittest.TestCase):
  def test_query_refresh_retains_all_original_api_parameters(self):
   response=Mock(status_code=200,content=b'{"rows":[]}',headers={'X-Revision':'current'},url='https://datasets-server.huggingface.co/rows?live_audit=1')
