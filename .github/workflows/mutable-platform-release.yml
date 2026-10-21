@@ -1,0 +1,95 @@
+name: Validate and align mutable website HF Kaggle notebook
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [inspect, preflight, publish]
+        required: true
+      reviewed_commit: {type: string, required: true}
+      candidate_run: {type: string, required: false}
+      baseline_hf: {type: string, required: false}
+      baseline_site: {type: string, required: false}
+      baseline_kaggle: {type: string, required: false}
+      baseline_notebook: {type: string, required: false}
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      BASELINE_HF: ${{ inputs.baseline_hf }}
+      BASELINE_SITE: ${{ inputs.baseline_site }}
+      BASELINE_KAGGLE: ${{ inputs.baseline_kaggle }}
+      BASELINE_NOTEBOOK: ${{ inputs.baseline_notebook }}
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - run: test "$GITHUB_SHA" = '${{ inputs.reviewed_commit }}'
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install validation and platform dependencies
+        run: python -m pip install requests 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - name: Build and validate candidate before any platform write
+        if: inputs.operation == 'preflight'
+        run: |
+          npm ci
+          node --test tests/*.test.mjs
+          npm run build
+          python tests/coordinated-doi-release.test.py
+          python tests/platform-bundle-sync.test.py
+          python tests/platform-publication.test.py
+          python tests/mutable-platform-release.test.py
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+      - uses: actions/download-artifact@v4
+        if: inputs.operation == 'publish'
+        with:
+          name: frozen-mutable-candidate
+          run-id: ${{ inputs.candidate_run }}
+          github-token: ${{ github.token }}
+          path: /tmp/mutable-artifact
+      - name: Restore exact validated bytes without rebuild
+        if: inputs.operation == 'publish'
+        run: |
+          tar -xzf /tmp/mutable-artifact/candidate.tar.gz -C /tmp
+          python - <<'PY'
+          import json,subprocess,os
+          p=json.load(open('/tmp/mutable-release/release-plan.json'))
+          assert p['archiveWrites'] is False
+          subprocess.run(['git','merge-base','--is-ancestor',p['sourceCommit'],os.environ['GITHUB_SHA']],check=True)
+          subprocess.run(['git','diff','--quiet',p['sourceCommit'],os.environ['GITHUB_SHA'],'--','src','public','build','package.json','package-lock.json','astro.config.mjs'],check=True)
+          PY
+      - name: Inspect, freeze or publish only the requested mutable distributions
+        run: python .github/scripts/mutable_platform_release.py '${{ inputs.operation }}'
+      - name: Preserve exact preflight inputs and HF commit object
+        if: inputs.operation == 'preflight' && success()
+        run: tar -czf /tmp/candidate.tar.gz -C /tmp mutable-release
+      - uses: actions/upload-artifact@v4
+        if: inputs.operation == 'preflight' && success()
+        with:
+          name: frozen-mutable-candidate
+          path: /tmp/candidate.tar.gz
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutable-release-evidence
+          path: |
+            /tmp/mutable-release/*.json
+            /tmp/mutable-release/*.log
+          if-no-files-found: warn
