@@ -35,6 +35,16 @@ class Tests(unittest.TestCase):
   workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
   self.assertIn('Restore exact validated bytes without rebuild',workflow)
   self.assertNotIn('zenodo-only',workflow)
+class PreviewSchemaTests(unittest.TestCase):
+ def test_real_bounded_preview_without_partial_is_valid(self):
+  rows=[{'example_id':'positioning-001'},{'example_id':'positioning-002'}]
+  preview={'dataset':'d','config':'market_positioning','split':'train','features':[],'truncated':True,'rows':[{'row_idx':0,'row':rows[0],'truncated_cells':[]}]}
+  self.assertEqual(release.gates.assert_viewer_preview_rows(preview,rows,'market_positioning'),1)
+  for change in [{'row':{'example_id':'wrong'}},{'truncated_cells':['example_id']},{'row_idx':9}]:
+   bad={**preview,'rows':[{**preview['rows'][0],**change}]}
+   with self.assertRaises(AssertionError):release.gates.assert_viewer_preview_rows(bad,rows,'market_positioning')
+ def test_search_still_requires_explicit_nonpartial(self):
+  with self.assertRaises(AssertionError):release.gates.assert_viewer_result_rows({'rows':[{'row_idx':0,'row':{'x':'a'}}]},[{'x':'a'}],'c','search')
 class NotebookOnlyTests(unittest.TestCase):
  def test_only_notebook_writer_is_reachable_directly(self):
   tree=ast.parse((ROOT/'.github/scripts/mutable_platform_release.py').read_text())

@@ -238,6 +238,13 @@ def assert_viewer_result_rows(result,expected,config,label):
   assert encode(row.get('row'))==encode(expected[index]), ('Viewer result differs from frozen row',config,label,index)
  return len(rows)
 
+def assert_viewer_preview_rows(result,expected,config):
+ # /first-rows has a bounded preview schema, not the search partial flag.
+ # Global truncated means the preview omits later rows; individual cells must
+ # still be complete and every provided row must match its frozen row index.
+ assert isinstance(result.get('truncated'),bool), ('Preview truncated flag',config)
+ return assert_viewer_result_rows({**result,'partial':False},expected,config,'preview')
+
 def verify_hf(work, runtime_features=True):
  from urllib.parse import urlencode
  plan=json.loads((work/'release-plan.json').read_text());revision=plan['hfRevision']
@@ -269,7 +276,7 @@ def verify_hf(work, runtime_features=True):
   preview=endpoint('first-rows',params);assert preview['rows'],('Empty viewer',config)
   rows=endpoint('rows',{**params,'offset':0,'length':2});assert rows['rows']
   stats=endpoint('statistics',params);assert 'statistics' in stats
-  assert_viewer_result_rows(preview,expected_rows,config,'preview')
+  assert_viewer_preview_rows(preview,expected_rows,config)
   assert_viewer_result_rows(rows,expected_rows,config,'rows')
   if not runtime_features:
    evidence[config]={'rows':counts[config],'completeConvertedRowsMatched':converted_rows,'responseRevisionVerified':True,'preview':True,'viewer':True,'statistics':True,'search':'deferred per user','filter':'deferred per user'}
