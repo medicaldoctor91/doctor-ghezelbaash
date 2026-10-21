@@ -43,19 +43,25 @@ export function createMediaRangeWorker(media,policy={}){
   if(url.hostname==='doctor-ghezelbaash.pages.dev'||url.hostname.endsWith('.doctor-ghezelbaash.pages.dev'))headers.set('X-Robots-Tag','noindex');
   const modified=Date.parse(headers.get('Last-Modified')??'');
   const since=Date.parse(request.headers.get('If-Modified-Since')??'');
+  // Empty responses must not inherit the full body's Content-Digest (RFC 9530).
   if((noneMatch&&noneMatch.split(',').some(tag=>tag.trim()==='*'||tag.trim().replace(/^W\//,'')===etag))||(!noneMatch&&Number.isFinite(modified)&&Number.isFinite(since)&&modified<=since)){
-   discard(asset);headers.delete('Content-Length');headers.delete('Content-Range');
+   discard(asset);headers.delete('Content-Length');headers.delete('Content-Range');headers.delete('Content-Digest');
    return new Response(null,{status:304,headers});
   }
-  if(request.method==='HEAD'){discard(asset);return new Response(null,{headers});}
+  if(request.method==='HEAD'){discard(asset);headers.delete('Content-Digest');return new Response(null,{headers});}
   const ifRange=request.headers.get('If-Range'),rangeDate=Date.parse(ifRange??'');
   const permitted=!ifRange||ifRange===etag||(Number.isFinite(modified)&&Number.isFinite(rangeDate)&&modified<=rangeDate);
   const range=permitted?rangeFor(request.headers.get('Range'),meta.bytes):null;
   if(!range)return new Response(asset.body,{headers});
-  if(range.unsatisfied){discard(asset);headers.set('Content-Range',`bytes */${meta.bytes}`);headers.set('Content-Length','0');return new Response(null,{status:416,headers});}
+  if(range.unsatisfied){discard(asset);headers.delete('Content-Digest');headers.set('Content-Range',`bytes */${meta.bytes}`);headers.set('Content-Length','0');return new Response(null,{status:416,headers});}
   const {start,end}=range,bytes=await asset.arrayBuffer();
   headers.set('Content-Range',`bytes ${start}-${end}/${meta.bytes}`);
   headers.set('Content-Length',String(end-start+1));
-  return new Response(bytes.slice(start,end+1),{status:206,headers});
+  const content=bytes.slice(start,end+1);
+  // RFC 9530: Content-Digest covers this message's content, not the full
+  // representation. Replace inherited digests, including legacy cache headers.
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',content));
+  headers.set('Content-Digest',`sha-256=:${btoa(String.fromCharCode(...digest))}:`);
+  return new Response(content,{status:206,headers});
  }};
 }
