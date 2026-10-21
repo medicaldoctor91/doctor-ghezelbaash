@@ -51,6 +51,11 @@ def seal_kg(stage):
  excluded={'checksums.sha256','dataset-metadata.json','kernel-metadata.json'}
  (stage/'checksums.sha256').write_text(''.join(h+'  '+n+'\n' for n,h in inventory(stage).items() if n not in excluded))
 
+def mutable_context(source):
+ ctx=context(source,'0')
+ ctx.update(coordinated_release=True,publication_scope=['website','hf','kaggle','notebook'],archived_snapshots_updated=False,run_url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,notebook='https://www.kaggle.com/code/'+gates.NB)
+ return ctx
+
 def preflight(w,expected):
  state=snapshot(w);assert state['hfRevision']==expected['hfRevision'];assert state['siteSource']==expected['siteSource'];assert state['kaggleOwner']=={'version':expected['kaggleVersion'],'status':'ready'};assert state['notebookVersion']==expected['notebookVersion'];assert state['kagglePublicDefault']==expected['kaggleVersion']
  # Freeze a truthful boundary: no reserve/publish/edit of the pending DOI.
@@ -74,7 +79,7 @@ def preflight(w,expected):
  kg_before=w/'kaggle-before';(w/'kaggle-before.zip').write_bytes(read('https://www.kaggle.com/api/v1/datasets/download/'+KAGGLE_REF+'?datasetVersionNumber='+str(expected['kaggleVersion'])).content);extract_package(w/'kaggle-before.zip',kg_before)
  for line in (kg_before/'checksums.sha256').read_text().splitlines():h,n=line.split('  ',1);assert sha(kg_before/n)==h
  assert load(kg_before/'kaggle-manifest.json')['desired_kaggle_version']==expected['kaggleVersion']
- ctx=context(source,'0');ctx.update(coordinated_release=True,publication_scope=['website','hf','kaggle','notebook'],archived_snapshots_updated=False,run_url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source)
+ ctx=mutable_context(source)
  # Preserve archive source metadata; mutable source provenance has its own fields.
  import platform_bundle
  platform_bundle.DOI_POLICY=load(ROOT/'src/canonical/doi-policy.json')

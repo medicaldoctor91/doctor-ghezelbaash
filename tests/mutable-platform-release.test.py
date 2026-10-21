@@ -4,6 +4,18 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'.github/scripts'))
 import mutable_platform_release as release
 class Tests(unittest.TestCase):
+ def test_scope_includes_notebook_distribution(self):
+  import tempfile
+  from platform_bundle import common_release, dump, load
+  ctx=release.mutable_context('a'*40)
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);dump(root/'datapackage.json',{'edition':'2026-10-18','version':'1.3.4'})
+   common_release(root,ctx)
+   matrix=load(root/'current-release-matrix.json')
+  self.assertEqual(set(matrix['publicationScope']),{'website','hf','kaggle','notebook'})
+  self.assertEqual(set(matrix['distributions']),set(matrix['publicationScope']))
+  self.assertEqual(matrix['distributions']['notebook'],'https://www.kaggle.com/code/'+release.gates.NB)
+  self.assertFalse(matrix['archivedSnapshotsUpdated'])
  def test_reserved_archive_not_claimed_published(self):
   text='Use the assigned exact DOI to cite this coordinated archive.'
   self.assertIn('reserved',release.archive_scope(text));self.assertNotIn('cite this coordinated archive',release.archive_scope(text))
