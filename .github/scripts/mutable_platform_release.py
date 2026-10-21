@@ -168,6 +168,20 @@ def verify_media(w):
   out[path]={'fullSHA256':meta['sha256'],'partialChecks':checks,'HEAD304416':True}
  return out
 
+def fresh_viewer_reads(work,original):
+ """Refresh Viewer API cache keys only; retain all revision/row/type gates."""
+ from urllib.parse import urlsplit
+ def fresh(url):
+  if urlsplit(url).netloc!='datasets-server.huggingface.co':return original(url)
+  token=str(time.time_ns())
+  r=requests.get(url,params={'live_audit':token},headers={'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache','Accept-Encoding':'identity'},timeout=90)
+  folder=Path(work)/'viewer-response-evidence';folder.mkdir(exist_ok=True)
+  name=token+'-'+urlsplit(url).path.strip('/').replace('/','-')
+  (folder/(name+'.body')).write_bytes(r.content)
+  dump(folder/(name+'.json'),{'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'requestedURL':url,'finalURL':r.url,'status':r.status_code,'headers':dict(r.headers),'bytes':len(r.content),'sha256':hashlib.sha256(r.content).hexdigest()})
+  r.raise_for_status();return r
+ return fresh
+
 def publish(w):
  plan=load(w/'release-plan.json');assert plan['candidateSchema']=='mutable-distributions-1' and plan['archiveWrites'] is False;guard_frozen(w);assert load(w/'preflight-report.json')['status']=='PASS'
  state=snapshot(w/'publication-before');client=kaggle_client();assert state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']};assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']};assert state['kaggleOwner']['version'] in {plan['kagglePreviousVersion'],plan['kaggleVersion']}
@@ -193,6 +207,7 @@ def publish(w):
  gates.retry(w,'kaggle-owner-ready',metadata_after_ready,attempts=12)
  gates.retry(w,'kaggle',lambda:gates.verify_kaggle(w),attempts=90)
  gates.publish_notebook(w,client)
+ gates.get=fresh_viewer_reads(w,gates.get)
  gates.retry(w,'hf',lambda:gates.verify_hf(w),attempts=18)
  guard_frozen(w);dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
 

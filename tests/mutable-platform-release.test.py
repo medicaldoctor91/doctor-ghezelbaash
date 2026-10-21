@@ -1,5 +1,6 @@
 """Guards for the non-archival maintenance path; no platform requests."""
-import ast,importlib.util,json,sys,unittest
+import ast,importlib.util,json,sys,unittest,tempfile
+from unittest.mock import Mock,patch
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'.github/scripts'))
 import mutable_platform_release as release
@@ -34,4 +35,21 @@ class Tests(unittest.TestCase):
   workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
   self.assertIn('Restore exact validated bytes without rebuild',workflow)
   self.assertNotIn('zenodo-only',workflow)
+class FreshViewerTests(unittest.TestCase):
+ def test_query_refresh_retains_all_original_api_parameters(self):
+  response=Mock(status_code=200,content=b'{"rows":[]}',headers={'X-Revision':'current'},url='https://datasets-server.huggingface.co/rows?live_audit=1')
+  with tempfile.TemporaryDirectory() as folder,patch.object(release.requests,'get',return_value=response) as get,patch.object(release.time,'time_ns',side_effect=[11,12]):
+   original=Mock();read=release.fresh_viewer_reads(folder,original);url='https://datasets-server.huggingface.co/rows?dataset=d&config=c&split=train&offset=0&length=2'
+   self.assertIs(read(url),response);self.assertIs(read(url),response)
+   self.assertEqual([c.kwargs['params']['live_audit'] for c in get.call_args_list],['11','12'])
+   self.assertTrue(all(c.args==(url,) for c in get.call_args_list));self.assertIn('no-store',get.call_args.kwargs['headers']['Cache-Control']);original.assert_not_called()
+ def test_kaggle_download_never_receives_unknown_parameters(self):
+  with tempfile.TemporaryDirectory() as folder,patch.object(release.requests,'get') as get:
+   original=Mock(return_value='unchanged');url='https://www.kaggle.com/api/v1/datasets/download/o/d?datasetVersionNumber=26'
+   self.assertEqual(release.fresh_viewer_reads(folder,original)(url),'unchanged');original.assert_called_once_with(url);get.assert_not_called()
+ def test_transport_failure_still_raises_and_saves_evidence(self):
+  response=Mock(status_code=500,content=b'{"error":"index loading"}',headers={},url='https://datasets-server.huggingface.co/search');response.raise_for_status.side_effect=release.requests.HTTPError('500')
+  with tempfile.TemporaryDirectory() as folder,patch.object(release.requests,'get',return_value=response):
+   with self.assertRaises(release.requests.HTTPError):release.fresh_viewer_reads(folder,Mock())(response.url)
+   self.assertEqual(len(list((Path(folder)/'viewer-response-evidence').glob('*.json'))),1)
 if __name__=='__main__':unittest.main()
