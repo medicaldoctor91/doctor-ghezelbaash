@@ -38,7 +38,7 @@ jobs:
         with: {node-version-file: .nvmrc, cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - run: python -m pip install requests
+      - run: python -m pip install requests 'kaggle==2.2.4'
       - name: Build and test all release inputs
         if: inputs.operation == 'preflight'
         run: |
