@@ -204,6 +204,31 @@ class Guards(unittest.TestCase):
    with self.assertRaises(AssertionError):release.assert_viewer_result_rows(broken,expected,'fixture','search')
 
 class StagedPublishGuards(unittest.TestCase):
+ def test_bucket_timeout_recovers_from_inventory_without_another_upload(self):
+  import doi_release,hashlib
+  from unittest.mock import Mock
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'data.json';path.write_bytes(b'frozen')
+   spec={'path':str(path),'md5':hashlib.md5(b'frozen').hexdigest(),'sha256':hashlib.sha256(b'frozen').hexdigest()}
+   session=Mock();session.put.side_effect=doi_release.requests.Timeout('ambiguous')
+   session.get.return_value.json.return_value=[{'filename':'data.json','checksum':spec['md5']}]
+   self.assertEqual(doi_release.upload_draft_file(session,'https://zenodo.org/api/deposit/depositions/23474664','https://zenodo.org/api/files/bucket','data.json',spec),'data.json')
+   session.post.assert_not_called();self.assertEqual(session.put.call_count,1)
+ def test_multipart_fallback_reads_remote_inventory_and_never_publishes(self):
+  import doi_release,hashlib
+  from unittest.mock import Mock
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'data.json';path.write_bytes(b'frozen')
+   spec={'path':str(path),'md5':hashlib.md5(b'frozen').hexdigest(),'sha256':hashlib.sha256(b'frozen').hexdigest()}
+   session=Mock();bad=Mock(status_code=504);bad.raise_for_status.side_effect=doi_release.requests.HTTPError(response=bad);session.put.return_value=bad
+   missing=Mock();missing.json.return_value=[]
+   draft=Mock();draft.json.return_value={'submitted':False}
+   present=Mock();present.json.return_value=[{'filename':'data.json','checksum':spec['md5']}]
+   session.get.side_effect=[missing,draft,present];session.post.return_value.status_code=201
+   doi_release.upload_draft_file(session,'https://zenodo.org/api/deposit/depositions/23474664','https://zenodo.org/api/files/bucket','data.json',spec)
+   self.assertEqual(session.post.call_count,1)
+   self.assertEqual(session.post.call_args.args[0],'https://zenodo.org/api/deposit/depositions/23474664/files')
+   self.assertEqual(session.post.call_args.kwargs['data'],{'name':'data.json'})
  def test_unstaged_draft_never_reaches_publish_post(self):
   import doi_release
   from unittest.mock import patch,Mock

@@ -132,18 +132,16 @@ def stage(previous, work):
                 response=session.delete(dep+'/files/'+str(item['id']),timeout=60);response.raise_for_status()
         response=session.get(dep+'/files',timeout=60);response.raise_for_status()
         present={item.get('filename') or item.get('key'):item.get('checksum','').removeprefix('md5:') for item in response.json()}
+        print(json.dumps({'stageRecord':record,'existingMatchingFiles':sum(present.get(key)==spec['md5'] for key,spec in payload['files'].items()),'expectedFiles':len(payload['files'])}),flush=True)
         bucket=draft['links']['bucket'];assert bucket.startswith(base+'files/')
         def upload(item):
             key,spec=item
             if present.get(key)==spec['md5']:return key
-            path=Path(spec['path']);assert hashlib.sha256(path.read_bytes()).hexdigest()==spec['sha256']
-            with path.open('rb') as stream:
-                response=requests.put(bucket+'/'+quote(key,safe=''),data=stream,headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN'],'Content-Type':'application/octet-stream'},timeout=240)
-            response.raise_for_status()
-            return key
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(upload,payload['files'].items()))
+            return upload_draft_file(session,dep,bucket,key,spec,prefer_multipart=True)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:list(pool.map(upload,payload['files'].items()))
         response=session.get(dep+'/files',timeout=60);response.raise_for_status()
         actual={item.get('filename') or item.get('key'):item.get('checksum','').removeprefix('md5:') for item in response.json()}
+        assert len(response.json())==len(payload['files']),'Duplicate staged filenames'
         assert actual=={key:spec['md5'] for key,spec in payload['files'].items()}, 'Draft file inventory differs'
         md=draft['metadata'];md.update(upload_type='dataset',version=p['currentArchive']['packagingVersion'],doi=p['currentArchive']['doi'])
         md['description']=('<p><strong>مجموعهٔ عمومی و آخرین نسخه / Public collection and latest version:</strong> <a href="'+p['concept']['url']+'">'+p['concept']['doi']+'</a>.</p>'
@@ -163,6 +161,47 @@ def stage(previous, work):
         return report
     verify_published(previous,work)
     return {'status':'PASS','record':record,'alreadyPublished':True}
+
+
+def upload_draft_file(session, dep, bucket, key, spec, *, prefer_multipart=False):
+    """Recover an ambiguous bucket upload by inventory before using official multipart API."""
+    path=Path(spec['path']);assert hashlib.sha256(path.read_bytes()).hexdigest()==spec['sha256']
+    def present():
+        response=session.get(dep+'/files',timeout=60);response.raise_for_status()
+        matches=[f for f in response.json() if (f.get('filename') or f.get('key'))==key]
+        assert len(matches)<=1,('Duplicate draft filename',key)
+        if not matches:return False
+        assert matches[0].get('checksum','').removeprefix('md5:')==spec['md5'],('Unexpected remote draft bytes',key)
+        return True
+    status=None
+    if not prefer_multipart:
+        try:
+            with path.open('rb') as stream:
+                response=session.put(bucket+'/'+quote(key,safe=''),data=stream,headers={'Content-Type':'application/octet-stream'},timeout=240)
+            response.raise_for_status()
+            return key
+        except requests.RequestException as error:
+            status=getattr(getattr(error,'response',None),'status_code',None)
+            if status not in {None,500,502,503,504}:raise
+    # Inventory is authoritative after any ambiguous upload. The small frozen
+    # files also support Zenodo's documented multipart endpoint, which avoids
+    # the repeated gateway failures observed on this record's bucket route.
+    if present():
+        print(json.dumps({'recoveredDraftUpload':key,'serverMD5Verified':True}),flush=True)
+        return key
+    assert path.stat().st_size<=100*1024*1024,'Multipart API file limit'
+    state=session.get(dep,timeout=60);state.raise_for_status()
+    assert state.json().get('submitted') is False,'Archive was published outside staging'
+    print(json.dumps({'multipartUpload':key,'previousHTTP':status}),flush=True)
+    with path.open('rb') as stream:
+        response=session.post(dep+'/files',data={'name':key},files={'file':(key,stream,'application/octet-stream')},timeout=240)
+    if response.status_code>=400:
+        # Never repeat an ambiguous multipart POST; recover by server inventory.
+        if present():return key
+        response.raise_for_status()
+    assert present(),('Multipart upload not confirmed',key)
+    return key
+
 
 
 def verify_staged(work, *, session=None):
