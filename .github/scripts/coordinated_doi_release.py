@@ -33,6 +33,7 @@ def inspect(work):
  r=requests.get('https://zenodo.org/api/deposit/depositions/23474664',headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN']},timeout=60);r.raise_for_status();d=r.json()
  doi=d.get('doi') or d.get('metadata',{}).get('prereserve_doi',{}).get('doi')
  assert doi==P['currentArchive']['doi'] and str(d['conceptrecid'])=='18765168'
+ dump(work/'zenodo-owner-metadata-observation.json',d.get('metadata',{}))
  result={'record':d['id'],'reservedDoi':doi,'submitted':d.get('submitted'),'state':d.get('state'),'files':len(d.get('files',[])),
  'draftFiles':[{'name':f.get('filename') or f.get('key'),'checksum':f.get('checksum'),'bytes':f.get('filesize') or f.get('size'),'download':next((v.split('?')[0] for k,v in f.get('links',{}).items() if k in {'download','content'}),None)} for f in d.get('files',[])],
  'draftMetadataSHA256':hashlib.sha256(json.dumps(d.get('metadata',{}),sort_keys=True,ensure_ascii=False).encode()).hexdigest(),
