@@ -56,7 +56,7 @@ def build_archive(hf, previous_archive, output, source_commit):
     current = DOI_POLICY['currentArchive']
     text = '# Dr. Saeed Ghezelbash — DOI-policy aligned Dataset archive\n\n'
     text += 'Public collection and latest version: '+DOI_POLICY['concept']['url']+'\n\n'
-    text += 'Exact release binding (reserved before publication; availability verified by external receipts): '+current['url']+'; packaging version **'+current['packagingVersion']+'**; content baseline **'+current['contentBaseline']+'**.\n\n'
+    text += 'Exact reproducible snapshot (publication availability verified by external receipts): '+current['url']+'; packaging version **'+current['packagingVersion']+'**; content baseline **'+current['contentBaseline']+'**.\n\n'
     text += 'Canonical Dataset IRI: '+DOI_POLICY['canonicalDatasetIri']+'. The physician, clinic, canonical dataset, Concept DOI and exact archive are distinct resources.\n\n'
     text += 'Source commit: `'+source_commit+'`. Every current archive descriptor binds file downloads to this record and its own measured files. `upstream/` preserves historical input descriptors and receipts without modifications. Historical training messages retain their labelled historical DOI references.\n\n'
     text += 'Hugging Face: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data\n\nKaggle: https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data\n\nNotebook: https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter\n'

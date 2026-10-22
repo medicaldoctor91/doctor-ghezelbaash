@@ -1,5 +1,11 @@
+import {execFileSync} from 'node:child_process';
 import policyTemplate from '../canonical/doi-policy.json' with {type: 'json'};
 const DOI_POLICY = structuredClone(policyTemplate);
+if (DOI_POLICY.currentArchive.sourceCommitMode === 'build-source') {
+  const sourceCommit = process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], {cwd: new URL('../..', import.meta.url), encoding: 'utf8'}).trim();
+  if (!/^[a-f0-9]{40}$/.test(sourceCommit)) throw new Error('Invalid archive build source commit');
+  DOI_POLICY.currentArchive.sourceCommit = sourceCommit;
+}
 export {DOI_POLICY};
 
 export function applyDoiPolicy(source) {
@@ -28,7 +34,7 @@ export function applyDoiPolicy(source) {
        name: 'Dr. Saeed Ghezelbash — exact Zenodo snapshot ' + archive.packagingVersion,
        identifier: archive.doi, version: archive.packagingVersion, url: archive.url,
        creator: person, license: dataset.license, about: ref(datasetIri),
-       description: 'Exact archive binding, reserved before publication, for content baseline ' + archive.contentBaseline + '; source commit ' + archive.sourceCommit + '. Current website and platform distributions record their own source revisions.',
+       description: 'Exact reproducible snapshot binding for content baseline ' + archive.contentBaseline + '; source commit ' + archive.sourceCommit + '. Current website and platform distributions record their own source revisions.',
        'dcterms:isVersionOf': ref(concept.url), 'dcat:isVersionOf': ref(concept.url),
        'prov:wasDerivedFrom': ref('https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/' + archive.sourceCommit)});
   const distribution = source.canonicalOrigin + '/project-zenodo-current-release';

@@ -16,11 +16,11 @@
     "contentBaseline": "1.3.4",
     "edition": "2026-10-18",
     "role": "current_exact",
-    "meaning": "Exact release binding reserved before publication; archive availability is verified by external publication receipts. Mutable distributions record their own revisions.",
-    "sourceCommitReference": "archive-provenance.json#/sourceCommit",
-    "sourceCommit": "b753b84011256f13c4badb21af888e92282565dd",
-    "inputBaselineHfRevision": "47699e7fc8bad2df2c6d90dcfb9da72278aba28d",
-    "bindingStatus": "reserved-before-publication"
+    "meaning": "Exact reproducible snapshot of this release cohort; collection DOI is the persistent public entry point. Publication receipts establish live availability.",
+    "sourceCommitReference": "release-provenance.json#/sourceCommit",
+    "inputBaselineHfRevision": "b3bf6162c411f924b1f70dee372e17c337397568",
+    "bindingStatus": "assigned-release-binding; availability recorded in external publication receipts",
+    "sourceCommitMode": "build-source"
   },
   "historical": [
     {
@@ -146,15 +146,15 @@
   },
   "archiveMutationPolicy": "Published payload and upstream/ receipts remain immutable. Metadata-only DOI introduction alignment never creates a new version. A necessary payload release must reserve its real DOI before generating record-bound descriptors.",
   "coordinatedRelease": {
-    "hfParent": "47699e7fc8bad2df2c6d90dcfb9da72278aba28d",
-    "websiteBaselineCommit": "fd91956a05def31360f0f5984a9afe517f11b88c",
-    "kaggleBaselineVersion": 24,
-    "kaggleTargetVersion": 25,
-    "notebookBaselineVersion": 9,
-    "notebookTargetVersion": 10,
+    "hfParent": "b3bf6162c411f924b1f70dee372e17c337397568",
+    "websiteBaselineCommit": "bbda1167e1ed05bda5e8a600b1ad4a9547629489",
+    "kaggleBaselineVersion": 26,
+    "kaggleTargetVersion": 27,
+    "notebookBaselineVersion": 11,
+    "notebookTargetVersion": 12,
     "previousZenodoRecord": 23473947,
     "expectedGraphNodes": 1600,
-    "expectedGraphTriples": 22220,
+    "expectedGraphTriples": 22235,
     "baselineAuthority": "Authenticated Kaggle owner ready state; public default is recorded separately and must converge before Zenodo publication"
   }
 }

@@ -114,7 +114,7 @@ def preflight(work):
  for line in (before/'checksums.sha256').read_text().splitlines():
   digest,name=line.split('  ',1);assert sha(before/name)==digest, ('Kaggle baseline checksum',name)
  client=kaggle_client();client.dataset_metadata(KG,str(before));wrapped=json.loads((before/'dataset-metadata.json').read_text());control=dict(wrapped.get('info') or wrapped);control['id']=KG;dump(before/'dataset-metadata.json',control)
- ctx=context(source,'0',maintenance_date='2026-10-19');ctx['coordinated_release']=True;ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source
+ ctx=context(source,'0',maintenance_date='2026-10-22');ctx.update(coordinated_release=True,publication_scope=['website','hf','kaggle','notebook','zenodo_dataset']);ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source
  kg=work/'kaggle';description=build_kaggle(hf,before,kg,ctx,COHORT['kaggleTargetVersion'],revision)
  control['subtitle']=', '.join([format(json.loads((hf/'viewer/packaging.json').read_text())['tables'][name]['rows'],',')+' '+label for name,label in [('entity_facts','facts'),('clinical_passages','clinical passages'),('query_matrix','queries'),('clinical_answers','source-linked answers')]])
  control['description']=description;control['userSpecifiedSources']=source_metadata(control['userSpecifiedSources'],revision,source);dump(kg/'dataset-metadata.json',control)
@@ -346,6 +346,7 @@ def publish_notebook(work,client):
  return retry(work,'notebook',proof,attempts=90)
 
 def publish_all(work):
+ global get
  from sync_platform_machine_resources import kaggle_client,correct_kaggle_sources
  from doi_release import publish as publish_zenodo
  plan=require_reviewable_candidate(work);check_frozen(work)
@@ -376,7 +377,12 @@ def publish_all(work):
   dump(work/'kaggle-submission.json',{'status':str(getattr(result,'status','submitted')),'version':plan['kaggleVersion']})
  retry(work,'kaggle',lambda:verify_kaggle(work),attempts=120)
  publish_notebook(work,client)
- retry(work,'hf',lambda:verify_hf(work),attempts=90)
+ # User explicitly defers runtime search/filter indexing; data integrity is strict.
+ from mutable_platform_release import fresh_viewer_reads,verify_media
+ get=fresh_viewer_reads(work,get)
+ retry(work,'media',lambda:verify_media(work),attempts=3)
+ retry(work,'hf-core',lambda:verify_hf(work,runtime_features=False),attempts=3)
+ dump(work/'runtime-readiness.json',{'searchFilter':'deferred per user; not an overall runtime PASS'})
  # Zenodo is published last, after every platform candidate and live user flow.
  check_frozen(work);publish_zenodo(COHORT['previousZenodoRecord'],work);check_frozen(work)
  report={'status':'PASS','sourceCommit':plan['sourceCommit'],'publicationToolCommit':os.environ['GITHUB_SHA'],'plan':plan,'frozenManifestSha256':sha(work/'frozen-sha256.json'),'noPostPublicationPayloadChanges':True,'completedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}

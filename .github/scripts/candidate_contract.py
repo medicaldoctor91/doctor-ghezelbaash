@@ -22,6 +22,11 @@ def validate_candidate(work):
             assert hashlib.sha256(target.read_bytes()).hexdigest()==digest,('Protected positioning bytes changed',platform,name)
 
     import rdflib
+    plan=json.loads((work/'website/release-provenance.json').read_text())
+    expected_source=plan['sourceCommit']
+    for platform in ['website','hf-stage','kaggle','archive']:
+        policy=json.loads((work/platform/'doi-policy.json').read_text())
+        assert policy['currentArchive']['sourceCommit']==expected_source,('Archive source differs',platform)
     graph=json.loads((work/'website/graph.jsonld').read_text())
     assert len(graph['@graph'])==cohort['expectedGraphNodes']
     assert len(rdflib.Graph().parse(work/'website/graph.jsonld',format='json-ld'))==cohort['expectedGraphTriples']
@@ -38,7 +43,7 @@ def validate_candidate(work):
     for platform in ['website','hf-stage']:
         html=(work/platform/'index.html').read_bytes();inline=Inline();inline.feed(html.decode())
         validate_home_projection(work/platform/'graph.jsonld',inline.blocks,html)
-    banned=['در این انتشار به‌روزرسانی نشده‌اند','DOIهای فعلی زنودو ثابت مانده‌اند','without minting a new release or DOI','Verified website publication: .','latest verified archived snapshot','Latest verified immutable snapshot','Professional and scholarly records also use']
+    banned=['در این انتشار به‌روزرسانی نشده‌اند','DOIهای فعلی زنودو ثابت مانده‌اند','without minting a new release or DOI','Verified website publication: .','latest verified archived snapshot','Latest verified immutable snapshot','Professional and scholarly records also use','exact DOI is reserved and does not yet resolve','not published by this maintenance','reserved and unpublished','Reserved unpublished archive binding']
     for platform in ['hf-stage','kaggle','archive','website']:
         root=work/platform
         for file in root.rglob('*'):
@@ -52,7 +57,7 @@ def validate_candidate(work):
             if value:
                 assert 'publicationRun' not in value
                 assert value['archivedSnapshotsUpdated'] is False
-                assert set(value['publicationScope'])=={'hf','kaggle','zenodo_dataset'}
+                assert set(value['publicationScope'])=={'website','hf','kaggle','notebook','zenodo_dataset'}
                 assert value['releaseCohort']==DOI_POLICY['currentArchive']['doi']
     kg=work/'kaggle';control=json.loads((kg/'dataset-metadata.json').read_text());assert control['description']==(kg/'README.md').read_text()
     packaging=json.loads((work/'hf-stage/viewer/packaging.json').read_text())

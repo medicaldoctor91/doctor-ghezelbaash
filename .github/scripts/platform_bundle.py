@@ -32,6 +32,7 @@ def context(source_commit,run_id,maintenance_date=None):
             'maintenance_date':maintenance_date,
             'publication_scope':['hf','kaggle'],'archived_snapshots_updated':False,
             'website':'https://www.ghezelbaash.ir/','wikidata':'https://www.wikidata.org/wiki/Q140287622',
+            'notebook':'https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter',
             'hf':'https://huggingface.co/datasets/'+HF_REPO,'kaggle':'https://www.kaggle.com/datasets/'+KAGGLE_REF,
             'zenodo_dataset':DOI_POLICY['currentArchive']['url'],'zenodo_concept':DOI_POLICY['concept']['url'],
             'zenodo_source':next(item['url'] for item in DOI_POLICY['historical'] if item['role']=='historical_software_source'),
@@ -50,7 +51,7 @@ def common_release(root,ctx):
     scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
     publication={'publicationScope':scope}
     if not ctx.get('coordinated_release'):publication['publicationRun']=ctx['run_url']
-    else:publication.update(buildSource='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+ctx['source_commit'],releaseCohort=DOI_POLICY['currentArchive']['doi'],archiveBindingStatus='reserved release binding; availability is established by external publication receipts',historicalArchivesUnchanged=True)
+    else:publication.update(buildSource='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+ctx['source_commit'],releaseCohort=DOI_POLICY['currentArchive']['doi'],archiveBindingStatus='exact snapshot release binding; availability is established by external publication receipts',historicalArchivesUnchanged=True,currentArchiveIncludedInRelease='zenodo_dataset' in scope)
     if ctx.get('website_publication_run_url'):publication['websitePublicationRun']=ctx['website_publication_run_url']
     if ctx.get('publication_commit'):publication['publicationCommit']=ctx['publication_commit']
     dump(root/'current-release-matrix.json',{
@@ -351,6 +352,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
         readme=readme.replace('match the published website','match the website candidate')
     # Update only current release fields; keep every existing author and contributor verbatim.
     citation=(previous/'CITATION.cff').read_text()
+    citation=citation.replace('Reserved unpublished archive binding '+DOI_POLICY['currentArchive']['packagingVersion'],'Exact reproducible snapshot '+DOI_POLICY['currentArchive']['packagingVersion'])
     for key,value in [('version',DOI_POLICY['currentArchive']['packagingVersion']),
                       ('date-released',ctx['maintenance_date']),('repository-code',ctx['hf']+'/tree/'+hf_revision),
                       ('url',DOI_POLICY['currentArchive']['url']),('message','Exact snapshot citation: '+DOI_POLICY['currentArchive']['doi']+'; archive '+DOI_POLICY['currentArchive']['packagingVersion']+'. Content baseline '+release['version']+', edition '+release['edition']+'. Current Kaggle distribution version '+str(version)+' pins Hugging Face revision '+hf_revision+' and has separate platform descriptors/receipts.')]:

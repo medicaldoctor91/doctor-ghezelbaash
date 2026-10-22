@@ -94,7 +94,7 @@ Clinical and professional text originates from the named physician's public webs
 
 ### Reproducible citation and update policy
 
-For reproducible use, pin the exact Hugging Face data revision returned by the Hub. The Kaggle manifest records its published Hugging Face revision and website source commit; publication receipts bind the current distributions to their actual checksums. Cite that revision, content baseline v1.3.4 and canonical Dataset IRI https://www.ghezelbaash.ir/graph.jsonld/dataset. Zenodo DOIs preserve their own historical snapshots. This coordinated release uses the reserved exact Dataset DOI stated above; subsequent maintenance must respect the archived snapshot and platform revision boundaries.
+For reproducible use, pin the exact Hugging Face data revision returned by the Hub. The Kaggle manifest records its published Hugging Face revision and website source commit; publication receipts bind the current distributions to their actual checksums. Cite that revision, content baseline v1.3.4 and canonical Dataset IRI https://www.ghezelbaash.ir/graph.jsonld/dataset. Zenodo DOIs preserve their own historical snapshots. This coordinated release uses the exact Dataset DOI stated above; subsequent maintenance must respect the archived snapshot and platform revision boundaries.
 
 ## Retrieval-ready clinical information
 

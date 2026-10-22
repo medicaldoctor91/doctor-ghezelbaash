@@ -7,16 +7,23 @@ const concept = 'https://doi.org/10.5281/zenodo.18765168';
 const exact = 'https://doi.org/10.5281/zenodo.23474664';
 const datasetIri = 'https://www.ghezelbaash.ir/graph.jsonld/dataset';
 
-test('rebuilding the mutable website cannot relabel the frozen archive source revision', () => {
+test('final archive graph and policy use the same explicit build-source identity without a self hash', () => {
   const result = execFileSync(process.execPath, ['--input-type=module', '-e', `
     import {SOURCE} from './src/canonical/source.mjs';
     const archive=SOURCE.graph['@graph'].find(n => n['@id']==='${exact}');
     console.log(JSON.stringify([SOURCE.doiPolicy.currentArchive.sourceCommit, archive['prov:wasDerivedFrom']['@id']]));
   `], {cwd: new URL('..', import.meta.url), env: {...process.env, GITHUB_SHA: '1111111111111111111111111111111111111111'}, encoding:'utf8'});
   assert.deepEqual(JSON.parse(result), [
-    'b753b84011256f13c4badb21af888e92282565dd',
-    'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/b753b84011256f13c4badb21af888e92282565dd',
+    '1111111111111111111111111111111111111111',
+    'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/1111111111111111111111111111111111111111',
   ]);
+});
+
+test('JS and Python resolve the same build source without storing a self hash in the template', () => {
+  const env={...process.env,GITHUB_SHA:'2222222222222222222222222222222222222222'};
+  const python=execFileSync('python3',['-c',"import sys;sys.path.insert(0,'.github/scripts');import platform_bundle;print(platform_bundle.DOI_POLICY['currentArchive']['sourceCommit'])"],{cwd:new URL('..',import.meta.url),env,encoding:'utf8'}).trim();
+  const js=execFileSync(process.execPath,['--input-type=module','-e',"import {DOI_POLICY} from './src/lib/doi-policy.mjs';console.log(DOI_POLICY.currentArchive.sourceCommit)"],{cwd:new URL('..',import.meta.url),env,encoding:'utf8'}).trim();
+  assert.equal(js,python);assert.equal(js,env.GITHUB_SHA);
 });
 
 test('public discovery uses concept DOI and archive is a distinct versioned entity', () => {

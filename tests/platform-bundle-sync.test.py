@@ -200,6 +200,10 @@ class PackageMaintenanceTests(unittest.TestCase):
         bundle.dump(before / "current-release-matrix.json", {"sourceVersion": "1.3.3", "edition": "2026-10-10"})
         (before / "README.md").write_text("# Existing dataset\n\nSource release **1.3.3**, edition **2026-10-10**.\nCreator: Existing author introduction.\n- **entity_facts:** 22,142 RDF statements.\n")
         (before / "CITATION.cff").write_text('cff-version: 1.2.0\nversion: "2026-10-12-kaggle-packaging-8"\ndate-released: "2026-10-12"\n' + AUTHORS + 'repository-code: "old"\nurl: "old"\n')
+        # The current exact reference must lose its old reserved/unpublished title;
+        # historical DOI labels and credited authors remain untouched.
+        with (before / "CITATION.cff").open('a') as citation:
+            citation.write('references:\n  - type: dataset\n    title: "Reserved unpublished archive binding '+bundle.DOI_POLICY['currentArchive']['packagingVersion']+'"\n    doi: '+bundle.DOI_POLICY['currentArchive']['doi']+'\n  - type: dataset\n    title: "Historical 1.3.3 snapshot"\n    doi: 10.5281/zenodo.22838416\n')
         spec = bundle.load(hf / "viewer/packaging.json")["tables"]["query_matrix"]
         with (before / "query-matrix.csv").open("w", newline="") as handle:
             csv.DictWriter(handle, fieldnames=spec["fields"]).writeheader()
@@ -223,6 +227,11 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertNotIn("integrity-manifest.json", {p.name for p in out.iterdir()})
         citation = (out / "CITATION.cff").read_text()
         self.assertIn(AUTHORS, citation)
+        import yaml
+        parsed=yaml.safe_load(citation)
+        exact=next(r for r in parsed['references'] if r.get('doi')==bundle.DOI_POLICY['currentArchive']['doi'])
+        self.assertEqual(exact['title'],'Exact reproducible snapshot '+bundle.DOI_POLICY['currentArchive']['packagingVersion'])
+        self.assertEqual(next(r for r in parsed['references'] if r.get('doi')=='10.5281/zenodo.22838416')['title'],'Historical 1.3.3 snapshot')
         self.assertIn('version: '+json.dumps(bundle.DOI_POLICY['currentArchive']['packagingVersion']), citation)
         self.assertIn('date-released: "2026-10-14"', citation)
         readme = (out / "README.md").read_text()
