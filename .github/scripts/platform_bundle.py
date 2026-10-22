@@ -9,7 +9,37 @@ DATASET='https://www.ghezelbaash.ir/graph.jsonld/dataset'
 HF_REPO='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
 DOI_POLICY=json.loads((Path(__file__).resolve().parents[2]/'src/canonical/doi-policy.json').read_text())
-DOI_POLICY['currentArchive']['sourceCommit']=os.environ.get('GITHUB_SHA') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=Path(__file__).resolve().parents[2]).decode().strip()
+if DOI_POLICY['currentArchive'].get('sourceCommitMode') == 'build-source':
+    pinned=os.environ.get('ARCHIVE_SOURCE_COMMIT')
+    preparing=os.environ.get('PREPARE_RESERVED_DOI')==str(DOI_POLICY['currentArchive']['recordId'])
+    if not pinned and not preparing:
+        raise RuntimeError('ARCHIVE_SOURCE_COMMIT must pin the published archive; use PREPARE_RESERVED_DOI only for its unpublished preflight')
+    source=pinned or os.environ.get('GITHUB_SHA') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=Path(__file__).resolve().parents[2]).decode().strip()
+    if not re.fullmatch('[a-f0-9]{40}',source):raise ValueError('Invalid archive source commit')
+    DOI_POLICY['currentArchive']['sourceCommit']=source
+
+def replace_yaml_field(text, key, value):
+    """Replace one complete top-level field, preserving untouched author blocks."""
+    import yaml
+    node = yaml.compose(text)
+    assert isinstance(node, yaml.MappingNode), 'CFF must be a YAML mapping'
+    rendered = (key + ': ' + json.dumps(value, ensure_ascii=False) + '\n'
+                if isinstance(value, str) else
+                yaml.safe_dump({key: value}, allow_unicode=True, sort_keys=False, width=100000))
+    for name, original in node.value:
+        if name.value != key:
+            continue
+        end = original.end_mark.index
+        # Scalar nodes can span wrapped lines or block scalars. Their end mark
+        # is authoritative; a line-only regex leaves stale continuation lines.
+        if original.end_mark.column and end < len(text) and text[end] not in '\r\n':
+            newline = text.find('\n', end)
+            end = len(text) if newline < 0 else newline
+        while end < len(text) and text[end] in '\r\n':
+            end += 1
+        return text[:name.start_mark.index] + rendered + text[end:]
+    return text.rstrip('\r\n') + '\n' + rendered
+
 
 def render_doi_text(text):
     mapping={'concept_url':DOI_POLICY['concept']['url'],'concept_doi':DOI_POLICY['concept']['doi'],
@@ -350,45 +380,34 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     if ctx.get('coordinated_release'):
         readme=readme.replace('Archived Zenodo snapshots: '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. They were not updated in this publication.', 'Exact release binding: '+ctx['zenodo_dataset']+'. Historical software source: '+ctx['zenodo_source']+'. Historical archives remain unchanged; publication availability is recorded in external receipts.')
         readme=readme.replace('match the published website','match the website candidate')
-    # Update only current release fields; keep every existing author and contributor verbatim.
-    citation=(previous/'CITATION.cff').read_text()
-    citation=citation.replace('Reserved unpublished archive binding '+DOI_POLICY['currentArchive']['packagingVersion'],'Exact reproducible snapshot '+DOI_POLICY['currentArchive']['packagingVersion'])
-    for key,value in [('version',DOI_POLICY['currentArchive']['packagingVersion']),
-                      ('date-released',ctx['maintenance_date']),('repository-code',ctx['hf']+'/tree/'+hf_revision),
-                      ('url',DOI_POLICY['currentArchive']['url']),('message','Exact snapshot citation: '+DOI_POLICY['currentArchive']['doi']+'; archive '+DOI_POLICY['currentArchive']['packagingVersion']+'. Content baseline '+release['version']+', edition '+release['edition']+'. Current Kaggle distribution version '+str(version)+' pins Hugging Face revision '+hf_revision+' and has separate platform descriptors/receipts.')]:
-        line=key+': '+json.dumps(value)+'\n'
-        if re.search(r'^'+re.escape(key)+r':.*$',citation,flags=re.M):
-            citation=re.sub(r'^'+re.escape(key)+r':.*(?:\n|$)',lambda _:line,citation,flags=re.M)
-        else:citation+=line
+    # Replace complete YAML values; retain original author/contributor text.
     import yaml
-    citation_object=yaml.safe_load(citation)
-    line='doi: '+json.dumps(DOI_POLICY['currentArchive']['doi'])+'\n'
-    if re.search(r'^doi:.*$',citation,flags=re.M):citation=re.sub(r'^doi:.*(?:\n|$)',lambda _:line,citation,flags=re.M)
-    else:citation+='\n'+line
-    if not any(ref.get('doi')==DOI_POLICY['currentArchive']['doi'] for ref in citation_object.get('references',[])):
-        reference={'type':'dataset','title':'Exact archived snapshot '+DOI_POLICY['currentArchive']['packagingVersion'],
-                   'version':DOI_POLICY['currentArchive']['packagingVersion'],'doi':DOI_POLICY['currentArchive']['doi'],
-                   'authors':citation_object.get('authors',[])}
-        block=''.join('  '+part+'\n' for part in yaml.safe_dump([reference],sort_keys=False,allow_unicode=True).splitlines())
-        if 'references' not in citation_object:citation+='references:\n'+block
-        else:
-            start=citation.index('references:')+len('references:')
-            following=re.search(r'^\S',citation[start+1:],flags=re.M)
-            position=start+1+following.start() if following else len(citation)
-            citation=citation[:position]+block+citation[position:]
-    if not any(ref.get('doi')==DOI_POLICY['concept']['doi'] for ref in citation_object.get('references',[])):
-        reference={'type':'dataset','title':'Public collection DOI and latest-version entry point (not a competing snapshot)',
-                   'doi':DOI_POLICY['concept']['doi'],'authors':citation_object.get('authors',[])}
-        block=''.join('  '+part+'\n' for part in yaml.safe_dump([reference],sort_keys=False,allow_unicode=True).splitlines())
-        # Insert into the existing references sequence without touching author text.
-        start=citation.index('references:')+len('references:')
-        following=re.search(r'^\S',citation[start+1:],flags=re.M)
-        position=start+1+following.start() if following else len(citation)
-        citation=citation[:position]+block+citation[position:]
+    citation=(previous/'CITATION.cff').read_text()
+    original_citation=yaml.safe_load(citation)
+    updates={
+        'version': DOI_POLICY['currentArchive']['packagingVersion'],
+        'date-released': ctx['maintenance_date'],
+        'repository-code': ctx['hf']+'/tree/'+hf_revision,
+        'url': DOI_POLICY['currentArchive']['url'],
+        'message': 'Exact snapshot citation: '+DOI_POLICY['currentArchive']['doi']+'; archive '+DOI_POLICY['currentArchive']['packagingVersion']+'. Content baseline '+release['version']+', edition '+release['edition']+'. Current Kaggle distribution version '+str(version)+' pins Hugging Face revision '+hf_revision+' and has separate platform descriptors/receipts.',
+        'doi': DOI_POLICY['currentArchive']['doi'],
+    }
+    for key,value in updates.items():
+        citation=replace_yaml_field(citation,key,value)
+    references=original_citation.get('references',[])
+    exact=next((r for r in references if r.get('doi')==DOI_POLICY['currentArchive']['doi']),None)
+    if exact is None:
+        exact={'type':'dataset','doi':DOI_POLICY['currentArchive']['doi'],'authors':original_citation.get('authors',[])}
+        references.append(exact)
+    exact.update(title='Exact reproducible snapshot '+DOI_POLICY['currentArchive']['packagingVersion'],version=DOI_POLICY['currentArchive']['packagingVersion'])
+    if not any(r.get('doi')==DOI_POLICY['concept']['doi'] for r in references):
+        references.append({'type':'dataset','title':'Public collection DOI and latest-version entry point (not a competing snapshot)','doi':DOI_POLICY['concept']['doi'],'authors':original_citation.get('authors',[])})
+    citation=replace_yaml_field(citation,'references',references)
     parsed_citation=yaml.safe_load(citation)
     assert parsed_citation['doi']==DOI_POLICY['currentArchive']['doi']
     assert parsed_citation['version']==DOI_POLICY['currentArchive']['packagingVersion']
-    assert any(ref.get('doi')==DOI_POLICY['concept']['doi'] for ref in parsed_citation['references'])
+    for key in ['authors','contributors']:
+        assert parsed_citation.get(key)==original_citation.get(key),('CFF attribution changed',key)
     (out/'CITATION.cff').write_text(citation)
     controls={'dataset-metadata.json','kernel-metadata.json','checksums.sha256'}
     payload=[p for p in out.rglob('*') if p.is_file() and p.relative_to(out).as_posix() not in controls]

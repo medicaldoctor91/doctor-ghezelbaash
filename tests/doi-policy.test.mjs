@@ -12,7 +12,7 @@ test('final archive graph and policy use the same explicit build-source identity
     import {SOURCE} from './src/canonical/source.mjs';
     const archive=SOURCE.graph['@graph'].find(n => n['@id']==='${exact}');
     console.log(JSON.stringify([SOURCE.doiPolicy.currentArchive.sourceCommit, archive['prov:wasDerivedFrom']['@id']]));
-  `], {cwd: new URL('..', import.meta.url), env: {...process.env, GITHUB_SHA: '1111111111111111111111111111111111111111'}, encoding:'utf8'});
+  `], {cwd: new URL('..', import.meta.url), env: {...process.env, GITHUB_SHA: '1111111111111111111111111111111111111111', ARCHIVE_SOURCE_COMMIT: '', PREPARE_RESERVED_DOI: '23474664'}, encoding:'utf8'});
   assert.deepEqual(JSON.parse(result), [
     '1111111111111111111111111111111111111111',
     'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/1111111111111111111111111111111111111111',
@@ -20,7 +20,7 @@ test('final archive graph and policy use the same explicit build-source identity
 });
 
 test('JS and Python resolve the same build source without storing a self hash in the template', () => {
-  const env={...process.env,GITHUB_SHA:'2222222222222222222222222222222222222222'};
+  const env={...process.env,GITHUB_SHA:'2222222222222222222222222222222222222222',ARCHIVE_SOURCE_COMMIT:'',PREPARE_RESERVED_DOI:'23474664'};
   const python=execFileSync('python3',['-c',"import sys;sys.path.insert(0,'.github/scripts');import platform_bundle;print(platform_bundle.DOI_POLICY['currentArchive']['sourceCommit'])"],{cwd:new URL('..',import.meta.url),env,encoding:'utf8'}).trim();
   const js=execFileSync(process.execPath,['--input-type=module','-e',"import {DOI_POLICY} from './src/lib/doi-policy.mjs';console.log(DOI_POLICY.currentArchive.sourceCommit)"],{cwd:new URL('..',import.meta.url),env,encoding:'utf8'}).trim();
   assert.equal(js,python);assert.equal(js,env.GITHUB_SHA);
@@ -52,4 +52,16 @@ test('every immutable record binding agrees with the reserved DOI', () => {
   assert.equal(p.downloadBindings.apiPrefix, `https://zenodo.org/api/records/${record}/files/`);
   assert.ok(p.downloadBindings.bundle.startsWith(p.downloadBindings.publicPrefix));
   assert.ok(p.downloadBindings.bundle.endsWith('zenodo.3.zip'));
+});
+
+test('a later maintenance build cannot relabel a pinned immutable archive', () => {
+  const env={...process.env,GITHUB_SHA:'3333333333333333333333333333333333333333',ARCHIVE_SOURCE_COMMIT:'4444444444444444444444444444444444444444',PREPARE_RESERVED_DOI:''};
+  const js=execFileSync(process.execPath,['--input-type=module','-e',"import {DOI_POLICY} from './src/lib/doi-policy.mjs';console.log(DOI_POLICY.currentArchive.sourceCommit)"],{cwd:new URL('..',import.meta.url),env,encoding:'utf8'}).trim();
+  const python=execFileSync('python3',['-c',"import sys;sys.path.insert(0,'.github/scripts');import platform_bundle;print(platform_bundle.DOI_POLICY['currentArchive']['sourceCommit'])"],{cwd:new URL('..',import.meta.url),env,encoding:'utf8'}).trim();
+  assert.equal(js,env.ARCHIVE_SOURCE_COMMIT);assert.equal(python,env.ARCHIVE_SOURCE_COMMIT);
+});
+
+test('absence of an archive pin outside explicit preflight fails safely', () => {
+  const env={...process.env,GITHUB_SHA:'5555555555555555555555555555555555555555',ARCHIVE_SOURCE_COMMIT:'',PREPARE_RESERVED_DOI:''};
+  assert.throws(()=>execFileSync(process.execPath,['--input-type=module','-e',"import './src/lib/doi-policy.mjs'"],{cwd:new URL('..',import.meta.url),env,stdio:'pipe'}));
 });

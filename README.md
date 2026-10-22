@@ -11,3 +11,8 @@ Start with [the maintenance and frozen-release checkpoint](docs/maintenance-rele
 - [Archived workflow snapshots](.github/archive/workflows/2026-10-20/README.md) and [retired standalone utilities](.github/archive/scripts/2026-10-20/README.md)
 
 Preserve the full homepage inline graph, its ProfilePage + MedicalWebPage architecture and every positioning word. Housekeeping does not regenerate public data, build/deploy the site or publish to any platform. It does not create manual approval requirements or change protection, permissions or secrets. The retained coordinated publisher and its strict validation are separate, explicitly invoked operations.
+
+
+### Immutable archive source pin
+
+The reserved-record preflight explicitly sets `PREPARE_RESERVED_DOI=23474664` to resolve the first archive source from the real build commit. Before publication, set the public repository variable `ZENODO_23474664_SOURCE_COMMIT` and the Pages build variable `ARCHIVE_SOURCE_COMMIT` to that frozen commit. Later builds must retain this archive pin while recording their own website build commit separately. Local builds use `ARCHIVE_SOURCE_COMMIT=<published archive source commit> npm run build`; absence of a pin outside the reserved-record preflight fails rather than relabelling the immutable archive. Publication receipts remain outside payload files.

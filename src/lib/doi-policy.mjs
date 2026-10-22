@@ -2,7 +2,10 @@ import {execFileSync} from 'node:child_process';
 import policyTemplate from '../canonical/doi-policy.json' with {type: 'json'};
 const DOI_POLICY = structuredClone(policyTemplate);
 if (DOI_POLICY.currentArchive.sourceCommitMode === 'build-source') {
-  const sourceCommit = process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], {cwd: new URL('../..', import.meta.url), encoding: 'utf8'}).trim();
+  const pinned = process.env.ARCHIVE_SOURCE_COMMIT;
+  const preparing = process.env.PREPARE_RESERVED_DOI === String(DOI_POLICY.currentArchive.recordId);
+  if (!pinned && !preparing) throw new Error('ARCHIVE_SOURCE_COMMIT must pin the published archive; PREPARE_RESERVED_DOI is only for the unpublished release preflight');
+  const sourceCommit = pinned || process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], {cwd: new URL('../..', import.meta.url), encoding: 'utf8'}).trim();
   if (!/^[a-f0-9]{40}$/.test(sourceCommit)) throw new Error('Invalid archive build source commit');
   DOI_POLICY.currentArchive.sourceCommit = sourceCommit;
 }

@@ -4,7 +4,7 @@ on:
     inputs:
       operation:
         type: choice
-        options: [inspect, preflight, publish-frozen]
+        options: [inspect, preflight, stage-draft, publish-frozen, verify-publication]
         required: true
       candidate_run: {type: string, required: false}
       reviewed_commit: {type: string, required: true}
@@ -27,6 +27,8 @@ jobs:
       REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
       OPERATION: ${{ inputs.operation }}
       GIT_LFS_SKIP_SMUDGE: '1'
+      ARCHIVE_SOURCE_COMMIT: ${{ vars.ZENODO_23474664_SOURCE_COMMIT }}
+      PREPARE_RESERVED_DOI: ${{ (inputs.operation == 'preflight' || inputs.operation == 'inspect') && '23474664' || '' }}
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
@@ -51,17 +53,17 @@ jobs:
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
       - name: Install frozen-publication dependencies
-        if: inputs.operation == 'publish-frozen'
+        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-publication'
         run: python -m pip install 'pyarrow==22.0.0' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
       - uses: actions/download-artifact@v4
-        if: inputs.operation == 'publish-frozen'
+        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-publication'
         with:
           name: frozen-coordinated-candidate
           run-id: ${{ inputs.candidate_run }}
           github-token: ${{ github.token }}
           path: /tmp/frozen-artifact/
       - name: Restore the validated artifact without rebuilding
-        if: inputs.operation == 'publish-frozen'
+        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-publication'
         run: |
           tar -xzf /tmp/frozen-artifact/candidate.tar.gz -C /tmp
           python - <<'PYGUARD'

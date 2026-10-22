@@ -203,5 +203,25 @@ class Guards(unittest.TestCase):
    else:del broken['rows'][0]['row']['text']
    with self.assertRaises(AssertionError):release.assert_viewer_result_rows(broken,expected,'fixture','search')
 
+class StagedPublishGuards(unittest.TestCase):
+ def test_unstaged_draft_never_reaches_publish_post(self):
+  import doi_release
+  from unittest.mock import patch,Mock
+  with tempfile.TemporaryDirectory() as folder:
+   session=Mock();session.headers={}
+   with patch.object(doi_release.requests,'Session',return_value=session),patch.object(doi_release,'verify_staged',side_effect=AssertionError('wrong server bytes')),patch.dict(os.environ,{'ZENODO_TOKEN':'unit-test'}):
+    with self.assertRaises(AssertionError):doi_release.publish(23473947,Path(folder))
+   session.post.assert_not_called()
+ def test_ambiguous_publish_response_cannot_repeat_post_in_same_recovery(self):
+  import doi_release
+  from unittest.mock import patch,Mock
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);release.dump(root/'payload.json',{'sourceCommit':'a'*40})
+   session=Mock();session.headers={};session.post.side_effect=doi_release.requests.Timeout('ambiguous response')
+   with patch.object(doi_release.requests,'Session',return_value=session),patch.object(doi_release,'verify_staged',return_value={'submitted':False}),patch.dict(os.environ,{'ZENODO_TOKEN':'unit-test'}):
+    with self.assertRaises(doi_release.requests.Timeout):doi_release.publish(23473947,root)
+    with self.assertRaises(AssertionError):doi_release.publish(23473947,root)
+   self.assertEqual(session.post.call_count,1)
+
 if __name__=='__main__':unittest.main()
 

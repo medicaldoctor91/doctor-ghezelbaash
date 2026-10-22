@@ -107,7 +107,7 @@ def prepare(previous, work):
     print(json.dumps({'preparedRecord':p['currentArchive']['recordId'],'files':len(files),'sourceCommit':source_commit,'validation':result}),flush=True)
 
 
-def publish(previous, work):
+def stage(previous, work):
     from platform_bundle import dump
     from doi_validation import validate_policy
     validate_policy(work/'archive',archive=True)
@@ -116,8 +116,14 @@ def publish(previous, work):
     session=requests.Session();session.headers['Authorization']='Bearer '+os.environ['ZENODO_TOKEN']
     base='https://zenodo.org/api/';dep=base+'deposit/depositions/'+str(record)
     response=session.get(dep,timeout=60);response.raise_for_status();draft=response.json()
-    assert draft['doi']==p['currentArchive']['doi'] and str(draft['conceptrecid'])==str(p['concept']['recordId'])
+    assert (draft.get('doi') or draft.get('metadata',{}).get('prereserve_doi',{}).get('doi'))==p['currentArchive']['doi'] and str(draft['conceptrecid'])==str(p['concept']['recordId'])
     if not draft.get('submitted'):
+        plan=json.loads((work/'release-plan.json').read_text())
+        original=plan['zenodoDraftMetadataSHA256']
+        current=hashlib.sha256(json.dumps(draft.get('metadata',{}),sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+        final=json.loads((work/'zenodo-metadata.json').read_text())
+        already_staged=all(draft['metadata'].get(k)==final.get(k) for k in ['title','description','version','publication_date','creators','contributors','keywords','license','access_right','notes','communities','grants','references','subjects','language'])
+        assert current==original or already_staged,'Draft metadata changed outside this frozen release'
         response=session.get(dep+'/files',timeout=60);response.raise_for_status();existing=response.json()
         for item in existing:
             key=item.get('filename') or item.get('key')
@@ -151,8 +157,54 @@ def publish(previous, work):
         md['related_identifiers']=related
         if (work/'zenodo-metadata.json').is_file():md=json.loads((work/'zenodo-metadata.json').read_text())
         response=session.put(dep,json={'metadata':md},timeout=90);response.raise_for_status()
-        # One publish request only. A later recovery verifies this same record.
-        response=session.post(dep+'/actions/publish',json={},timeout=120);response.raise_for_status()
+        verify_staged(work, session=session)
+        report={'status':'PASS','record':record,'doi':p['currentArchive']['doi'],'sourceCommit':payload['sourceCommit'],'files':len(payload['files']),'metadataSha256':hashlib.sha256((work/'zenodo-metadata.json').read_bytes()).hexdigest(),'published':False}
+        dump(work/'zenodo-stage-report.json',report)
+        return report
+    verify_published(previous,work)
+    return {'status':'PASS','record':record,'alreadyPublished':True}
+
+
+def verify_staged(work, *, session=None):
+    p=policy();payload=json.loads((work/'payload.json').read_text());record=p['currentArchive']['recordId']
+    assert record==23474664 and payload['record']==record
+    if session is None:
+        session=requests.Session();session.headers['Authorization']='Bearer '+os.environ['ZENODO_TOKEN']
+    dep='https://zenodo.org/api/deposit/depositions/'+str(record)
+    response=session.get(dep,timeout=60);response.raise_for_status();draft=response.json()
+    assert (draft.get('doi') or draft.get('metadata',{}).get('prereserve_doi',{}).get('doi'))==p['currentArchive']['doi'] and str(draft['conceptrecid'])==str(p['concept']['recordId'])
+    if draft.get('submitted'):
+        verify_published(p['coordinatedRelease']['previousZenodoRecord'],work)
+        return {'submitted':True,'draft':draft}
+    assert draft.get('state')=='unsubmitted',('Draft is not ready to publish',draft.get('state'))
+    expected=json.loads((work/'zenodo-metadata.json').read_text());actual=draft['metadata']
+    for key in ['title','description','version','publication_date','creators','contributors','keywords','license','access_right','notes','communities','grants','references','subjects','language']:
+        assert actual.get(key)==expected.get(key),('Staged metadata differs',key)
+    assert {(x['identifier'],x['relation']) for x in actual.get('related_identifiers',[])}=={(x['identifier'],x['relation']) for x in expected.get('related_identifiers',[])},'Staged related identifiers differ'
+    response=session.get(dep+'/files',timeout=60);response.raise_for_status();files=response.json()
+    assert {x.get('filename') or x.get('key'):x.get('checksum','').removeprefix('md5:') for x in files}=={key:spec['md5'] for key,spec in payload['files'].items()},'Staged file inventory differs'
+    # Verify actual server-side draft bytes, not only local upload receipts.
+    bucket=draft['links']['bucket'];assert bucket.startswith('https://zenodo.org/api/files/')
+    def download(item):
+        key,spec=item
+        response=session.get(bucket+'/'+quote(key,safe=''),timeout=180);response.raise_for_status()
+        assert hashlib.sha256(response.content).hexdigest()==spec['sha256'],('Staged server bytes differ',key)
+        return key
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:list(pool.map(download,payload['files'].items()))
+    return {'submitted':False,'files':len(files),'sha256Verified':True,'draft':draft}
+
+
+def publish(previous, work):
+    from platform_bundle import dump
+    session=requests.Session();session.headers['Authorization']='Bearer '+os.environ['ZENODO_TOKEN']
+    state=verify_staged(work,session=session);record=policy()['currentArchive']['recordId']
+    if not state['submitted']:
+        attempt=work/'zenodo-publish-attempt.json'
+        assert not attempt.exists(),'Publish already attempted; use read-only verification before recovery'
+        dump(attempt,{'record':record,'action':'publish','sourceCommit':json.loads((work/'payload.json').read_text())['sourceCommit']})
+        # Never retry this POST after an ambiguous response. Recovery is GET-only.
+        response=session.post('https://zenodo.org/api/deposit/depositions/'+str(record)+'/actions/publish',json={},timeout=120)
+        response.raise_for_status()
     verify_published(previous,work)
 
 
@@ -197,12 +249,13 @@ def verify_published(previous, work):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('operation', choices=['reserve','prepare','publish','verify'])
+    parser.add_argument('operation', choices=['reserve','prepare','stage','publish','verify'])
     parser.add_argument('--previous-record', type=int, required=True)
     parser.add_argument('--output', type=Path, default=Path('/tmp/doi-release/reservation.json'))
     args = parser.parse_args()
     if args.operation=='reserve':reserve(args.previous_record, args.output)
     elif args.operation=='prepare':prepare(args.previous_record,args.output.parent)
+    elif args.operation=='stage':stage(args.previous_record,args.output.parent)
     elif args.operation=='publish':publish(args.previous_record,args.output.parent)
     else:verify_published(args.previous_record,args.output.parent)
 

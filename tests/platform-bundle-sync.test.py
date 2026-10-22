@@ -22,6 +22,18 @@ FRONT_MATTER = "---\nconfigs:\n- config_name: clinical_passages\n  default: true
 AUTHORS = 'authors:\n  - family-names: "Ghezelbash"\n    given-names: "Saeed"\n    orcid: "https://orcid.org/0009-0001-9346-8475"\n  - name: "Existing credited contributor"\n'
 
 
+class CffFieldRegression(unittest.TestCase):
+    def test_wrapped_message_is_replaced_as_a_whole_without_damaging_authors(self):
+        import yaml
+        text='cff-version: 1.2.0\nmessage: Cite this mutable distribution by its pinned Kaggle version, Hugging Face\n  revision and website source commit.\nauthors:\n- family-names: Ghezelbash\n  given-names: Saeed\nreferences:\n- title: Historical snapshot\n  doi: 10.5281/zenodo.22838416\n'
+        original=yaml.safe_load(text)
+        updated=bundle.replace_yaml_field(text,'message','Exact snapshot citation')
+        current=yaml.safe_load(updated)
+        self.assertEqual(current['message'],'Exact snapshot citation')
+        self.assertEqual(current['authors'],original['authors'])
+        self.assertEqual(current['references'],original['references'])
+        self.assertIn('authors:\n- family-names: Ghezelbash\n  given-names: Saeed\n',updated)
+
 class PackageMaintenanceTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()

@@ -34,6 +34,7 @@ def inspect(work):
  doi=d.get('doi') or d.get('metadata',{}).get('prereserve_doi',{}).get('doi')
  assert doi==P['currentArchive']['doi'] and str(d['conceptrecid'])=='18765168'
  result={'record':d['id'],'reservedDoi':doi,'submitted':d.get('submitted'),'state':d.get('state'),'files':len(d.get('files',[])),
+ 'draftMetadataSHA256':hashlib.sha256(json.dumps(d.get('metadata',{}),sort_keys=True,ensure_ascii=False).encode()).hexdigest(),
  'siteSource':get(SITE+'release-provenance.json').json()['sourceCommit'],
  'hfRevision':get('https://huggingface.co/api/datasets/'+HF).json()['sha'],
  'kaggleOwnerVersion':owner['version'],'kaggleOwnerStatus':owner['status'],
@@ -41,9 +42,18 @@ def inspect(work):
  dump(work/'inspection.json',result);print(json.dumps(result),flush=True);return result
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('operation',choices=['inspect','preflight','publish-frozen']);ap.add_argument('--root',type=Path,default=Path('/tmp/coordinated-release'));a=ap.parse_args();a.root.mkdir(parents=True,exist_ok=True)
+ ap=argparse.ArgumentParser();ap.add_argument('operation',choices=['inspect','preflight','stage-draft','publish-frozen','verify-publication']);ap.add_argument('--root',type=Path,default=Path('/tmp/coordinated-release'));a=ap.parse_args();a.root.mkdir(parents=True,exist_ok=True)
  if a.operation=='inspect':inspect(a.root)
  elif a.operation=='preflight':preflight(a.root)
+ elif a.operation=='stage-draft':
+  from doi_release import stage
+  require_reviewable_candidate(a.root);check_frozen(a.root)
+  assert json.loads((a.root/'preflight-report.json').read_text())['status']=='PASS'
+  stage(COHORT['previousZenodoRecord'],a.root);check_frozen(a.root)
+ elif a.operation=='verify-publication':
+  from doi_release import verify_published
+  require_reviewable_candidate(a.root);check_frozen(a.root)
+  verify_published(COHORT['previousZenodoRecord'],a.root)
  else:publish_all(a.root)
 
 # Source builds and publication receipts are distinct: no publication receipt is
@@ -146,9 +156,9 @@ def preflight(work):
  differences={name:items for name,items in variants.items() if len(set(items.values()))>1}
  assert set(differences)<=allowed, ('Undocumented byte differences',set(differences)-allowed)
  dump(work/'intentional-platform-differences.json',{'differences':differences,'reason':'Platform cards/receipts, immutable archive descriptors and inventories are scoped; all other shared originals are byte-identical.','identicalSharedFiles':sum(len(v)>1 and len(set(v.values()))==1 for v in variants.values())})
- dump(work/'release-plan.json',{'candidateSchema':CANDIDATE_SCHEMA,'sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':COHORT['kaggleBaselineVersion'],'kaggleVersion':COHORT['kaggleTargetVersion'],'notebookPreviousVersion':nb_version-1,'notebookVersion':nb_version,'sitePreviousSource':state['siteSource'],'kagglePublicDefaultAtPreflight':state['kagglePublicDefaultVersion'],'record':P['currentArchive']['recordId']})
+ dump(work/'release-plan.json',{'candidateSchema':CANDIDATE_SCHEMA,'sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':COHORT['kaggleBaselineVersion'],'kaggleVersion':COHORT['kaggleTargetVersion'],'notebookPreviousVersion':nb_version-1,'notebookVersion':nb_version,'sitePreviousSource':state['siteSource'],'kagglePublicDefaultAtPreflight':state['kagglePublicDefaultVersion'],'record':P['currentArchive']['recordId'],'zenodoDraftMetadataSHA256':state['draftMetadataSHA256']})
  r=requests.get('https://zenodo.org/api/deposit/depositions/23474664',headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN']},timeout=60);r.raise_for_status();md=r.json()['metadata']
- md.update(upload_type='dataset',version=P['currentArchive']['packagingVersion'],doi=P['currentArchive']['doi'])
+ md.update(upload_type='dataset',version=P['currentArchive']['packagingVersion'],doi=P['currentArchive']['doi'],publication_date='2026-10-22')
  md['description']='<p>Public collection and latest version: <a href="'+P['concept']['url']+'">'+P['concept']['doi']+'</a>.</p><p>Exact reproducible Dataset snapshot: <a href="'+P['currentArchive']['url']+'">'+P['currentArchive']['doi']+'</a>; packaging '+P['currentArchive']['packagingVersion']+'; content baseline 1.3.4, edition 2026-10-18.</p><p>Source commit '+source+'. Frozen Hugging Face revision '+revision+'; Kaggle dataset version '+str(COHORT['kaggleTargetVersion'])+'; pinned notebook version '+str(nb_version)+'. The source commit identifies build inputs; publication/execution receipts are external and do not modify the frozen files.</p><p>The five root archive descriptors use this record’s own immutable file URLs and measured checksums. Person, Clinic and canonical Dataset IRI '+P['canonicalDatasetIri']+' are distinct from collection/archive DOI entities. Files under upstream/ retain explicitly historical input receipts; older releases retain their own immutable payloads.</p>'
  md['related_identifiers']=[{'identifier':P['concept']['doi'],'scheme':'doi','relation':'isVersionOf','resource_type':'dataset'}, {'identifier':'10.5281/zenodo.'+str(COHORT['previousZenodoRecord']),'scheme':'doi','relation':'isNewVersionOf','resource_type':'dataset'}, {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,'scheme':'url','relation':'isDerivedFrom','resource_type':'software'}, {'identifier':'https://huggingface.co/datasets/'+HF+'/tree/'+revision,'scheme':'url','relation':'isSupplementedBy','resource_type':'dataset'}, {'identifier':'https://www.kaggle.com/datasets/'+KG+'/versions/'+str(COHORT['kaggleTargetVersion']),'scheme':'url','relation':'isSupplementedBy','resource_type':'dataset'}, {'identifier':SITE,'scheme':'url','relation':'isDescribedBy'}, {'identifier':'https://www.kaggle.com/code/'+NB,'scheme':'url','relation':'references','resource_type':'software-computationalnotebook'}]
  dump(work/'zenodo-metadata.json',md)
@@ -348,8 +358,9 @@ def publish_notebook(work,client):
 def publish_all(work):
  global get
  from sync_platform_machine_resources import kaggle_client,correct_kaggle_sources
- from doi_release import publish as publish_zenodo
+ from doi_release import publish as publish_zenodo,verify_staged
  plan=require_reviewable_candidate(work);check_frozen(work)
+ verify_staged(work) # Server-validated archive must exist before mutable cutover.
  state=inspect(work);assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']} and state['kaggleOwnerVersion'] in {plan['kagglePreviousVersion'],plan['kaggleVersion']} and state['kaggleOwnerStatus']=='ready' and state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']}
  # The preflight report and checksums exist before this first payload publication.
  assert json.loads((work/'preflight-report.json').read_text())['status']=='PASS'
