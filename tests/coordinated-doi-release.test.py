@@ -204,6 +204,14 @@ class Guards(unittest.TestCase):
    with self.assertRaises(AssertionError):release.assert_viewer_result_rows(broken,expected,'fixture','search')
 
 class StagedPublishGuards(unittest.TestCase):
+ def test_description_typography_does_not_hide_content_or_link_changes(self):
+  import doi_release
+  expected='<p>This record\u2019s files: <a href="https://doi.org/10.5281/zenodo.23474664">archive</a>.</p>'
+  normalized=expected.replace('\u2019',"'")
+  self.assertTrue(doi_release.same_metadata_value('description',normalized,expected))
+  for changed in [normalized.replace('23474664','23473947'),normalized.replace('files','claims'),normalized+'<p>Additional assertion</p>']:
+   self.assertFalse(doi_release.same_metadata_value('description',changed,expected))
+  self.assertFalse(doi_release.same_metadata_value('title',normalized,expected))
  def test_bucket_timeout_recovers_from_inventory_without_another_upload(self):
   import doi_release,hashlib
   from unittest.mock import Mock

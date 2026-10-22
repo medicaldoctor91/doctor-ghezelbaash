@@ -19,6 +19,14 @@ def policy():
     return json.loads((ROOT / 'src/canonical/doi-policy.json').read_text())
 
 
+def same_metadata_value(key, actual, expected):
+    # Observed Zenodo normalization: U+2019 becomes ASCII apostrophe in HTML.
+    # Preserve exact comparisons for every other character, URL and field.
+    if key=='description' and isinstance(actual,str) and isinstance(expected,str):
+        return actual.replace('\u2019',"'")==expected.replace('\u2019',"'")
+    return actual==expected
+
+
 def reserve(previous, output):
     p = policy()
     session = requests.Session()
@@ -122,7 +130,8 @@ def stage(previous, work):
         original=plan['zenodoDraftMetadataSHA256']
         current=hashlib.sha256(json.dumps(draft.get('metadata',{}),sort_keys=True,ensure_ascii=False).encode()).hexdigest()
         final=json.loads((work/'zenodo-metadata.json').read_text())
-        already_staged=all(draft['metadata'].get(k)==final.get(k) for k in ['title','description','version','publication_date','creators','contributors','keywords','license','access_right','notes','communities','grants','references','subjects','language'])
+        already_staged=all(same_metadata_value(k,draft['metadata'].get(k),final.get(k)) for k in ['title','description','version','publication_date','creators','contributors','keywords','license','access_right','notes','communities','grants','references','subjects','language'])
+        already_staged=already_staged and {(x['identifier'],x['relation']) for x in draft['metadata'].get('related_identifiers',[])}=={(x['identifier'],x['relation']) for x in final.get('related_identifiers',[])}
         assert current==original or already_staged,'Draft metadata changed outside this frozen release'
         response=session.get(dep+'/files',timeout=60);response.raise_for_status();existing=response.json()
         for item in existing:
@@ -155,8 +164,8 @@ def stage(previous, work):
         md['related_identifiers']=related
         if (work/'zenodo-metadata.json').is_file():md=json.loads((work/'zenodo-metadata.json').read_text())
         response=session.put(dep,json={'metadata':md},timeout=90);response.raise_for_status()
-        verify_staged(work, session=session)
-        report={'status':'PASS','record':record,'doi':p['currentArchive']['doi'],'sourceCommit':payload['sourceCommit'],'files':len(payload['files']),'metadataSha256':hashlib.sha256((work/'zenodo-metadata.json').read_bytes()).hexdigest(),'published':False}
+        verified=verify_staged(work, session=session)
+        report={'status':'PASS','record':record,'doi':p['currentArchive']['doi'],'sourceCommit':payload['sourceCommit'],'files':len(payload['files']),'serverFilesSha256Verified':verified['sha256Verified'],'metadataSha256':hashlib.sha256((work/'zenodo-metadata.json').read_bytes()).hexdigest(),'descriptionTypographyNormalized':verified['draft']['metadata']['description']!=md['description'],'published':False}
         dump(work/'zenodo-stage-report.json',report)
         return report
     verify_published(previous,work)
@@ -218,15 +227,19 @@ def verify_staged(work, *, session=None):
     assert draft.get('state')=='unsubmitted',('Draft is not ready to publish',draft.get('state'))
     expected=json.loads((work/'zenodo-metadata.json').read_text());actual=draft['metadata']
     for key in ['title','description','version','publication_date','creators','contributors','keywords','license','access_right','notes','communities','grants','references','subjects','language']:
-        assert actual.get(key)==expected.get(key),('Staged metadata differs',key)
+        assert same_metadata_value(key,actual.get(key),expected.get(key)),('Staged metadata differs',key)
     assert {(x['identifier'],x['relation']) for x in actual.get('related_identifiers',[])}=={(x['identifier'],x['relation']) for x in expected.get('related_identifiers',[])},'Staged related identifiers differ'
     response=session.get(dep+'/files',timeout=60);response.raise_for_status();files=response.json()
+    assert len(files)==len(payload['files']),'Duplicate staged filenames'
     assert {x.get('filename') or x.get('key'):x.get('checksum','').removeprefix('md5:') for x in files}=={key:spec['md5'] for key,spec in payload['files'].items()},'Staged file inventory differs'
     # Verify actual server-side draft bytes, not only local upload receipts.
     bucket=draft['links']['bucket'];assert bucket.startswith('https://zenodo.org/api/files/')
+    links={f.get('filename') or f.get('key'):f.get('links',{}).get('download') or f.get('links',{}).get('content') for f in files}
     def download(item):
         key,spec=item
-        response=session.get(bucket+'/'+quote(key,safe=''),timeout=180);response.raise_for_status()
+        url=links.get(key) or bucket+'/'+quote(key,safe='')
+        assert url.startswith(('https://zenodo.org/api/files/','https://zenodo.org/api/records/'+str(record)+'/draft/files/')),'Unexpected draft download origin'
+        response=session.get(url,timeout=180);response.raise_for_status()
         assert hashlib.sha256(response.content).hexdigest()==spec['sha256'],('Staged server bytes differ',key)
         return key
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:list(pool.map(download,payload['files'].items()))
