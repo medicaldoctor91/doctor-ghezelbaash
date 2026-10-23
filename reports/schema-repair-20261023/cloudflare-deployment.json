@@ -1,0 +1,49 @@
+{
+  "status": 200,
+  "name": "doctor-ghezelbaash",
+  "productionBranch": "main",
+  "gitConfig": {
+    "production_branch": "main",
+    "production_deployments_enabled": false,
+    "preview_deployment_setting": "none"
+  },
+  "canonicalDeployment": {
+    "id": "51fc7680-1235-4556-b6f2-4bb8d764556c",
+    "url": "https://51fc7680.doctor-ghezelbaash.pages.dev",
+    "stage": {
+      "name": "deploy",
+      "started_on": null,
+      "ended_on": "2026-10-23T17:02:29.183678Z",
+      "status": "success"
+    },
+    "trigger": {
+      "type": "ad_hoc",
+      "metadata": {
+        "branch": "main",
+        "commit_hash": "94611168bacf7630022499204c493f6e4af64f70",
+        "commit_message": "Validated website and mutable distribution alignment",
+        "commit_dirty": false
+      }
+    }
+  },
+  "latestDeployment": {
+    "id": "c5c08a11-3876-40f4-9486-d54d9c9c1c88",
+    "stage": {
+      "name": "queued",
+      "started_on": null,
+      "ended_on": null,
+      "status": "idle"
+    },
+    "trigger": {
+      "type": "github:push",
+      "metadata": {
+        "branch": "codex/repair-schema-detection-20261023",
+        "commit_hash": "949c05a69deff28fcab8c56c7e9632975169887a",
+        "commit_message": "Verify and execute the frozen notebook from exact public Kaggle inputs",
+        "commit_dirty": false
+      }
+    }
+  },
+  "scope": "Read-only Cloudflare project check; no config changes",
+  "recordedUTC": "2026-10-23T17:40:19Z"
+}

@@ -2,7 +2,7 @@
 
 This repository contains the authored website, its complete linked-data graph and tools for the coordinated dataset distributions. The public name is **Saeed Ghezelbash / سعید قزلباش**. Existing historical author names and citations retain their original attribution.
 
-Start with [the maintenance and frozen-release checkpoint](docs/maintenance-release.md). The frozen website source is `b753b84011256f13c4badb21af888e92282565dd`; later tooling/documentation commits are not replacement payload revisions. The reserved exact Dataset DOI is `10.5281/zenodo.23474664`; the collection DOI is `10.5281/zenodo.18765168`. Consult actual publication receipts and live verification for availability.
+Start with [the maintenance and frozen-release checkpoint](docs/maintenance-release.md) for the historical checkpoint and preservation policy. The `b753b84011256f13c4badb21af888e92282565dd` checkpoint is historical; the 2026-10-23 schema repair payload source is `94611168bacf7630022499204c493f6e4af64f70`. See the [dated repair and external verification report](docs/schema-repair-20261023.md) for observed results and remaining service gates. The published immutable Dataset archive is [10.5281/zenodo.23474664](https://doi.org/10.5281/zenodo.23474664), source `ed767f6e6726e1453196e2ec2b312fcad00677e2`; the collection DOI is [10.5281/zenodo.18765168](https://doi.org/10.5281/zenodo.18765168). Later mutable repairs and documentation commits do not rewrite or relabel that archived snapshot.
 
 - [DOI roles and historical release planning](docs/doi-policy.md)
 - [Read-only local audit and exact historical recovery](docs/maintenance/audit-recovery.md)
@@ -13,6 +13,6 @@ Start with [the maintenance and frozen-release checkpoint](docs/maintenance-rele
 Preserve the full homepage inline graph, its ProfilePage + MedicalWebPage architecture and every positioning word. Housekeeping does not regenerate public data, build/deploy the site or publish to any platform. It does not create manual approval requirements or change protection, permissions or secrets. The retained coordinated publisher and its strict validation are separate, explicitly invoked operations.
 
 
-### Immutable archive source pin
+### Published archive source pin
 
-The reserved-record preflight explicitly sets `PREPARE_RESERVED_DOI=23474664` to resolve the first archive source from the real build commit. Before publication, set the public repository variable `ZENODO_23474664_SOURCE_COMMIT` and the Pages build variable `ARCHIVE_SOURCE_COMMIT` to that frozen commit. Later builds must retain this archive pin while recording their own website build commit separately. Local builds use `ARCHIVE_SOURCE_COMMIT=<published archive source commit> npm run build`; absence of a pin outside the reserved-record preflight fails rather than relabelling the immutable archive. Publication receipts remain outside payload files.
+Record `23474664` is published and immutable. Its source pin is `ed767f6e6726e1453196e2ec2b312fcad00677e2`. Later builds retain that archive source while recording their own website build commit separately. Build with `ARCHIVE_SOURCE_COMMIT=ed767f6e6726e1453196e2ec2b312fcad00677e2 npm run build`. The `PREPARE_RESERVED_DOI=23474664` procedure describes the historical first-publication preflight and must not be reused to replace this published archive. Current mutable distributions are checked through exact public revisions, downloaded byte hashes and actual runtime results. Publication receipts remain outside payload files.

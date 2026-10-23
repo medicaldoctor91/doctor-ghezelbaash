@@ -1,0 +1,69 @@
+{
+  "status": "PASS",
+  "scope": "Hugging Face core only: exact public file hashes, complete converted Parquet rows, Viewer previews/rows/statistics. Search/filter and overall release remain uncertified by this check.",
+  "sourceCommit": "94611168bacf7630022499204c493f6e4af64f70",
+  "startedUTC": "2026-10-23T17:19:08Z",
+  "finishedUTC": "2026-10-23T17:19:21Z",
+  "filesInventoryMatchesFrozen": true,
+  "totalConvertedRowsMatched": 26545,
+  "runtimeFeatures": "separate runtime audit, not certified by core",
+  "result": {
+    "revision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e",
+    "filesSha256Matched": 203,
+    "viewer": {
+      "clinical_passages": {
+        "rows": 3249,
+        "completeConvertedRowsMatched": 3249,
+        "responseRevisionVerified": true,
+        "preview": true,
+        "viewer": true,
+        "statistics": true,
+        "search": "not certified by core; separate runtime audit",
+        "filter": "not certified by core; separate runtime audit"
+      },
+      "clinical_answers": {
+        "rows": 125,
+        "completeConvertedRowsMatched": 125,
+        "responseRevisionVerified": true,
+        "preview": true,
+        "viewer": true,
+        "statistics": true,
+        "search": "not certified by core; separate runtime audit",
+        "filter": "not certified by core; separate runtime audit"
+      },
+      "entity_facts": {
+        "rows": 22235,
+        "completeConvertedRowsMatched": 22235,
+        "responseRevisionVerified": true,
+        "preview": true,
+        "viewer": true,
+        "statistics": true,
+        "search": "not certified by core; separate runtime audit",
+        "filter": "not certified by core; separate runtime audit"
+      },
+      "query_matrix": {
+        "rows": 876,
+        "completeConvertedRowsMatched": 876,
+        "responseRevisionVerified": true,
+        "preview": true,
+        "viewer": true,
+        "statistics": true,
+        "search": "not certified by core; separate runtime audit",
+        "filter": "not certified by core; separate runtime audit"
+      },
+      "market_positioning": {
+        "rows": 60,
+        "completeConvertedRowsMatched": 60,
+        "responseRevisionVerified": true,
+        "preview": true,
+        "viewer": true,
+        "statistics": true,
+        "search": "not certified by core; separate runtime audit",
+        "filter": "not certified by core; separate runtime audit"
+      }
+    }
+  },
+  "publicFileCount": 203,
+  "publicBytesVerified": 67751760,
+  "publicFilesInventoryExactlyMatchesFrozen": true
+}

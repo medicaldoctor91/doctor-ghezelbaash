@@ -1,0 +1,93 @@
+{
+  "provider": "AdNabu Schema Validator",
+  "public_interface": "https://www.adnabu.com/free-tools/schema-validator",
+  "checked_at_utc": "2026-10-23T17:20:31.624851+00:00",
+  "website_source_before": "94611168bacf7630022499204c493f6e4af64f70",
+  "website_source_after": "94611168bacf7630022499204c493f6e4af64f70",
+  "same_source": true,
+  "scope": "Hosted detection and JSON-LD extraction evidence for five representative URLs. This is not Google Rich Results Test, Schema.org hosted validator acceptance, Ahrefs recrawl, or full vocabulary/eligibility conformance.",
+  "provider_rule_caveat": "The provider reports absent Product schema as a critical ecommerce rule for every page. That rule does not establish a defect on a physician education website and must not be used to add irrelevant Product markup.",
+  "pages": [
+    {
+      "page": "home",
+      "url": "https://www.ghezelbaash.ir/",
+      "http_status": 200,
+      "success": true,
+      "extraction_errors": [],
+      "detected_entities": 1600,
+      "tool_reported_total": 1600,
+      "homepage_profile_type": [
+        "ProfilePage",
+        "MedicalWebPage"
+      ],
+      "homepage_profile_mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      }
+    },
+    {
+      "page": "botox",
+      "url": "https://www.ghezelbaash.ir/botox",
+      "http_status": 200,
+      "success": true,
+      "extraction_errors": [],
+      "detected_entities": 137,
+      "tool_reported_total": 137,
+      "homepage_profile_type": [
+        "ProfilePage",
+        "MedicalWebPage"
+      ],
+      "homepage_profile_mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      }
+    },
+    {
+      "page": "acne",
+      "url": "https://www.ghezelbaash.ir/acne-pigmentation-and-scars",
+      "http_status": 200,
+      "success": true,
+      "extraction_errors": [],
+      "detected_entities": 105,
+      "tool_reported_total": 105,
+      "homepage_profile_type": [
+        "ProfilePage",
+        "MedicalWebPage"
+      ],
+      "homepage_profile_mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      }
+    },
+    {
+      "page": "clinic",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+      "http_status": 200,
+      "success": true,
+      "extraction_errors": [],
+      "detected_entities": 85,
+      "tool_reported_total": 85,
+      "homepage_profile_type": [
+        "ProfilePage",
+        "MedicalWebPage"
+      ],
+      "homepage_profile_mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      }
+    },
+    {
+      "page": "english",
+      "url": "https://www.ghezelbaash.ir/aesthetic-guide-en",
+      "http_status": 200,
+      "success": true,
+      "extraction_errors": [],
+      "detected_entities": 147,
+      "tool_reported_total": 147,
+      "homepage_profile_type": [
+        "ProfilePage",
+        "MedicalWebPage"
+      ],
+      "homepage_profile_mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      }
+    }
+  ],
+  "method": "Public hosted URL submission through the provider's no-login interface"
+}
