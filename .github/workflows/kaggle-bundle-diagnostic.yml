@@ -25,7 +25,7 @@ jobs:
       ARCHIVE_SOURCE_COMMIT: ${{ vars.ZENODO_23474664_SOURCE_COMMIT }}
       INPUT_KAGGLE_VERSION: ${{ inputs.version }}
       REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
-      DIAGNOSTIC_DIR: ${{ runner.temp }}/kaggle-bundle-diagnostic
+      DIAGNOSTIC_DIR: /tmp/kaggle-bundle-diagnostic
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
@@ -133,5 +133,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kaggle-29-owner-public-bundle-diagnostic
-          path: ${{ runner.temp }}/kaggle-bundle-diagnostic/report.json
+          path: /tmp/kaggle-bundle-diagnostic/report.json
           if-no-files-found: warn
