@@ -52,7 +52,7 @@ To enable the dist-backed tests: `npm run build && node --test tests/google-rich
 The final-HTML tests deliberately skip before `dist` exists. No build or test execution result is claimed in this report.
 
 ## 6. Live verification
-The public production payload has the expected JSON-LD structure at all five sampled URLs (snapshot checked on 2026-10-24). Independent Google Search Console inspection previously confirmed indexability and matching canonicals for four URLs (home, botox, clinic, English guide); that observation is not an RRT eligibility verdict. No production changes were deployed as part of this audit.
+The public production payload has the expected JSON-LD structure at all five sampled URLs (snapshot checked on 2026-10-24). Independent Google Search Console inspection confirmed indexability, successful page fetches and matching canonicals for all five URLs (including the acne page last crawled at 2026-10-22T02:47:49Z); that observation is not an RRT eligibility verdict. No production changes were deployed as part of this audit.
 
 ## 7. Unverified items and next gate
 - Actual Google Rich Results Test output (screenshots, rendered HTML diagnostics and test settings) for each exact URL: **not obtained**. Do not claim Google approval or reproduce the user's reported zero without independent test evidence.
