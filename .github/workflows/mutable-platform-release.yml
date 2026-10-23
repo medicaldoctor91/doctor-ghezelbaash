@@ -48,6 +48,7 @@ jobs:
         if: inputs.operation != 'preflight'
         run: |
           python tests/mutable-platform-release.test.py
+          python tests/immutable-archive.test.py
           python tests/coordinated-doi-release.test.py
           python tests/platform-publication.test.py
       - name: Build and validate candidate before any platform write
@@ -60,6 +61,7 @@ jobs:
           python tests/platform-bundle-sync.test.py
           python tests/platform-publication.test.py
           python tests/mutable-platform-release.test.py
+          python tests/immutable-archive.test.py
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
           python tests/validate_platform_bundle.py dist --no-query --rdf

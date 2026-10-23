@@ -3,8 +3,9 @@ import argparse, concurrent.futures, copy, hashlib, json, os, re, shutil, subpro
 from pathlib import Path
 import requests
 import coordinated_doi_release as gates
-from platform_bundle import build_hf, build_kaggle, context, dump, load, sha, HF_REPO, KAGGLE_REF
+from platform_bundle import build_hf, build_kaggle, context, dump, load, sha, HF_REPO, KAGGLE_REF, DOI_POLICY
 from sync_platform_machine_resources import kaggle_client, extract_package, source_metadata
+from immutable_archive import verify_published_archive
 ROOT=Path(__file__).resolve().parents[2]
 SITE=gates.SITE
 
@@ -33,7 +34,18 @@ def snapshot(w):
  for name in ['release-provenance.json','integrity-manifest.json']:(w/('before-'+name)).write_bytes(read(SITE+name).content)
  print(json.dumps(state),flush=True);return state
 
-def archive_scope(text):
+def archive_scope(text, published=False):
+ if published:
+  boundary='The published immutable archive '+DOI_POLICY['currentArchive']['doi']+' preserves source '+DOI_POLICY['currentArchive']['sourceCommit']+'. Cite these updated distribution bytes by their own platform revision and website source; the archive files are unchanged.'
+  for original in [
+   'The exact Dataset archive belongs to this coordinated release; the website source archive remains historical.',
+   'The exact Dataset archive belongs to this coordinated release; the software source archive remains historical.',
+   'Use the assigned exact DOI to cite this coordinated archive.',
+   'the exact release DOI identifies this coordinated snapshot; historical records retain their own provenance.',
+   'while the necessary corrected Zenodo packaging has the exact DOI and version stated above.',
+   'This coordinated release uses the exact Dataset DOI stated above; subsequent maintenance must respect the archived snapshot and platform revision boundaries.']:
+   text=text.replace(original,boundary)
+  return text
  # This maintenance does not turn a reserved DOI into a published archive.
  replacements={
  'The exact Dataset archive belongs to this coordinated release; the website source archive remains historical.':'The exact Dataset DOI remains a reserved archive binding; this maintenance updates only site, HF, Kaggle and notebook distributions. Historical archives remain unchanged.',
@@ -58,9 +70,12 @@ def mutable_context(source):
 
 def preflight(w,expected):
  state=snapshot(w);assert state['hfRevision']==expected['hfRevision'];assert state['siteSource']==expected['siteSource'];assert state['kaggleOwner']=={'version':expected['kaggleVersion'],'status':'ready'};assert state['notebookVersion']==expected['notebookVersion'];assert state['kagglePublicDefault']==expected['kaggleVersion']
- # Freeze a truthful boundary: no reserve/publish/edit of the pending DOI.
- assert state['zenodoPublicHTTP']==404 and state.get('zenodo',{}).get('submitted') is False, 'Archive status changed: review DOI scope before building'
+ # This maintenance preserves the published archive and its independent source pin.
+ assert state['zenodoPublicHTTP']==200, 'Published immutable archive must be publicly available'
+ archive=verify_published_archive(w/'archive-public-before',DOI_POLICY,DOI_POLICY['currentArchive']['sourceCommit'],read)
+ dump(w/'archive-baseline.json',archive)
  assert load(ROOT/'dist/release-provenance.json')['sourceCommit']==os.environ['GITHUB_SHA']
+ assert load(ROOT/'dist/doi-policy.json')['currentArchive']['sourceCommit']==archive['sourceCommit'], 'Website relabels the immutable archive'
  source=os.environ['GITHUB_SHA'];shutil.copytree(ROOT/'dist',w/'website')
  # Snapshot every public baseline body against the current live manifest.
  manifest=load(w/'before-integrity-manifest.json');controls={'_headers','_redirects','_worker.js','_routes.json'}
@@ -80,23 +95,21 @@ def preflight(w,expected):
  for line in (kg_before/'checksums.sha256').read_text().splitlines():h,n=line.split('  ',1);assert sha(kg_before/n)==h
  assert load(kg_before/'kaggle-manifest.json')['desired_kaggle_version']==expected['kaggleVersion']
  ctx=mutable_context(source)
- # Preserve archive source metadata; mutable source provenance has its own fields.
- import platform_bundle
- platform_bundle.DOI_POLICY=load(ROOT/'src/canonical/doi-policy.json')
+ # Keep platform_bundle's resolved archive source pin; its template has no sourceCommit.
  hf=w/'hf-stage';build_hf(w/'website',baseline,hf,ctx)
  obsolete=[]
  for file in list(hf.glob('assets/guide*.json')):
   if not (w/'website'/file.relative_to(hf)).exists():obsolete.append(file.relative_to(hf).as_posix());file.unlink()
  dump(w/'removed-obsolete-assets.json',obsolete)
- for n in ['README.md']:(hf/n).write_text(archive_scope((hf/n).read_text()))
+ for n in ['README.md']:(hf/n).write_text(archive_scope((hf/n).read_text(),published=True))
  for n in ['current-release-matrix.json','release-attestation.json']:
-  d=load(hf/n);d.update(archiveBindingStatus='reserved, unpublished; no archive mutation in this maintenance',archivedSnapshotsUpdated=False);dump(hf/n,d)
- # CFF describes these mutable bytes by source, not a reserved archive as published.
+  d=load(hf/n);d.update(archiveBindingStatus='published immutable archive; this maintenance changes only mutable distributions',archiveSourceCommit=archive['sourceCommit'],archivedSnapshotsUpdated=False);dump(hf/n,d)
+ # CFF describes these mutable bytes by source and preserves the archive's own citation.
  import yaml
  if (hf/'CITATION.cff').exists():
-  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+source.'+source[:12],url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Exact archive DOI '+gates.P['currentArchive']['doi']+' is reserved and unpublished; collection DOI '+gates.P['concept']['doi']+' remains stable.')
+  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+source.'+source[:12],url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
   for ref in cff.get('references',[]):
-   if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Reserved unpublished archive binding '+gates.P['currentArchive']['packagingVersion']
+   if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
   (hf/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
  reseal_hf(hf)
  repo=w/'hf-git';env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'}
@@ -110,12 +123,12 @@ def preflight(w,expected):
  gates.run(['git','commit','-m','Align website and typed datasets; source '+source],cwd=repo,env=git_env);revision=gates.run(['git','rev-parse','HEAD'],cwd=repo)
  control=load(w/'owner-metadata/dataset-metadata.json');control=dict(control.get('info') or control);control['id']=KAGGLE_REF;dump(kg_before/'dataset-metadata.json',control)
  kg=w/'kaggle';build_kaggle(hf,kg_before,kg,ctx,expected['kaggleVersion']+1,revision)
- (kg/'README.md').write_text(archive_scope((kg/'README.md').read_text()))
- # The reserved archive is a reference, not a DOI falsely assigned to changed mutable bytes.
+ (kg/'README.md').write_text(archive_scope((kg/'README.md').read_text(),published=True))
+ # The archive citation remains a reference; changed mutable bytes keep their own version.
  import yaml
- cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+kaggle.'+str(expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. The collection DOI is stable; the exact archive DOI is reserved and unpublished.')
+ cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+kaggle.'+str(expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
  for ref in cff.get('references',[]):
-  if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Reserved unpublished archive binding '+gates.P['currentArchive']['packagingVersion']
+  if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
  (kg/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
  seal_kg(kg)
  tables=load(hf/'viewer/packaging.json')['tables'];control.update(description=(kg/'README.md').read_text(),subtitle=', '.join(format(tables[n]['rows'],',')+' '+label for n,label in [('entity_facts','facts'),('clinical_passages','clinical passages'),('query_matrix','queries'),('clinical_answers','source-linked answers')]),userSpecifiedSources=source_metadata(control['userSpecifiedSources'],revision,source));dump(kg/'dataset-metadata.json',control)
@@ -144,8 +157,9 @@ def preflight(w,expected):
   for folder in [hf,kg]:assert sha(folder/name)==sha(baseline/name),('Protected derived positioning changed',folder,name)
  for name in inventory(ROOT/'public'):
   assert sha(w/'website'/name)==sha(ROOT/'public'/name),('Public payload modified',name)
- plan={'candidateSchema':'mutable-distributions-1','sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':expected['kaggleVersion'],'kaggleVersion':expected['kaggleVersion']+1,'notebookPreviousVersion':expected['notebookVersion'],'notebookVersion':expected['notebookVersion']+1,'sitePreviousSource':state['siteSource'],'archiveWrites':False,'archivePublicStatus':404}
- dump(w/'release-plan.json',plan);dump(w/'frozen-sha256.json',{**{k:inventory(w/k) for k in ['website','hf-stage','kaggle','notebook']},'controls':{'release-plan.json':sha(w/'release-plan.json')}});guard_frozen(w)
+ for folder in [w/'website',hf,kg]:assert load(folder/'doi-policy.json')['currentArchive']['sourceCommit']==archive['sourceCommit'], ('Immutable archive source changed',folder)
+ plan={'candidateSchema':'mutable-distributions-2','sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':expected['kaggleVersion'],'kaggleVersion':expected['kaggleVersion']+1,'notebookPreviousVersion':expected['notebookVersion'],'notebookVersion':expected['notebookVersion']+1,'sitePreviousSource':state['siteSource'],'archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive['sourceCommit']}
+ dump(w/'release-plan.json',plan);dump(w/'frozen-sha256.json',{**{k:inventory(w/k) for k in ['website','hf-stage','kaggle','notebook']},'controls':{n:sha(w/n) for n in ['release-plan.json','archive-baseline.json']}});guard_frozen(w)
  assert read(SITE+'release-provenance.json').json()['sourceCommit']==state['siteSource'];assert read('https://huggingface.co/api/datasets/'+HF_REPO).json()['sha']==state['hfRevision'];gates.guard_owner(client,expected['kaggleVersion'])
  dump(w/'preflight-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'localExecution':local});print('MUTABLE CANDIDATE FROZEN AND VALIDATED '+sha(w/'frozen-sha256.json'),flush=True)
 
@@ -182,20 +196,30 @@ def fresh_viewer_reads(work,original):
   r.raise_for_status();return r
  return fresh
 
+def guard_hf_git(w,plan):
+ repo=w/'hf-git'
+ assert gates.run(['git','rev-parse','HEAD'],cwd=repo)==plan['hfRevision'], 'Frozen HF Git commit differs from the release plan'
+ assert not gates.run(['git','status','--porcelain'],cwd=repo), 'Frozen HF Git tree is dirty'
+ from git_payload import validate_index
+ return validate_index(repo,w/'hf-stage')
+
 def publish(w):
- plan=load(w/'release-plan.json');assert plan['candidateSchema']=='mutable-distributions-1' and plan['archiveWrites'] is False;guard_frozen(w);assert load(w/'preflight-report.json')['status']=='PASS'
+ plan=load(w/'release-plan.json');assert plan['candidateSchema']=='mutable-distributions-2' and plan['archiveWrites'] is False and plan['archivePublicStatus']==200;guard_frozen(w);assert load(w/'preflight-report.json')['status']=='PASS'
+ guard_hf_git(w,plan)
+ archive=load(w/'archive-baseline.json');assert plan['archiveSourceCommit']==archive['sourceCommit']==DOI_POLICY['currentArchive']['sourceCommit']
+ verify_published_archive(w/'archive-public-at-cutover',DOI_POLICY,archive['sourceCommit'],read,expected=archive,verify_bytes=False)
  state=snapshot(w/'publication-before');client=kaggle_client();assert state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']};assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']};assert state['kaggleOwner']['version'] in {plan['kagglePreviousVersion'],plan['kaggleVersion']}
  # All candidate bytes already validated before these first writes.
  if state['hfRevision']==plan['hfParent']:
   ask=w/'askpass.py';ask.write_text('#!/usr/bin/env python3\nimport os,sys\nprint(os.environ["HF_TOKEN"] if "password" in sys.argv[1].lower() else "hf_user")\n');ask.chmod(0o700)
   gates.run(['git','push','origin','HEAD:main'],cwd=w/'hf-git',env={**os.environ,'GIT_ASKPASS':str(ask),'GIT_TERMINAL_PROMPT':'0','GIT_LFS_SKIP_SMUDGE':'1'})
- if state['siteSource']==plan['sitePreviousSource']:subprocess.run(['npx','--yes','wrangler@4','pages','deploy',str(w/'website'),'--project-name=doctor-ghezelbaash','--branch=main','--commit-hash='+plan['sourceCommit'],'--commit-message=Validated media digest and mutable distribution alignment','--commit-dirty=false'],cwd=ROOT,check=True)
+ if state['siteSource']==plan['sitePreviousSource']:subprocess.run(['npx','--yes','wrangler@4','pages','deploy',str(w/'website'),'--project-name=doctor-ghezelbaash','--branch=main','--commit-hash='+plan['sourceCommit'],'--commit-message=Validated website and mutable distribution alignment','--commit-dirty=false'],cwd=ROOT,check=True)
  gates.retry(w,'site',lambda:gates.verify_site(w),attempts=12)
  gates.retry(w,'media',lambda:verify_media(w),attempts=6)
  if state['kaggleOwner']['version']==plan['kagglePreviousVersion']:
   gates.guard_owner(client,plan['kagglePreviousVersion']);guard_frozen(w)
   # SDK consumes final metadata with this version; exactly one version write.
-  response=client.dataset_create_version(str(w/'kaggle'),version_notes='Align validated website source '+plan['sourceCommit']+'; immutable HF '+plan['hfRevision']+'; media rights and Range Content-Digest repair',quiet=True,convert_to_csv=False,delete_old_versions=False,dir_mode='zip')
+  response=client.dataset_create_version(str(w/'kaggle'),version_notes='Align validated website source '+plan['sourceCommit']+'; immutable HF '+plan['hfRevision']+'; preserve archive source '+archive['sourceCommit'],quiet=True,convert_to_csv=False,delete_old_versions=False,dir_mode='zip')
   dump(w/'kaggle-submission.json',{'status':str(getattr(response,'status','submitted')),'target':plan['kaggleVersion']})
  def metadata_after_ready():
   gates.guard_owner(client,plan['kaggleVersion']);folder=w/'owner-after';folder.mkdir(exist_ok=True);client.dataset_metadata(KAGGLE_REF,str(folder));v=load(folder/'dataset-metadata.json');v=dict(v.get('info') or v);desired=load(w/'kaggle/dataset-metadata.json')
@@ -209,7 +233,8 @@ def publish(w):
  gates.publish_notebook(w,client)
  gates.get=fresh_viewer_reads(w,gates.get)
  gates.retry(w,'hf',lambda:gates.verify_hf(w),attempts=18)
- guard_frozen(w);dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
+ verify_published_archive(w/'archive-public-after',DOI_POLICY,archive['sourceCommit'],read,expected=archive)
+ guard_frozen(w);dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files'])});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
 
 def complete_notebook(w):
  """Only notebook may be written; independent runtime faults stay visible."""

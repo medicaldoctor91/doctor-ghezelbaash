@@ -23,6 +23,15 @@ class Tests(unittest.TestCase):
  def test_positioning_text_is_untouched(self):
   original=(ROOT/'src/canonical/enrichment/instruction_examples_fa_market_positioning.jsonl').read_text()
   self.assertEqual(release.archive_scope(original),original)
+  self.assertEqual(release.archive_scope(original,published=True),original)
+ def test_published_archive_has_its_own_source_and_citation_boundary(self):
+  original='Use the assigned exact DOI to cite this coordinated archive.'
+  text=release.archive_scope(original,published=True)
+  self.assertIn(release.DOI_POLICY['currentArchive']['sourceCommit'],text)
+  self.assertIn('unchanged',text)
+  self.assertIn('platform revision and website source',text)
+  self.assertNotIn('reserved',text)
+  self.assertNotIn('unpublished',text)
  def test_no_zenodo_mutation_calls(self):
   source=(ROOT/'.github/scripts/mutable_platform_release.py').read_text();tree=ast.parse(source)
   for node in ast.walk(tree):
@@ -79,4 +88,35 @@ class FreshViewerTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder,patch.object(release.requests,'get',return_value=response):
    with self.assertRaises(release.requests.HTTPError):release.fresh_viewer_reads(folder,Mock())(response.url)
    self.assertEqual(len(list((Path(folder)/'viewer-response-evidence').glob('*.json'))),1)
+
+class FrozenGitTests(unittest.TestCase):
+ def repo(self,root):
+  import subprocess
+  repo=root/'hf-git';repo.mkdir();stage=root/'hf-stage';stage.mkdir()
+  def git(*args):return subprocess.check_output(['git',*args],cwd=repo,stderr=subprocess.DEVNULL).decode().strip()
+  git('init','-q');git('config','user.name','Test');git('config','user.email','test@example.invalid')
+  for folder in [repo,stage]:(folder/'data.txt').write_text('frozen payload\n')
+  git('add','data.txt');git('commit','-qm','Frozen payload')
+  return repo,stage,git,git('rev-parse','HEAD')
+ def assert_blocked_before_external_operations(self,root,revision,message):
+  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200,'hfRevision':revision}
+  with patch.object(release,'load',side_effect=[plan,{'status':'PASS'}]),patch.object(release,'guard_frozen'),patch.object(release,'verify_published_archive') as archive,patch.object(release,'snapshot') as snapshot:
+   with self.assertRaisesRegex(AssertionError,message):release.publish(root)
+   archive.assert_not_called();snapshot.assert_not_called()
+ def test_restored_hf_head_drift_blocks_before_any_platform_operation(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);repo,stage,git,revision=self.repo(root)
+   (repo/'data.txt').write_text('different commit\n');git('add','data.txt');git('commit','-qm','Unexpected commit')
+   self.assert_blocked_before_external_operations(root,revision,'commit differs')
+ def test_dirty_restored_hf_worktree_blocks_before_any_platform_operation(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);repo,stage,git,revision=self.repo(root)
+   (repo/'data.txt').write_text('uncommitted alteration\n')
+   self.assert_blocked_before_external_operations(root,revision,'tree is dirty')
+ def test_clean_hf_index_must_match_frozen_logical_payload(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);repo,stage,git,revision=self.repo(root)
+   self.assertEqual(release.guard_hf_git(root,{'hfRevision':revision})['files'],1)
+   (stage/'data.txt').write_text('different candidate payload\n')
+   self.assert_blocked_before_external_operations(root,revision,'data.txt')
 if __name__=='__main__':unittest.main()
