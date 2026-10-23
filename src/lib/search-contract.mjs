@@ -2,8 +2,9 @@ const values=v=>Array.isArray(v)?v:v==null?[]:[v];
 const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariable','Observation','SoftwareSourceCode','FAQPage']);
 const OMIT=Symbol('omit');
 const identityKeys=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
-const personBoundaryKeys=new Set([...identityKeys,'givenName','familyName','honorificPrefix','jobTitle','disambiguatingDescription','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage','hasCredential','skills','knowsAbout']);
-const clinicBoundaryKeys=new Set([...identityKeys,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','owner','founder','priceRange','areaServed']);
+const personBoundaryKeys=new Set([...identityKeys,'additionalType','givenName','familyName','additionalName','honorificPrefix','jobTitle','disambiguatingDescription','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage','nationality','areaServed','affiliation','alumniOf','potentialAction','hasOccupation','hasCredential','skills','knowsAbout','address','geo','telephone','email','practicesAt','workLocation','owns','image']);
+const clinicBoundaryKeys=new Set([...identityKeys,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','owner','founder','priceRange','areaServed','image','logo','location','containedInPlace','potentialAction','contactPoint','mainEntityOfPage']);
+const imageBoundaryKeys=new Set([...identityKeys,'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','about','creator','publisher','copyrightHolder','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','version','keywords','representativeOfPage']);
 const credentialBoundaryKeys=new Set([...identityKeys,'credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires']);
 const termBoundaryKeys=new Set([...identityKeys,'termCode','inDefinedTermSet']);
 const termSetBoundaryKeys=new Set([...identityKeys,'dateModified']);
@@ -18,6 +19,7 @@ function focusedAuthorityBoundary(node,id,primaryPageId){
   // relationships remain in the canonical graph and the full homepage graph.
   const keys=types.includes('Person')?personBoundaryKeys
     :types.some(type=>['MedicalClinic','PhysiciansOffice','LocalBusiness'].includes(type))?clinicBoundaryKeys
+    :types.includes('ImageObject')?imageBoundaryKeys
     :types.includes('EducationalOccupationalCredential')?credentialBoundaryKeys
     :types.includes('DefinedTerm')?termBoundaryKeys
     :types.includes('DefinedTermSet')?termSetBoundaryKeys

@@ -3203,12 +3203,20 @@ export function compileCanonicalSource() {
           text(answer.text, "FAQPage.Answer.text");
         }
       }
-      const clinics = nodes.filter((node) => hasType(node, "MedicalClinic") || hasType(node, "LocalBusiness"));
+      const clinics = nodes.filter((node) => ["MedicalClinic", "PhysiciansOffice", "LocalBusiness", "IndividualPhysician"].some(type => hasType(node, type)));
       for (const clinic of clinics) {
         text(clinic.name, "LocalBusiness.name");
         const address = resolve(clinic.address, ["PostalAddress"], "LocalBusiness.address");
         for (const property of ["streetAddress", "addressLocality", "addressRegion", "addressCountry", "postalCode"])
           text(address[property], "Published clinic address." + property);
+        if (hasType(clinic, "IndividualPhysician")) {
+          const images = values(clinic.image);
+          if (!images.length) fail("Published IndividualPhysician.image must retain its authored images");
+          for (const image of images) {
+            if (typeof image === "string") webUrl(image, "IndividualPhysician.image");
+            else resolve(image, ["ImageObject"], "IndividualPhysician.image");
+          }
+        }
       }
       const images = nodes.filter((node) => hasType(node, "ImageObject"));
       for (const image of images) {
@@ -3390,7 +3398,7 @@ export function compileCanonicalSource() {
       const identityTypes = new Set(["Person", "MedicalClinic", "PhysiciansOffice", "LocalBusiness", "Organization", "EducationalOrganization", "CollegeOrUniversity", "WebSite", "ServiceChannel"]);
       const personKeys = new Set(["@id", "@type", "additionalType", "name", "givenName", "familyName", "additionalName", "alternateName",
         "honorificPrefix", "jobTitle", "description", "disambiguatingDescription", "url", "mainEntityOfPage", "identifier", "sameAs",
-        "image", "email", "telephone", "knowsLanguage", "nationality", "address", "practicesAt", "workLocation", "worksFor",
+        "image", "email", "telephone", "knowsLanguage", "nationality", "address", "geo", "practicesAt", "workLocation", "owns", "worksFor",
         "affiliation", "alumniOf", "medicalSpecialty", "areaServed", "potentialAction"]);
       const clinicKeys = new Set(["@id", "@type", "name", "alternateName", "description", "url", "identifier", "sameAs", "image", "logo",
         "address", "telephone", "location", "owner", "founder", "employee", "areaServed", "geo", "openingHoursSpecification",

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {closeSearchReferences} from '../src/lib/search-contract.mjs';
+import {SOURCE} from '../src/canonical/source.mjs';
 
 const origin = 'https://example.test';
 const personId = origin + '/#saeed-ghezelbash';
@@ -152,4 +153,43 @@ test('focused procedures retain content meaning without a duplicate reciprocal c
   assert.deepEqual(byId.get(procedureId).subjectOf, [{'@id': independent['@id']}], 'nonreciprocal evidence remains');
   assert.deepEqual(byId.get(independent['@id']), independent);
   assert.deepEqual(graph, before, 'the full canonical graph retains both authored directions');
+});
+
+test('the real physician retains contact, practice, education, occupation and licensed image identities', () => {
+  const graph = SOURCE.graph;
+  const canonical = new Map(graph['@graph'].map(node => [node['@id'], node]));
+  const origin = SOURCE.canonicalOrigin;
+  const physicianId = origin + '/#saeed-ghezelbash';
+  const physician = canonical.get(physicianId);
+  const primary = {'@id': origin + '/test-clinical-page#webpage', '@type': 'MedicalWebPage',
+    name: 'Clinical page', mainEntity: {'@id': physicianId}};
+  const before = structuredClone(graph);
+  const document = {'@context': 'https://schema.org', '@graph': [primary]};
+
+  closeSearchReferences(document, {origin, graph, primaryPageId: primary['@id'], project: id => canonical.get(id)});
+
+  const output = new Map(document['@graph'].map(node => [node['@id'], node]));
+  const actual = output.get(physicianId);
+  assert.ok(actual['@type'].includes('IndividualPhysician'));
+  for (const key of ['additionalType', 'additionalName', 'nationality', 'email', 'telephone', 'address', 'geo',
+    'practicesAt', 'workLocation', 'owns', 'areaServed', 'image', 'alumniOf', 'potentialAction', 'hasOccupation']) {
+    if (key in physician) assert.deepEqual(actual[key], physician[key], 'real physician ' + key);
+  }
+  const address = output.get(actual.address['@id']);
+  assert.ok([address['@type']].flat().includes('PostalAddress'));
+  for (const key of ['streetAddress', 'addressLocality', 'addressRegion', 'addressCountry', 'postalCode'])
+    assert.deepEqual(address[key], canonical.get(actual.address['@id'])[key], 'complete physician address ' + key);
+  assert.equal(output.get(actual.practicesAt['@id']).owner['@id'], physicianId);
+  const images = [actual.image].flat();
+  assert.ok(images.length, 'the physician must retain its published image identities');
+  for (const ref of images) {
+    const image = output.get(ref['@id']), original = canonical.get(ref['@id']);
+    assert.ok(image && [image['@type']].flat().includes('ImageObject'));
+    for (const key of ['name', 'alternateName', 'description', 'caption', 'contentUrl', 'encodingFormat', 'width', 'height',
+      'creator', 'publisher', 'copyrightHolder', 'copyrightNotice', 'creditText', 'license', 'acquireLicensePage'])
+      if (key in original) assert.deepEqual(image[key], original[key], 'licensed image ' + key);
+    assert.equal(image.encoding, undefined, 'supporting images do not expand rendition inventories');
+    assert.equal(image.isPartOf, undefined, 'supporting images do not expand the homepage corpus');
+  }
+  assert.deepEqual(graph, before, 'the real canonical graph must remain unchanged');
 });
