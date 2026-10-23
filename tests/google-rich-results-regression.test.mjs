@@ -20,7 +20,7 @@ const field = (tag, key) => {
   return match?.[2];
 };
 const tags = (html, tagName) => [...html.matchAll(new RegExp('<' + tagName + '\\b[^>]*>', 'gi'))].map(x => x[0]);
-const docScripts = html => [...html.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script\\s*>/gi)]
+const docScripts = html => [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .filter(m => field(m[1], 'type') === 'application/ld+json')
   .map(m => JSON.parse(m[2]));
 function checkBreadcrumb(doc, url) {
@@ -78,7 +78,7 @@ for (const route of ROUTES) {
     const canonical = tags(html, 'link').find(t => field(t, 'rel') === 'canonical');
     assert.equal(field(canonical || '', 'href'), url, 'canonical mismatch');
     const robots = tags(html, 'meta').find(t => field(t, 'name')?.toLowerCase() === 'robots');
-    assert.match(field(robots || '', 'content') || '', /\\bindex\\s*,\\s*follow\\b/i);
+    assert.match(field(robots || '', 'content') || '', /\bindex\s*,\s*follow\b/i);
     const docs = docScripts(html);
     assert.equal(docs.length, 1, 'exactly one server-delivered JSON-LD script');
     assert.ok(Array.isArray(docs[0]['@graph']));
