@@ -6,6 +6,7 @@ import coordinated_doi_release as gates
 from platform_bundle import build_hf, build_kaggle, context, dump, load, sha, HF_REPO, KAGGLE_REF, DOI_POLICY
 from sync_platform_machine_resources import kaggle_client, extract_package, source_metadata
 from immutable_archive import verify_published_archive
+from kaggle_baseline import public_baseline_state, prepare_baseline
 ROOT=Path(__file__).resolve().parents[2]
 SITE=gates.SITE
 
@@ -69,7 +70,8 @@ def mutable_context(source):
  return ctx
 
 def preflight(w,expected):
- state=snapshot(w);assert state['hfRevision']==expected['hfRevision'];assert state['siteSource']==expected['siteSource'];assert state['kaggleOwner']=={'version':expected['kaggleVersion'],'status':'ready'};assert state['notebookVersion']==expected['notebookVersion'];assert state['kagglePublicDefault']==expected['kaggleVersion']
+ state=snapshot(w);assert state['hfRevision']==expected['hfRevision'];assert state['siteSource']==expected['siteSource'];assert state['notebookVersion']==expected['notebookVersion']
+ kg_publication=public_baseline_state(state['kaggleOwner'],load(w/'kaggle-public-before.json'),expected['kaggleVersion'])
  # This maintenance preserves the published archive and its independent source pin.
  assert state['zenodoPublicHTTP']==200, 'Published immutable archive must be publicly available'
  archive=verify_published_archive(w/'archive-public-before',DOI_POLICY,DOI_POLICY['currentArchive']['sourceCommit'],read)
@@ -91,9 +93,8 @@ def preflight(w,expected):
   n=x['rfilename'];r=read('https://huggingface.co/datasets/'+HF_REPO+'/resolve/'+state['hfRevision']+'/'+requests.utils.quote(n,safe='/'));p=baseline/n;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(r.content)
  with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(hub_file,load(w/'hf-before-info.json')['siblings']))
  for n,v in load(baseline/'dist-sha256.json')['files'].items():assert sha(baseline/n)==v['sha256'],('HF baseline integrity',n)
- kg_before=w/'kaggle-before';(w/'kaggle-before.zip').write_bytes(read('https://www.kaggle.com/api/v1/datasets/download/'+KAGGLE_REF+'?datasetVersionNumber='+str(expected['kaggleVersion'])).content);extract_package(w/'kaggle-before.zip',kg_before)
- for line in (kg_before/'checksums.sha256').read_text().splitlines():h,n=line.split('  ',1);assert sha(kg_before/n)==h
- assert load(kg_before/'kaggle-manifest.json')['desired_kaggle_version']==expected['kaggleVersion']
+ kg_before=w/'kaggle-before'
+ kg_baseline=prepare_baseline(w,KAGGLE_REF,expected['kaggleVersion'],state['hfRevision'],load(baseline/'release-provenance.json')['sourceCommit'],read,extract_package,kg_publication)
  ctx=mutable_context(source)
  # Keep platform_bundle's resolved archive source pin; its template has no sourceCommit.
  hf=w/'hf-stage';build_hf(w/'website',baseline,hf,ctx)
@@ -158,8 +159,8 @@ def preflight(w,expected):
  for name in inventory(ROOT/'public'):
   assert sha(w/'website'/name)==sha(ROOT/'public'/name),('Public payload modified',name)
  for folder in [w/'website',hf,kg]:assert load(folder/'doi-policy.json')['currentArchive']['sourceCommit']==archive['sourceCommit'], ('Immutable archive source changed',folder)
- plan={'candidateSchema':'mutable-distributions-2','sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':expected['kaggleVersion'],'kaggleVersion':expected['kaggleVersion']+1,'notebookPreviousVersion':expected['notebookVersion'],'notebookVersion':expected['notebookVersion']+1,'sitePreviousSource':state['siteSource'],'archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive['sourceCommit']}
- dump(w/'release-plan.json',plan);dump(w/'frozen-sha256.json',{**{k:inventory(w/k) for k in ['website','hf-stage','kaggle','notebook']},'controls':{n:sha(w/n) for n in ['release-plan.json','archive-baseline.json']}});guard_frozen(w)
+ plan={'candidateSchema':'mutable-distributions-2','sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':expected['kaggleVersion'],'kaggleVersion':expected['kaggleVersion']+1,'notebookPreviousVersion':expected['notebookVersion'],'notebookVersion':expected['notebookVersion']+1,'sitePreviousSource':state['siteSource'],'archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive['sourceCommit'],'kaggleBaselinePublication':kg_baseline}
+ dump(w/'release-plan.json',plan);dump(w/'frozen-sha256.json',{**{k:inventory(w/k) for k in ['website','hf-stage','kaggle','notebook']},'controls':{n:sha(w/n) for n in ['release-plan.json','archive-baseline.json','baseline-publication-evidence.json']}});guard_frozen(w)
  assert read(SITE+'release-provenance.json').json()['sourceCommit']==state['siteSource'];assert read('https://huggingface.co/api/datasets/'+HF_REPO).json()['sha']==state['hfRevision'];gates.guard_owner(client,expected['kaggleVersion'])
  dump(w/'preflight-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'localExecution':local});print('MUTABLE CANDIDATE FROZEN AND VALIDATED '+sha(w/'frozen-sha256.json'),flush=True)
 
