@@ -1,12 +1,28 @@
 const values=v=>Array.isArray(v)?v:v==null?[]:[v];
 const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariable','Observation','SoftwareSourceCode','FAQPage']);
 const OMIT=Symbol('omit');
-const personBoundaryKeys=new Set(['@id','@type','name','alternateName','givenName','familyName','honorificPrefix','jobTitle','description','disambiguatingDescription','url','sameAs','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage']);
-const clinicBoundaryKeys=new Set(['@id','@type','name','alternateName','url','description','telephone','address','geo','openingHoursSpecification','hasMap','sameAs','medicalSpecialty','owner','founder','priceRange','areaServed']);
+const identityKeys=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
+const personBoundaryKeys=new Set([...identityKeys,'givenName','familyName','honorificPrefix','jobTitle','disambiguatingDescription','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage','hasCredential','skills','knowsAbout']);
+const clinicBoundaryKeys=new Set([...identityKeys,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','owner','founder','priceRange','areaServed']);
+const credentialBoundaryKeys=new Set([...identityKeys,'credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires']);
+const termBoundaryKeys=new Set([...identityKeys,'termCode','inDefinedTermSet']);
+const termSetBoundaryKeys=new Set([...identityKeys,'dateModified']);
+const identifierBoundaryKeys=new Set([...identityKeys,'propertyID','value','unitCode','unitText']);
+const organizationBoundaryKeys=new Set(identityKeys);
+const supportingPageTypes=new Set(['WebPage','MedicalWebPage','ContactPage','ProfilePage','AboutPage']);
 function focusedAuthorityBoundary(node,id,primaryPageId){
   if(id===primaryPageId)return structuredClone(node);
   const types=values(node?.['@type']);
-  const keys=types.includes('Person')?personBoundaryKeys:types.some(type=>['MedicalClinic','PhysiciansOffice','LocalBusiness'].includes(type))?clinicBoundaryKeys:null;
+  // Supporting identities retain their claims, codes and descriptions without
+  // traversing a second evidence, membership or content inventory. The complete
+  // relationships remain in the canonical graph and the full homepage graph.
+  const keys=types.includes('Person')?personBoundaryKeys
+    :types.some(type=>['MedicalClinic','PhysiciansOffice','LocalBusiness'].includes(type))?clinicBoundaryKeys
+    :types.includes('EducationalOccupationalCredential')?credentialBoundaryKeys
+    :types.includes('DefinedTerm')?termBoundaryKeys
+    :types.includes('DefinedTermSet')?termSetBoundaryKeys
+    :types.includes('PropertyValue')?identifierBoundaryKeys
+    :types.some(type=>['Organization','EducationalOrganization','CollegeOrUniversity'].includes(type))?organizationBoundaryKeys:null;
   if(!keys)return structuredClone(node);
   return Object.fromEntries(Object.entries(node).filter(([key])=>keys.has(key)).map(([key,value])=>[key,structuredClone(value)]));
 }
@@ -28,13 +44,16 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
     if(answers&&types.includes('Answer')&&!answers.has(id))return false;
     if(media&&types.includes('VideoObject')&&!media.has(id))return false;
     if(clips&&types.includes('Clip')&&!clips.has(id))return false;
-    // The renderer's route projector already selects topic-specific credentials
-    // and expertise. Keep those selected edges; generic callers retain the boundary.
+    // The renderer first selects topic-specific credentials and expertise; the
+    // support boundary retains those claims while closing their identities.
     let output=authorityIsScoped?structuredClone(node):focusedAuthorityBoundary(node,id,primaryPageId);
     // Apply to preselected pages as well as newly resolved pages. A cited
     // document is a link to its identity, never a copy of its clinical corpus.
-    if(id!==primaryPageId&&(id.endsWith('#webpage')||id===origin+'/webpage')) {
-      output=Object.fromEntries(['@id','@type','url','name','inLanguage','author','publisher'].filter(k=>k in output).map(k=>[k,output[k]]));
+    // ProfilePage still requires its subject; keep that edge to the physician.
+    if(id!==primaryPageId&&(types.some(type=>supportingPageTypes.has(type))||id.endsWith('#webpage')||id===origin+'/webpage')) {
+      const keys=['@id','@type','url','name','inLanguage','author','publisher','identifier','dateModified'];
+      if(types.includes('ProfilePage'))keys.push('mainEntity');
+      output=Object.fromEntries(keys.filter(k=>k in output).map(k=>[k,output[k]]));
     }
     selected.set(id,output);queue.push(output);return true;
   }
@@ -45,10 +64,25 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
     const out={};for(const [key,entry] of Object.entries(value)){const v=key==='@id'?entry:clean(entry);if(v!==OMIT)out[key]=v;}return out;
   }
   resolve(primaryPageId);
+  // Visible questions and media are route content roots, even when no
+  // supporting physician inventory happens to link back to them.
+  for(const id of questions??[])resolve(id);
+  for(const id of media??[])resolve(id);
   for(const node of graph['@graph'])if(node['@id']===origin+'/#saeed-ghezelbash'||values(node['@type']).includes('MedicalClinic'))resolve(node['@id']);
   for(let i=0;i<queue.length;i++) {
     const node=queue[i],cleaned=clean(node);
     for(const key of Object.keys(node))delete node[key];Object.assign(node,cleaned);
+  }
+  // A focused clinical topic needs one direction of its content relationship.
+  // Keep every page/question's explicit about edge; do not also re-expand that
+  // same content through the procedure's reciprocal subjectOf index.
+  if(!authorityIsScoped)for(const node of selected.values()) {
+    if(!values(node['@type']).some(type=>['MedicalProcedure','Service'].includes(type))||!node.subjectOf)continue;
+    const kept=values(node.subjectOf).filter(ref=>{
+      const target=selected.get(typeof ref==='string'?ref:ref?.['@id']);
+      return !values(target?.about).some(about=>(typeof about==='string'?about:about?.['@id'])===node['@id']);
+    });
+    if(kept.length)node.subjectOf=Array.isArray(node.subjectOf)?kept:kept[0];else delete node.subjectOf;
   }
   document['@graph']=[...selected.values()];return document;
 }

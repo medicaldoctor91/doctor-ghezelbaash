@@ -4984,7 +4984,9 @@ export function compileCanonicalSource() {
     const project=pageDiscoveryJsonld.focusedProjection(SOURCE.graph,record.document['@graph'].filter(node=>rootIds.has(node['@id'])),
       {language:record.lang,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds});
     record.document['@graph']=record.document['@graph'].map(node=>project(node['@id'])??node);
-    closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project,authorityIsScoped:true});
+    closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project});
+    // Validate the graph that will actually be serialized, after every projection.
+    richResultsContract.assertRichResultsDocument(record.document,{primaryPageId});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));
   const article = htmlContract.inspectHtml(home).guideArticles[0], location = article.sourceCodeLocation;
