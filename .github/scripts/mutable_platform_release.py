@@ -6,7 +6,7 @@ import coordinated_doi_release as gates
 from platform_bundle import build_hf, build_kaggle, context, dump, load, sha, HF_REPO, KAGGLE_REF, DOI_POLICY
 from sync_platform_machine_resources import kaggle_client, extract_package, source_metadata
 from immutable_archive import verify_published_archive
-from kaggle_baseline import public_baseline_state, prepare_baseline
+from kaggle_baseline import public_baseline_state, prepare_baseline, verify_exact_public_files
 ROOT=Path(__file__).resolve().parents[2]
 SITE=gates.SITE
 
@@ -260,10 +260,52 @@ def complete_notebook(w):
  dump(w/'notebook-completion-report.json',{'status':'PASS','scope':'notebook completion and core alignment; not overall runtime health','proof':proof,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'mediaDelivery':'independent canonical partial digest defect; Cloudflare Rules access denied','searchFilter':'deferred per explicit user instruction'})
  print('FROZEN NOTEBOOK COMPLETE; RUNTIME HEALTH REPORTED SEPARATELY',flush=True)
 
+def complete_notebook_exact_version(w):
+ """Complete only the reviewed notebook using every frozen exact-version public file."""
+ plan=load(w/'release-plan.json');guard_frozen(w)
+ assert sha(w/'frozen-sha256.json')=='82aa6b793ca90cf1027a27e454d4e41c83fb71d24c502aa862b28c25c045df05', 'Unreviewed exact-version candidate'
+ assert plan['candidateSchema']=='mutable-distributions-2' and plan['archiveWrites'] is False
+ assert plan['sourceCommit']=='94611168bacf7630022499204c493f6e4af64f70'
+ assert plan['hfRevision']=='d5d5d17e2b4584fba2da326060f9b3202d712a1e'
+ assert plan['kaggleVersion']==29 and plan['notebookVersion']==13 and plan['notebookPreviousVersion']==12
+ assert load(w/'preflight-report.json')['status']=='PASS'
+ state=snapshot(w/'exact-notebook-before');client=kaggle_client()
+ assert state['siteSource']==plan['sourceCommit'] and state['hfRevision']==plan['hfRevision']
+ assert state['kaggleOwner']=={'version':29,'status':'ready'} and state['notebookVersion'] in {12,13}
+ public=load(w/'exact-notebook-before/kaggle-public-before.json')
+ assert public['currentVersionNumber'] in {27,28,29}, 'Unexpected public Kaggle default'
+ assert any(v['versionNumber']==29 and v.get('status','').lower()=='ready' for v in public['versions']), 'Exact version 29 is not publicly Ready'
+ assert not any(v['versionNumber']>29 for v in public['versions']), 'Newer Kaggle version exists'
+ website=read(SITE+'release-provenance.json').content
+ assert website==(w/'website/release-provenance.json').read_bytes(), 'Live website provenance differs from candidate'
+ hub=read('https://huggingface.co/datasets/'+HF_REPO+'/resolve/'+plan['hfRevision']+'/release-provenance.json').content
+ assert hub==(w/'hf-stage/release-provenance.json').read_bytes(), 'Live HF provenance differs from candidate'
+ assert json.loads(website)['sourceCommit']==json.loads(hub)['sourceCommit']==plan['sourceCommit']
+ exact=verify_exact_public_files(w/'exact-notebook-public-files',KAGGLE_REF,29,w/'kaggle',read)
+ assert exact['filesSha256Matched']==48 and exact['packageChecksumsVerified']==47
+ assert exact['sourceCommit']==plan['sourceCommit'] and exact['hfRevision']==plan['hfRevision']
+ archive=load(w/'archive-baseline.json')
+ verify_published_archive(w/'exact-notebook-archive-before',DOI_POLICY,archive['sourceCommit'],read,expected=archive,verify_bytes=False)
+ guard_frozen(w)
+ assert read(SITE+'release-provenance.json').content==website, 'Website changed during exact-version verification'
+ assert read('https://huggingface.co/api/datasets/'+HF_REPO).json()['sha']==plan['hfRevision'], 'HF changed during exact-version verification'
+ gates.guard_owner(client,29)
+ proof=gates.publish_notebook(w,client)
+ guard_frozen(w)
+ verify_published_archive(w/'exact-notebook-archive-after',DOI_POLICY,archive['sourceCommit'],read,expected=archive,verify_bytes=False)
+ dump(w/'notebook-completion-report.json',{'status':'NOTEBOOK_VERIFIED','scope':'Reviewed notebook 13 and all exact-version 29 public input files only',
+  'verificationBasis':'Complete anonymous exact-version inventory/SHA256 plus actual notebook execution; no implication that the default pointer or generated ZIP is ready',
+  'fullPublicationVerified':False,'proof':proof,'exactVersionPublicFiles':exact,'observedPublicDefaultVersion':public['currentVersionNumber'],
+  'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,
+  'outstanding':{'currentDefaultAndExactDefaultZipEquality':'Not verified by this operation; full publication gate remains required',
+                 'hfRuntimeSearchFilter':'Not verified by this operation; no overall runtime PASS'}})
+ print('NOTEBOOK 13 AND EXACT VERSION 29 INPUTS VERIFIED; FULL PUBLICATION AND RUNTIME GATES REMAIN OUTSTANDING',flush=True)
+
 def main():
- p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','complete-notebook']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
+ p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','complete-notebook','complete-notebook-exact-version']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
  if a.operation=='inspect':snapshot(a.root)
  elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK'])})
  elif a.operation=='complete-notebook':complete_notebook(a.root)
+ elif a.operation=='complete-notebook-exact-version':complete_notebook_exact_version(a.root)
  else:publish(a.root)
 if __name__=='__main__':main()

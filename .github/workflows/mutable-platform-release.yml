@@ -4,7 +4,7 @@ on:
     inputs:
       operation:
         type: choice
-        options: [inspect, preflight, publish, complete-notebook]
+        options: [inspect, preflight, publish, complete-notebook, complete-notebook-exact-version]
         required: true
       reviewed_commit: {type: string, required: true}
       candidate_run: {type: string, required: false}
@@ -68,14 +68,14 @@ jobs:
           python tests/validate_canonical_invariants.py dist
           python tests/validate_platform_bundle.py dist --no-query --rdf
       - uses: actions/download-artifact@v4
-        if: inputs.operation == 'publish' || inputs.operation == 'complete-notebook'
+        if: inputs.operation == 'publish' || inputs.operation == 'complete-notebook' || inputs.operation == 'complete-notebook-exact-version'
         with:
           name: frozen-mutable-candidate
           run-id: ${{ inputs.candidate_run }}
           github-token: ${{ github.token }}
           path: /tmp/mutable-artifact
       - name: Restore exact validated bytes without rebuild
-        if: inputs.operation == 'publish' || inputs.operation == 'complete-notebook'
+        if: inputs.operation == 'publish' || inputs.operation == 'complete-notebook' || inputs.operation == 'complete-notebook-exact-version'
         run: |
           tar -xzf /tmp/mutable-artifact/candidate.tar.gz -C /tmp
           python - <<'PY'

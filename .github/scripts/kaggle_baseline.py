@@ -125,3 +125,47 @@ def prepare_baseline(work, ref, version, hf_revision, source_commit, read, extra
                     finalPublicationGate='Still requires target current/default pointer plus exact/default ZIP equality before notebook publication')
     (work / 'baseline-publication-evidence.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
     return evidence
+
+
+def verify_exact_public_files(work, ref, version, frozen, read):
+    """Verify every exact-version public file against an already frozen candidate."""
+    work, frozen = Path(work), Path(frozen)
+    work.mkdir(parents=True, exist_ok=True)
+    controls = {'dataset-metadata.json', 'kernel-metadata.json'}
+    expected = {p.relative_to(frozen).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in frozen.rglob('*') if p.is_file() and p.relative_to(frozen).as_posix() not in controls}
+    base = 'https://www.kaggle.com/api/v1/datasets/'
+    listed, seen_tokens, token = {}, set(), ''
+    for _ in range(100):
+        params = {'datasetVersionNumber': version, 'pageSize': 1000}
+        if token: params['pageToken'] = token
+        page = read(base + 'list/' + ref + '?' + urlencode(params)).json()
+        assert not page.get('errorMessage') and isinstance(page.get('datasetFiles'), list) and page['datasetFiles'], 'Invalid exact-version file listing'
+        for item in page['datasetFiles']:
+            name = safe_path(item['name'])
+            assert name not in listed and type(item['totalBytes']) is int and item['totalBytes'] >= 0, 'Duplicate or invalid exact-version file'
+            listed[name] = item['totalBytes']
+        token = page.get('nextPageToken', '')
+        if not token: break
+        assert isinstance(token, str) and token not in seen_tokens, 'Repeated exact-version pagination token'
+        seen_tokens.add(token)
+    else: raise AssertionError('Exact-version file listing exceeded bounded pagination')
+    assert set(listed) == set(expected), 'Exact-version public file coverage differs from frozen candidate'
+    def download(item):
+        name, digest = item
+        body = read(base + 'download/' + ref + '/' + quote(name, safe='') + '?' + urlencode({'datasetVersionNumber': version, 'raw': 'true'})).content
+        assert len(body) == listed[name] == (frozen / name).stat().st_size, ('Exact-version file size differs', name)
+        assert hashlib.sha256(body).hexdigest() == digest, ('Exact-version public file hash differs', name)
+        target = work / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(body)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+        list(pool.map(download, expected.items()))
+    checksums = checksum_inventory((work / 'checksums.sha256').read_bytes())
+    assert set(checksums) == set(expected) - {'checksums.sha256'}, 'Exact-version checksum coverage differs'
+    assert all(expected[name] == digest for name, digest in checksums.items()), 'Exact-version checksum inventory differs'
+    manifest = json.loads((work / 'kaggle-manifest.json').read_text())
+    assert manifest['desired_kaggle_version'] == version, 'Wrong exact-version manifest'
+    return {'version': version, 'filesSha256Matched': len(expected), 'packageChecksumsVerified': len(checksums),
+            'sourceCommit': manifest['website_source_commit'], 'hfRevision': manifest['upstream_revision'],
+            'scope': 'All exact-version public file bytes; does not verify default pointer or generated ZIPs'}

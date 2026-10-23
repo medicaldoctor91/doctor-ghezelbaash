@@ -1,5 +1,5 @@
 """Guards for the non-archival maintenance path; no platform requests."""
-import ast,importlib.util,json,sys,unittest,tempfile
+import ast,importlib.util,json,sys,unittest,tempfile,contextlib
 from unittest.mock import Mock,patch
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'.github/scripts'))
@@ -119,4 +119,74 @@ class FrozenGitTests(unittest.TestCase):
    self.assertEqual(release.guard_hf_git(root,{'hfRevision':revision})['files'],1)
    (stage/'data.txt').write_text('different candidate payload\n')
    self.assert_blocked_before_external_operations(root,revision,'data.txt')
+
+class ExactVersionNotebookTests(unittest.TestCase):
+ source='94611168bacf7630022499204c493f6e4af64f70'
+ hf='d5d5d17e2b4584fba2da326060f9b3202d712a1e'
+ fingerprint='82aa6b793ca90cf1027a27e454d4e41c83fb71d24c502aa862b28c25c045df05'
+ def setup(self,root):
+  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'sourceCommit':self.source,'hfRevision':self.hf,'kaggleVersion':29,'notebookVersion':13,'notebookPreviousVersion':12}
+  state={'siteSource':self.source,'hfRevision':self.hf,'kaggleOwner':{'version':29,'status':'ready'},'notebookVersion':12}
+  public={'currentVersionNumber':27,'versions':[{'versionNumber':29,'status':'Ready'}]}
+  exact={'filesSha256Matched':48,'packageChecksumsVerified':47,'sourceCommit':self.source,'hfRevision':self.hf}
+  provenance=json.dumps({'sourceCommit':self.source}).encode()
+  for folder in ['website','hf-stage','kaggle','notebook']:(root/folder).mkdir()
+  for folder in ['website','hf-stage']:(root/folder/'release-provenance.json').write_bytes(provenance)
+  values={'release-plan.json':plan,'preflight-report.json':{'status':'PASS'},'kaggle-public-before.json':public,'archive-baseline.json':{'sourceCommit':'a'*40}}
+  def load(path):return values[Path(path).name]
+  stack=contextlib.ExitStack();self.addCleanup(stack.close)
+  stack.enter_context(patch.object(release,'load',side_effect=load));stack.enter_context(patch.object(release,'guard_frozen'))
+  stack.enter_context(patch.object(release,'sha',return_value=self.fingerprint));stack.enter_context(patch.object(release,'snapshot',return_value=state))
+  stack.enter_context(patch.object(release,'read',side_effect=lambda url:Mock(json=lambda:{'sha':self.hf}) if '/api/datasets/' in url else Mock(content=provenance)))
+  verify=stack.enter_context(patch.object(release,'verify_exact_public_files',return_value=exact))
+  stack.enter_context(patch.object(release,'verify_published_archive'))
+  client=Mock();client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':29});stack.enter_context(patch.object(release,'kaggle_client',return_value=client))
+  return plan,state,public,verify,client
+ def test_unreviewed_candidate_pins_block_before_notebook_write(self):
+  for field,value in [('sourceCommit','c'*40),('hfRevision','c'*40),('kaggleVersion',28),('notebookVersion',12)]:
+   with self.subTest(field=field),tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);plan,state,public,verify,client=self.setup(root);plan[field]=value
+    with patch.object(release.gates,'publish_notebook') as push:
+     with self.assertRaises(AssertionError):release.complete_notebook_exact_version(root)
+     push.assert_not_called();verify.assert_not_called()
+ def test_public_hash_or_version_failure_blocks_notebook_write(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);plan,state,public,verify,client=self.setup(root)
+   verify.side_effect=AssertionError('Exact-version public file hash differs')
+   with patch.object(release.gates,'publish_notebook') as push:
+    with self.assertRaisesRegex(AssertionError,'hash differs'):release.complete_notebook_exact_version(root)
+    push.assert_not_called()
+   verify.side_effect=None;public['versions']=[{'versionNumber':30,'status':'Ready'}]
+   with patch.object(release.gates,'publish_notebook') as push:
+    with self.assertRaises(AssertionError):release.complete_notebook_exact_version(root)
+    push.assert_not_called()
+ def test_existing_notebook13_uses_real_source_execution_guard_without_repush(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);plan,state,public,verify,client=self.setup(root);state['notebookVersion']=13
+   notebook={'cells':[{'cell_type':'code','source':['print(1)'],'metadata':{}}]}
+   release.dump(root/'notebook/starter.ipynb',notebook);(root/'kaggle/checksums.sha256').write_text('frozen inputs')
+   live={'metadata':{'currentVersionNumber':13},'blob':{'source':json.dumps(notebook)}}
+   client.kernels_status.return_value.status='complete'
+   def output(ref,path,**kwargs):
+    release.dump(Path(path)/'doi-release-execution.json',{'status':'PASS','kaggle_version':29,'upstream_revision':self.hf,'source_commit':self.source,'input_checksums_sha256':self.fingerprint,'exact_doi':release.gates.P['currentArchive']['doi']})
+   client.kernels_output.side_effect=output
+   with patch.object(release.gates,'get',return_value=Mock(json=lambda:live)),patch.object(release.gates,'sha',return_value=self.fingerprint):
+    release.dump(root/'release-plan.json',plan);release.dump(root/'frozen-sha256.json',{})
+    release.complete_notebook_exact_version(root)
+   client.kernels_push.assert_not_called();client.dataset_create_version.assert_not_called()
+   report=json.loads((root/'notebook-completion-report.json').read_text())
+   self.assertEqual(report['status'],'NOTEBOOK_VERIFIED');self.assertFalse(report['fullPublicationVerified'])
+   self.assertEqual(report['proof']['version'],13);self.assertEqual(report['observedPublicDefaultVersion'],27)
+   self.assertFalse((root/'publication-report.json').exists())
+ def test_last_moment_owner_or_site_change_blocks_notebook_write(self):
+  for changed in ['owner','site']:
+   with self.subTest(changed=changed),tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);plan,state,public,verify,client=self.setup(root)
+    if changed=='owner':client.dataset_status.return_value=json.dumps({'status':'processing','current_version_number':29})
+    else:
+     provenance=(root/'website/release-provenance.json').read_bytes()
+     release.read.side_effect=[Mock(content=provenance),Mock(content=provenance),Mock(content=b'changed site')]
+    with patch.object(release.gates,'publish_notebook') as push:
+     with self.assertRaises(AssertionError):release.complete_notebook_exact_version(root)
+     push.assert_not_called()
 if __name__=='__main__':unittest.main()

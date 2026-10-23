@@ -14,7 +14,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / '.github/scripts'))
-from kaggle_baseline import prepare_baseline, public_baseline_state
+from kaggle_baseline import prepare_baseline, public_baseline_state, verify_exact_public_files
 
 HF = 'a' * 40
 SOURCE = 'b' * 40
@@ -162,6 +162,29 @@ class Baseline(unittest.TestCase):
             with patch.object(release, 'get', return_value=Mock(json=lambda: PUBLIC)):
                 with self.assertRaisesRegex(AssertionError, 'public default has not converged'):
                     release.verify_kaggle(root)
+
+    def test_exact_public_files_match_every_frozen_hash_without_requesting_a_bundle(self):
+        bodies, _, read = fixture()
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder);frozen = root / 'frozen';frozen.mkdir()
+            for name, body in bodies.items():
+                path = frozen / name;path.parent.mkdir(parents=True, exist_ok=True);path.write_bytes(body)
+            proof = verify_exact_public_files(root / 'live', 'owner/dataset', 28, frozen, read)
+            self.assertEqual(proof['filesSha256Matched'], len(bodies))
+            self.assertEqual(proof['packageChecksumsVerified'], len(bodies) - 1)
+            self.assertTrue(all('/list/' in c.args[0] or 'raw=true' in c.args[0] for c in read.call_args_list))
+            bodies['data.txt'] = b'changed row\n'
+            with self.assertRaisesRegex(AssertionError, 'hash differs'):
+                verify_exact_public_files(root / 'changed', 'owner/dataset', 28, frozen, read)
+
+    def test_exact_public_manifest_must_have_requested_version(self):
+        bodies, _, read = fixture(version=27)
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder);frozen = root / 'frozen';frozen.mkdir()
+            for name, body in bodies.items():
+                path = frozen / name;path.parent.mkdir(parents=True, exist_ok=True);path.write_bytes(body)
+            with self.assertRaisesRegex(AssertionError, 'Wrong exact-version manifest'):
+                verify_exact_public_files(root / 'live', 'owner/dataset', 28, frozen, read)
 
 
 if __name__ == '__main__':
