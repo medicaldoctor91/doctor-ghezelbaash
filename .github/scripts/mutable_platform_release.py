@@ -48,7 +48,13 @@ def archive_scope(text, published=False, *, archive=None):
    'while the necessary corrected Zenodo packaging has the exact DOI and version stated above.',
    'This coordinated release uses the exact Dataset DOI stated above; subsequent maintenance must respect the archived snapshot and platform revision boundaries.']:
    text=text.replace(original,boundary)
-  return text.replace('Exact release binding','Published immutable archive')
+  text=text.replace('Exact release binding','Published immutable archive')
+  text=text.replace('The corrected exact archive is identified below;','The preserved immutable archive is identified below;')
+  text=text.replace('The exact Zenodo Dataset snapshot for this release is','The published immutable Zenodo Dataset archive is')
+  text=text.replace('نسخهٔ جاری کاگل و هاگینگ‌فیس از فایل‌های یکسان استفاده می‌کنند؛ شناسهٔ دقیق این انتشار در بخش DOI آمده است؛ آرشیوهای تاریخی با فایل‌ها و سوابق اصلی خود محفوظ می‌مانند.',
+   'نسخهٔ جاری کاگل و هاگینگ‌فیس داده‌های مشترک را با شناسهٔ نسخه، بازبینی هاگینگ‌فیس و کامیت منبع سایت مشخص می‌کنند؛ DOI بخش آرشیو، تصویر ثابتِ منتشرشده و سوابق اصلی آن را معرفی می‌کند.')
+  return text.replace('DOI مجموعه، پیوند پایدار مجموعه است و DOI دقیق، شناسهٔ همین انتشار است.',
+   'DOI مجموعه، پیوند پایدار مجموعه است و DOI دقیق، شناسهٔ آرشیو ثابت با کامیت منبع ثبت‌شدهٔ خودش است.')
  # This maintenance does not turn a reserved DOI into a published archive.
  replacements={
  'The exact Dataset archive belongs to this coordinated release; the website source archive remains historical.':'The exact Dataset DOI remains a reserved archive binding; this maintenance updates only site, HF, Kaggle and notebook distributions. Historical archives remain unchanged.',
@@ -76,6 +82,27 @@ def scope_notebook_archive(path, *, archive_doi, archive_source_commit):
  assert [cell for cell in document['cells'] if cell.get('cell_type')=='code']==executable, 'Notebook executable cells changed during archive scoping'
  if changed:dump(path,document)
  return changed
+
+def guard_frozen_archive_scope(w,archive):
+ """Reject superseded public citation claims in the actual frozen bytes."""
+ binding={'doi':archive['doi'],'sourceCommit':archive['sourceCommit']};checked=[]
+ for name in ['hf-stage/README.md','kaggle/README.md']:
+  text=(w/name).read_text()
+  assert archive_scope(text,published=True,archive=binding)==text, ('Ambiguous frozen archive citation',name)
+  assert binding['doi'] in text and 'preserves source '+binding['sourceCommit'] in text, ('Missing immutable archive citation boundary',name)
+  checked.append({'path':name,'sha256':sha(w/name)})
+ for name in ['kaggle/starter.ipynb','notebook/starter.ipynb']:
+  notebook=load(w/name);prose=[]
+  for cell in notebook['cells']:
+   if cell.get('cell_type')!='markdown':continue
+   value=cell.get('source',[]);text=value if isinstance(value,str) else ''.join(value)
+   assert archive_scope(text,published=True,archive=binding)==text, ('Ambiguous frozen notebook citation',name)
+   prose.append(text)
+  assert 'preserves source '+binding['sourceCommit'] in '\n'.join(prose), ('Missing notebook archive source boundary',name)
+  checked.append({'path':name,'sha256':sha(w/name)})
+ assert sha(w/'kaggle/starter.ipynb')==sha(w/'notebook/starter.ipynb'), 'Dataset and executable notebook citations differ'
+ proof={'status':'PASS','archiveDOI':binding['doi'],'archiveSourceCommit':binding['sourceCommit'],'checked':checked}
+ dump(w/'archive-citation-scope.json',proof);return proof
 
 def reseal_hf(stage):
  inv={n:{'bytes':(stage/n).stat().st_size,'sha256':h} for n,h in inventory(stage).items() if n!='dist-sha256.json'}
@@ -174,7 +201,8 @@ def preflight(w,expected):
  for name in inventory(ROOT/'public'):
   assert sha(w/'website'/name)==sha(ROOT/'public'/name),('Public payload modified',name)
  for folder in [w/'website',hf,kg]:assert load(folder/'doi-policy.json')['currentArchive']['sourceCommit']==archive['sourceCommit'], ('Immutable archive source changed',folder)
- plan={'candidateSchema':'mutable-distributions-3','sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':expected['kaggleVersion'],'kaggleVersion':expected['kaggleVersion']+1,'notebookPreviousVersion':expected['notebookVersion'],'notebookVersion':expected['notebookVersion']+1,'sitePreviousSource':state['siteSource'],'archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive['sourceCommit'],'kaggleBaselinePublication':kg_baseline}
+ guard_frozen_archive_scope(w,archive)
+ plan={'candidateSchema':'mutable-distributions-4','sourceCommit':source,'hfParent':state['hfRevision'],'hfRevision':revision,'kagglePreviousVersion':expected['kaggleVersion'],'kaggleVersion':expected['kaggleVersion']+1,'notebookPreviousVersion':expected['notebookVersion'],'notebookVersion':expected['notebookVersion']+1,'sitePreviousSource':state['siteSource'],'archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive['sourceCommit'],'kaggleBaselinePublication':kg_baseline}
  dump(w/'release-plan.json',plan);dump(w/'frozen-sha256.json',{**{k:inventory(w/k) for k in ['website','hf-stage','kaggle','notebook']},'controls':{n:sha(w/n) for n in ['release-plan.json','archive-baseline.json','baseline-publication-evidence.json']}});guard_frozen(w)
  assert read(SITE+'release-provenance.json').json()['sourceCommit']==state['siteSource'];assert read('https://huggingface.co/api/datasets/'+HF_REPO).json()['sha']==state['hfRevision'];gates.guard_owner(client,expected['kaggleVersion'])
  dump(w/'preflight-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'localExecution':local});print('MUTABLE CANDIDATE FROZEN AND VALIDATED '+sha(w/'frozen-sha256.json'),flush=True)
@@ -248,11 +276,12 @@ def verify_final_consistency(w,plan,client):
 
 def publish(w):
  plan=load(w/'release-plan.json')
- assert plan.get('candidateSchema')=='mutable-distributions-3', 'Superseded archive-citation candidate: rebuild with explicit preserved-archive notebook scope'
+ assert plan.get('candidateSchema')=='mutable-distributions-4', 'Superseded archive-citation candidate: rebuild with explicit preserved-archive notebook scope'
  assert plan['archiveWrites'] is False and plan['archivePublicStatus']==200;guard_frozen(w);assert load(w/'preflight-report.json')['status']=='PASS'
  guard_hf_git(w,plan)
  home_projection=guard_frozen_home_projection(w)
  archive=load(w/'archive-baseline.json');assert plan['archiveSourceCommit']==archive['sourceCommit']==DOI_POLICY['currentArchive']['sourceCommit']
+ citation_scope=guard_frozen_archive_scope(w,archive)
  verify_published_archive(w/'archive-public-at-cutover',DOI_POLICY,archive['sourceCommit'],read,expected=archive,verify_bytes=False)
  state=snapshot(w/'publication-before');client=kaggle_client();assert state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']};assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']};assert state['kaggleOwner']['version'] in {plan['kagglePreviousVersion'],plan['kaggleVersion']}
  # All candidate bytes already validated before these first writes.
@@ -282,7 +311,7 @@ def publish(w):
  verify_published_archive(w/'archive-public-after',DOI_POLICY,archive['sourceCommit'],read,expected=archive)
  guard_frozen(w)
  final=verify_final_consistency(w,plan,client)
- dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files']),'frozenHomeProjection':home_projection,'finalOutsideConsistency':final});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
+ dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files']),'frozenHomeProjection':home_projection,'archiveCitationScope':citation_scope,'finalOutsideConsistency':final});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
 
 def complete_notebook(w):
  """Only notebook may be written; independent runtime faults stay visible."""
@@ -311,7 +340,7 @@ def complete_notebook_exact_version(w):
  """Complete only the reviewed notebook using every frozen exact-version public file."""
  plan=load(w/'release-plan.json');guard_frozen(w)
  assert sha(w/'frozen-sha256.json')=='82aa6b793ca90cf1027a27e454d4e41c83fb71d24c502aa862b28c25c045df05', 'Unreviewed exact-version candidate'
- assert plan['candidateSchema']=='mutable-distributions-3' and plan['archiveWrites'] is False
+ assert plan['candidateSchema']=='mutable-distributions-4' and plan['archiveWrites'] is False
  assert plan['sourceCommit']=='94611168bacf7630022499204c493f6e4af64f70'
  assert plan['hfRevision']=='d5d5d17e2b4584fba2da326060f9b3202d712a1e'
  assert plan['kaggleVersion']==29 and plan['notebookVersion']==13 and plan['notebookPreviousVersion']==12
