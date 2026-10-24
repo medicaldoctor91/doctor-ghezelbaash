@@ -1,0 +1,201 @@
+name: Read-only HF Viewer public and owner access diagnostic
+'on':
+  workflow_dispatch:
+    inputs:
+      reviewed_commit:
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-hf-viewer-read-only-diagnostic
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require the exact reviewed workflow commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$REVIEWED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+          test "$(git rev-parse HEAD)" = "$REVIEWED_COMMIT"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install only the diagnostic dependencies
+        run: python -m pip install --disable-pip-version-check requests 'pyarrow==22.0.0'
+      - name: Compare two public Viewer flows with owner-authorized reads
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import hashlib, io, json, os, time
+          from pathlib import Path
+          from urllib.parse import urlencode
+          import pyarrow.parquet as pq
+          import requests
+
+          OUT = Path('/tmp/hf-viewer-access-diagnostic')
+          OUT.mkdir(exist_ok=True)
+          REPO = 'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          REVISION = 'd5d5d17e2b4584fba2da326060f9b3202d712a1e'
+          SOURCES = {
+              'clinical_answers': ('viewer/clinical-answers.parquet', 'e4ab988fad12d9d73684d2d8c8ca34b44f042bc2e49387329ea563c90fa55d18', 125),
+              'entity_facts': ('viewer/entity-facts.parquet', '4894003de27b828ba00e52e7c3f4fd9dbb1cbe4ee70004c73786e17b2da55e9b', 22235),
+          }
+          ABOUT = '["https://www.ghezelbaash.ir/procedure-acne-scar-evaluation"]'
+          FLOWS = [
+              ('clinical_answers', 'filter', {'where': '"aboutIds"=' + "'" + ABOUT + "'"}),
+              ('entity_facts', 'search', {'query': 'Patient'}),
+          ]
+          HEADER_NAMES = ('Date', 'X-Revision', 'X-Error-Code', 'X-Cache', 'X-Envoy-Upstream-Service-Time')
+          token = os.environ.get('HF_TOKEN', '')
+          summary = {
+              'repository': REPO, 'revision': REVISION, 'maximumViewerRequests': 4,
+              'viewerRequests': 0, 'overallHealth': 'not assessed; scoped access diagnostic only',
+              'results': {'anonymous': {}, 'owner': {}}, 'stoppedOnAccessOrRateRestriction': False,
+              'filterSelectionPreviewSha256': 'f545a48e47d661e783f67a09c5003762620f54c3218aa5eb6350a79042ce4998',
+          }
+
+          class NoImplicitAuth(requests.auth.AuthBase):
+              def __call__(self, request):
+                  return request
+
+          def new_session():
+              client = requests.Session()
+              client.auth = NoImplicitAuth()  # No .netrc authentication, including anonymous redirects.
+              client.headers.update({'Cache-Control': 'no-cache, no-store, max-age=0', 'Pragma': 'no-cache', 'Accept-Encoding': 'identity'})
+              return client
+
+          session = new_session()  # Anonymous source downloads only; never receives the owner token.
+
+          class ValidationFailure(Exception):
+              pass
+
+          def save(name, value):
+              (OUT / (name + '.json')).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
+
+          def require(condition, code):
+              if not condition:
+                  raise ValidationFailure(code)
+
+          def restricted(status):
+              if status in (401, 403, 429):
+                  summary.update(stoppedOnAccessOrRateRestriction=True, stoppedHTTPStatus=status)
+                  return True
+              return False
+
+          def safe_headers(response):
+              headers = {}
+              for name in HEADER_NAMES:
+                  value = response.headers.get(name)
+                  if value is not None:
+                      if token:
+                          value = value.replace(token, '[REDACTED]')
+                      headers[name] = value.replace('\r', '').replace('\n', '')[:256]
+              return headers
+
+          def canonical(value):
+              return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+
+          def run():
+              require(bool(token), 'HF_TOKEN_binding_missing')
+              expected, source_evidence = {}, {}
+              for config, (filename, digest, count) in SOURCES.items():
+                  # Pinned public download is anonymous; redirect URLs and bodies are never logged.
+                  url = 'https://huggingface.co/datasets/' + REPO + '/resolve/' + REVISION + '/' + filename
+                  with session.get(url, timeout=90) as response:
+                      source_evidence[config] = {'file': filename, 'status': response.status_code, 'expectedSha256': digest}
+                      save('source-verification', source_evidence)
+                      require(not restricted(response.status_code), 'source_access_or_rate_restriction')
+                      require(response.status_code == 200, 'source_HTTP_failure')
+                      body = response.content
+                  actual_digest = hashlib.sha256(body).hexdigest()
+                  source_evidence[config].update(bytes=len(body), sha256=actual_digest, sha256Matched=actual_digest == digest)
+                  save('source-verification', source_evidence)
+                  require(actual_digest == digest, 'source_SHA256_mismatch')
+                  expected[config] = pq.read_table(io.BytesIO(body)).to_pylist()
+                  require(len(expected[config]) == count, 'source_row_count_mismatch')
+                  source_evidence[config]['rows'] = count
+              save('source-verification', source_evidence)
+              # This is the original selection from the saved, final-revision first-rows response.
+              first = expected['clinical_answers'][0]
+              field, value = next((key, value) for key, value in first.items() if isinstance(value, str) and value and len(value) < 200)
+              require(field == 'aboutIds' and value == ABOUT, 'saved_original_filter_differs')
+              require(any('Patient' in value for row in expected['entity_facts'] for value in row.values() if isinstance(value, str)), 'search_probe_absent')
+              for config, operation, predicate in FLOWS:
+                  for identity in ('anonymous', 'owner'):
+                      if summary['stoppedOnAccessOrRateRestriction']:
+                          return
+                      parameters = {'dataset': REPO, 'config': config, 'split': 'train', 'offset': 0, 'length': 2, **predicate}
+                      result = {'config': config, 'operation': operation, 'identity': identity, 'parameters': parameters, 'passedScopedChecks': False, 'observedUTC': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
+                      # Four fixed GETs maximum. No automatic retries, redirects, admin routes or writes.
+                      url = 'https://datasets-server.huggingface.co/' + operation + '?' + urlencode({**parameters, 'live_audit': str(time.time_ns())})
+                      headers = {'Authorization': 'Bearer ' + token} if identity == 'owner' else {}
+                      started = time.monotonic()
+                      try:
+                          summary['viewerRequests'] += 1
+                          # A fresh session prevents owner cookies from contaminating anonymous reads.
+                          with new_session() as viewer_session, viewer_session.get(url, headers=headers, timeout=90, allow_redirects=False) as response:
+                              result.update(status=response.status_code, headers=safe_headers(response), bytes=len(response.content), bodySha256=hashlib.sha256(response.content).hexdigest())
+                              if restricted(response.status_code):
+                                  result['failureKind'] = 'access_or_rate_restriction'
+                              else:
+                                  require(response.status_code == 200, 'Viewer_HTTP_failure')
+                                  require(response.headers.get('X-Revision') == REVISION, 'Viewer_revision_mismatch')
+                                  data = response.json()
+                                  require(data.get('partial') is False, 'partial_Viewer_result')
+                                  rows = data.get('rows')
+                                  require(isinstance(rows, list) and 0 < len(rows) <= 2, 'no_positive_bounded_rows')
+                                  require(type(data.get('num_rows_total')) is int and data['num_rows_total'] > 0, 'no_positive_total')
+                                  for item in rows:
+                                      index = item.get('row_idx')
+                                      require(type(index) is int and 0 <= index < len(expected[config]), 'invalid_row_idx')
+                                      require(not item.get('truncated_cells'), 'truncated_cells')
+                                      require(canonical(item.get('row')) == canonical(expected[config][index]), 'frozen_row_mismatch')
+                                      if operation == 'filter':
+                                          require(item['row']['aboutIds'] == ABOUT, 'filter_predicate_mismatch')
+                                  if operation == 'filter':
+                                      require(data['num_rows_total'] == sum(row['aboutIds'] == ABOUT for row in expected[config]), 'filter_total_mismatch')
+                                  result.update(passedScopedChecks=True, partial=False, exactRowsMatched=len(rows), rowIndices=[item['row_idx'] for item in rows], num_rows_total=data['num_rows_total'])
+                      except ValidationFailure as error:
+                          result['failureKind'] = str(error)  # Fixed local validation code only.
+                      except Exception as error:
+                          result['failureKind'] = type(error).__name__
+                      result['elapsedSeconds'] = round(time.monotonic() - started, 3)
+                      summary['results'][identity][config + '/' + operation] = result
+                      save(identity + '-' + config + '-' + operation, result)
+                      save('summary', summary)
+                      print(json.dumps({key: result[key] for key in ('config', 'operation', 'identity', 'passedScopedChecks', 'elapsedSeconds')}, separators=(',', ':')))
+                      if summary['stoppedOnAccessOrRateRestriction']:
+                          return
+
+          exit_code = 0
+          try:
+              run()
+          except Exception as error:
+              summary['setupFailureKind'] = type(error).__name__
+              exit_code = 1
+          finally:
+              summary['completedUTC'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+              save('summary', summary)
+              print(json.dumps({'viewerRequests': summary['viewerRequests'], 'stoppedOnAccessOrRateRestriction': summary['stoppedOnAccessOrRateRestriction'], 'overallHealth': summary['overallHealth'], 'scopedChecks': {identity: {flow: result['passedScopedChecks'] for flow, result in values.items()} for identity, values in summary['results'].items()}}, separators=(',', ':')))
+              session.close()
+          raise SystemExit(exit_code)
+          PY
+      - name: Preserve sanitized JSON evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-viewer-access-diagnostic
+          path: /tmp/hf-viewer-access-diagnostic/*.json
+          if-no-files-found: warn
