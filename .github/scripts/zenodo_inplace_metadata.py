@@ -132,16 +132,30 @@ def guard_live_cohort(evidence, read=get, post=requests.post):
     assert digest(hf_provenance) == frozen['hf-stage']['release-provenance.json']
     assert json.loads(hf_provenance)['sourceCommit'] == plan['sourceCommit']
     kg = read('https://api.kaggle.com/v1/datasets/view/' + KG).json()
-    assert kg['currentVersionNumber'] == plan['kaggleVersion']
+    assert kg['currentVersionNumber'] in {plan['kagglePreviousVersion'], plan['kaggleVersion']}
     assert not any(v['versionNumber'] > plan['kaggleVersion'] for v in kg.get('versions', []))
+    if kg['currentVersionNumber'] != plan['kaggleVersion']:
+        assert any(v['versionNumber'] == plan['kaggleVersion'] and v.get('status', '').lower() == 'ready'
+                   for v in kg.get('versions', [])), 'Pinned Kaggle version is not publicly Ready'
     expected = {name: sha for name, sha in frozen['kaggle'].items()
                 if name not in {'dataset-metadata.json', 'kernel-metadata.json'}}
     observations = {}
     for label, suffix in [('exact', '?datasetVersionNumber=' + str(plan['kaggleVersion'])), ('default', '')]:
         body = read('https://www.kaggle.com/api/v1/datasets/download/' + KG + suffix).content
         actual, content = zip_inventory(body)
-        assert actual == expected, 'Kaggle ' + label + ' files differ from frozen distribution'
-        observations[label] = {'filesSha256Verified': len(actual), 'zipSHA256': digest(body)}
+        current = actual == expected
+        if label == 'exact':
+            assert current, 'Kaggle exact files differ from frozen distribution'
+        elif not current:
+            # A stale unversioned download is a separate, explicitly reported
+            # platform state. The DOI links the fully verified pinned version.
+            baseline = plan.get('kaggleBaselinePublication', {})
+            assert baseline.get('version') == plan['kagglePreviousVersion']
+            assert digest(body) == baseline.get('zipSHA256'), 'Unreviewed default Kaggle distribution'
+        observations[label] = {'filesSha256Verified': len(actual) if current else 0,
+                               'zipSHA256': digest(body), 'matchesPinnedDistribution': current}
+        if not current:
+            observations[label]['verifiedPreviousVersion'] = plan['kagglePreviousVersion']
         if label == 'exact':
             starter = json.loads(content['starter.ipynb'])
     public_notebook = read('https://www.kaggle.com/api/v1/kernels/pull/' + NB).json()
@@ -162,13 +176,20 @@ def guard_live_cohort(evidence, read=get, post=requests.post):
     assert execution['all_table_rows_reconstructed'] is True and execution['unresolved_query_references'] == 0
     # The slow ZIP/output reads must not hide a concurrent platform release.
     assert read('https://huggingface.co/api/datasets/' + HF).json()['sha'] == plan['hfRevision']
-    assert read('https://api.kaggle.com/v1/datasets/view/' + KG).json()['currentVersionNumber'] == plan['kaggleVersion']
+    final_kg = read('https://api.kaggle.com/v1/datasets/view/' + KG).json()
+    assert final_kg['currentVersionNumber'] in {plan['kagglePreviousVersion'], plan['kaggleVersion']}
+    assert not any(v['versionNumber'] > plan['kaggleVersion'] for v in final_kg.get('versions', []))
     assert read('https://www.kaggle.com/api/v1/kernels/pull/' + NB).json()['metadata']['currentVersionNumber'] == plan['notebookVersion']
     assert read(SITE + 'release-provenance.json').content == provenance
-    return {'status': 'PASS', 'observedUTC': utc(), 'cohort': plan,
+    default_current = (final_kg['currentVersionNumber'] == plan['kaggleVersion'] and
+                       observations['default']['matchesPinnedDistribution'])
+    return {'status': 'PASS' if default_current else 'PINNED_COHORT_VERIFIED_DEFAULT_PENDING',
+            'observedUTC': utc(), 'cohort': plan, 'unversionedKaggleDefaultCurrent': default_current,
+            'observedKaggleDefaultVersion': final_kg['currentVersionNumber'],
             'kaggle': observations, 'notebookPublicSourceAndExecutionVerified': True,
             'notebookExecutionSHA256': digest(response.content),
-            'scope': 'Published distribution identity, exact files and notebook execution; no HF search/filter health assertion'}
+            'scope': 'Published pinned distribution identity, complete exact-version ZIP and notebook execution; '
+                     'unversioned default readiness is reported separately; no HF search/filter health assertion'}
 
 
 def desired_metadata(original, plan):
@@ -181,7 +202,7 @@ def desired_metadata(original, plan):
         'Physician-authored clinical education, source-linked answers, professional identity and multilingual retrieval data. '
         'Content baseline 1.3.4; edition 2026-10-18. Canonical Dataset IRI: '
         'https://www.ghezelbaash.ir/graph.jsonld/dataset.</p>'
-        '<p><strong>Connected current distributions — 2026-10-24.</strong> '
+        '<p><strong>Connected versioned distributions — 2026-10-24.</strong> '
         '<a href="' + SITE + '">Canonical website</a>; '
         '<a href="' + HUB + '">Hugging Face dataset</a> '
         '(<a href="' + hf_pin + '">pinned revision ' + plan['hfRevision'] + '</a>); '
@@ -189,6 +210,8 @@ def desired_metadata(original, plan):
         '<a href="' + KAGGLE + '">Kaggle dataset</a> '
         '(<a href="' + kg_pin + '">version ' + str(plan['kaggleVersion']) + '</a>); '
         '<a href="' + NOTEBOOK + '">Kaggle starter notebook</a>, version ' + str(plan['notebookVersion']) + '. '
+        'Use the linked Kaggle version ' + str(plan['kaggleVersion']) + ' and notebook ' + str(plan['notebookVersion']) +
+        ' to select the verified files for this distribution. '
         'The website search markup has been corrected; the complete scientific graph and authored clinical content remain available. '
         'These distributions share the same canonical identities and scientific baseline; their platform packaging and HTML can differ.</p>'
         '<p><strong>Creator and entity identifiers.</strong> Dr. Saeed Ghezelbash; Iran Medical Council 167430; '

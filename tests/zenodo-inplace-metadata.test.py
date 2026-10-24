@@ -306,6 +306,36 @@ class MetadataTests(unittest.TestCase):
                 self.assertEqual(kwargs['json']['versionNumber'], 15)
                 return Response(execution)
             self.assertEqual(m.guard_live_cohort(folder, read=read, post=next_output)['status'], 'PASS')
+            previous_zip = io.BytesIO()
+            with zipfile.ZipFile(previous_zip, 'w') as archive:
+                archive.writestr('starter.ipynb', json.dumps({'cells': []}))
+                archive.writestr('checksums.sha256', 'previous frozen inventory')
+            previous_body = previous_zip.getvalue()
+            plan['kaggleBaselinePublication'] = {'version': 30, 'zipSHA256': m.digest(previous_body)}
+            seal_controls(folder, plan, frozen)
+            def lag_read(url):
+                if '/datasets/view/' in url:
+                    return Response({'currentVersionNumber': 30, 'versions': [{'versionNumber': 31, 'status': 'Ready'}]})
+                if '/datasets/download/' in url and '?' not in url:
+                    return Response(content=previous_body)
+                return read(url)
+            proof = m.guard_live_cohort(folder, read=lag_read, post=next_output)
+            self.assertEqual(proof['status'], 'PINNED_COHORT_VERIFIED_DEFAULT_PENDING')
+            self.assertFalse(proof['unversionedKaggleDefaultCurrent'])
+            self.assertTrue(proof['kaggle']['exact']['matchesPinnedDistribution'])
+            self.assertEqual(proof['kaggle']['default']['verifiedPreviousVersion'], 30)
+            def unknown_default(url):
+                if '/datasets/download/' in url and '?' not in url:
+                    return Response(content=previous_body + b'unknown mutation')
+                return lag_read(url)
+            with self.assertRaisesRegex(AssertionError, 'Unreviewed default Kaggle distribution'):
+                m.guard_live_cohort(folder, read=unknown_default, post=next_output)
+            def wrong_exact(url):
+                if '/datasets/download/' in url and '?' in url:
+                    return Response(content=previous_body)
+                return lag_read(url)
+            with self.assertRaisesRegex(AssertionError, 'Kaggle exact files'):
+                m.guard_live_cohort(folder, read=wrong_exact, post=next_output)
 
 
 if __name__ == '__main__':
