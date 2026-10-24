@@ -5,6 +5,16 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'.github/scripts'))
 import mutable_platform_release as release
 class Tests(unittest.TestCase):
+ def test_superseded_notebook_citation_candidate_stops_before_external_operations(self):
+  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200}
+  with contextlib.ExitStack() as stack:
+   stack.enter_context(patch.object(release,'load',return_value=plan))
+   operations=[stack.enter_context(patch.object(owner,name)) for owner,name in [
+    (release,'guard_frozen'),(release,'snapshot'),(release,'verify_published_archive'),
+    (release,'kaggle_client'),(release.gates,'run'),(release.subprocess,'run')]]
+   with self.assertRaisesRegex(AssertionError,'Superseded archive-citation candidate'):
+    release.publish(Path('/unused'))
+   for operation in operations:operation.assert_not_called()
  def test_scope_includes_notebook_distribution(self):
   import tempfile
   from platform_bundle import common_release, dump, load
@@ -32,6 +42,44 @@ class Tests(unittest.TestCase):
   self.assertIn('platform revision and website source',text)
   self.assertNotIn('reserved',text)
   self.assertNotIn('unpublished',text)
+ def test_notebook_citation_prose_preserves_actual_executable_cells_and_dois(self):
+  import copy,re
+  from platform_bundle import render_doi_text
+  original=json.loads(render_doi_text((ROOT/'src/canonical/platforms/kaggle-starter.ipynb').read_text()))
+  # This literal must remain code, even though its words also need correction
+  # in the public citation prose.
+  original['cells'].append({'cell_type':'code','metadata':{'keep':True},'execution_count':None,'outputs':[],
+   'source':['print("The exact DOI identifies this release cohort; its live availability is verified separately in publication receipts.")\n']})
+  code=copy.deepcopy([cell for cell in original['cells'] if cell['cell_type']=='code'])
+  code_bytes=[(''.join(cell['source']) if isinstance(cell['source'],list) else cell['source']).encode() for cell in code]
+  doi_ids=set(re.findall(r'10\.5281/zenodo\.\d+',json.dumps(original)))
+  archive=release.DOI_POLICY['currentArchive'];explicit_source='e'*40
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'starter.ipynb';path.write_text(json.dumps(original,ensure_ascii=False))
+   self.assertTrue(release.scope_notebook_archive(path,archive_doi=archive['doi'],archive_source_commit=explicit_source))
+   transformed=json.loads(path.read_text());first_bytes=path.read_bytes()
+   self.assertFalse(release.scope_notebook_archive(path,archive_doi=archive['doi'],archive_source_commit=explicit_source))
+   self.assertEqual(path.read_bytes(),first_bytes,'Repeated scoping must be byte-idempotent')
+  self.assertEqual([cell for cell in transformed['cells'] if cell['cell_type']=='code'],code)
+  self.assertEqual([(''.join(cell['source']) if isinstance(cell['source'],list) else cell['source']).encode() for cell in transformed['cells'] if cell['cell_type']=='code'],code_bytes)
+  self.assertEqual(set(re.findall(r'10\.5281/zenodo\.\d+',json.dumps(transformed))),doi_ids)
+  prose='\n'.join(''.join(cell['source']) for cell in transformed['cells'] if cell['cell_type']=='markdown')
+  self.assertNotIn('The exact DOI identifies this release cohort',prose)
+  self.assertNotIn('Exact release binding',prose)
+  self.assertIn('Published immutable archive',prose)
+  self.assertIn('preserves source '+explicit_source,prose)
+  self.assertIn('platform revision and website source',prose)
+  self.assertEqual(transformed['metadata'],original['metadata'])
+ def test_notebook_archive_scope_preserves_string_sources_and_ignores_missing_hf_copy(self):
+  archive=release.DOI_POLICY['currentArchive']
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'starter.ipynb'
+   self.assertFalse(release.scope_notebook_archive(path,archive_doi=archive['doi'],archive_source_commit=archive['sourceCommit']))
+   document={'cells':[{'cell_type':'markdown','source':'The exact DOI identifies this release cohort; its live availability is verified separately in publication receipts.'}], 'metadata':{}}
+   path.write_text(json.dumps(document))
+   self.assertTrue(release.scope_notebook_archive(path,archive_doi=archive['doi'],archive_source_commit=archive['sourceCommit']))
+   result=json.loads(path.read_text());self.assertIsInstance(result['cells'][0]['source'],str)
+   self.assertIn(archive['sourceCommit'],result['cells'][0]['source'])
  def test_no_zenodo_mutation_calls(self):
   source=(ROOT/'.github/scripts/mutable_platform_release.py').read_text();tree=ast.parse(source)
   for node in ast.walk(tree):
@@ -99,7 +147,7 @@ class FrozenGitTests(unittest.TestCase):
   git('add','data.txt');git('commit','-qm','Frozen payload')
   return repo,stage,git,git('rev-parse','HEAD')
  def assert_blocked_before_external_operations(self,root,revision,message):
-  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200,'hfRevision':revision}
+  plan={'candidateSchema':'mutable-distributions-3','archiveWrites':False,'archivePublicStatus':200,'hfRevision':revision}
   with patch.object(release,'load',side_effect=[plan,{'status':'PASS'}]),patch.object(release,'guard_frozen'),patch.object(release,'verify_published_archive') as archive,patch.object(release,'snapshot') as snapshot:
    with self.assertRaisesRegex(AssertionError,message):release.publish(root)
    archive.assert_not_called();snapshot.assert_not_called()
@@ -151,7 +199,7 @@ class FrozenHomeProjectionTests(unittest.TestCase):
    self.assertEqual(proof['canonicalGraphSHA256'],release.sha(root/'website/graph.jsonld'))
    self.assertEqual(json.loads((root/'frozen-home-projection.json').read_text()),proof)
  def test_old_format_or_reintroduced_cycle_blocks_all_publication_operations(self):
-  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200,'hfRevision':'a'*40}
+  plan={'candidateSchema':'mutable-distributions-3','archiveWrites':False,'archivePublicStatus':200,'hfRevision':'a'*40}
   for mutation,message in [('legacy','inert canonical-entity-graph'),('cyclic','Cyclic search reference')]:
    with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as folder:
     root=Path(folder);self.fixture(root,legacy=mutation=='legacy',cyclic=mutation=='cyclic')
@@ -170,7 +218,7 @@ class ExactVersionNotebookTests(unittest.TestCase):
  hf='d5d5d17e2b4584fba2da326060f9b3202d712a1e'
  fingerprint='82aa6b793ca90cf1027a27e454d4e41c83fb71d24c502aa862b28c25c045df05'
  def setup(self,root):
-  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'sourceCommit':self.source,'hfRevision':self.hf,'kaggleVersion':29,'notebookVersion':13,'notebookPreviousVersion':12}
+  plan={'candidateSchema':'mutable-distributions-3','archiveWrites':False,'sourceCommit':self.source,'hfRevision':self.hf,'kaggleVersion':29,'notebookVersion':13,'notebookPreviousVersion':12}
   state={'siteSource':self.source,'hfRevision':self.hf,'kaggleOwner':{'version':29,'status':'ready'},'notebookVersion':12}
   public={'currentVersionNumber':27,'versions':[{'versionNumber':29,'status':'Ready'}]}
   exact={'filesSha256Matched':48,'packageChecksumsVerified':47,'sourceCommit':self.source,'hfRevision':self.hf}
@@ -238,7 +286,7 @@ class ExactVersionNotebookTests(unittest.TestCase):
 class FinalConsistencyTests(unittest.TestCase):
  def setup(self,root):
   source='a'*40;hf='b'*40;archive_source=release.DOI_POLICY['currentArchive']['sourceCommit']
-  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive_source,
+  plan={'candidateSchema':'mutable-distributions-3','archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive_source,
         'sourceCommit':source,'sitePreviousSource':'c'*40,'hfRevision':hf,'hfParent':'d'*40,'kaggleVersion':29,'kagglePreviousVersion':28,
         'notebookVersion':13,'notebookPreviousVersion':12}
   for folder in ['website','kaggle','notebook']:(root/folder).mkdir()
