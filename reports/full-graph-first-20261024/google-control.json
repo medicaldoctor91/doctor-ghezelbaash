@@ -1,0 +1,107 @@
+{
+  "scope": "Saved Google result data; eligible item counts are not all graph nodes or proof of indexing",
+  "callbackKeys": [
+    "ds:2",
+    "ds:6",
+    "ds:5",
+    "ds:3",
+    "ds:0",
+    "ds:4",
+    "ds:1"
+  ],
+  "testedURL": "https://077ae6ce.doctor-ghezelbaash.pages.dev/control/",
+  "testTimeUTC": "2026-10-24T22:52:09+00:00",
+  "fetchHTTP": 200,
+  "fetchMessage": "OK",
+  "googleSummaryRaw": [
+    0,
+    13,
+    4
+  ],
+  "categories": [
+    {
+      "typeID": 21,
+      "items": 1,
+      "summaryRaw": [
+        1,
+        "",
+        0
+      ],
+      "statusCountersRaw": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "typeID": 39,
+      "items": 7,
+      "summaryRaw": [
+        1,
+        "",
+        0
+      ],
+      "statusCountersRaw": [
+        0,
+        0,
+        7
+      ]
+    },
+    {
+      "typeID": 4,
+      "items": 2,
+      "summaryRaw": [
+        1,
+        "",
+        1
+      ],
+      "statusCountersRaw": [
+        0,
+        2,
+        0
+      ]
+    },
+    {
+      "typeID": 54,
+      "items": 2,
+      "summaryRaw": [
+        1,
+        "",
+        1
+      ],
+      "statusCountersRaw": [
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "typeID": 52,
+      "items": 1,
+      "summaryRaw": [
+        1,
+        "",
+        1
+      ],
+      "statusCountersRaw": [
+        0,
+        1,
+        0
+      ]
+    }
+  ],
+  "activeJSONLD": [
+    {
+      "id": "schema-core-mainentity",
+      "nodes": 85,
+      "contextKind": "https://schema.org"
+    }
+  ],
+  "role": "control",
+  "resultURL": "https://search.google.com/test/rich-results/result?id=knrJKuOUtIdfKrr8bvryVw",
+  "savedResultPageSHA256": "32169a936f4ae7779762748259c2c86d7788e5a0d9075fabc1a146865bf06b97",
+  "renderedHTMLSHA256": "22c69993eaf6ce271661bf67eb00cfa0978df33bbdc21d953b2f807d08ad3d06",
+  "renderedHTMLBytes": 3647814,
+  "fetchWasSuccessful": true,
+  "previewNoindex": true
+}

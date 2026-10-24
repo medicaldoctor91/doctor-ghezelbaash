@@ -38,16 +38,44 @@ See the [candidate receipt](../reports/full-graph-first-20261024/candidate.json)
 [independent outside check](../reports/full-graph-first-20261024/independent-public.json)
 and [unchanged production proof](../reports/full-graph-first-20261024/production-after.json).
 
-## Google recognition remains pending
+## Google recognition regressed; preview restored
 
-- [Test the full-graph candidate](https://search.google.com/test/rich-results?url=https%3A%2F%2F077ae6ce.doctor-ghezelbaash.pages.dev%2F)
-- [Test the baseline control](https://search.google.com/test/rich-results?url=https%3A%2F%2F077ae6ce.doctor-ghezelbaash.pages.dev%2Fcontrol%2F)
+The user supplied both completed Google tests. The first supplied link tested
+the control, and the second tested the full-graph candidate; the mapping below
+comes from Google's saved tested URL rather than the order of the links.
 
-The connected tools cannot execute a live Rich Results Test. The user has been
-asked for both completed result links. No Google recognition PASS is claimed yet.
-The intentional preview `noindex` can exclude the URL from indexing; compare
-recognized structured data and its errors rather than treating that exclusion
-as a parsing failure. Rich Results cannot prove that all 1,600 nodes were indexed.
+| Tested HTML | Google test time, UTC | Recognized eligible items | Categories |
+| --- | --- | --- | --- |
+| [85-node baseline control](https://search.google.com/test/rich-results/result?id=knrJKuOUtIdfKrr8bvryVw) | 22:52:09 | 13 valid; no critical errors; 4 items with warnings | Dataset, ImageMetadata, LocalBusiness, Organization, ProfilePage |
+| [Full 1,600-node graph first](https://search.google.com/test/rich-results/result?id=LQgOpomf5iY8QvYfrDDYWQ) | 22:53:51 | 0 | None |
+
+Both fetches returned HTTP 200 and the same intentional preview `noindex`.
+Google's tested HTML contains the candidate's complete active 1,600-node JSON-LD,
+deep-equal to the canonical graph. Thus moving the complete graph before the body
+alone did not restore Google's recognition. Missing or truncated graph content
+does not explain this observation. The precise parser limitation has not been
+isolated; this result does not establish that the RDF itself is invalid.
+Rich Results item counts do not establish indexing of all graph nodes.
+See the [control receipt](../reports/full-graph-first-20261024/google-control.json),
+[candidate receipt](../reports/full-graph-first-20261024/google-full-graph-candidate.json)
+and [independent comparison](../reports/full-graph-first-20261024/google-independent-review.json).
+
+As authorized, [restore workflow 40140681020](https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/40140681020)
+completed successfully using reviewed controller `2f1f75e8303c2284ceefd502a92f274a27023e73`.
+It restored all 188 original website files to the same preview branch, with no
+baseline file changes. The restored immutable preview is
+<https://49bfc628.doctor-ghezelbaash.pages.dev/> (deployment
+`49bfc628-1635-48c2-992f-bffb79ac0a96`). The branch alias also serves the original
+homepage SHA-256. The failed immutable `077ae6ce` preview remains as test evidence.
+
+The workflow's before/after guards and separate anonymous public reads at
+22:58:47 UTC confirm production remains at `a86aa67c`, source `0f72c5e6`, with
+the exact original homepage, Botox, full graph and provenance bytes. Git automatic
+deployments remain disabled. No HF, Kaggle, notebook or Zenodo files were changed
+by the experiment or restore, so this experiment introduces no cohort mismatch.
+See the [restore receipt](../reports/full-graph-first-20261024/restore-preview.json),
+[production guard](../reports/full-graph-first-20261024/restore-production-after.json)
+and [outside verification](../reports/full-graph-first-20261024/restore-public-verification.json).
 
 Search Console's read-only baseline inspection reports the production home and
 Botox URLs as indexed with matching Google canonicals. Their last crawl times are
@@ -55,7 +83,7 @@ October 23, before this experiment, so they do not validate its markup.
 
 ## Restore and promotion conditions
 
-If Google's recognition regresses relative to the control, dispatch
+If another reviewed experiment regresses relative to its control, dispatch
 `full-graph-first-preview.yml` with `mode=restore` and the exact reviewed controller
 commit. This uploads the original verified 188-file website to the same fixed
 preview branch. It does not roll back someone else's production deployment;
