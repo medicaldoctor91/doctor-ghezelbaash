@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: doctor-ghezelbaash-readonly-notebook-observation
   cancel-in-progress: false
@@ -13,41 +14,127 @@ jobs:
     env:
       ARCHIVE_SOURCE_COMMIT: ed767f6e6726e1453196e2ec2b312fcad00677e2
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - run: python -m pip install requests 'kaggle==2.2.4'
-      - name: Read owner execution status and any existing error output
+      - uses: actions/download-artifact@v4
+        with:
+          name: same-doi-file-correction-evidence
+          run-id: 40120487161
+          github-token: ${{ github.token }}
+          path: /tmp/prepared-observer
+      - name: Read existing Zenodo draft file progress without editing
         run: |
           python - <<'PY'
-          import json,sys,time
+          import hashlib,json,os,time
+          from pathlib import Path
+          import requests
+          folder=Path('/tmp/notebook-observation')
+          folder.mkdir(exist_ok=True)
+          manifests=list(Path('/tmp/prepared-observer').rglob('correction-manifest.json'))
+          assert len(manifests)==1,'Expected one reviewed correction manifest'
+          manifest=json.loads(manifests[0].read_text())
+          assert manifest['record']==23474664 and manifest['doi']=='10.5281/zenodo.23474664'
+          target={name:{'checksum':item['checksum'],'bytes':item['bytes']}
+                  for name,item in manifest['target']['files'].items()}
+          assert len(target)==43
+          canonical=json.dumps(manifest,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()
+          report={'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+                  'scope':'Read-only owner staging progress; no publication claim or final byte verification',
+                  'record':23474664,'preparedRun':40120487161,
+                  'targetManifestSHA256':hashlib.sha256(canonical).hexdigest(),
+                  'expectedFiles':43,'platformWrites':False,'readCalls':1}
+          try:
+              response=requests.get('https://zenodo.org/api/records/23474664/draft/files',
+                  headers={'Authorization':'Bearer '+os.environ['ZENODO_TOKEN'],
+                           'Accept':'application/vnd.inveniordm.v1+json'},
+                  timeout=(15,45),allow_redirects=False)
+              report['HTTP']=response.status_code
+              if response.status_code==404:
+                  report.update(status='NO_DRAFT',draftExists=False,fileCount=0,
+                                targetMatches=False,remainingNames=sorted(target))
+              elif response.status_code==200:
+                  entries=response.json()['entries']
+                  if isinstance(entries,dict):
+                      entries=[dict(value,key=value.get('key',key)) for key,value in entries.items()]
+                  assert isinstance(entries,list)
+                  actual={item['key']:{'checksum':item.get('checksum'),'bytes':item.get('size')}
+                          for item in entries}
+                  assert len(actual)==len(entries),'Duplicate draft filenames'
+                  remaining=sorted(name for name,item in target.items() if actual.get(name)!=item)
+                  unexpected=sorted(set(actual)-set(target))
+                  report.update(status='DRAFT_OBSERVED',draftExists=True,fileCount=len(actual),
+                                targetMatches=not remaining and not unexpected and len(actual)==43,
+                                targetFilesMatched=43-len(remaining),remainingNames=remaining,
+                                unexpectedNames=unexpected)
+              else:
+                  report.update(status='ACCESS_STOP' if response.status_code in (401,403,429) else 'READ_ERROR',
+                                draftExists=None,targetMatches=False)
+          except Exception as error:
+              report.update(status='READ_ERROR',errorType=type(error).__name__,draftExists=None,targetMatches=False)
+          report['completedUTC']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
+          (folder/'zenodo-draft-report.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Read owner status and the exact version 16 persisted execution log
+        run: |
+          python - <<'PY'
+          import json,os,re,sys,time
           from pathlib import Path
           sys.path.insert(0,'.github/scripts')
           from sync_platform_machine_resources import kaggle_client
+          from kagglesdk.kernels.types.kernels_api_service import ApiListKernelSessionOutputRequest
+          # Store only a bounded, sanitized snapshot. Never stream or restart a session.
+          def sanitized(value):
+              text=str(value or '')
+              for key,secret in os.environ.items():
+                  if re.search(r'TOKEN|SECRET|PASSWORD|API_KEY',key,re.I) and len(secret)>=8:
+                      text=text.replace(secret,'[REDACTED]')
+              text=re.sub(r'https?://[^\s<>"\']+','[URL REDACTED]',text,flags=re.I)
+              text=re.sub(r'(?im)^.*(?:authorization\s*:|set-cookie\s*:|cookie\s*:|x-api-key\s*:|bearer\s+|api[_-]?token\s*[:=]|password\s*[:=]|secret\s*[:=]).*$','[CREDENTIAL LINE REDACTED]',text)
+              return text
           client=kaggle_client()
           ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
+          version_label='16'
+          folder=Path('/tmp/notebook-observation')
+          folder.mkdir(exist_ok=True)
           state=client.kernels_status(ref)
           status=str(state.status)
           report={'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
                   'scope':'Owner execution diagnostic only; no public health assertion or publication',
-                  'status':status,'failureMessage':getattr(state,'failure_message',None),
-                  'dataset':client.dataset_status('saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data',format='json(status,current_version_number)'),
-                  'platformWrites':False}
-          if 'error' in status.lower() or 'fail' in status.lower():
-              try:
-                  client.kernels_output(ref,'/tmp/notebook-observation',file_pattern='__notebook__.ipynb',force=True,quiet=True)
-                  errors=[]
-                  for path in Path('/tmp/notebook-observation').rglob('*.ipynb'):
-                      for cell in json.loads(path.read_text()).get('cells',[]):
-                          errors.extend({'ename':o.get('ename'),'evalue':o.get('evalue'),'traceback':o.get('traceback')}
-                                        for o in cell.get('outputs',[]) if o.get('output_type')=='error')
-                  report['existingNotebookErrors']=errors
-              except Exception as error:
-                  report['outputReadErrorType']=type(error).__name__
-          Path('/tmp/notebook-observation').mkdir(exist_ok=True)
-          Path('/tmp/notebook-observation/report.json').write_text(json.dumps(report,indent=2)+'\n')
+                  'status':sanitized(status),'failureMessage':sanitized(getattr(state,'failure_message',None)) or None,
+                  'statusScope':'Latest owner session; the persisted log is explicitly pinned to version 16',
+                  'versionLabel':version_label,
+                  'dataset':sanitized(client.dataset_status('saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data',format='json(status,current_version_number)')),
+                  'platformWrites':False,'logCalls':1,'logStreaming':False,'maximumSavedLogBytes':100000,
+                  'logBytes':0,'logSavedBytes':0}
+          try:
+              request=ApiListKernelSessionOutputRequest()
+              request.user_name='saeedghezelbash'
+              request.kernel_slug='dr-saeed-ghezelbash-knowledge-graph-starter'
+              request.version_label=version_label
+              with client.build_kaggle_client() as kaggle:
+                  response=kaggle.kernels.kernels_api_client.list_kernel_session_output(request)
+              raw=response.log or ''
+              clean=sanitized(raw).encode('utf-8')
+              saved=clean[-100000:]
+              (folder/'owner-version16.log').write_bytes(saved)
+              report.update(logBytes=len(raw.encode('utf-8')),logSavedBytes=len(saved),
+                            logStatus='EMPTY' if not raw else 'PERSISTED_LOG',
+                            logTruncated=len(clean)>len(saved),
+                            logTail=saved.decode('utf-8',errors='replace')[-4000:])
+          except Exception as error:
+              # No alternative endpoint, account or retry follows a denied owner read.
+              response=getattr(error,'response',None)
+              http=getattr(response,'status_code',None)
+              report.update(logReadErrorType=type(error).__name__,logReadHTTP=http,
+                            logStatus='ACCESS_STOP' if http in (401,403,429) else 'READ_ERROR')
+          report['completedUTC']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
+          (folder/'report.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
       - uses: actions/upload-artifact@v4
