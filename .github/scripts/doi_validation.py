@@ -87,7 +87,7 @@ def validate_policy(root, *, archive=False):
             'archiveBindingMode': archive}
 
 
-def validate_archive(root, *, online=False):
+def validate_archive(root, *, online=False, legacy_home_projection=False):
     import mlcroissant
     import pyarrow.parquet as pq
     import rdflib
@@ -119,10 +119,12 @@ def validate_archive(root, *, online=False):
             def handle_endtag(self, tag):
                 if tag == 'script' and self.capture:self.blocks.append(json.loads(''.join(self.text)));self.capture=False
         inline=Inline();inline.feed((root/'index.html').read_text())
-        # The homepage retains the complete canonical inline graph, including
-        # every authored entity, relation and multilingual literal.
+        # New archives preserve every canonical entity/value as inert JSON and
+        # expose the bounded search projection. A historical archive's former
+        # full JSON-LD format must be requested explicitly by its caller.
         from browser_projection import validate_home_projection
-        validate_home_projection(root/'graph.jsonld', inline.blocks, (root/'index.html').read_bytes())
+        validate_home_projection(root/'graph.jsonld', inline.blocks, (root/'index.html').read_bytes(),
+                                 allow_legacy_full_graph=legacy_home_projection)
     triples = len(g)
     g.parse(root / 'provenance.jsonld', format='json-ld')
     g.parse(root / 'dcat.ttl', format='turtle')

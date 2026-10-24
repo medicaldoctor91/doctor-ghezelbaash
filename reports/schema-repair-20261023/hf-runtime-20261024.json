@@ -1,0 +1,283 @@
+{
+  "startedUTC": "2026-10-24T02:25:13.760136+00:00",
+  "method": "One public search and one public filter request per config; length2; no retries or cache-busting",
+  "expectedRevision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e",
+  "platformWrites": 0,
+  "viewerCallBudget": 10,
+  "viewerCalls": [
+    {
+      "config": "clinical_passages",
+      "endpoint": "search",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "clinical_passages",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "query": "ghezelbaash"
+      },
+      "startedUTC": "2026-10-24T02:25:14.938915+00:00",
+      "frozenParquetSHA256": "8262b80ff5c3bbd3eeedc41f9eb9a2662d783997f9f19dd47186f4512142597e",
+      "status": "TRANSPORT_OR_VALIDATION_ERROR",
+      "error": "HTTPSConnectionPool(host='datasets-server.huggingface.co', port=443): Read timed out. (read timeout=60)",
+      "elapsedSeconds": 60.092,
+      "completedUTC": "2026-10-24T02:26:15.031096+00:00"
+    },
+    {
+      "config": "clinical_passages",
+      "endpoint": "filter",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "clinical_passages",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "where": "\"citedUrls\"='[]'"
+      },
+      "startedUTC": "2026-10-24T02:26:15.032005+00:00",
+      "frozenParquetSHA256": "8262b80ff5c3bbd3eeedc41f9eb9a2662d783997f9f19dd47186f4512142597e",
+      "status": "TRANSPORT_OR_VALIDATION_ERROR",
+      "error": "HTTPSConnectionPool(host='datasets-server.huggingface.co', port=443): Read timed out. (read timeout=60)",
+      "elapsedSeconds": 60.131,
+      "completedUTC": "2026-10-24T02:27:15.163002+00:00"
+    },
+    {
+      "config": "clinical_answers",
+      "endpoint": "search",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "clinical_answers",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "query": "ghezelbaash"
+      },
+      "startedUTC": "2026-10-24T02:27:15.181485+00:00",
+      "frozenParquetSHA256": "e4ab988fad12d9d73684d2d8c8ca34b44f042bc2e49387329ea563c90fa55d18",
+      "status": "TRANSPORT_OR_VALIDATION_ERROR",
+      "error": "HTTPSConnectionPool(host='datasets-server.huggingface.co', port=443): Read timed out. (read timeout=60)",
+      "elapsedSeconds": 60.12,
+      "completedUTC": "2026-10-24T02:28:15.301497+00:00"
+    },
+    {
+      "config": "clinical_answers",
+      "endpoint": "filter",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "clinical_answers",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "where": "\"aboutIds\"='[\"https://www.ghezelbaash.ir/procedure-acne-scar-evaluation\"]'"
+      },
+      "startedUTC": "2026-10-24T02:28:15.304001+00:00",
+      "frozenParquetSHA256": "e4ab988fad12d9d73684d2d8c8ca34b44f042bc2e49387329ea563c90fa55d18",
+      "status": "TRANSPORT_OR_VALIDATION_ERROR",
+      "error": "HTTPSConnectionPool(host='datasets-server.huggingface.co', port=443): Read timed out. (read timeout=60)",
+      "elapsedSeconds": 60.11,
+      "completedUTC": "2026-10-24T02:29:15.414065+00:00"
+    },
+    {
+      "config": "entity_facts",
+      "endpoint": "search",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "entity_facts",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "query": "Patient"
+      },
+      "startedUTC": "2026-10-24T02:29:15.559587+00:00",
+      "frozenParquetSHA256": "4894003de27b828ba00e52e7c3f4fd9dbb1cbe4ee70004c73786e17b2da55e9b",
+      "http": 200,
+      "elapsedSeconds": 4.44,
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 02:29:19 GMT",
+        "Age": null,
+        "Content-Type": "application/json",
+        "X-Revision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e",
+        "X-Error-Code": null,
+        "X-Cache": "Miss from cloudfront",
+        "X-Cache-Hits": null,
+        "Cache-Control": "max-age=120"
+      },
+      "bytes": 1450,
+      "sha256": "6f4f9a5de12c35122542d854ca49461a39b95d90f00233c8591a7f2a4a1d28d8",
+      "status": "PASS",
+      "numRowsTotal": 544,
+      "returnedRowsVerified": 2,
+      "rowIndices": [
+        20542,
+        20534
+      ],
+      "partial": false,
+      "revisionVerified": true,
+      "fullFrozenRowsMatched": true,
+      "completedUTC": "2026-10-24T02:29:19.999505+00:00"
+    },
+    {
+      "config": "entity_facts",
+      "endpoint": "filter",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "entity_facts",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "where": "\"object\"='https://schema.org/Patient'"
+      },
+      "startedUTC": "2026-10-24T02:29:20.000367+00:00",
+      "frozenParquetSHA256": "4894003de27b828ba00e52e7c3f4fd9dbb1cbe4ee70004c73786e17b2da55e9b",
+      "status": "TRANSPORT_OR_VALIDATION_ERROR",
+      "error": "HTTPSConnectionPool(host='datasets-server.huggingface.co', port=443): Read timed out. (read timeout=60)",
+      "elapsedSeconds": 60.088,
+      "completedUTC": "2026-10-24T02:30:20.088107+00:00"
+    },
+    {
+      "config": "query_matrix",
+      "endpoint": "search",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "query_matrix",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "query": "ghezelbaash"
+      },
+      "startedUTC": "2026-10-24T02:30:20.118037+00:00",
+      "frozenParquetSHA256": "6d7c76161c3417d58d6eed6753fdd61444e90d013da5401e9cbecd2903a01832",
+      "status": "TRANSPORT_OR_VALIDATION_ERROR",
+      "error": "HTTPSConnectionPool(host='datasets-server.huggingface.co', port=443): Read timed out. (read timeout=60)",
+      "elapsedSeconds": 60.071,
+      "completedUTC": "2026-10-24T02:31:20.188964+00:00"
+    },
+    {
+      "config": "query_matrix",
+      "endpoint": "filter",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "query_matrix",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "where": "\"answer_id\"='https://www.ghezelbaash.ir/botox#answer-botox-doctor-selection-criteria-kermanshah'"
+      },
+      "startedUTC": "2026-10-24T02:31:20.191717+00:00",
+      "frozenParquetSHA256": "6d7c76161c3417d58d6eed6753fdd61444e90d013da5401e9cbecd2903a01832",
+      "http": 200,
+      "elapsedSeconds": 5.135,
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 02:31:25 GMT",
+        "Age": null,
+        "Content-Type": "application/json",
+        "X-Revision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e",
+        "X-Error-Code": null,
+        "X-Cache": "Miss from cloudfront",
+        "X-Cache-Hits": null,
+        "Cache-Control": "max-age=120"
+      },
+      "bytes": 5295,
+      "sha256": "2bfe7edc40652bb742fc667821fb57c62b235f5ab640d8849eda75bce923a95c",
+      "status": "PASS",
+      "numRowsTotal": 24,
+      "returnedRowsVerified": 2,
+      "rowIndices": [
+        0,
+        1
+      ],
+      "partial": false,
+      "revisionVerified": true,
+      "fullFrozenRowsMatched": true,
+      "completedUTC": "2026-10-24T02:31:25.327947+00:00"
+    },
+    {
+      "config": "market_positioning",
+      "endpoint": "search",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "market_positioning",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "query": "positioning"
+      },
+      "startedUTC": "2026-10-24T02:31:25.339438+00:00",
+      "frozenParquetSHA256": "1c4458b2ae1645eeab6a940b0529f8a00ebabc7d6cb8bf67afba5c0b1ff1f408",
+      "http": 200,
+      "elapsedSeconds": 6.738,
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 02:31:32 GMT",
+        "Age": null,
+        "Content-Type": "application/json",
+        "X-Revision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e",
+        "X-Error-Code": null,
+        "X-Cache": "Miss from cloudfront",
+        "X-Cache-Hits": null,
+        "Cache-Control": "max-age=120"
+      },
+      "bytes": 6464,
+      "sha256": "8cd5847280cc6ba5ff72a35b060e1b36fb66bcb8566b4a53a8a4f978c766f65f",
+      "status": "PASS",
+      "numRowsTotal": 60,
+      "returnedRowsVerified": 2,
+      "rowIndices": [
+        44,
+        45
+      ],
+      "partial": false,
+      "revisionVerified": true,
+      "fullFrozenRowsMatched": true,
+      "completedUTC": "2026-10-24T02:31:32.078504+00:00"
+    },
+    {
+      "config": "market_positioning",
+      "endpoint": "filter",
+      "params": {
+        "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "config": "market_positioning",
+        "split": "train",
+        "offset": 0,
+        "length": 2,
+        "where": "\"example_id\"='positioning-001'"
+      },
+      "startedUTC": "2026-10-24T02:31:32.080131+00:00",
+      "frozenParquetSHA256": "1c4458b2ae1645eeab6a940b0529f8a00ebabc7d6cb8bf67afba5c0b1ff1f408",
+      "http": 200,
+      "elapsedSeconds": 0.379,
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 02:31:32 GMT",
+        "Age": null,
+        "Content-Type": "application/json",
+        "X-Revision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e",
+        "X-Error-Code": null,
+        "X-Cache": "Miss from cloudfront",
+        "X-Cache-Hits": null,
+        "Cache-Control": "max-age=120"
+      },
+      "bytes": 8768,
+      "sha256": "3a628b5ea3603b261d84e5179ab14131672b30be05a785b4bbec880971e40c16",
+      "status": "PASS",
+      "numRowsTotal": 1,
+      "returnedRowsVerified": 1,
+      "rowIndices": [
+        0
+      ],
+      "partial": false,
+      "revisionVerified": true,
+      "fullFrozenRowsMatched": true,
+      "completedUTC": "2026-10-24T02:31:32.460459+00:00"
+    }
+  ],
+  "stopped": false,
+  "hub": {
+    "http": 200,
+    "sha256": "b714fbf9c0ed8669ede2bf430e17278036501e9681a3c3f1a1401283bbd7aa17",
+    "observedUTC": "2026-10-24T02:25:14.398299+00:00",
+    "revision": "d5d5d17e2b4584fba2da326060f9b3202d712a1e"
+  },
+  "completedUTC": "2026-10-24T02:31:32.461922+00:00",
+  "viewerCallsMade": 10,
+  "passedCalls": 4,
+  "status": "FAIL"
+}

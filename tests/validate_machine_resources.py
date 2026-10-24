@@ -93,8 +93,27 @@ def validate_html(root, origin, graph):
             expanded = jsonld.expand(script, {'base': expected, 'documentLoader': document_loader})
             projection = rdflib.Graph().parse(data=json.dumps(expanded), format='json-ld')
             for subject, predicate, obj in projection:
+                # Schema.org's published context expands its vocabulary with
+                # http IRIs; the canonical scientific graph uses https IRIs.
+                # Match the two published forms of the same vocabulary term.
+                if str(predicate).startswith('http://schema.org/'):
+                    predicate = rdflib.URIRef('https://schema.org/' + str(predicate)[len('http://schema.org/'):])
                 if predicate in selected and (subject, predicate, None) in graph:
-                    assert (subject, predicate, obj) in graph, ('Browser RDF term drift', file.name, subject, predicate, obj)
+                    # Search markup uses Schema.org's ordinary URL-valued
+                    # strings. Coercing url/sameAs to @id can make a node's own
+                    # public URL a self-reference during consumer expansion.
+                    # Preserve the exact authored URL claim while allowing
+                    # that browser representation; canonical RDF still has
+                    # its independent JSON-LD/Turtle/CSV isomorphism checks.
+                    same_url = (
+                        isinstance(obj, rdflib.Literal)
+                        and obj.language is None
+                        and obj.datatype in {None, XSD.string, XSD.anyURI}
+                        and str(obj).startswith(('https://', 'http://'))
+                        and any(isinstance(expected, rdflib.URIRef) and str(expected) == str(obj)
+                                for expected in graph.objects(subject, predicate))
+                    )
+                    assert (subject, predicate, obj) in graph or same_url, ('Browser RDF term drift', file.name, subject, predicate, obj)
                     checked += 1
         documents[file.stem] = document
     license_page = documents['media-license']

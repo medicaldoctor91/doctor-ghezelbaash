@@ -45,5 +45,42 @@
     }
   },
   "scope": "Read-only Cloudflare project check; no config changes",
-  "recordedUTC": "2026-10-23T17:40:19Z"
+  "recordedUTC": "2026-10-23T17:40:19Z",
+  "unexpectedProductionDeployment": {
+    "id": "dc22e5c4-e6f3-4d1b-8ab8-f5d4897e8a26",
+    "source": "73027916d6fde6a3750c07e7ac2797a54dad887a",
+    "deployedUTC": "2026-10-23T17:46:16.108302Z",
+    "rendererAndPublicSourceTreesIdenticalToFrozen": true,
+    "granularSwitchesWereDisabled": true,
+    "globalGitDeploymentsWasEnabled": true
+  },
+  "recovery": {
+    "globalGitDeploymentsEnabled": false,
+    "automaticProductionDeployments": false,
+    "previewSetting": "none",
+    "activeProductionDeployment": "51fc7680-1235-4556-b6f2-4bb8d764556c",
+    "activeSource": "94611168bacf7630022499204c493f6e4af64f70",
+    "latestRecordedBuildRemainsHistoryOnly": "73027916d6fde6a3750c07e7ac2797a54dad887a",
+    "publicVerification": {
+      "observedUTC": "2026-10-23T17:54:05.076423+00:00",
+      "pages": {
+        "release-provenance.json": {
+          "http": 200,
+          "sha256": "87558d3762c20c8ae5c1c7e9fee0b5aa0a021bcca1183889477d623fff76d373",
+          "matchesFrozen946": true
+        },
+        "index.html": {
+          "http": 200,
+          "sha256": "5e95c5d280de0a4fddb8e27db5acc4b979fd60427c1f732a25badb2f63b26aa0",
+          "matchesFrozen946": true
+        },
+        "botox.html": {
+          "http": 200,
+          "sha256": "ff46d4791540669a7fe0345bffe2dbb58c0b1e160b8ab449a5d2902d23e96107",
+          "matchesFrozen946": true
+        }
+      },
+      "sourceCommit": "94611168bacf7630022499204c493f6e4af64f70"
+    }
+  }
 }

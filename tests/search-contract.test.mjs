@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {closeSearchReferences} from '../src/lib/search-contract.mjs';
+import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, assertBoundedSearchDocument} from '../src/lib/search-contract.mjs';
 import {SOURCE} from '../src/canonical/source.mjs';
 
 const origin = 'https://example.test';
@@ -192,4 +192,87 @@ test('the real physician retains contact, practice, education, occupation and li
     assert.equal(image.isPartOf, undefined, 'supporting images do not expand the homepage corpus');
   }
   assert.deepEqual(graph, before, 'the real canonical graph must remain unchanged');
+});
+
+test('the real homepage Search document is finite and preserves clinical identity and licensed image claims', () => {
+  const original=structuredClone(SOURCE.graph);
+  const canonical=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
+  const projected=projectHomeSearchGraph(SOURCE.graph,SOURCE.canonicalOrigin);
+  const actual=new Map(projected['@graph'].map(node=>[node['@id'],node]));
+  const physicianId=SOURCE.canonicalOrigin+'/#saeed-ghezelbash';
+  const physician=actual.get(physicianId),authored=canonical.get(physicianId);
+  const home=actual.get(SOURCE.canonicalOrigin+'/webpage');
+  assert.deepEqual(home['@type'],['ProfilePage','MedicalWebPage']);
+  assert.equal(home.mainEntity['@id'],physicianId);
+  assert.ok(physician['@type'].includes('Person'));
+  assert.equal(typeof physician.name,'string');
+  for(const key of ['telephone','email','sameAs','hasCredential','identifier','hasOccupation','owns','practicesAt']) {
+    if(key==='owns')assert.deepEqual(physician[key],authored[key].filter(ref=>ref['@id'].includes('aesthetic-clinic')));
+    else assert.deepEqual(physician[key],authored[key],key+' remains the authored clinical claim');
+  }
+  const address=actual.get(physician.address['@id']);
+  for(const key of ['streetAddress','addressLocality','addressRegion','addressCountry','postalCode'])assert.equal(address[key],canonical.get(physician.address['@id'])[key]);
+  assert.deepEqual(physician.image,authored.image.map(ref=>canonical.get(ref['@id']).contentUrl));
+  for(const ref of authored.image) {
+    const image=actual.get(ref['@id']),truth=canonical.get(ref['@id']);
+    assert.equal(image.creator['@id'],physicianId);
+    for(const key of ['contentUrl','license','acquireLicensePage','creditText','copyrightNotice'])assert.deepEqual(image[key],truth[key]);
+    for(const key of ['width','height'])if(truth[key])assert.equal(image[key],typeof truth[key]==='number'?truth[key]:truth[key].value??canonical.get(truth[key]['@id']).value);
+  }
+  assert.equal(projected['@context'],'https://schema.org','URL strings stay terminal browser values rather than coerced self-links');
+  assert.ok(Buffer.byteLength(JSON.stringify(projected))<=38000,'critical identity markup fits before the preserved full data');
+  const stats=assertBoundedSearchDocument(projected);
+  assert.ok(stats.expandedObjects<4096);
+  assert.ok(stats.maxDepth<=12);
+  assert.deepEqual(SOURCE.graph,original,'canonical facts and every authored literal are untouched');
+});
+
+test('clinical Search projection keeps the visible questions, breadcrumb and media without reciprocal inventories', () => {
+  const ids={topic:origin+'/treatment',clinic:origin+'/clinic',image:origin+'/portrait',question:origin+'/question',answer:origin+'/answer',video:origin+'/video',clip:origin+'/clip',breadcrumb:origin+'/breadcrumb',address:origin+'/address'};
+  const graph={'@context':'https://schema.org','@graph':[
+    {'@id':pageId,'@type':'MedicalWebPage',name:'Treatment',mainEntity:{'@id':ids.topic},author:{'@id':personId},isPartOf:{'@id':homeId},breadcrumb:{'@id':ids.breadcrumb}},
+    {'@id':homeId,'@type':['ProfilePage','MedicalWebPage'],url:origin+'/',mainEntity:{'@id':personId}},
+    {'@id':personId,'@type':['Person','IndividualPhysician'],name:'Example Physician',description:'Exact clinical biography.',mainEntityOfPage:{'@id':homeId},owns:[{'@id':ids.clinic}],practicesAt:{'@id':ids.clinic},image:[{'@id':ids.image}],address:{'@id':ids.address}},
+    {'@id':ids.clinic,'@type':['PhysiciansOffice','LocalBusiness'],name:'Clinic',owner:{'@id':personId},address:{'@id':ids.address}},
+    {'@id':ids.address,'@type':'PostalAddress',streetAddress:'Street',addressLocality:'City'},
+    {'@id':ids.image,'@type':'ImageObject',contentUrl:origin+'/photo.jpg',creator:{'@id':personId},license:'https://creativecommons.org/licenses/by/4.0/'},
+    {'@id':ids.topic,'@type':'MedicalProcedure',name:'Treatment',description:'Exact clinical topic.',subjectOf:{'@id':pageId}},
+    {'@id':ids.question,'@type':'Question',name:'Visible question?',acceptedAnswer:{'@id':ids.answer},isPartOf:{'@id':homeId},about:{'@id':ids.topic}},
+    {'@id':ids.answer,'@type':'Answer',text:'Exact visible answer.',isPartOf:{'@id':ids.question}},
+    {'@id':ids.video,'@type':'VideoObject',name:'Visible video',description:'Exact video description.',contentUrl:origin+'/video.mp4',thumbnailUrl:origin+'/poster.jpg',uploadDate:'2026-10-01T10:00:00Z',creator:{'@id':personId},isPartOf:{'@id':pageId},hasPart:[{'@id':ids.clip}]},
+    {'@id':ids.clip,'@type':'Clip',name:'Chapter',url:origin+'/video?t=10',startOffset:10,endOffset:20,isPartOf:{'@id':ids.video}},
+    {'@id':ids.breadcrumb,'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:origin+'/'},{'@type':'ListItem',position:2,name:'Treatment',item:origin+'/treatment'}]},
+  ]};
+  const before=structuredClone(graph);
+  const result=projectBoundedSearchDocument(graph,{graph,primaryPageId:pageId,language:'en',visibleQuestionIds:[ids.question],visibleMediaIds:[ids.video]});
+  const actual=new Map(result['@graph'].map(node=>[node['@id'],node]));
+  assert.equal(actual.has(homeId),false,'an internal clinical page does not impersonate the home profile');
+  assert.equal(actual.get(ids.answer).text,'Exact visible answer.');
+  assert.equal(actual.get(ids.video).description,'Exact video description.');
+  assert.equal(actual.get(ids.clip).startOffset,10);
+  assert.deepEqual(actual.get(ids.breadcrumb),before['@graph'].find(node=>node['@id']===ids.breadcrumb));
+  assert.equal(actual.get(ids.topic).subjectOf,undefined);
+  assert.equal(actual.get(ids.question).isPartOf,undefined);
+  assert.equal(actual.get(personId).mainEntityOfPage,undefined);
+  assert.equal(actual.get(ids.clinic).owner,undefined,'the physician owns edge already carries the clinical ownership claim');
+  assert.deepEqual(actual.get(personId).image,[origin+'/photo.jpg']);
+  assert.ok(assertBoundedSearchDocument(result).expandedObjects<4096);
+  assert.deepEqual(graph,before);
+});
+
+test('Search graph guard rejects merged identifier cycles and dangling local entities', () => {
+  assert.throws(()=>assertBoundedSearchDocument({'@graph':[
+    {'@id':pageId,'@type':'ProfilePage',mainEntity:{'@id':personId}},
+    {'@id':personId,'@type':'Person',mainEntityOfPage:{'@id':pageId}},
+  ]}),/Cyclic Search entity reference/);
+  assert.throws(()=>assertBoundedSearchDocument({'@graph':[
+    {'@id':pageId,'@type':'MedicalWebPage',author:{'@id':origin+'/missing'}},
+  ]}),/Unresolved local Search entity/);
+});
+
+test('Search graph depth is checked even when a shared child was memoized earlier', () => {
+  const leaf={'@id':origin+'/leaf','@type':'Thing'};
+  const shared={'@id':origin+'/shared','@type':'Thing',about:{'@id':leaf['@id']}};
+  const root={'@id':pageId,'@type':'MedicalWebPage',about:{'@id':shared['@id']}};
+  assert.throws(()=>assertBoundedSearchDocument({'@graph':[leaf,shared,root]},{maxDepth:1}),/depth budget/);
 });

@@ -120,6 +120,51 @@ class FrozenGitTests(unittest.TestCase):
    (stage/'data.txt').write_text('different candidate payload\n')
    self.assert_blocked_before_external_operations(root,revision,'data.txt')
 
+class FrozenHomeProjectionTests(unittest.TestCase):
+ @classmethod
+ def setUpClass(cls):
+  from browser_projection import expected_home_search_projection
+  origin='https://www.ghezelbaash.ir';person=origin+'/#saeed-ghezelbash';address=origin+'/clinic-postal-address'
+  cls.graph={'@context':'https://schema.org','@graph':[
+   {'@id':origin+'/webpage','@type':['ProfilePage','MedicalWebPage'],'url':origin+'/', 'name':'Physician profile','mainEntity':{'@id':person}},
+   {'@id':person,'@type':['Person','IndividualPhysician'],'name':'Example physician','telephone':'+980000000001','email':'mailto:test@example.invalid','address':{'@id':address}},
+   {'@id':origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','@type':['PhysiciansOffice','LocalBusiness'],'name':'Example clinic','telephone':'+980000000001','address':{'@id':address}},
+   {'@id':address,'@type':'PostalAddress','streetAddress':'Example street','addressLocality':'Example city','addressCountry':'IR','postalCode':'0000000000'}]}
+  cls.search=expected_home_search_projection(cls.graph)
+ def fixture(self,root,*,legacy=False,cyclic=False):
+  website=root/'website';website.mkdir()
+  release.dump(website/'graph.jsonld',self.graph)
+  search=json.loads(json.dumps(self.search))
+  if cyclic:
+   physician=next(node for node in search['@graph'] if 'Person' in (node['@type'] if isinstance(node['@type'],list) else [node['@type']]))
+   physician['mainEntityOfPage']={'@id':'https://www.ghezelbaash.ir/webpage'}
+  def dump(value):return json.dumps(value,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
+  ld='<script id="schema-core-mainentity" type="application/ld+json">'+dump(self.graph if legacy else search)+'</script>'
+  canonical='' if legacy else '<script id="canonical-entity-graph" type="application/json">'+dump(self.graph)+'</script>'
+  (website/'index.html').write_text('<!doctype html><html><head>'+ld+'</head><body><p>Visible authored content</p>'+canonical+'</body></html>')
+ def test_restored_home_is_rechecked_from_actual_bytes(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);self.fixture(root)
+   proof=release.guard_frozen_home_projection(root)
+   self.assertEqual(proof['status'],'PASS');self.assertEqual(proof['canonicalGraphStorage'],'application/json#canonical-entity-graph')
+   self.assertEqual(proof['homepageSHA256'],release.sha(root/'website/index.html'))
+   self.assertEqual(proof['canonicalGraphSHA256'],release.sha(root/'website/graph.jsonld'))
+   self.assertEqual(json.loads((root/'frozen-home-projection.json').read_text()),proof)
+ def test_old_format_or_reintroduced_cycle_blocks_all_publication_operations(self):
+  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200,'hfRevision':'a'*40}
+  for mutation,message in [('legacy','inert canonical-entity-graph'),('cyclic','Cyclic search reference')]:
+   with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);self.fixture(root,legacy=mutation=='legacy',cyclic=mutation=='cyclic')
+    with contextlib.ExitStack() as stack:
+     stack.enter_context(patch.object(release,'load',side_effect=[plan,{'status':'PASS'}]))
+     stack.enter_context(patch.object(release,'guard_frozen'));stack.enter_context(patch.object(release,'guard_hf_git'))
+     operations=[stack.enter_context(patch.object(owner,name)) for owner,name in [
+      (release,'snapshot'),(release,'verify_published_archive'),(release,'kaggle_client'),
+      (release.gates,'run'),(release.gates,'publish_notebook'),(release.subprocess,'run')]]
+     with self.assertRaisesRegex(AssertionError,message):release.publish(root)
+     for operation in operations:operation.assert_not_called()
+    self.assertFalse((root/'publication-report.json').exists())
+
 class ExactVersionNotebookTests(unittest.TestCase):
  source='94611168bacf7630022499204c493f6e4af64f70'
  hf='d5d5d17e2b4584fba2da326060f9b3202d712a1e'
@@ -189,4 +234,54 @@ class ExactVersionNotebookTests(unittest.TestCase):
     with patch.object(release.gates,'publish_notebook') as push:
      with self.assertRaises(AssertionError):release.complete_notebook_exact_version(root)
      push.assert_not_called()
+
+class FinalConsistencyTests(unittest.TestCase):
+ def setup(self,root):
+  source='a'*40;hf='b'*40;archive_source=release.DOI_POLICY['currentArchive']['sourceCommit']
+  plan={'candidateSchema':'mutable-distributions-2','archiveWrites':False,'archivePublicStatus':200,'archiveSourceCommit':archive_source,
+        'sourceCommit':source,'sitePreviousSource':'c'*40,'hfRevision':hf,'hfParent':'d'*40,'kaggleVersion':29,'kagglePreviousVersion':28,
+        'notebookVersion':13,'notebookPreviousVersion':12}
+  for folder in ['website','kaggle','notebook']:(root/folder).mkdir()
+  provenance=json.dumps({'sourceCommit':source}).encode();(root/'website/release-provenance.json').write_bytes(provenance)
+  (root/'kaggle/checksums.sha256').write_text('frozen input checksums')
+  notebook={'cells':[{'cell_type':'code','source':['print(1)'],'metadata':{}}]};release.dump(root/'notebook/starter.ipynb',notebook)
+  execution={'status':'PASS','kaggle_version':29,'upstream_revision':hf,'source_commit':source,
+             'input_checksums_sha256':release.gates.sha(root/'kaggle/checksums.sha256'),'exact_doi':release.gates.P['currentArchive']['doi']}
+  release.dump(root/'notebook-live.json',{'status':'PASS','result':{'executionEvidence':execution}})
+  release.dump(root/'release-plan.json',plan);release.dump(root/'preflight-report.json',{'status':'PASS'})
+  release.dump(root/'archive-baseline.json',{'sourceCommit':archive_source,'files':{'archive.txt':{}}});release.dump(root/'frozen-sha256.json',{})
+  public={'currentVersionNumber':29,'versions':[{'versionNumber':29,'status':'Ready'}]}
+  live={'metadata':{'currentVersionNumber':13},'blob':{'source':json.dumps(notebook)}}
+  responses={'site':Mock(content=provenance),'hf':{'sha':hf},'kaggle':public,'notebook':live}
+  def read(url):
+   if url==release.SITE+'release-provenance.json':return responses['site']
+   if '/api/datasets/' in url:return Mock(json=lambda:responses['hf'])
+   if '/datasets/view/' in url:return Mock(json=lambda:responses['kaggle'])
+   if '/kernels/pull/' in url:return Mock(json=lambda:responses['notebook'])
+   raise AssertionError('Unexpected final read')
+  client=Mock();client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':29})
+  return plan,responses,client,read
+ def run_publish(self,root,plan,client,read):
+  state={'siteSource':plan['sourceCommit'],'hfRevision':plan['hfRevision'],'kaggleOwner':{'version':29,'status':'ready'}}
+  with patch.object(release,'guard_frozen'),patch.object(release,'guard_hf_git'),patch.object(release,'guard_frozen_home_projection',return_value={'status':'PASS'}),patch.object(release,'verify_published_archive'),patch.object(release,'snapshot',return_value=state),patch.object(release,'kaggle_client',return_value=client),patch.object(release,'read',side_effect=read),patch.object(release.gates,'retry',return_value={}),patch.object(release.gates,'publish_notebook'),patch.object(release,'fresh_viewer_reads',side_effect=lambda w,original:original):
+   release.publish(root)
+ def test_final_cohort_recheck_allows_pass_only_when_current_identities_agree(self):
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);plan,responses,client,read=self.setup(root)
+   self.run_publish(root,plan,client,read)
+   report=json.loads((root/'publication-report.json').read_text())
+   self.assertEqual(report['status'],'PASS');self.assertTrue(report['finalOutsideConsistency']['notebookSourceAndExecutionReceiptRechecked'])
+   client.dataset_create_version.assert_not_called();client.kernels_push.assert_not_called()
+ def test_late_site_hf_kaggle_or_notebook_drift_prevents_final_pass_report(self):
+  for changed in ['site','hf','kaggle_default','kaggle_owner','notebook_version','notebook_source']:
+   with self.subTest(changed=changed),tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);plan,responses,client,read=self.setup(root)
+    if changed=='site':responses['site']=Mock(content=json.dumps({'sourceCommit':'e'*40}).encode())
+    elif changed=='hf':responses['hf']['sha']='e'*40
+    elif changed=='kaggle_default':responses['kaggle']['currentVersionNumber']=28
+    elif changed=='kaggle_owner':client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':30})
+    elif changed=='notebook_version':responses['notebook']['metadata']['currentVersionNumber']=14
+    else:responses['notebook']['blob']['source']=json.dumps({'cells':[{'cell_type':'code','source':['print(2)'],'metadata':{}}]})
+    with self.assertRaises(AssertionError):self.run_publish(root,plan,client,read)
+    self.assertFalse((root/'publication-report.json').exists())
 if __name__=='__main__':unittest.main()

@@ -12,27 +12,33 @@ def read(key,url):
  LOG.append({'key':key,'url':url,'finalURL':r.url,'UTC':datetime.datetime.now(datetime.timezone.utc).isoformat(),'HTTP':r.status_code,'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest(),'headers':{h:r.headers.get(h) for h in ['Date','Age','ETag','X-Repo-Commit','Content-Type']}})
  return r
 class Parse(HTMLParser):
- def __init__(self):super().__init__();self.ids=set();self.scripts=[];self.inld=False;self.text=''
+ def __init__(self):super().__init__();self.ids=set();self.scripts=[];self.canonical=[];self.capture=None;self.text=''
  def handle_starttag(self,tag,attrs):
   a=dict(attrs)
   if a.get('id'):self.ids.add(a['id'])
   if a.get('name'):self.ids.add(a['name'])
-  if tag=='script' and a.get('type')=='application/ld+json':self.inld=True;self.text=''
+  if tag=='script':
+   if a.get('type')=='application/ld+json':self.capture=self.scripts;self.text=''
+   elif a.get('type')=='application/json' and a.get('id')=='canonical-entity-graph':self.capture=self.canonical;self.text=''
  def handle_data(self,data):
-  if self.inld:self.text+=data
+  if self.capture is not None:self.text+=data
  def handle_endtag(self,tag):
-  if tag=='script' and self.inld:self.scripts.append(json.loads(self.text));self.inld=False
+  if tag=='script' and self.capture is not None:self.capture.append(json.loads(self.text));self.capture=None
 def parse(r):
  p=Parse();p.feed(r.text);return p
 home=read('site-home',SITE+'?_home_identity_audit='+datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ'));home.raise_for_status();hp=parse(home)
 g=read('site-graph',SITE+'graph.jsonld');g.raise_for_status();graph=g.json();nodes={n['@id']:n for n in graph['@graph'] if '@id' in n}
-inline=next(x for x in hp.scripts if '@graph' in x);assert inline==graph,'Full homepage graph differs'
+assert len(hp.scripts)==1,'Expected one recognized search JSON-LD document'
+assert len(hp.canonical)<=1,'Duplicate inline canonical graph'
+inline=hp.canonical[0] if hp.canonical else hp.scripts[0]
+assert inline==graph,'Full preserved homepage graph differs'
+storage='application/json#canonical-entity-graph' if hp.canonical else 'legacy application/ld+json'
 pages=[]
 for n in graph['@graph']:
  ty=n.get('@type',[]);ty=[ty] if isinstance(ty,str) else ty
  if 'ProfilePage' in ty or n.get('url')==SITE or n.get('@id') in [SITE,SITE+'#webpage',SITE+'#profilepage']:
   pages.append(n)
-dump('home-identity.json',{'UTC':datetime.datetime.now(datetime.timezone.utc).isoformat(),'HTMLSHA256':hashlib.sha256(home.content).hexdigest(),'graphSHA256':hashlib.sha256(g.content).hexdigest(),'fullInlineEqualsGraph':True,'graphEntities':len(nodes),'profileAndHomeNodes':pages,'physician':nodes.get(SITE+'#saeed-ghezelbash')})
+dump('home-identity.json',{'UTC':datetime.datetime.now(datetime.timezone.utc).isoformat(),'HTMLSHA256':hashlib.sha256(home.content).hexdigest(),'graphSHA256':hashlib.sha256(g.content).hexdigest(),'fullInlineEqualsGraph':True,'fullCanonicalGraphStorage':storage,'recognizedSearchNodes':len(hp.scripts[0].get('@graph',[])),'graphEntities':len(nodes),'profileAndHomeNodes':pages,'physician':nodes.get(SITE+'#saeed-ghezelbash')})
 names=['enrichment/instruction_examples_fa_market_positioning.jsonl','enrichment/positioning-strategy.json','enrichment/market-positioning-evidence.json']
 texts={};baseline={};urls={}
 for n in names:

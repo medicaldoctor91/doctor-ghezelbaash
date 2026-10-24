@@ -139,18 +139,9 @@ def preflight(w,expected):
  for folder,platform in [(hf,'hf'),(kg,'kaggle')]:
   dump(w/(platform+'-policy.json'),validate_policy(folder));subprocess.run([sys.executable,str(ROOT/'tests/validate_platform_sync.py'),str(folder),'--platform',platform,'--source-commit',source,'--report',str(w/(platform+'-validation.json'))],check=True)
  local=load(w/'local-notebook-execution.json');assert local['status']=='PASS' and local['input_checksums_sha256']==sha(kg/'checksums.sha256')
- # Complete inline equality is a hard invariant; source may legitimately add media triples.
- from browser_projection import validate_home_projection
- from html.parser import HTMLParser
- class Inline(HTMLParser):
-  def __init__(self):super().__init__();self.blocks=[];self.active=False;self.text=''
-  def handle_starttag(self,t,a):
-   if t=='script' and dict(a).get('type')=='application/ld+json':self.active=True;self.text=''
-  def handle_data(self,d):
-   if self.active:self.text+=d
-  def handle_endtag(self,t):
-   if t=='script' and self.active:self.blocks.append(json.loads(self.text));self.active=False
- html=(w/'website/index.html').read_bytes();parser=Inline();parser.feed(html.decode());validate_home_projection(w/'website/graph.jsonld',parser.blocks,html)
+ # Preserve complete canonical data separately from the bounded recognized
+ # search document; the shared helper verifies both against the final HTML.
+ guard_frozen_home_projection(w)
  protected=['enrichment/instruction_examples_fa_market_positioning.jsonl','enrichment/positioning-strategy.json','enrichment/market-positioning-evidence.json']
  for name in protected:
   for folder in [w/'website',hf,kg]:assert sha(folder/name)==sha(baseline/name),('Positioning changed',folder,name)
@@ -204,9 +195,37 @@ def guard_hf_git(w,plan):
  from git_payload import validate_index
  return validate_index(repo,w/'hf-stage')
 
+def guard_frozen_home_projection(w):
+ """Recheck actual restored HTML before any publication API can write."""
+ from browser_projection import validate_home_html
+ home=w/'website/index.html';graph=w/'website/graph.jsonld'
+ proof=validate_home_html(graph,home.read_bytes())
+ proof.update(homepageSHA256=sha(home),canonicalGraphSHA256=sha(graph))
+ dump(w/'frozen-home-projection.json',proof)
+ return proof
+
+def verify_final_consistency(w,plan,client):
+ """Re-read public identities after slow runtime checks and before declaring success."""
+ website=read(SITE+'release-provenance.json').content
+ assert website==(w/'website/release-provenance.json').read_bytes(), 'Website changed before final publication verification'
+ assert json.loads(website)['sourceCommit']==plan['sourceCommit'], 'Final website source differs'
+ assert read('https://huggingface.co/api/datasets/'+HF_REPO).json()['sha']==plan['hfRevision'], 'HF changed before final publication verification'
+ public=read('https://api.kaggle.com/v1/datasets/view/'+KAGGLE_REF).json()
+ assert public['currentVersionNumber']==plan['kaggleVersion'], 'Kaggle default changed before final publication verification'
+ assert not any(v['versionNumber']>plan['kaggleVersion'] for v in public.get('versions',[])), 'Newer Kaggle version appeared before final verification'
+ gates.guard_owner(client,plan['kaggleVersion'])
+ notebook=read('https://www.kaggle.com/api/v1/kernels/pull/'+gates.NB).json()
+ saved=load(w/'notebook-live.json');assert saved['status']=='PASS', 'Verified notebook execution receipt is missing'
+ gates.notebook_identity(w,notebook,saved['result']['executionEvidence'])
+ return {'status':'PASS','observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+         'sourceCommit':plan['sourceCommit'],'websiteProvenanceSHA256':hashlib.sha256(website).hexdigest(),
+         'hfRevision':plan['hfRevision'],'kagglePublicAndOwnerVersion':plan['kaggleVersion'],
+         'notebookVersion':plan['notebookVersion'],'notebookSourceAndExecutionReceiptRechecked':True}
+
 def publish(w):
  plan=load(w/'release-plan.json');assert plan['candidateSchema']=='mutable-distributions-2' and plan['archiveWrites'] is False and plan['archivePublicStatus']==200;guard_frozen(w);assert load(w/'preflight-report.json')['status']=='PASS'
  guard_hf_git(w,plan)
+ home_projection=guard_frozen_home_projection(w)
  archive=load(w/'archive-baseline.json');assert plan['archiveSourceCommit']==archive['sourceCommit']==DOI_POLICY['currentArchive']['sourceCommit']
  verify_published_archive(w/'archive-public-at-cutover',DOI_POLICY,archive['sourceCommit'],read,expected=archive,verify_bytes=False)
  state=snapshot(w/'publication-before');client=kaggle_client();assert state['siteSource'] in {plan['sitePreviousSource'],plan['sourceCommit']};assert state['hfRevision'] in {plan['hfParent'],plan['hfRevision']};assert state['kaggleOwner']['version'] in {plan['kagglePreviousVersion'],plan['kaggleVersion']}
@@ -235,7 +254,9 @@ def publish(w):
  gates.get=fresh_viewer_reads(w,gates.get)
  gates.retry(w,'hf',lambda:gates.verify_hf(w),attempts=18)
  verify_published_archive(w/'archive-public-after',DOI_POLICY,archive['sourceCommit'],read,expected=archive)
- guard_frozen(w);dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files'])});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
+ guard_frozen(w)
+ final=verify_final_consistency(w,plan,client)
+ dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files']),'frozenHomeProjection':home_projection,'finalOutsideConsistency':final});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
 
 def complete_notebook(w):
  """Only notebook may be written; independent runtime faults stay visible."""

@@ -57,7 +57,7 @@ class Guards(unittest.TestCase):
  def test_reviewed_plan_rejects_old_target_and_manifest_protects_plan(self):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);c=release.COHORT
-   plan={'candidateSchema':3,'sourceCommit':'f'*40,'hfParent':c['hfParent'],'sitePreviousSource':c['websiteBaselineCommit'],'kagglePreviousVersion':c['kaggleBaselineVersion'],'kaggleVersion':c['kaggleTargetVersion'],'notebookPreviousVersion':c['notebookBaselineVersion'],'notebookVersion':c['notebookTargetVersion']}
+   plan={'candidateSchema':release.CANDIDATE_SCHEMA,'sourceCommit':'f'*40,'hfParent':c['hfParent'],'sitePreviousSource':c['websiteBaselineCommit'],'kagglePreviousVersion':c['kaggleBaselineVersion'],'kaggleVersion':c['kaggleTargetVersion'],'notebookPreviousVersion':c['notebookBaselineVersion'],'notebookVersion':c['notebookTargetVersion']}
    release.dump(root/'release-plan.json',plan);release.require_reviewable_candidate(root)
    release.dump(root/'frozen-sha256.json',{'controls':{'release-plan.json':release.sha(root/'release-plan.json')}});release.check_frozen(root)
    plan['kaggleVersion']=23;release.dump(root/'release-plan.json',plan)
@@ -119,17 +119,22 @@ class Guards(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);release.dump(root/'release-plan.json',{'sourceCommit':'14304eb2ed06d8d87563a2979df2175407399da0'})
    with self.assertRaises(AssertionError):release.require_reviewable_candidate(root)
- def test_compact_home_candidate_is_rejected(self):
+ def test_superseded_home_format_candidates_are_rejected(self):
   with tempfile.TemporaryDirectory() as folder:
-   root=Path(folder);release.dump(root/'release-plan.json',{'candidateSchema':2,'sourceCommit':'650e0c2e9d44e44f3dba8085378bcbe218ffbb94','hfParent':release.P['currentArchive']['inputBaselineHfRevision']})
-   with self.assertRaises(AssertionError):release.require_reviewable_candidate(root)
- def test_home_inline_must_preserve_entities_and_values(self):
+   root=Path(folder)
+   for version in [2,3]:
+    release.dump(root/'release-plan.json',{'candidateSchema':version,'sourceCommit':'650e0c2e9d44e44f3dba8085378bcbe218ffbb94','hfParent':release.P['currentArchive']['inputBaselineHfRevision']})
+    with self.subTest(candidateSchema=version),self.assertRaises(AssertionError):release.require_reviewable_candidate(root)
+ def test_historical_home_format_requires_explicit_scope_and_exact_values(self):
   from browser_projection import validate_home_projection
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);graph={'@context':'https://schema.org','@graph':[{'@id':'home','@type':'WebPage','name':'اصل'},{'@id':'answer','@type':'Answer','text':'پاسخ کامل'}]};release.dump(root/'graph.jsonld',graph)
-   self.assertTrue(validate_home_projection(root/'graph.jsonld',[graph],b'html')['completeCanonicalGraph'])
+   def html(document):return ('<html><head><script type="application/ld+json">'+json.dumps(document,ensure_ascii=False)+'</script></head><body>متن</body></html>').encode()
+   result=validate_home_projection(root/'graph.jsonld',[graph],html(graph),allow_legacy_full_graph=True)
+   self.assertTrue(result['completeCanonicalGraph']);self.assertTrue(result['historicalFormatExplicitlyAllowed'])
+   with self.assertRaisesRegex(AssertionError,'inert canonical-entity-graph'):validate_home_projection(root/'graph.jsonld',[graph],html(graph))
    for compact in [dict(graph, **{'@graph':graph['@graph'][:1]}),dict(graph, **{'@graph':[dict(graph['@graph'][0],name='changed'),graph['@graph'][1]]})]:
-    with self.assertRaises(AssertionError):validate_home_projection(root/'graph.jsonld',[compact],b'html')
+    with self.assertRaises(AssertionError):validate_home_projection(root/'graph.jsonld',[compact],html(compact),allow_legacy_full_graph=True)
  def test_missing_route_is_not_literal_404_file(self):
   from types import SimpleNamespace
   body=b'<html><head><meta name="robots" content="noindex"></head></html>'
@@ -255,6 +260,111 @@ class StagedPublishGuards(unittest.TestCase):
     with self.assertRaises(doi_release.requests.Timeout):doi_release.publish(23473947,root)
     with self.assertRaises(AssertionError):doi_release.publish(23473947,root)
    self.assertEqual(session.post.call_count,1)
+
+class HomeSearchProjection(unittest.TestCase):
+    """Exercise actual authored identity/data against consumer-facing mutations."""
+    @classmethod
+    def setUpClass(cls):
+        import subprocess
+        from browser_projection import expected_home_search_projection
+        cls.graph=json.loads(subprocess.check_output(['node','--input-type=module','-e',
+            "import {SOURCE} from './src/canonical/source.mjs';process.stdout.write(JSON.stringify(SOURCE.graph));"],cwd=ROOT))
+        cls.search=expected_home_search_projection(cls.graph)
+        cls.origin='https://www.ghezelbaash.ir'
+
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
+        release.dump(self.root/'graph.jsonld',self.graph)
+
+    def tearDown(self):self.temp.cleanup()
+
+    def clone(self):return json.loads(json.dumps(self.search))
+
+    def node(self,document,path):
+        return next(node for node in document['@graph'] if node['@id']==self.origin+path)
+
+    def html(self,search=None,canonical=None,*,after='',prefix='',canonical_in_head=False):
+        def dump(value):return json.dumps(value,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
+        search=self.search if search is None else search
+        canonical=self.graph if canonical is None else canonical
+        ld='<script id="schema-core-mainentity" type="application/ld+json">'+dump(search)+'</script>'
+        preserved='<script id="canonical-entity-graph" type="application/json">'+dump(canonical)+'</script>'
+        return ('<!doctype html><html><head>'+prefix+ld+(preserved if canonical_in_head else '')+
+                '</head><body><p>متن کامل و بدون تغییر صفحه</p>'+
+                ('' if canonical_in_head else preserved)+after+'</body></html>').encode()
+
+    def validate(self,search=None,canonical=None,**kwargs):
+        from browser_projection import validate_home_projection
+        return validate_home_projection(self.root/'graph.jsonld',[self.search if search is None else search],
+                                        self.html(search,canonical,**kwargs))
+
+    def test_actual_authored_graph_survives_with_bounded_search_schema(self):
+        result=self.validate()
+        self.assertTrue(result['completeCanonicalGraph'])
+        self.assertEqual(result['canonicalNodes'],len(self.graph['@graph']))
+        self.assertEqual(result['canonicalGraphStorage'],'application/json#canonical-entity-graph')
+        self.assertLess(result['recognizedSearchEndByte'],2_000_000)
+        self.assertEqual(result['headerReserveBytes'],8192)
+        self.assertLess(result['criticalPrefixIncludingHeaderReserveBytes'],2_000_000)
+        self.assertLess(result['expandedCopies'],5_000)
+
+    def test_preserved_canonical_graph_cannot_lose_entity_or_authored_words(self):
+        for mutation in ['entity','words']:
+            changed=json.loads(json.dumps(self.graph))
+            if mutation=='entity':changed['@graph'].pop()
+            else:self.node(changed,'/#saeed-ghezelbash')['description']='changed physician biography'
+            with self.subTest(mutation=mutation),self.assertRaisesRegex(AssertionError,'canonical graph differs'):
+                self.validate(canonical=changed)
+
+    def test_physician_contact_address_credentials_and_licensed_portraits_are_required(self):
+        changes=[('/#saeed-ghezelbash','telephone',None),
+                 ('/clinic-postal-address','postalCode','0000000000'),
+                 ('/#saeed-ghezelbash','hasCredential',[]),
+                 ('/image-saeed-ghezelbash-portrait-master','license',None),
+                 ('/image-ghezelbaash-clinic-interior','creator',None),
+                 ('/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','telephone','+980000000000')]
+        for path,key,value in changes:
+            changed=self.clone();node=self.node(changed,path)
+            if value is None:node.pop(key,None)
+            else:node[key]=value
+            with self.subTest(path=path,key=key),self.assertRaises(AssertionError):self.validate(changed)
+
+    def test_profile_requires_its_named_person_main_entity(self):
+        changed=self.clone();self.node(changed,'/webpage')['mainEntity']={'@id':self.origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'}
+        with self.assertRaisesRegex(AssertionError,'mainEntity must identify the physician'):self.validate(changed)
+
+    def test_reintroduced_person_home_backlink_is_rejected_as_cycle(self):
+        changed=self.clone();self.node(changed,'/#saeed-ghezelbash')['mainEntityOfPage']={'@id':self.origin+'/webpage'}
+        with self.assertRaisesRegex(AssertionError,'Cyclic search reference'):self.validate(changed)
+
+    def test_acyclic_diamond_graph_cannot_restore_exponential_embedding(self):
+        changed=self.clone();previous=[]
+        for level in range(12):
+            current=[]
+            for side in ['a','b']:
+                identifier=self.origin+'/embedding-stress-'+str(level)+'-'+side
+                node={'@id':identifier,'@type':'CreativeWork','name':'Embedding stress'}
+                if previous:node['hasPart']=[{'@id':target} for target in previous]
+                changed['@graph'].append(node);current.append(identifier)
+            previous=current
+        with self.assertRaisesRegex(AssertionError,'reference expansion exceeds bound'):self.validate(changed)
+
+    def test_valid_shape_cannot_introduce_an_unauthored_search_claim(self):
+        changed=self.clone();self.node(changed,'/#saeed-ghezelbash')['award']='Unauthored award'
+        with self.assertRaisesRegex(AssertionError,'differs from the canonical search projection'):self.validate(changed)
+
+    def test_inert_graph_follows_visible_content_and_search_precedes_crawl_limit(self):
+        with self.assertRaisesRegex(AssertionError,'must be in the body'):self.validate(canonical_in_head=True)
+        with self.assertRaisesRegex(AssertionError,'must follow visible page content'):self.validate(after='<p>محتوای دیرهنگام</p>')
+        with self.assertRaisesRegex(AssertionError,'2 MB crawl boundary'):self.validate(prefix=' ' * 2_000_000)
+
+    def test_crawl_prefix_accounts_for_http_headers_as_well_as_html(self):
+        from browser_projection import _InlineDocuments
+        parser=_InlineDocuments(self.html().decode());parser.feed(parser.html)
+        padding=1_995_000-parser.canonical[0]['start']
+        self.assertGreater(padding,0)
+        with self.assertRaisesRegex(AssertionError,'including the header reserve'):self.validate(prefix=' ' * padding)
+
 
 if __name__=='__main__':unittest.main()
 

@@ -64,10 +64,10 @@ def run(args,**kwargs):
  return subprocess.check_output([str(x) for x in args],text=True,**kwargs).strip()
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def inventory(root):return {p.relative_to(root).as_posix():sha(p) for p in sorted(root.rglob('*')) if p.is_file() and '.git' not in p.relative_to(root).parts}
-CANDIDATE_SCHEMA=3
+CANDIDATE_SCHEMA=4
 def require_reviewable_candidate(work):
  plan=json.loads((work/'release-plan.json').read_text())
- assert plan.get('candidateSchema')==CANDIDATE_SCHEMA, 'Superseded candidate: rebuild with complete homepage inline graph preservation'
+ assert plan.get('candidateSchema')==CANDIDATE_SCHEMA, 'Superseded candidate: rebuild with preserved canonical data and bounded search JSON-LD'
  assert plan['sourceCommit']!='14304eb2ed06d8d87563a2979df2175407399da0', 'Rejected superseded source'
  assert plan['hfParent']==COHORT['hfParent']
  assert plan['sitePreviousSource']==COHORT['websiteBaselineCommit']

@@ -12,7 +12,7 @@ import { createHash } from "node:crypto";
 import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
-import {closeSearchReferences, renderMedicalTrust} from "../lib/search-contract.mjs";
+import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, renderMedicalTrust} from "../lib/search-contract.mjs";
 export const prerender = true;
 import {SOURCE, AUTHORED_BODY} from "../canonical/source.mjs";
 export {SOURCE, AUTHORED_BODY};
@@ -2192,6 +2192,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       canonical: copy(doc.head.querySelector('link[rel="canonical"]')),
       alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map(copy),
       scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map(copy),
+      canonicalGraphScript: copy(doc.getElementById("canonical-entity-graph")),
     };
   };
   const initialArticle = primaryArticle();
@@ -2386,8 +2387,10 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     }
     for (const node of d.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],meta[name="guide-source-signature"],#guide-reader-scope,link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
     for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
+    d.getElementById("canonical-entity-graph")?.remove();
     for (const node of [...state.metas, state.sourceMarker, state.scopeScript, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean))
       d.head.append(node.cloneNode(true));
+    if (state.canonicalGraphScript) d.body.append(state.canonicalGraphScript.cloneNode(true));
   };
   window.syncGuidePageState = async (path) => {
     const key = keyFor(path), current = ++ticket;
@@ -2406,8 +2409,8 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       // Preserve its live disclosures, focus and native restoration geometry.
       if (key === committedPath) return true;
       const state = cache.get(key);
-      // The complete Home graph is needed only when Home becomes primary.
-      // Internal entries share its visible guide without downloading that graph.
+      // Home's complete data is inert; only its bounded Search document is
+      // recognized JSON-LD. Internal entries do not download the full graph.
       if (key === "/" && state.metadataPath && !state.scripts.length) {
         const metadata = await fetchContent(state.metadataPath, { json: true });
         if (metadata.schemaVersion !== 1 || metadata.sourceSignature !== state.sourceSignature ||
@@ -2418,6 +2421,12 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
           const script = d.createElement("script"); script.type = "application/ld+json";
           script.id = id; script.textContent = text; return script;
         });
+        if (metadata.canonicalGraph) {
+          JSON.parse(metadata.canonicalGraph.text);
+          const script = d.createElement("script"); script.type = "application/json";
+          script.id = "canonical-entity-graph"; script.textContent = metadata.canonicalGraph.text;
+          state.canonicalGraphScript = script;
+        }
       }
       const prepared = await prepareReader(state, key, false);
       if (current !== ticket || keyFor(location.pathname) !== key) return false;
@@ -4909,6 +4918,8 @@ export function compileCanonicalSource() {
   }
   const bodyHtml = serialize(body);
   const homeGraph = projectHomeGraph(SOURCE.graph, base);
+  const homeSearchGraph = projectHomeSearchGraph(homeGraph, base);
+  richResultsContract.assertRichResultsDocument(homeSearchGraph,{primaryPageId:base+'/webpage'});
   const social = byId.get(base + '/image-saeed-ghezelbash-portrait-social-1200x630');
   const meta = (key,value) => `<meta ${key.startsWith('og:') || key.startsWith('profile:') ? 'property' : 'name'}="${escape(key)}" content="${escape(value)}">`;
   const contentType = resource => {
@@ -4959,9 +4970,11 @@ export function compileCanonicalSource() {
   };
   const shell = (head, body, lang='fa-IR', dir='rtl', focused=false) => '<!doctype html><html lang="' + lang + '" dir="' + dir + '" prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"' +
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
+  const canonicalDataScript='<script id="canonical-entity-graph" type="application/json">'+json(homeGraph)+'</script>';
   const rawHome = shell(baseHead + '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' + `<link rel="stylesheet" href="${assets[0].path}">` +
-    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
+    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
+    .replace('</body>',canonicalDataScript+'</body>');
   const stampedHome = readerScope.stampGuideSource(rawHome);
   // Internal entries need the authored article, not a second full document and
   // its 1,592-node discovery graph. Keep exact DOM boundaries from this Home.
@@ -4974,6 +4987,7 @@ export function compileCanonicalSource() {
   walk(readerBody,node=>{if(node.tagName==='article'&&attr(node,'class')?.split(/\s+/).includes('medical-guide'))readerArticle=node;});
   const sourceSignature = attr(readerHead.childNodes.find(node=>node.tagName==='meta'&&attr(node,'name')==='guide-source-signature'),'content');
   const metadataAsset = asset('guide-meta','json',JSON.stringify({schemaVersion:1,sourceSignature,
+    canonicalGraph:{id:'canonical-entity-graph',text:json(homeGraph)},
     scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json')
       .map(node=>({id:attr(node,'id'),text:node.childNodes.map(child=>child.value??'').join('')}))}), 'application/json; charset=utf-8');
   readerHead.childNodes = readerHead.childNodes.filter(node=>node.tagName==='title'||node.tagName==='meta'||
@@ -4995,10 +5009,12 @@ export function compileCanonicalSource() {
     closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project});
     // Validate the graph that will actually be serialized, after every projection.
     richResultsContract.assertRichResultsDocument(record.document,{primaryPageId});
+    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds});
+    richResultsContract.assertRichResultsDocument(record.searchDocument,{primaryPageId});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));
   const article = htmlContract.inspectHtml(home).guideArticles[0], location = article.sourceCodeLocation;
-  const homePrefix = home.slice(0,location.startOffset), homeSuffix = home.slice(location.endOffset);
+  const homePrefix = home.slice(0,location.startOffset), homeSuffix = home.slice(location.endOffset).replace(canonicalDataScript,'');
   const render = path => {
     if (path === '/') return home;
     const record = recordByPath.get(path);
@@ -5088,7 +5104,7 @@ export function compileCanonicalSource() {
     const routeImage=thumbnail?SOURCE.graph['@graph'].find(n=>n.contentUrl===thumbnail&&[n['@type']].flat().includes('ImageObject'))??{contentUrl:thumbnail,encodingFormat:new URL(thumbnail).pathname.endsWith('.webp')?'image/webp':'image/jpeg',name:byId.get(watch.videoId).name}:social;
     const extras = '<title>' + escape(record.documentTitle) + '</title>' + meta('description',record.description) + meta('author',local(person.name,record.lang)) + socialMeta(record.documentTitle,record.description,record.canonicalUrl,record.lang,record.pageType,locales,routeImage) +
       '<link rel="canonical" href="' + record.canonicalUrl + '">' + record.alternates.map(a=>'<link rel="alternate" hreflang="'+escape(a.hrefLang)+'" href="'+escape(a.href)+'">').join('') +
-      '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.document)+'</script>';
+      '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.searchDocument)+'</script>';
     const extrasDoc=parseFragment(extras);
     for(const n of extrasDoc.childNodes){n.parentNode=head;head.childNodes.push(n);}
     const root = document.childNodes.find(n=>n.tagName==='html'),bodyNode=root.childNodes.find(n=>n.tagName==='body');set(bodyNode,'lang',record.lang);set(bodyNode,'dir',record.dir);set(root,'lang',record.lang);set(root,'dir',record.dir);set(root,'data-route-view','focused');
