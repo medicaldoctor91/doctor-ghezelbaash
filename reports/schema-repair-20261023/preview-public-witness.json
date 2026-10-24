@@ -1,0 +1,41 @@
+{
+  "recordedUTC": "2026-10-24T07:46:40.160272+00:00",
+  "observationDateUTC": "2026-10-24",
+  "method": "Ordinary anonymous requests made in parallel with retrieving CI failure logs; no retries or identity changes. Responses were captured before the CI403 cause was known.",
+  "previewUrl": "https://267b9140.doctor-ghezelbaash.pages.dev",
+  "sourceCommit": "4d531723f5418906dde206ff14de7614c7788e22",
+  "independentPublicResponses": {
+    "index.html": {
+      "HTTP": 200,
+      "sha256": "0f07d1cec2ac8dc0eedc12cc87099176d27e60e45a954d2c4054351a20128218",
+      "exactFrozenBytes": true
+    },
+    "botox.html": {
+      "HTTP": 200,
+      "sha256": "c2592a7725b378759e27d88c0903905bb221d23af60997ee89f08a9146af170a",
+      "exactFrozenBytes": true
+    },
+    "release-provenance.json": {
+      "HTTP": 200,
+      "sha256": "697ef3b3443e4dcd751838f615c083dac154d7935b8a45465e01fc6773462b2f",
+      "exactFrozenBytes": true
+    }
+  },
+  "previewNoindex": true,
+  "ciRun": 40075032296,
+  "ciOverallConclusion": "failure",
+  "ciFailure": "Public verification HTTP403; no successful workflow claimed and no retry attempted",
+  "productionUnchanged": {
+    "project": "doctor-ghezelbaash",
+    "productionBranch": "main",
+    "deploymentId": "51fc7680-1235-4556-b6f2-4bb8d764556c",
+    "sourceCommit": "94611168bacf7630022499204c493f6e4af64f70",
+    "deploymentBranch": "main",
+    "stage": "success",
+    "globalGitDeploymentsEnabled": false,
+    "automaticProductionDeployments": false,
+    "automaticPreviewSetting": "none",
+    "publicSourceCommit": "94611168bacf7630022499204c493f6e4af64f70",
+    "publicProvenanceSha256": "87558d3762c20c8ae5c1c7e9fee0b5aa0a021bcca1183889477d623fff76d373"
+  }
+}
