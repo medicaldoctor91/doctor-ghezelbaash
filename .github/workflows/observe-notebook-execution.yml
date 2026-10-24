@@ -80,15 +80,17 @@ jobs:
           (folder/'zenodo-draft-report.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
-      - name: Read owner status and the exact version 16 persisted execution log
+      - name: Read owner status and exact version 16 persisted or bounded live log
         run: |
           python - <<'PY'
-          import json,os,re,sys,time
+          import json,os,re,signal,sys,time
           from pathlib import Path
+          import requests
           sys.path.insert(0,'.github/scripts')
           from sync_platform_machine_resources import kaggle_client
-          from kagglesdk.kernels.types.kernels_api_service import ApiListKernelSessionOutputRequest
-          # Store only a bounded, sanitized snapshot. Never stream or restart a session.
+          from kagglesdk import KaggleEnv
+          from kagglesdk.kernels.types.kernels_api_service import ApiListKernelSessionOutputRequest, ApiGetKernelSessionStatusRequest
+          # Store bounded, sanitized snapshots; never restart or alter a session.
           def sanitized(value):
               text=str(value or '')
               for key,secret in os.environ.items():
@@ -96,6 +98,7 @@ jobs:
                       text=text.replace(secret,'[REDACTED]')
               text=re.sub(r'https?://[^\s<>"\']+','[URL REDACTED]',text,flags=re.I)
               text=re.sub(r'(?im)^.*(?:authorization\s*:|set-cookie\s*:|cookie\s*:|x-api-key\s*:|bearer\s+|api[_-]?token\s*[:=]|password\s*[:=]|secret\s*[:=]).*$','[CREDENTIAL LINE REDACTED]',text)
+              text=re.sub(r'\b(?:hf_[A-Za-z0-9]{8,}|KGAT_[A-Za-z0-9_=-]{8,})\b','[TOKEN REDACTED]',text)
               return text
           client=kaggle_client()
           ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
@@ -133,6 +136,100 @@ jobs:
               http=getattr(response,'status_code',None)
               report.update(logReadErrorType=type(error).__name__,logReadHTTP=http,
                             logStatus='ACCESS_STOP' if http in (401,403,429) else 'READ_ERROR')
+          if report.get('logStatus')=='EMPTY' or (report.get('logStatus')=='READ_ERROR' and report.get('logReadHTTP')==404):
+              # The documented live endpoint is a separate running-session feature.
+              # Missing persisted output is not an access denial. Denials never enter this branch.
+              live={'versionLabel':version_label,'readCalls':1,'maximumBytes':16000,'maximumSeconds':15,
+                    'scope':'One bounded owner live-log snapshot of the existing session; not an execution/publication claim',
+                    'timeout':False,'truncated':False}
+              capture=bytearray()
+              response=None
+              started=time.monotonic()
+              old_handler=signal.getsignal(signal.SIGALRM)
+              def deadline(signum,frame):
+                  raise TimeoutError('Bounded live-log capture timed out')
+              signal.signal(signal.SIGALRM,deadline)
+              signal.setitimer(signal.ITIMER_REAL,15)
+              try:
+                  with client.build_kaggle_client() as kaggle:
+                      http=kaggle._http_client
+                      http._init_session()
+                      base=http._endpoint if http._env==KaggleEnv.PROD else f'{http._endpoint}/api'
+                      url=base+'/v1/kernels/logs/stream/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
+                      headers=dict(http._session.headers)
+                      headers['Accept']='text/event-stream, */*'
+                      headers.pop('Content-Type',None)
+                      response=http._session.get(url,headers=headers,auth=http._session.auth,
+                          params={'versionLabel':version_label,'waitForLogsUrlSeconds':1},
+                          stream=True,timeout=(10,12),allow_redirects=False)
+                      live.update(HTTP=response.status_code,
+                                  contentType=sanitized(response.headers.get('Content-Type','')))
+                      if response.status_code in (401,403,429):
+                          live['status']='ACCESS_STOP'
+                      else:
+                          live['status']='LIVE_SNAPSHOT' if response.status_code==200 else 'HTTP_ERROR'
+                          for chunk in response.iter_content(chunk_size=1024):
+                              if not chunk:
+                                  continue
+                              remaining=16000-len(capture)
+                              capture.extend(chunk[:remaining])
+                              if len(chunk)>remaining or len(capture)>=16000:
+                                  live['truncated']=True
+                                  break
+                              if b'END_OF_LOG' in capture:
+                                  live['endOfLog']=True
+                                  break
+                              if time.monotonic()-started>=15:
+                                  live.update(timeout=True,truncated=True)
+                                  break
+              except Exception as error:
+                  live.update(errorType=type(error).__name__,
+                              timeout=isinstance(error,(TimeoutError,requests.Timeout)) or 'timed out' in str(error).lower(),
+                              status='CAPTURE_STOPPED')
+              finally:
+                  signal.setitimer(signal.ITIMER_REAL,0)
+                  signal.signal(signal.SIGALRM,old_handler)
+                  if response is not None:
+                      response.close()
+              text=capture.decode('utf-8',errors='replace')
+              safe=sanitized(text).encode('utf-8')[-16000:]
+              (folder/'owner-version16-live.log').write_bytes(safe)
+              data=[]
+              for line in text.splitlines():
+                  if not line.startswith('data:'):
+                      continue
+                  payload=line[5:].lstrip()
+                  if payload=='END_OF_LOG':
+                      continue
+                  try:
+                      event=json.loads(payload)
+                      data.append(str(event.get('data',event)) if isinstance(event,dict) else str(event))
+                  except (ValueError,TypeError):
+                      data.append(payload)
+              live.update(bytesCaptured=len(capture),savedBytes=len(safe),eventsSeen=len(data),
+                          seconds=round(time.monotonic()-started,3),
+                          tail=sanitized('\n'.join(data) if data else text)[-4000:])
+              report.update(logStreaming=True,logStreamingBounded=True,liveLog=live)
+          # kernels_status(ref) omits version_label even when ref includes a version.
+          # Use the official request model to observe this exact published version.
+          try:
+              request=ApiGetKernelSessionStatusRequest()
+              request.user_name='saeedghezelbash'
+              request.kernel_slug='dr-saeed-ghezelbash-knowledge-graph-starter'
+              request.version_label=version_label
+              with client.build_kaggle_client() as kaggle:
+                  exact_state=kaggle.kernels.kernels_api_client.get_kernel_session_status(request)
+              report['exactVersionStatus']={'versionLabel':version_label,
+                  'status':sanitized(exact_state.status),
+                  'failureMessage':sanitized(getattr(exact_state,'failure_message',None)) or None,
+                  'scope':'Owner status explicitly pinned to version 16; not a public execution-output assertion'}
+          except Exception as error:
+              response=getattr(error,'response',None)
+              http=getattr(response,'status_code',None)
+              report['exactVersionStatus']={'versionLabel':version_label,
+                  'errorType':type(error).__name__,'HTTP':http,
+                  'status':'ACCESS_STOP' if http in (401,403,429) else 'READ_ERROR'}
+              # No retry or alternate status endpoint follows this read.
           report['completedUTC']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
           (folder/'report.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
