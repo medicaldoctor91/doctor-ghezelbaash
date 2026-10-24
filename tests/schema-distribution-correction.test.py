@@ -25,6 +25,9 @@ class Response:
         if self.status_code >= 400:
             raise RuntimeError('Unexpected unhandled status')
 
+    def close(self):
+        pass
+
 
 def zipped(files):
     output = io.BytesIO()
@@ -72,6 +75,19 @@ class CorrectionTests(unittest.TestCase):
     def test_challenge_response_is_not_treated_as_readiness(self):
         with self.assertRaises(correction.AccessStop):
             correction.checked(Response(200, b'<html>captcha verification</html>', 'text/html'))
+
+    def test_only_gateway_failures_receive_a_bounded_read_retry(self):
+        with patch.object(correction.requests, 'Session') as session, patch.object(correction.time, 'sleep'):
+            session.return_value.__enter__.return_value.get.side_effect = [Response(502), Response(200)]
+            self.assertEqual(correction.read('https://datasets-server.huggingface.co/rows').status_code, 200)
+            self.assertEqual(session.return_value.__enter__.return_value.get.call_count, 2)
+        for status in [401, 403, 429]:
+            with patch.object(correction.requests, 'Session') as session, patch.object(correction.time, 'sleep') as sleep:
+                session.return_value.__enter__.return_value.get.return_value = Response(status)
+                with self.assertRaises(correction.AccessStop):
+                    correction.read('https://datasets-server.huggingface.co/rows')
+                self.assertEqual(session.return_value.__enter__.return_value.get.call_count, 1)
+                sleep.assert_not_called()
 
     def test_pending_is_caught_by_existing_notebook_retry_but_access_is_not(self):
         with tempfile.TemporaryDirectory() as work, patch.object(correction.gates.time, 'sleep'):
@@ -177,6 +193,7 @@ class CorrectionTests(unittest.TestCase):
                 result = correction.verify_current_cohort(work, plan, stage_only=True)
                 self.assertTrue(result['stageOnly'])
                 self.assertFalse(result['notebookActualExecutionVerified'])
+                self.assertFalse(result['hfCore']['checkedInThisPhase'])
                 with self.assertRaisesRegex(AssertionError, 'must not be claimed'):
                     correction.verify_current_cohort(work, plan)
 

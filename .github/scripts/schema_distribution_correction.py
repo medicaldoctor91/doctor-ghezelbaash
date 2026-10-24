@@ -63,7 +63,15 @@ def checked(response, *, pending=(404, 500, 502, 503, 504)):
 def read(url):
     with requests.Session() as session:
         session.auth = Anonymous()
-        return checked(session.get(url, timeout=(15, 90)))
+        for attempt in range(3):
+            response = session.get(url, timeout=(15, 90))
+            try:
+                return checked(response)
+            except Pending:
+                if response.status_code not in {502, 503, 504} or attempt == 2:
+                    raise
+                response.close()
+                time.sleep(2)
 
 
 def public_post(url, **kwargs):
@@ -358,7 +366,9 @@ def verify_current_cohort(work, plan, *, stage_only=False):
     exact = exact_kaggle(work, plan)
     metadata = public_kaggle_metadata(work)
     downloads = public_kaggle_downloads(work, plan)
-    core = gates.verify_hf(work, runtime_features=False)
+    core = ({'checkedInThisPhase': False,
+             'scope': 'Private preparation verifies the pinned public dataset/source; live Viewer verification remains mandatory in the final publication guard'}
+            if stage_only else gates.verify_hf(work, runtime_features=False))
     return {'status': 'PASS', 'scope': ('Private draft preparation only; notebook execution is still required before public publication' if stage_only else 'Pinned complete public files, actual notebook execution and primary Viewer; search/filter deferred by user'),
             'heads': heads, 'exactKaggle': exact, 'hfCore': core,
             'kaggleMetadata': metadata, 'kaggleDownloads': downloads,
@@ -413,15 +423,14 @@ def publish(work):
     gates.get = read
     if heads['notebookVersion'] == 15:
         gates.publish_notebook(work, client)
-    retry(work, 'hf-primary-viewer', lambda: gates.verify_hf(work, runtime_features=False), attempts=18)
     cohort = retry(work, 'pre-zenodo-cohort', lambda: verify_current_cohort(work, plan, stage_only=True), attempts=3)
     dump(work / 'cohort-before-zenodo.json', cohort)
     from zenodo_file_correction import publish as publish_archive
     def publication_guard(prepared_plan):
         retry(work, 'existing-notebook-execution', lambda: public_notebook_execution(work, prepared_plan), attempts=180)
-        return verify_current_cohort(work, prepared_plan)
+        return retry(work, 'final-public-cohort', lambda: verify_current_cohort(work, prepared_plan), attempts=6)
     result = publish_archive(work / 'zenodo-prepared', work / 'zenodo-publish',
-                             prestage_guard=lambda prepared_plan: verify_current_cohort(work, prepared_plan, stage_only=True),
+                             prestage_guard=lambda prepared_plan: retry(work, 'private-draft-cohort', lambda: verify_current_cohort(work, prepared_plan, stage_only=True), attempts=3),
                              cohort_guard=publication_guard)
     final = verify_current_cohort(work, plan)
     dump(work / 'publication-report.json', {'status': 'PASS' if final['unversionedDefaultCurrent'] else 'PINNED_COHORT_PUBLISHED_DEFAULT_PENDING', 'plan': plan,
