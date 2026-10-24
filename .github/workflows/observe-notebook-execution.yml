@@ -80,16 +80,16 @@ jobs:
           (folder/'zenodo-draft-report.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
           PY
-      - name: Read owner status and exact version 16 persisted or bounded live log
+      - name: Read latest owner session logs with current source identity before and after
         run: |
           python - <<'PY'
-          import json,os,re,signal,sys,time
+          import hashlib,json,os,re,signal,sys,time
           from pathlib import Path
           import requests
           sys.path.insert(0,'.github/scripts')
           from sync_platform_machine_resources import kaggle_client
           from kagglesdk import KaggleEnv
-          from kagglesdk.kernels.types.kernels_api_service import ApiListKernelSessionOutputRequest, ApiGetKernelSessionStatusRequest
+          from kagglesdk.kernels.types.kernels_api_service import ApiListKernelSessionOutputRequest, ApiGetKernelRequest
           # Store bounded, sanitized snapshots; never restart or alter a session.
           def sanitized(value):
               text=str(value or '')
@@ -102,7 +102,26 @@ jobs:
               return text
           client=kaggle_client()
           ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
-          version_label='16'
+          expected_version=16
+          expected_cells_sha256='c5d98c8b68289dd13c66ecb90208a2bc05ea8f399912dfe1a2d3d8e3950ffefb'
+          def source_identity():
+              request=ApiGetKernelRequest()
+              request.user_name='saeedghezelbash'
+              request.kernel_slug='dr-saeed-ghezelbash-knowledge-graph-starter'
+              with client.build_kaggle_client() as kaggle:
+                  current=kaggle.kernels.kernels_api_client.get_kernel(request)
+              notebook=json.loads(current.blob.source)
+              cells=[{'cell_type':cell['cell_type'],
+                      'source':''.join(cell['source']) if isinstance(cell['source'],list) else cell['source']}
+                     for cell in notebook['cells']]
+              digest=hashlib.sha256(json.dumps(cells,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+              version=current.metadata.current_version_number
+              return {'currentVersionNumber':version,'cells':len(cells),'normalizedCellsSHA256':digest,
+                      'matchesFrozenSource':version==expected_version and len(cells)==8 and digest==expected_cells_sha256}
+          def source_read_error(error):
+              http=getattr(getattr(error,'response',None),'status_code',None)
+              return {'errorType':type(error).__name__,'HTTP':http,
+                      'status':'ACCESS_STOP' if http in (401,403,429) else 'READ_ERROR'}
           folder=Path('/tmp/notebook-observation')
           folder.mkdir(exist_ok=True)
           state=client.kernels_status(ref)
@@ -110,23 +129,32 @@ jobs:
           report={'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
                   'scope':'Owner execution diagnostic only; no public health assertion or publication',
                   'status':sanitized(status),'failureMessage':sanitized(getattr(state,'failure_message',None)) or None,
-                  'statusScope':'Latest owner session; the persisted log is explicitly pinned to version 16',
-                  'versionLabel':version_label,
+                  'statusScope':'Latest owner session only; status and logs are not numeric version-16 execution proof',
+                  'numericVersionLabel404Interpretation':'Optional version_label strings are not established as numeric versions; previous label 16 not-found responses are ambiguous. No label probe is repeated.',
+                  'sourceExpectation':{'currentVersionNumber':expected_version,'cells':8,'normalizedCellsSHA256':expected_cells_sha256},
                   'dataset':sanitized(client.dataset_status('saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data',format='json(status,current_version_number)')),
                   'platformWrites':False,'logCalls':1,'logStreaming':False,'maximumSavedLogBytes':100000,
                   'logBytes':0,'logSavedBytes':0}
           try:
+              report['sourceBefore']=source_identity()
+          except Exception as error:
+              report['sourceBefore']=source_read_error(error)
+              (folder/'report.json').write_text(json.dumps(report,indent=2)+'\n')
+              print(json.dumps(report,indent=2))
+              raise SystemExit('Current source read failed; no log diagnostic follows')
+          try:
               request=ApiListKernelSessionOutputRequest()
               request.user_name='saeedghezelbash'
               request.kernel_slug='dr-saeed-ghezelbash-knowledge-graph-starter'
-              request.version_label=version_label
               with client.build_kaggle_client() as kaggle:
                   response=kaggle.kernels.kernels_api_client.list_kernel_session_output(request)
               raw=response.log or ''
               clean=sanitized(raw).encode('utf-8')
               saved=clean[-100000:]
-              (folder/'owner-version16.log').write_bytes(saved)
-              report.update(logBytes=len(raw.encode('utf-8')),logSavedBytes=len(saved),
+              (folder/'owner-latest-session.log').write_bytes(saved)
+              report.update(outputFileNames=[sanitized(item.file_name)[:500] for item in (response.files or [])[:200]],
+                            outputFileNamesTruncated=len(response.files or [])>200,
+                            logBytes=len(raw.encode('utf-8')),logSavedBytes=len(saved),
                             logStatus='EMPTY' if not raw else 'PERSISTED_LOG',
                             logTruncated=len(clean)>len(saved),
                             logTail=saved.decode('utf-8',errors='replace')[-4000:])
@@ -139,7 +167,7 @@ jobs:
           if report.get('logStatus')=='EMPTY' or (report.get('logStatus')=='READ_ERROR' and report.get('logReadHTTP')==404):
               # The documented live endpoint is a separate running-session feature.
               # Missing persisted output is not an access denial. Denials never enter this branch.
-              live={'versionLabel':version_label,'readCalls':1,'maximumBytes':16000,'maximumSeconds':15,
+              live={'sessionSelector':'Latest owner session; no version label','readCalls':1,'maximumBytes':16000,'maximumSeconds':15,
                     'scope':'One bounded owner live-log snapshot of the existing session; not an execution/publication claim',
                     'timeout':False,'truncated':False}
               capture=bytearray()
@@ -160,7 +188,7 @@ jobs:
                       headers['Accept']='text/event-stream, */*'
                       headers.pop('Content-Type',None)
                       response=http._session.get(url,headers=headers,auth=http._session.auth,
-                          params={'versionLabel':version_label,'waitForLogsUrlSeconds':1},
+                          params={'waitForLogsUrlSeconds':1},
                           stream=True,timeout=(10,12),allow_redirects=False)
                       live.update(HTTP=response.status_code,
                                   contentType=sanitized(response.headers.get('Content-Type','')))
@@ -193,7 +221,7 @@ jobs:
                       response.close()
               text=capture.decode('utf-8',errors='replace')
               safe=sanitized(text).encode('utf-8')[-16000:]
-              (folder/'owner-version16-live.log').write_bytes(safe)
+              (folder/'owner-latest-session-live.log').write_bytes(safe)
               data=[]
               for line in text.splitlines():
                   if not line.startswith('data:'):
@@ -210,29 +238,22 @@ jobs:
                           seconds=round(time.monotonic()-started,3),
                           tail=sanitized('\n'.join(data) if data else text)[-4000:])
               report.update(logStreaming=True,logStreamingBounded=True,liveLog=live)
-          # kernels_status(ref) omits version_label even when ref includes a version.
-          # Use the official request model to observe this exact published version.
-          try:
-              request=ApiGetKernelSessionStatusRequest()
-              request.user_name='saeedghezelbash'
-              request.kernel_slug='dr-saeed-ghezelbash-knowledge-graph-starter'
-              request.version_label=version_label
-              with client.build_kaggle_client() as kaggle:
-                  exact_state=kaggle.kernels.kernels_api_client.get_kernel_session_status(request)
-              report['exactVersionStatus']={'versionLabel':version_label,
-                  'status':sanitized(exact_state.status),
-                  'failureMessage':sanitized(getattr(exact_state,'failure_message',None)) or None,
-                  'scope':'Owner status explicitly pinned to version 16; not a public execution-output assertion'}
-          except Exception as error:
-              response=getattr(error,'response',None)
-              http=getattr(response,'status_code',None)
-              report['exactVersionStatus']={'versionLabel':version_label,
-                  'errorType':type(error).__name__,'HTTP':http,
-                  'status':'ACCESS_STOP' if http in (401,403,429) else 'READ_ERROR'}
-              # No retry or alternate status endpoint follows this read.
+          access_stop=report.get('logStatus')=='ACCESS_STOP' or report.get('liveLog',{}).get('status')=='ACCESS_STOP'
+          if access_stop:
+              report['sourceAfter']={'status':'NOT_READ_AFTER_ACCESS_STOP'}
+          else:
+              try:
+                  report['sourceAfter']=source_identity()
+              except Exception as error:
+                  report['sourceAfter']=source_read_error(error)
+          report['sourceIdentityVerified']=(report.get('sourceBefore')==report.get('sourceAfter')
+              and report.get('sourceBefore',{}).get('matchesFrozenSource') is True)
+          report['executionAssertion']='No version-16 completion assertion; only actual public version-16 output can establish that'
           report['completedUTC']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
           (folder/'report.json').write_text(json.dumps(report,indent=2)+'\n')
           print(json.dumps(report,indent=2))
+          if not report['sourceIdentityVerified']:
+              raise SystemExit('Latest source identity did not remain identical to the reviewed eight-cell source')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
