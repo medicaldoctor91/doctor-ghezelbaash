@@ -272,9 +272,17 @@ def verify_draft_bytes(session, owner, manifest):
         assert len(body) == expected['bytes'] and sha(body) == expected['SHA256'] and md5(body) == expected['checksum'], 'Draft bytes differ: ' + name
 
 
-def publish(prepared, work, *, cohort_guard, session=None, public_read=None, reviewed_sha256=None):
-    """Publish only an exact reviewed correction; uncertain mutations are never retried."""
+def publish(prepared, work, *, cohort_guard, session=None, public_read=None,
+            reviewed_sha256=None, prestage_guard=None):
+    """Stage reviewed private files, then require fresh strict publication proof.
+
+    A separate preparation guard may permit work in the isolated draft while a
+    notebook is still executing. Its result never authorizes publication: the
+    mandatory cohort guard runs again after all staged bytes are verified and
+    immediately before the existing record's publish action.
+    """
     assert callable(cohort_guard), 'A real fresh public-cohort guard is mandatory'
+    assert prestage_guard is None or callable(prestage_guard), 'The preparation guard must be callable'
     prepared, work = Path(prepared), Path(work)
     manifest = load(prepared / 'correction-manifest.json')
     manifest_sha = sha(canonical(manifest))
@@ -339,9 +347,16 @@ def publish(prepared, work, *, cohort_guard, session=None, public_read=None, rev
         assert not any(item['label'] == 'publish' for item in journal['operations']), 'An earlier publish attempt is uncertain or already acknowledged; never repeat it'
         # All intended staged bytes and metadata prove earlier non-publication
         # operations succeeded; skip every edit, unlock, upload and metadata PUT.
-    guard = cohort_guard(copy.deepcopy(manifest['plan']))
+    preparation_guard = prestage_guard if prestage_guard is not None else cohort_guard
+    guard = preparation_guard(copy.deepcopy(manifest['plan']))
     assert isinstance(guard, dict) and guard.get('status') == 'PASS', 'Fresh public-cohort verification did not pass'
-    dump(work / 'cohort-before-stage.json', guard)
+    dump(work / 'cohort-before-stage.json', {
+        'status': 'PASS', 'phase': 'private-draft-preparation',
+        'scope': 'Preparation of isolated draft files and metadata only; no public-file or publication authorization',
+        'authorizesPublication': False,
+        'guardKind': 'prestage' if prestage_guard is not None else 'strict-cohort',
+        'result': guard,
+    })
 
     def mutate(label, method, url, *, data=None, json_payload=None, draft_bucket=None):
         allowed = {( 'POST', DEPOSIT + '/actions/edit'), ('POST', PUBLIC + '/file-modification'),

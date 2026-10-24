@@ -337,23 +337,34 @@ def public_kaggle_downloads(work, plan):
     return result
 
 
-def verify_current_cohort(work, plan):
-    expected_plan(plan)
-    heads = provenance_and_heads(work, plan, target=True)
-    exact = exact_kaggle(work, plan)
-    metadata = public_kaggle_metadata(work)
-    downloads = public_kaggle_downloads(work, plan)
+def public_notebook_execution(work, plan):
+    """Require actual public results; a cached owner status is not a substitute."""
     public = read('https://www.kaggle.com/api/v1/kernels/pull/' + gates.NB).json()
     owner, slug = gates.NB.split('/')
     response = public_post('https://api.kaggle.com/v1/kernels.KernelsApiService/DownloadKernelOutput',
         json={'ownerSlug': owner, 'kernelSlug': slug, 'filePath': 'doi-release-execution.json', 'versionNumber': 16}, timeout=90)
     gates.notebook_identity(work, public, response.json())
+    return {'status': 'PASS', 'version': 16, 'publicSourceAndExecutionVerified': True,
+            'execution': response.json()}
+
+
+def verify_current_cohort(work, plan, *, stage_only=False):
+    expected_plan(plan)
+    heads = provenance_and_heads(work, plan, target=True)
+    public = read('https://www.kaggle.com/api/v1/kernels/pull/' + gates.NB).json()
+    blob = public['blob']
+    assert gates.notebook_cells_for_comparison(json.loads(blob.get('source') or blob['sourceNullable'])) == gates.notebook_cells_for_comparison(load(work / 'notebook/starter.ipynb')), 'Public notebook source differs'
+    execution = None if stage_only else public_notebook_execution(work, plan)
+    exact = exact_kaggle(work, plan)
+    metadata = public_kaggle_metadata(work)
+    downloads = public_kaggle_downloads(work, plan)
     core = gates.verify_hf(work, runtime_features=False)
-    return {'status': 'PASS', 'scope': 'Pinned complete public files, actual notebook execution and primary Viewer; search/filter deferred by user',
+    return {'status': 'PASS', 'scope': ('Private draft preparation only; notebook execution is still required before public publication' if stage_only else 'Pinned complete public files, actual notebook execution and primary Viewer; search/filter deferred by user'),
             'heads': heads, 'exactKaggle': exact, 'hfCore': core,
             'kaggleMetadata': metadata, 'kaggleDownloads': downloads,
             'unversionedDefaultCurrent': heads['kagglePublicDefault'] == 32 and downloads['allCurrent'],
-            'notebookActualExecutionVerified': True, 'hfSearchFilter': 'Deferred; no runtime health assertion'}
+            'stageOnly': stage_only, 'notebookActualExecutionVerified': not stage_only,
+            'notebookExecution': execution, 'hfSearchFilter': 'Deferred; no runtime health assertion'}
 
 
 def publish(work):
@@ -400,13 +411,18 @@ def publish(work):
     retry(work, 'kaggle-owner', owner_ready, attempts=18)
     retry(work, 'kaggle-exact', lambda: exact_kaggle(work, plan))
     gates.get = read
-    gates.publish_notebook(work, client)
+    if heads['notebookVersion'] == 15:
+        gates.publish_notebook(work, client)
     retry(work, 'hf-primary-viewer', lambda: gates.verify_hf(work, runtime_features=False), attempts=18)
-    cohort = retry(work, 'pre-zenodo-cohort', lambda: verify_current_cohort(work, plan), attempts=3)
+    cohort = retry(work, 'pre-zenodo-cohort', lambda: verify_current_cohort(work, plan, stage_only=True), attempts=3)
     dump(work / 'cohort-before-zenodo.json', cohort)
     from zenodo_file_correction import publish as publish_archive
+    def publication_guard(prepared_plan):
+        retry(work, 'existing-notebook-execution', lambda: public_notebook_execution(work, prepared_plan), attempts=180)
+        return verify_current_cohort(work, prepared_plan)
     result = publish_archive(work / 'zenodo-prepared', work / 'zenodo-publish',
-                             cohort_guard=lambda prepared_plan: verify_current_cohort(work, prepared_plan))
+                             prestage_guard=lambda prepared_plan: verify_current_cohort(work, prepared_plan, stage_only=True),
+                             cohort_guard=publication_guard)
     final = verify_current_cohort(work, plan)
     dump(work / 'publication-report.json', {'status': 'PASS' if final['unversionedDefaultCurrent'] else 'PINNED_COHORT_PUBLISHED_DEFAULT_PENDING', 'plan': plan,
          'zenodo': result, 'cohort': final,

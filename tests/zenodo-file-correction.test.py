@@ -354,6 +354,70 @@ class CorrectionTests(unittest.TestCase):
         self.assertEqual(report['status'], 'PASS')
         self.assertEqual(self.fake.writes(), [('POST', correction.DEPOSIT + '/actions/publish')])
 
+    def test_prestage_guard_stages_private_files_but_cannot_authorize_publication(self):
+        preparation_calls = []
+        strict_calls = []
+
+        def preparation(plan):
+            self.assertEqual(plan, self.fixture.plan)
+            preparation_calls.append(plan)
+            return {'status': 'PASS', 'publicDatasetAndSourceVerified': True,
+                    'notebookExecution': 'PENDING'}
+
+        def strict_pending(plan):
+            strict_calls.append(plan)
+            # The strict check must occur only after the complete target draft
+            # has been independently verified; public content is still old.
+            self.assertEqual(self.fake.draft_bodies, self.fixture.after_bodies)
+            self.assertEqual(self.fake.draft_metadata, self.manifest['target']['metadata'])
+            self.assertEqual(self.fake.public_bodies, self.fixture.before_bodies)
+            self.assertEqual(self.fake.public_metadata, self.fixture.metadata)
+            raise RuntimeError('Notebook16 actual execution remains pending')
+
+        with self.assertRaisesRegex(RuntimeError, 'actual execution remains pending'):
+            self.publish(prestage_guard=preparation, cohort_guard=strict_pending)
+        self.assertEqual(len(preparation_calls), 1)
+        self.assertEqual(len(strict_calls), 1)
+        self.assertEqual(self.fake.draft_bodies, self.fixture.after_bodies)
+        self.assertEqual(self.fake.draft_metadata, self.manifest['target']['metadata'])
+        self.assertEqual(self.fake.public_bodies, self.fixture.before_bodies)
+        self.assertEqual(self.fake.public_metadata, self.fixture.metadata)
+        before_writes = self.fake.writes()
+        self.assertFalse(any(url.endswith('/actions/publish') for method, url in before_writes))
+        journal = json.loads((self.root / 'work/mutation-journal.json').read_text())
+        self.assertTrue(journal['operations'])
+        self.assertTrue(all(item['state'] == 'acknowledged' for item in journal['operations']))
+        self.assertEqual(journal['operations'][-1]['label'], 'metadata')
+        self.assertNotIn('publish', [item['label'] for item in journal['operations']])
+        receipt = json.loads((self.root / 'work/cohort-before-stage.json').read_text())
+        self.assertEqual(receipt['phase'], 'private-draft-preparation')
+        self.assertEqual(receipt['guardKind'], 'prestage')
+        self.assertIs(receipt['authorizesPublication'], False)
+        self.assertEqual(receipt['result']['notebookExecution'], 'PENDING')
+
+        # The exact saved draft resumes without repeating any edit, unlock,
+        # upload or metadata write. Only a new strict check can permit publish.
+        def strict_ready(plan):
+            strict_calls.append(plan)
+            self.assertEqual(plan, self.fixture.plan)
+            return self.guard(plan)
+
+        report = self.publish(prestage_guard=preparation, cohort_guard=strict_ready)
+        self.assertEqual(report['status'], 'PASS')
+        self.assertEqual(len(strict_calls), 2)
+        self.assertEqual(self.fake.writes(), before_writes + [
+            ('POST', correction.DEPOSIT + '/actions/publish')])
+        self.assertEqual(self.fake.public_bodies, self.fixture.after_bodies)
+
+    def test_preparation_guard_cannot_replace_or_bypass_the_mandatory_strict_guard(self):
+        with self.assertRaisesRegex(AssertionError, 'mandatory'):
+            self.publish(prestage_guard=lambda plan: {'status': 'PASS'}, cohort_guard=None)
+        self.assertEqual(self.fake.writes(), [])
+        with self.assertRaisesRegex(AssertionError, 'did not pass'):
+            self.publish(prestage_guard=lambda plan: {'status': 'PENDING'})
+        self.assertEqual(self.fake.writes(), [])
+        self.assertEqual(self.guard_calls, 0)
+
     def test_uncertain_publish_is_not_repeated_when_public_still_old(self):
         self.fake.uncertain_label = 'publish'
         with self.assertRaisesRegex(RuntimeError, 'Uncertain publish'):

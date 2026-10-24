@@ -135,6 +135,51 @@ class CorrectionTests(unittest.TestCase):
                 with self.assertRaisesRegex(AssertionError, 'userSpecifiedSources'):
                     correction.public_kaggle_metadata(work)
 
+    def test_public_execution_cannot_accept_cached_previous_version_results(self):
+        import hashlib
+        plan = self.plan()
+        with tempfile.TemporaryDirectory() as folder:
+            work = Path(folder)
+            (work / 'notebook').mkdir()
+            (work / 'kaggle').mkdir()
+            notebook = {'cells': [{'cell_type': 'code', 'source': ['assert True\n'], 'metadata': {}, 'outputs': [], 'execution_count': None}]}
+            (work / 'notebook/starter.ipynb').write_text(json.dumps(notebook))
+            (work / 'release-plan.json').write_text(json.dumps(plan))
+            (work / 'kaggle/checksums.sha256').write_bytes(b'exact-reviewed-inputs\n')
+            public = {'metadata': {'currentVersionNumber': 16}, 'blob': {'source': json.dumps(notebook)}}
+            execution = {'status': 'PASS', 'kaggle_version': 32, 'upstream_revision': plan['hfRevision'],
+                         'source_commit': plan['sourceCommit'], 'input_checksums_sha256': hashlib.sha256(b'exact-reviewed-inputs\n').hexdigest(),
+                         'exact_doi': correction.DOI}
+            with patch.object(correction, 'read', lambda url: Response(body=json.dumps(public).encode())):
+                for field, wrong in [('kaggle_version', 31), ('upstream_revision', correction.PARENT), ('source_commit', correction.ORIGINAL), ('input_checksums_sha256', '0' * 64)]:
+                    stale = {**execution, field: wrong}
+                    with patch.object(correction, 'public_post', lambda *a, value=stale, **k: Response(body=json.dumps(value).encode())):
+                        with self.assertRaises(AssertionError):
+                            correction.public_notebook_execution(work, plan)
+                with patch.object(correction, 'public_post', lambda *a, **k: Response(body=json.dumps(execution).encode())):
+                    self.assertTrue(correction.public_notebook_execution(work, plan)['publicSourceAndExecutionVerified'])
+
+    def test_private_staging_does_not_claim_notebook_execution(self):
+        plan = self.plan()
+        with tempfile.TemporaryDirectory() as folder:
+            work = Path(folder)
+            (work / 'notebook').mkdir()
+            notebook = {'cells': []}
+            (work / 'notebook/starter.ipynb').write_text(json.dumps(notebook))
+            public = {'metadata': {'currentVersionNumber': 16}, 'blob': {'source': json.dumps(notebook)}}
+            with patch.object(correction, 'provenance_and_heads', return_value={'kagglePublicDefault': 32}), \
+                    patch.object(correction, 'read', return_value=Response(body=json.dumps(public).encode())), \
+                    patch.object(correction, 'exact_kaggle', return_value={'filesSha256Matched': 48}), \
+                    patch.object(correction, 'public_kaggle_metadata', return_value={'verified': True}), \
+                    patch.object(correction, 'public_kaggle_downloads', return_value={'allCurrent': True}), \
+                    patch.object(correction.gates, 'verify_hf', return_value={'verified': True}), \
+                    patch.object(correction, 'public_notebook_execution', side_effect=AssertionError('Execution must not be claimed')):
+                result = correction.verify_current_cohort(work, plan, stage_only=True)
+                self.assertTrue(result['stageOnly'])
+                self.assertFalse(result['notebookActualExecutionVerified'])
+                with self.assertRaisesRegex(AssertionError, 'must not be claimed'):
+                    correction.verify_current_cohort(work, plan)
+
 
 if __name__ == '__main__':
     unittest.main()
