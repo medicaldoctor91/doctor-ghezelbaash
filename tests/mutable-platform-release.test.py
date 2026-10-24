@@ -323,6 +323,53 @@ class ExactVersionNotebookTests(unittest.TestCase):
      with self.assertRaises(AssertionError):release.complete_notebook_exact_version(root)
      push.assert_not_called()
 
+class ArticleExactVersionNotebookTests(unittest.TestCase):
+ source='0f72c5e6ef832adef66d003069e3e3c189cf5079'
+ hf='017269f382c41c5eb27c5cfcebaf7a365368903e'
+ fingerprint='4b369026533ee309ba7b92a62e0a33ac99a3fe5738d8fe5039f97c67e3826fea'
+ def setup(self,root):
+  plan,state,public,verify,client=ExactVersionNotebookTests.setup(self,root)
+  plan.update(kaggleVersion=31,kagglePreviousVersion=30,notebookVersion=15,notebookPreviousVersion=14)
+  state.update(kaggleOwner={'version':31,'status':'ready'},notebookVersion=14)
+  public.update(currentVersionNumber=30,versions=[{'versionNumber':31,'status':'Ready'}])
+  client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':31})
+  return plan,state,public,verify,client
+ def test_only_the_exact_frozen_article_cohort_may_complete_notebook15(self):
+  for field,value in [('sourceCommit','c'*40),('hfRevision','c'*40),('kaggleVersion',32),('notebookVersion',16),('notebookPreviousVersion',13)]:
+   with self.subTest(field=field),tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);plan,state,public,verify,client=self.setup(root);plan[field]=value
+    with patch.object(release.gates,'publish_notebook') as push:
+     with self.assertRaisesRegex(AssertionError,'cohort pins differ'):release.complete_notebook_exact_version(root)
+     push.assert_not_called();verify.assert_not_called()
+ def test_notebook15_uses_exact31_files_and_actual_execution_without_an_extra_dataset_version(self):
+  import hashlib
+  for already_published in [False,True]:
+   with self.subTest(already_published=already_published),tempfile.TemporaryDirectory() as folder:
+    root=Path(folder);plan,state,public,verify,client=self.setup(root)
+    state['notebookVersion']=15 if already_published else 14
+    notebook={'cells':[{'cell_type':'code','source':['print(31)'],'metadata':{}}]}
+    release.dump(root/'notebook/starter.ipynb',notebook)
+    (root/'kaggle/checksums.sha256').write_text('frozen article cohort inputs')
+    checksum=hashlib.sha256((root/'kaggle/checksums.sha256').read_bytes()).hexdigest()
+    live={'metadata':{'currentVersionNumber':15},'blob':{'source':json.dumps(notebook)}}
+    client.kernels_status.return_value.status='complete'
+    def output(ref,path,**kwargs):
+     release.dump(Path(path)/'doi-release-execution.json',{'status':'PASS','kaggle_version':31,'upstream_revision':self.hf,'source_commit':self.source,
+      'input_checksums_sha256':checksum,'exact_doi':release.gates.P['currentArchive']['doi']})
+    client.kernels_output.side_effect=output
+    before={'metadata':{'currentVersionNumber':state['notebookVersion']}}
+    with patch.object(release.gates,'get',side_effect=[Mock(json=lambda:before),Mock(json=lambda:live),Mock(json=lambda:live)]):
+     release.dump(root/'release-plan.json',plan);release.dump(root/'frozen-sha256.json',{})
+     release.complete_notebook_exact_version(root)
+    if already_published:client.kernels_push.assert_not_called()
+    else:client.kernels_push.assert_called_once_with(str(root/'notebook'))
+    client.dataset_create_version.assert_not_called()
+    verify.assert_called_once_with(root/'exact-notebook-public-files',release.KAGGLE_REF,31,root/'kaggle',release.read)
+    report=json.loads((root/'notebook-completion-report.json').read_text())
+    self.assertEqual(report['proof']['version'],15);self.assertEqual(report['observedPublicDefaultVersion'],30)
+    self.assertFalse(report['fullPublicationVerified']);self.assertIn('full publication gate',report['outstanding']['currentDefaultAndExactDefaultZipEquality'])
+    self.assertFalse((root/'publication-report.json').exists())
+
 class FinalConsistencyTests(unittest.TestCase):
  def setup(self,root):
   source='a'*40;hf='b'*40;archive_source=release.DOI_POLICY['currentArchive']['sourceCommit']
