@@ -1,0 +1,117 @@
+name: Correct same DOI delivery files from the verified live distribution
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [preflight, publish]
+        required: true
+      reviewed_commit: {type: string, required: true}
+      seed_run: {type: string, required: true, default: '40100042632'}
+      prepared_run: {type: string, required: false}
+      expected_manifest: {type: string, required: false}
+      recovery_run: {type: string, required: false}
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ARCHIVE_SOURCE_COMMIT: ed767f6e6726e1453196e2ec2b312fcad00677e2
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      GIT_LFS_SKIP_SMUDGE: '1'
+      EXPECTED_MANIFEST: ${{ inputs.expected_manifest }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Bind the reviewed correction implementation
+        run: test "$GITHUB_SHA" = '${{ inputs.reviewed_commit }}'
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install data validators and platform SDKs
+        run: python -m pip install requests 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - name: Test the bounded correction protocol
+        run: |
+          python tests/schema-correction-prose.test.py
+          python tests/zenodo-correction-bundle.test.py
+          python tests/zenodo-file-correction.test.py
+          python tests/schema-distribution-correction.test.py
+      - uses: actions/download-artifact@v4
+        if: inputs.operation == 'preflight'
+        with:
+          name: frozen-mutable-candidate
+          run-id: ${{ inputs.seed_run }}
+          github-token: ${{ github.token }}
+          path: /tmp/verified-seed-artifact
+      - name: Restore already verified website and platform inputs
+        if: inputs.operation == 'preflight'
+        run: tar -xzf /tmp/verified-seed-artifact/candidate.tar.gz -C /tmp
+      - uses: actions/download-artifact@v4
+        if: inputs.operation == 'publish' && inputs.recovery_run == ''
+        with:
+          name: frozen-same-doi-correction
+          run-id: ${{ inputs.prepared_run }}
+          github-token: ${{ github.token }}
+          path: /tmp/reviewed-correction
+      - uses: actions/download-artifact@v4
+        if: inputs.operation == 'publish' && inputs.recovery_run != ''
+        with:
+          name: same-doi-correction-recovery
+          run-id: ${{ inputs.recovery_run }}
+          github-token: ${{ github.token }}
+          path: /tmp/reviewed-correction
+      - name: Bind restored payload to the reviewed frozen manifest
+        if: inputs.operation == 'publish'
+        run: |
+          test -n '${{ inputs.prepared_run }}'
+          tar -xzf /tmp/reviewed-correction/correction.tar.gz -C /tmp
+          python - <<'PY'
+          import hashlib,os,re
+          from pathlib import Path
+          expected=os.environ['EXPECTED_MANIFEST']
+          assert re.fullmatch('[a-f0-9]{64}',expected)
+          actual=hashlib.sha256(Path('/tmp/schema-distribution-correction/frozen-sha256.json').read_bytes()).hexdigest()
+          assert actual==expected, 'Correction artifact differs from the exact reviewed manifest'
+          PY
+      - name: Prepare or publish the same-DOI technical file correction
+        run: python .github/scripts/schema_distribution_correction.py '${{ inputs.operation }}'
+      - name: Preserve the exact successful preflight
+        if: inputs.operation == 'preflight' && success()
+        run: tar -czf /tmp/correction.tar.gz -C /tmp schema-distribution-correction
+      - uses: actions/upload-artifact@v4
+        if: inputs.operation == 'preflight' && success()
+        with:
+          name: frozen-same-doi-correction
+          path: /tmp/correction.tar.gz
+          compression-level: 0
+      - name: Preserve mutation journals for read-only recovery
+        if: always() && inputs.operation == 'publish'
+        run: |
+          if [ -d /tmp/schema-distribution-correction ]; then
+            tar -czf /tmp/correction.tar.gz --exclude=askpass.py -C /tmp schema-distribution-correction
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.operation == 'publish'
+        with:
+          name: same-doi-correction-recovery
+          path: /tmp/correction.tar.gz
+          compression-level: 0
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: same-doi-file-correction-evidence
+          path: |
+            /tmp/schema-distribution-correction/*.json
+            /tmp/schema-distribution-correction/zenodo-prepared/correction-manifest.json
+            /tmp/schema-distribution-correction/zenodo-prepared/correction-manifest.sha256
+            /tmp/schema-distribution-correction/zenodo-publish/*.json
+            /tmp/schema-distribution-correction/archive-build/correction-build-report.json
+          if-no-files-found: warn
