@@ -1,0 +1,16 @@
+{
+  "previewUrl": "https://077ae6ce.doctor-ghezelbaash.pages.dev",
+  "controlUrl": "https://077ae6ce.doctor-ghezelbaash.pages.dev/control/",
+  "deploymentId": "077ae6ce-4c44-4fd4-bd75-b44bdf0cb481",
+  "branch": "full-graph-first-20261024",
+  "environment": "preview",
+  "controllerCommit": "d70700e303577ec3cf840c488a12c1dab740272d",
+  "baselineSource": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+  "candidateHomeSHA256": "372a538549d500a3c25ea3f64343f64fd459a91f91bea178f15bd6f61da6f423",
+  "mode": "experiment",
+  "googleRecognition": "NOT_TESTED",
+  "productionWrites": false,
+  "ordinaryPublicBytesVerified": true,
+  "previewXRobotsTag": "noindex, nofollow, noarchive",
+  "canonicalGraphSHA256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7"
+}
