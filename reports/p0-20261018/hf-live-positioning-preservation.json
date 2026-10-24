@@ -1,9 +1,0 @@
-{
-  "hfRevision": "96975d60b8a4a8a24b84bf892bdbb11321a89553",
-  "public47RecordsAndMessagesByteIdentical": true,
-  "nativeParquetAll47ValuesEqual": true,
-  "positioningSha256": "f0fdb151be6bd080954c8f2bac86f198cfa2a54db12c5087295a91f6877706e5",
-  "sourceGitBlob": "68fdd9f5c48c4590d8ce4db77d49f5ab63cb9244",
-  "version": "1.3.4",
-  "websiteSourceCommit": "5e45873a95c63aa6206317d7f429d4d055f58f5c"
-}

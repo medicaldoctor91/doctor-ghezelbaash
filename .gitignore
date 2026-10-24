@@ -4,3 +4,6 @@ dist/
 .DS_Store
 __pycache__/
 *.pyc
+
+# Internal audit output belongs outside the source tree.
+/reports/

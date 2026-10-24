@@ -308,7 +308,7 @@ def validate_positioning(root):
     path=directory/'instruction_examples_fa_market_positioning.jsonl'
     examples=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     assert len(examples)==len({r['example_id'] for r in examples})==strategy['record_count']
-    historical=[json.loads(line)['before'] for line in (REPOSITORY/'reports/p0-20261018/market-positioning-migration.jsonl').read_text().splitlines()]
+    historical=[json.loads(line) for line in (REPOSITORY/'tests/fixtures/original-positioning-messages.jsonl').read_text().splitlines()]
     assert len(historical)==47 and len(examples)>47
     assert [r['messages'] for r in examples[:47]]==[r['messages'] for r in historical], 'Original training messages changed'
     spec=load(root/'viewer/packaging.json')['tables']['market_positioning']

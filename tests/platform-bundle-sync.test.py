@@ -128,11 +128,11 @@ class PackageMaintenanceTests(unittest.TestCase):
         with (root/spec['source']).with_suffix('.csv').open(newline='') as handle:
             decoded=[{k:json.loads(v) if k in spec['csvJsonEncodedFields'] else v for k,v in row.items()} for row in csv.DictReader(handle)]
         self.assertEqual(decoded,original)
-        matrix=Path(__file__).resolve().parents[1]/'reports/p0-20261018/market-positioning-migration.jsonl'
-        migrations=[json.loads(line) for line in matrix.read_text().splitlines()]
-        self.assertEqual(len(migrations),47)
-        self.assertEqual([m['before']['messages'] for m in migrations],[r['messages'] for r in original[:47]])
-        self.assertEqual({m['example_id'] for m in migrations},{r['example_id'] for r in original[:47]})
+        fixture=Path(__file__).resolve().parent/'fixtures/original-positioning-messages.jsonl'
+        historical=[json.loads(line) for line in fixture.read_text().splitlines()]
+        self.assertEqual(len(historical),47)
+        self.assertEqual([r['messages'] for r in historical],[r['messages'] for r in original[:47]])
+        self.assertEqual({r['example_id'] for r in historical},{r['example_id'] for r in original[:47]})
         self.assertEqual({r['example_id'] for r in original[47:]},{f'positioning-{i:03}' for i in range(48,61)})
         for row in original:
             self.assertTrue(row['query_aliases'] and row['evidence_urls'])

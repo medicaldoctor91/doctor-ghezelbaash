@@ -1,9 +1,0 @@
-{
-  "status": "PASS",
-  "scope": "Offline RDF validity of exact complete graph embedded in the experiment, not Google recognition",
-  "canonicalNodes": 1600,
-  "RDFTriples": 22235,
-  "seconds": 0.505,
-  "networkCalls": 0,
-  "platformWrites": false
-}
