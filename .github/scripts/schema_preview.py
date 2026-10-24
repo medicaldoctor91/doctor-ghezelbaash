@@ -139,7 +139,10 @@ def check_frozen(source):
 
 
 def preview_deployments():
-    return api('/deployments?env=preview&per_page=100')
+    # Pages rejects per_page=100 although its OpenAPI schema omits the bound.
+    # The serialized preview upload only needs the newest deployments; fail
+    # closed if its exact source/branch cannot be found in this valid window.
+    return api('/deployments?env=preview&per_page=10')
 
 
 def public_bytes(url):
