@@ -11,6 +11,7 @@ import { parse, parseFragment, serialize, serializeOuter } from "parse5";
 import { createHash } from "node:crypto";
 import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
+import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
 import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
 import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, renderMedicalTrust} from "../lib/search-contract.mjs";
 export const prerender = true;
@@ -4939,7 +4940,7 @@ export function compileCanonicalSource() {
     for(const relation of resource.httpRelationships)if(!resourceByPath.has(relation.path))throw new Error('Unresolved HTTP relation '+resource.path);
     if(resource.discoverable&&(!resource.rel||resource.title!==undefined&&typeof resource.title!=='string'))throw new Error('Invalid machine discovery metadata '+resource.path);
   }
-  const machineLinks = SOURCE.machineResources.filter(r=>r.discoverable).map(r => `<link rel="${escape(r.rel)}" href="${escape(base+r.path)}" type="${escape(contentType(r))}"${r.title ? ` title="${escape(r.title)}"` : ''}>`).join('');
+  const machineLinks = renderCompactMachineDiscoveryLinks(SOURCE.machineResources);
   const identityLinks = ['<link rel="author" href="' + person.url + '">', '<link rel="about" href="' + person['@id'] + '">',
     '<link rel="about" href="' + base + '/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">',
     ...[...new Set(person.sameAs)].map(url => '<link rel="me" href="' + escape(url) + '">')].join('');
@@ -5009,7 +5010,7 @@ export function compileCanonicalSource() {
     closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project});
     // Validate the graph that will actually be serialized, after every projection.
     richResultsContract.assertRichResultsDocument(record.document,{primaryPageId});
-    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds});
+    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,pagePurpose:record.pagePurpose,visibleImageUrls:record.imageUrls});
     richResultsContract.assertRichResultsDocument(record.searchDocument,{primaryPageId});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));

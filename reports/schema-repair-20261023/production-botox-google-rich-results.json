@@ -1,0 +1,36 @@
+{
+  "resultUrl": "https://search.google.com/test/rich-results/result?id=YcTmfxwWTioEI13E8LU39g",
+  "testedUrl": "https://www.ghezelbaash.ir/botox",
+  "observedDateUTC": "2026-10-24",
+  "GoogleHTTPDateUTC": "2026-10-24T13:06:14Z",
+  "testAgent": "Google Inspection Tool smartphone",
+  "HTTP": 200,
+  "pageFetch": "Successful",
+  "crawlAllowed": true,
+  "indexingAllowed": true,
+  "reportedValidItems": 12,
+  "googleReportedCategories": {
+    "Breadcrumbs": {
+      "validItems": 1
+    },
+    "Image Metadata": {
+      "validItems": 7
+    },
+    "Local businesses": {
+      "validItems": 2,
+      "nonCriticalIssues": true
+    },
+    "Organization": {
+      "validItems": 2,
+      "nonCriticalIssues": true
+    }
+  },
+  "categoryCountingScope": "Google reports 12 eligible valid items; type-category counts can overlap",
+  "recognizedNodes": 88,
+  "context": "https://schema.org",
+  "testedSchemaMatchesPublicProductionAndAcceptedPreview": true,
+  "sourceCommit": "994861d5fbf6b1191c0f5afd586bb369fcd5534b",
+  "normalizedTestedSchemaSHA256": "1749beffbf47d3bc9669dbab3f76a3debc3a19ea19dc551fbd02e505b5c1a1ea",
+  "allPageResourcesLoaded": true,
+  "scope": "Completed Google Rich Results Test of production Botox URL; no claim of Google tests for every sitemap page or third-party platform runtime health"
+}

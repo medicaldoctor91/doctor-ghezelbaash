@@ -1,3 +1,5 @@
+import {appendHomeDatasetDiscovery} from './home-graph-discovery.mjs';
+
 const values=v=>Array.isArray(v)?v:v==null?[]:[v];
 const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariable','Observation','SoftwareSourceCode','FAQPage']);
 const OMIT=Symbol('omit');
@@ -95,6 +97,7 @@ const searchPerson=[...searchIdentity,'additionalType','givenName','familyName',
 const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','areaServed','image','logo','location','containedInPlace','contactPoint'];
 const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','creator','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','representativeOfPage'];
 const searchVideo=[...searchImage,'description','publisher','copyrightHolder','about','uploadDate','duration','embedUrl','inLanguage','hasPart'];
+const searchArticle=['@id','@type','url','headline','description','inLanguage','datePublished','dateModified','author','publisher','image','about','hasPart','mainEntityOfPage'];
 const searchQuestion=[...searchIdentity,'acceptedAnswer','answerCount','about','inLanguage'];
 const searchAnswer=[...searchIdentity,'text','about','inLanguage'];
 const searchLeaf=[...searchIdentity,'propertyID','value','unitCode','unitText','termCode','inDefinedTermSet','credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires','roleName','hasOccupation','streetAddress','addressLocality','addressRegion','addressCountry','postalCode','latitude','longitude','dayOfWeek','opens','closes','validFrom','validThrough','contactType','availableLanguage','telephone','email','containedInPlace'];
@@ -107,7 +110,7 @@ const searchTopic=[...searchIdentity,'about','mainEntity','medicalSpecialty','pr
  * to the physician, while the physician's image uses the actual file URL;
  * these are both Schema.org forms and do not create image/creator cycles.
  */
-export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[]}={}) {
+export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[],pagePurpose,visibleImageUrls=[]}={}) {
   const truth=new Map(graph['@graph'].map(node=>[node['@id'],node]));
   const source=new Map([...truth,...document['@graph'].map(node=>[node['@id'],node])]);
   function indexInline(value){
@@ -117,7 +120,7 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     for(const child of Object.values(value))indexInline(child);
   }
   indexInline(graph['@graph']);indexInline(document['@graph']);
-  const primary=source.get(primaryPageId);
+  let primary=source.get(primaryPageId);
   if(!primary)throw new Error('Search projection requires its primary page');
   const origin=new URL(primary['@id']).origin;
   const physicianId=origin+'/#saeed-ghezelbash';
@@ -125,9 +128,34 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   const clinic=[...source.values()].find(node=>values(node['@type']).some(type=>['MedicalClinic','PhysiciansOffice','LocalBusiness'].includes(type))&&node['@id']!==physicianId);
   const home=values(primary['@type']).includes('ProfilePage')&&primary.url===origin+'/';
   const topicIds=new Set([...values(primary.mainEntity),...values(primary.about)].map(ref=>ref?.['@id']).filter(Boolean));
+  // MedicalWebPage describes the document; Article describes its authored
+  // clinical guide. Only the reviewed route purpose enables this publication
+  // wrapper. A clinic, a video or an access/contact page must not be retyped as
+  // an article merely because it is the existing page's mainEntity.
+  if(pagePurpose==='clinical-guide') {
+    if(home||!values(primary['@type']).includes('MedicalWebPage')||typeof primary.url!=='string')
+      throw new Error('Clinical Article requires its reviewed MedicalWebPage');
+    const articleId=primary.url+'#article';
+    if(source.has(articleId))throw new Error('Clinical Article identifier already exists: '+articleId);
+    const article={'@id':articleId,'@type':'Article',url:primary.url,headline:structuredClone(primary.name),
+      inLanguage:structuredClone(primary.inLanguage??language),mainEntityOfPage:primary.url};
+    for(const key of ['description','author','publisher','about','datePublished','dateModified'])
+      if(key in primary)article[key]=structuredClone(primary[key]);
+    const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
+      .some(type=>['WebPageElement','Article','Question','Answer'].includes(type)));
+    if(content.length)article.hasPart=structuredClone(content);
+    // These URLs come from images actually present in this route's article.
+    // The physician's portrait/logo is not an editorial-image fallback, and
+    // publication dates are never inferred from review or build timestamps.
+    const images=[...new Set(visibleImageUrls)];
+    if(images.length)article.image=images;
+    source.set(articleId,article);
+    primary={...primary,mainEntity:{'@id':articleId}};
+    source.set(primaryPageId,primary);
+  }
   const selected=new Map(),queue=[];
   const leafTypes=new Set(['PostalAddress','GeoCoordinates','OpeningHoursSpecification','ContactPoint','Country','City','State','AdministrativeArea','Place','EducationalOccupationalCredential','Certification','DefinedTerm','DefinedTermSet','PropertyValue','QuantitativeValue','Occupation','Role','Organization','EducationalOrganization','CollegeOrUniversity']);
-  const namedText=new Set(['name','description','caption','givenName','familyName','additionalName','honorificPrefix','jobTitle','roleName','disambiguatingDescription']);
+  const namedText=new Set(['name','headline','description','caption','givenName','familyName','additionalName','honorificPrefix','jobTitle','roleName','disambiguatingDescription']);
   function normalized(value,key){
     if(Array.isArray(value)) {
       if(namedText.has(key)&&value.some(item=>item&&typeof item==='object'&&'@language' in item))return truthText(value,language);
@@ -165,6 +193,7 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     if(id===primaryPageId)keys=searchPage;
     else if(id===physicianId)keys=searchPerson;
     else if(node===clinic)keys=searchClinic;
+    else if(types.includes('Article'))keys=searchArticle;
     else if(types.includes('ImageObject'))keys=searchImage;
     else if(types.includes('VideoObject'))keys=searchVideo;
     else if(types.includes('Clip'))keys=[...searchIdentity,'startOffset','endOffset'];
@@ -204,7 +233,12 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
 
 /** Deterministic homepage entry point also used by the release verifier. */
 export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir') {
-  return projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
+  const projected=projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
+  const result=appendHomeDatasetDiscovery(projected,graph,origin);
+  assertBoundedSearchDocument(result);
+  if(new TextEncoder().encode(JSON.stringify(result)).length>38000)
+    throw new Error('Homepage Search markup exceeds the crawler-prefix budget');
+  return result;
 }
 
 /** Reject both identifier cycles and excessive per-path tree expansion. */

@@ -98,15 +98,32 @@ def zip_inventory(body):
     return {name: digest(data) for name, data in content.items()}, content
 
 
-def guard_live_cohort(evidence, read=get, post=requests.post):
-    """Anonymous bytes and actual version-specific notebook output, not receipt assertions."""
-    plan = load(evidence / 'release-plan.json')
-    frozen = load(evidence / 'frozen-sha256.json')
+def guard_reviewed_plan(evidence, plan, frozen):
+    """Bind future maintenance targets to the exact frozen plan and archive."""
     assert plan['candidateSchema'] == 'mutable-distributions-4'
     assert plan['archiveSourceCommit'] == ARCHIVE_SOURCE and plan['archiveWrites'] is False
     assert re.fullmatch('[a-f0-9]{40}', plan['sourceCommit'])
     assert re.fullmatch('[a-f0-9]{40}', plan['hfRevision'])
-    assert plan['kaggleVersion'] == 30 and plan['notebookVersion'] == 14
+    for previous, target in [('kagglePreviousVersion', 'kaggleVersion'),
+                             ('notebookPreviousVersion', 'notebookVersion')]:
+        assert type(plan[previous]) is int and type(plan[target]) is int, 'Version targets must be integers'
+        assert plan[previous] > 0 and plan[target] == plan[previous] + 1, 'Version target must increment its reviewed baseline exactly once'
+    controls = frozen['controls']
+    assert {'release-plan.json', 'archive-baseline.json'} <= controls.keys(), 'Missing frozen plan/archive controls'
+    for name, expected in controls.items():
+        assert PurePosixPath(name).name == name and name not in {'', '.', '..'}, 'Unsafe frozen control filename'
+        assert re.fullmatch('[a-f0-9]{64}', expected)
+        assert digest((evidence / name).read_bytes()) == expected, 'Frozen control changed: ' + name
+    baseline = load(evidence / 'archive-baseline.json')
+    assert baseline['record'] == RECORD and baseline['doi'] == DOI and baseline['conceptDOI'] == CONCEPT
+    assert baseline['version'] == VERSION and baseline['sourceCommit'] == ARCHIVE_SOURCE and len(baseline['files']) == 43
+
+
+def guard_live_cohort(evidence, read=get, post=requests.post):
+    """Anonymous bytes and actual version-specific notebook output, not receipt assertions."""
+    plan = load(evidence / 'release-plan.json')
+    frozen = load(evidence / 'frozen-sha256.json')
+    guard_reviewed_plan(evidence, plan, frozen)
     provenance = read(SITE + 'release-provenance.json').content
     assert digest(provenance) == frozen['website']['release-provenance.json']
     assert json.loads(provenance)['sourceCommit'] == plan['sourceCommit']

@@ -29,6 +29,19 @@ function resourceLinks(origin,resource,resourceByPath,defaultAbout=[]){
   return links.join(', ');
 }
 function profileFor(delivery,indexing){return delivery?.http?.indexingProfiles?.[indexing]??null;}
+function validateIndexingOverrides(delivery,resources){
+  const paths=new Set(resources.map(resource=>resource.path));
+  const known=new Set(['all','none','index','noindex','follow','nofollow','noarchive','nosnippet','noimageindex','notranslate','indexifembedded','max-image-preview:none','max-image-preview:standard','max-image-preview:large']);
+  for(const profile of Object.values(delivery?.http?.indexingProfiles??{})){
+    if(profile.resourceOverrides===undefined)continue;
+    if(!profile.resourceOverrides||typeof profile.resourceOverrides!=='object'||Array.isArray(profile.resourceOverrides))throw new Error('Indexing resource overrides must be a path map');
+    for(const [path,directives] of Object.entries(profile.resourceOverrides)){
+      requirePath(path,'indexing override path');
+      if(!paths.has(path))throw new Error('Indexing override targets an unregistered resource '+path);
+      if(typeof directives!=='string'||/[\r\n]/.test(directives)||!directives.split(',').every(token=>known.has(token.trim().toLowerCase())||/^max-(?:snippet|video-preview):-?\d+$/.test(token.trim().toLowerCase())))throw new Error('Invalid resource indexing directives');
+    }
+  }
+}
 function globalBlock(delivery){
   if(!delivery)return null;const http=delivery.http??{},security=http.security??{},lines=['/*'];
   if(http.contentSignal)lines.push(`  Content-Signal: ${http.contentSignal}`);
@@ -50,7 +63,9 @@ function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}
   lines.push(`  Cache-Control: ${cache}`);
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
-  const profile=profileFor(delivery,resource.indexing);if(profile?.default)lines.push(`  X-Robots-Tag: ${profile.default}`);
+  const profile=profileFor(delivery,resource.indexing);
+  const robots=profile?.resourceOverrides?.[resource.path]??profile?.default;
+  if(robots){if(typeof robots!=='string'||/[\r\n]/.test(robots))throw new Error('Invalid resource indexing directives');lines.push(`  X-Robots-Tag: ${robots}`);}
   if(['machine','contact'].includes(resource.indexing)){
     const cors=delivery.http.machineCors??{};
     if(cors.origin)lines.push(`  Access-Control-Allow-Origin: ${cors.origin}`);
@@ -63,6 +78,7 @@ function countPotential({routes,machineResources,watchPosters}){return 1+routes.
 export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),earlyHints=true,delivery=null,machineResources=[]}){
   if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');requirePath(cssPath,'cssPath');
   machineResources=[...machineResources,...(delivery?.releaseResources??[])];
+  validateIndexingOverrides(delivery,machineResources);
   const blocks=[];const global=globalBlock(delivery);if(global)blocks.push(global);
   const compact=delivery&&countPotential({routes,machineResources,watchPosters})>100&&routes.filter(r=>r!=='/').every(r=>/^\/[a-z0-9-]+$/i.test(r));
   if(compact){

@@ -1,0 +1,38 @@
+{
+  "resultUrl": "https://search.google.com/test/rich-results/result?id=fEz_pverInW2WWdZcDAViw",
+  "testedUrl": "https://www.ghezelbaash.ir/",
+  "observedDateUTC": "2026-10-24",
+  "GoogleHTTPDateUTC": "2026-10-24T13:04:20Z",
+  "testAgent": "Google Inspection Tool smartphone",
+  "HTTP": 200,
+  "pageFetch": "Successful",
+  "crawlAllowed": true,
+  "indexingAllowed": true,
+  "reportedValidItems": 12,
+  "googleReportedCategories": {
+    "Image Metadata": {
+      "validItems": 7
+    },
+    "Local businesses": {
+      "validItems": 2,
+      "nonCriticalIssues": true
+    },
+    "Organization": {
+      "validItems": 2,
+      "nonCriticalIssues": true
+    },
+    "Profile page": {
+      "validItems": 1,
+      "nonCriticalIssues": true
+    }
+  },
+  "categoryCountingScope": "Google reports 12 eligible valid items; type-category counts can overlap and are not a distinct graph-node count",
+  "recognizedNodes": 84,
+  "context": "https://schema.org",
+  "testedSchemaMatchesPublicProduction": true,
+  "sourceCommit": "994861d5fbf6b1191c0f5afd586bb369fcd5534b",
+  "normalizedTestedSchemaSHA256": "46ea70ce977236781ea1261527ef7f6b2ad550e0ae1b9882d1eaf44a89591e1d",
+  "allPageResourcesLoaded": true,
+  "consoleWarning": "Permissions-Policy: unrecognized feature ambient-light-sensor; one nonfatal warning",
+  "scope": "Completed Google Rich Results Test of production homepage; no claim that every page was Google-tested or that third-party platform runtimes are healthy"
+}

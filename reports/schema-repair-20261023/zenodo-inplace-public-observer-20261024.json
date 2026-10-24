@@ -1,0 +1,147 @@
+{
+  "startedUTC": "2026-10-24T13:13:39Z",
+  "record": 23474664,
+  "doi": "10.5281/zenodo.23474664",
+  "calls": [
+    {
+      "label": "record",
+      "url": "https://zenodo.org/api/records/23474664",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T13:13:41Z",
+      "seconds": 1.118,
+      "contentType": "application/json",
+      "bytes": 19951,
+      "sha256": "0f41663694e5d6e1eaba45dd94b5809c8bab38f46b884086656359138a4f4826"
+    },
+    {
+      "label": "landing",
+      "url": "https://zenodo.org/records/23474664",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T13:13:42Z",
+      "seconds": 1.306,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 213032,
+      "sha256": "3daaacee3efd79db4db4ffeaacc7dc31ee27ae5cd43445c0f8596530c1464e87"
+    },
+    {
+      "label": "json-ld",
+      "url": "https://zenodo.org/records/23474664/export/json-ld",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T13:13:43Z",
+      "seconds": 1.15,
+      "contentType": "application/ld+json",
+      "bytes": 12483,
+      "sha256": "a7a002db3a1fa0c2e63bb691805f6426cca38fecb93d2c624e346b26e188e186"
+    },
+    {
+      "label": "datacite-json",
+      "url": "https://zenodo.org/records/23474664/export/datacite-json",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T13:13:44Z",
+      "seconds": 0.918,
+      "contentType": "application/vnd.datacite.datacite+json",
+      "bytes": 7942,
+      "sha256": "d67e56028ca8c32df3c64c197d175bfb70540d1967a1c5efe77ff71bf4505f7e"
+    },
+    {
+      "label": "datacite-xml",
+      "url": "https://zenodo.org/records/23474664/export/datacite-xml",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T13:13:45Z",
+      "seconds": 0.878,
+      "contentType": "application/vnd.datacite.datacite+xml",
+      "bytes": 6668,
+      "sha256": "8cbfd1aa4d66f0f3e6d21d994fd7b6f8f043c3f540fa965cf1a12ce1d9829d67"
+    },
+    {
+      "label": "datacite-registration",
+      "url": "https://api.datacite.org/dois/10.5281/zenodo.23474664",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T13:13:46Z",
+      "seconds": 1.241,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 15604,
+      "sha256": "8950ced5b47fcf2b5fbe0d46f684f89dcf247ddefe32551cb1bea2a993b1511b"
+    }
+  ],
+  "retries": 0,
+  "platformWrites": 0,
+  "scope": "Independent anonymous metadata, visible landing HTML, Dataset JSON-LD and DataCite export verification; no HF search/filter health assertion",
+  "recordMetadata": {
+    "status": "PASS",
+    "all43FilesMetadataUnchanged": true,
+    "DOIAndVersionUnchanged": true,
+    "otherMetadataUnchanged": true,
+    "descriptionExactReviewedPatch": true,
+    "currentMachineRelations": [
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/ec16d5b2cef15d01651c05884ffc6596a83efb99",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data/versions/30",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/viewer",
+      "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter"
+    ],
+    "historicalDistributionPinsAbsentFromCurrentRelations": true,
+    "metadataSHA256": "ef818cce2c9dbbbdf10a02712cb1fe2c74e5d50182ddd5755e4447a16cef1409"
+  },
+  "landing": {
+    "status": "PASS",
+    "visibleCurrentPinsAndHistoricalBoundary": true,
+    "currentLinksPresent": true,
+    "DatasetJSONLDRecognized": true,
+    "DatasetJSONLDDescriptionExactReviewedPatch": true,
+    "scriptCount": 1
+  },
+  "jsonldExport": {
+    "status": "PASS",
+    "DatasetDOIAndDescriptionExact": true
+  },
+  "dataciteJSONExport": {
+    "status": "PASS",
+    "currentMachineRelations": [
+      "10.5281/zenodo.18765168",
+      "10.5281/zenodo.23473947",
+      "https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/ed767f6e6726e1453196e2ec2b312fcad00677e2",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/ec16d5b2cef15d01651c05884ffc6596a83efb99",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/viewer",
+      "https://www.ghezelbaash.ir/",
+      "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data/versions/30"
+    ],
+    "oldDistributionPinsAbsent": true
+  },
+  "dataciteXMLExport": {
+    "status": "PASS",
+    "currentMachineRelations": [
+      "10.5281/zenodo.18765168",
+      "10.5281/zenodo.23473947",
+      "https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/ed767f6e6726e1453196e2ec2b312fcad00677e2",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/ec16d5b2cef15d01651c05884ffc6596a83efb99",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/viewer",
+      "https://www.ghezelbaash.ir/",
+      "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data/versions/30"
+    ],
+    "oldDistributionPinsAbsent": true
+  },
+  "externalDataCiteRegistration": {
+    "status": "CURRENT",
+    "relatedIdentifiers": [
+      "10.5281/zenodo.18765168",
+      "10.5281/zenodo.23473947",
+      "https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/ed767f6e6726e1453196e2ec2b312fcad00677e2",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/ec16d5b2cef15d01651c05884ffc6596a83efb99",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/viewer",
+      "https://www.ghezelbaash.ir/",
+      "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data/versions/30"
+    ],
+    "updated": "2026-10-24T13:11:14.000Z"
+  },
+  "status": "PASS",
+  "completedUTC": "2026-10-24T13:13:46Z"
+}

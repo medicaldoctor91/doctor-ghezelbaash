@@ -21,8 +21,8 @@ import urllib.request
 ACCOUNT = '884d1d90bd1fb6ecca14992c6c60d677'
 PROJECT = 'doctor-ghezelbaash'
 BRANCH = 'schema-validation-20261023'
-PRODUCTION_SOURCE = '94611168bacf7630022499204c493f6e4af64f70'
-PRODUCTION_DEPLOYMENT = '51fc7680-1235-4556-b6f2-4bb8d764556c'
+PRODUCTION_SOURCE = '994861d5fbf6b1191c0f5afd586bb369fcd5534b'
+PRODUCTION_DEPLOYMENT = '6a430764-c2d9-4e46-ae4a-5af4c33891c2'
 PRODUCTION_URL = 'https://www.ghezelbaash.ir'
 ARCHIVE_SOURCE = 'ed767f6e6726e1453196e2ec2b312fcad00677e2'
 ROOT = Path(__file__).resolve().parents[2]

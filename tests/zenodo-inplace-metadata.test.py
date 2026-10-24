@@ -28,6 +28,7 @@ class Response:
 def fixtures():
     plan = {'candidateSchema': 'mutable-distributions-4', 'sourceCommit': 'a' * 40,
             'hfRevision': 'b' * 40, 'kaggleVersion': 30, 'notebookVersion': 14,
+            'kagglePreviousVersion': 29, 'notebookPreviousVersion': 13,
             'archiveSourceCommit': m.ARCHIVE_SOURCE, 'archiveWrites': False}
     metadata = {'title': 'Dr. Saeed Ghezelbash Public Knowledge Graph — Reproducible Dataset Archive',
                 'version': m.VERSION, 'description': 'Original archive introduction',
@@ -42,12 +43,65 @@ def fixtures():
     public = {'id': m.RECORD, 'doi': m.DOI, 'conceptdoi': m.CONCEPT,
               'metadata': copy.deepcopy(metadata), 'files': files}
     owner = {'id': m.RECORD, 'doi': m.DOI, 'submitted': True, 'metadata': copy.deepcopy(metadata)}
-    baseline = {'record': m.RECORD, 'doi': m.DOI, 'sourceCommit': m.ARCHIVE_SOURCE,
+    baseline = {'record': m.RECORD, 'doi': m.DOI, 'conceptDOI': m.CONCEPT,
+                'version': m.VERSION, 'sourceCommit': m.ARCHIVE_SOURCE,
                 'files': {f['key']: {'checksum': f['checksum'], 'bytes': f['size']} for f in files}}
     return plan, metadata, public, owner, baseline
 
 
+def seal_controls(folder, plan, frozen):
+    m.dump(folder / 'release-plan.json', plan)
+    m.dump(folder / 'archive-baseline.json', fixtures()[-1])
+    frozen['controls'] = {name: m.digest((folder / name).read_bytes())
+                          for name in ['release-plan.json', 'archive-baseline.json']}
+    m.dump(folder / 'frozen-sha256.json', frozen)
+
+
 class MetadataTests(unittest.TestCase):
+    def test_future_cohort_targets_come_from_frozen_plan(self):
+        plan, metadata, _, _, _ = fixtures()
+        plan.update(kagglePreviousVersion=30, kaggleVersion=31,
+                    notebookPreviousVersion=14, notebookVersion=15)
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            frozen = {}
+            seal_controls(folder, plan, frozen)
+            m.guard_reviewed_plan(folder, plan, frozen)
+            wanted = m.desired_metadata(metadata, plan)
+            self.assertIn(m.KAGGLE + '/versions/31', wanted['description'])
+            self.assertIn('notebook</a>, version 15', wanted['description'])
+            self.assertNotIn(m.KAGGLE + '/versions/30', wanted['description'])
+
+    def test_inconsistent_or_non_integer_plan_increments_fail(self):
+        for update in [{'kaggleVersion': 31}, {'notebookVersion': 15},
+                       {'kagglePreviousVersion': 0, 'kaggleVersion': 1},
+                       {'notebookPreviousVersion': True, 'notebookVersion': 2},
+                       {'kaggleVersion': '30'}, {'candidateSchema': 'mutable-distributions-3'}]:
+            with self.subTest(update=update), tempfile.TemporaryDirectory() as directory:
+                plan = dict(fixtures()[0], **update)
+                folder = Path(directory)
+                frozen = {}
+                seal_controls(folder, plan, frozen)
+                with self.assertRaises(AssertionError):
+                    m.guard_reviewed_plan(folder, plan, frozen)
+
+    def test_frozen_plan_and_archive_control_tampering_fail(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            plan = fixtures()[0]
+            frozen = {}
+            seal_controls(folder, plan, frozen)
+            (folder / 'release-plan.json').write_text('{}')
+            with self.assertRaisesRegex(AssertionError, 'Frozen control changed'):
+                m.guard_reviewed_plan(folder, plan, frozen)
+            seal_controls(folder, plan, frozen)
+            baseline = fixtures()[-1]
+            baseline['sourceCommit'] = 'c' * 40
+            m.dump(folder / 'archive-baseline.json', baseline)
+            frozen['controls']['archive-baseline.json'] = m.digest((folder / 'archive-baseline.json').read_bytes())
+            with self.assertRaises(AssertionError):
+                m.guard_reviewed_plan(folder, plan, frozen)
+
     def test_current_machine_relations_replace_old_pins_without_changing_identity(self):
         plan, metadata, _, _, _ = fixtures()
         wanted = m.desired_metadata(metadata, plan)
@@ -214,7 +268,8 @@ class MetadataTests(unittest.TestCase):
             if '/api/datasets/' in url:
                 return Response({'sha': plan['hfRevision']})
             if '/datasets/view/' in url:
-                return Response({'currentVersionNumber': 30, 'versions': [{'versionNumber': 30}]})
+                return Response({'currentVersionNumber': plan['kaggleVersion'],
+                                 'versions': [{'versionNumber': plan['kaggleVersion']}]})
             if '/datasets/download/' in url:
                 return Response(content=zip_bytes.getvalue())
             if '/kernels/pull/' in url:
@@ -222,8 +277,7 @@ class MetadataTests(unittest.TestCase):
             raise AssertionError('Unexpected read URL: ' + url)
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
-            m.dump(folder / 'release-plan.json', plan)
-            m.dump(folder / 'frozen-sha256.json', frozen)
+            seal_controls(folder, plan, frozen)
             self.assertEqual(m.guard_live_cohort(folder, read=read, post=lambda *a, **k: Response(execution))['status'], 'PASS')
             wrong = dict(execution, kaggle_version=29)
             with self.assertRaises(AssertionError):
@@ -236,6 +290,22 @@ class MetadataTests(unittest.TestCase):
             m.dump(folder / 'frozen-sha256.json', frozen)
             with self.assertRaisesRegex(AssertionError, 'Kaggle exact files'):
                 m.guard_live_cohort(folder, read=read, post=lambda *a, **k: Response(execution))
+            # The same real-byte/output guard must support the next frozen
+            # cohort, rather than merely rendering a new version label.
+            plan.update(kagglePreviousVersion=30, kaggleVersion=31,
+                        notebookPreviousVersion=14, notebookVersion=15,
+                        sourceCommit='c' * 40, hfRevision='d' * 40)
+            provenance = json.dumps({'sourceCommit': plan['sourceCommit']}).encode()
+            frozen['website']['release-provenance.json'] = m.digest(provenance)
+            frozen['hf-stage']['release-provenance.json'] = m.digest(provenance)
+            frozen['kaggle']['starter.ipynb'] = m.zip_inventory(zip_bytes.getvalue())[0]['starter.ipynb']
+            notebook['metadata']['currentVersionNumber'] = 15
+            execution.update(source_commit=plan['sourceCommit'], upstream_revision=plan['hfRevision'], kaggle_version=31)
+            seal_controls(folder, plan, frozen)
+            def next_output(*args, **kwargs):
+                self.assertEqual(kwargs['json']['versionNumber'], 15)
+                return Response(execution)
+            self.assertEqual(m.guard_live_cohort(folder, read=read, post=next_output)['status'], 'PASS')
 
 
 if __name__ == '__main__':

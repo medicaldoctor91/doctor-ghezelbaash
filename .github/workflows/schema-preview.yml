@@ -29,6 +29,7 @@ jobs:
           [[ "$REVIEWED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
           test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
           test "$(git rev-parse HEAD)" = "$REVIEWED_COMMIT"
+          python tests/schema-preview-guard.test.py
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Record the fixed production baseline and disabled Git deployments
