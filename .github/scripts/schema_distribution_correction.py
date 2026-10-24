@@ -206,14 +206,15 @@ def preflight(seed, work):
                         publicationScope=['website', 'hf', 'kaggle', 'notebook', 'zenodo_dataset'])
         dump(hf / name, document)
     import yaml
-    citation = yaml.safe_load((hf / 'CITATION.cff').read_text())
-    citation['message'] = ('Cite platform revision and website source ' + SOURCE +
-        '; DOI ' + DOI + ' preserves the original scientific source ' + ORIGINAL +
-        ' with minor technical delivery corrections documented in its archive provenance.')
-    for item in citation.get('references', []):
-        if item.get('doi') == DOI:
-            item['title'] = 'Zenodo Dataset with documented same-DOI technical delivery corrections'
-    (hf / 'CITATION.cff').write_text(yaml.safe_dump(citation, allow_unicode=True, sort_keys=False))
+    if (hf / 'CITATION.cff').is_file():
+        citation = yaml.safe_load((hf / 'CITATION.cff').read_text())
+        citation['message'] = ('Cite platform revision and website source ' + SOURCE +
+            '; DOI ' + DOI + ' preserves the original scientific source ' + ORIGINAL +
+            ' with minor technical delivery corrections documented in its archive provenance.')
+        for item in citation.get('references', []):
+            if item.get('doi') == DOI:
+                item['title'] = 'Zenodo Dataset with documented same-DOI technical delivery corrections'
+        (hf / 'CITATION.cff').write_text(yaml.safe_dump(citation, allow_unicode=True, sort_keys=False))
     seal_hf(hf)
     # A prose/receipt correction cannot silently change the actual scientific data.
     protected = [name for name in gates.inventory(hf) if name not in {
