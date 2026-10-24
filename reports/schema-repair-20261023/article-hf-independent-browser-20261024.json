@@ -1,0 +1,13 @@
+{
+  "observer": "Cloudflare managed Chromium, ordinary anonymous navigation; no scripts or header changes",
+  "target": "https://datasets-server.huggingface.co/search?dataset=doctor-ghezelbaash%2Fdr-saeid-ghezelbaash-entity-data&config=entity_facts&split=train&query=Patient&offset=0&length=2",
+  "apiSuccess": true,
+  "apiStatus": 200,
+  "result": "<html><head><meta name=\"color-scheme\" content=\"light dark\"><meta charset=\"utf-8\"></head><body><pre>{\"error\":\"Authentication check on the Hugging Face Hub failed or timed out. Please try again later, it's a temporary internal issue.\"}</pre><div class=\"json-formatter-container\"></div></body></html>",
+  "targetServiceOutcome": {
+    "error": "Authentication check on the Hugging Face Hub failed or timed out. Please try again later, it's a temporary internal issue."
+  },
+  "apiStatusMeaning": "Cloudflare Browser Rendering request status; not the target page HTTP status",
+  "targetHTTPStatus": "Not exposed by content endpoint",
+  "status": "SERVICE_ERROR_CONFIRMED_BY_INDEPENDENT_BROWSER"
+}

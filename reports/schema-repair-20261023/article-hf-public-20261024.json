@@ -1,0 +1,1955 @@
+{
+  "scope": "Independent public exact HF files, complete converted data and primary viewer verified; search/filter service unavailable",
+  "allPublicFiles": {
+    "startedUTC": "2026-10-24T14:55:03Z",
+    "revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+    "files": [
+      {
+        "file": ".gitattributes",
+        "HTTP": 200,
+        "bytes": 4091,
+        "sha256": "2b8c93489fa509151d234d21591596f705358e79f075a983e7ac9a47b640bb54"
+      },
+      {
+        "file": ".well-known/security.txt",
+        "HTTP": 200,
+        "bytes": 159,
+        "sha256": "047e084ce249c2bf64c414257ad8a4c74c50dda711107819244323d2c6f34d84"
+      },
+      {
+        "file": "2d0a99837e327f6744f9184ec6d2877f.txt",
+        "HTTP": 200,
+        "bytes": 33,
+        "sha256": "bb4bf5365824b3261872e3e4fc9f1f4af4a83345aa647323347a7e22d5e59767"
+      },
+      {
+        "file": "404.html",
+        "HTTP": 200,
+        "bytes": 2233,
+        "sha256": "2e00f55f4ec24014f7d3b93bddd4b523ebf9bd82e34320ff1d6def5dbe663387"
+      },
+      {
+        "file": "README.md",
+        "HTTP": 200,
+        "bytes": 18505,
+        "sha256": "7a3795b4000c22b2632fa871f175d5469d46365b9aa9ab233fe484f35675188c"
+      },
+      {
+        "file": "_headers",
+        "HTTP": 200,
+        "bytes": 24736,
+        "sha256": "d03a20896594157813f0b3955eb2d2d7b9f1f7e5a531ccbae97fc42ccb34d70b"
+      },
+      {
+        "file": "_redirects",
+        "HTTP": 200,
+        "bytes": 69195,
+        "sha256": "39afc46201c0b2cb36801d8ed80825f9f72306010eddfce1deb8473a0f9070ce"
+      },
+      {
+        "file": "_routes.json",
+        "HTTP": 200,
+        "bytes": 649,
+        "sha256": "8da1ef5b9c4b920a36af7c87f26c4c7aa4dfc9b07e63cb0db8bd80aae70962fa"
+      },
+      {
+        "file": "_worker.js",
+        "HTTP": 200,
+        "bytes": 7344,
+        "sha256": "5670fed4f82e9b45367c4f3b3c0c3b0b262392d555e32a894e759b9cd60a01bb"
+      },
+      {
+        "file": "acne-pigmentation-and-scars.html",
+        "HTTP": 200,
+        "bytes": 109795,
+        "sha256": "f9d07150148443c812825651d37f01d3f64f81ef73d4d69fbe381290c39d51c6"
+      },
+      {
+        "file": "acne-scar-resurfacing-microneedling-fractional-laser-and-peeling.html",
+        "HTTP": 200,
+        "bytes": 71311,
+        "sha256": "79d82d6b509f3f715d414d4b9182b9c9d9422baa9cfd0e1f752e5a15bd371234"
+      },
+      {
+        "file": "acne-scars.html",
+        "HTTP": 200,
+        "bytes": 110079,
+        "sha256": "4ae5a6139ae0aa91e1dd8d4dfb4a86e3b748da69fea9d6b2e39888cd4879b1a0"
+      },
+      {
+        "file": "active-acne.html",
+        "HTTP": 200,
+        "bytes": 81734,
+        "sha256": "7fa7540adbe5c679bbab231915e58bd20f2e306f12d6e237216e1f4d95cbf2f5"
+      },
+      {
+        "file": "aesthetic-clinical-decision-pathway.html",
+        "HTTP": 200,
+        "bytes": 89431,
+        "sha256": "56899848d9de627f0fdca4ba90774f26754a11345b22ed346e12a325100b1e37"
+      },
+      {
+        "file": "aesthetic-guide-ar-iq.html",
+        "HTTP": 200,
+        "bytes": 111737,
+        "sha256": "332a95cb4e28f074accfb875da0b2809a562a492133c88a1a6bb4ddc576dda1e"
+      },
+      {
+        "file": "aesthetic-guide-ckb-iq.html",
+        "HTTP": 200,
+        "bytes": 119546,
+        "sha256": "0cb1d5e734de45c1f641bf463abc631e5ef07c4bb66e7df034c0c51ff529405b"
+      },
+      {
+        "file": "aesthetic-guide-en.html",
+        "HTTP": 200,
+        "bytes": 99823,
+        "sha256": "06739433fe1937343640c85b5f4e2ac302a390ab5229401aa7459e205179dc41"
+      },
+      {
+        "file": "aesthetic-terminology-and-treatment-errors.html",
+        "HTTP": 200,
+        "bytes": 82292,
+        "sha256": "95ccf22f823783de86de374a584ad90a579ddeb542d8652e55385a2bd8ac41f6"
+      },
+      {
+        "file": "aesthetic-treatment-candidacy.html",
+        "HTTP": 200,
+        "bytes": 65250,
+        "sha256": "2ec97e9f3a1cf7eb6d6aa32f5e7b3649ac907709e147f5f8276ffaed7bef3a58"
+      },
+      {
+        "file": "aesthetic-treatment-comparison.html",
+        "HTTP": 200,
+        "bytes": 91364,
+        "sha256": "ca07b5582d520471a79bcdb6428c020ee6b1f2e0a6f3cf9e734741507deef2be"
+      },
+      {
+        "file": "aesthetic-treatment-failure-from-diagnostic-error.html",
+        "HTTP": 200,
+        "bytes": 96432,
+        "sha256": "e383355247059034d60f3f67cb93ea06de51f1ecefdc454bb354880b1de2f75d"
+      },
+      {
+        "file": "aesthetic-treatment-selection.html",
+        "HTTP": 200,
+        "bytes": 152187,
+        "sha256": "25e1340d12f2273c8c809ed569a16ed42f0412926025544f269769d3f2c134a7"
+      },
+      {
+        "file": "answers.txt",
+        "HTTP": 200,
+        "bytes": 278883,
+        "sha256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4"
+      },
+      {
+        "file": "apple-touch-icon.png",
+        "HTTP": 200,
+        "bytes": 18660,
+        "sha256": "71a26e240d0ecda5d5fabb647ca39da2181794953f15a26aa6feea5bf77ee650"
+      },
+      {
+        "file": "assets/guide-meta.10a740549752.json",
+        "HTTP": 200,
+        "bytes": 1809101,
+        "sha256": "10a740549752b9fb29ad22d91d686db155e616780d429278e5fb984fa3ac675a"
+      },
+      {
+        "file": "assets/guide.d9c3dc438710.json",
+        "HTTP": 200,
+        "bytes": 1936326,
+        "sha256": "d9c3dc438710f4f3b25da5ba0ef11ca919d958b70514a10b8246179a528f13b9"
+      },
+      {
+        "file": "assets/reader.63584d2612aa.js",
+        "HTTP": 200,
+        "bytes": 63048,
+        "sha256": "63584d2612aa1527301e5df1cc364129442eeee94614c76c5344157e08d4c95c"
+      },
+      {
+        "file": "assets/reader.c860ea7c6a8f.js",
+        "HTTP": 200,
+        "bytes": 63611,
+        "sha256": "c860ea7c6a8ff26f6f50142bca59dd45074282efc3d60dab9acf59799fd2d594"
+      },
+      {
+        "file": "assets/site.396fbb0b79dc.css",
+        "HTTP": 200,
+        "bytes": 48983,
+        "sha256": "396fbb0b79dc9596d501b14023297e810cf0d041eb6e83f028da6cb053c50152"
+      },
+      {
+        "file": "blepharoplasty-for-excess-eyelid-skin-and-fat.html",
+        "HTTP": 200,
+        "bytes": 68382,
+        "sha256": "cccb26d5ac22ded21cc7f8cf3f36fac04e023e90543a1b69e968c974e9f35907"
+      },
+      {
+        "file": "body-filler.html",
+        "HTTP": 200,
+        "bytes": 68585,
+        "sha256": "73151d3f49a4bdfab8fc62ad09e9fdef6db14ec789c997a4b136afc7daba629d"
+      },
+      {
+        "file": "botox-complications-longevity-and-aftercare.html",
+        "HTTP": 200,
+        "bytes": 78177,
+        "sha256": "8d8caf157d99026b686932e36e4f10d5bb9af98c73fff3ac0cdd40a8907384cf"
+      },
+      {
+        "file": "botox-contraindications-and-precautions.html",
+        "HTTP": 200,
+        "bytes": 85843,
+        "sha256": "93fccd269f87454653b90b65ff943139070ecbecd49a1a3ac52693792703daa5"
+      },
+      {
+        "file": "botox-for-jaw-neck-body-and-hyperhidrosis.html",
+        "HTTP": 200,
+        "bytes": 118115,
+        "sha256": "28cb6510d5c4598cbf3ff87b25ce675b49ead4ee2ff84e89e02407823d2de7d2"
+      },
+      {
+        "file": "botox-mechanism-indications-and-limitations.html",
+        "HTTP": 200,
+        "bytes": 80683,
+        "sha256": "4a30784907960f55b9e8086f4108ecaebba0a7578eabd24c5601f562f8c52a8b"
+      },
+      {
+        "file": "botox-pre-injection-clinical-assessment.html",
+        "HTTP": 200,
+        "bytes": 81137,
+        "sha256": "459bfbd548129d52f2f9441c0d497fc4c8e038ca226e59c5ca27285c58476623"
+      },
+      {
+        "file": "botox.html",
+        "HTTP": 200,
+        "bytes": 123046,
+        "sha256": "c78d3ef4c3d8001f490fc71d38d27961db933abe389501de630ccee47cdcda60"
+      },
+      {
+        "file": "buccal-fat-removal-facial-fullness-assessment.html",
+        "HTTP": 200,
+        "bytes": 68636,
+        "sha256": "1b299c91941b39f1db3ff78bbc4c68465873d68ae44ae60df95cab9663aae762"
+      },
+      {
+        "file": "central-lip-lift-for-long-upper-lip.html",
+        "HTTP": 200,
+        "bytes": 68517,
+        "sha256": "7b41994e3b08e7cd76fb98c32e36ab06e58762aa47b71dbc55e0cc8c0629d0b7"
+      },
+      {
+        "file": "chin-jawline-and-facial-contouring.html",
+        "HTTP": 200,
+        "bytes": 173195,
+        "sha256": "9cec5c56eb21e44e1042972b9a414b123b7b982f0990bc17d3ac56e60585c99f"
+      },
+      {
+        "file": "choosing-an-aesthetic-doctor-in-kermanshah-and-iran.html",
+        "HTTP": 200,
+        "bytes": 73660,
+        "sha256": "12e75e4cc1b25ffe5807b5d648a68775eb5122152ee7a7d802655bdc2e14c2a7"
+      },
+      {
+        "file": "clinic.vcf",
+        "HTTP": 200,
+        "bytes": 484,
+        "sha256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf"
+      },
+      {
+        "file": "clinical-passages.jsonl",
+        "HTTP": 200,
+        "bytes": 6884386,
+        "sha256": "6e4c2b65f7b70d69d639349b528194f27fe953098565d294815cf9e5a6d77781"
+      },
+      {
+        "file": "collagen-stimulation-sculptra-and-liquid-thread.html",
+        "HTTP": 200,
+        "bytes": 96067,
+        "sha256": "695a3e09fd014225f317f8f65c7b5bddc44cccafb5aa8562f6ce3334d97cff4b"
+      },
+      {
+        "file": "complications-aftercare-and-follow-up.html",
+        "HTTP": 200,
+        "bytes": 65823,
+        "sha256": "efba79a58847ea58e11f29b663e99e1121d7bbb67e72f2ab768735f72e05c08d"
+      },
+      {
+        "file": "content-digest-eligibility.json",
+        "HTTP": 200,
+        "bytes": 16520,
+        "sha256": "2e97da64f3ecce0e10aabfb234d8bffd1bd4ed718bd8edee2dbba085a796033a"
+      },
+      {
+        "file": "croissant.json",
+        "HTTP": 200,
+        "bytes": 14710,
+        "sha256": "8ba1f41650fad4f2a76a658b011cc4067a5620d0e4b1cc3634358ebaaaee7ee5"
+      },
+      {
+        "file": "current-release-matrix.json",
+        "HTTP": 200,
+        "bytes": 9218,
+        "sha256": "bbfcdb53ce269e8660996e39044adb3d7ec14178a4a7ba7a4b75db1dc88e4a40"
+      },
+      {
+        "file": "datapackage.json",
+        "HTTP": 200,
+        "bytes": 16259,
+        "sha256": "a0b32e813c6a7732ed33c8e5bbf2d6e71d854913c34f5b5f17e76e10a5f4ef56"
+      },
+      {
+        "file": "dcat.ttl",
+        "HTTP": 200,
+        "bytes": 15172,
+        "sha256": "f2af8240cc1f44efb01e0de02f17adb0f7a7edc5ec87cb6c5f8f5d0b8eb8f236"
+      },
+      {
+        "file": "diagnosis-before-aesthetic-treatment-selection.html",
+        "HTTP": 200,
+        "bytes": 86667,
+        "sha256": "78808b85b7cbf31ce7cf28975fb256a2c97b6b69441a5b8b0d5da85cd98b7173"
+      },
+      {
+        "file": "dist-sha256.json",
+        "HTTP": 200,
+        "bytes": 33742,
+        "sha256": "2cc4ced1682dbe484313c8b77f6d5469f092aa0108a42b85709cbadeed19365f"
+      },
+      {
+        "file": "doctor.vcf",
+        "HTTP": 200,
+        "bytes": 393,
+        "sha256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5"
+      },
+      {
+        "file": "doi-policy.json",
+        "HTTP": 200,
+        "bytes": 5444,
+        "sha256": "7ae3ff76786a877cbbb45155bf3f66405cc3ff80703872fd7ff34bd3a49880e8"
+      },
+      {
+        "file": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah.html",
+        "HTTP": 200,
+        "bytes": 83040,
+        "sha256": "3b0fba5ac177814ea24676839c9bb07caa3645ec146d1f15a00c7095a95d355e"
+      },
+      {
+        "file": "enrichment/instruction_examples_fa_market_positioning.csv",
+        "HTTP": 200,
+        "bytes": 340043,
+        "sha256": "2791d935640702021dbeff4664890c674204200fb84954828193659b3f01ac8c"
+      },
+      {
+        "file": "enrichment/instruction_examples_fa_market_positioning.jsonl",
+        "HTTP": 200,
+        "bytes": 361646,
+        "sha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4"
+      },
+      {
+        "file": "enrichment/market-positioning-evidence.json",
+        "HTTP": 200,
+        "bytes": 8895,
+        "sha256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c"
+      },
+      {
+        "file": "enrichment/positioning-strategy.json",
+        "HTTP": 200,
+        "bytes": 27845,
+        "sha256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9"
+      },
+      {
+        "file": "entity-facts.csv",
+        "HTTP": 200,
+        "bytes": 5328500,
+        "sha256": "e10e9299d6bf7364a7eb900bbb496504beef20a0e3f18381ad1c26290a0e102f"
+      },
+      {
+        "file": "entity-facts.csv-metadata.json",
+        "HTTP": 200,
+        "bytes": 3264,
+        "sha256": "a0108da3467b3fb61b219388d6359d3a7fc9ddec537d14bede573fa23358a6f1"
+      },
+      {
+        "file": "evidence-snapshot.json",
+        "HTTP": 200,
+        "bytes": 183213,
+        "sha256": "b8623d90a6a08b67cc3eaaaabff7ebadbdf2900336f0e7061d2f909fe131fbc6"
+      },
+      {
+        "file": "facial-aging-differential-diagnosis.html",
+        "HTTP": 200,
+        "bytes": 83562,
+        "sha256": "4ce6599a87a9f47da10c4796527a337f2320cadf4dc8b28b0a38de37dade38d8"
+      },
+      {
+        "file": "facial-filler-by-anatomic-area-and-cause.html",
+        "HTTP": 200,
+        "bytes": 132759,
+        "sha256": "18f63b825217ca20d2eabb46f78fdcb45bfc95797e5ecffe1c54ac766147aab5"
+      },
+      {
+        "file": "fact-map.json",
+        "HTTP": 200,
+        "bytes": 278519,
+        "sha256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15"
+      },
+      {
+        "file": "favicon.png",
+        "HTTP": 200,
+        "bytes": 9235,
+        "sha256": "3b55e07d34deace0d927754c8c9e7a15956bd97fbb4415290062f4523b116143"
+      },
+      {
+        "file": "favicon.svg",
+        "HTTP": 200,
+        "bytes": 4547,
+        "sha256": "886e43150d2b3a0147bf1c96b75fb309f1b27a908115efdaa12f48e0a90ceb01"
+      },
+      {
+        "file": "filler-complications-correction-and-aftercare.html",
+        "HTTP": 200,
+        "bytes": 130832,
+        "sha256": "616f0b40d26573a8f0170bd5c520c2681158a083dc1354a77f5e1ce648301767"
+      },
+      {
+        "file": "filler-material-selection-and-tissue-behavior.html",
+        "HTTP": 200,
+        "bytes": 87000,
+        "sha256": "d11dab642036521648e7e1cfab05456a652b1ad809e406f238ce06d7a18728d0"
+      },
+      {
+        "file": "filler-treatment-exclusion-criteria.html",
+        "HTTP": 200,
+        "bytes": 79678,
+        "sha256": "c896864e0d1251654a8a9863974926bbd26324b76fb5ab7484740a9f0d8d4ce0"
+      },
+      {
+        "file": "filler-volume-shadow-and-proportion-assessment.html",
+        "HTTP": 200,
+        "bytes": 86442,
+        "sha256": "54d5b3b90f43c19925e69b2fa74f4ec9a7a8be5cef7cc1cc661edb1a152b77a8"
+      },
+      {
+        "file": "filler.html",
+        "HTTP": 200,
+        "bytes": 152212,
+        "sha256": "39b8f166faf19e4d8da4c50c43b3c4eff3c96af223068837d190cc895acb779b"
+      },
+      {
+        "file": "fonts/vazirmatn-nl-wght.woff2",
+        "HTTP": 200,
+        "bytes": 47972,
+        "sha256": "cdef5578ea583313cbea060a14aa107955a99717a861971b860cb564dfe1bbf5"
+      },
+      {
+        "file": "general-aesthetic-treatment-risks-and-setting-boundaries.html",
+        "HTTP": 200,
+        "bytes": 75993,
+        "sha256": "b0901dabe3025d34f26b5f21607cae6de8ff767fce91b8593566128ae032830e"
+      },
+      {
+        "file": "general-follow-up-and-aftercare.html",
+        "HTTP": 200,
+        "bytes": 76122,
+        "sha256": "263d4b3f1cba358bfcf90d6e841bb74276f6e8ff9a0217cef6d23e1592bac351"
+      },
+      {
+        "file": "graph.jsonld",
+        "HTTP": 200,
+        "bytes": 1658030,
+        "sha256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7"
+      },
+      {
+        "file": "graph.ttl",
+        "HTTP": 200,
+        "bytes": 3749618,
+        "sha256": "f868dcaaccc9410c1d7576f841d87f248809c50f479fa843681bde1a8de8aceb"
+      },
+      {
+        "file": "hair-loss-diagnostic-assessment-before-prp-and-mesotherapy.html",
+        "HTTP": 200,
+        "bytes": 97940,
+        "sha256": "f109c256fd2d1040ffd506354d77bb68d44863d602dd2f2ddff7c0a29d01d01a"
+      },
+      {
+        "file": "hair-loss.html",
+        "HTTP": 200,
+        "bytes": 97794,
+        "sha256": "42cd38033d2903aa40f15e8cc165467ca6dc4dec8ef5dce1857d1d9ab7eb5710"
+      },
+      {
+        "file": "hand-rejuvenation.html",
+        "HTTP": 200,
+        "bytes": 66728,
+        "sha256": "1330b020f9bb5a6f9bfd6a08123fa2b490ac2071fbc0ddaa32a4c9b76b30c14d"
+      },
+      {
+        "file": "historical-patient-origin-summary.html",
+        "HTTP": 200,
+        "bytes": 63145,
+        "sha256": "241e5fa2e57b36a86ceb500e07a743522cb8a16c0f5c270e621a4bd97dcfbbf2"
+      },
+      {
+        "file": "hyaluronidase-filler-dissolution-limitations.html",
+        "HTTP": 200,
+        "bytes": 69223,
+        "sha256": "6be8675933cac3adc27ba64ae95c9fdf6b0f4919251c709752d76639647cc321"
+      },
+      {
+        "file": "index.html",
+        "HTTP": 200,
+        "bytes": 3647779,
+        "sha256": "4f8cb1cc228a620110bc45fb01decf7446c0e8f06dba80878e0ceb204bda863b"
+      },
+      {
+        "file": "index.md",
+        "HTTP": 200,
+        "bytes": 1679921,
+        "sha256": "ed7a9c1d2c9e49ca1a7ce832e618653c4183090761b6f62d6bb9ec84c7220da3"
+      },
+      {
+        "file": "integrity-manifest.json",
+        "HTTP": 200,
+        "bytes": 37789,
+        "sha256": "ba3ecd4e1cefe5d405830c37aa73250b5d87136560c67fa1e131c55f031263de"
+      },
+      {
+        "file": "jalupro-and-profhilo.html",
+        "HTTP": 200,
+        "bytes": 132177,
+        "sha256": "7096d6703f0de194af307374fb5399a927fc152441636321158dc9478b7327b7"
+      },
+      {
+        "file": "knowledge.xml",
+        "HTTP": 200,
+        "bytes": 41524,
+        "sha256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf"
+      },
+      {
+        "file": "linkset.json",
+        "HTTP": 200,
+        "bytes": 3554,
+        "sha256": "d35d190cc929a3a1cf4ab2dfc4df6d50ca1d5170b9cc69ec9a66de4cc7516d95"
+      },
+      {
+        "file": "llms-full.txt",
+        "HTTP": 200,
+        "bytes": 1630360,
+        "sha256": "eaf7c67ef64dee45a6f5c11528801ccc38bae6e8428f9b7976eabca02be16399"
+      },
+      {
+        "file": "llms.txt",
+        "HTTP": 200,
+        "bytes": 18959,
+        "sha256": "68e9cf2e8ea60f27994f4bb4d58b1fbf74844a93d9032a3b5e54ad902197f1e1"
+      },
+      {
+        "file": "lower-face-proportion-and-contouring.html",
+        "HTTP": 200,
+        "bytes": 110130,
+        "sha256": "222851420d2c0b7187180b065d5738f010d742bcc1e9981c7ad46af01bacad15"
+      },
+      {
+        "file": "media/brand/doctor-ghezelbaash-symbol-192.png",
+        "HTTP": 200,
+        "bytes": 9235,
+        "sha256": "3b55e07d34deace0d927754c8c9e7a15956bd97fbb4415290062f4523b116143"
+      },
+      {
+        "file": "media/brand/doctor-ghezelbaash-symbol-512.png",
+        "HTTP": 200,
+        "bytes": 14641,
+        "sha256": "42612d6184ed983967c1d172341870b1b035c1e4194f0c5d9fca159f2707fcf1"
+      },
+      {
+        "file": "media/brand/doctor-ghezelbaash-symbol-maskable-512.png",
+        "HTTP": 200,
+        "bytes": 24259,
+        "sha256": "0859af2e0d9b8f917faa83a6585f5aed8d5743a693cd94d3d4b6cab532995ad9"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.webp",
+        "HTTP": 200,
+        "bytes": 58010,
+        "sha256": "1c8cf47170215f6bfeb1701be58b157264fa23f303f2915dbf5d6502e43f7f70"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.webp",
+        "HTTP": 200,
+        "bytes": 66728,
+        "sha256": "3bf7a3083ee9fb330b4e1000de634a81aa23ebb03dc500c02b724d6d7fff6c40"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.webp",
+        "HTTP": 200,
+        "bytes": 59894,
+        "sha256": "a73e2b1cde35b74dc0b64da02cf804367934073833b0d08fc20fb577ce4ddadc"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.avif",
+        "HTTP": 200,
+        "bytes": 22167,
+        "sha256": "c856b9f10cd83666f7f65e4edd068d317d59f344c7d275ddc3bf6b4fb9922916"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.webp",
+        "HTTP": 200,
+        "bytes": 44618,
+        "sha256": "c26f7db4982a3807db3114ee755b1889db8abb32ccfe04c260d7b6b4db0750da"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.avif",
+        "HTTP": 200,
+        "bytes": 29279,
+        "sha256": "a71d05e8a072024e074e2f3a724acfd867d4ea04911c9b4c1d0da17e395aea23"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.webp",
+        "HTTP": 200,
+        "bytes": 67354,
+        "sha256": "63d4010576cb6f067d7724200c45b02967adde7321d233c8562bb173171a8859"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.webp",
+        "HTTP": 200,
+        "bytes": 56254,
+        "sha256": "1ee123845ab5d2702a1ceecc04cc50423602fcc9552daba09552a6fe1cba7ee4"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.webp",
+        "HTTP": 200,
+        "bytes": 80050,
+        "sha256": "04ad33d2000c1ee19baba80eec14ae70cc87a29f84746fa223cbe3a1595e2307"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.webp",
+        "HTTP": 200,
+        "bytes": 63734,
+        "sha256": "6d8a4a4189af439fb8444212e211654f76e81b7d6e6a903199f09bd08dd0e855"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.avif",
+        "HTTP": 200,
+        "bytes": 29549,
+        "sha256": "600831159be9b3c55ebffaab0b16ed67792f6f00e95c0d5f6e6d0210bb23a961"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.webp",
+        "HTTP": 200,
+        "bytes": 73796,
+        "sha256": "57c8ffe2f77b66051d9bb65c7b83f64d3fc3c1ae9dcab61345c2b2c16043a500"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.avif",
+        "HTTP": 200,
+        "bytes": 37538,
+        "sha256": "c839d5928f375761982f807bd1644c8618ba9922b9a46f530e02ea5446a8b2e9"
+      },
+      {
+        "file": "media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.webp",
+        "HTTP": 200,
+        "bytes": 104268,
+        "sha256": "b50f67c70e14d775a229129cc49ecbb0289ba5f169a586e07a9ec6d7cab477a4"
+      },
+      {
+        "file": "media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.jpg",
+        "HTTP": 200,
+        "bytes": 109501,
+        "sha256": "91df19269f18e70d78b4b7a6914367a57cbd33e457037ab4e4918184558fcd96"
+      },
+      {
+        "file": "media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.jpg",
+        "HTTP": 200,
+        "bytes": 72882,
+        "sha256": "a3f28a24eeb68972aa91aff0eca616834c5aa6842b2dfe910c664121b12912b7"
+      },
+      {
+        "file": "media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.jpg",
+        "HTTP": 200,
+        "bytes": 86196,
+        "sha256": "f3fd3a31e46c9a7573aba3eebb7877a10de8590cb77631bf87c5b8751fa5eefa"
+      },
+      {
+        "file": "media/images/physician/derived/saeed-ghezelbaash-social-1200x630.jpg",
+        "HTTP": 200,
+        "bytes": 69394,
+        "sha256": "f2de734ff4f62759b38bb05f664de003da0e233fce8e51d3a746b34fdca6833a"
+      },
+      {
+        "file": "media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg",
+        "HTTP": 200,
+        "bytes": 348781,
+        "sha256": "d6c3fad100ca817027800c6ff881c6eb0b168b827b3a2e66c354c39f888308bd"
+      },
+      {
+        "file": "media/images/physician/master/saeed-ghezelbaash-in-clinical-office.webp",
+        "HTTP": 200,
+        "bytes": 552992,
+        "sha256": "61fb9216411e398ca6568c83b4c7da46fdfca2329ad48710e024095aabf7261c"
+      },
+      {
+        "file": "media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg",
+        "HTTP": 200,
+        "bytes": 287381,
+        "sha256": "91ead39aa0d26022f2f64a86ca6c6876927ff83f550603b670e5151cd68a3f68"
+      },
+      {
+        "file": "media/images/physician/master/saeed-ghezelbaash-physician-portrait.webp",
+        "HTTP": 200,
+        "bytes": 434898,
+        "sha256": "4922bba29be36b7bbd80bc8db65e23eb1a2625a03974f5411a810aa6c05e648d"
+      },
+      {
+        "file": "media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg",
+        "HTTP": 200,
+        "bytes": 378109,
+        "sha256": "0ca2cf266ccbccbc1aa3a7deb276dd25b132e2246efc285842b1a0cab23aa9f5"
+      },
+      {
+        "file": "media/images/physician/master/saeed-ghezelbaash-with-clinical-team.webp",
+        "HTTP": 200,
+        "bytes": 639888,
+        "sha256": "ecfe2a621fdecb13342a456504c741a742f6c6992203c12e797495afd441d93f"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-clinical-examination-1600.avif",
+        "HTTP": 200,
+        "bytes": 25911,
+        "sha256": "b224c91d5cba2a530f01c9893cba1faad82e71360ff06dc2207c6a66dc86c0c2"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp",
+        "HTTP": 200,
+        "bytes": 66082,
+        "sha256": "e31a4e7db538da15864cba87a4eaf248b97770ac81b30a5bb596a67188aed04d"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-clinical-examination-960.avif",
+        "HTTP": 200,
+        "bytes": 20135,
+        "sha256": "725a42827965d82cf7c15b65168caf36222f48e41ac00caff124a7201cc37b0b"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-clinical-examination-960.webp",
+        "HTTP": 200,
+        "bytes": 39160,
+        "sha256": "ee71f67f4fa99e85c648f6042ff74afa4b22865a3aedc84004ac76863254edcd"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.avif",
+        "HTTP": 200,
+        "bytes": 16989,
+        "sha256": "0d267f1331409e751e739a9f5fe49b71f9edebe8ffe49db5282c39141c81d7f3"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp",
+        "HTTP": 200,
+        "bytes": 28608,
+        "sha256": "3ef75ad1b84fc72c6bc2e5af26970059aef84a94ca9fba50b4beb569cc8ecd87"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-1600.avif",
+        "HTTP": 200,
+        "bytes": 21578,
+        "sha256": "75fc75537a3b9589f39bc520844e457b5571be385c67b05c2bb020533cd9048a"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-1600.webp",
+        "HTTP": 200,
+        "bytes": 52066,
+        "sha256": "4a98e8621f1db1a2d241bafef7a5b3208107fb20941ed844d0ac12f9fd666d02"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-768.avif",
+        "HTTP": 200,
+        "bytes": 9372,
+        "sha256": "e9ff8624723da5db5cc3e6c403373ec8d87f78e961f73f86244964e516e56323"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-768.webp",
+        "HTTP": 200,
+        "bytes": 18522,
+        "sha256": "d11aad26e8b16ea8e6eda2b890417ea77d1edbd6d007619790f24fe535ccce5b"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-960.avif",
+        "HTTP": 200,
+        "bytes": 16799,
+        "sha256": "abde9c5ed375941f4123c9cf9f03b4870d51dd0b8716f177daf463385b7656d4"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-960.webp",
+        "HTTP": 200,
+        "bytes": 31304,
+        "sha256": "637a6fbe30a3921e903e80a3ba6606153c7d870d9550e78509aa1e701439258d"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp",
+        "HTTP": 200,
+        "bytes": 22548,
+        "sha256": "5c350c081420120f06737bfac53fe353933f6002c39dba7256c962972c7f3325"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-with-clinic-team-1600.avif",
+        "HTTP": 200,
+        "bytes": 28732,
+        "sha256": "7e730a155505c0595bea9cf0a1be5a1c36f8201d794a46a741973a3470ab4700"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp",
+        "HTTP": 200,
+        "bytes": 73776,
+        "sha256": "307433442210a818045281310ba32a3b616380e073ab8f6c834236d6de1ec535"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-with-clinic-team-960.avif",
+        "HTTP": 200,
+        "bytes": 21521,
+        "sha256": "390e8740882a45f85f6c6611e9bc783f75f86a761a8f43e66c60b783a224733b"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp",
+        "HTTP": 200,
+        "bytes": 44108,
+        "sha256": "9e99a17fdc43444c4428506e53039362fabf354281c41a668f4ca5db2c4599b5"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.avif",
+        "HTTP": 200,
+        "bytes": 18139,
+        "sha256": "829fe780aff13de71221140fe8034fb6eeb9eb3231254aa8ddcf78ba288632de"
+      },
+      {
+        "file": "media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp",
+        "HTTP": 200,
+        "bytes": 30648,
+        "sha256": "85e2f8c7e5d66eb21b3eba4c0959e3be6624da753a8f4b35f12eb76d63384b88"
+      },
+      {
+        "file": "media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.webp",
+        "HTTP": 200,
+        "bytes": 91618,
+        "sha256": "1d1c99aa1bf129c05d8b3371bd3dabbb7ef53854514de774bf86207be553899d"
+      },
+      {
+        "file": "media/posters/education/saeed-ghezelbash-subcision-technique.webp",
+        "HTTP": 200,
+        "bytes": 75996,
+        "sha256": "9cb6520c1ca29ea4d7fcb94a8e903b32a4f0114fae79f7936dc8170a3ada786f"
+      },
+      {
+        "file": "media/posters/education/saeed-ghezelbash-thread-lift-workshop.webp",
+        "HTTP": 200,
+        "bytes": 109594,
+        "sha256": "eff4e3b822ff2ae11027d39df5c110c22b2a075c5819ad174415b32d07fd8c08"
+      },
+      {
+        "file": "media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.webp",
+        "HTTP": 200,
+        "bytes": 37726,
+        "sha256": "ac9353dcde1372c7076f23a666c6d15090e12d0589afec2c514574b94540f924"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt",
+        "HTTP": 200,
+        "bytes": 1621,
+        "sha256": "63cad84cf10cf325c3de047a30bff5d11c918f911914dfb8690514ef81d35939"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.chapters.fa.vtt",
+        "HTTP": 200,
+        "bytes": 445,
+        "sha256": "fadc4fdb5db12bdb5bcd0c018c5efb09e3c54716ab47c73a87f4701c380ea679"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.subtitles.en.vtt",
+        "HTTP": 200,
+        "bytes": 1245,
+        "sha256": "9b668d608c56dd38d624c6c7bac65bc795b5114e16a2d58965d726c700726695"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt",
+        "HTTP": 200,
+        "bytes": 1411,
+        "sha256": "7f2640c97d71252d0a02b793f1c5891c327bfdf5448701beaf6d9e90495f5bbf"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-subcision-technique.chapters.fa.vtt",
+        "HTTP": 200,
+        "bytes": 337,
+        "sha256": "b3457c65f474315550c48c9f0ec9c4f2ca1610d4aff345bf0b13b76c31bfa22b"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-subcision-technique.subtitles.en.vtt",
+        "HTTP": 200,
+        "bytes": 1169,
+        "sha256": "4de2683558d6a739672f2f9c2c8810d4d393f9396c36c987f7c6ab262c95b457"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.captions.fa.vtt",
+        "HTTP": 200,
+        "bytes": 1349,
+        "sha256": "ac0609c9ba860a1adc3c10c1a357b566c4415ce00a6abdf941679e0a12277faf"
+      },
+      {
+        "file": "media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.vtt",
+        "HTTP": 200,
+        "bytes": 347,
+        "sha256": "155ce514ff8d9e4914db79c401c3ac612d4ad9424dfc61dcac2ceffca0014c92"
+      },
+      {
+        "file": "media/video-tracks/testimonials/saeed-ghezelbash-kurdish-patient-review.chapters.fa.vtt",
+        "HTTP": 200,
+        "bytes": 237,
+        "sha256": "4c2c5187b3935d8c1d3025d11b1e7f2f7ad55b9c5a8cd688711edb531b006498"
+      },
+      {
+        "file": "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4",
+        "HTTP": 200,
+        "bytes": 3812039,
+        "sha256": "bdadae8d26cae37e8330352c6bc87d763b7f48cf4d62d008d586e8216ff255f1"
+      },
+      {
+        "file": "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm",
+        "HTTP": 200,
+        "bytes": 1586652,
+        "sha256": "e2c3b1488f57af632adb0ee71abb374a7bdeb5f2c014e2a49900ee36a2bcefa0"
+      },
+      {
+        "file": "media/videos/education/saeed-ghezelbash-subcision-technique.mp4",
+        "HTTP": 200,
+        "bytes": 3191562,
+        "sha256": "00b6767efbbae93f02aefc3f7a7c5cfa2818934a9d36eea174b3dd55af5d3a2d"
+      },
+      {
+        "file": "media/videos/education/saeed-ghezelbash-subcision-technique.webm",
+        "HTTP": 200,
+        "bytes": 1324957,
+        "sha256": "5a1a267156fdae78db72aacd5f49701189e523a1889d52f074cb7c57dfd7a186"
+      },
+      {
+        "file": "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4",
+        "HTTP": 200,
+        "bytes": 4600265,
+        "sha256": "2c89afd43b73d169b3df972196d75a1278dabfb596a21ad3b3222663acb12791"
+      },
+      {
+        "file": "media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm",
+        "HTTP": 200,
+        "bytes": 2062340,
+        "sha256": "c4849f04d15ea0d85158501fd51b298dae7d8774564476f202845f49cb871ede"
+      },
+      {
+        "file": "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4",
+        "HTTP": 200,
+        "bytes": 1673689,
+        "sha256": "22a180232482bc1cd59b4dfdd0412b2d9e77eef0aaebc1ecda28127a34e5dc9a"
+      },
+      {
+        "file": "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm",
+        "HTTP": 200,
+        "bytes": 666680,
+        "sha256": "d6b0dfc0737e756d0cb75a0afa7c717bd22c1ae0c8136b299d6581afde6ef539"
+      },
+      {
+        "file": "media-license.html",
+        "HTTP": 200,
+        "bytes": 4616,
+        "sha256": "415dfc5b5a16b74b210ea5a4181e1502f047c43ee16bc86ed9956151faf389a7"
+      },
+      {
+        "file": "mesobotox-and-borderline-treatments.html",
+        "HTTP": 200,
+        "bytes": 79161,
+        "sha256": "aabda8fd51b92485ce71dec2427451bc445ce691a97bc7f55e5f0d54e2aca6e7"
+      },
+      {
+        "file": "out-of-town-aesthetic-patients-iran.html",
+        "HTTP": 200,
+        "bytes": 68305,
+        "sha256": "007921dde1e5df84fc37e467efa76091bfab9fe15087b349c3898817a8aea9d6"
+      },
+      {
+        "file": "perioral-and-lip-botox.html",
+        "HTTP": 200,
+        "bytes": 133965,
+        "sha256": "4e5db5b4608c72d5df7cf96e86eeebbe519f9ceb36b88723485d8d9d9ca89d0a"
+      },
+      {
+        "file": "physician-expertise.md",
+        "HTTP": 200,
+        "bytes": 6796,
+        "sha256": "effcdefdc36d706697384b20b514fc7c98cc8739c87944d441ab8747dd531329"
+      },
+      {
+        "file": "provenance.jsonld",
+        "HTTP": 200,
+        "bytes": 1197247,
+        "sha256": "66770058070c98e988f3673454f8a494d3e0575bb4b5c20aa283e6b4c49294e8"
+      },
+      {
+        "file": "prp-for-skin-and-hair.html",
+        "HTTP": 200,
+        "bytes": 73243,
+        "sha256": "a0ed4b97dc0f7219e634c51c09f6af4907550b3fe77382425d4151f194a1d733"
+      },
+      {
+        "file": "query-matrix.json-seq",
+        "HTTP": 200,
+        "bytes": 994936,
+        "sha256": "6d510503c15f1099ebdba10c241d9d2946673b05d2b083ef4daa73ab5c1ef043"
+      },
+      {
+        "file": "query-matrix.jsonl",
+        "HTTP": 200,
+        "bytes": 994060,
+        "sha256": "95d77cf937300911574e187495cc9a4ec62040cd99978c7f0800e579fa27057b"
+      },
+      {
+        "file": "release-attestation.json",
+        "HTTP": 200,
+        "bytes": 8682,
+        "sha256": "f4e5b028cde670a452711216f0dd08c1cd4dc8b63472b1d41abd1ffdcec9dbda"
+      },
+      {
+        "file": "release-provenance.json",
+        "HTTP": 200,
+        "bytes": 7339,
+        "sha256": "66a4f4df8653225f899d8f8a70cbba6f7602fa5f7003a776442b8755546ad41c"
+      },
+      {
+        "file": "robots.txt",
+        "HTTP": 200,
+        "bytes": 156,
+        "sha256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda"
+      },
+      {
+        "file": "saeed-ghezelbash-clinic-contact-and-location.html",
+        "HTTP": 200,
+        "bytes": 62700,
+        "sha256": "724179c6ae6a347760c0c5423512e247a60ce4c6e83ceb9cb67eecc2fd0ce9c0"
+      },
+      {
+        "file": "saeed-ghezelbash-diagnostic-philosophy.html",
+        "HTTP": 200,
+        "bytes": 89141,
+        "sha256": "fbe2804bc29a7186d7f3459c7aca357b572a23746216152c30ec8f1148a36f2d"
+      },
+      {
+        "file": "saeed-ghezelbash-research-education-and-clinical-decisions.html",
+        "HTTP": 200,
+        "bytes": 82777,
+        "sha256": "8a621125694217f8b294abd6f43477fd3746e1f0f177ec8e1b9133fc0aa79e60"
+      },
+      {
+        "file": "sbom.cdx.json",
+        "HTTP": 200,
+        "bytes": 321490,
+        "sha256": "1ebba2a458c97b11128a5f5e751bbabea790e82a6914a0db992b213e775bceeb"
+      },
+      {
+        "file": "shapes.ttl",
+        "HTTP": 200,
+        "bytes": 108912,
+        "sha256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51"
+      },
+      {
+        "file": "site.webmanifest",
+        "HTTP": 200,
+        "bytes": 2082,
+        "sha256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05"
+      },
+      {
+        "file": "sitemap.xml",
+        "HTTP": 200,
+        "bytes": 12996,
+        "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd"
+      },
+      {
+        "file": "skin-pigmentation.html",
+        "HTTP": 200,
+        "bytes": 98207,
+        "sha256": "b99524a0f5fc256391f43f806b43422d17fb1d5e3aff5760d627cb5e99185524"
+      },
+      {
+        "file": "skin-rejuvenation.html",
+        "HTTP": 200,
+        "bytes": 86879,
+        "sha256": "70abb9eb47499ca5f230fe87be8a66e64822df532196874c921f4bdc676ff99c"
+      },
+      {
+        "file": "skin-treatment-and-fat-grafting-aftercare.html",
+        "HTTP": 200,
+        "bytes": 91754,
+        "sha256": "5737155123b36185580962efb3ffc524db912a73d7924062c1fe2daf0dba84ba"
+      },
+      {
+        "file": "subcision-for-tethered-acne-scars.html",
+        "HTTP": 200,
+        "bytes": 75822,
+        "sha256": "a7575696e14be0150b4ac425a3139cbe10fe2934b9f5093e173923dbc2e5acc2"
+      },
+      {
+        "file": "submental-fat-and-neck-contour.html",
+        "HTTP": 200,
+        "bytes": 94955,
+        "sha256": "4941a4ce446facb7cc8814e8af4595cf7fa8e596c8bd9130e6ae2166ae1943ac"
+      },
+      {
+        "file": "submental-liposuction-for-fat-dominant-fullness.html",
+        "HTTP": 200,
+        "bytes": 85226,
+        "sha256": "db40f7c208f274ed290ab4ea66a8c0dc0040116aa7c8035b306eab3f230ebed8"
+      },
+      {
+        "file": "therapeutic-botox-indications.html",
+        "HTTP": 200,
+        "bytes": 117676,
+        "sha256": "c6a549b6a3f6b8a88942420d63146d00bae63fc62e40d1e3e4de116677626630"
+      },
+      {
+        "file": "thread-lift-by-anatomic-area.html",
+        "HTTP": 200,
+        "bytes": 119531,
+        "sha256": "8e9bd12802cffc43a3064d591ac40a3aa9e97b25d7b4f99bc4577c4df1445532"
+      },
+      {
+        "file": "thread-lift-complications-preparation-and-aftercare.html",
+        "HTTP": 200,
+        "bytes": 95987,
+        "sha256": "d3c5a136b02afd1ee47f4c6d3e84230c92408a80746a86c0e8cdf7965e326271"
+      },
+      {
+        "file": "thread-lift-contraindications.html",
+        "HTTP": 200,
+        "bytes": 132650,
+        "sha256": "ce752538cbdee0ace87ffa5f3dea892d322f87a301912f5bc80b57318046b157"
+      },
+      {
+        "file": "thread-lift-pre-treatment-assessment.html",
+        "HTTP": 200,
+        "bytes": 116013,
+        "sha256": "5c0de546d5fcf55f0a40c1c6474715c9766fefa94d388b2aeacea5345e1902f9"
+      },
+      {
+        "file": "thread-lift-vs-surgery-hifu-and-radiofrequency.html",
+        "HTTP": 200,
+        "bytes": 116532,
+        "sha256": "f39ed30991e8eeeab97c151555e370a72e9adc24227b64219c80c2b0baba1bda"
+      },
+      {
+        "file": "thread-lift.html",
+        "HTTP": 200,
+        "bytes": 100210,
+        "sha256": "c3e3e932286e411ec2750b0100991be1f4bbe3e2ff79c716d18a5f915267052e"
+      },
+      {
+        "file": "thread-types-and-selection.html",
+        "HTTP": 200,
+        "bytes": 139464,
+        "sha256": "4cf4b89103bf6d3754ec24c1b68d0f869337c73bef7a7d74100c166d5d2257ab"
+      },
+      {
+        "file": "upper-face-botox.html",
+        "HTTP": 200,
+        "bytes": 129076,
+        "sha256": "90624cefa90e85803dc2872db71e4af5b523cc586c9e0802c86546fa600b4444"
+      },
+      {
+        "file": "video-saeed-ghezelbash-jalupro-vs-profhilo.html",
+        "HTTP": 200,
+        "bytes": 70383,
+        "sha256": "f898387600b92c621a8b54f7ad7f4a5246d07b2d337e624a0a1547019f8b6511"
+      },
+      {
+        "file": "video-saeed-ghezelbash-kurdish-patient-review.html",
+        "HTTP": 200,
+        "bytes": 63252,
+        "sha256": "8fe2a07e0770311587bbb4df1b4826d8f8ba922a9cf6f94a4ccf5e7e3e5b5802"
+      },
+      {
+        "file": "video-saeed-ghezelbash-subcision-technique.html",
+        "HTTP": 200,
+        "bytes": 68729,
+        "sha256": "028d42338d6918efb2a2fbd53521a524312466c62cb59b7f9acd9358ff865b18"
+      },
+      {
+        "file": "video-saeed-ghezelbash-thread-lift-workshop.html",
+        "HTTP": 200,
+        "bytes": 69098,
+        "sha256": "debca321f36252c2cb0bc9f4c5962a601d1debe4561b381b7ab5aff8cecab900"
+      },
+      {
+        "file": "viewer/clinical-answers.parquet",
+        "HTTP": 200,
+        "bytes": 74788,
+        "sha256": "e4ab988fad12d9d73684d2d8c8ca34b44f042bc2e49387329ea563c90fa55d18"
+      },
+      {
+        "file": "viewer/clinical-passages.parquet",
+        "HTTP": 200,
+        "bytes": 846901,
+        "sha256": "8262b80ff5c3bbd3eeedc41f9eb9a2662d783997f9f19dd47186f4512142597e"
+      },
+      {
+        "file": "viewer/entity-facts.parquet",
+        "HTTP": 200,
+        "bytes": 979256,
+        "sha256": "4894003de27b828ba00e52e7c3f4fd9dbb1cbe4ee70004c73786e17b2da55e9b"
+      },
+      {
+        "file": "viewer/iri-migration.json",
+        "HTTP": 200,
+        "bytes": 20099,
+        "sha256": "78118485afd0bbbb7ddbd1b6ccbf951677f86f5d2fcac1ce1c4a06a6ada6e2b1"
+      },
+      {
+        "file": "viewer/packaging.json",
+        "HTTP": 200,
+        "bytes": 7929,
+        "sha256": "9b27f000072112a061322d4fde9b35398d22fe8ae8f154dd0f4dc844c01cbb40"
+      },
+      {
+        "file": "viewer/positioning-examples.parquet",
+        "HTTP": 200,
+        "bytes": 52421,
+        "sha256": "1c4458b2ae1645eeab6a940b0529f8a00ebabc7d6cb8bf67afba5c0b1ff1f408"
+      },
+      {
+        "file": "viewer/query-matrix.parquet",
+        "HTTP": 200,
+        "bytes": 25727,
+        "sha256": "72b1bac58d470dcaf97e56b7ddc244e16ad46eaa8ba9d02e2ae6867e55e20ad6"
+      },
+      {
+        "file": "void.ttl",
+        "HTTP": 200,
+        "bytes": 11165,
+        "sha256": "8c6e11a0301d33ee5f30b7801f826c1f0e4849f31ba3d56e016ad521471bc7d4"
+      }
+    ],
+    "retries": 0,
+    "status": "PASS",
+    "publicFilesVerified": 204,
+    "publicBytesVerified": 66432396,
+    "completedUTC": "2026-10-24T14:55:40Z"
+  },
+  "convertedParquetRows": {
+    "startedUTC": "2026-10-24T14:15:19Z",
+    "revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+    "tables": {
+      "clinical_passages": {
+        "rowsVerified": 3249,
+        "shards": 1,
+        "allValuesEqual": true
+      },
+      "clinical_answers": {
+        "rowsVerified": 125,
+        "shards": 1,
+        "allValuesEqual": true
+      },
+      "entity_facts": {
+        "rowsVerified": 22235,
+        "shards": 1,
+        "allValuesEqual": true
+      },
+      "query_matrix": {
+        "rowsVerified": 876,
+        "shards": 1,
+        "allValuesEqual": true
+      },
+      "market_positioning": {
+        "rowsVerified": 60,
+        "shards": 1,
+        "allValuesEqual": true
+      }
+    },
+    "retries": 0,
+    "status": "PASS",
+    "totalRowsVerified": 26545,
+    "completedUTC": "2026-10-24T14:15:25Z"
+  },
+  "primaryViewer": {
+    "startedUTC": "2026-10-24T14:15:20.178298+00:00",
+    "expectedRevision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+    "calls": [
+      {
+        "endpoint": "first-rows",
+        "config": "clinical_passages",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "clinical_passages",
+          "split": "train"
+        },
+        "startedUTC": "2026-10-24T14:15:20.178333+00:00",
+        "HTTP": 200,
+        "bytes": 198253,
+        "SHA256": "bfb6f580c80f4e91c2d3e73858a3f6d056b5288eca63b4be3f40452dd26e6e32",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:20 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "previewTruncated": true,
+        "exactRowsMatched": 86,
+        "rowIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85
+        ],
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:20.521185+00:00",
+        "elapsedSeconds": 0.343
+      },
+      {
+        "endpoint": "first-rows",
+        "config": "clinical_answers",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "clinical_answers",
+          "split": "train"
+        },
+        "startedUTC": "2026-10-24T14:15:20.521515+00:00",
+        "HTTP": 200,
+        "bytes": 199798,
+        "SHA256": "f545a48e47d661e783f67a09c5003762620f54c3218aa5eb6350a79042ce4998",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:20 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "previewTruncated": true,
+        "exactRowsMatched": 84,
+        "rowIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83
+        ],
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:20.707398+00:00",
+        "elapsedSeconds": 0.186
+      },
+      {
+        "endpoint": "first-rows",
+        "config": "entity_facts",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "entity_facts",
+          "split": "train"
+        },
+        "startedUTC": "2026-10-24T14:15:20.707833+00:00",
+        "HTTP": 200,
+        "bytes": 35498,
+        "SHA256": "c9352ffd2b62216c65a2f149ece602c902c8833b3c162bcfd016ffe4fbe28dbc",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:20 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "previewTruncated": true,
+        "exactRowsMatched": 100,
+        "rowIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99
+        ],
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:20.850374+00:00",
+        "elapsedSeconds": 0.143
+      },
+      {
+        "endpoint": "first-rows",
+        "config": "query_matrix",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "query_matrix",
+          "split": "train"
+        },
+        "startedUTC": "2026-10-24T14:15:20.851103+00:00",
+        "HTTP": 200,
+        "bytes": 168349,
+        "SHA256": "ccf9fcb7d27a7a394cb6be0ec62ec889e8b940034a728dc9eeda5bbf73cb8c0f",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:20 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "previewTruncated": true,
+        "exactRowsMatched": 100,
+        "rowIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99
+        ],
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:21.011314+00:00",
+        "elapsedSeconds": 0.16
+      },
+      {
+        "endpoint": "first-rows",
+        "config": "market_positioning",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "market_positioning",
+          "split": "train"
+        },
+        "startedUTC": "2026-10-24T14:15:21.011909+00:00",
+        "HTTP": 200,
+        "bytes": 194739,
+        "SHA256": "6e6351c62e8c8bb47b0618dfeab48abac92353d24b411dea6f7773c5e960fa2a",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:21 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "previewTruncated": true,
+        "exactRowsMatched": 29,
+        "rowIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:21.265423+00:00",
+        "elapsedSeconds": 0.254
+      },
+      {
+        "endpoint": "rows",
+        "config": "clinical_answers",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "clinical_answers",
+          "split": "train",
+          "offset": 0,
+          "length": 2
+        },
+        "startedUTC": "2026-10-24T14:15:21.266005+00:00",
+        "HTTP": 200,
+        "bytes": 7653,
+        "SHA256": "a56e5569949b4145d9a0b18785be52419fdbbbb3c25391d53e4dd30d50748942",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:21 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "numRowsTotal": 125,
+        "exactRowsMatched": 2,
+        "rowIndices": [
+          0,
+          1
+        ],
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:21.923025+00:00",
+        "elapsedSeconds": 0.657
+      },
+      {
+        "endpoint": "statistics",
+        "config": "market_positioning",
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "config": "market_positioning",
+          "split": "train"
+        },
+        "startedUTC": "2026-10-24T14:15:21.923737+00:00",
+        "HTTP": 200,
+        "bytes": 5579,
+        "SHA256": "335a4fb4708dfde59abf14f49b19d20be19a61cff977558a0d13ff4316a007d0",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:22 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "statisticEntries": 24,
+        "partial": false,
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:22.060460+00:00",
+        "elapsedSeconds": 0.137
+      },
+      {
+        "endpoint": "size",
+        "config": null,
+        "parameters": {
+          "dataset": "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+        },
+        "startedUTC": "2026-10-24T14:15:22.061490+00:00",
+        "HTTP": 200,
+        "bytes": 2634,
+        "SHA256": "3d516d4aacdbb357e7752c65043aba7457aeea5cff7614b80bc55189dba4d9a1",
+        "headers": {
+          "Date": "Sat, 24 Oct 2026 14:15:22 GMT",
+          "Age": null,
+          "X-Revision": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+          "X-Error-Code": null,
+          "X-Cache": "Miss from cloudfront",
+          "Content-Type": "application/json",
+          "Cache-Control": "max-age=120"
+        },
+        "revisionVerified": true,
+        "configRows": {
+          "clinical_passages": 3249,
+          "clinical_answers": 125,
+          "entity_facts": 22235,
+          "market_positioning": 60,
+          "query_matrix": 876
+        },
+        "partial": false,
+        "status": "PASS",
+        "completedUTC": "2026-10-24T14:15:22.202723+00:00",
+        "elapsedSeconds": 0.141
+      }
+    ],
+    "maximumCalls": 8,
+    "retries": 0,
+    "platformWrites": 0,
+    "searchFilterCalls": 0,
+    "completedUTC": "2026-10-24T14:15:22.202757+00:00",
+    "status": "PASS"
+  },
+  "latestSearchFilterService": {
+    "startedUTC": "2026-10-24T15:00:10Z",
+    "maxCalls": 2,
+    "calls": [
+      {
+        "config": "clinical_answers",
+        "endpoint": "filter",
+        "HTTP": 500,
+        "seconds": 10.297,
+        "X-Error-Code": "AuthCheckHubRequestError",
+        "X-Revision": null,
+        "SHA256": "c960bbe066a9c8419e9530b70f2aa6f40c002e5970888a45dba198331db04d41"
+      },
+      {
+        "config": "entity_facts",
+        "endpoint": "search",
+        "HTTP": 500,
+        "seconds": 10.948,
+        "X-Error-Code": "AuthCheckHubRequestError",
+        "X-Revision": null,
+        "SHA256": "c960bbe066a9c8419e9530b70f2aa6f40c002e5970888a45dba198331db04d41"
+      }
+    ],
+    "retries": 0,
+    "completedUTC": "2026-10-24T15:00:31Z",
+    "status": "SERVICE_STILL_UNAVAILABLE"
+  }
+}
