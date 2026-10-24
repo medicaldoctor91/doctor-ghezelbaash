@@ -213,7 +213,11 @@ class FrozenHomeProjectionTests(unittest.TestCase):
    {'@id':origin+'/webpage','@type':['ProfilePage','MedicalWebPage'],'url':origin+'/', 'name':'Physician profile','mainEntity':{'@id':person}},
    {'@id':person,'@type':['Person','IndividualPhysician'],'name':'Example physician','telephone':'+980000000001','email':'mailto:test@example.invalid','address':{'@id':address}},
    {'@id':origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','@type':['PhysiciansOffice','LocalBusiness'],'name':'Example clinic','telephone':'+980000000001','address':{'@id':address}},
-   {'@id':address,'@type':'PostalAddress','streetAddress':'Example street','addressLocality':'Example city','addressCountry':'IR','postalCode':'0000000000'}]}
+   {'@id':address,'@type':'PostalAddress','streetAddress':'Example street','addressLocality':'Example city','addressCountry':'IR','postalCode':'0000000000'},
+   {'@id':origin+'/graph.jsonld/dataset','@type':'Dataset','name':'Example physician-authored dataset',
+    'description':'A complete public knowledge graph of the physician and supporting clinic.',
+    'creator':{'@id':person},'license':'https://creativecommons.org/licenses/by/4.0/'},
+   {'@id':origin+'/graph.jsonld/download','@type':'DataDownload','contentUrl':origin+'/graph.jsonld','encodingFormat':'application/ld+json'}]}
   cls.search=expected_home_search_projection(cls.graph)
  def fixture(self,root,*,legacy=False,cyclic=False):
   website=root/'website';website.mkdir()
