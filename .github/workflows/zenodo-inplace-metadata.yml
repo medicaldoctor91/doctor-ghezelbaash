@@ -1,0 +1,62 @@
+name: Align existing Zenodo DOI with verified live distributions
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [preflight, publish]
+        required: true
+      reviewed_commit: {type: string, required: true}
+      cohort_run: {type: string, required: true}
+      prepared_run: {type: string, required: false}
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ${{ inputs.operation == 'preflight' && 'doctor-ghezelbaash-zenodo-metadata-preflight' || 'doctor-ghezelbaash-publication' }}
+  cancel-in-progress: false
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      OPERATION: ${{ inputs.operation }}
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      PREPARED_RUN: ${{ inputs.prepared_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Bind the reviewed implementation
+        run: test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install 'requests>=2,<3'
+      - run: python tests/zenodo-inplace-metadata.test.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: mutable-release-evidence
+          run-id: ${{ inputs.cohort_run }}
+          github-token: ${{ github.token }}
+          path: /tmp/zenodo-cohort-evidence
+      - uses: actions/download-artifact@v4
+        if: inputs.operation == 'publish'
+        with:
+          name: zenodo-inplace-metadata-evidence
+          run-id: ${{ inputs.prepared_run }}
+          github-token: ${{ github.token }}
+          path: /tmp/zenodo-prepared
+      - name: Prepare or apply only the exact reviewed metadata patch
+        run: |
+          if [ "$OPERATION" = publish ]; then
+            test -n "$PREPARED_RUN"
+            python .github/scripts/zenodo_inplace_metadata.py publish --evidence /tmp/zenodo-cohort-evidence --prepared /tmp/zenodo-prepared
+          else
+            python .github/scripts/zenodo_inplace_metadata.py preflight --evidence /tmp/zenodo-cohort-evidence
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zenodo-inplace-metadata-evidence
+          path: /tmp/zenodo-inplace-metadata/*.json
+          if-no-files-found: warn

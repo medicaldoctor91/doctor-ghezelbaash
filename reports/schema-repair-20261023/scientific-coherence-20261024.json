@@ -1,0 +1,738 @@
+{
+  "status": "PASS",
+  "startedUTC": "2026-10-24T12:59:42Z",
+  "scope": "Anonymous public scientific-data and identity alignment; no guarantee of viewer search/filter health",
+  "networkPolicy": "Ordinary GET only; no retry/cache-buster/authentication/fingerprint change",
+  "zenodo": {
+    "record": 23474664,
+    "doi": "10.5281/zenodo.23474664",
+    "conceptDOI": "10.5281/zenodo.18765168",
+    "version": "1.3.4+zenodo.3",
+    "publicInventoryAndMD5MatchBaseline": true,
+    "cachedFilesRehashedWithMD5AndSHA256": 43,
+    "bytesBasis": "Previously downloaded exact archive bytes; all43 current public checksums rechecked today; no claim of43 fresh downloads",
+    "updated": "2026-10-22T04:16:50.154972+00:00"
+  },
+  "resources": [
+    {
+      "archiveFile": "graph.jsonld",
+      "path": "graph.jsonld",
+      "sha256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7",
+      "bytes": 1658030,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "knowledge.xml",
+      "path": "knowledge.xml",
+      "sha256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf",
+      "bytes": 41524,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "sitemap.xml",
+      "path": "sitemap.xml",
+      "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+      "bytes": 12996,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": false
+    },
+    {
+      "archiveFile": "positioning-strategy.json",
+      "path": "enrichment/positioning-strategy.json",
+      "sha256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9",
+      "bytes": 27845,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "doi-policy.json",
+      "path": "doi-policy.json",
+      "sha256": "7ae3ff76786a877cbbb45155bf3f66405cc3ff80703872fd7ff34bd3a49880e8",
+      "bytes": 5444,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "provenance.jsonld",
+      "path": "provenance.jsonld",
+      "sha256": "66770058070c98e988f3673454f8a494d3e0575bb4b5c20aa283e6b4c49294e8",
+      "bytes": 1197247,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "graph.ttl",
+      "path": "graph.ttl",
+      "sha256": "f868dcaaccc9410c1d7576f841d87f248809c50f479fa843681bde1a8de8aceb",
+      "bytes": 3749618,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "doctor.vcf",
+      "path": "doctor.vcf",
+      "sha256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5",
+      "bytes": 393,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "clinic.vcf",
+      "path": "clinic.vcf",
+      "sha256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf",
+      "bytes": 484,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "linkset.json",
+      "path": "linkset.json",
+      "sha256": "d35d190cc929a3a1cf4ab2dfc4df6d50ca1d5170b9cc69ec9a66de4cc7516d95",
+      "bytes": 3554,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "entity-facts.csv",
+      "path": "entity-facts.csv",
+      "sha256": "e10e9299d6bf7364a7eb900bbb496504beef20a0e3f18381ad1c26290a0e102f",
+      "bytes": 5328500,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "robots.txt",
+      "path": "robots.txt",
+      "sha256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda",
+      "bytes": 156,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": false
+    },
+    {
+      "archiveFile": "evidence-snapshot.json",
+      "path": "evidence-snapshot.json",
+      "sha256": "b8623d90a6a08b67cc3eaaaabff7ebadbdf2900336f0e7061d2f909fe131fbc6",
+      "bytes": 183213,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "index.md",
+      "path": "index.md",
+      "sha256": "ed7a9c1d2c9e49ca1a7ce832e618653c4183090761b6f62d6bb9ec84c7220da3",
+      "bytes": 1679921,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "shapes.ttl",
+      "path": "shapes.ttl",
+      "sha256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51",
+      "bytes": 108912,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "answers.txt",
+      "path": "answers.txt",
+      "sha256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4",
+      "bytes": 278883,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "clinical-passages.jsonl",
+      "path": "clinical-passages.jsonl",
+      "sha256": "6e4c2b65f7b70d69d639349b528194f27fe953098565d294815cf9e5a6d77781",
+      "bytes": 6884386,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "market-positioning-evidence.json",
+      "path": "enrichment/market-positioning-evidence.json",
+      "sha256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c",
+      "bytes": 8895,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "site.webmanifest",
+      "path": "site.webmanifest",
+      "sha256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05",
+      "bytes": 2082,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": false
+    },
+    {
+      "archiveFile": "physician-expertise.md",
+      "path": "physician-expertise.md",
+      "sha256": "effcdefdc36d706697384b20b514fc7c98cc8739c87944d441ab8747dd531329",
+      "bytes": 6796,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "fact-map.json",
+      "path": "fact-map.json",
+      "sha256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15",
+      "bytes": 278519,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "llms.txt",
+      "path": "llms.txt",
+      "sha256": "30d53139308c4e4bf7a3cd92092757c97e35e8cb3047322ef1799ad83abaaef2",
+      "bytes": 18860,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "llms-full.txt",
+      "path": "llms-full.txt",
+      "sha256": "eaf7c67ef64dee45a6f5c11528801ccc38bae6e8428f9b7976eabca02be16399",
+      "bytes": 1630360,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    },
+    {
+      "archiveFile": "instruction_examples_fa_market_positioning.jsonl",
+      "path": "enrichment/instruction_examples_fa_market_positioning.jsonl",
+      "sha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+      "bytes": 361646,
+      "websiteHTTP": 200,
+      "hfHTTP": 200,
+      "kaggleAndZenodoSHA256Matched": true,
+      "scientificOrIdentityResource": true
+    }
+  ],
+  "sharedScientificAndIdentityFilesByteIdenticalAcrossAllFour": 21,
+  "additionalSharedDiscoveryControls": 3,
+  "identity": {
+    "dataset": "https://www.ghezelbaash.ir/graph.jsonld/dataset",
+    "person": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "clinic": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "graphNodes": 1600,
+    "graphSHA256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7",
+    "scientificContentBaseline": "1.3.4 / 2026-10-18"
+  },
+  "kaggle": {
+    "version": 30,
+    "exactAndDefaultPublicZIPIdentical": true,
+    "zipSHA256": "3685f56869229401b18859e90a3cfc68eb95ef5ac3aa1f8304e320332c60367d",
+    "publicDownloadReceiptDate": "Sat, 24 Oct 2026 12:52:43 GMT",
+    "zipBytes": 5769667
+  },
+  "publicCohortBeforeAndAfter": {
+    "websiteSource": "994861d5fbf6b1191c0f5afd586bb369fcd5534b",
+    "hfRevision": "ec16d5b2cef15d01651c05884ffc6596a83efb99",
+    "kaggleVersion": 30
+  },
+  "intentionalDifferences": [
+    "Website current HTML uses bounded recognized JSON-LD and relocated full inert graph; archived index.html retains older presentation, served as text/plain. No archived/current HTML byte-equality claim.",
+    "Platform Croissant/Data Package/DCAT/VoID/CSVW descriptors bind to their own platform download URLs and measured bytes.",
+    "Each platform release provenance, matrix, notebook and checksums describe its own publication; archive source ed767 and current website source994 remain explicitly scoped.",
+    "Viewer Parquet/search/filter runtime availability is checked separately and is not implied by scientific-content equality."
+  ],
+  "completedUTC": "2026-10-24T12:59:54Z",
+  "requests": [
+    {
+      "url": "https://zenodo.org/api/records/23474664",
+      "status": 200,
+      "seconds": 1.3,
+      "bytes": 16122,
+      "sha256": "b79d50abe660ec71dfa23bcc7b99f6419a5fef5c6f5102238ec1a96eccabf1ee",
+      "observedUTC": "2026-10-24T12:59:43Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/release-provenance.json",
+      "status": 200,
+      "seconds": 0.68,
+      "bytes": 7339,
+      "sha256": "6f0188d30e38e85f514d280f024121a940b6fb88fcbe74984951873f3029d45e",
+      "observedUTC": "2026-10-24T12:59:44Z"
+    },
+    {
+      "url": "https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "status": 200,
+      "seconds": 0.301,
+      "bytes": 15150,
+      "sha256": "d9b5656e08ff0a3e1f1be9dd6d56c8c4e4dfa3f916ea9358d6e19be95ad0f51b",
+      "observedUTC": "2026-10-24T12:59:44Z"
+    },
+    {
+      "url": "https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "status": 200,
+      "seconds": 0.49,
+      "bytes": 26291,
+      "sha256": "472e330e2741872977ac5a855bea8d05d4831d4be8cb9bda17bc76eec81e7cfd",
+      "observedUTC": "2026-10-24T12:59:45Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/graph.jsonld",
+      "status": 200,
+      "seconds": 0.552,
+      "bytes": 1658030,
+      "sha256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7",
+      "observedUTC": "2026-10-24T12:59:45Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/sitemap.xml",
+      "status": 200,
+      "seconds": 0.609,
+      "bytes": 12996,
+      "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+      "observedUTC": "2026-10-24T12:59:45Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/knowledge.xml",
+      "status": 200,
+      "seconds": 0.637,
+      "bytes": 41524,
+      "sha256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf",
+      "observedUTC": "2026-10-24T12:59:45Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/sitemap.xml",
+      "status": 200,
+      "seconds": 0.47,
+      "bytes": 12996,
+      "sha256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+      "observedUTC": "2026-10-24T12:59:46Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/graph.jsonld",
+      "status": 200,
+      "seconds": 0.566,
+      "bytes": 1658030,
+      "sha256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7",
+      "observedUTC": "2026-10-24T12:59:46Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/knowledge.xml",
+      "status": 200,
+      "seconds": 0.599,
+      "bytes": 41524,
+      "sha256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf",
+      "observedUTC": "2026-10-24T12:59:46Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/enrichment/positioning-strategy.json",
+      "status": 200,
+      "seconds": 0.354,
+      "bytes": 27845,
+      "sha256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9",
+      "observedUTC": "2026-10-24T12:59:46Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/doi-policy.json",
+      "status": 200,
+      "seconds": 0.33,
+      "bytes": 5444,
+      "sha256": "7ae3ff76786a877cbbb45155bf3f66405cc3ff80703872fd7ff34bd3a49880e8",
+      "observedUTC": "2026-10-24T12:59:46Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/provenance.jsonld",
+      "status": 200,
+      "seconds": 0.655,
+      "bytes": 1197247,
+      "sha256": "66770058070c98e988f3673454f8a494d3e0575bb4b5c20aa283e6b4c49294e8",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/doi-policy.json",
+      "status": 200,
+      "seconds": 0.466,
+      "bytes": 5444,
+      "sha256": "7ae3ff76786a877cbbb45155bf3f66405cc3ff80703872fd7ff34bd3a49880e8",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/enrichment/positioning-strategy.json",
+      "status": 200,
+      "seconds": 0.586,
+      "bytes": 27845,
+      "sha256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/doctor.vcf",
+      "status": 200,
+      "seconds": 0.172,
+      "bytes": 393,
+      "sha256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/graph.ttl",
+      "status": 200,
+      "seconds": 0.301,
+      "bytes": 3749618,
+      "sha256": "f868dcaaccc9410c1d7576f841d87f248809c50f479fa843681bde1a8de8aceb",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/provenance.jsonld",
+      "status": 200,
+      "seconds": 0.535,
+      "bytes": 1197247,
+      "sha256": "66770058070c98e988f3673454f8a494d3e0575bb4b5c20aa283e6b4c49294e8",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/doctor.vcf",
+      "status": 200,
+      "seconds": 0.441,
+      "bytes": 393,
+      "sha256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/graph.ttl",
+      "status": 200,
+      "seconds": 0.46,
+      "bytes": 3749618,
+      "sha256": "f868dcaaccc9410c1d7576f841d87f248809c50f479fa843681bde1a8de8aceb",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/clinic.vcf",
+      "status": 200,
+      "seconds": 0.308,
+      "bytes": 484,
+      "sha256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf",
+      "observedUTC": "2026-10-24T12:59:47Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/linkset.json",
+      "status": 200,
+      "seconds": 0.233,
+      "bytes": 3554,
+      "sha256": "d35d190cc929a3a1cf4ab2dfc4df6d50ca1d5170b9cc69ec9a66de4cc7516d95",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/entity-facts.csv",
+      "status": 200,
+      "seconds": 0.371,
+      "bytes": 5328500,
+      "sha256": "e10e9299d6bf7364a7eb900bbb496504beef20a0e3f18381ad1c26290a0e102f",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/clinic.vcf",
+      "status": 200,
+      "seconds": 0.426,
+      "bytes": 484,
+      "sha256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/linkset.json",
+      "status": 200,
+      "seconds": 0.429,
+      "bytes": 3554,
+      "sha256": "d35d190cc929a3a1cf4ab2dfc4df6d50ca1d5170b9cc69ec9a66de4cc7516d95",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/evidence-snapshot.json",
+      "status": 200,
+      "seconds": 0.196,
+      "bytes": 183213,
+      "sha256": "b8623d90a6a08b67cc3eaaaabff7ebadbdf2900336f0e7061d2f909fe131fbc6",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/entity-facts.csv",
+      "status": 200,
+      "seconds": 0.545,
+      "bytes": 5328500,
+      "sha256": "e10e9299d6bf7364a7eb900bbb496504beef20a0e3f18381ad1c26290a0e102f",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/robots.txt",
+      "status": 200,
+      "seconds": 0.536,
+      "bytes": 156,
+      "sha256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda",
+      "observedUTC": "2026-10-24T12:59:48Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/evidence-snapshot.json",
+      "status": 200,
+      "seconds": 0.499,
+      "bytes": 183213,
+      "sha256": "b8623d90a6a08b67cc3eaaaabff7ebadbdf2900336f0e7061d2f909fe131fbc6",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/robots.txt",
+      "status": 200,
+      "seconds": 0.482,
+      "bytes": 156,
+      "sha256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/shapes.ttl",
+      "status": 200,
+      "seconds": 0.213,
+      "bytes": 108912,
+      "sha256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/index.md",
+      "status": 200,
+      "seconds": 0.554,
+      "bytes": 1679921,
+      "sha256": "ed7a9c1d2c9e49ca1a7ce832e618653c4183090761b6f62d6bb9ec84c7220da3",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/answers.txt",
+      "status": 200,
+      "seconds": 0.338,
+      "bytes": 278883,
+      "sha256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/index.md",
+      "status": 200,
+      "seconds": 0.487,
+      "bytes": 1679921,
+      "sha256": "ed7a9c1d2c9e49ca1a7ce832e618653c4183090761b6f62d6bb9ec84c7220da3",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/shapes.ttl",
+      "status": 200,
+      "seconds": 0.544,
+      "bytes": 108912,
+      "sha256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51",
+      "observedUTC": "2026-10-24T12:59:49Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/enrichment/market-positioning-evidence.json",
+      "status": 200,
+      "seconds": 0.254,
+      "bytes": 8895,
+      "sha256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/answers.txt",
+      "status": 200,
+      "seconds": 0.495,
+      "bytes": 278883,
+      "sha256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/clinical-passages.jsonl",
+      "status": 200,
+      "seconds": 0.447,
+      "bytes": 6884386,
+      "sha256": "6e4c2b65f7b70d69d639349b528194f27fe953098565d294815cf9e5a6d77781",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/site.webmanifest",
+      "status": 200,
+      "seconds": 0.235,
+      "bytes": 2082,
+      "sha256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/enrichment/market-positioning-evidence.json",
+      "status": 200,
+      "seconds": 0.442,
+      "bytes": 8895,
+      "sha256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/physician-expertise.md",
+      "status": 200,
+      "seconds": 0.13,
+      "bytes": 6796,
+      "sha256": "effcdefdc36d706697384b20b514fc7c98cc8739c87944d441ab8747dd531329",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/site.webmanifest",
+      "status": 200,
+      "seconds": 0.362,
+      "bytes": 2082,
+      "sha256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/clinical-passages.jsonl",
+      "status": 200,
+      "seconds": 0.466,
+      "bytes": 6884386,
+      "sha256": "6e4c2b65f7b70d69d639349b528194f27fe953098565d294815cf9e5a6d77781",
+      "observedUTC": "2026-10-24T12:59:50Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/fact-map.json",
+      "status": 200,
+      "seconds": 0.199,
+      "bytes": 278519,
+      "sha256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/llms.txt",
+      "status": 200,
+      "seconds": 0.194,
+      "bytes": 18860,
+      "sha256": "30d53139308c4e4bf7a3cd92092757c97e35e8cb3047322ef1799ad83abaaef2",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/physician-expertise.md",
+      "status": 200,
+      "seconds": 0.387,
+      "bytes": 6796,
+      "sha256": "effcdefdc36d706697384b20b514fc7c98cc8739c87944d441ab8747dd531329",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/llms.txt",
+      "status": 200,
+      "seconds": 0.329,
+      "bytes": 18860,
+      "sha256": "30d53139308c4e4bf7a3cd92092757c97e35e8cb3047322ef1799ad83abaaef2",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/fact-map.json",
+      "status": 200,
+      "seconds": 0.506,
+      "bytes": 278519,
+      "sha256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/enrichment/instruction_examples_fa_market_positioning.jsonl",
+      "status": 200,
+      "seconds": 0.191,
+      "bytes": 361646,
+      "sha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/llms-full.txt",
+      "status": 200,
+      "seconds": 0.523,
+      "bytes": 1630360,
+      "sha256": "eaf7c67ef64dee45a6f5c11528801ccc38bae6e8428f9b7976eabca02be16399",
+      "observedUTC": "2026-10-24T12:59:51Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/enrichment/instruction_examples_fa_market_positioning.jsonl",
+      "status": 200,
+      "seconds": 0.328,
+      "bytes": 361646,
+      "sha256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+      "observedUTC": "2026-10-24T12:59:52Z"
+    },
+    {
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/ec16d5b2cef15d01651c05884ffc6596a83efb99/llms-full.txt",
+      "status": 200,
+      "seconds": 0.481,
+      "bytes": 1630360,
+      "sha256": "eaf7c67ef64dee45a6f5c11528801ccc38bae6e8428f9b7976eabca02be16399",
+      "observedUTC": "2026-10-24T12:59:52Z"
+    },
+    {
+      "url": "https://www.ghezelbaash.ir/release-provenance.json",
+      "status": 200,
+      "seconds": 0.172,
+      "bytes": 7339,
+      "sha256": "6f0188d30e38e85f514d280f024121a940b6fb88fcbe74984951873f3029d45e",
+      "observedUTC": "2026-10-24T12:59:52Z"
+    },
+    {
+      "url": "https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "status": 200,
+      "seconds": 0.182,
+      "bytes": 15150,
+      "sha256": "d9b5656e08ff0a3e1f1be9dd6d56c8c4e4dfa3f916ea9358d6e19be95ad0f51b",
+      "observedUTC": "2026-10-24T12:59:52Z"
+    },
+    {
+      "url": "https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "status": 200,
+      "seconds": 0.665,
+      "bytes": 26291,
+      "sha256": "472e330e2741872977ac5a855bea8d05d4831d4be8cb9bda17bc76eec81e7cfd",
+      "observedUTC": "2026-10-24T12:59:53Z"
+    },
+    {
+      "url": "https://zenodo.org/api/records/23474664",
+      "status": 200,
+      "seconds": 0.898,
+      "bytes": 16122,
+      "sha256": "b79d50abe660ec71dfa23bcc7b99f6419a5fef5c6f5102238ec1a96eccabf1ee",
+      "observedUTC": "2026-10-24T12:59:54Z"
+    }
+  ]
+}

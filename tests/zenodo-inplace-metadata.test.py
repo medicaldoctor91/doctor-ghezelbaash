@@ -1,0 +1,242 @@
+"""Safety and outside-observer identity checks for the same-record metadata edit."""
+import copy
+import importlib.util
+import io
+import json
+import sys
+import tempfile
+import unittest
+import zipfile
+from pathlib import Path
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location('zenodo_inplace_metadata', ROOT / '.github/scripts/zenodo_inplace_metadata.py')
+m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+
+
+class Response:
+    def __init__(self, value=None, status=200, content=None):
+        self.status_code = status
+        self.content = content if content is not None else json.dumps(value).encode()
+
+    def json(self):
+        return json.loads(self.content)
+
+
+def fixtures():
+    plan = {'candidateSchema': 'mutable-distributions-4', 'sourceCommit': 'a' * 40,
+            'hfRevision': 'b' * 40, 'kaggleVersion': 30, 'notebookVersion': 14,
+            'archiveSourceCommit': m.ARCHIVE_SOURCE, 'archiveWrites': False}
+    metadata = {'title': 'Dr. Saeed Ghezelbash Public Knowledge Graph — Reproducible Dataset Archive',
+                'version': m.VERSION, 'description': 'Original archive introduction',
+                'doi': m.DOI, 'creators': [{'name': 'Ghezelbash, Saeed', 'orcid': '0009-0001-9346-8475'}],
+                'keywords': ['RDF', 'دکتر سعید قزلباش'], 'publication_date': '2026-10-22',
+                'related_identifiers': [
+                    {'identifier': m.CONCEPT, 'relation': 'isVersionOf', 'scheme': 'doi'},
+                    {'identifier': m.HUB + '/tree/old', 'relation': 'isSupplementedBy', 'scheme': 'url'},
+                    {'identifier': m.KAGGLE + '/versions/27', 'relation': 'isSupplementedBy', 'scheme': 'url'},
+                    {'identifier': m.SITE, 'relation': 'isDescribedBy', 'scheme': 'url'}]}
+    files = [{'key': str(i) + '.json', 'checksum': 'md5:' + str(i).zfill(32), 'size': i + 1} for i in range(43)]
+    public = {'id': m.RECORD, 'doi': m.DOI, 'conceptdoi': m.CONCEPT,
+              'metadata': copy.deepcopy(metadata), 'files': files}
+    owner = {'id': m.RECORD, 'doi': m.DOI, 'submitted': True, 'metadata': copy.deepcopy(metadata)}
+    baseline = {'record': m.RECORD, 'doi': m.DOI, 'sourceCommit': m.ARCHIVE_SOURCE,
+                'files': {f['key']: {'checksum': f['checksum'], 'bytes': f['size']} for f in files}}
+    return plan, metadata, public, owner, baseline
+
+
+class MetadataTests(unittest.TestCase):
+    def test_current_machine_relations_replace_old_pins_without_changing_identity(self):
+        plan, metadata, _, _, _ = fixtures()
+        wanted = m.desired_metadata(metadata, plan)
+        self.assertEqual(metadata['description'], 'Original archive introduction')
+        self.assertEqual({k: v for k, v in wanted.items() if k not in m.CHANGED_FIELDS},
+                         {k: v for k, v in metadata.items() if k not in m.CHANGED_FIELDS})
+        links = [r['identifier'] for r in wanted['related_identifiers']]
+        self.assertIn(m.HUB + '/tree/' + plan['hfRevision'], links)
+        self.assertIn(m.KAGGLE + '/versions/30', links)
+        self.assertIn(m.NOTEBOOK, links)
+        self.assertNotIn(m.KAGGLE + '/versions/27', links)
+        self.assertNotIn(m.HUB + '/tree/old', links)
+        self.assertIn('historical snapshot bindings', wanted['description'])
+        self.assertIn('notebook</a>, version 14', wanted['description'])
+        self.assertEqual(m.desired_metadata(wanted, plan), wanted)
+
+    def test_changed_files_or_doi_are_rejected(self):
+        _, _, public, _, baseline = fixtures()
+        m.invariant(public, baseline)
+        for mutate in [lambda j: j.update(doi='10.5281/zenodo.999'),
+                       lambda j: j['files'][0].update(checksum='md5:changed'),
+                       lambda j: j['metadata'].update(version='new')]:
+            changed = copy.deepcopy(public)
+            mutate(changed)
+            with self.assertRaises(AssertionError):
+                m.invariant(changed, baseline)
+
+    def test_unrelated_public_metadata_change_is_rejected(self):
+        plan, metadata, public, _, _ = fixtures()
+        wanted = m.desired_metadata(metadata, plan)
+        after = copy.deepcopy(public)
+        after['metadata'] = wanted
+        m.verify_public_metadata(public, after, wanted)
+        after['metadata']['creators'][0]['name'] = 'Wrong creator'
+        with self.assertRaises(AssertionError):
+            m.verify_public_metadata(public, after, wanted)
+
+    def test_pending_metadata_or_file_edits_are_not_overwritten(self):
+        _, _, public, owner, _ = fixtures()
+        modern = {'metadata': {'title': 'Original'}}
+        draft = {'metadata': {'title': 'Unpublished edits'}}
+        with patch.object(m, 'get', side_effect=[Response(owner), Response(draft), Response(modern)]):
+            with self.assertRaisesRegex(AssertionError, 'Unpublished metadata'):
+                m.inspect_owner(object(), public)
+        entries = [{'key': f['key'], 'checksum': f['checksum'], 'size': f['size']} for f in public['files']]
+        entries[0]['size'] += 1
+        with patch.object(m, 'get', side_effect=[Response(owner), Response(modern), Response(modern), Response({'entries': entries})]):
+            with self.assertRaisesRegex(AssertionError, 'Unpublished file'):
+                m.inspect_owner(object(), public)
+
+    def test_file_and_new_version_write_endpoints_are_impossible(self):
+        class Session:
+            def request(self, *args, **kwargs):
+                raise AssertionError('network must not be invoked')
+        for url in [m.PUBLIC + '/file-modification', m.DEPOSIT + '/actions/newversion',
+                    m.PUBLIC + '/draft/files', 'https://other.example/']:
+            with self.assertRaisesRegex(AssertionError, 'Out-of-scope'):
+                m.mutate(Session(), 'POST', url)
+
+    def test_http_write_failure_is_not_retried(self):
+        class Session:
+            calls = 0
+            def request(self, *args, **kwargs):
+                self.calls += 1
+                return Response({}, status=403)
+        session = Session()
+        with self.assertRaisesRegex(RuntimeError, 'no automatic retry'):
+            m.mutate(session, 'POST', m.DEPOSIT + '/actions/edit')
+        self.assertEqual(session.calls, 1)
+
+    def test_transmitted_put_body_matches_saved_exact_request_hash(self):
+        class Session:
+            def request(self, *args, **kwargs):
+                self.body = kwargs['data']
+                return Response({})
+        session = Session()
+        payload = {'metadata': {'description': 'دکتر سعید قزلباش'}}
+        m.mutate(session, 'PUT', m.DEPOSIT, payload=payload)
+        self.assertEqual(session.body, m.canonical(payload))
+        self.assertEqual(json.loads(session.body), payload)
+
+    def test_live_gate_failure_precedes_every_zenodo_write(self):
+        _, _, _, _, baseline = fixtures()
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            m.dump(folder / 'archive-baseline.json', baseline)
+            m.dump(folder / 'release-plan.json', fixtures()[0])
+            with patch.object(m, 'guard_live_cohort', side_effect=AssertionError('Wrong notebook')), \
+                 patch.object(m, 'mutate') as write:
+                with self.assertRaisesRegex(AssertionError, 'Wrong notebook'):
+                    m.run('publish', folder, folder / 'out', folder)
+                write.assert_not_called()
+
+    def test_preflight_performs_no_write(self):
+        plan, _, public, owner, baseline = fixtures()
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            m.dump(folder / 'archive-baseline.json', baseline)
+            m.dump(folder / 'release-plan.json', plan)
+            with patch.object(m, 'guard_live_cohort', return_value={'status': 'PASS'}), \
+                 patch.object(m, 'get', return_value=Response(public)), \
+                 patch.object(m, 'inspect_owner', return_value=(owner, False)), \
+                 patch.dict(m.os.environ, {'ZENODO_TOKEN': 'unit-test-never-sent'}), \
+                 patch.object(m, 'mutate') as write:
+                m.run('preflight', folder, folder / 'out')
+                write.assert_not_called()
+                report = m.load(folder / 'out/preflight-report.json')
+                self.assertFalse(report['writesPerformed'])
+
+    def test_publish_uses_only_same_record_actions_and_preserves_all_files(self):
+        plan, metadata, public, owner, baseline = fixtures()
+        wanted = m.desired_metadata(metadata, plan)
+        after = copy.deepcopy(public)
+        after['metadata'] = wanted
+        staged = copy.deepcopy(owner)
+        staged['metadata'] = wanted
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            m.dump(folder / 'archive-baseline.json', baseline)
+            m.dump(folder / 'release-plan.json', plan)
+            common = [patch.object(m, 'guard_live_cohort', return_value={'status': 'PASS'}),
+                      patch.object(m, 'inspect_owner', return_value=(owner, False)),
+                      patch.dict(m.os.environ, {'ZENODO_TOKEN': 'unit-test-never-sent'})]
+            with common[0], common[1], common[2], patch.object(m, 'get', return_value=Response(public)):
+                m.run('preflight', folder, folder / 'prepared')
+            with patch.object(m, 'guard_live_cohort', return_value={'status': 'PASS'}), \
+                 patch.object(m, 'inspect_owner', return_value=(owner, False)), \
+                 patch.dict(m.os.environ, {'ZENODO_TOKEN': 'unit-test-never-sent'}), \
+                 patch.object(m, 'get', side_effect=[Response(public), Response(staged), Response(after)]), \
+                 patch.object(m, 'mutate') as write:
+                m.run('publish', folder, folder / 'published', folder / 'prepared')
+                self.assertEqual([(c.args[1], c.args[2]) for c in write.call_args_list],
+                                 [('POST', m.DEPOSIT + '/actions/edit'), ('PUT', m.DEPOSIT),
+                                  ('POST', m.DEPOSIT + '/actions/publish')])
+                report = m.load(folder / 'published/publication-report.json')
+                self.assertEqual(report['archiveFilesUnchanged'], 43)
+                self.assertEqual(report['doi'], m.DOI)
+
+    def test_zip_path_traversal_is_rejected_without_extraction(self):
+        body = io.BytesIO()
+        with zipfile.ZipFile(body, 'w') as archive:
+            archive.writestr('../outside', b'bad')
+        with self.assertRaisesRegex(AssertionError, 'Unsafe ZIP'):
+            m.zip_inventory(body.getvalue())
+
+    def test_cohort_guard_checks_actual_output_and_complete_public_zip(self):
+        plan = fixtures()[0]
+        starter = {'cells': [{'cell_type': 'code', 'source': ['print(1)\n'], 'metadata': {}, 'outputs': [], 'execution_count': None}]}
+        zip_bytes = io.BytesIO()
+        with zipfile.ZipFile(zip_bytes, 'w') as archive:
+            archive.writestr('starter.ipynb', json.dumps(starter))
+            archive.writestr('checksums.sha256', 'frozen inventory')
+        inventory, _ = m.zip_inventory(zip_bytes.getvalue())
+        provenance = json.dumps({'sourceCommit': plan['sourceCommit']}).encode()
+        frozen = {'website': {'release-provenance.json': m.digest(provenance)},
+                  'hf-stage': {'release-provenance.json': m.digest(provenance)}, 'kaggle': inventory}
+        execution = {'status': 'PASS', 'source_commit': plan['sourceCommit'], 'upstream_revision': plan['hfRevision'],
+                     'kaggle_version': 30, 'exact_doi': m.DOI, 'input_checksums_sha256': inventory['checksums.sha256'],
+                     'all_table_rows_reconstructed': True, 'unresolved_query_references': 0}
+        notebook = {'metadata': {'currentVersionNumber': 14}, 'blob': {'source': json.dumps(starter)}}
+        def read(url):
+            if url.endswith('release-provenance.json'):
+                return Response(content=provenance)
+            if '/api/datasets/' in url:
+                return Response({'sha': plan['hfRevision']})
+            if '/datasets/view/' in url:
+                return Response({'currentVersionNumber': 30, 'versions': [{'versionNumber': 30}]})
+            if '/datasets/download/' in url:
+                return Response(content=zip_bytes.getvalue())
+            if '/kernels/pull/' in url:
+                return Response(notebook)
+            raise AssertionError('Unexpected read URL: ' + url)
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            m.dump(folder / 'release-plan.json', plan)
+            m.dump(folder / 'frozen-sha256.json', frozen)
+            self.assertEqual(m.guard_live_cohort(folder, read=read, post=lambda *a, **k: Response(execution))['status'], 'PASS')
+            wrong = dict(execution, kaggle_version=29)
+            with self.assertRaises(AssertionError):
+                m.guard_live_cohort(folder, read=read, post=lambda *a, **k: Response(wrong))
+            notebook['metadata']['currentVersionNumber'] = 15
+            with self.assertRaises(AssertionError):
+                m.guard_live_cohort(folder, read=read, post=lambda *a, **k: Response(execution))
+            notebook['metadata']['currentVersionNumber'] = 14
+            frozen['kaggle']['starter.ipynb'] = 'wrong frozen hash'
+            m.dump(folder / 'frozen-sha256.json', frozen)
+            with self.assertRaisesRegex(AssertionError, 'Kaggle exact files'):
+                m.guard_live_cohort(folder, read=read, post=lambda *a, **k: Response(execution))
+
+
+if __name__ == '__main__':
+    unittest.main()
