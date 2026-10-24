@@ -1,0 +1,218 @@
+{
+  "status": "PASS",
+  "plan": {
+    "candidateSchema": "same-doi-delivery-correction-1",
+    "record": 23474664,
+    "doi": "10.5281/zenodo.23474664",
+    "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+    "originalArchiveSourceCommit": "ed767f6e6726e1453196e2ec2b312fcad00677e2",
+    "hfParent": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+    "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+    "kagglePreviousVersion": 31,
+    "kaggleVersion": 32,
+    "notebookPreviousVersion": 15,
+    "notebookVersion": 16,
+    "technicalCorrectionDate": "2026-10-24",
+    "websiteWrites": false,
+    "newDoi": false,
+    "sitePreviousSource": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+    "originalPublicRecordPath": "/tmp/schema-distribution-correction/original-archive/public-record.json",
+    "hfSearchFilter": "Deferred by user while index warms; no overall runtime health claim"
+  },
+  "zenodo": {
+    "status": "PASS",
+    "record": 23474664,
+    "doi": "10.5281/zenodo.23474664",
+    "conceptDOI": "10.5281/zenodo.18765168",
+    "version": "1.3.4+zenodo.3",
+    "manifestSHA256": "0f8938032f547b99d63a1b91e96e6675a6be9e0396f832df375681c7dc5af72c",
+    "sameRecordPublished": true,
+    "alreadyPublished": false,
+    "publicFilesSHA256Verified": 43,
+    "changedFiles": [
+      "README.md",
+      "archive-provenance.json",
+      "archive-validation.json",
+      "checksums.sha256",
+      "croissant.json",
+      "current-release-matrix.json",
+      "datapackage.json",
+      "dcat.ttl",
+      "dist-sha256.json",
+      "doi-policy.json",
+      "doi-role-inventory.json",
+      "dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip",
+      "index.html",
+      "llms.txt",
+      "query-matrix.json-seq",
+      "query-matrix.jsonl",
+      "release-attestation.json",
+      "release-provenance.json"
+    ],
+    "websiteFilesInZIP": 188,
+    "observedUTC": "2026-10-24T19:59:05.381560+00:00",
+    "cohort": {
+      "candidateSchema": "same-doi-delivery-correction-1",
+      "record": 23474664,
+      "doi": "10.5281/zenodo.23474664",
+      "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+      "originalArchiveSourceCommit": "ed767f6e6726e1453196e2ec2b312fcad00677e2",
+      "hfParent": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+      "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "kagglePreviousVersion": 31,
+      "kaggleVersion": 32,
+      "notebookPreviousVersion": 15,
+      "notebookVersion": 16,
+      "technicalCorrectionDate": "2026-10-24",
+      "websiteWrites": false,
+      "newDoi": false,
+      "sitePreviousSource": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+      "originalPublicRecordPath": "/tmp/schema-distribution-correction/original-archive/public-record.json",
+      "hfSearchFilter": "Deferred by user while index warms; no overall runtime health claim"
+    }
+  },
+  "cohort": {
+    "status": "PASS",
+    "scope": "Pinned complete public files, actual notebook execution and primary Viewer; search/filter deferred by user",
+    "heads": {
+      "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+      "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "kagglePublicDefault": 32,
+      "notebookVersion": 16
+    },
+    "exactKaggle": {
+      "version": 32,
+      "filesSha256Matched": 48,
+      "packageChecksumsVerified": 47,
+      "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+      "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "scope": "All exact-version public file bytes; does not verify default pointer or generated ZIPs"
+    },
+    "hfCore": {
+      "revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "filesSha256Matched": 204,
+      "viewer": {
+        "clinical_passages": {
+          "rows": 3249,
+          "completeConvertedRowsMatched": 3249,
+          "responseRevisionVerified": true,
+          "preview": true,
+          "viewer": true,
+          "statistics": true,
+          "search": "deferred per user",
+          "filter": "deferred per user"
+        },
+        "clinical_answers": {
+          "rows": 125,
+          "completeConvertedRowsMatched": 125,
+          "responseRevisionVerified": true,
+          "preview": true,
+          "viewer": true,
+          "statistics": true,
+          "search": "deferred per user",
+          "filter": "deferred per user"
+        },
+        "entity_facts": {
+          "rows": 22235,
+          "completeConvertedRowsMatched": 22235,
+          "responseRevisionVerified": true,
+          "preview": true,
+          "viewer": true,
+          "statistics": true,
+          "search": "deferred per user",
+          "filter": "deferred per user"
+        },
+        "query_matrix": {
+          "rows": 876,
+          "completeConvertedRowsMatched": 876,
+          "responseRevisionVerified": true,
+          "preview": true,
+          "viewer": true,
+          "statistics": true,
+          "search": "deferred per user",
+          "filter": "deferred per user"
+        },
+        "market_positioning": {
+          "rows": 60,
+          "completeConvertedRowsMatched": 60,
+          "responseRevisionVerified": true,
+          "preview": true,
+          "viewer": true,
+          "statistics": true,
+          "search": "deferred per user",
+          "filter": "deferred per user"
+        }
+      }
+    },
+    "kaggleMetadata": {
+      "publicDescriptionSubtitleAndSourcesVerified": true
+    },
+    "kaggleDownloads": {
+      "exact": {
+        "status": "CURRENT",
+        "filesVerified": 48,
+        "SHA256": "ab7e99d5e16440281308d7248306b71a1863df0f68b779fdae02e5c9b117dc1b"
+      },
+      "default": {
+        "status": "CURRENT",
+        "filesVerified": 48,
+        "SHA256": "ab7e99d5e16440281308d7248306b71a1863df0f68b779fdae02e5c9b117dc1b"
+      },
+      "allCurrent": true
+    },
+    "unversionedDefaultCurrent": true,
+    "stageOnly": false,
+    "notebookActualExecutionVerified": true,
+    "notebookExecution": {
+      "status": "PASS",
+      "version": 16,
+      "publicSourceAndExecutionVerified": true,
+      "execution": {
+        "status": "PASS",
+        "upstream_revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "source_commit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+        "tables": {
+          "clinical_passages": 3249,
+          "clinical_answers": 125,
+          "entity_facts": 22235,
+          "query_matrix": 876,
+          "market_positioning": 60
+        },
+        "unresolved_query_references": 0,
+        "all_table_rows_reconstructed": true,
+        "csv_query_roundtrips": 876,
+        "negative_reference_test": true,
+        "identity_separation": true,
+        "archived_doi": "10.5281/zenodo.23474664",
+        "kaggle_version": 32,
+        "exact_doi": "10.5281/zenodo.23474664",
+        "input_checksums_sha256": "4e4dc07d2832effe50f7d0959c74e1c853583f3b2da7c79b43371f8e0b381224"
+      }
+    },
+    "hfSearchFilter": "Deferred; no runtime health assertion"
+  },
+  "websiteWrites": false,
+  "sameDOI": true,
+  "hfSearchFilter": "Deferred by user",
+  "workflowRun": "https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/40127515807",
+  "evidenceArtifact": {
+    "id": 12573018862,
+    "SHA256": "2cd9f115e5f7257cdc67fea908c7050feb788f18e8494c36801cc245b267eb62"
+  },
+  "mutationJournalSummary": {
+    "manifestSHA256": "0f8938032f547b99d63a1b91e96e6675a6be9e0396f832df375681c7dc5af72c",
+    "operations": 22,
+    "allAcknowledged": true,
+    "publishAttempts": 1,
+    "finalPublish": {
+      "label": "publish",
+      "method": "POST",
+      "attemptedUTC": "2026-10-24T19:57:53.943107+00:00",
+      "requestSHA256": null,
+      "state": "acknowledged",
+      "HTTP": 202
+    },
+    "priorStagingRun": 40123999621,
+    "resumedExistingExactDraft": true
+  }
+}

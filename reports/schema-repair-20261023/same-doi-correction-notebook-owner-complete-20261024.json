@@ -1,0 +1,28 @@
+{
+  "observedUTC": "2026-10-24T20:00:17Z",
+  "completedUTC": "2026-10-24T20:00:19Z",
+  "scope": "Official owner diagnostic with Kaggle 2.2.5 and v16 selector, separate from independently verified anonymous execution output",
+  "workflowRun": "https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/40127802851",
+  "status": "KernelWorkerStatus.COMPLETE",
+  "failureMessage": null,
+  "versionLabel": "v16",
+  "sourceBefore": {
+    "currentVersionNumber": 16,
+    "cells": 8,
+    "normalizedCellsSHA256": "c5d98c8b68289dd13c66ecb90208a2bc05ea8f399912dfe1a2d3d8e3950ffefb",
+    "matchesFrozenSource": true
+  },
+  "sourceAfter": {
+    "currentVersionNumber": 16,
+    "cells": 8,
+    "normalizedCellsSHA256": "c5d98c8b68289dd13c66ecb90208a2bc05ea8f399912dfe1a2d3d8e3950ffefb",
+    "matchesFrozenSource": true
+  },
+  "sourceIdentityVerified": true,
+  "outputFileNames": [
+    "doi-release-execution.json"
+  ],
+  "logStatus": "PERSISTED_LOG",
+  "logBytes": 7678,
+  "platformWrites": false
+}

@@ -1,0 +1,1386 @@
+{
+  "startedUTC": "2026-10-24T19:58:38Z",
+  "scope": "Independent anonymous same-DOI corrected files, nested full website and public metadata; no HF search/filter assertion",
+  "DOI": "10.5281/zenodo.23474664",
+  "record": 23474664,
+  "manifestSHA256": "0f8938032f547b99d63a1b91e96e6675a6be9e0396f832df375681c7dc5af72c",
+  "platformWrites": 0,
+  "retries": 0,
+  "downloadConcurrency": 4,
+  "calls": [
+    {
+      "label": "record",
+      "url": "https://zenodo.org/api/records/23474664",
+      "finalURL": "https://zenodo.org/api/records/23474664",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:40Z",
+      "seconds": 1.223,
+      "contentType": "application/json",
+      "bytes": 20548,
+      "SHA256": "e1d2dbcd0804c315a3c90894403761fdde6da8d39e0d423bcbcb3cd8f96162be"
+    },
+    {
+      "label": "file:archive-validation.json",
+      "url": "https://zenodo.org/api/records/23474664/files/archive-validation.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/archive-validation.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:40Z",
+      "seconds": 0.773,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 503,
+      "SHA256": "d001218e61e5b20f859ae62a2db007d2164bad8824889e952d2cc844eb5eca44"
+    },
+    {
+      "label": "file:README.md",
+      "url": "https://zenodo.org/api/records/23474664/files/README.md/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/README.md/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:40Z",
+      "seconds": 0.869,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 1814,
+      "SHA256": "c7eaeb8a88ef85cd6d9fcff023fabfc2b0a579d78dea8348e50b30c6bb2f8fc7"
+    },
+    {
+      "label": "file:archive-provenance.json",
+      "url": "https://zenodo.org/api/records/23474664/files/archive-provenance.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/archive-provenance.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:41Z",
+      "seconds": 1.038,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 35891,
+      "SHA256": "bc46a238d06dde7a9cd978607ce421433b15f03cf65cdf4166c5ddd58be633b4"
+    },
+    {
+      "label": "file:answers.txt",
+      "url": "https://zenodo.org/api/records/23474664/files/answers.txt/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/answers.txt/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:41Z",
+      "seconds": 1.428,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 278883,
+      "SHA256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4"
+    },
+    {
+      "label": "file:checksums.sha256",
+      "url": "https://zenodo.org/api/records/23474664/files/checksums.sha256/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/checksums.sha256/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:41Z",
+      "seconds": 0.848,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 28247,
+      "SHA256": "528b3b1b34b8e1bc4548e7e95946911af1dbeae36e92c08aa68f9ed32246eb28"
+    },
+    {
+      "label": "file:clinic.vcf",
+      "url": "https://zenodo.org/api/records/23474664/files/clinic.vcf/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/clinic.vcf/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:41Z",
+      "seconds": 0.946,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 484,
+      "SHA256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf"
+    },
+    {
+      "label": "file:croissant.json",
+      "url": "https://zenodo.org/api/records/23474664/files/croissant.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/croissant.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:42Z",
+      "seconds": 0.69,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 19576,
+      "SHA256": "577e052aeec86f075c7d230eeadd6c72dad83c18eafe56e0d0e958934d39e731"
+    },
+    {
+      "label": "file:current-release-matrix.json",
+      "url": "https://zenodo.org/api/records/23474664/files/current-release-matrix.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/current-release-matrix.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:42Z",
+      "seconds": 0.671,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 10509,
+      "SHA256": "d25a4f760d4989d774deafc742d41a9b8bbed3ce372a95e5648c572f93e43380"
+    },
+    {
+      "label": "file:datapackage.json",
+      "url": "https://zenodo.org/api/records/23474664/files/datapackage.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/datapackage.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:42Z",
+      "seconds": 0.73,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 20688,
+      "SHA256": "5b704e7d4808a605e7494aaff22238faae9a749e96b68a6a0563a4df7a3557d8"
+    },
+    {
+      "label": "file:dcat.ttl",
+      "url": "https://zenodo.org/api/records/23474664/files/dcat.ttl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/dcat.ttl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:42Z",
+      "seconds": 0.611,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 50207,
+      "SHA256": "d474ada33b552ce3aae4d9e6f12aa7b1f2ee56b0424b6d8a8c7cc42205cb4aaf"
+    },
+    {
+      "label": "file:dist-sha256.json",
+      "url": "https://zenodo.org/api/records/23474664/files/dist-sha256.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/dist-sha256.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:43Z",
+      "seconds": 0.886,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 42335,
+      "SHA256": "96bed7d2c5b7638114d6884df9aadc3607a0747cb1c3f43d48428e7a2479048b"
+    },
+    {
+      "label": "file:doctor.vcf",
+      "url": "https://zenodo.org/api/records/23474664/files/doctor.vcf/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/doctor.vcf/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:43Z",
+      "seconds": 0.676,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 393,
+      "SHA256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5"
+    },
+    {
+      "label": "file:doi-policy.json",
+      "url": "https://zenodo.org/api/records/23474664/files/doi-policy.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/doi-policy.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:43Z",
+      "seconds": 0.704,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 6697,
+      "SHA256": "56f4f146e1b84a428877533e7c5737b2c5f2d3077c77f6c20cf931ae23fdb9a8"
+    },
+    {
+      "label": "file:doi-role-inventory.json",
+      "url": "https://zenodo.org/api/records/23474664/files/doi-role-inventory.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/doi-role-inventory.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:44Z",
+      "seconds": 0.919,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 1016074,
+      "SHA256": "8284b13c20638c808a1342504d7e6e7e42edce564c74692596a2358f61e96a74"
+    },
+    {
+      "label": "file:entity-facts.csv-metadata.json",
+      "url": "https://zenodo.org/api/records/23474664/files/entity-facts.csv-metadata.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/entity-facts.csv-metadata.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:44Z",
+      "seconds": 0.32,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 3898,
+      "SHA256": "1df41f1f505b7d7b081cba9a08555504fcfccd6597af9df595480e38ec97c365"
+    },
+    {
+      "label": "file:evidence-snapshot.json",
+      "url": "https://zenodo.org/api/records/23474664/files/evidence-snapshot.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/evidence-snapshot.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:45Z",
+      "seconds": 0.85,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 183213,
+      "SHA256": "b8623d90a6a08b67cc3eaaaabff7ebadbdf2900336f0e7061d2f909fe131fbc6"
+    },
+    {
+      "label": "file:fact-map.json",
+      "url": "https://zenodo.org/api/records/23474664/files/fact-map.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/fact-map.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:46Z",
+      "seconds": 1.057,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 278519,
+      "SHA256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15"
+    },
+    {
+      "label": "file:entity-facts.csv",
+      "url": "https://zenodo.org/api/records/23474664/files/entity-facts.csv/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/entity-facts.csv/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:46Z",
+      "seconds": 3.44,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 5328500,
+      "SHA256": "e10e9299d6bf7364a7eb900bbb496504beef20a0e3f18381ad1c26290a0e102f"
+    },
+    {
+      "label": "file:graph.jsonld",
+      "url": "https://zenodo.org/api/records/23474664/files/graph.jsonld/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/graph.jsonld/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:50Z",
+      "seconds": 3.89,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 1658030,
+      "SHA256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7"
+    },
+    {
+      "label": "file:index.html",
+      "url": "https://zenodo.org/api/records/23474664/files/index.html/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/index.html/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:52Z",
+      "seconds": 2.25,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 3647779,
+      "SHA256": "4f8cb1cc228a620110bc45fb01decf7446c0e8f06dba80878e0ceb204bda863b"
+    },
+    {
+      "label": "file:clinical-passages.jsonl",
+      "url": "https://zenodo.org/api/records/23474664/files/clinical-passages.jsonl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/clinical-passages.jsonl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:54Z",
+      "seconds": 13.345,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 6884386,
+      "SHA256": "6e4c2b65f7b70d69d639349b528194f27fe953098565d294815cf9e5a6d77781"
+    },
+    {
+      "label": "file:graph.ttl",
+      "url": "https://zenodo.org/api/records/23474664/files/graph.ttl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/graph.ttl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:54Z",
+      "seconds": 7.855,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 3749618,
+      "SHA256": "f868dcaaccc9410c1d7576f841d87f248809c50f479fa843681bde1a8de8aceb"
+    },
+    {
+      "label": "file:instruction_examples_fa_market_positioning.csv",
+      "url": "https://zenodo.org/api/records/23474664/files/instruction_examples_fa_market_positioning.csv/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/instruction_examples_fa_market_positioning.csv/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:55Z",
+      "seconds": 0.878,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 340043,
+      "SHA256": "2791d935640702021dbeff4664890c674204200fb84954828193659b3f01ac8c"
+    },
+    {
+      "label": "file:instruction_examples_fa_market_positioning.jsonl",
+      "url": "https://zenodo.org/api/records/23474664/files/instruction_examples_fa_market_positioning.jsonl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/instruction_examples_fa_market_positioning.jsonl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:56Z",
+      "seconds": 1.539,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 361646,
+      "SHA256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4"
+    },
+    {
+      "label": "file:knowledge.xml",
+      "url": "https://zenodo.org/api/records/23474664/files/knowledge.xml/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/knowledge.xml/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:56Z",
+      "seconds": 1.038,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 41524,
+      "SHA256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf"
+    },
+    {
+      "label": "file:index.md",
+      "url": "https://zenodo.org/api/records/23474664/files/index.md/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/index.md/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:56Z",
+      "seconds": 3.989,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 1679921,
+      "SHA256": "ed7a9c1d2c9e49ca1a7ce832e618653c4183090761b6f62d6bb9ec84c7220da3"
+    },
+    {
+      "label": "file:linkset.json",
+      "url": "https://zenodo.org/api/records/23474664/files/linkset.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/linkset.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:56Z",
+      "seconds": 0.311,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 3554,
+      "SHA256": "d35d190cc929a3a1cf4ab2dfc4df6d50ca1d5170b9cc69ec9a66de4cc7516d95"
+    },
+    {
+      "label": "file:llms.txt",
+      "url": "https://zenodo.org/api/records/23474664/files/llms.txt/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/llms.txt/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:57Z",
+      "seconds": 0.387,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 18959,
+      "SHA256": "68e9cf2e8ea60f27994f4bb4d58b1fbf74844a93d9032a3b5e54ad902197f1e1"
+    },
+    {
+      "label": "file:market-positioning-evidence.json",
+      "url": "https://zenodo.org/api/records/23474664/files/market-positioning-evidence.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/market-positioning-evidence.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:57Z",
+      "seconds": 0.323,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 8895,
+      "SHA256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c"
+    },
+    {
+      "label": "file:physician-expertise.md",
+      "url": "https://zenodo.org/api/records/23474664/files/physician-expertise.md/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/physician-expertise.md/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:57Z",
+      "seconds": 0.355,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 6796,
+      "SHA256": "effcdefdc36d706697384b20b514fc7c98cc8739c87944d441ab8747dd531329"
+    },
+    {
+      "label": "file:positioning-strategy.json",
+      "url": "https://zenodo.org/api/records/23474664/files/positioning-strategy.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/positioning-strategy.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:57Z",
+      "seconds": 0.32,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 27845,
+      "SHA256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9"
+    },
+    {
+      "label": "file:llms-full.txt",
+      "url": "https://zenodo.org/api/records/23474664/files/llms-full.txt/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/llms-full.txt/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:58Z",
+      "seconds": 1.77,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 1630360,
+      "SHA256": "eaf7c67ef64dee45a6f5c11528801ccc38bae6e8428f9b7976eabca02be16399"
+    },
+    {
+      "label": "file:provenance.jsonld",
+      "url": "https://zenodo.org/api/records/23474664/files/provenance.jsonld/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/provenance.jsonld/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:58:59Z",
+      "seconds": 2.423,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 1197247,
+      "SHA256": "66770058070c98e988f3673454f8a494d3e0575bb4b5c20aa283e6b4c49294e8"
+    },
+    {
+      "label": "file:release-attestation.json",
+      "url": "https://zenodo.org/api/records/23474664/files/release-attestation.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/release-attestation.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:00Z",
+      "seconds": 0.712,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 9883,
+      "SHA256": "eab64b63147e877b7aa7b9348d5fb2606138df870a9dfb68aa3c023afdcbe237"
+    },
+    {
+      "label": "file:query-matrix.json-seq",
+      "url": "https://zenodo.org/api/records/23474664/files/query-matrix.json-seq/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/query-matrix.json-seq/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:00Z",
+      "seconds": 3.166,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 994936,
+      "SHA256": "6d510503c15f1099ebdba10c241d9d2946673b05d2b083ef4daa73ab5c1ef043"
+    },
+    {
+      "label": "file:query-matrix.jsonl",
+      "url": "https://zenodo.org/api/records/23474664/files/query-matrix.jsonl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/query-matrix.jsonl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:00Z",
+      "seconds": 2.401,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 994060,
+      "SHA256": "95d77cf937300911574e187495cc9a4ec62040cd99978c7f0800e579fa27057b"
+    },
+    {
+      "label": "file:release-provenance.json",
+      "url": "https://zenodo.org/api/records/23474664/files/release-provenance.json/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/release-provenance.json/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:01Z",
+      "seconds": 0.712,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 7705,
+      "SHA256": "36d67d43e4f71c0ef7e28fc36abc1e66ce4cdcbdfd8124069015571f9fc90a23"
+    },
+    {
+      "label": "file:robots.txt",
+      "url": "https://zenodo.org/api/records/23474664/files/robots.txt/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/robots.txt/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:01Z",
+      "seconds": 0.694,
+      "contentType": "text/plain; charset=utf-8,text/plain; charset=utf-8",
+      "bytes": 156,
+      "SHA256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda"
+    },
+    {
+      "label": "file:sitemap.xml",
+      "url": "https://zenodo.org/api/records/23474664/files/sitemap.xml/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/sitemap.xml/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:01Z",
+      "seconds": 0.326,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 12996,
+      "SHA256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd"
+    },
+    {
+      "label": "file:shapes.ttl",
+      "url": "https://zenodo.org/api/records/23474664/files/shapes.ttl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/shapes.ttl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:01Z",
+      "seconds": 1.161,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 108912,
+      "SHA256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51"
+    },
+    {
+      "label": "file:site.webmanifest",
+      "url": "https://zenodo.org/api/records/23474664/files/site.webmanifest/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/site.webmanifest/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:02Z",
+      "seconds": 1.092,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 2082,
+      "SHA256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05"
+    },
+    {
+      "label": "file:void.ttl",
+      "url": "https://zenodo.org/api/records/23474664/files/void.ttl/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/void.ttl/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:02Z",
+      "seconds": 0.961,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 38021,
+      "SHA256": "19350bad71934b1b149a8daa1d3a05893e87f6f9230d1c40c306df42524a79a9"
+    },
+    {
+      "label": "file:dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip",
+      "url": "https://zenodo.org/api/records/23474664/files/dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip/content",
+      "finalURL": "https://zenodo.org/api/records/23474664/files/dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip/content",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T19:59:58Z",
+      "seconds": 75.009,
+      "contentType": "application/octet-stream,application/octet-stream",
+      "bytes": 42135612,
+      "SHA256": "8e2d3c78f52a6167e332e9da84009737c99773e75f9ada961e9237a9f4816a2a"
+    },
+    {
+      "label": "landing",
+      "url": "https://zenodo.org/records/23474664",
+      "finalURL": "https://zenodo.org/records/23474664",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:02Z",
+      "seconds": 1.892,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 218374,
+      "SHA256": "0b5aa1b1769e5a17b6e3c62e5c617c0b4672ba7887eb3034755cb70d122847e7"
+    },
+    {
+      "label": "jsonld-export",
+      "url": "https://zenodo.org/records/23474664/export/json-ld",
+      "finalURL": "https://zenodo.org/records/23474664/export/json-ld",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:03Z",
+      "seconds": 1.381,
+      "contentType": "application/ld+json",
+      "bytes": 13077,
+      "SHA256": "171ce6b3c8671b9c70dab0c49507b09b4124f733d1bcddac3b5d29fefba50430"
+    },
+    {
+      "label": "datacite-json",
+      "url": "https://zenodo.org/records/23474664/export/datacite-json",
+      "finalURL": "https://zenodo.org/records/23474664/export/datacite-json",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:04Z",
+      "seconds": 1.021,
+      "contentType": "application/vnd.datacite.datacite+json",
+      "bytes": 8534,
+      "SHA256": "1d90512b2f13b41289446b42f73cbcd8c04ba3174e07f1ae6abf40a639a42fc9"
+    },
+    {
+      "label": "datacite-xml",
+      "url": "https://zenodo.org/records/23474664/export/datacite-xml",
+      "finalURL": "https://zenodo.org/records/23474664/export/datacite-xml",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:06Z",
+      "seconds": 1.237,
+      "contentType": "application/vnd.datacite.datacite+xml",
+      "bytes": 7260,
+      "SHA256": "09a1eeb6bcf8ea31a3c612c7a287b21e504185a67b28857419acd0f3c8f0e35d"
+    },
+    {
+      "label": "datacite-registration",
+      "url": "https://api.datacite.org/dois/10.5281/zenodo.23474664",
+      "finalURL": "https://api.datacite.org/dois/10.5281/zenodo.23474664",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:07Z",
+      "seconds": 1.228,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 16988,
+      "SHA256": "1a1aa315d5b495034d942ebb15f0b04e8ebc263ffc87d2bb3304841cf9201a41"
+    },
+    {
+      "label": "site-provenance",
+      "url": "https://www.ghezelbaash.ir/release-provenance.json",
+      "finalURL": "https://www.ghezelbaash.ir/release-provenance.json",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:07Z",
+      "seconds": 0.515,
+      "contentType": "application/json",
+      "bytes": 7339,
+      "SHA256": "66a4f4df8653225f899d8f8a70cbba6f7602fa5f7003a776442b8755546ad41c"
+    },
+    {
+      "label": "site-index.html",
+      "url": "https://www.ghezelbaash.ir/",
+      "finalURL": "https://www.ghezelbaash.ir/",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:08Z",
+      "seconds": 1.02,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 3647779,
+      "SHA256": "4f8cb1cc228a620110bc45fb01decf7446c0e8f06dba80878e0ceb204bda863b"
+    },
+    {
+      "label": "site-botox.html",
+      "url": "https://www.ghezelbaash.ir/botox",
+      "finalURL": "https://www.ghezelbaash.ir/botox",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:10Z",
+      "seconds": 1.525,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 123046,
+      "SHA256": "c78d3ef4c3d8001f490fc71d38d27961db933abe389501de630ccee47cdcda60"
+    },
+    {
+      "label": "site-graph.jsonld",
+      "url": "https://www.ghezelbaash.ir/graph.jsonld",
+      "finalURL": "https://www.ghezelbaash.ir/graph.jsonld",
+      "HTTP": 200,
+      "observedUTC": "2026-10-24T20:00:13Z",
+      "seconds": 2.498,
+      "contentType": "application/ld+json; profile=\"https://www.w3.org/TR/json-ld11/\"",
+      "bytes": 1658030,
+      "SHA256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7"
+    }
+  ],
+  "cohort": {
+    "candidateSchema": "same-doi-delivery-correction-1",
+    "record": 23474664,
+    "doi": "10.5281/zenodo.23474664",
+    "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+    "originalArchiveSourceCommit": "ed767f6e6726e1453196e2ec2b312fcad00677e2",
+    "hfParent": "017269f382c41c5eb27c5cfcebaf7a365368903e",
+    "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+    "kagglePreviousVersion": 31,
+    "kaggleVersion": 32,
+    "notebookPreviousVersion": 15,
+    "notebookVersion": 16,
+    "technicalCorrectionDate": "2026-10-24",
+    "websiteWrites": false,
+    "newDoi": false,
+    "sitePreviousSource": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+    "originalPublicRecordPath": "/tmp/schema-distribution-correction/original-archive/public-record.json",
+    "hfSearchFilter": "Deferred by user while index warms; no overall runtime health claim"
+  },
+  "recordMetadata": {
+    "status": "PASS",
+    "sameDOIAndVersion": true,
+    "unrelatedMetadataUnchanged": true,
+    "exactReviewedDescriptionAndRelations": true,
+    "metadataSHA256": "f5816b5471e09a6badc59a75108a838fd14a5f934c26439d7c8f79720596485f"
+  },
+  "depositedFileBytes": {
+    "status": "PASS",
+    "files": [
+      {
+        "name": "README.md",
+        "bytes": 1814,
+        "SHA256": "c7eaeb8a88ef85cd6d9fcff023fabfc2b0a579d78dea8348e50b30c6bb2f8fc7",
+        "MD5": "md5:028272d35efae83b96707eeff90b737a"
+      },
+      {
+        "name": "answers.txt",
+        "bytes": 278883,
+        "SHA256": "9c62053e259a3a95bb0f931561f0dc7c35e7580f73bcfc8543e222c4fb921ed4",
+        "MD5": "md5:2189630ad576ca8bfc10feac827cfa60"
+      },
+      {
+        "name": "archive-provenance.json",
+        "bytes": 35891,
+        "SHA256": "bc46a238d06dde7a9cd978607ce421433b15f03cf65cdf4166c5ddd58be633b4",
+        "MD5": "md5:f6493d1d011bf21879f27259382937fa"
+      },
+      {
+        "name": "archive-validation.json",
+        "bytes": 503,
+        "SHA256": "d001218e61e5b20f859ae62a2db007d2164bad8824889e952d2cc844eb5eca44",
+        "MD5": "md5:faeab5f262d9534a18bdfebcfc0e3d27"
+      },
+      {
+        "name": "checksums.sha256",
+        "bytes": 28247,
+        "SHA256": "528b3b1b34b8e1bc4548e7e95946911af1dbeae36e92c08aa68f9ed32246eb28",
+        "MD5": "md5:016906ce87925d042212ccf65ea7537e"
+      },
+      {
+        "name": "clinic.vcf",
+        "bytes": 484,
+        "SHA256": "24244218a33b02e5170c3fd3b96e6894d6ec5d5e85083b80a239ed288b7b36cf",
+        "MD5": "md5:368b8f21736a7f64556078fa28f325e3"
+      },
+      {
+        "name": "clinical-passages.jsonl",
+        "bytes": 6884386,
+        "SHA256": "6e4c2b65f7b70d69d639349b528194f27fe953098565d294815cf9e5a6d77781",
+        "MD5": "md5:dcbb6c99d8c2c6a4cc444b8811c950f8"
+      },
+      {
+        "name": "croissant.json",
+        "bytes": 19576,
+        "SHA256": "577e052aeec86f075c7d230eeadd6c72dad83c18eafe56e0d0e958934d39e731",
+        "MD5": "md5:9604d9756cfda89fc899060067f21acf"
+      },
+      {
+        "name": "current-release-matrix.json",
+        "bytes": 10509,
+        "SHA256": "d25a4f760d4989d774deafc742d41a9b8bbed3ce372a95e5648c572f93e43380",
+        "MD5": "md5:2b4d75cc1ce54322b1cb912fa8165e98"
+      },
+      {
+        "name": "datapackage.json",
+        "bytes": 20688,
+        "SHA256": "5b704e7d4808a605e7494aaff22238faae9a749e96b68a6a0563a4df7a3557d8",
+        "MD5": "md5:b3d4d10cf33b6d4ad7883ac971de8a21"
+      },
+      {
+        "name": "dcat.ttl",
+        "bytes": 50207,
+        "SHA256": "d474ada33b552ce3aae4d9e6f12aa7b1f2ee56b0424b6d8a8c7cc42205cb4aaf",
+        "MD5": "md5:57211c82de36753ebd9000f8d2c5ecea"
+      },
+      {
+        "name": "dist-sha256.json",
+        "bytes": 42335,
+        "SHA256": "96bed7d2c5b7638114d6884df9aadc3607a0747cb1c3f43d48428e7a2479048b",
+        "MD5": "md5:c72926ecd622c693f07f3d29210175f3"
+      },
+      {
+        "name": "doctor.vcf",
+        "bytes": 393,
+        "SHA256": "fba930d4ba82f248be5897df89eecdaeed7b974e6bf0449855eeea251f7e8ed5",
+        "MD5": "md5:aaab64a41b2c53cb4a3c17df36a7ed10"
+      },
+      {
+        "name": "doi-policy.json",
+        "bytes": 6697,
+        "SHA256": "56f4f146e1b84a428877533e7c5737b2c5f2d3077c77f6c20cf931ae23fdb9a8",
+        "MD5": "md5:9058784f46074c4f256501a6b90a206e"
+      },
+      {
+        "name": "doi-role-inventory.json",
+        "bytes": 1016074,
+        "SHA256": "8284b13c20638c808a1342504d7e6e7e42edce564c74692596a2358f61e96a74",
+        "MD5": "md5:28691faddd772dc1b3ee4a57f79859ac"
+      },
+      {
+        "name": "dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip",
+        "bytes": 42135612,
+        "SHA256": "8e2d3c78f52a6167e332e9da84009737c99773e75f9ada961e9237a9f4816a2a",
+        "MD5": "md5:9714059e83e35cda7a5c32290de0cd90"
+      },
+      {
+        "name": "entity-facts.csv",
+        "bytes": 5328500,
+        "SHA256": "e10e9299d6bf7364a7eb900bbb496504beef20a0e3f18381ad1c26290a0e102f",
+        "MD5": "md5:993eda0769642e827ee69ff941643ce5"
+      },
+      {
+        "name": "entity-facts.csv-metadata.json",
+        "bytes": 3898,
+        "SHA256": "1df41f1f505b7d7b081cba9a08555504fcfccd6597af9df595480e38ec97c365",
+        "MD5": "md5:c8b2f07c4903d6535b2613df515a03c8"
+      },
+      {
+        "name": "evidence-snapshot.json",
+        "bytes": 183213,
+        "SHA256": "b8623d90a6a08b67cc3eaaaabff7ebadbdf2900336f0e7061d2f909fe131fbc6",
+        "MD5": "md5:2c7e845926c5bc0dbe839b5d330e1062"
+      },
+      {
+        "name": "fact-map.json",
+        "bytes": 278519,
+        "SHA256": "0a1741d0406851e25ceb5ea43f0875ebde18fcda08972a5b66c1e6717d02fc15",
+        "MD5": "md5:4b34c61193d4071992e7400845097efe"
+      },
+      {
+        "name": "graph.jsonld",
+        "bytes": 1658030,
+        "SHA256": "aa8776aab907ab2abed459127a50f18d5e431b7f4d2dfb6d3382564da5fed4a7",
+        "MD5": "md5:b8be96345bda0b753c10c66777c84e20"
+      },
+      {
+        "name": "graph.ttl",
+        "bytes": 3749618,
+        "SHA256": "f868dcaaccc9410c1d7576f841d87f248809c50f479fa843681bde1a8de8aceb",
+        "MD5": "md5:79a6f8fdef035c12243f0f7b8e45408f"
+      },
+      {
+        "name": "index.html",
+        "bytes": 3647779,
+        "SHA256": "4f8cb1cc228a620110bc45fb01decf7446c0e8f06dba80878e0ceb204bda863b",
+        "MD5": "md5:b1d4472d7e48f34ccda644354170cfc1"
+      },
+      {
+        "name": "index.md",
+        "bytes": 1679921,
+        "SHA256": "ed7a9c1d2c9e49ca1a7ce832e618653c4183090761b6f62d6bb9ec84c7220da3",
+        "MD5": "md5:f42c79f301226e368d45fec9c64dd771"
+      },
+      {
+        "name": "instruction_examples_fa_market_positioning.csv",
+        "bytes": 340043,
+        "SHA256": "2791d935640702021dbeff4664890c674204200fb84954828193659b3f01ac8c",
+        "MD5": "md5:ceeb845f71c60d1400f461fa6db58c64"
+      },
+      {
+        "name": "instruction_examples_fa_market_positioning.jsonl",
+        "bytes": 361646,
+        "SHA256": "f7974f01ed0fef290a334598c020abcb0e5af382d831d40f7253c3e25bb205f4",
+        "MD5": "md5:4ffc1a00a7e9847130f6043bb6f86046"
+      },
+      {
+        "name": "knowledge.xml",
+        "bytes": 41524,
+        "SHA256": "c7cff1cb83f39644d1d4c3f3c48fc95cc5749cc14b0683c47b2cfd8aebc5eccf",
+        "MD5": "md5:e293c5f3c94ded1d7b5e14234e10b022"
+      },
+      {
+        "name": "linkset.json",
+        "bytes": 3554,
+        "SHA256": "d35d190cc929a3a1cf4ab2dfc4df6d50ca1d5170b9cc69ec9a66de4cc7516d95",
+        "MD5": "md5:5d2365976f8fca062b64e8fb8a76b3e5"
+      },
+      {
+        "name": "llms-full.txt",
+        "bytes": 1630360,
+        "SHA256": "eaf7c67ef64dee45a6f5c11528801ccc38bae6e8428f9b7976eabca02be16399",
+        "MD5": "md5:c18ae7efdea8cb6e4302c3081b35f72d"
+      },
+      {
+        "name": "llms.txt",
+        "bytes": 18959,
+        "SHA256": "68e9cf2e8ea60f27994f4bb4d58b1fbf74844a93d9032a3b5e54ad902197f1e1",
+        "MD5": "md5:3743f19cc9f983f335cdb07c0c00506a"
+      },
+      {
+        "name": "market-positioning-evidence.json",
+        "bytes": 8895,
+        "SHA256": "8e3bd2f5d5ceecc222022b2cec5ba972a1f1726d4d4166ca338e68715b2ee27c",
+        "MD5": "md5:e6046b4eb7c2777c09b6cfa4dcdde78c"
+      },
+      {
+        "name": "physician-expertise.md",
+        "bytes": 6796,
+        "SHA256": "effcdefdc36d706697384b20b514fc7c98cc8739c87944d441ab8747dd531329",
+        "MD5": "md5:68c563a7e5df1d74100d2ca3de6ddea5"
+      },
+      {
+        "name": "positioning-strategy.json",
+        "bytes": 27845,
+        "SHA256": "e2e06843c1653012a93209c3d77629759e31a5143411a22d9b1fb0b3bb18b7b9",
+        "MD5": "md5:5e68cbd08c40f79b1d308c3caf750431"
+      },
+      {
+        "name": "provenance.jsonld",
+        "bytes": 1197247,
+        "SHA256": "66770058070c98e988f3673454f8a494d3e0575bb4b5c20aa283e6b4c49294e8",
+        "MD5": "md5:b7d72e73606d47f87d2ddc8039b16422"
+      },
+      {
+        "name": "query-matrix.json-seq",
+        "bytes": 994936,
+        "SHA256": "6d510503c15f1099ebdba10c241d9d2946673b05d2b083ef4daa73ab5c1ef043",
+        "MD5": "md5:fbcb51e68aaf0c1517b86e4fe8339048"
+      },
+      {
+        "name": "query-matrix.jsonl",
+        "bytes": 994060,
+        "SHA256": "95d77cf937300911574e187495cc9a4ec62040cd99978c7f0800e579fa27057b",
+        "MD5": "md5:1ec2cb56aab2158c8dd49218bdedc419"
+      },
+      {
+        "name": "release-attestation.json",
+        "bytes": 9883,
+        "SHA256": "eab64b63147e877b7aa7b9348d5fb2606138df870a9dfb68aa3c023afdcbe237",
+        "MD5": "md5:84a2129be7552485ceafec641149a1e1"
+      },
+      {
+        "name": "release-provenance.json",
+        "bytes": 7705,
+        "SHA256": "36d67d43e4f71c0ef7e28fc36abc1e66ce4cdcbdfd8124069015571f9fc90a23",
+        "MD5": "md5:8620381995f782f285c9ee29eca2e7e8"
+      },
+      {
+        "name": "robots.txt",
+        "bytes": 156,
+        "SHA256": "6b7cd8e1e495a7abbf3db012164b4fdd6a05eeb7a66c3c3bd5e795e901ea3dda",
+        "MD5": "md5:3392b9df557cf4af197f7dcd017f219f"
+      },
+      {
+        "name": "shapes.ttl",
+        "bytes": 108912,
+        "SHA256": "01b6f380c6514510b77021b8a5b924bb9e11c03bb9b84668ad9763a128470b51",
+        "MD5": "md5:149cce644d348f9e5ab0b30e439aecb1"
+      },
+      {
+        "name": "site.webmanifest",
+        "bytes": 2082,
+        "SHA256": "1ae9b6311f38a990a74ed2d92821363763c571234981a922981be8b13ee7eb05",
+        "MD5": "md5:c0ab69d2ef84bd8d15e725cf8e683064"
+      },
+      {
+        "name": "sitemap.xml",
+        "bytes": 12996,
+        "SHA256": "fe780c896daf217de39744205d5b19047a5dd95ef777434dfcf5ca55d92fb8bd",
+        "MD5": "md5:94bae329dd70a558f7cb56f3aaf65c6e"
+      },
+      {
+        "name": "void.ttl",
+        "bytes": 38021,
+        "SHA256": "19350bad71934b1b149a8daa1d3a05893e87f6f9230d1c40c306df42524a79a9",
+        "MD5": "md5:a4526d38504f481e30b90d51555f1b0b"
+      }
+    ],
+    "count": 43
+  },
+  "changedFiles": {
+    "count": 18,
+    "names": [
+      "README.md",
+      "archive-provenance.json",
+      "archive-validation.json",
+      "checksums.sha256",
+      "croissant.json",
+      "current-release-matrix.json",
+      "datapackage.json",
+      "dcat.ttl",
+      "dist-sha256.json",
+      "doi-policy.json",
+      "doi-role-inventory.json",
+      "dr-saeed-ghezelbash-dataset-1.3.4-zenodo.3.zip",
+      "index.html",
+      "llms.txt",
+      "query-matrix.json-seq",
+      "query-matrix.jsonl",
+      "release-attestation.json",
+      "release-provenance.json"
+    ],
+    "unchanged": 25
+  },
+  "nestedZIP": {
+    "status": "PASS",
+    "entries": 254,
+    "allHashesAndSizesVerified": true,
+    "all42OuterFilesEqualNested": true,
+    "originalZIPPreservedExact": true,
+    "originalPublicRecordPreservedExact": true,
+    "historicalUpstreamPreservedExact": true,
+    "scientificFilesExact": 17,
+    "websiteFilesExact": 188,
+    "authoredPages": 72,
+    "articlePages": 63,
+    "pages": [
+      {
+        "path": "website/acne-pigmentation-and-scars.html",
+        "canonical": "https://www.ghezelbaash.ir/acne-pigmentation-and-scars",
+        "schemaNodes": 82,
+        "article": true
+      },
+      {
+        "path": "website/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling.html",
+        "canonical": "https://www.ghezelbaash.ir/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling",
+        "schemaNodes": 74,
+        "article": true
+      },
+      {
+        "path": "website/acne-scars.html",
+        "canonical": "https://www.ghezelbaash.ir/acne-scars",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/active-acne.html",
+        "canonical": "https://www.ghezelbaash.ir/active-acne",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-clinical-decision-pathway.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-clinical-decision-pathway",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-guide-ar-iq.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-guide-ar-iq",
+        "schemaNodes": 89,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-guide-ckb-iq.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-guide-ckb-iq",
+        "schemaNodes": 93,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-guide-en.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-guide-en",
+        "schemaNodes": 89,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-terminology-and-treatment-errors.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-terminology-and-treatment-errors",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-treatment-candidacy.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-treatment-candidacy",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-treatment-comparison.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-treatment-comparison",
+        "schemaNodes": 73,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-treatment-failure-from-diagnostic-error.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-treatment-failure-from-diagnostic-error",
+        "schemaNodes": 72,
+        "article": true
+      },
+      {
+        "path": "website/aesthetic-treatment-selection.html",
+        "canonical": "https://www.ghezelbaash.ir/aesthetic-treatment-selection",
+        "schemaNodes": 110,
+        "article": true
+      },
+      {
+        "path": "website/blepharoplasty-for-excess-eyelid-skin-and-fat.html",
+        "canonical": "https://www.ghezelbaash.ir/blepharoplasty-for-excess-eyelid-skin-and-fat",
+        "schemaNodes": 66,
+        "article": true
+      },
+      {
+        "path": "website/body-filler.html",
+        "canonical": "https://www.ghezelbaash.ir/body-filler",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/botox-complications-longevity-and-aftercare.html",
+        "canonical": "https://www.ghezelbaash.ir/botox-complications-longevity-and-aftercare",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/botox-contraindications-and-precautions.html",
+        "canonical": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/botox-for-jaw-neck-body-and-hyperhidrosis.html",
+        "canonical": "https://www.ghezelbaash.ir/botox-for-jaw-neck-body-and-hyperhidrosis",
+        "schemaNodes": 78,
+        "article": true
+      },
+      {
+        "path": "website/botox-mechanism-indications-and-limitations.html",
+        "canonical": "https://www.ghezelbaash.ir/botox-mechanism-indications-and-limitations",
+        "schemaNodes": 70,
+        "article": true
+      },
+      {
+        "path": "website/botox-pre-injection-clinical-assessment.html",
+        "canonical": "https://www.ghezelbaash.ir/botox-pre-injection-clinical-assessment",
+        "schemaNodes": 72,
+        "article": true
+      },
+      {
+        "path": "website/botox.html",
+        "canonical": "https://www.ghezelbaash.ir/botox",
+        "schemaNodes": 89,
+        "article": true
+      },
+      {
+        "path": "website/buccal-fat-removal-facial-fullness-assessment.html",
+        "canonical": "https://www.ghezelbaash.ir/buccal-fat-removal-facial-fullness-assessment",
+        "schemaNodes": 66,
+        "article": true
+      },
+      {
+        "path": "website/central-lip-lift-for-long-upper-lip.html",
+        "canonical": "https://www.ghezelbaash.ir/central-lip-lift-for-long-upper-lip",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/chin-jawline-and-facial-contouring.html",
+        "canonical": "https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring",
+        "schemaNodes": 92,
+        "article": true
+      },
+      {
+        "path": "website/choosing-an-aesthetic-doctor-in-kermanshah-and-iran.html",
+        "canonical": "https://www.ghezelbaash.ir/choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+        "schemaNodes": 66,
+        "article": true
+      },
+      {
+        "path": "website/collagen-stimulation-sculptra-and-liquid-thread.html",
+        "canonical": "https://www.ghezelbaash.ir/collagen-stimulation-sculptra-and-liquid-thread",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/complications-aftercare-and-follow-up.html",
+        "canonical": "https://www.ghezelbaash.ir/complications-aftercare-and-follow-up",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/diagnosis-before-aesthetic-treatment-selection.html",
+        "canonical": "https://www.ghezelbaash.ir/diagnosis-before-aesthetic-treatment-selection",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah.html",
+        "canonical": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/facial-aging-differential-diagnosis.html",
+        "canonical": "https://www.ghezelbaash.ir/facial-aging-differential-diagnosis",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/facial-filler-by-anatomic-area-and-cause.html",
+        "canonical": "https://www.ghezelbaash.ir/facial-filler-by-anatomic-area-and-cause",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/filler-complications-correction-and-aftercare.html",
+        "canonical": "https://www.ghezelbaash.ir/filler-complications-correction-and-aftercare",
+        "schemaNodes": 72,
+        "article": true
+      },
+      {
+        "path": "website/filler-material-selection-and-tissue-behavior.html",
+        "canonical": "https://www.ghezelbaash.ir/filler-material-selection-and-tissue-behavior",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/filler-treatment-exclusion-criteria.html",
+        "canonical": "https://www.ghezelbaash.ir/filler-treatment-exclusion-criteria",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/filler-volume-shadow-and-proportion-assessment.html",
+        "canonical": "https://www.ghezelbaash.ir/filler-volume-shadow-and-proportion-assessment",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/filler.html",
+        "canonical": "https://www.ghezelbaash.ir/filler",
+        "schemaNodes": 116,
+        "article": true
+      },
+      {
+        "path": "website/general-aesthetic-treatment-risks-and-setting-boundaries.html",
+        "canonical": "https://www.ghezelbaash.ir/general-aesthetic-treatment-risks-and-setting-boundaries",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/general-follow-up-and-aftercare.html",
+        "canonical": "https://www.ghezelbaash.ir/general-follow-up-and-aftercare",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/hair-loss-diagnostic-assessment-before-prp-and-mesotherapy.html",
+        "canonical": "https://www.ghezelbaash.ir/hair-loss-diagnostic-assessment-before-prp-and-mesotherapy",
+        "schemaNodes": 73,
+        "article": true
+      },
+      {
+        "path": "website/hair-loss.html",
+        "canonical": "https://www.ghezelbaash.ir/hair-loss",
+        "schemaNodes": 83,
+        "article": true
+      },
+      {
+        "path": "website/hand-rejuvenation.html",
+        "canonical": "https://www.ghezelbaash.ir/hand-rejuvenation",
+        "schemaNodes": 67,
+        "article": true
+      },
+      {
+        "path": "website/historical-patient-origin-summary.html",
+        "canonical": "https://www.ghezelbaash.ir/historical-patient-origin-summary",
+        "schemaNodes": 64,
+        "article": false
+      },
+      {
+        "path": "website/hyaluronidase-filler-dissolution-limitations.html",
+        "canonical": "https://www.ghezelbaash.ir/hyaluronidase-filler-dissolution-limitations",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/index.html",
+        "canonical": "https://www.ghezelbaash.ir/",
+        "schemaNodes": 85,
+        "article": false
+      },
+      {
+        "path": "website/jalupro-and-profhilo.html",
+        "canonical": "https://www.ghezelbaash.ir/jalupro-and-profhilo",
+        "schemaNodes": 80,
+        "article": true
+      },
+      {
+        "path": "website/lower-face-proportion-and-contouring.html",
+        "canonical": "https://www.ghezelbaash.ir/lower-face-proportion-and-contouring",
+        "schemaNodes": 73,
+        "article": true
+      },
+      {
+        "path": "website/mesobotox-and-borderline-treatments.html",
+        "canonical": "https://www.ghezelbaash.ir/mesobotox-and-borderline-treatments",
+        "schemaNodes": 73,
+        "article": true
+      },
+      {
+        "path": "website/out-of-town-aesthetic-patients-iran.html",
+        "canonical": "https://www.ghezelbaash.ir/out-of-town-aesthetic-patients-iran",
+        "schemaNodes": 65,
+        "article": false
+      },
+      {
+        "path": "website/perioral-and-lip-botox.html",
+        "canonical": "https://www.ghezelbaash.ir/perioral-and-lip-botox",
+        "schemaNodes": 74,
+        "article": true
+      },
+      {
+        "path": "website/prp-for-skin-and-hair.html",
+        "canonical": "https://www.ghezelbaash.ir/prp-for-skin-and-hair",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/saeed-ghezelbash-clinic-contact-and-location.html",
+        "canonical": "https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location",
+        "schemaNodes": 64,
+        "article": false
+      },
+      {
+        "path": "website/saeed-ghezelbash-diagnostic-philosophy.html",
+        "canonical": "https://www.ghezelbaash.ir/saeed-ghezelbash-diagnostic-philosophy",
+        "schemaNodes": 71,
+        "article": true
+      },
+      {
+        "path": "website/saeed-ghezelbash-research-education-and-clinical-decisions.html",
+        "canonical": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
+        "schemaNodes": 73,
+        "article": false
+      },
+      {
+        "path": "website/skin-pigmentation.html",
+        "canonical": "https://www.ghezelbaash.ir/skin-pigmentation",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/skin-rejuvenation.html",
+        "canonical": "https://www.ghezelbaash.ir/skin-rejuvenation",
+        "schemaNodes": 72,
+        "article": true
+      },
+      {
+        "path": "website/skin-treatment-and-fat-grafting-aftercare.html",
+        "canonical": "https://www.ghezelbaash.ir/skin-treatment-and-fat-grafting-aftercare",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/subcision-for-tethered-acne-scars.html",
+        "canonical": "https://www.ghezelbaash.ir/subcision-for-tethered-acne-scars",
+        "schemaNodes": 74,
+        "article": true
+      },
+      {
+        "path": "website/submental-fat-and-neck-contour.html",
+        "canonical": "https://www.ghezelbaash.ir/submental-fat-and-neck-contour",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/submental-liposuction-for-fat-dominant-fullness.html",
+        "canonical": "https://www.ghezelbaash.ir/submental-liposuction-for-fat-dominant-fullness",
+        "schemaNodes": 66,
+        "article": true
+      },
+      {
+        "path": "website/therapeutic-botox-indications.html",
+        "canonical": "https://www.ghezelbaash.ir/therapeutic-botox-indications",
+        "schemaNodes": 75,
+        "article": true
+      },
+      {
+        "path": "website/thread-lift-by-anatomic-area.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-lift-by-anatomic-area",
+        "schemaNodes": 72,
+        "article": true
+      },
+      {
+        "path": "website/thread-lift-complications-preparation-and-aftercare.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-lift-complications-preparation-and-aftercare",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/thread-lift-contraindications.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-lift-contraindications",
+        "schemaNodes": 69,
+        "article": true
+      },
+      {
+        "path": "website/thread-lift-pre-treatment-assessment.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-lift-pre-treatment-assessment",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/thread-lift-vs-surgery-hifu-and-radiofrequency.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-lift-vs-surgery-hifu-and-radiofrequency",
+        "schemaNodes": 66,
+        "article": true
+      },
+      {
+        "path": "website/thread-lift.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-lift",
+        "schemaNodes": 81,
+        "article": true
+      },
+      {
+        "path": "website/thread-types-and-selection.html",
+        "canonical": "https://www.ghezelbaash.ir/thread-types-and-selection",
+        "schemaNodes": 68,
+        "article": true
+      },
+      {
+        "path": "website/upper-face-botox.html",
+        "canonical": "https://www.ghezelbaash.ir/upper-face-botox",
+        "schemaNodes": 70,
+        "article": true
+      },
+      {
+        "path": "website/video-saeed-ghezelbash-jalupro-vs-profhilo.html",
+        "canonical": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo",
+        "schemaNodes": 71,
+        "article": false
+      },
+      {
+        "path": "website/video-saeed-ghezelbash-kurdish-patient-review.html",
+        "canonical": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review",
+        "schemaNodes": 67,
+        "article": false
+      },
+      {
+        "path": "website/video-saeed-ghezelbash-subcision-technique.html",
+        "canonical": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique",
+        "schemaNodes": 69,
+        "article": false
+      },
+      {
+        "path": "website/video-saeed-ghezelbash-thread-lift-workshop.html",
+        "canonical": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop",
+        "schemaNodes": 69,
+        "article": false
+      }
+    ]
+  },
+  "visibleAndEmbeddedMetadata": {
+    "status": "PASS",
+    "currentPinsAndCorrectionVisible": true,
+    "DatasetDescriptionExact": true
+  },
+  "exportsAndExternalDataCite": {
+    "status": "PASS",
+    "allCurrentRelations": [
+      "10.5281/zenodo.18765168",
+      "10.5281/zenodo.23473947",
+      "https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/ed767f6e6726e1453196e2ec2b312fcad00677e2",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/tree/3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/viewer",
+      "https://www.ghezelbaash.ir/",
+      "https://www.kaggle.com/code/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data",
+      "https://www.kaggle.com/datasets/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data/versions/32"
+    ],
+    "registryUpdated": "2026-10-24T19:57:56.000Z",
+    "correctionDescriptionRegistered": true
+  },
+  "currentWebsite": {
+    "status": "PASS",
+    "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+    "homeBotoxGraphEqualArchivedWebsite": true,
+    "canonicalGraphIndexable": true
+  },
+  "status": "PASS",
+  "completedUTC": "2026-10-24T20:00:13Z"
+}

@@ -1,0 +1,96 @@
+{
+  "startedUTC": "2026-10-24T18:55:17.533277+00:00",
+  "expectedVersion": 32,
+  "expectedHFRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+  "expectedSourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+  "retries": 0,
+  "platformWrites": 0,
+  "scope": "Fresh independent public metadata and exact/default complete ZIP byte verification after current pointer convergence; earlier pending receipt preserved",
+  "calls": [
+    {
+      "surface": "public-head",
+      "startedUTC": "2026-10-24T18:55:17.539565+00:00",
+      "HTTP": 200,
+      "bytes": 26792,
+      "SHA256": "6e168d6f55a3ff16bfc03f9422c82e6549cc8649e4d37447f07b75b806bc3d8d",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:55:17 GMT",
+        "Age": null,
+        "Content-Type": "application/json",
+        "Cache-Control": null
+      },
+      "currentVersionNumber": 32,
+      "latestListedVersion": 32,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:55:18.122035+00:00",
+      "seconds": 0.582
+    },
+    {
+      "surface": "public-metadata",
+      "startedUTC": "2026-10-24T18:55:17.543571+00:00",
+      "HTTP": 200,
+      "bytes": 11359,
+      "SHA256": "09c8b66f5a56fef41ffa6c4bed27ad9136ea9cc26de6195c246c83333bf30139",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:55:16 GMT",
+        "Age": null,
+        "Content-Type": "application/json",
+        "Cache-Control": null
+      },
+      "fieldsMatchFrozen": {
+        "description": true,
+        "subtitle": true,
+        "userSpecifiedSources": true
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:55:17.765355+00:00",
+      "seconds": 0.222
+    },
+    {
+      "surface": "exact32-zip",
+      "startedUTC": "2026-10-24T18:55:17.544743+00:00",
+      "HTTP": 200,
+      "bytes": 5770151,
+      "SHA256": "ab7e99d5e16440281308d7248306b71a1863df0f68b779fdae02e5c9b117dc1b",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:55:18 GMT",
+        "Age": null,
+        "Content-Type": "application/zip",
+        "Cache-Control": "private, max-age=0"
+      },
+      "status": "PASS",
+      "version": 32,
+      "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+      "filesSHA256Verified": 48,
+      "packageChecksumsVerified": 47,
+      "sameAsEarlierExact32ZIP": true,
+      "completedUTC": "2026-10-24T18:55:18.820162+00:00",
+      "seconds": 1.275
+    },
+    {
+      "surface": "default-zip",
+      "startedUTC": "2026-10-24T18:55:17.547289+00:00",
+      "HTTP": 200,
+      "bytes": 5770151,
+      "SHA256": "ab7e99d5e16440281308d7248306b71a1863df0f68b779fdae02e5c9b117dc1b",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:55:18 GMT",
+        "Age": null,
+        "Content-Type": "application/zip",
+        "Cache-Control": "private, max-age=0"
+      },
+      "status": "PASS",
+      "version": 32,
+      "hfRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+      "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079",
+      "filesSHA256Verified": 48,
+      "packageChecksumsVerified": 47,
+      "sameAsEarlierExact32ZIP": true,
+      "completedUTC": "2026-10-24T18:55:18.770417+00:00",
+      "seconds": 1.223
+    }
+  ],
+  "completedUTC": "2026-10-24T18:55:18.826007+00:00",
+  "status": "PASS"
+}

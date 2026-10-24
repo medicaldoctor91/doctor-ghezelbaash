@@ -1,0 +1,490 @@
+{
+  "startedUTC": "2026-10-24T18:42:06.390265+00:00",
+  "expectedRevision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+  "calls": [
+    {
+      "name": "hub-before",
+      "startedUTC": "2026-10-24T18:42:06.986467+00:00",
+      "HTTP": 200,
+      "bytes": 15063,
+      "SHA256": "5911c57513728fd1f6c086192123c71326f1b13eb638816bf210867343f9f65e",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:07 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:07.324241+00:00",
+      "seconds": 0.338
+    },
+    {
+      "name": "parquet",
+      "startedUTC": "2026-10-24T18:42:07.324706+00:00",
+      "HTTP": 200,
+      "bytes": 1602,
+      "SHA256": "bb6e1cf8be9c89482004141b19b7c77ede2f1b881e4a65b6ac65dbe7fbe0d355",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:07 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:07.682492+00:00",
+      "seconds": 0.358
+    },
+    {
+      "name": "size",
+      "startedUTC": "2026-10-24T18:42:07.683300+00:00",
+      "HTTP": 200,
+      "bytes": 2634,
+      "SHA256": "3d516d4aacdbb357e7752c65043aba7457aeea5cff7614b80bc55189dba4d9a1",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:07 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:07.835466+00:00",
+      "seconds": 0.152
+    },
+    {
+      "name": "converted-clinical_passages-0",
+      "startedUTC": "2026-10-24T18:42:07.835998+00:00",
+      "HTTP": 200,
+      "bytes": 846901,
+      "SHA256": "8262b80ff5c3bbd3eeedc41f9eb9a2662d783997f9f19dd47186f4512142597e",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:08 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/octet-stream"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:09.125353+00:00",
+      "seconds": 1.289
+    },
+    {
+      "name": "first-rows-clinical_passages",
+      "startedUTC": "2026-10-24T18:42:09.353124+00:00",
+      "HTTP": 200,
+      "bytes": 198253,
+      "SHA256": "bfb6f580c80f4e91c2d3e73858a3f6d056b5288eca63b4be3f40452dd26e6e32",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:09 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:09.610637+00:00",
+      "seconds": 0.258
+    },
+    {
+      "name": "rows-clinical_passages",
+      "startedUTC": "2026-10-24T18:42:09.615768+00:00",
+      "HTTP": 200,
+      "bytes": 5607,
+      "SHA256": "671aaf1f9a70f9ff9ee815d869b925fface7a4d2daa33fd2dbd98cc0d10bbc1f",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:10 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:10.267268+00:00",
+      "seconds": 0.651
+    },
+    {
+      "name": "statistics-clinical_passages",
+      "startedUTC": "2026-10-24T18:42:10.269066+00:00",
+      "HTTP": 200,
+      "bytes": 163668,
+      "SHA256": "2b6e48ca8eba1732b2b2e61a2738e4f2fca4e545d937bfae1eb6149eadd83604",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:10 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:10.412536+00:00",
+      "seconds": 0.143
+    },
+    {
+      "name": "converted-clinical_answers-0",
+      "startedUTC": "2026-10-24T18:42:10.415495+00:00",
+      "HTTP": 200,
+      "bytes": 74788,
+      "SHA256": "e4ab988fad12d9d73684d2d8c8ca34b44f042bc2e49387329ea563c90fa55d18",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:10 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/octet-stream"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:11.098464+00:00",
+      "seconds": 0.683
+    },
+    {
+      "name": "first-rows-clinical_answers",
+      "startedUTC": "2026-10-24T18:42:11.123374+00:00",
+      "HTTP": 200,
+      "bytes": 199798,
+      "SHA256": "f545a48e47d661e783f67a09c5003762620f54c3218aa5eb6350a79042ce4998",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:11 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:11.268928+00:00",
+      "seconds": 0.146
+    },
+    {
+      "name": "rows-clinical_answers",
+      "startedUTC": "2026-10-24T18:42:11.273000+00:00",
+      "HTTP": 200,
+      "bytes": 7653,
+      "SHA256": "a56e5569949b4145d9a0b18785be52419fdbbbb3c25391d53e4dd30d50748942",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:11 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:11.789596+00:00",
+      "seconds": 0.517
+    },
+    {
+      "name": "statistics-clinical_answers",
+      "startedUTC": "2026-10-24T18:42:11.790684+00:00",
+      "HTTP": 200,
+      "bytes": 5464,
+      "SHA256": "f7d8692ea7a7c52dbe17f7309f61d8e5b7810c7e27ee93cb11eed1f3ffdec5a6",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:11 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:11.935614+00:00",
+      "seconds": 0.145
+    },
+    {
+      "name": "converted-entity_facts-0",
+      "startedUTC": "2026-10-24T18:42:11.940018+00:00",
+      "HTTP": 200,
+      "bytes": 979256,
+      "SHA256": "4894003de27b828ba00e52e7c3f4fd9dbb1cbe4ee70004c73786e17b2da55e9b",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:12 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/octet-stream"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:12.929139+00:00",
+      "seconds": 0.989
+    },
+    {
+      "name": "first-rows-entity_facts",
+      "startedUTC": "2026-10-24T18:42:13.695273+00:00",
+      "HTTP": 200,
+      "bytes": 35498,
+      "SHA256": "c9352ffd2b62216c65a2f149ece602c902c8833b3c162bcfd016ffe4fbe28dbc",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:14 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:14.193144+00:00",
+      "seconds": 0.498
+    },
+    {
+      "name": "rows-entity_facts",
+      "startedUTC": "2026-10-24T18:42:14.412407+00:00",
+      "HTTP": 200,
+      "bytes": 1404,
+      "SHA256": "6c12cd793e18e60ecdd18c4cd4670bdae5a45523052416126c64550bc9b5503f",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:14 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:15.939905+00:00",
+      "seconds": 1.527
+    },
+    {
+      "name": "statistics-entity_facts",
+      "startedUTC": "2026-10-24T18:42:15.940779+00:00",
+      "HTTP": 200,
+      "bytes": 15100,
+      "SHA256": "2d01501f26c0a972e2f7846aa74e7a24f898d13c8a32df7ded2412c4a2c46db1",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:16 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:16.896742+00:00",
+      "seconds": 0.956
+    },
+    {
+      "name": "converted-query_matrix-0",
+      "startedUTC": "2026-10-24T18:42:16.982571+00:00",
+      "HTTP": 200,
+      "bytes": 25727,
+      "SHA256": "72b1bac58d470dcaf97e56b7ddc244e16ad46eaa8ba9d02e2ae6867e55e20ad6",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:18 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/octet-stream"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:18.461821+00:00",
+      "seconds": 1.467
+    },
+    {
+      "name": "first-rows-query_matrix",
+      "startedUTC": "2026-10-24T18:42:18.519701+00:00",
+      "HTTP": 200,
+      "bytes": 168349,
+      "SHA256": "ccf9fcb7d27a7a394cb6be0ec62ec889e8b940034a728dc9eeda5bbf73cb8c0f",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:18 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:18.696620+00:00",
+      "seconds": 0.178
+    },
+    {
+      "name": "rows-query_matrix",
+      "startedUTC": "2026-10-24T18:42:18.711099+00:00",
+      "HTTP": 200,
+      "bytes": 5296,
+      "SHA256": "7e153e084730bffbb49f9c21d77177bfc5b0f1a324da2ab766906dea38a60307",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:19 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:19.322221+00:00",
+      "seconds": 0.611
+    },
+    {
+      "name": "statistics-query_matrix",
+      "startedUTC": "2026-10-24T18:42:19.323322+00:00",
+      "HTTP": 200,
+      "bytes": 24471,
+      "SHA256": "e0086387cf14c56991eb5e97148d7562a3cc29e3816664f57fbaefc3b83f84ec",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:19 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:19.571491+00:00",
+      "seconds": 0.248
+    },
+    {
+      "name": "converted-market_positioning-0",
+      "startedUTC": "2026-10-24T18:42:19.574938+00:00",
+      "HTTP": 200,
+      "bytes": 52421,
+      "SHA256": "1c4458b2ae1645eeab6a940b0529f8a00ebabc7d6cb8bf67afba5c0b1ff1f408",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:20 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/octet-stream"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:20.519957+00:00",
+      "seconds": 0.945
+    },
+    {
+      "name": "first-rows-market_positioning",
+      "startedUTC": "2026-10-24T18:42:20.534204+00:00",
+      "HTTP": 200,
+      "bytes": 194739,
+      "SHA256": "6e6351c62e8c8bb47b0618dfeab48abac92353d24b411dea6f7773c5e960fa2a",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:20 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:20.828985+00:00",
+      "seconds": 0.295
+    },
+    {
+      "name": "rows-market_positioning",
+      "startedUTC": "2026-10-24T18:42:20.834260+00:00",
+      "HTTP": 200,
+      "bytes": 15688,
+      "SHA256": "aea264962aafc0dd9f81d7dd579c4da75034d45378a0ffc06d4493c0855b0de9",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:21 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:21.402732+00:00",
+      "seconds": 0.568
+    },
+    {
+      "name": "statistics-market_positioning",
+      "startedUTC": "2026-10-24T18:42:21.406841+00:00",
+      "HTTP": 200,
+      "bytes": 5579,
+      "SHA256": "97c7736cff45f7d3135efc3b2b169128fcb9bc24eaa41dd748a14f174e4acd69",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:21 GMT",
+        "Age": null,
+        "X-Revision": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+        "X-Error-Code": null,
+        "Content-Type": "application/json"
+      },
+      "revisionVerified": true,
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:21.657324+00:00",
+      "seconds": 0.25
+    },
+    {
+      "name": "hub-after",
+      "startedUTC": "2026-10-24T18:42:21.659071+00:00",
+      "HTTP": 200,
+      "bytes": 15063,
+      "SHA256": "5911c57513728fd1f6c086192123c71326f1b13eb638816bf210867343f9f65e",
+      "headers": {
+        "Date": "Sat, 24 Oct 2026 18:42:21 GMT",
+        "Age": null,
+        "X-Revision": null,
+        "X-Error-Code": null,
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      "status": "PASS",
+      "completedUTC": "2026-10-24T18:42:21.867428+00:00",
+      "seconds": 0.208
+    }
+  ],
+  "platformWrites": 0,
+  "searchFilterCalls": 0,
+  "retries": 0,
+  "maximumCalls": 24,
+  "scope": "Complete converted exports and primary Viewer flows; search/filter deliberately deferred by user",
+  "completedUTC": "2026-10-24T18:42:21.884024+00:00",
+  "hubHeadBefore": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+  "tableCounts": {
+    "clinical_passages": 3249,
+    "clinical_answers": 125,
+    "entity_facts": 22235,
+    "market_positioning": 60,
+    "query_matrix": 876
+  },
+  "tables": {
+    "clinical_passages": {
+      "status": "PASS",
+      "fullConvertedRowsMatched": 3249,
+      "firstRowsExactMatched": 86,
+      "pageRowsExactMatched": 2,
+      "statisticsEntries": 21,
+      "revisionVerified": true
+    },
+    "clinical_answers": {
+      "status": "PASS",
+      "fullConvertedRowsMatched": 125,
+      "firstRowsExactMatched": 84,
+      "pageRowsExactMatched": 2,
+      "statisticsEntries": 22,
+      "revisionVerified": true
+    },
+    "entity_facts": {
+      "status": "PASS",
+      "fullConvertedRowsMatched": 22235,
+      "firstRowsExactMatched": 100,
+      "pageRowsExactMatched": 2,
+      "statisticsEntries": 8,
+      "revisionVerified": true
+    },
+    "query_matrix": {
+      "status": "PASS",
+      "fullConvertedRowsMatched": 876,
+      "firstRowsExactMatched": 100,
+      "pageRowsExactMatched": 2,
+      "statisticsEntries": 24,
+      "revisionVerified": true
+    },
+    "market_positioning": {
+      "status": "PASS",
+      "fullConvertedRowsMatched": 60,
+      "firstRowsExactMatched": 29,
+      "pageRowsExactMatched": 2,
+      "statisticsEntries": 24,
+      "revisionVerified": true
+    }
+  },
+  "status": "PASS",
+  "hubHeadAfter": "3cc04302a7adf0f8972d47a994cc48ce141ba6d1",
+  "fullConvertedRowsMatched": 26545
+}

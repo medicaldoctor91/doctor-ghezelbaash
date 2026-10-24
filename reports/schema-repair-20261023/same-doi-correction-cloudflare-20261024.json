@@ -1,0 +1,22 @@
+{
+  "observedUTC": "2026-10-24T19:48:09.897Z",
+  "success": true,
+  "project": "doctor-ghezelbaash",
+  "canonical": {
+    "id": "a86aa67c-5d7d-426d-87b2-b11ce8bdef7f",
+    "environment": "production",
+    "latest_stage": {
+      "name": "deploy",
+      "started_on": null,
+      "ended_on": "2026-10-24T14:03:45.295124Z",
+      "status": "success"
+    },
+    "sourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079"
+  },
+  "git": {
+    "type": "github",
+    "deployments_enabled": false,
+    "production_deployments_enabled": false,
+    "preview_deployment_setting": "none"
+  }
+}
