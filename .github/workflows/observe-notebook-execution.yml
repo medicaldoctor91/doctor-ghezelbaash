@@ -1,0 +1,58 @@
+name: Observe the existing notebook execution without publishing
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-readonly-notebook-observation
+  cancel-in-progress: false
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ARCHIVE_SOURCE_COMMIT: ed767f6e6726e1453196e2ec2b312fcad00677e2
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests 'kaggle==2.2.4'
+      - name: Read owner execution status and any existing error output
+        run: |
+          python - <<'PY'
+          import json,sys,time
+          from pathlib import Path
+          sys.path.insert(0,'.github/scripts')
+          from sync_platform_machine_resources import kaggle_client
+          client=kaggle_client()
+          ref='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter'
+          state=client.kernels_status(ref)
+          status=str(state.status)
+          report={'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+                  'scope':'Owner execution diagnostic only; no public health assertion or publication',
+                  'status':status,'failureMessage':getattr(state,'failure_message',None),
+                  'dataset':client.dataset_status('saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data',format='json(status,current_version_number)'),
+                  'platformWrites':False}
+          if 'error' in status.lower() or 'fail' in status.lower():
+              try:
+                  client.kernels_output(ref,'/tmp/notebook-observation',file_pattern='__notebook__.ipynb',force=True,quiet=True)
+                  errors=[]
+                  for path in Path('/tmp/notebook-observation').rglob('*.ipynb'):
+                      for cell in json.loads(path.read_text()).get('cells',[]):
+                          errors.extend({'ename':o.get('ename'),'evalue':o.get('evalue'),'traceback':o.get('traceback')}
+                                        for o in cell.get('outputs',[]) if o.get('output_type')=='error')
+                  report['existingNotebookErrors']=errors
+              except Exception as error:
+                  report['outputReadErrorType']=type(error).__name__
+          Path('/tmp/notebook-observation').mkdir(exist_ok=True)
+          Path('/tmp/notebook-observation/report.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: existing-notebook-execution-observation
+          path: /tmp/notebook-observation/
+          if-no-files-found: warn
