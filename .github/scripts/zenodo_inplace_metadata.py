@@ -34,6 +34,15 @@ PUBLIC = API + 'records/' + str(RECORD)
 DEPOSIT = API + 'deposit/depositions/' + str(RECORD)
 RDM = 'application/vnd.inveniordm.v1+json'
 CHANGED_FIELDS = {'description', 'related_identifiers'}
+# Reviewed public default bytes observed before the Google schema maintenance.
+# This exception permits pinned-link metadata alignment, never a default-ready
+# claim. Exact target files and actual notebook execution remain mandatory.
+REVIEWED_STALE_DEFAULTS = {
+    '1421b06c41ac324ed689e029d4098bcdaf03204c4c4922867f6fb2f32971221e': {
+        'version': 32,
+        'zipSHA256': 'ab7e99d5e16440281308d7248306b71a1863df0f68b779fdae02e5c9b117dc1b',
+    },
+}
 
 
 def digest(data):
@@ -124,6 +133,11 @@ def guard_live_cohort(evidence, read=get, post=requests.post):
     plan = load(evidence / 'release-plan.json')
     frozen = load(evidence / 'frozen-sha256.json')
     guard_reviewed_plan(evidence, plan, frozen)
+    reviewed_stale = REVIEWED_STALE_DEFAULTS.get(digest((evidence / 'frozen-sha256.json').read_bytes()))
+    allowed_defaults = {plan['kagglePreviousVersion'], plan['kaggleVersion']}
+    if reviewed_stale:
+        assert 0 < reviewed_stale['version'] < plan['kagglePreviousVersion']
+        allowed_defaults.add(reviewed_stale['version'])
     provenance = read(SITE + 'release-provenance.json').content
     assert digest(provenance) == frozen['website']['release-provenance.json']
     assert json.loads(provenance)['sourceCommit'] == plan['sourceCommit']
@@ -132,7 +146,7 @@ def guard_live_cohort(evidence, read=get, post=requests.post):
     assert digest(hf_provenance) == frozen['hf-stage']['release-provenance.json']
     assert json.loads(hf_provenance)['sourceCommit'] == plan['sourceCommit']
     kg = read('https://api.kaggle.com/v1/datasets/view/' + KG).json()
-    assert kg['currentVersionNumber'] in {plan['kagglePreviousVersion'], plan['kaggleVersion']}
+    assert kg['currentVersionNumber'] in allowed_defaults
     assert not any(v['versionNumber'] > plan['kaggleVersion'] for v in kg.get('versions', []))
     if kg['currentVersionNumber'] != plan['kaggleVersion']:
         assert any(v['versionNumber'] == plan['kaggleVersion'] and v.get('status', '').lower() == 'ready'
@@ -151,11 +165,13 @@ def guard_live_cohort(evidence, read=get, post=requests.post):
             # platform state. The DOI links the fully verified pinned version.
             baseline = plan.get('kaggleBaselinePublication', {})
             assert baseline.get('version') == plan['kagglePreviousVersion']
+            if digest(body) != baseline.get('zipSHA256') and reviewed_stale:
+                baseline = reviewed_stale
             assert digest(body) == baseline.get('zipSHA256'), 'Unreviewed default Kaggle distribution'
         observations[label] = {'filesSha256Verified': len(actual) if current else 0,
                                'zipSHA256': digest(body), 'matchesPinnedDistribution': current}
         if not current:
-            observations[label]['verifiedPreviousVersion'] = plan['kagglePreviousVersion']
+            observations[label]['verifiedPreviousVersion'] = baseline['version']
         if label == 'exact':
             starter = json.loads(content['starter.ipynb'])
     public_notebook = read('https://www.kaggle.com/api/v1/kernels/pull/' + NB).json()
@@ -177,7 +193,7 @@ def guard_live_cohort(evidence, read=get, post=requests.post):
     # The slow ZIP/output reads must not hide a concurrent platform release.
     assert read('https://huggingface.co/api/datasets/' + HF).json()['sha'] == plan['hfRevision']
     final_kg = read('https://api.kaggle.com/v1/datasets/view/' + KG).json()
-    assert final_kg['currentVersionNumber'] in {plan['kagglePreviousVersion'], plan['kaggleVersion']}
+    assert final_kg['currentVersionNumber'] in allowed_defaults
     assert not any(v['versionNumber'] > plan['kaggleVersion'] for v in final_kg.get('versions', []))
     assert read('https://www.kaggle.com/api/v1/kernels/pull/' + NB).json()['metadata']['currentVersionNumber'] == plan['notebookVersion']
     assert read(SITE + 'release-provenance.json').content == provenance
