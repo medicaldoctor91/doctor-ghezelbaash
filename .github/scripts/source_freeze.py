@@ -63,7 +63,11 @@ def _baseline(root: Path) -> dict[str, tuple[str, str]]:
     actual_tree = git(root, 'rev-parse', FROZEN_COMMIT + '^{tree}').decode().strip()
     if actual_tree != FROZEN_TREE:
         raise FreezeError('Frozen commit does not have the pinned source tree')
-    baseline = _tree(root, FROZEN_COMMIT)
+    # A later reviewed checkpoint also contains the four freeze-management
+    # files. Keep their management role independent of the frozen application,
+    # as it was when they were additions after the original checkpoint.
+    baseline = {name: entry for name, entry in _tree(root, FROZEN_COMMIT).items()
+                if name not in MANAGEMENT_ADDITIONS}
     if len(baseline) != FROZEN_FILE_COUNT:
         raise FreezeError('Frozen source file count differs')
     present = subprocess.run(
