@@ -19,14 +19,23 @@ POLICY = {'currentArchive': {'recordId': 12, 'doi': '10.5281/zenodo.12', 'packag
           'downloadBindings': {'bundle': 'https://zenodo.org/records/12/files/bundle.zip'}}
 
 
-def fixture(*, zip_change=None):
+def fixture(*, zip_change=None, delivery_source=None, website_copy=False):
     bodies = {name: json.dumps({'sourceCommit': SOURCE}).encode()
               for name in ['release-provenance.json', 'archive-provenance.json']}
     bodies['doi-policy.json'] = json.dumps({'currentArchive': {**POLICY['currentArchive'], 'sourceCommit': SOURCE},
                                            'concept': POLICY['concept']}).encode()
+    if delivery_source:
+        for name in ['release-provenance.json','archive-provenance.json']:
+            bodies[name] = json.dumps({'sourceCommit':delivery_source,'deliverySourceCommit':delivery_source,
+                                      'originalScientificSourceCommit':SOURCE}).encode()
+        policy=json.loads(bodies['doi-policy.json'])
+        policy['currentArchive'].update(originalScientificSourceCommit=SOURCE,deliverySourceCommit=delivery_source,
+                                       sourceCommitReference='release-provenance.json#/originalScientificSourceCommit')
+        bodies['doi-policy.json']=json.dumps(policy).encode()
     bodies['graph.jsonld'] = b'{"@graph":[]}'
-    manifest = ''.join(hashlib.sha256(body).hexdigest() + '  ' + name + '\n' for name, body in sorted(bodies.items())).encode()
-    zip_bodies = {**bodies, 'checksums.sha256': manifest}
+    payload={**bodies,**({'website/graph.jsonld':bodies['graph.jsonld']} if website_copy else {})}
+    manifest = ''.join(hashlib.sha256(body).hexdigest() + '  ' + name + '\n' for name, body in sorted(payload.items())).encode()
+    zip_bodies = {**payload, 'checksums.sha256': manifest}
     if zip_change:
         zip_change(zip_bodies)
     output = io.BytesIO()
@@ -46,6 +55,30 @@ def fixture(*, zip_change=None):
 
 
 class PublishedArchive(unittest.TestCase):
+    def test_nested_website_copy_does_not_ambiguate_the_standalone_archive_file(self):
+        _,_,read=fixture(delivery_source='b'*40,website_copy=True)
+        with tempfile.TemporaryDirectory() as folder:
+            verify_published_archive(folder,POLICY,SOURCE,read)
+
+    def test_recorded_technical_correction_preserves_distinct_science_and_delivery_sources(self):
+        record,bodies,read=fixture(delivery_source='b'*40)
+        with tempfile.TemporaryDirectory() as folder:
+            proof=verify_published_archive(folder,POLICY,SOURCE,read)
+            self.assertEqual(proof['sourceCommit'],SOURCE)
+            self.assertEqual(json.loads(bodies['release-provenance.json'])['sourceCommit'],'b'*40)
+            self.assertEqual(verify_published_archive(folder,POLICY,SOURCE,read,expected=proof),proof)
+            verify_published_archive(folder,POLICY,SOURCE,read,expected=proof,verify_bytes=False)
+
+    def test_technical_correction_cannot_hide_an_unbound_or_different_source(self):
+        for field,value in [('originalScientificSourceCommit','c'*40),('deliverySourceCommit','c'*40)]:
+            record,bodies,read=fixture(delivery_source='b'*40)
+            document=json.loads(bodies['release-provenance.json']);document[field]=value
+            bodies['release-provenance.json']=json.dumps(document).encode()
+            item=next(x for x in record['files'] if x['key']=='release-provenance.json')
+            item.update(size=len(bodies[item['key']]),checksum='md5:'+hashlib.md5(bodies[item['key']]).hexdigest())
+            with tempfile.TemporaryDirectory() as folder,self.assertRaisesRegex(AssertionError,'Archived provenance differs'):
+                verify_published_archive(folder,POLICY,SOURCE,read)
+
     def test_public_bytes_zip_inventory_and_source_are_verified(self):
         record, bodies, read = fixture()
         with tempfile.TemporaryDirectory() as folder:

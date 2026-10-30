@@ -4919,7 +4919,7 @@ export function compileCanonicalSource() {
   }
   const bodyHtml = serialize(body);
   const homeGraph = projectHomeGraph(SOURCE.graph, base);
-  const homeSearchGraph = projectHomeSearchGraph(homeGraph, base);
+  const homeSearchGraph = projectHomeSearchGraph(homeGraph, base, {profileModifiedAt: SOURCE.profileMarkupModifiedAt});
   richResultsContract.assertRichResultsDocument(homeSearchGraph,{primaryPageId:base+'/webpage'});
   const social = byId.get(base + '/image-saeed-ghezelbash-portrait-social-1200x630');
   const meta = (key,value) => `<meta ${key.startsWith('og:') || key.startsWith('profile:') ? 'property' : 'name'}="${escape(key)}" content="${escape(value)}">`;

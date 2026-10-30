@@ -22,6 +22,15 @@ test('ProfilePage retains an actually recorded timestamp and its timezone',()=>{
   assert.equal(byId(projectHomeSearchGraph(graph,origin)).get(origin+'/webpage').dateModified,recorded);
 });
 
+test('the corrected public profile uses its recorded markup-edit time and preserves the scientific date',()=>{
+  const graph=structuredClone(SOURCE.graph),before=structuredClone(graph);
+  const profileModifiedAt=SOURCE.profileMarkupModifiedAt;
+  assert.equal(byId(projectHomeSearchGraph(graph,origin,{profileModifiedAt})).get(origin+'/webpage').dateModified,'2026-10-30T03:58:16Z');
+  assert.deepEqual(graph,before);
+  for(const invalid of ['2026-10-30','2026-10-30T12:00:00','not a timestamp'])
+    assert.throws(()=>projectHomeSearchGraph(graph,origin,{profileModifiedAt:invalid}),/recorded timestamp with timezone/);
+});
+
 function videoFixture({duration='PT20S',explicitEnd,missingParent=false,last=true}={}) {
   const pageId=origin+'/watch#webpage',videoId=origin+'/test-video',clipId=origin+'/test-clip';
   const clip={'@id':clipId,'@type':'Clip',name:'Final chapter',startOffset:16,url:origin+'/watch?t=16',

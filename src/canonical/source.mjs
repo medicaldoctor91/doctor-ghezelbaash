@@ -2,6 +2,8 @@ import {applyDoiPolicy, DOI_POLICY} from '../lib/doi-policy.mjs';
 // Canonical facts, route/delivery policy and authored corpus.
 // Imported directly by rendering, materialization and validation.
 export const SOURCE = {
+  // Recorded time of the Google profile-markup correction; independent of the scientific edition.
+  "profileMarkupModifiedAt": "2026-10-30T03:58:16Z",
   "search": {
     "copy": {
       "ariaLabel": "جست‌وجوی درون راهنمای پزشکی زیبایی",

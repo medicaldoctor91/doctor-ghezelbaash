@@ -250,8 +250,14 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
 }
 
 /** Deterministic homepage entry point also used by the release verifier. */
-export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir') {
+export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir',{profileModifiedAt}={}) {
   const projected=projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
+  if(profileModifiedAt!==undefined) {
+    if(typeof profileModifiedAt!=='string'||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(profileModifiedAt)||
+        !Number.isFinite(Date.parse(profileModifiedAt)))throw new Error('Profile modification requires a recorded timestamp with timezone');
+    projected['@graph'].find(node=>node['@id']===origin+'/webpage').dateModified=profileModifiedAt;
+  }
   const result=appendHomeDatasetDiscovery(projected,graph,origin);
   assertBoundedSearchDocument(result);
   if(new TextEncoder().encode(JSON.stringify(result)).length>38000)

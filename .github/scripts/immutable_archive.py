@@ -47,11 +47,23 @@ def verify_published_archive(work, policy, source_commit, read, *, expected=None
             (work / name).write_bytes(body)
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
             list(pool.map(download, files.items()))
-        for name in ['release-provenance.json', 'archive-provenance.json']:
-            assert json.loads((work / name).read_text())['sourceCommit'] == source_commit, ('Archived provenance differs', name)
         archived_policy = json.loads((work / 'doi-policy.json').read_text())
         assert archived_policy['currentArchive']['sourceCommit'] == source_commit, 'Archived DOI source differs'
         assert archived_policy['currentArchive']['doi'] == archive['doi'] and archived_policy['concept']['doi'] == concept['doi']
+        binding = archived_policy['currentArchive']
+        delivery = binding.get('deliverySourceCommit')
+        for name in ['release-provenance.json', 'archive-provenance.json']:
+            provenance = json.loads((work / name).read_text())
+            if provenance['sourceCommit'] == source_commit:
+                continue
+            # The existing same-DOI correction records original science and
+            # technical delivery separately. Verify every explicit binding;
+            # never relabel corrected delivery bytes as the scientific source.
+            assert (binding.get('originalScientificSourceCommit') == source_commit and
+                    binding.get('sourceCommitReference') == 'release-provenance.json#/originalScientificSourceCommit' and
+                    re.fullmatch(r'[a-f0-9]{40}', delivery or '') and
+                    provenance.get('originalScientificSourceCommit') == source_commit and
+                    provenance.get('deliverySourceCommit') == delivery == provenance['sourceCommit']), ('Archived provenance differs', name)
         bundle = Path(policy['downloadBindings']['bundle']).name
         assert bundle in files, 'Published archive bundle missing'
         with zipfile.ZipFile(io.BytesIO((work / bundle).read_bytes())) as zipped:
@@ -68,7 +80,7 @@ def verify_published_archive(work, policy, source_commit, read, *, expected=None
             for name in files:
                 if name == bundle:
                     continue
-                matches = [n for n in names if not n.startswith(('viewer/', 'upstream/')) and PurePosixPath(n).name == name]
+                matches = [n for n in names if not n.startswith(('viewer/', 'upstream/', 'website/')) and PurePosixPath(n).name == name]
                 assert len(matches) == 1 and zipped.read(matches[0]) == (work / name).read_bytes(), ('Archive standalone/ZIP mismatch', name)
     (work / 'verification.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     return result
