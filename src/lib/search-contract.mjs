@@ -110,7 +110,14 @@ const searchTopic=[...searchIdentity,'about','mainEntity','medicalSpecialty','pr
  * to the physician, while the physician's image uses the actual file URL;
  * these are both Schema.org forms and do not create image/creator cycles.
  */
-export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[],pagePurpose,visibleImageUrls=[]}={}) {
+function recordedMarkupTimestamp(value) {
+  if(typeof value!=='string'||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)||
+      !Number.isFinite(Date.parse(value)))throw new Error('Markup modification requires a recorded timestamp with timezone');
+  return value;
+}
+
+export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[],pagePurpose,visibleImageUrls=[],articleModifiedAt}={}) {
   const truth=new Map(graph['@graph'].map(node=>[node['@id'],node]));
   const source=new Map([...truth,...document['@graph'].map(node=>[node['@id'],node])]);
   function indexInline(value){
@@ -141,6 +148,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       inLanguage:structuredClone(primary.inLanguage??language),mainEntityOfPage:primary.url};
     for(const key of ['description','author','publisher','about','datePublished','dateModified'])
       if(key in primary)article[key]=structuredClone(primary[key]);
+    // Record the actual structured-metadata edit, independently of clinical
+    // review dates and the unchanged original scientific edition.
+    if(articleModifiedAt!==undefined)article.dateModified=recordedMarkupTimestamp(articleModifiedAt);
     const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
       .some(type=>['WebPageElement','Article','Question','Answer'].includes(type)));
     if(content.length)article.hasPart=structuredClone(content);
@@ -253,10 +263,7 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
 export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir',{profileModifiedAt}={}) {
   const projected=projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
   if(profileModifiedAt!==undefined) {
-    if(typeof profileModifiedAt!=='string'||
-        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(profileModifiedAt)||
-        !Number.isFinite(Date.parse(profileModifiedAt)))throw new Error('Profile modification requires a recorded timestamp with timezone');
-    projected['@graph'].find(node=>node['@id']===origin+'/webpage').dateModified=profileModifiedAt;
+    projected['@graph'].find(node=>node['@id']===origin+'/webpage').dateModified=recordedMarkupTimestamp(profileModifiedAt);
   }
   const result=appendHomeDatasetDiscovery(projected,graph,origin);
   assertBoundedSearchDocument(result);

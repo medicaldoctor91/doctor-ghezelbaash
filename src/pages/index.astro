@@ -5010,7 +5010,7 @@ export function compileCanonicalSource() {
     closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project});
     // Validate the graph that will actually be serialized, after every projection.
     richResultsContract.assertRichResultsDocument(record.document,{primaryPageId});
-    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,pagePurpose:record.pagePurpose,visibleImageUrls:record.imageUrls});
+    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,pagePurpose:record.pagePurpose,visibleImageUrls:record.imageUrls,articleModifiedAt:SOURCE.articleMarkupModifiedAt});
     richResultsContract.assertRichResultsDocument(record.searchDocument,{primaryPageId});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));

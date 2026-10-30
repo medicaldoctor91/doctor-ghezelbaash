@@ -24,6 +24,16 @@ function fixture() {
 const project=(graph,options={})=>projectBoundedSearchDocument(graph,{graph,primaryPageId:pageId,language:'en',pagePurpose:'clinical-guide',...options});
 const byId=document=>new Map(document['@graph'].map(node=>[node['@id'],node]));
 
+test('Google Article dates carry a recorded metadata-edit time without relabelling the clinical source or review',()=>{
+  const graph=fixture(),before=structuredClone(graph),articleModifiedAt=SOURCE.articleMarkupModifiedAt;
+  const projected=byId(project(graph,{articleModifiedAt}));
+  assert.equal(projected.get(contentId+'#article').dateModified,'2026-10-30T04:17:44Z');
+  assert.equal(projected.get(pageId).dateModified,'2026-10-10');
+  assert.equal(projected.get(pageId).lastReviewed,'2026-10-04');
+  assert.deepEqual(graph,before);
+  assert.throws(()=>project(graph,{articleModifiedAt:'2026-10-10'}),/timestamp with timezone/);
+});
+
 test('a reviewed clinical guide has a distinct authored Article and retains its medical document and content identities',()=>{
   const graph=fixture(),before=structuredClone(graph),result=project(graph),nodes=byId(result);
   const page=nodes.get(pageId),article=nodes.get(contentId+'#article');
