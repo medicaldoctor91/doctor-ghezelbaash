@@ -129,6 +129,18 @@ class FrozenSourceTests(unittest.TestCase):
             self.write(name, 'management fixture\n')
         self.assertEqual(freeze.check(self.root)['additionalFiles'], 4)
 
+    def test_later_checkpoint_keeps_management_separate_and_still_rejects_source_changes(self):
+        for name in freeze.MANAGEMENT_ADDITIONS:
+            self.write(name, 'management fixture\n')
+        revision = self.commit_change()
+        tree = self.git('rev-parse', 'HEAD^{tree}').strip()
+        self.git('tag', '-f', freeze.FROZEN_TAG, revision)
+        with mock.patch.object(freeze, 'FROZEN_COMMIT', revision), mock.patch.object(freeze, 'FROZEN_TREE', tree):
+            self.assertEqual(freeze.check(self.root)['frozenFiles'], 4)
+            self.write('src/main.mjs', 'unreviewed source change\n')
+            with self.assertRaisesRegex(freeze.FreezeError, 'changed frozen file'):
+                freeze.check(self.root)
+
     def test_changed_commit_and_moved_tag_fail(self):
         self.write('src/main.mjs', 'later source\n')
         revision = self.commit_change()

@@ -4919,7 +4919,7 @@ export function compileCanonicalSource() {
   }
   const bodyHtml = serialize(body);
   const homeGraph = projectHomeGraph(SOURCE.graph, base);
-  const homeSearchGraph = projectHomeSearchGraph(homeGraph, base);
+  const homeSearchGraph = projectHomeSearchGraph(homeGraph, base, {profileModifiedAt: SOURCE.profileMarkupModifiedAt});
   richResultsContract.assertRichResultsDocument(homeSearchGraph,{primaryPageId:base+'/webpage'});
   const social = byId.get(base + '/image-saeed-ghezelbash-portrait-social-1200x630');
   const meta = (key,value) => `<meta ${key.startsWith('og:') || key.startsWith('profile:') ? 'property' : 'name'}="${escape(key)}" content="${escape(value)}">`;
@@ -5010,7 +5010,7 @@ export function compileCanonicalSource() {
     closeSearchReferences(record.document,{origin:base,graph:SOURCE.graph,primaryPageId,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,project});
     // Validate the graph that will actually be serialized, after every projection.
     richResultsContract.assertRichResultsDocument(record.document,{primaryPageId});
-    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,pagePurpose:record.pagePurpose,visibleImageUrls:record.imageUrls});
+    record.searchDocument=projectBoundedSearchDocument(record.document,{graph:SOURCE.graph,primaryPageId,language:record.lang,visibleQuestionIds:record.visibleQuestionIds,visibleMediaIds:record.visibleMediaIds,pagePurpose:record.pagePurpose,visibleImageUrls:record.imageUrls,articleModifiedAt:SOURCE.articleMarkupModifiedAt});
     richResultsContract.assertRichResultsDocument(record.searchDocument,{primaryPageId});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));

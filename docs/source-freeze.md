@@ -1,9 +1,16 @@
 # Fixed source and isolated additions
 
-The source baseline is commit `fd4c523bbbc4103f10be89cec152dfdd436655aa`,
-tree `98c37613e7349f9f9070cbf3fe93f259a229183f`, containing 182 files.
-The existing annotated tag `source-frozen-2026-10-24` continues to identify that
-same commit. Neither the tag nor the published website's source is relabelled.
+The current source-only baseline is commit `0afbefec50a5cd019608699af09ff67efa4c8212`,
+tree `36fb3d46e15a3cf0374585ee6187c15d581c7067`, containing 184 application files.
+Annotated tag `source-frozen-2026-10-30` identifies that checkpoint. The four
+freeze-management files remain separately in `main`; they are excluded from
+the materialized application snapshot, so its source has no self-referencing
+management pin. Run the guard and materialization command from `main`.
+
+The earlier `source-frozen-2026-10-24` retains commit
+`fd4c523bbbc4103f10be89cec152dfdd436655aa`, tree
+`98c37613e7349f9f9070cbf3fe93f259a229183f` and its 182 application files.
+Neither that tag nor any published website/source identity is relabelled.
 
 ## Integrity contract
 
@@ -21,13 +28,14 @@ that tree from reaching `main` additionally requires a server-side required-chec
 rule; a workflow alone cannot prevent a direct push or protect itself from an
 administrator who changes repository policy.
 
-The connected integration rejected creation of a tag-protection ruleset with
-HTTP 403 (`Resource not accessible by integration`). No server-side main or tag
-ruleset was applied. To enforce the integrity check on `main`, a repository
-administrator must require `Frozen source integrity` from GitHub Actions, prevent
-branch deletion and force pushes, and protect the existing freeze tag against
-updates and deletion. These settings need no human-review requirement. Until
-configured, the check detects violations but cannot prohibit a direct push.
+At the earlier checkpoint, this integration's attempt to create tag protection
+was rejected with HTTP 403 (`Resource not accessible by integration`). During
+the 30 October maintenance, GitHub's active `main` rules were independently read:
+they require a pull request and the passing `Frozen source integrity` check,
+require the branch to be current, and prohibit deletion and non-fast-forward
+updates. The required approving-review count is zero. The maintenance follows
+those rules; it does not bypass or change them. Tag protection is not inferred
+from the branch rules, and all older source tags remain unchanged.
 
 ## Use the fixed source
 
@@ -44,7 +52,7 @@ To remove that temporary checkout when finished, use `git worktree remove` with
 its path; the source baseline and current working tree remain intact.
 
 This source checkout is distinct from the existing published website payload at
-`0f72c5e6ef832adef66d003069e3e3c189cf5079`. A rebuild would create new provenance;
+`7dc53a5d75aeb4954cc598216be0bff2ada75e7e`. A rebuild would create new provenance;
 exact restoration uses the already verified published bytes, never a relabelled
 rebuild. The fixed cohort is recorded in [maintenance](maintenance-release.md).
 

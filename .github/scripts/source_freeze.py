@@ -16,10 +16,10 @@ import subprocess
 import sys
 
 
-FROZEN_COMMIT = 'fd4c523bbbc4103f10be89cec152dfdd436655aa'
-FROZEN_TREE = '98c37613e7349f9f9070cbf3fe93f259a229183f'
-FROZEN_FILE_COUNT = 182
-FROZEN_TAG = 'source-frozen-2026-10-24'
+FROZEN_COMMIT = '0afbefec50a5cd019608699af09ff67efa4c8212'
+FROZEN_TREE = '36fb3d46e15a3cf0374585ee6187c15d581c7067'
+FROZEN_FILE_COUNT = 184
+FROZEN_TAG = 'source-frozen-2026-10-30'
 ROOT = Path(__file__).resolve().parents[2]
 MANAGEMENT_ADDITIONS = frozenset({
     '.github/scripts/source_freeze.py',
@@ -63,7 +63,11 @@ def _baseline(root: Path) -> dict[str, tuple[str, str]]:
     actual_tree = git(root, 'rev-parse', FROZEN_COMMIT + '^{tree}').decode().strip()
     if actual_tree != FROZEN_TREE:
         raise FreezeError('Frozen commit does not have the pinned source tree')
-    baseline = _tree(root, FROZEN_COMMIT)
+    # A later reviewed checkpoint also contains the four freeze-management
+    # files. Keep their management role independent of the frozen application,
+    # as it was when they were additions after the original checkpoint.
+    baseline = {name: entry for name, entry in _tree(root, FROZEN_COMMIT).items()
+                if name not in MANAGEMENT_ADDITIONS}
     if len(baseline) != FROZEN_FILE_COUNT:
         raise FreezeError('Frozen source file count differs')
     present = subprocess.run(

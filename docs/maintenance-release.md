@@ -1,8 +1,27 @@
-# Maintenance and source freeze
+# Maintenance and source checkpoints
 
-The source checkpoint is annotated tag `source-frozen-2026-10-24`. The pre-cleanup tree, including removed internal audit material, is retained at `archive/source-before-cleanup-20261024`. Keep these refs unchanged; use a new checkpoint for future work. `main` is the sole retained working branch after cleanup.
+The current source checkpoint is annotated tag `source-frozen-2026-10-30`. The earlier `source-frozen-2026-10-24` and pre-cleanup `archive/source-before-cleanup-20261024` refs remain unchanged. `main` is the maintained source branch; publication records preserve their own exact delivery commits.
 
-## Published cohort at the freeze
+## Google schema maintenance — 30 October
+
+| Component | Verified pinned identity |
+| --- | --- |
+| Website payload source | `7dc53a5d75aeb4954cc598216be0bff2ada75e7e` |
+| Hugging Face | `doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data` at `ca61e0e2dfce8d4245045873c8fd058467e4976d` |
+| Kaggle exact dataset | `saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data`, version 34 |
+| Kaggle notebook | `saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter`, version 17; actual execution verified |
+| Zenodo archive | Same DOI [10.5281/zenodo.23474664](https://doi.org/10.5281/zenodo.23474664), packaging `1.3.4+zenodo.3`, 43 archive files preserved |
+| Original scientific source | `ed767f6e6726e1453196e2ec2b312fcad00677e2` |
+
+Fresh Google Rich Results tests confirm the reported profile datetime, Article datetime/timezone and last-chapter warnings are absent. [The validation report](gsc-schema-maintenance-2026-10-30.md) records the test URLs and remaining optional recommendations. The complete graph, authored corpus, clinical review dates and source scientific tables are unchanged. All 204 pinned Hugging Face files and all five complete converted Viewer tables were verified. Search/filter remain deferred.
+
+[Preflight](https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/41002385780) froze the candidate with manifest `1421b06c41ac324ed689e029d4098bcdaf03204c4c4922867f6fb2f32971221e`. [Notebook verification](https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/41003927503) checked all 48 exact-version public files, package checksums, actual notebook source and actual execution output. The unversioned Kaggle metadata/default ZIP still served the independently verified version 32 at that observation. This is recorded separately from exact version 34 readiness; no default-ready or universal service-health claim is made. A later pointer change requires read-only verification, not another dataset version by itself. If a future substantive Kaggle correction is needed, align the same Zenodo record's metadata again after verifying that new cohort.
+
+The current Zenodo metadata alignment is performed in place and changes only the connected distribution links and description. Its DOI, edition and archive files retain their recorded historical provenance. The source checkpoint does not relabel the published website payload or scientific archive source.
+
+[Zenodo publication and public verification](https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/41005456571) succeeded after the pinned Kaggle files and actual notebook execution were checked. The reviewed metadata patch SHA256 is `5512f207b5d5798bdae89670d5f2987bc2a94e167d76277bfa0946fe55e0eb0b`. An independent subsequent public read confirmed the same DOI, version and 43 identical file checksums, together with all new connected distribution pins.
+
+## Earlier published cohort — 24 October
 
 | Component | Published identity |
 | --- | --- |

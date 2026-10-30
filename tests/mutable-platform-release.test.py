@@ -93,6 +93,14 @@ class Tests(unittest.TestCase):
   workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
   self.assertIn('Restore exact validated bytes without rebuild',workflow)
   self.assertNotIn('zenodo-only',workflow)
+ def test_primary_viewer_scope_requires_an_explicit_operation_and_keeps_default_strict(self):
+  import inspect
+  self.assertIs(inspect.signature(release.publish).parameters['runtime_features'].default,True)
+  source=(ROOT/'.github/scripts/mutable_platform_release.py').read_text()
+  self.assertIn("runtime_features=a.operation!='publish-primary-viewer'",source)
+  self.assertIn("'hfSearchFilterVerified':runtime_features",source)
+  workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
+  self.assertEqual(workflow.count("inputs.operation == 'publish-primary-viewer'"),2)
 class PreviewSchemaTests(unittest.TestCase):
  def test_real_bounded_preview_without_partial_is_valid(self):
   rows=[{'example_id':'positioning-001'},{'example_id':'positioning-002'}]
@@ -322,6 +330,43 @@ class ExactVersionNotebookTests(unittest.TestCase):
     with patch.object(release.gates,'publish_notebook') as push:
      with self.assertRaises(AssertionError):release.complete_notebook_exact_version(root)
      push.assert_not_called()
+
+class GscExactVersionNotebookTests(unittest.TestCase):
+ source='7dc53a5d75aeb4954cc598216be0bff2ada75e7e'
+ hf='ca61e0e2dfce8d4245045873c8fd058467e4976d'
+ fingerprint='1421b06c41ac324ed689e029d4098bcdaf03204c4c4922867f6fb2f32971221e'
+ def setup(self,root):
+  plan,state,public,verify,client=ExactVersionNotebookTests.setup(self,root)
+  plan.update(kaggleVersion=34,kagglePreviousVersion=33,notebookVersion=17,notebookPreviousVersion=16)
+  state.update(kaggleOwner={'version':34,'status':'ready'},notebookVersion=16)
+  public.update(currentVersionNumber=32,versions=[{'versionNumber':34,'status':'Ready'}])
+  client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':34})
+  return plan,state,public,verify,client
+ def test_changed_gsc_candidate_identity_blocks_before_notebook_write(self):
+  ExactVersionNotebookTests.test_unreviewed_candidate_pins_block_before_notebook_write(self)
+ def test_frozen_gsc_notebook_executes_against_exact34_without_claiming_default_ready(self):
+  import hashlib
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);plan,state,public,verify,client=self.setup(root)
+   notebook={'cells':[{'cell_type':'code','source':['print(34)'],'metadata':{}}]}
+   release.dump(root/'notebook/starter.ipynb',notebook)
+   (root/'kaggle/checksums.sha256').write_text('reviewed GSC cohort inputs')
+   checksum=hashlib.sha256((root/'kaggle/checksums.sha256').read_bytes()).hexdigest()
+   live={'metadata':{'currentVersionNumber':17},'blob':{'source':json.dumps(notebook)}}
+   client.kernels_status.return_value.status='complete'
+   def output(ref,path,**kwargs):
+    release.dump(Path(path)/'doi-release-execution.json',{'status':'PASS','kaggle_version':34,'upstream_revision':self.hf,'source_commit':self.source,
+     'input_checksums_sha256':checksum,'exact_doi':release.gates.P['currentArchive']['doi']})
+   client.kernels_output.side_effect=output
+   with patch.object(release.gates,'get',side_effect=[Mock(json=lambda:{'metadata':{'currentVersionNumber':16}}),Mock(json=lambda:live),Mock(json=lambda:live)]):
+    release.dump(root/'release-plan.json',plan);release.dump(root/'frozen-sha256.json',{})
+    release.complete_notebook_exact_version(root)
+   client.dataset_create_version.assert_not_called()
+   client.kernels_push.assert_called_once_with(str(root/'notebook'))
+   report=json.loads((root/'notebook-completion-report.json').read_text())
+   self.assertEqual(report['proof']['version'],17)
+   self.assertEqual(report['observedPublicDefaultVersion'],32)
+   self.assertFalse(report['fullPublicationVerified'])
 
 class ArticleExactVersionNotebookTests(unittest.TestCase):
  source='0f72c5e6ef832adef66d003069e3e3c189cf5079'

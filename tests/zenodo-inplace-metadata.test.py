@@ -71,6 +71,7 @@ class MetadataTests(unittest.TestCase):
             self.assertIn(m.KAGGLE + '/versions/31', wanted['description'])
             self.assertIn('notebook</a>, version 15', wanted['description'])
             self.assertNotIn(m.KAGGLE + '/versions/30', wanted['description'])
+            self.assertIn('https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+plan['sourceCommit'],wanted['description'])
 
     def test_inconsistent_or_non_integer_plan_increments_fail(self):
         for update in [{'kaggleVersion': 31}, {'notebookVersion': 15},
@@ -336,6 +337,27 @@ class MetadataTests(unittest.TestCase):
                 return lag_read(url)
             with self.assertRaisesRegex(AssertionError, 'Kaggle exact files'):
                 m.guard_live_cohort(folder, read=wrong_exact, post=next_output)
+            # A specifically reviewed older default is allowed only for the
+            # exact frozen candidate and remains explicitly NOT default-ready.
+            fingerprint=m.digest((folder/'frozen-sha256.json').read_bytes())
+            older_zip=io.BytesIO()
+            with zipfile.ZipFile(older_zip,'w') as archive:
+                archive.writestr('starter.ipynb',json.dumps({'cells':[],'metadata':{'older':True}}))
+                archive.writestr('checksums.sha256','older reviewed inventory')
+            older_body=older_zip.getvalue()
+            reviewed={fingerprint:{'version':29,'zipSHA256':m.digest(older_body)}}
+            def older_default(url):
+                if '/datasets/view/' in url:
+                    return Response({'currentVersionNumber':29,'versions':[{'versionNumber':31,'status':'Ready'}]})
+                if '/datasets/download/' in url and '?' not in url:
+                    return Response(content=older_body)
+                return lag_read(url)
+            with self.assertRaises(AssertionError):
+                m.guard_live_cohort(folder,read=older_default,post=next_output)
+            with patch.object(m,'REVIEWED_STALE_DEFAULTS',reviewed):
+                proof=m.guard_live_cohort(folder,read=older_default,post=next_output)
+                self.assertFalse(proof['unversionedKaggleDefaultCurrent'])
+                self.assertEqual(proof['kaggle']['default']['verifiedPreviousVersion'],29)
 
 
 if __name__ == '__main__':

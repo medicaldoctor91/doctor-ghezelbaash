@@ -274,7 +274,7 @@ def verify_final_consistency(w,plan,client):
          'hfRevision':plan['hfRevision'],'kagglePublicAndOwnerVersion':plan['kaggleVersion'],
          'notebookVersion':plan['notebookVersion'],'notebookSourceAndExecutionReceiptRechecked':True}
 
-def publish(w):
+def publish(w, runtime_features=True):
  plan=load(w/'release-plan.json')
  assert plan.get('candidateSchema')=='mutable-distributions-4', 'Superseded archive-citation candidate: rebuild with explicit preserved-archive notebook scope'
  assert plan['archiveWrites'] is False and plan['archivePublicStatus']==200;guard_frozen(w);assert load(w/'preflight-report.json')['status']=='PASS'
@@ -307,11 +307,11 @@ def publish(w):
  gates.retry(w,'kaggle',lambda:gates.verify_kaggle(w),attempts=90)
  gates.publish_notebook(w,client)
  gates.get=fresh_viewer_reads(w,gates.get)
- gates.retry(w,'hf',lambda:gates.verify_hf(w),attempts=18)
+ gates.retry(w,'hf',lambda:gates.verify_hf(w) if runtime_features else gates.verify_hf(w,runtime_features=False),attempts=18)
  verify_published_archive(w/'archive-public-after',DOI_POLICY,archive['sourceCommit'],read,expected=archive)
  guard_frozen(w)
  final=verify_final_consistency(w,plan,client)
- dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files']),'frozenHomeProjection':home_projection,'archiveCitationScope':citation_scope,'finalOutsideConsistency':final});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
+ dump(w/'publication-report.json',{'status':'PASS','plan':plan,'frozenManifestSHA256':sha(w/'frozen-sha256.json'),'archiveWrites':False,'publishedArchivePreserved':True,'archivedFilesSha256Verified':len(archive['files']),'frozenHomeProjection':home_projection,'archiveCitationScope':citation_scope,'finalOutsideConsistency':final,'hfSearchFilterVerified':runtime_features,'hfVerificationScope':'complete files, converted rows, preview, rows, statistics'+('; search and filter' if runtime_features else '; search/filter remain deferred')});print('MUTABLE PLATFORMS LIVE VERIFIED',flush=True)
 
 def complete_notebook(w):
  """Only notebook may be written; independent runtime faults stay visible."""
@@ -345,7 +345,10 @@ def complete_notebook_exact_version(w):
    'kaggleVersion':29,'notebookVersion':13,'notebookPreviousVersion':12,'publicDefaults':{27,28,29}},
   '4b369026533ee309ba7b92a62e0a33ac99a3fe5738d8fe5039f97c67e3826fea':{
    'sourceCommit':'0f72c5e6ef832adef66d003069e3e3c189cf5079','hfRevision':'017269f382c41c5eb27c5cfcebaf7a365368903e',
-   'kaggleVersion':31,'notebookVersion':15,'notebookPreviousVersion':14,'publicDefaults':{30,31}}}
+   'kaggleVersion':31,'notebookVersion':15,'notebookPreviousVersion':14,'publicDefaults':{30,31}},
+  '1421b06c41ac324ed689e029d4098bcdaf03204c4c4922867f6fb2f32971221e':{
+   'sourceCommit':'7dc53a5d75aeb4954cc598216be0bff2ada75e7e','hfRevision':'ca61e0e2dfce8d4245045873c8fd058467e4976d',
+   'kaggleVersion':34,'notebookVersion':17,'notebookPreviousVersion':16,'publicDefaults':{32,33,34}}}
  binding=reviewed.get(sha(w/'frozen-sha256.json'))
  assert binding is not None, 'Unreviewed exact-version candidate'
  assert plan['candidateSchema']=='mutable-distributions-4' and plan['archiveWrites'] is False
@@ -385,10 +388,10 @@ def complete_notebook_exact_version(w):
  print('NOTEBOOK '+str(notebook_version)+' AND EXACT VERSION '+str(version)+' INPUTS VERIFIED; FULL PUBLICATION AND RUNTIME GATES REMAIN OUTSTANDING',flush=True)
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','complete-notebook','complete-notebook-exact-version']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
+ p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','publish-primary-viewer','complete-notebook','complete-notebook-exact-version']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
  if a.operation=='inspect':snapshot(a.root)
  elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK'])})
  elif a.operation=='complete-notebook':complete_notebook(a.root)
  elif a.operation=='complete-notebook-exact-version':complete_notebook_exact_version(a.root)
- else:publish(a.root)
+ else:publish(a.root,runtime_features=a.operation!='publish-primary-viewer')
 if __name__=='__main__':main()

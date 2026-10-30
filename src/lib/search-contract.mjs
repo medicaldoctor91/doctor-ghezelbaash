@@ -110,7 +110,14 @@ const searchTopic=[...searchIdentity,'about','mainEntity','medicalSpecialty','pr
  * to the physician, while the physician's image uses the actual file URL;
  * these are both Schema.org forms and do not create image/creator cycles.
  */
-export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[],pagePurpose,visibleImageUrls=[]}={}) {
+function recordedMarkupTimestamp(value) {
+  if(typeof value!=='string'||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)||
+      !Number.isFinite(Date.parse(value)))throw new Error('Markup modification requires a recorded timestamp with timezone');
+  return value;
+}
+
+export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[],pagePurpose,visibleImageUrls=[],articleModifiedAt}={}) {
   const truth=new Map(graph['@graph'].map(node=>[node['@id'],node]));
   const source=new Map([...truth,...document['@graph'].map(node=>[node['@id'],node])]);
   function indexInline(value){
@@ -141,6 +148,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       inLanguage:structuredClone(primary.inLanguage??language),mainEntityOfPage:primary.url};
     for(const key of ['description','author','publisher','about','datePublished','dateModified'])
       if(key in primary)article[key]=structuredClone(primary[key]);
+    // Record the actual structured-metadata edit, independently of clinical
+    // review dates and the unchanged original scientific edition.
+    if(articleModifiedAt!==undefined)article.dateModified=recordedMarkupTimestamp(articleModifiedAt);
     const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
       .some(type=>['WebPageElement','Article','Question','Answer'].includes(type)));
     if(content.length)article.hasPart=structuredClone(content);
@@ -214,6 +224,10 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   for(let i=0;i<queue.length;i++) {
     const {node,output,keys}=queue[i];
     for(const key of keys)if(key in node) {
+      // Google's ProfilePage dates require DateTime. A recorded calendar date
+      // remains authoritative in the canonical graph; never invent its hour.
+      if(home&&node['@id']===primaryPageId&&['dateCreated','dateModified'].includes(key)&&
+          /^\d{4}-\d{2}-\d{2}$/.test(node[key]?.['@value']??node[key]))continue;
       let item;
       if(key==='@id'||key==='@type')item=structuredClone(node[key]);
       // Keep the clinical ownership claim without importing the separately
@@ -224,6 +238,20 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       else item=normalized(node[key],key);
       if(item!==OMIT)output[key]=item;
     }
+    // The last chapter may end implicitly at the video's recorded duration.
+    // Expose that existing boundary for Google's recommended Clip.endOffset;
+    // preserve explicit chapter ends and the canonical scientific data.
+    if(values(node['@type']).includes('Clip')&&node.endOffset==null) {
+      const parent=source.get(node.isPartOf?.['@id']);
+      const duration=typeof parent?.duration==='string'&&
+        /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/.exec(parent.duration);
+      const seconds=duration&&duration.slice(1).some(Boolean)
+        ?Number(duration[1]??0)*3600+Number(duration[2]??0)*60+Number(duration[3]??0):NaN;
+      if(values(parent?.['@type']).includes('VideoObject')&&
+          values(parent.hasPart).at(-1)?.['@id']===node['@id']&&
+          Number.isFinite(node.startOffset)&&Number.isFinite(seconds)&&seconds>node.startOffset)
+        output.endOffset=seconds;
+    }
   }
   const result={'@context':'https://schema.org','@graph':[...selected.values()]};
   assertBoundedSearchDocument(result);
@@ -232,8 +260,11 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
 }
 
 /** Deterministic homepage entry point also used by the release verifier. */
-export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir') {
+export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir',{profileModifiedAt}={}) {
   const projected=projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
+  if(profileModifiedAt!==undefined) {
+    projected['@graph'].find(node=>node['@id']===origin+'/webpage').dateModified=recordedMarkupTimestamp(profileModifiedAt);
+  }
   const result=appendHomeDatasetDiscovery(projected,graph,origin);
   assertBoundedSearchDocument(result);
   if(new TextEncoder().encode(JSON.stringify(result)).length>38000)

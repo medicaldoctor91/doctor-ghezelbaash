@@ -94,10 +94,11 @@ def expected_home_search_projection(graph):
     script = """
 import fs from 'node:fs';
 import {projectHomeSearchGraph} from './src/lib/search-contract.mjs';
+import {SOURCE} from './src/canonical/source.mjs';
 const graph=JSON.parse(fs.readFileSync(0,'utf8'));
 const homepage=graph['@graph'].find(n=>[n['@type']].flat().includes('ProfilePage')&&[n['@type']].flat().includes('MedicalWebPage'));
 if(!homepage||typeof homepage.url!=='string')throw new Error('Canonical homepage identity missing');
-process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepage.url).origin)));
+process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepage.url).origin,{profileModifiedAt:SOURCE.profileMarkupModifiedAt})));
 """
     result = subprocess.run(['node', '--input-type=module', '-e', script], cwd=ROOT,
                             input=json.dumps(graph, ensure_ascii=False), text=True,
