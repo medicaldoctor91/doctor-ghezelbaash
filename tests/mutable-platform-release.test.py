@@ -93,6 +93,14 @@ class Tests(unittest.TestCase):
   workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
   self.assertIn('Restore exact validated bytes without rebuild',workflow)
   self.assertNotIn('zenodo-only',workflow)
+ def test_primary_viewer_scope_requires_an_explicit_operation_and_keeps_default_strict(self):
+  import inspect
+  self.assertIs(inspect.signature(release.publish).parameters['runtime_features'].default,True)
+  source=(ROOT/'.github/scripts/mutable_platform_release.py').read_text()
+  self.assertIn("runtime_features=a.operation!='publish-primary-viewer'",source)
+  self.assertIn("'hfSearchFilterVerified':runtime_features",source)
+  workflow=(ROOT/'.github/workflows/mutable-platform-release.yml').read_text()
+  self.assertEqual(workflow.count("inputs.operation == 'publish-primary-viewer'"),2)
 class PreviewSchemaTests(unittest.TestCase):
  def test_real_bounded_preview_without_partial_is_valid(self):
   rows=[{'example_id':'positioning-001'},{'example_id':'positioning-002'}]
