@@ -71,6 +71,7 @@ class MetadataTests(unittest.TestCase):
             self.assertIn(m.KAGGLE + '/versions/31', wanted['description'])
             self.assertIn('notebook</a>, version 15', wanted['description'])
             self.assertNotIn(m.KAGGLE + '/versions/30', wanted['description'])
+            self.assertIn('https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+plan['sourceCommit'],wanted['description'])
 
     def test_inconsistent_or_non_integer_plan_increments_fail(self):
         for update in [{'kaggleVersion': 31}, {'notebookVersion': 15},

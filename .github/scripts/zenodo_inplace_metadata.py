@@ -210,6 +210,8 @@ def desired_metadata(original, plan):
         '<a href="' + KAGGLE + '">Kaggle dataset</a> '
         '(<a href="' + kg_pin + '">version ' + str(plan['kaggleVersion']) + '</a>); '
         '<a href="' + NOTEBOOK + '">Kaggle starter notebook</a>, version ' + str(plan['notebookVersion']) + '. '
+        'Current website delivery source: <a href="https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/' +
+        plan['sourceCommit'] + '">' + plan['sourceCommit'] + '</a>. '
         'Use the linked Kaggle version ' + str(plan['kaggleVersion']) + ' and notebook ' + str(plan['notebookVersion']) +
         ' to select the verified files for this distribution. '
         'The website search markup has been corrected; the complete scientific graph and authored clinical content remain available. '
