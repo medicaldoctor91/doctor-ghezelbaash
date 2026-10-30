@@ -345,7 +345,10 @@ def complete_notebook_exact_version(w):
    'kaggleVersion':29,'notebookVersion':13,'notebookPreviousVersion':12,'publicDefaults':{27,28,29}},
   '4b369026533ee309ba7b92a62e0a33ac99a3fe5738d8fe5039f97c67e3826fea':{
    'sourceCommit':'0f72c5e6ef832adef66d003069e3e3c189cf5079','hfRevision':'017269f382c41c5eb27c5cfcebaf7a365368903e',
-   'kaggleVersion':31,'notebookVersion':15,'notebookPreviousVersion':14,'publicDefaults':{30,31}}}
+   'kaggleVersion':31,'notebookVersion':15,'notebookPreviousVersion':14,'publicDefaults':{30,31}},
+  '1421b06c41ac324ed689e029d4098bcdaf03204c4c4922867f6fb2f32971221e':{
+   'sourceCommit':'7dc53a5d75aeb4954cc598216be0bff2ada75e7e','hfRevision':'ca61e0e2dfce8d4245045873c8fd058467e4976d',
+   'kaggleVersion':34,'notebookVersion':17,'notebookPreviousVersion':16,'publicDefaults':{32,33,34}}}
  binding=reviewed.get(sha(w/'frozen-sha256.json'))
  assert binding is not None, 'Unreviewed exact-version candidate'
  assert plan['candidateSchema']=='mutable-distributions-4' and plan['archiveWrites'] is False
