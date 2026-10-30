@@ -28,13 +28,14 @@ that tree from reaching `main` additionally requires a server-side required-chec
 rule; a workflow alone cannot prevent a direct push or protect itself from an
 administrator who changes repository policy.
 
-The connected integration rejected creation of a tag-protection ruleset with
-HTTP 403 (`Resource not accessible by integration`). No server-side main or tag
-ruleset was applied. To enforce the integrity check on `main`, a repository
-administrator must require `Frozen source integrity` from GitHub Actions, prevent
-branch deletion and force pushes, and protect the existing freeze tag against
-updates and deletion. These settings need no human-review requirement. Until
-configured, the check detects violations but cannot prohibit a direct push.
+At the earlier checkpoint, this integration's attempt to create tag protection
+was rejected with HTTP 403 (`Resource not accessible by integration`). During
+the 30 October maintenance, GitHub's active `main` rules were independently read:
+they require a pull request and the passing `Frozen source integrity` check,
+require the branch to be current, and prohibit deletion and non-fast-forward
+updates. The required approving-review count is zero. The maintenance follows
+those rules; it does not bypass or change them. Tag protection is not inferred
+from the branch rules, and all older source tags remain unchanged.
 
 ## Use the fixed source
 
