@@ -19,7 +19,7 @@ The homepage exposes a bounded 85-node initial JSON-LD projection. The complete 
 
 ## Source checkpoint
 
-The cleaned source is frozen by annotated tag `source-frozen-2026-10-24`; `main` is the working branch. The pre-cleanup source, including removed internal reports, is recoverable from `archive/source-before-cleanup-20261024`.
+The current source checkpoint is annotated tag `source-frozen-2026-10-30`; `main` is the working branch. The earlier `source-frozen-2026-10-24` and `archive/source-before-cleanup-20261024` refs retain their original contents. The latest maintenance corrects Google's profile and Article datetime markup and the final video chapter boundary while preserving scientific data; see [the Google validation receipts](docs/gsc-schema-maintenance-2026-10-30.md).
 
 A source tag identifies repository contents. It does not deploy the website, create a dataset version or change the source identity of published bytes. See [maintenance and recovery](docs/maintenance-release.md) for the exact public cohort and [DOI policy](docs/doi-policy.md) for identifier roles.
 
