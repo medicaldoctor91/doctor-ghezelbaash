@@ -40,6 +40,7 @@ class Response:
 class Zenodo:
     def __init__(self, draft=None, new_version_doi=True):
         self.draft = copy.deepcopy(draft); self.new_version_doi = new_version_doi
+        self.latest_record = 22
         self.metadata = {'title': 'Reviewed parent', 'description': 'Exact reviewed description'}
         old_policy = copy.deepcopy(POLICY); old_policy['currentArchive']['sourceCommit'] = OLD_SOURCE
         self.controls = {'doi-policy.json': old_policy, 'release-provenance.json': {'sourceCommit': OLD_SOURCE},
@@ -53,6 +54,9 @@ class Zenodo:
         self.calls.append(url)
         if '/files/' in url:
             return Response(content=self.bodies[url.split('/files/')[1].split('/')[0]])
+        if url.endswith('/records/22/versions/latest'):
+            return Response({'id': self.latest_record, 'doi': '10.5281/zenodo.' + str(self.latest_record),
+                             'conceptdoi': '10.5281/zenodo.11'})
         if url.endswith('/records/22'):
             return Response({'id': 22, 'doi': '10.5281/zenodo.22', 'conceptdoi': '10.5281/zenodo.11',
                              'metadata': copy.deepcopy(self.metadata), 'files': copy.deepcopy(self.files)})
@@ -261,6 +265,18 @@ class ReservationTests(Fixtures):
         self.zn.draft = draft(); self.zn.draft['metadata']['title'] = 'Independent draft'
         with self.assertRaisesRegex(AssertionError, 'baseline checks are incomplete'):
             self.prepare()
+        self.assertEqual(self.zn.posts, [])
+
+    def test_external_new_published_version_blocks_preparation_and_any_post(self):
+        self.zn.latest_record = 44
+        with self.assertRaisesRegex(AssertionError, 'baseline checks are incomplete'):
+            self.prepare()
+        self.assertEqual(self.zn.posts, [])
+
+    def test_external_new_version_after_intent_blocks_before_any_post(self):
+        self.prepare(); self.zn.latest_record = 44
+        with self.assertRaisesRegex(AssertionError, 'newer or unrelated published archive'):
+            self.reserve()
         self.assertEqual(self.zn.posts, [])
 
     def test_missing_current_durable_intent_blocks_before_post(self):

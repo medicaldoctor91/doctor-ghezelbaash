@@ -89,6 +89,9 @@ def zenodo_state(client, p):
     parent = get(client, 'https://zenodo.org/api/records/' + str(previous['recordId']))
     assert parent['id'] == previous['recordId'] and parent['doi'] == previous['doi'], 'Previous archive differs'
     assert parent['conceptdoi'] == concept['doi'], 'Previous collection differs'
+    latest = get(client, 'https://zenodo.org/api/records/' + str(previous['recordId']) + '/versions/latest')
+    assert latest['id'] == previous['recordId'] and latest['conceptdoi'] == concept['doi'], 'A newer or unrelated published archive exists'
+    assert latest['doi'] == previous['doi'], 'Latest published archive DOI differs'
     files = {item['key']: item['checksum'] for item in parent['files']}
     assert files and len(files) == len(parent['files']), 'Invalid previous archive inventory'
     published = get(client, 'https://zenodo.org/api/deposit/depositions/' + str(previous['recordId']))
