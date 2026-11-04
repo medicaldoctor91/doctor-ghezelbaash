@@ -3,7 +3,7 @@ import {applyDoiPolicy, DOI_POLICY} from '../lib/doi-policy.mjs';
 // Imported directly by rendering, materialization and validation.
 export const SOURCE = {
   // Recorded time of the Google profile-markup correction; independent of the scientific edition.
-  "profileMarkupModifiedAt": "2026-10-30T03:58:16Z",
+  "profileMarkupModifiedAt": "2026-11-03T13:59:18Z",
   "articleMarkupModifiedAt": "2026-10-30T04:17:44Z",
   "search": {
     "copy": {
@@ -2310,8 +2310,8 @@ export const SOURCE = {
           "@type": "Patient"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-04T04:43:07Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -8683,7 +8683,7 @@ export const SOURCE = {
           "@value": "2024-12-18T09:58:51.282Z",
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         },
-        "description": "توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
+        "description": "در این ویدئوی ۶۲ ثانیه‌ای، دکتر سعید قزلباش هنگام مشخص‌کردن نقاط تزریق EJAL 40، درباره مزوژل‌ها، الگوی نقاط و اهمیت هدف و لایه تزریق در مقایسه با پروفایلو و جالپرو سوپرهیدرو توضیح می‌دهد. زیرنویس فارسی و انگلیسی، فصل‌ها و متن گفتار زمان‌دار همراه ویدئو هستند.",
         "version": "1.2.1",
         "dateModified": {
           "@value": "2026-09-30",
@@ -8812,7 +8812,7 @@ export const SOURCE = {
           "@value": "2025-01-16T17:17:17.334Z",
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         },
-        "description": "توضیحات دکتر سعید قزلباش درباره سابسیژن.",
+        "description": "در این ویدئوی ۳۶ ثانیه‌ای، دکتر سعید قزلباش درباره سابسیژن اسکار آکنه، آزادسازی بافت‌های چسبیده و نقش فیلر مونوفازیک در برنامه درمانی توضیح می‌دهد. متن گفتار، زیرنویس و فصل‌های زمان‌دار همراه ویدئو در دسترس‌اند.",
         "version": "1.2.1",
         "dateModified": {
           "@value": "2026-09-30",
@@ -8938,7 +8938,7 @@ export const SOURCE = {
           "@value": "2025-01-19T07:01:26.523Z",
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         },
-        "description": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
+        "description": "گزیده‌ای ۳۹ ثانیه‌ای از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران، با توضیح جهت نخ، نقطه ورود و تفاوت رفتار بافت اسکار‌دار. ویدئو همراه با زیرنویس فارسی، متن گفتار و فصل‌های زمان‌دار ارائه شده است.",
         "transcript": "[بخشی از گفتار نامفهوم]\n... آقای دکتر قزلباش هستیم.\nما رو دعوت کردن اینجا که با هم دیگه صحبت...\nاینجا جهت خار [نامفهوم] این شکلی می‌شه.\nپس می‌تونم اینو لیفت کنم.\nولی وقتی یونی‌دیرکشنال باشه...\nریورس [نامفهوم] انتری پوینتت بیاد اینجا.\nنقطه ورودت بیاد اینجا.\nدو تا [نامفهوم] رو چجوری می‌آمدی؟\nکتاب [نام کتاب نامفهوم] تردلیفت...\nمی‌آید روی آرک [نامفهوم]...\nاگه جایی هم بخوای بترسی، اینجا [نامفهوم] تمپوراله.\nچرا؟ طرف یه سمت صورتش اسکار داره، یه سمت نداره.\nاون سمتی که اسکار داره، الاستیسیتیش کمتره.",
         "caption": "https://www.ghezelbaash.ir/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.captions.fa.vtt",
         "version": "1.2.1",
@@ -9067,7 +9067,7 @@ export const SOURCE = {
           "@value": "2025-04-23T16:20:44.677Z",
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         },
-        "description": "ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.",
+        "description": "لە ئەم ڤیدیۆیەی ٢٠ چرکەییدا، مراجعێکی کوردزمان لە هەولێر ئەزموونی سەردانی خۆی دەگێڕێتەوە و سوپاسی دکتۆر سەعید قزلباش دەکات. بەشەکانی ڤیدیۆ کات‌نیشانکراون و بەستەری بڵاوکراوە سەرەکییەکەی ئینستاگرام لە پەڕەکەدا هەیە.",
         "version": "1.2.1",
         "dateModified": {
           "@value": "2026-09-30",
@@ -50141,8 +50141,8 @@ export const SOURCE = {
           }
         ],
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-04T04:43:07Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -50489,8 +50489,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -51088,8 +51088,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -52158,8 +52158,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -53475,8 +53475,8 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -53661,8 +53661,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -54384,8 +54384,8 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -54755,8 +54755,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -55115,8 +55115,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -55339,8 +55339,8 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -55844,7 +55844,7 @@ export const SOURCE = {
         "@type": "WebPage",
         "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo",
         "name": "دکتر سعید قزلباش | پروفایلو، جالپرو و جوانسازهای تزریقی",
-        "description": "توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
+        "description": "در این ویدئوی ۶۲ ثانیه‌ای، دکتر سعید قزلباش هنگام مشخص‌کردن نقاط تزریق EJAL 40، درباره مزوژل‌ها، الگوی نقاط و اهمیت هدف و لایه تزریق در مقایسه با پروفایلو و جالپرو سوپرهیدرو توضیح می‌دهد. زیرنویس فارسی و انگلیسی، فصل‌ها و متن گفتار زمان‌دار همراه ویدئو هستند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -55881,8 +55881,8 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-jalupro-vs-profhilo#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -55914,7 +55914,7 @@ export const SOURCE = {
         "@type": "WebPage",
         "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review",
         "name": "ڕەزامەندیی مراجعێک لە هەولێر | دکتۆر سەعید قزلباش",
-        "description": "ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.",
+        "description": "لە ئەم ڤیدیۆیەی ٢٠ چرکەییدا، مراجعێکی کوردزمان لە هەولێر ئەزموونی سەردانی خۆی دەگێڕێتەوە و سوپاسی دکتۆر سەعید قزلباش دەکات. بەشەکانی ڤیدیۆ کات‌نیشانکراون و بەستەری بڵاوکراوە سەرەکییەکەی ئینستاگرام لە پەڕەکەدا هەیە.",
         "inLanguage": "ckb-IQ",
         "isPartOf": [
           {
@@ -55948,8 +55948,8 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-kurdish-patient-review#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-04T04:43:07Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -55981,7 +55981,7 @@ export const SOURCE = {
         "@type": "WebPage",
         "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique",
         "name": "دکتر سعید قزلباش | سابسیژن و درمان اسکار آکنه",
-        "description": "توضیحات دکتر سعید قزلباش درباره سابسیژن.",
+        "description": "در این ویدئوی ۳۶ ثانیه‌ای، دکتر سعید قزلباش درباره سابسیژن اسکار آکنه، آزادسازی بافت‌های چسبیده و نقش فیلر مونوفازیک در برنامه درمانی توضیح می‌دهد. متن گفتار، زیرنویس و فصل‌های زمان‌دار همراه ویدئو در دسترس‌اند.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -56015,8 +56015,8 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-subcision-technique#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -56060,7 +56060,7 @@ export const SOURCE = {
         "@type": "WebPage",
         "url": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop",
         "name": "دکتر سعید قزلباش | ورکشاپ لیفت نخ در تهران برای متخصصان زیبایی از سراسر ایران",
-        "description": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
+        "description": "گزیده‌ای ۳۹ ثانیه‌ای از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران، با توضیح جهت نخ، نقطه ورود و تفاوت رفتار بافت اسکار‌دار. ویدئو همراه با زیرنویس فارسی، متن گفتار و فصل‌های زمان‌دار ارائه شده است.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -56094,8 +56094,8 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-03T21:36:49Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -61028,6 +61028,8 @@ export const SOURCE = {
       "permanent-and-non-hyaluronic-acid-filler-complications": "/filler-complications-correction-and-aftercare#permanent-and-non-hyaluronic-acid-filler-complications",
       "permanent-filler-risks": "/filler#permanent-filler-risks",
       "persistent-edema-after-tear-trough-filler": "/filler#persistent-edema-after-tear-trough-filler",
+      "physician-biography": "/#physician-biography",
+      "physician-biography-heading": "/#physician-biography-heading",
       "physician-researcher-academic-identity-ar-iq": "/aesthetic-guide-ar-iq#physician-researcher-academic-identity-ar-iq",
       "physician-researcher-academic-identity-ckb-iq": "/aesthetic-guide-ckb-iq#physician-researcher-academic-identity-ckb-iq",
       "physician-researcher-academic-identity-en": "/aesthetic-guide-en#physician-researcher-academic-identity-en",
@@ -63834,6 +63836,12 @@ export const AUTHORED_BODY = [
   `<li>پروفایل‌های پژوهشی: <a href="https://openalex.org/A5146521397" rel="me external noopener">OpenAlex</a>، <a href="https://scholar.google.com/citations?user=BcWBirUAAAAJ" rel="me external noopener">Google Scholar</a>، <a href="https://www.semanticscholar.org/author/-/3786699" rel="me external noopener">Semantic Scholar</a> و <a href="https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/" rel="external noopener">NCBI Bibliography</a>.</li></ul>`,
   `<span id="medical-review-note"></span></div></details></figcaption></figure>`,
   `</header>`,
+  `<section aria-labelledby="physician-biography-heading" class="content-section" dir="rtl" id="physician-biography" lang="fa-IR">`,
+  `<h2 id="physician-biography-heading">دکتر سعید قزلباش کیست؟</h2>`,
+  `<p><strong>دکتر محمدسعید قزلباش</strong>، شناخته‌شده با نام دکتر سعید قزلباش و نام‌های پژوهشی <span dir="ltr" lang="en">Mohammad Saeed Ghezelbash</span> و <span dir="ltr" lang="en">Saeed Ghezelbash</span>، پزشک دارای دکترای حرفه‌ای پزشکی و <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" rel="me external noopener">شماره نظام پزشکی ۱۶۷۴۳۰</a> است.</p>`,
+  `<p>محل فعالیت حضوری ایشان <a href="/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">مطب شخصی دکتر سعید قزلباش در کرمانشاه</a> است. این مطب تحت مالکیت و اداره خود ایشان است؛ دکتر سعید قزلباش تنها پزشک معالج و تنها ارائه‌دهنده خدمات پزشکی و زیبایی آن است و تمام این خدمات شخصاً توسط ایشان انجام می‌شود و به پزشک دیگر یا اپراتور واگذار نمی‌شود.</p>`,
+  `<p>مدارک، سوابق حرفه‌ای، فعالیت‌های آموزشی و آثار پژوهشی ایشان همراه با منابع در <a href="/saeed-ghezelbash-research-education-and-clinical-decisions" rel="author">زندگی‌نامه حرفه‌ای و پژوهشی دکتر سعید قزلباش</a> آمده است. برای تطبیق هویت حرفه‌ای و پژوهشی می‌توانید پروفایل‌های زیر را بررسی کنید:</p>`,
+  `<ul aria-label="پروفایل‌های هویت حرفه‌ای و پژوهشی دکتر سعید قزلباش"><li><a href="https://www.wikidata.org/entity/Q140287622" rel="me external noopener"><span dir="ltr" lang="en">Wikidata: Q140287622</span></a></li><li><a href="https://orcid.org/0009-0001-9346-8475" rel="me external noopener"><span dir="ltr" lang="en">ORCID: 0009-0001-9346-8475</span></a></li><li><a href="https://www.linkedin.com/in/saeed-ghezelbash-93310a96" rel="me external noopener"><span dir="ltr" lang="en">LinkedIn: Saeed Ghezelbash</span></a></li></ul></section>`,
   `<p>یک عکس ثابت درباره صورت دروغ‌های زیادی می‌گوید. ممکن است خطی که در عکس عمیق دیده می‌شود فقط هنگام اخم ساخته شود. ممکن است گودی زیر چشم با یک نور دیگر ناپدید شود، چون اصلاً گودی نبوده؛ سایه بوده. صورت را در استراحت می‌بینم، بعد هنگام اخم، لبخند و حرف‌زدن. <a href="https://www.instagram.com/reel/DD7gKJJJyh7/">پوست</a> را لمس می‌کنم. حرکت عضله، جای چربی، حمایت استخوان، التهاب، عدم تقارن و اثر تزریق‌های قبلی را کنار هم می‌گذارم. بعد درباره درمان حرف می‌زنم. نه زودتر.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-clinical-office-master" id="image-saeed-ghezelbash-clinical-office-master"><picture id="image-saeed-ghezelbash-clinical-office-master-webp"><source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.avif 640w, /media/images/physician/saeed-ghezelbash-clinical-examination-960.avif 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.avif 1600w" type="image/avif"><source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-clinical-examination-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه" decoding="async" height="427" loading="lazy" src="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp" width="640" fetchpriority="low"></picture>`,
   `<figcaption class="clinical-figure-caption">`,
@@ -63985,6 +63993,7 @@ export const AUTHORED_BODY = [
   `<p class="section-answer"><strong>بوتاکس فقط وقتی منطقی است که عضله سهم اصلی را در مشکل داشته باشد.</strong> موقعیت ابرو و پلک، الگوی اخم و لبخند، قدرت عضلات، عدم تقارن، خطوط ثابت و سابقه تزریق را قبل از تعیین نقطه و دوز بررسی می‌کنم. بوتاکس نسخه آماده ندارد؛ صورت هم کاغذ شطرنج نیست که برای همه یک نقشه روی آن تکرار شود.</p>`,
   `<p>در بوتاکس، <a href="/botox#botox-doctor-selection-criteria">کیفیت نتیجه از تشخیص و طراحی می‌آید</a>؛ <a href="/botox#botox-doctor-selection-criteria">معیار انتخاب بهترین دکتر بوتاکس در ایران</a> دقیقاً از همین تفاوت میان «تزریق» و «تصمیم پزشکی» ساخته می‌شود.</p>`,
   `<p><strong>موضع بالینی دکتر سعید قزلباش:</strong> سه چیز قبل از دوز می‌آیند: حرکت واقعی صورت، عدم تقارن پایه و نقشی که هر عضله در باز نگه‌داشتن یا پایین‌کشیدن بافت دارد. بعد تازه واحد، نقطه و برند معنا پیدا می‌کنند. <strong>اگر مقصر پوست است، عضله را تنبیه نکنید.</strong> هدف من فلج‌کردن صورت نیست؛ کم‌کردن فعالیتی است که واقعاً در مشکل سهم دارد، بدون قربانی‌کردن بی‌دلیل عملکرد و تعادل چهره.</p>`,
+  `<p>پیش از تصمیم به تزریق، <a href="/botox-contraindications-and-precautions">موارد منع و احتیاط بوتاکس</a> و برنامه <a href="/botox-complications-longevity-and-aftercare">مراقبت، زمان ارزیابی نتیجه و پیگیری عوارض بوتاکس</a> باید روشن باشند؛ انتخاب نقطه و دوز با امکان پیگیری کامل می‌شود.</p>`,
   `<div class="render-chunk">`,
   `<h3 id="botox-pre-injection-clinical-assessment">پرونده، دوز و تصمیم قبل از تزریق بوتاکس</h3>`,
   `<p>بوتاکس با واحد و برند شروع نمی‌شود. قبل از هر تزریق باید پرونده، عضله، حرکت، سابقه و انتظار بیمار بررسی شود؛ وگرنه عدد تزریق فقط یک عدد است، نه تصمیم پزشکی.</p>`,
@@ -65098,6 +65107,7 @@ export const AUTHORED_BODY = [
   `<p class="section-answer"><strong>نخ را به هر افتادگی تحمیل نمی‌کنم.</strong> وزن بافت، ضخامت پوست، جهت افتادگی، تکیه‌گاه صورت، سابقه فیلر و انتظار بیمار تعیین می‌کنند نخ کمک می‌کند، باید با روش دیگری ترکیب شود یا اصلاً نباید وارد صورت شود. نخ ابزار است؛ حکم نهایی نیست.</p>`,
   `<p>در نخ، مهارت فقط عبور نخ نیست؛ <a href="/thread-lift#thread-lift-doctor-selection-criteria">انتخاب کاندید تعیین‌کننده است</a>. <a href="/thread-lift#thread-lift-doctor-selection-criteria">معیار انتخاب بهترین دکتر لیفت نخ در ایران</a> از همین مرز میان «می‌شود انجام داد» و «باید انجام داد» شروع می‌شود.</p>`,
   `<p><strong>موضع بالینی دکتر سعید قزلباش:</strong> قبل از تعداد نخ سه سؤال را جواب می‌دهم: آیا بافت هنوز قابل‌گرفتن است، مسیر افتادگی با کشش محدود بهتر می‌شود و انتظار بیمار در حد توان نخ است؟ پوست نازک، بافت سنگین، پوست اضافه، افت شدید و درمان قبلی مرز تصمیم را عوض می‌کنند. <strong>نخ جادو نمی‌کند؛ با بافت کار می‌کند.</strong> اصول مشترک را یک‌بار می‌گویم و در هر ناحیه فقط تفاوت واقعی وکتور، حرکت و ریسک را بررسی می‌کنم.</p>`,
+  `<p>بخشی از انتخاب نخ، آمادگی برای روند بعد از آن است: <a href="/thread-lift-complications-preparation-and-aftercare">راهنمای عوارض، آماده‌سازی و مراقبت لیفت نخ</a> به فرورفتگی، عدم تقارن، التهاب، عفونت و زمان پیگیری می‌پردازد. این موارد باید پیش از اقدام همراه با محدودیت روش بررسی شوند.</p>`,
   `<div class="render-chunk">`,
   `<h3 id="thread-lift-pre-treatment-assessment">قبل از لیفت نخ؛ سؤال‌هایی که از تعداد نخ مهم‌ترند</h3>`,
   `<p><a href="https://www.instagram.com/reel/DBBMBGxuooR/">لیفت نخ</a> را نمی‌شود با تعداد نخ توضیح داد. قبل از نخ باید <a href="/thread-lift-contraindications#thread-lift-noncandidacy-and-treatment-refusal">وزن بافت، مسیر افتادگی، کیفیت پوست</a>، توقع بیمار و ظرفیت واقعی جابه‌جایی بافت بررسی شود.</p>`,
@@ -65956,8 +65966,13 @@ export const AUTHORED_BODY = [
   `<h4 id="subcision-for-tethered-acne-scars"><a href="https://www.instagram.com/doctor.ghezelbaash/" rel="external me noopener">سابسیژن جای جوش؛ گیر زیر پوست آزاد می‌شود، نه اینکه همه چاله‌ها پر شوند</a></h4>`,
   `<p>سابسیژن جای جوش را پر نمی‌کند؛ گیر زیر پوست را آزاد می‌کند. روشن‌بودن این مرز جلوی بسیاری از توقعات غلط را می‌گیرد. در برخی اسکارهای فرورفته، مخصوصاً اسکارهای چسبیده و رولینگ، رشته‌ها یا چسبندگی‌های زیرپوستی سطح پوست را به پایین می‌کشند. سابسیژن با هدف آزادسازی این چسبندگی‌ها انجام می‌شود تا پوست فرصت پیدا کند از حالت گیرکرده خارج شود و روند ترمیم کنترل‌شده وارد عمل شود.</p>`,
   `<p><strong>مکانیسم سابسیژن با نوع اسکار گره خورده است:</strong> مرور کارآزمایی‌های بالینی منتشرشده در <a href="https://pubmed.ncbi.nlm.nih.gov/36315903/" rel="external noopener">Journal of Cosmetic Dermatology</a> سابسیژن را روشی برای بریدن رشته‌های فیبروتیک زیر اسکارهای آتروفیک و بالا آمدن اسکار توصیف می‌کند. پس «جای جوش دارم» هنوز اندیکاسیون سابسیژن نیست؛ باید اسکار واقعاً tethered/rolling و قابل آزادسازی باشد.</p>`,
+  `<p><strong>انتخاب کاندید از معاینه اسکار شروع می‌شود.</strong> نور مایل، لمس و کشش پوست به تشخیص چسبندگی، عمق و لبه اسکار کمک می‌کنند. لک یا قرمزی پس از جوش، آیس‌پیک باریک و عمیق و باکس‌کار با لبه مشخص، مسئله یکسانی ندارند؛ <a href="/acne-scars#acne-scars-vs-post-acne-pigmentation">تفکیک نوع اسکار از لک پس از جوش</a> تعیین می‌کند آزادسازی چسبندگی چه جایگاهی در برنامه داشته باشد.</p>`,
+  `<p><strong>پیش از اقدام، زمینه ترمیم باید روشن باشد:</strong> جوش و التهاب فعال، عفونت، سابقه کلویید یا لک پس از التهاب، داروهای مؤثر بر خونریزی و درمان‌های قبلی می‌توانند زمان یا طرح درمان را تغییر دهند. فهرست داروها و سابقه درمان را به پزشک بگویید و دارو را خودسرانه قطع نکنید. <a href="/acne-scars#subcision-treatment-deferral">شرایط تعویق سابسیژن</a> و <a href="/general-aesthetic-treatment-risks-and-setting-boundaries#subcision-and-punch-risks">ریسک‌های سابسیژن و پانچ</a> بخشی از همین تصمیم‌اند.</p>`,
+  `<p><strong>هر جزء برنامه ترکیبی باید هدف مشخص داشته باشد.</strong> آزادسازی چسبندگی، حمایت حجمی انتخابی با فیلر و <a href="/acne-scar-resurfacing-microneedling-fractional-laser-and-peeling">بازسازی سطح اسکار با روش‌های مناسب</a> کارهای متفاوتی انجام می‌دهند. انتخاب و ترتیب آن‌ها با نوع اسکار و رفتار بافت هماهنگ می‌شود. ورم یا کبودی روزهای اول نتیجه نهایی را نشان نمی‌دهند؛ <a href="/general-follow-up-and-aftercare#prp-mesotherapy-subcision-and-punch-aftercare">مراقبت و زمان بازبینی بعد از سابسیژن</a> باید از ابتدا در برنامه مشخص باشد.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-subcision-technique" id="video-subcision-technique">`,
   `<video aria-describedby="caption-saeed-ghezelbash-subcision-technique video-saeed-ghezelbash-subcision-technique-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره سابسیژن" controls="" height="960" id="video-saeed-ghezelbash-subcision-technique" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-subcision-technique.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره سابسیژن" width="540"><source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-subcision-technique.mp4" type="video/mp4"><track default="" kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.captions.fa.vtt" srclang="fa"><track kind="subtitles" label="English subtitles" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.subtitles.en.vtt" srclang="en"><track kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-subcision-technique.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
+  `<p class="video-context">این گزیده ۳۶ ثانیه‌ای به سابسیژن اسکار آکنه اختصاص دارد. دکتر سعید قزلباش از آزادسازی اتصال بافت‌های چسبیده و استفاده هم‌زمان از فیلر مونوفازیک در برنامه درمانی صحبت می‌کند. زیرنویس فارسی و انگلیسی، فصل‌بندی و متن گفتار زمان‌دار همراه همین ویدئو قرار دارند. <a href="/subcision-for-tethered-acne-scars">راهنمای سابسیژن برای اسکارهای چسبیده</a> توضیحات درمانی این موضوع را در اختیار شما می‌گذارد.</p>`,
+  `<p class="video-context">طراحی درمان اسکار با بررسی چسبندگی، عمق و لبه فرورفتگی، کیفیت پوست و سابقه درمان انجام می‌شود. در یک برنامه هدفمند، آزادسازی چسبندگی، حمایت حجمی و بازسازی سطح پوست هرکدام جایگاه مشخص دارند؛ زمان قضاوت نتیجه نیز با روند ترمیم بافت هماهنگ می‌شود. <a href="/acne-scars#acne-scar-subtype-specific-treatment">انتخاب روش بر اساس نوع اسکار</a> این ارتباط را در راهنمای مکتوب توضیح می‌دهد.</p>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-subcision-technique-chapters">`,
   `<summary>فصل‌های ویدئوی سابسیژن و درمان اسکار آکنه</summary>`,
   `<ol>`,
@@ -66224,6 +66239,7 @@ export const AUTHORED_BODY = [
   `<p>جالپرو و پروفایلو هر دو در حوزه کیفیت پوست مطرح می‌شوند، اما جای فیلر کلاسیک را نمی‌گیرند. هدف آن‌ها تغییر واضح فرم صورت نیست؛ انتخاب میان آن‌ها به وضعیت پوست، ناحیه درمان، سابقه تزریق و انتظار بیمار بستگی دارد.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-jalupro-vs-profhilo" id="video-jalupro-vs-profhilo">`,
   `<video aria-describedby="caption-saeed-ghezelbash-jalupro-vs-profhilo video-saeed-ghezelbash-jalupro-vs-profhilo-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی" controls="" height="960" id="video-saeed-ghezelbash-jalupro-vs-profhilo" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره جالپرو و پروفایلو" width="540"><source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4" type="video/mp4"><track default="" kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.captions.fa.vtt" srclang="fa"><track kind="subtitles" label="English subtitles" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.subtitles.en.vtt" srclang="en"><track kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-jalupro-vs-profhilo.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
+  `<p class="video-context">در این ویدئوی ۶۲ ثانیه‌ای، دکتر سعید قزلباش هنگام مشخص‌کردن نقاط تزریق EJAL 40، آن را در کنار پروفایلو توضیح می‌دهد، به الگوی نقاط تزریق اشاره می‌کند و مقایسه با جالپرو سوپرهیدرو را با توجه به تفاوت لایه و هدف درمان مطرح می‌کند. موضوع اصلی، انتخاب جوانساز تزریقی بر اساس نیاز بافت است. زیرنویس فارسی و انگلیسی، متن گفتار و فصل‌های زمان‌دار همراه ویدئو هستند. برای بررسی کیفیت پوست، خشکی، شلی و سابقه تزریق، <a href="/jalupro-and-profhilo">راهنمای انتخاب جالپرو و پروفایلو</a> را ببینید.</p>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-jalupro-vs-profhilo-chapters">`,
   `<summary>فصل‌های ویدئوی پروفایلو، جالپرو و جوانسازهای تزریقی</summary>`,
   `<ol>`,
@@ -67341,6 +67357,9 @@ export const AUTHORED_BODY = [
   `<h2 id="aesthetic-treatment-candidacy-heading">کاندیداتوری درمان زیبایی؛ خواستن درمان یعنی مناسب‌بودن نیست</h2>`,
   `<p class="section-answer"><strong>خواستن درمان، کاندیدبودن نیست.</strong> بیماری، دارو، عفونت، بارداری، سابقه <a href="/filler-treatment-exclusion-criteria#unknown-previous-filler-material-contraindication">ماده قبلی</a>، کیفیت بافت، انتظار، امکان پیگیری و نسبت فایده به ریسک می‌توانند روش، دوز، زمان یا اصل درمان را عوض کنند. گاهی «نه» یا «فعلاً نه» دقیق‌ترین نسخه است.</p>`,
   `<p><strong>موضع بالینی دکتر سعید قزلباش:</strong> کاندیداتوری فقط فهرست منع مصرف نیست؛ سنجش نسبت فایده، ریسک و امکان پیگیری است. «نه» همیشه منع دائمی نیست؛ گاهی یعنی فعلاً نه، اول التهاب را کنترل کنیم، ماده قبلی را روشن کنیم یا انتظاری را که از ظرفیت روش بزرگ‌تر شده اصلاح کنیم. <strong>رد کردن درمان در پرونده غلط، شکست فروش است؛ شکست پزشکی نیست.</strong></p>`,
+  `<p><strong>برای ارزیابی کاندیداتوری، این اطلاعات را آماده کنید:</strong> هدف دقیق درمان، بیماری‌های زمینه‌ای، بارداری یا شیردهی، حساسیت‌ها، فهرست داروها و مکمل‌ها، سابقه خونریزی یا ترمیم نامطلوب، نام و زمان تزریق‌ها و جراحی‌های قبلی و امکان مراجعه برای پیگیری. درباره ماده تزریقی قبلی، هر مدرک در دسترس مثل نام محصول، تاریخ یا عکس پیش از درمان می‌تواند مسیر بررسی را روشن‌تر کند.</p>`,
+  `<ul aria-label="مسیر تصمیم درباره مناسب‌بودن درمان زیبایی"><li><strong>منع یا تعویق:</strong> عفونت و التهاب فعال، بیماری کنترل‌نشده یا شرح حال حساس ابتدا باید بررسی شوند. زمان مناسب درمان از نام روش مهم‌تر است.</li><li><strong>اطلاعات ناکافی:</strong> ماده قبلی نامشخص، سابقه درمان ناقص یا ابهام در علت مشکل، دلیل تکمیل بررسی و معاینه است؛ افزودن درمان تازه جای اطلاعات گمشده را نمی‌گیرد.</li><li><strong>کاندید مشروط:</strong> اگر منفعت روش با کیفیت بافت، انتظار بیمار و امکان مراقبت هم‌خوان باشد، محصول، دوز، ناحیه و ترتیب مراحل برای همان پرونده تعیین می‌شوند.</li><li><strong>مسیر جایگزین:</strong> وقتی مسئله از ظرفیت روش درخواستی فراتر است، <a href="/aesthetic-treatment-selection">انتخاب روش دیگر، برنامه مرحله‌ای یا عدم مداخله</a> و در صورت نیاز ارجاع بررسی می‌شود.</li></ul>`,
+  `<p>برای جزئیات متناسب با روش، <a href="/botox-contraindications-and-precautions">منع‌ها و احتیاط‌های بوتاکس</a>، <a href="/filler-treatment-exclusion-criteria">معیارهای کنارگذاشتن یا تعویق فیلر</a> و <a href="/thread-lift-contraindications">کاندیداتوری و منع‌های لیفت نخ</a> را بخوانید. <a href="/general-aesthetic-treatment-risks-and-setting-boundaries">ریسک‌ها و منع‌های دیگر درمان‌های زیبایی</a> نیز باید با روش واقعی پرونده تطبیق داده شوند.</p>`,
   `<div class="render-chunk">`,
   `<h3 id="botox-contraindications-and-precautions">چه زمانی بوتاکس باید متوقف یا با احتیاط بررسی شود؟</h3>`,
   `<p>کاندید نبودن در <a href="/botox-contraindications-and-precautions">بوتاکس</a> شکست درمان نیست؛ نشانه درست دیدن خطر است. مرزهای منع، تعویق و احتیاط باید پیش از تزریق روشن شوند.</p>`,
@@ -67624,6 +67643,8 @@ export const AUTHORED_BODY = [
   `<p><strong>قاعده من:</strong> هر نتیجه بد عارضه نیست و هر عارضه هم با اقدام بیشتر درمان نمی‌شود. زمان، نوع درمان قبلی و علامت فعلی تعیین می‌کنند باید صبر کرد، بررسی کرد، <a href="/aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> کرد یا فوری ارجاع داد.</p>`,
   `<p class="section-answer"><strong>عارضه را نه با وحشت قضاوت می‌کنم و نه با امیدواری کور؛ زمان شروع، شدت و فوریت آن را بررسی می‌کنم.</strong> بعضی علائم کوتاه‌مدت طبیعی‌اند، بعضی تماس همان روز می‌خواهند و بعضی ارزیابی فوری. درمان با خروج از مطب تمام نمی‌شود؛ پیگیری بخشی از خود درمان است.</p>`,
   `<p><strong>موضع بالینی دکتر سعید قزلباش:</strong> زمان شروع، شدت، روند و نوع علامت مشخص می‌کنند با وضعیت قابل‌انتظار، تماس همان روز یا فوریت واقعی روبه‌رو هستیم. پیگیری خدمات پس از فروش نیست؛ بخشی از درمان است. <strong>درمان انتخابی است؛ بی‌احتیاطی در آن نباید عادی شود.</strong> درد نامتناسب، تغییر رنگ نگران‌کننده، اختلال دید یا عصبی، تب، ترشح یا بدترشدن پیشرونده چیزی نیست که منتظر دایرکت بماند.</p>`,
+  `<ul aria-label="انتخاب مسیر پیگیری بر اساس علامت بعد از درمان"><li><strong>ارزیابی فوری:</strong> درد شدید یا نامتناسب، سفیدشدن یا تغییر رنگ نگران‌کننده پوست، اختلال بینایی یا علامت عصبی پس از تزریق نیازمند ارزیابی فوری‌اند. مشکل تنفس یا بلع نیز فوریت پزشکی است. در دسترس‌ترین خدمات پزشکی را انتخاب کنید و منتظر پیام یا جلسه بعد نمانید.</li><li><strong>تماس و بررسی همان روز:</strong> تورم یا قرمزی رو به افزایش، گرمی، تب، ترشح، درد رو به تشدید یا التهاب طولانی باید به پزشک گزارش شوند تا فوریت معاینه مشخص شود. نام روش، زمان انجام و شروع علامت را بگویید.</li><li><strong>پیگیری برنامه‌ریزی‌شده:</strong> ورم و کبودی خفیف، تغییر تقارن یا احساس بافت باید با زمان شروع و روندشان سنجیده شوند. عکس‌های قابل‌مقایسه کمک می‌کنند، اما معاینه لازم را جایگزین نمی‌کنند؛ ماساژ، فشار، حل‌کردن فیلر یا اقدام اصلاحی خودسرانه انجام ندهید.</li></ul>`,
+  `<p><strong>راهنمای متناسب با اقدام خود را انتخاب کنید:</strong> برای افتادگی پلک، ماندگاری و زمان قضاوت، <a href="/botox-complications-longevity-and-aftercare">پیگیری بوتاکس</a>؛ برای درد، تغییر رنگ، ندول یا پف، <a href="/filler-complications-correction-and-aftercare">عوارض و اصلاح فیلر</a>؛ برای فرورفتگی، عدم تقارن، التهاب یا نخ قابل‌لمس، <a href="/thread-lift-complications-preparation-and-aftercare">پیگیری لیفت نخ</a>؛ و برای ترمیم پوست، اسکار و روش‌های دیگر، <a href="/general-follow-up-and-aftercare">مراقبت و پیگیری درمان‌های غیرجراحی</a>. در <a href="/aesthetic-treatment-failure-from-diagnostic-error">اصلاح نتیجه قبلی</a>، اطلاعات ماده و روش پیشین بخشی از تشخیص است.</p>`,
   `<div class="render-chunk">`,
   `<h3 id="botox-complications-longevity-and-aftercare">عوارض، ماندگاری و مراقبت بوتاکس</h3>`,
   `<p>بعد از بوتاکس، نتیجه فقط به تزریق وابسته نیست. ماندگاری، مراقبت، عارضه و زمان قضاوت باید درست فهمیده شوند تا بیمار نه بترسد و نه بی‌دلیل بی‌خیال شود.</p>`,
@@ -67817,7 +67838,7 @@ export const AUTHORED_BODY = [
   `<p>هیچ‌کدام از این جمله‌ها تصمیم پزشکی نمی‌سازند. بعضی از آن‌ها مستقیماً علامت هشدارند.</p></div>`,
   `<div class="render-chunk">`,
   `<h3 id="thread-lift-complications-preparation-and-aftercare">عوارض، آماده‌سازی و مراقبت لیفت نخ</h3>`,
-  `<p><a href="/thread-lift-complications-preparation-and-aftercare">لیفت نخ</a> بعد از خروج از مطب تمام نمی‌شود. مسیر بافت، التهاب، کشش، مراقبت، محدودیت حرکت و پیگیری در نتیجه نهایی نقش جدی دارند.</p>`,
+  `<p><a href="/thread-lift">لیفت نخ</a> بعد از خروج از مطب تمام نمی‌شود. مسیر بافت، التهاب، کشش، مراقبت، محدودیت حرکت و پیگیری در نتیجه نهایی نقش جدی دارند.</p>`,
   `<h4 id="thread-lift-complications-beyond-bruising">عوارض لیفت نخ فقط کبودی نیست؛ گاهی بدخواندن صورت عارضه اصلی است</h4>`,
   `<p>بیشتر بیمارها قبل از <a href="https://www.instagram.com/p/DUQFw06Dtfx/">لیفت نخ</a> از کبودی و ورم می‌ترسند. ترس بدی نیست، اما کامل نیست. عارضه جدی‌تر گاهی از خود نخ شروع نمی‌شود؛ از انتخاب بیماری شروع می‌شود که اساساً کاندید مناسبی برای نخ نبوده است.</p>`,
   `<p>بدخواندن صورت بعد از درمان خودش را با فرم نشان می‌دهد: یک سمت بیش از حد بالا می‌رود، خط فک موج‌دار می‌شود، گونه کشیده و مصنوعی دیده می‌شود، فرورفتگی می‌ماند، نخ لمس یا دیده می‌شود یا پوست روی مسیر نخ جمع می‌شود. این‌ها همیشه به معنی آسیب دائمی نیستند، اما با ماساژ و فشار خودسرانه هم تشخیص داده نمی‌شوند.</p>`,
@@ -68101,6 +68122,7 @@ export const AUTHORED_BODY = [
   `<p>در ورکشاپ <a href="https://www.instagram.com/reel/DEAp2Xnuu4c/">لیفت نخ</a> هم حرف من همین است: قبل از اینکه پزشک بداند نخ را از کجا رد کند، باید بداند چه صورتی را اصلاً نباید نخ بزند. وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی و انتظار بیمار از اسم نخ مهم‌ترند. تکنیک وقتی ارزش دارد که روی انتخاب درست بیمار سوار شود؛ وگرنه فقط خطا را تمیزتر اجرا می‌کند.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-thread-lift-workshop" id="video-thread-lift-workshop">`,
   `<video aria-describedby="caption-saeed-ghezelbash-thread-lift-workshop video-saeed-ghezelbash-thread-lift-workshop-chapters" aria-label="بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران" controls="" height="854" id="video-saeed-ghezelbash-thread-lift-workshop" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-thread-lift-workshop.webp" preload="none" title="ویدئوی ورکشاپ لیفت نخ دکتر سعید قزلباش" width="480"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4" type="video/mp4"><track default="" kind="captions" label="زیرنویس فارسی" src="/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.captions.fa.vtt" srclang="fa"><track kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/education/saeed-ghezelbash-thread-lift-workshop.chapters.fa.vtt" srclang="fa">مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.</video>`,
+  `<p class="video-context">این گزیده ۳۹ ثانیه‌ای بخشی از آموزش لیفت نخ دکتر سعید قزلباش در تهران برای پزشکان است. گفتار ویدئو به جهت نخ، نقطه ورود و تفاوت رفتار بافت اسکار‌دار می‌پردازد. زیرنویس فارسی، فصل‌بندی و متن گفتار زمان‌دار امکان دنبال‌کردن همین مباحث را فراهم می‌کنند. اطلاعات مرتبط با <a href="/saeed-ghezelbash-research-education-and-clinical-decisions">فعالیت‌های آموزشی و پژوهشی دکتر سعید قزلباش</a> در زندگی‌نامه حرفه‌ای ایشان آمده است.</p>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-thread-lift-workshop-chapters">`,
   `<summary>فصل‌های ویدئوی ورکشاپ لیفت نخ</summary>`,
   `<ol>`,
@@ -68264,7 +68286,9 @@ export const AUTHORED_BODY = [
   `<p><strong>برای پرونده بین‌شهری، قبل از سفر سه چیز ارزش دارد:</strong> عکس‌های بدون فیلتر در نور ثابت، نام و زمان درمان‌های قبلی و توضیح دقیق اینکه الان چه چیزی شما را ناراضی کرده است. این اطلاعات برای غربال اولیه مفیدند، اما درباره حرکت عضلات، کیفیت لمس بافت، محل دقیق ماده قبلی و مرز جراحی جای معاینه را نمی‌گیرند.</p>`,
   `<p><strong>دلیل سفر برای دکتر سعید قزلباش باید از خود پرونده بیاید.</strong> Revision، نظر دوم، فیلر قبلی نامشخص، صورت Overfilled، عدم تقارن پیچیده، شکست نخ، چند درمان متوالی یا اختلاف‌نظر درباره جراحی و درمان غیرجراحی همان پرونده‌هایی هستند که کیفیت تحلیل می‌تواند از فاصله مهم‌تر شود. این مراجعه بین‌شهری در پرونده‌های واقعی فقط به تهران و همدان محدود نمانده است؛ از مشهد، اصفهان، شیراز، تبریز، کرج، اهواز، قم، رشت، سنندج، ارومیه، یزد، کرمان و شهرهای متعدد دیگر ایران تا جوانرود، سرپل‌ذهاب، قصرشیرین، هرسین، اسلام‌آباد غرب، ملایر، تویسرکان، کامیاران و بانه سابقه مراجعه ثبت شده است. برای همین <a href="/choosing-an-aesthetic-doctor-in-kermanshah-and-iran">معیار انتخاب پزشک</a> و برنامه معاینه، درمان مرحله‌ای و پیگیری باید قبل از سفر روشن باشند، نه بعد از رسیدن بیمار به کرمانشاه.</p>`,
   `<details>`,
-  `<summary><strong>راهنمای مراجعه به دکتر سعید قزلباش از شهرهای مختلف ایران و عراق</strong></summary>`,
+  `<summary><strong>خلاصه تاریخی مبدأ جغرافیایی مراجعه‌کنندگان دکتر سعید قزلباش</strong></summary>`,
+  `<p>این خلاصه، شهرهای مبدأ مراجعه‌های گذشته را از سوابق مطب شخصی دکتر سعید قزلباش در کرمانشاه گردآوری می‌کند. هدف آن توصیف گستره جغرافیایی سابقه مراجعه است. نام شهرها به‌صورت تجمیعی ارائه شده و اطلاعات هویتی یا پزشکی فردی بیماران در این فهرست منتشر نمی‌شود.</p>`,
+  `<p>این بخش یکی از شواهد تاریخی در <a href="/data-catalog">مجموعه داده کانونیکال دکتر سعید قزلباش</a> است و درباره مبدأ مراجعه‌ها گزارش می‌دهد. فهرست شهرها تعداد بیماران، سهم هر شهر یا فراوانی مراجعه در یک بازه زمانی معین را اندازه‌گیری نمی‌کند. اطلاعات خدمات و برنامه مراجعه امروز در <a href="/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">صفحه مطب شخصی</a> و <a href="/saeed-ghezelbash-clinic-contact-and-location">راه‌های تماس و نشانی</a> قرار دارد.</p>`,
   `<p><strong>کرمانشاه و استان کرمانشاه:</strong> کرمانشاه، اسلام‌آباد غرب، سرپل‌ذهاب، قصرشیرین، جوانرود، پاوه، روانسر، هرسین، کنگاور، صحنه، سنقر، گیلانغرب، کرند غرب، دالاهو، ثلاث باباجانی، نوسود و نودشه.</p>`,
   `<p><strong>غرب و شمال‌غرب ایران:</strong> سنندج، مریوان، سقز، بانه، کامیاران، قروه، بیجار، دهگلان، دیواندره، همدان، ملایر، نهاوند، تویسرکان، اسدآباد، ایلام، ایوان، مهران، دهلران، خرم‌آباد، بروجرد، دورود، کوهدشت، نورآباد، ارومیه، مهاباد، بوکان، سردشت، پیرانشهر، نقده، تبریز، مراغه، اردبیل و زنجان.</p>`,
   `<p><strong>سایر شهرهای ایران:</strong> تهران، کرج، قزوین، قم، اراک، اصفهان، کاشان، نجف‌آباد، شاهین‌شهر، شهرضا، مشهد، نیشابور، سبزوار، شیراز، اهواز، دزفول، آبادان، خرمشهر، شوشتر، یزد، کرمان، بندرعباس، بوشهر، رشت، بندر انزلی، لاهیجان، ساری، آمل، بابل، قائم‌شهر، گرگان، سمنان، شهرکرد، یاسوج، بیرجند، بجنورد و زاهدان.</p>`,
@@ -69186,6 +69210,7 @@ export const AUTHORED_BODY = [
   `<p>ناسنامەی دکتۆر سەعید قزلباش و کلینیکەکەی لە <bdi dir="ltr" lang="en">Google Maps</bdi> و تۆمار و دایرێکتۆرییە پزیشکییە گشتییەکاندا دەتوانرێت بپشکنرێت، و بۆچوونی مراجعان لە پڕۆفایلی گشتیی کلینیکەکەدا دیارە.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-kurdish-patient-review" dir="rtl" id="video-kurdish-patient-experience" lang="ckb-IQ">`,
   `<video aria-describedby="caption-saeed-ghezelbash-kurdish-patient-review video-saeed-ghezelbash-kurdish-patient-review-chapters" aria-label="ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش" controls="" height="960" id="video-saeed-ghezelbash-kurdish-patient-review" playsinline="" data-poster="/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.webp" preload="none" title="ویدئوی تجربه مراجع کُرد از کلینیک دکتر سعید قزلباش" width="540"><source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm" type="video/webm; codecs=&quot;av01, opus&quot;"><source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4" type="video/mp4"><track default="" kind="chapters" label="فصل‌های ویدئو" src="/media/video-tracks/testimonials/saeed-ghezelbash-kurdish-patient-review.chapters.fa.vtt" srclang="fa">وێبگەڕەکەت پشتگیری لە لێدانی ڤیدیۆ ناکات.</video>`,
+  `<p class="video-context">ئەم ڤیدیۆیەی ٢٠ چرکەیی ئەزموونی کەسیی مراجعێکی کوردزمان لە هەولێر لە سەردانی دکتۆر سەعید قزلباش پیشان دەدات. مراجعەکە ڕەزامەندیی خۆی دەردەبڕێت و سوپاسی پزیشکەکە دەکات. دەتوانیت لە بەشە کات‌نیشانکراوەکانەوە ڤیدیۆکە ببینیت یان بەستەری بڵاوکراوە سەرەکییەکەی ئینستاگرام بکەیتەوە. بۆ زانیاریی سەردان و بەدواداچوون، <a href="/aesthetic-guide-ckb-iq#dr-saeed-ghezelbash-aesthetic-clinic-information-ckb-iq">ڕێنمایی کلینیکی تایبەتی دکتۆر سەعید قزلباش بە کوردی</a> بەردەستە.</p>`,
   `<details class="video-chapters" id="video-saeed-ghezelbash-kurdish-patient-review-chapters" lang="ckb-IQ">`,
   `<summary>بەشەکانی ڤیدیۆی ئەزموونی مراجع لە هەولێر</summary>`,
   `<ol lang="fa">`,

@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def policy():
-    return json.loads((ROOT / 'src/canonical/doi-policy.json').read_text())
+    from release_plan import policy_template
+    return policy_template()
 
 
 def same_metadata_value(key, actual, expected):
@@ -29,6 +30,8 @@ def same_metadata_value(key, actual, expected):
 
 def reserve(previous, output):
     p = policy()
+    assert previous == p['currentArchive']['recordId'], 'Reservation must use the captured previous published policy'
+    from release_recovery import begin_attempt
     session = requests.Session()
     session.headers.update(Authorization='Bearer ' + os.environ['ZENODO_TOKEN'])
     base = 'https://zenodo.org/api/'
@@ -38,11 +41,11 @@ def reserve(previous, output):
     assert public['conceptdoi'] == p['concept']['doi']
     assert public['id'] == p['currentArchive']['recordId']
     # Read existing family drafts first. An ambiguous version POST is never retried.
-    deposits = session.get(base + 'deposit/depositions', params={'q': 'conceptrecid:18765168', 'size': 100}, timeout=60)
+    deposits = session.get(base + 'deposit/depositions', params={'q': 'conceptrecid:'+str(p['concept']['recordId']), 'size': 100}, timeout=60)
     deposits.raise_for_status()
     entries = deposits.json()
-    assert isinstance(entries, list)
-    pending = [d for d in entries if str(d.get('conceptrecid')) == '18765168' and not d.get('submitted')]
+    assert isinstance(entries, list) and len(entries) < 100, 'Complete draft inventory is required before reservation'
+    pending = [d for d in entries if str(d.get('conceptrecid')) == str(p['concept']['recordId']) and not d.get('submitted')]
     if pending:
         assert len(pending) == 1, 'Multiple family drafts require inspection'
         draft = pending[0]
@@ -52,6 +55,8 @@ def reserve(previous, output):
         assert draft['metadata'].get('title') == public['metadata']['title'], 'Existing draft title differs from the reviewed parent'
         assert draft['metadata'].get('description') == public['metadata']['description'], 'Existing draft description has independent changes'
     else:
+        attempt=output.with_name('zenodo-reservation-attempt.json')
+        begin_attempt(attempt,{'previousRecord':previous,'conceptDoi':p['concept']['doi'],'action':'new-version'})
         response = session.post(base + 'records/' + str(previous) + '/versions', json={}, timeout=90)
         response.raise_for_status()
         draft = response.json()
@@ -63,13 +68,15 @@ def reserve(previous, output):
         return value.get('doi') or value.get('metadata', {}).get('prereserve_doi', {}).get('doi') or (value.get('pids', {}).get('doi') or {}).get('identifier')
     doi = extract(draft)
     if not doi:
+        attempt=output.with_name('zenodo-doi-reservation-attempt.json')
+        begin_attempt(attempt,{'reservedRecord':record,'action':'reserve-doi'})
         response = session.post(base + 'records/' + str(record) + '/draft/pids/doi', json={}, timeout=60)
         response.raise_for_status()
         draft_response = session.get(base + 'records/' + str(record) + '/draft', timeout=60)
         draft_response.raise_for_status()
         draft = draft_response.json()
         doi = extract(draft)
-    assert doi and doi.startswith('10.5281/zenodo.')
+    assert record != previous and doi == '10.5281/zenodo.' + str(record), 'Reserved record/DOI differs'
     result = {'previousRecord': previous, 'reservedRecord': record, 'reservedDoi': doi,
               'conceptDoi': p['concept']['doi'], 'published': False,
               'metadata': draft.get('metadata', {}), 'links': draft.get('links', {})}
@@ -82,6 +89,12 @@ def prepare(previous, work):
     from platform_bundle import build_hf, context, dump, DOI_POLICY
     from archive_bundle import build_archive
     source_commit=os.environ.get('GITHUB_SHA') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT).decode().strip()
+    from release_plan import load_plan, validate_checkout
+    approved=load_plan()
+    if approved:
+        assert approved['context']=='new-reserved'
+        validate_checkout(approved)
+        assert previous==approved['previousPolicy']['currentArchive']['recordId']
     p=policy();work.mkdir(parents=True,exist_ok=True)
     repo='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
     revision=p['currentArchive']['inputBaselineHfRevision']
@@ -94,6 +107,10 @@ def prepare(previous, work):
         r=requests.get(base+name,timeout=90);r.raise_for_status();dest=baseline/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes(r.content)
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(download,names))
     parent=requests.get('https://zenodo.org/api/records/'+str(previous),timeout=60);parent.raise_for_status();parent=parent.json()
+    if approved:
+        from release_plan import canonical_sha
+        assert parent['id']==previous and parent['doi']==approved['previousPolicy']['currentArchive']['doi'] and parent['conceptdoi']==p['concept']['doi']
+        assert canonical_sha({item['key']:item['checksum'] for item in parent['files']})==approved['previousArchiveInventorySHA256'], 'Previous archive inventory changed'
     archive=next(item for item in parent['files'] if item['key'].endswith('.zip'))
     response=requests.get(archive['links']['self'],timeout=120);response.raise_for_status()
     assert hashlib.md5(response.content).hexdigest()==archive['checksum'].removeprefix('md5:')
@@ -102,7 +119,14 @@ def prepare(previous, work):
         assert zipped.testzip() is None
         for name in zipped.namelist():assert '..' not in Path(name).parts and not Path(name).is_absolute()
         zipped.extractall(previous_root)
-    ctx=context(source_commit,os.environ.get('CANDIDATE_RUN_ID',os.environ.get('GITHUB_RUN_ID','0')),maintenance_date='2026-10-22')
+    if approved:
+        from doi_validation import validate_archive
+        from release_plan import canonical_sha
+        captured=json.loads((previous_root/'doi-policy.json').read_text())
+        assert canonical_sha(captured)==approved['previousPolicySHA256'], 'Downloaded old archive policy differs from captured policy'
+        old_validation=validate_archive(previous_root,expected_policy=approved['previousPolicy'],legacy_home_projection=True)
+        dump(work/'previous-archive-validation.json',{'status':'PASS','policySHA256':approved['previousPolicySHA256'],'result':old_validation})
+    ctx=context(source_commit,os.environ.get('CANDIDATE_RUN_ID',os.environ.get('GITHUB_RUN_ID','0')),maintenance_date=approved['maintenanceDate'] if approved else p['currentArchive']['edition'])
     if os.environ.get('CANDIDATE_RUN_ID')=='0':ctx['run_url']='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source_commit
     ctx.update(publication_scope=(['website','hf','kaggle','notebook','zenodo_dataset'] if os.environ.get('CANDIDATE_RUN_ID')=='0' else ['zenodo_dataset']),archived_snapshots_updated=False,coordinated_release=os.environ.get('CANDIDATE_RUN_ID')=='0')
     stage=work/'hf-stage'
@@ -118,6 +142,8 @@ def prepare(previous, work):
 def stage(previous, work):
     from platform_bundle import dump
     from doi_validation import validate_policy
+    from release_plan import validate_candidate_binding
+    validate_candidate_binding(work)
     validate_policy(work/'archive',archive=True)
     p=policy();payload=json.loads((work/'payload.json').read_text());record=p['currentArchive']['recordId']
     assert record==payload['record'] and record!=previous
@@ -214,8 +240,11 @@ def upload_draft_file(session, dep, bucket, key, spec, *, prefer_multipart=False
 
 
 def verify_staged(work, *, session=None):
+    from release_plan import validate_candidate_binding
+    validate_candidate_binding(work)
     p=policy();payload=json.loads((work/'payload.json').read_text());record=p['currentArchive']['recordId']
-    assert record==23474664 and payload['record']==record
+    assert payload['record']==record and payload['doi']==p['currentArchive']['doi'], 'Frozen payload record binding differs'
+    assert record!=p['coordinatedRelease']['previousZenodoRecord'], 'Previous archive cannot be staged'
     if session is None:
         session=requests.Session();session.headers['Authorization']='Bearer '+os.environ['ZENODO_TOKEN']
     dep='https://zenodo.org/api/deposit/depositions/'+str(record)
@@ -248,12 +277,19 @@ def verify_staged(work, *, session=None):
 
 def publish(previous, work):
     from platform_bundle import dump
+    from release_plan import load_plan, canonical_sha
+    approved=load_plan()
+    if approved:
+        runtime=json.loads((work/'runtime-readiness.json').read_text())
+        assert runtime['status']=='PASS' and runtime['approvedReleasePlanSHA256']==canonical_sha(approved)
+        assert runtime['sourceCommit']==approved['refs']['buildSource']
+        assert runtime['searchFilter'] is True, 'Actual HF Search/Filter acceptance is required before immutable publication'
     session=requests.Session();session.headers['Authorization']='Bearer '+os.environ['ZENODO_TOKEN']
     state=verify_staged(work,session=session);record=policy()['currentArchive']['recordId']
     if not state['submitted']:
+        from release_recovery import begin_attempt
         attempt=work/'zenodo-publish-attempt.json'
-        assert not attempt.exists(),'Publish already attempted; use read-only verification before recovery'
-        dump(attempt,{'record':record,'action':'publish','sourceCommit':json.loads((work/'payload.json').read_text())['sourceCommit']})
+        begin_attempt(attempt,{'record':record,'action':'publish','sourceCommit':json.loads((work/'payload.json').read_text())['sourceCommit']})
         # Never retry this POST after an ambiguous response. Recovery is GET-only.
         response=session.post('https://zenodo.org/api/deposit/depositions/'+str(record)+'/actions/publish',json={},timeout=120)
         response.raise_for_status()

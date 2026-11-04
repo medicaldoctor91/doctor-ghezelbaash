@@ -4,8 +4,10 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+import sys
 
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'.github/scripts'))
 spec=importlib.util.spec_from_file_location('doi_validation',ROOT/'.github/scripts/doi_validation.py')
 validator=importlib.util.module_from_spec(spec);spec.loader.exec_module(validator)
 

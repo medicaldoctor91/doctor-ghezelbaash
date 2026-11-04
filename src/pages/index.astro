@@ -13,6 +13,8 @@ import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
 import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
+import {resolvePhysicianPractice} from "../lib/physician-identity.mjs";
 import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, renderMedicalTrust} from "../lib/search-contract.mjs";
 export const prerender = true;
 import {SOURCE, AUTHORED_BODY} from "../canonical/source.mjs";
@@ -2072,8 +2074,10 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   const keyFor = (path) => path.replace(/\\/$/, "") || "/";
   const focused = () => d.documentElement.dataset.routeView === "focused";
   const primaryArticle = () => d.querySelector("main article.medical-guide");
-  let homeSource, homeState, readerLoaded = false, expansion, ticket = 0;
+  let homeSource, homeState, expansion, expansionPath, expansionTicket, ticket = 0, navigationController;
+  let documentReady = Boolean(primaryArticle()), fullSourceStatus = "idle", readerMode = "focused";
   let committedPath = keyFor(location.pathname);
+  window.guideReaderState = () => ({documentReady, fullSourceStatus, readerMode, committedPath});
 
   // Read the current visible region without measuring every deferred source ID.
   // Headings keep their authored IDs when primary/context nodes are rebuilt.
@@ -2107,7 +2111,8 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   const settledPositions = new Map();
   const rememberPosition = () => {
     const previous = window.history.state?.__completeGuideScroll;
-    const position = { x: window.scrollX, y: window.scrollY,
+    const position = { x: window.scrollX, y: window.scrollY, mode:readerMode,
+      focus:d.activeElement?.id || null,
       entry: typeof previous?.entry === "string" ? previous.entry : \`\${performance.timeOrigin}-\${++entrySequence}\` };
     const anchor = captureReadingAnchor();
     if (anchor) position.anchor = anchor;
@@ -2119,18 +2124,20 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     const saved = window.history.state?.__completeGuideScroll;
     return settledPositions.get(saved?.entry) || saved;
   };
-  // A focused entry can be shorter than its saved complete-reader position.
+  // Focused documents are ready before the optional complete reader is loaded.
   window.saveGuideScrollState = () => {
-    if (!readerLoaded || keyFor(location.pathname) !== committedPath) return;
+    if (!documentReady || !primaryArticle() || keyFor(location.pathname) !== committedPath) return;
     const previous = window.history.state;
     const position = rememberPosition(), anchor = position.anchor;
     const saved = previous?.__completeGuideScroll;
     if (saved?.entry === position.entry && saved?.x === position.x && saved?.y === position.y &&
+      saved?.mode === position.mode && saved?.focus === position.focus &&
       saved?.anchor?.id === anchor?.id && saved?.anchor?.top === anchor?.top) return;
     try {
       window.history.replaceState({
         ...(previous && typeof previous === "object" ? previous : {}),
         __completeGuideScroll: position,
+        __completeGuideMode: readerMode,
       }, "");
       lastScrollWrite = performance.now();
     } catch { /* Native history remains usable if the browser refuses a write. */ }
@@ -2141,7 +2148,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     const generation = scrollGeneration;
     scrollTimer = setTimeout(() => {
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (scrollPaused || generation !== scrollGeneration || !readerLoaded || keyFor(location.pathname) !== committedPath) return;
+        if (scrollPaused || generation !== scrollGeneration || !primaryArticle() || keyFor(location.pathname) !== committedPath) return;
         rememberPosition();
         const delay = 500 - (performance.now() - lastScrollWrite);
         if (delay <= 0) window.saveGuideScrollState();
@@ -2163,8 +2170,11 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   window.addEventListener("popstate", window.pauseGuideScrollState);
   window.addEventListener("pagehide", () => { if (!scrollPaused) window.saveGuideScrollState(); });
   const yieldReader = () => globalThis.scheduler?.yield ? scheduler.yield() : new Promise(resolve => setTimeout(resolve, 0));
-  const fetchContent = async (path, { json = false, priority = "auto" } = {}) => {
+  const fetchContent = async (path, { json = false, priority = "auto", signal } = {}) => {
     const controller = new AbortController();
+    const cancel = () => controller.abort();
+    if (signal?.aborted) controller.abort();
+    else signal?.addEventListener("abort", cancel, {once:true});
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
       const response = await fetch(path, {
@@ -2172,10 +2182,11 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
         priority, signal: controller.signal,
       });
       if (!response.ok) throw new Error("Page unavailable");
+      if (response.url && new URL(response.url).origin !== origin) throw new Error("Unexpected resource origin");
       return json ? await response.json() : await response.text();
-    } finally { clearTimeout(timeout); }
+    } finally { clearTimeout(timeout); signal?.removeEventListener("abort", cancel); }
   };
-  const fetchHtml = path => fetchContent(path);
+  const fetchHtml = (path, signal) => fetchContent(path, {signal});
   const snapshot = (doc, takeArticle = false) => {
     const article = doc.querySelector("article.medical-guide");
     const scope = doc.getElementById("guide-reader-scope");
@@ -2188,12 +2199,14 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       sourceSignature: doc.head.querySelector('meta[name="guide-source-signature"]')?.getAttribute("content"),
       scope: scope ? JSON.parse(scope.textContent) : null,
       sourceMarker: copy(doc.head.querySelector('meta[name="guide-source-signature"]')),
+      searchMarker: copy(doc.head.querySelector('meta[name="guide-search-resource"]')),
       scopeScript: copy(scope),
       metas: [...doc.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map(copy),
       canonical: copy(doc.head.querySelector('link[rel="canonical"]')),
       alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map(copy),
       scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map(copy),
       canonicalGraphScript: copy(doc.getElementById("canonical-entity-graph")),
+      searchUi: copy(doc.getElementById("guide-search")),
     };
   };
   const initialArticle = primaryArticle();
@@ -2209,14 +2222,24 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (!canonical || !doc.querySelector("article.medical-guide")) return false;
     try {
       const url = new URL(canonical.getAttribute("href"), canonicalOrigin);
-      return url.origin === canonicalOrigin && keyFor(url.pathname) === path && !url.search && !url.hash;
+      const signature = doc.head.querySelector('meta[name="guide-source-signature"]')?.content;
+      const scope = doc.getElementById("guide-reader-scope");
+      const scopeValue = scope && JSON.parse(scope.textContent);
+      const boundary = value => value && Array.isArray(value.path) && value.path.length <= 64 &&
+        value.path.every(index => Number.isInteger(index) && index >= 0) && Number.isInteger(value.offset) && value.offset >= 0;
+      for (const script of doc.querySelectorAll('script[type="application/ld+json"],#canonical-entity-graph')) JSON.parse(script.textContent);
+      return url.origin === canonicalOrigin && keyFor(url.pathname) === path && !url.search && !url.hash &&
+        signature === initialState.sourceSignature &&
+        (path === "/" || scopeValue?.schemaVersion === 1 && scopeValue.sourceSignature === signature &&
+          boundary(scopeValue.insertion) && Array.isArray(scopeValue.ranges) && scopeValue.ranges.length > 0 &&
+          scopeValue.ranges.every(range => boundary(range.start) && boundary(range.end)));
     } catch { return false; }
   };
   cache.set(keyFor(location.pathname), initialState);
   if (!focused() && initialArticle) {
     homeState = initialState;
     homeSource = homeState.article;
-    readerLoaded = true;
+    fullSourceStatus = "ready";
   }
 
   const point = (root, value) => {
@@ -2303,16 +2326,18 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (existing) { video.replaceWith(existing); players.delete(video.id); }
     }
   };
-  const prepareReader = async (state, path, preservePrimary) => {
+  const prepareReader = async (state, path, preservePrimary, mode = readerMode) => {
     if (!state.article || !primaryArticle() || !d.getElementById("main-content"))
       throw new Error("Reader unavailable");
     const candidate = preservePrimary ? primaryArticle() : state.article.cloneNode(true);
-    return { candidate, context: path === "/" ? null : await partition(candidate, state) };
+    return { candidate, mode, context: path === "/" || mode === "focused" ? null : await partition(candidate, state) };
   };
-  const commitReader = ({ candidate, context }, path, preservePrimary = false) => {
+  const commitReader = ({ candidate, context, mode }, path, preservePrimary = false) => {
     const article = primaryArticle(), main = d.getElementById("main-content");
     const oldWrapper = d.querySelector("[data-guide-reader]");
-    const players = new Map([...d.querySelectorAll("video[id]")].map((video) => [video.id, video]));
+    const samePage = path === committedPath;
+    if (!samePage) for (const video of d.querySelectorAll("video")) video.pause();
+    const players = new Map([...d.querySelectorAll("video[id]")].filter(() => samePage).map((video) => [video.id, video]));
     const playing = [...players.values()].filter((video) => !video.paused);
     const search = d.getElementById("guide-search");
     const searchFocus = search?.contains(d.activeElement) ? d.activeElement : null;
@@ -2327,7 +2352,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       for (const video of article.querySelectorAll("video[id]")) players.delete(video.id);
     }
     article.setAttribute("data-guide-primary", "");
-    if (path === "/") {
+    if (!context) {
       if (oldWrapper) { oldWrapper.before(main); oldWrapper.remove(); }
     } else {
       reusePlayers([context.before, context.after], players);
@@ -2376,9 +2401,13 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     }
     for (const video of playing) if (video.isConnected && video.paused) video.play().catch(() => {});
     for (const node of d.querySelectorAll("details[id]")) if (openDetails.has(node.id)) node.open = true;
-    readerLoaded = true;
-    delete d.documentElement.dataset.routeView;
-    for (const node of d.querySelectorAll("[data-guide-expand],[data-guide-expand-status]")) node.remove();
+    documentReady = true; readerMode = mode;
+    if (mode === "focused" && path !== "/") d.documentElement.dataset.routeView = "focused";
+    else delete d.documentElement.dataset.routeView;
+    d.documentElement.dataset.readerMode = mode;
+    for (const node of d.querySelectorAll("[data-guide-expand]")) node.hidden = mode === "expanded";
+    for (const node of d.querySelectorAll("[data-guide-return]")) node.hidden = mode !== "expanded";
+    for (const node of d.querySelectorAll("[data-guide-expand-status]")) node.textContent = "";
   };
   const commitMetadata = (state) => {
     d.title = state.title;
@@ -2386,38 +2415,46 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       d.documentElement.setAttribute(attr, state[attr]);
       d.body.setAttribute(attr, state[attr]);
     }
-    for (const node of d.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],meta[name="guide-source-signature"],#guide-reader-scope,link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
+    for (const node of d.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],meta[name="guide-source-signature"],meta[name="guide-search-resource"],#guide-reader-scope,link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
     for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
     d.getElementById("canonical-entity-graph")?.remove();
-    for (const node of [...state.metas, state.sourceMarker, state.scopeScript, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean))
+    for (const node of [...state.metas, state.sourceMarker, state.searchMarker, state.scopeScript, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean))
       d.head.append(node.cloneNode(true));
     if (state.canonicalGraphScript) d.body.append(state.canonicalGraphScript.cloneNode(true));
+    const search = d.getElementById("guide-search"), ui = state.searchUi;
+    if (search && ui) {
+      for (const attr of ["aria-label","lang","dir","data-copy"]) {
+        const value = ui.getAttribute(attr); if (value !== null) search.setAttribute(attr,value);
+      }
+      const input = search.querySelector("input"), destination = ui.querySelector("input");
+      for (const attr of ["aria-label","placeholder"]) if (destination?.hasAttribute(attr)) input?.setAttribute(attr,destination.getAttribute(attr));
+      const results = search.querySelector("ol");
+      if (results) results.setAttribute("aria-label",ui.querySelector("ol")?.getAttribute("aria-label") || "");
+    }
   };
-  window.syncGuidePageState = async (path) => {
+  // One transaction prepares a focused document before history or visible HTML
+  // changes. Independent Search and complete-source fetches have their own life.
+  window.prepareGuidePage = async (path, {mode = readerMode} = {}) => {
     const key = keyFor(path), current = ++ticket;
+    navigationController?.abort();
+    const controller = navigationController = new AbortController();
     try {
-      if (keyFor(location.pathname) !== key) return false;
-      if (readerLoaded && key === committedPath) return true;
+      if (mode !== "focused" && mode !== "expanded") return null;
       if (!cache.has(key)) {
-        const doc = new DOMParser().parseFromString(await fetchHtml(key), "text/html");
-        if (!isPageDocument(doc, key)) return false;
+        const doc = new DOMParser().parseFromString(await fetchHtml(key, controller.signal), "text/html");
+        if (!isPageDocument(doc, key)) return null;
         cache.set(key, snapshot(doc, true));
       }
-      if (current !== ticket || keyFor(location.pathname) !== key) return false;
-      if (!readerLoaded && !await window.expandCompleteGuide()) return false;
-      if (current !== ticket || keyFor(location.pathname) !== key) return false;
-      // Fragment and video-time history entries share the same primary body.
-      // Preserve its live disclosures, focus and native restoration geometry.
-      if (key === committedPath) return true;
       const state = cache.get(key);
-      // Home's complete data is inert; only its bounded Search document is
-      // recognized JSON-LD. Internal entries do not download the full graph.
+      if (state.sourceSignature !== initialState.sourceSignature) return null;
+      if (mode === "expanded" && !await loadFullSource()) return null;
+      // Lazy Home payloads omit the discovery graph. Load its bounded head only
+      // for a real Home transition, never for a focused topic or Search query.
       if (key === "/" && state.metadataPath && !state.scripts.length) {
-        const metadata = await fetchContent(state.metadataPath, { json: true });
+        const metadata = await fetchContent(state.metadataPath, {json:true, signal:controller.signal});
         if (metadata.schemaVersion !== 1 || metadata.sourceSignature !== state.sourceSignature ||
-          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 1)
-          throw new Error("Guide metadata changed");
-        state.scripts = metadata.scripts.map(({ id, text }) => {
+          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 1) return null;
+        state.scripts = metadata.scripts.map(({id,text}) => {
           JSON.parse(text);
           const script = d.createElement("script"); script.type = "application/ld+json";
           script.id = id; script.textContent = text; return script;
@@ -2429,106 +2466,147 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
           state.canonicalGraphScript = script;
         }
       }
-      const prepared = await prepareReader(state, key, false);
-      if (current !== ticket || keyFor(location.pathname) !== key) return false;
-      commitReader(prepared, key);
-      commitMetadata(state);
-      committedPath = key;
-      d.dispatchEvent(new CustomEvent("guide:primary-changed"));
-      return true;
-    } catch { return false; }
+      if (current !== ticket || controller.signal.aborted) return null;
+      const unchanged = key === committedPath && mode === readerMode;
+      const prepared = unchanged ? null : await prepareReader(state, key, false, mode);
+      if (current !== ticket || controller.signal.aborted) return null;
+      return {state, path:key, prepared, mode, ticket:current};
+    } catch { return null; }
   };
-  window.expandCompleteGuide = () => {
-    if (readerLoaded) return Promise.resolve(true);
-    if (expansion) return expansion;
-    const current = primaryArticle(), control = d.querySelector("[data-guide-expand]");
-    const status = d.querySelector("[data-guide-expand-status]");
-    current?.setAttribute("aria-busy", "true");
-    if (status) status.textContent = control?.getAttribute("data-loading") || "در حال بارگذاری راهنمای کامل…";
-    expansion = (async () => {
+  window.commitGuidePage = transaction => {
+    if (!transaction || transaction.ticket !== ticket) return false;
+    const {state,path,prepared} = transaction;
+    if (prepared) {
+      commitReader(prepared, path);
+      commitMetadata(state);
+      committedPath = path;
+      d.dispatchEvent(new CustomEvent("guide:primary-changed"));
+    }
+    return true;
+  };
+  window.syncGuidePageState = async (path, options) =>
+    window.commitGuidePage(await window.prepareGuidePage(path, options));
+
+  let manifestPromise, manifest;
+  window.ensureGuideSearchManifest = () => {
+    if (manifest) return Promise.resolve(manifest);
+    if (manifestPromise) return manifestPromise;
+    manifestPromise = (async () => {
+      const path = initialState.searchMarker?.content;
+      if (!/^[/]assets[/]guide-search[.][a-f0-9]{12}[.]json$/.test(path || "")) throw new Error("Search unavailable");
+      const data = await fetchContent(path, {json:true});
+      const localUrl = value => {
+        if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return false;
+        const url = new URL(value, origin);
+        return url.origin === origin && !url.search;
+      };
+      if (data.schemaVersion !== 1 || data.sourceSignature !== initialState.sourceSignature ||
+        !Array.isArray(data.records) || !data.records.length || !data.anchors || Array.isArray(data.anchors) ||
+        !Object.values(data.anchors).every(localUrl) || !data.records.every(record =>
+          typeof record.id === "string" && typeof record.text === "string" && localUrl(record.href) &&
+          Number.isInteger(record.level) && record.level >= 1 && record.level <= 6 &&
+          Array.isArray(record.parents) && record.parents.every(value => typeof value === "string") &&
+          typeof record.retrievalAlias === "string")) throw new Error("Search source changed");
+      manifest = data;
+      return data;
+    })().finally(() => { manifestPromise = undefined; });
+    return manifestPromise;
+  };
+
+  let sourceRequest;
+  const loadFullSource = () => {
+    if (fullSourceStatus === "ready") return Promise.resolve(true);
+    if (sourceRequest) return sourceRequest;
+    fullSourceStatus = "loading";
+    sourceRequest = (async () => {
       try {
         let home, metadataPath;
-        const resourcePath = d.head.querySelector('meta[name="guide-reader-resource"]')?.getAttribute("content");
+        const resourcePath = d.head.querySelector('meta[name="guide-reader-resource"]')?.content;
         try {
-          if (!resourcePath || !/^\\/assets\\/guide\\.[a-f0-9]{12}\\.json$/.test(resourcePath))
-            throw new Error("Guide resource unavailable");
-          const resource = await fetchContent(resourcePath, { json: true, priority: "low" });
+          if (!/^[/]assets[/]guide[.][a-f0-9]{12}[.]json$/.test(resourcePath || "")) throw new Error("Guide unavailable");
+          const resource = await fetchContent(resourcePath, {json:true, priority:"low"});
           if (resource.schemaVersion !== 1 || resource.sourceSignature !== initialState.sourceSignature ||
-            typeof resource.html !== "string" || !/^\\/assets\\/guide-meta\\.[a-f0-9]{12}\\.json$/.test(resource.metadataPath))
-            throw new Error("Guide resource changed");
+            typeof resource.html !== "string" || !/^[/]assets[/]guide-meta[.][a-f0-9]{12}[.]json$/.test(resource.metadataPath))
+            throw new Error("Guide source changed");
           await yieldReader();
           home = new DOMParser().parseFromString(resource.html, "text/html");
           metadataPath = resource.metadataPath;
         } catch {
-          // An interrupted deployment or unavailable payload keeps native Home
-          // delivery as a compatibility path; partition still checks its signature.
           home = new DOMParser().parseFromString(await fetchHtml("/"), "text/html");
         }
-        const full = home.querySelector("article.medical-guide");
-        if (!full || !current || !isPageDocument(home, "/")) throw new Error("Guide unavailable");
+        if (!isPageDocument(home, "/")) throw new Error("Guide source changed");
         homeState = snapshot(home, true); homeState.metadataPath = metadataPath;
         homeSource = homeState.article;
         cache.set("/", homeState);
-        const path = committedPath, state = cache.get(path);
-        await yieldReader();
-        const prepared = await prepareReader(state, path, true);
-        const position = window.completeGuideInteraction && readingAnchor();
+        fullSourceStatus = "ready";
+        return true;
+      } catch { fullSourceStatus = "error"; return false; }
+      finally { sourceRequest = undefined; }
+    })();
+    return sourceRequest;
+  };
+  window.expandCompleteGuide = () => {
+    if (readerMode === "expanded") return Promise.resolve(true);
+    if (expansion && expansionPath === committedPath && expansionTicket === ticket) return expansion;
+    d.dispatchEvent(new CustomEvent("guide:mode-intent"));
+    const path = committedPath, current = primaryArticle(), generation = ++ticket;
+    navigationController?.abort();
+    const control = d.querySelector("[data-guide-expand]"), status = d.querySelector("[data-guide-expand-status]");
+    current?.setAttribute("aria-busy", "true");
+    if (status) status.textContent = control?.dataset.loading || "در حال بارگذاری راهنمای کامل…";
+    const request = (async () => {
+      try {
+        if (!await loadFullSource()) throw new Error("Guide unavailable");
+        if (generation !== ticket || path !== committedPath) return false;
+        const prepared = await prepareReader(cache.get(path), path, true, "expanded");
+        if (generation !== ticket || path !== committedPath) return false;
+        const position = readingAnchor();
         commitReader(prepared, path, true);
         if (position) restoreAnchor(position);
+        window.saveGuideScrollState();
         d.dispatchEvent(new CustomEvent("guide:primary-changed"));
-        d.dispatchEvent(new CustomEvent("guide:expanded"));
         return true;
       } catch {
-        if (status) status.textContent = control?.getAttribute("data-error") || "بارگذاری انجام نشد؛ دوباره تلاش کنید.";
+        if (status?.isConnected) status.textContent = control?.dataset.error || "بارگذاری انجام نشد؛ دوباره تلاش کنید.";
         return false;
-      } finally {
-        current?.removeAttribute("aria-busy");
-        expansion = undefined;
       }
-    })();
-    return expansion;
+    })().finally(() => {
+      if (expansion === request) {
+        current?.removeAttribute("aria-busy"); expansion = undefined;
+      }
+    });
+    expansion = request; expansionPath = path; expansionTicket = generation;
+    window.completeGuideReady = request;
+    return request;
   };
-  const replay = (url) => {
-    const link = d.createElement("a");
-    link.href = url.pathname + url.search + url.hash;
-    d.body.append(link); link.click(); link.remove();
-  };
-  d.addEventListener("click", (event) => {
+  d.addEventListener("click", async event => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
     const link = event.target.closest?.("a[href]");
-    if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
+    if (!link || link.hasAttribute("download") || link.target && link.target !== "_self") return;
     if (link.hasAttribute("data-guide-expand")) {
-      event.preventDefault(); window.expandCompleteGuide(); return;
+      event.preventDefault(); await window.expandCompleteGuide(); return;
     }
-    if (readerLoaded) return;
-    const url = new URL(link.href);
-    if (![origin, d.querySelector("#guide-search")?.dataset.canonicalOrigin].includes(url.origin)) return;
-    if (/\\.[A-Za-z0-9]+\\/?$/.test(url.pathname)) return;
-    if (url.hash && keyFor(url.pathname) === keyFor(location.pathname)) {
-      try { if (d.getElementById(decodeURIComponent(url.hash.slice(1)))) return; } catch { return; }
+    if (link.hasAttribute("data-guide-return")) {
+      event.preventDefault();
+      d.dispatchEvent(new CustomEvent("guide:mode-intent"));
+      const position = readingAnchor(), generation = ++ticket;
+      const prepared = await prepareReader(cache.get(committedPath), committedPath, true, "focused");
+      if (generation !== ticket) return;
+      commitReader(prepared, committedPath, true);
+      if (position) restoreAnchor(position);
+      window.saveGuideScrollState();
+      d.dispatchEvent(new CustomEvent("guide:primary-changed"));
     }
-    event.preventDefault();
-    window.expandCompleteGuide().then(async (ready) => {
-      if (ready) { await window.completeGuideReady; replay(url); }
-      else location.assign(url.href);
-    });
-  }, true);
-  d.addEventListener("focusin", (event) => {
-    if (event.target.id === "guide-search-input") window.expandCompleteGuide();
   });
-  const interactionTypes = ["pointerdown", "wheel", "keydown"];
-  const recordInteraction = () => { window.completeGuideInteraction = true; };
-  if (focused()) for (const type of interactionTypes)
-    window.addEventListener(type, recordInteraction, { once: true, passive: true });
-  window.completeGuideReady = window.expandCompleteGuide().finally(() => {
-    for (const type of interactionTypes) window.removeEventListener(type, recordInteraction);
-  });
+  window.completeGuideReady = Promise.resolve(fullSourceStatus === "ready");
+  d.documentElement.dataset.readerMode = readerMode;
 })();
 
 (async () => {
   const knownScroll = (value) => {
     if (!value || !Number.isFinite(value.x) || !Number.isFinite(value.y) || value.y < 0) return null;
-    const position = { x: value.x, y: value.y }, anchor = value.anchor;
+    const position = { x: value.x, y: value.y, mode:value.mode === "expanded" ? "expanded" : "focused",
+      focus:typeof value.focus === "string" ? value.focus : null }, anchor = value.anchor;
     if (anchor && typeof anchor.id === "string" && anchor.id.length > 0 && anchor.id.length <= 512 && Number.isFinite(anchor.top))
       position.anchor = { id: anchor.id, top: anchor.top };
     return position;
@@ -2542,7 +2620,6 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     for (const type of ["pointerdown", "wheel", "keydown", "touchstart"])
       addEventListener(type, () => { restorationInteraction = true; }, { once: true, passive: true });
   }
-  if (window.completeGuideReady) await window.completeGuideReady;
   const initialScrollGeneration = window.pauseGuideScrollState?.();
   const d=document,s=d.documentElement;
   s.classList.add("js");
@@ -2580,20 +2657,63 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
 
   const intentTargets=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentTargets||"{}")).map(([intent,url])=>{const target=new URL(url);return[intent,decodeURIComponent(target.hash?target.hash.slice(1):target.pathname.slice(1))]})),
     intentAnswers=Object.fromEntries(Object.entries(JSON.parse(search?.dataset.intentHeadings||"{}")).map(([intent,heading])=>[heading,intentTargets[intent]])),
-    copy=JSON.parse(search?.dataset.copy||"{}"),
+    initialCopy=JSON.parse(search?.dataset.copy||"{}"),
     detectIntent=(text,entity)=>{const has=(x)=>text.includes(x),select=entity||/(بهترین|دکتر|پزشک|متخصص|کلینیک)/u.test(text);if((has("میگرن")||has("سردرد"))&&has("بوتاکس"))return"migraine-botox";if(has("نظر دوم")||has("نظر پزشکی دوم"))return"second-opinion";if(/اورفیل|بیش از حد فیلر|صورت پر شده|پرونده پیچیده/u.test(text))return"complex-correction";if(/اصلاح|ترمیم|نتیجه نامطلوب/u.test(text))return"revision";if(!select)return null;if(/فیلر|ژل/u.test(text))return"filler";if(/بوتاکس|بوتولینوم/u.test(text))return"botox";if(/زیبایی|جوانسازی|جوان سازی/u.test(text))return"aesthetic-physician";return null},
-    searchEngine=createGuideSearch({aliases:(search?.dataset.entityAliases||"").split("|"),stopWords:copy.stopWords,synonyms:copy.synonyms,detectIntent}),
+    searchEngine=createGuideSearch({aliases:(search?.dataset.entityAliases||"").split("|"),stopWords:initialCopy.stopWords,synonyms:initialCopy.synonyms,detectIntent}),
     queryInfo=searchEngine.queryInfo;
 
-  let index;
-  const build=()=>{if(index)return index;const stack=[];return(index=searchEngine.build([...d.querySelectorAll("main h1[id],main h2[id],main h3[id],main h4[id],main h5[id],main h6[id],.guide-reader h1[id],.guide-reader h2[id],.guide-reader h3[id],.guide-reader h4[id],.guide-reader h5[id],.guide-reader h6[id]")].filter((h)=>!h.closest?.("[data-route-context]")).map((h)=>{const text=h.textContent.trim(),level=Number(h.tagName.slice(1)),parents=[];for(let l=1;l<level;l++)if(stack[l])parents.push(stack[l]);stack[level]=text;stack.length=level+1;return{id:h.id,href:h.dataset.canonicalHref||"/#"+encodeURIComponent(h.id),text,level,parents,answer:intentAnswers[h.id]||"",retrievalAlias:h.dataset.retrievalAlias||""}})))},
-    score=searchEngine.score,
-    closeResults=()=>{results.hidden=true},
-    render=()=>{const q=queryInfo(input.value);results.replaceChildren();if(q.original.length<2){closeResults();status.textContent=copy.minimumQuery;return}const target=q.intent&&intentTargets[q.intent],hits=build().map((x)=>({...x,rank:score(x,q)})).filter((x)=>x.rank<99||(target&&x.answer===target)).sort((a,b)=>(b.answer===target)-(a.answer===target)||a.rank-b.rank||a.level-b.level||a.text.length-b.text.length).slice(0,16);if(!hits.length){const li=d.createElement("li");li.className="guide-search__empty";li.textContent=copy.empty;results.append(li)}else for(const hit of hits){const li=d.createElement("li"),a=d.createElement("a"),title=d.createElement("span"),context=d.createElement("span");a.href=hit.href;title.className="guide-search__result-title";title.textContent=hit.text;a.append(title);const path=hit.parents.slice(-2).join(" ← ");if(path){context.className="guide-search__result-context";context.textContent=path;a.append(context)}li.append(a);results.append(li)}results.hidden=false;status.textContent=hits.length?copy.resultCount.replace("{count}",String(hits.length)):copy.noResultsStatus};
+  let copy = initialCopy;
+  let index, manifestStatus = "idle", composing = false;
+  const searchStatusCopy = {
+    fa:{loading:"در حال آماده‌سازی جست‌وجو…",error:"بارگذاری فهرست جست‌وجو انجام نشد؛ برای تلاش دوباره تایپ کنید."},
+    en:{loading:"Preparing search…",error:"Search could not load. Type again to retry."},
+    ar:{loading:"جارٍ تجهيز البحث…",error:"تعذّر تحميل البحث؛ اكتب مجددًا للمحاولة."},
+    ckb:{loading:"گەڕان ئامادە دەکرێت…",error:"بارکردنی گەڕان سەرکەوتوو نەبوو؛ دووبارە بنووسە."},
+  };
+  const localizedSearchStatus = () => searchStatusCopy[d.documentElement.lang.split("-")[0]] || searchStatusCopy.fa;
+  const closeResults = () => { results.hidden = true; };
+  const requestSearch = () => {
+    if (manifestStatus === "loading" || composing || norm(input.value).length < 2) return;
+    manifestStatus = "loading"; search.setAttribute("aria-busy","true");
+    window.ensureGuideSearchManifest().then(data => {
+      index = searchEngine.build(data.records.map(record => ({...record,answer:intentAnswers[record.id] || ""})));
+      manifestStatus = "ready";
+    }).catch(() => { manifestStatus = "error"; }).finally(() => {
+      search.removeAttribute("aria-busy"); render();
+    });
+  };
+  const render = () => {
+    const q = queryInfo(input.value); results.replaceChildren();
+    if (composing || q.original.length < 2) { closeResults(); status.textContent = copy.minimumQuery; return; }
+    if (manifestStatus === "idle") requestSearch();
+    if (manifestStatus !== "ready") {
+      closeResults(); status.textContent = localizedSearchStatus()[manifestStatus === "error" ? "error" : "loading"]; return;
+    }
+    const target = q.intent && intentTargets[q.intent];
+    const hits = index.map(record => ({...record,rank:searchEngine.score(record,q)}))
+      .filter(record => record.rank < 99 || target && record.answer === target)
+      .sort((a,b) => (b.answer===target)-(a.answer===target) || a.rank-b.rank || a.level-b.level || a.text.length-b.text.length).slice(0,16);
+    if (!hits.length) {
+      const li = d.createElement("li"); li.className = "guide-search__empty"; li.textContent = copy.empty; results.append(li);
+    }
+    for (const hit of hits) {
+      const li = d.createElement("li"), a = d.createElement("a"), title = d.createElement("span"), context = d.createElement("span");
+      a.href = hit.href; title.className = "guide-search__result-title"; title.textContent = hit.text; a.append(title);
+      if (hit.lang) title.lang = hit.lang;
+      title.dir = "auto";
+      const path = hit.parents.slice(-2).join(" ← ");
+      if (path) { context.className = "guide-search__result-context"; context.dir = "auto"; context.textContent = path; a.append(context); }
+      li.append(a); results.append(li);
+    }
+    results.hidden = false;
+    status.textContent = hits.length ? copy.resultCount.replace("{count}",String(hits.length)) : copy.noResultsStatus;
+  };
 
   if(searchReady){
     if(/Mac|iPhone|iPad/.test(navigator.userAgent))search.querySelector("kbd").textContent="⌘ K";
-    input.addEventListener("input",render);
+    input.addEventListener("compositionstart",()=>{composing=true;closeResults()});
+    input.addEventListener("compositionend",()=>{composing=false;if(manifestStatus==="error")manifestStatus="idle";render()});
+    input.addEventListener("input",()=>{if(manifestStatus==="error")manifestStatus="idle";render()});
     input.addEventListener("focus",()=>{if(norm(input.value).length>=2)render()});
     input.addEventListener("keydown",(event)=>{
       if(event.isComposing||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
@@ -2752,7 +2872,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   let readerRevision = 0;
   const refreshReader = () => {
     readerRevision++;
-    index = undefined;
+    copy = JSON.parse(search?.dataset.copy || "{}");
     tocLinks = undefined;
     targetChunk?.classList.remove("is-target-chunk");
     targetChunk = undefined;
@@ -2762,14 +2882,9 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     syncClinicHours();
     refreshPosters();
     refreshTranscripts();
-    if (searchReady && norm(input.value).length >= 2) render();
+    if (searchReady) { if(norm(input.value).length >= 2)render();else status.textContent=copy.initialStatus; }
   };
   d.addEventListener("guide:primary-changed", refreshReader);
-  d.addEventListener("guide:expanded", () => {
-    refreshReader();
-    if (d.activeElement !== input) moveTo(targetFromHash(location.hash) || targetFromPath(location.pathname));
-    else syncTarget();
-  });
   const targetFromHash = (hash) => {
     try { return hash ? d.getElementById(decodeURIComponent(hash.slice(1))) : null; }
     catch { return null; }
@@ -2779,7 +2894,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     const slug=url.searchParams.get("video")||(url.pathname.startsWith("/video-saeed-ghezelbash-")?url.pathname.slice("/video-saeed-ghezelbash-".length):null),rawTime=url.searchParams.get("t");
     if(!slug||[...url.searchParams.keys()].some((key)=>key!=="video"&&key!=="t"))return null;
     const video=d.getElementById("video-saeed-ghezelbash-"+slug),seconds=rawTime===null?null:Number(rawTime);
-    if(!(video instanceof HTMLVideoElement)||(url.pathname!=="/"&&targetFromPath(url.pathname)!==video))return null;
+    if(!(video instanceof HTMLVideoElement)||(url.pathname!=="/"&&url.pathname!=="/"+video.id))return null;
     if(rawTime!==null&&(!rawTime.trim()||!Number.isFinite(seconds)||seconds<0))return null;
     return {video,seconds};
   };
@@ -2915,6 +3030,22 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     pump();
   };
   let navigationTicket = 0;
+  // A mode choice supersedes an in-flight topic click just like another URL
+  // choice. Its aborted request must not fall back to that superseded URL.
+  d.addEventListener("guide:mode-intent", () => { navigationTicket++; });
+  const localPath = path => path.replace(/\\/$/, "") || "/";
+  const knownRoute = path => Object.hasOwn(contentRouteMap, localPath(path));
+  const resolveDestination = async url => {
+    if (!url.hash || targetFromHash(url.hash) && localPath(url.pathname) === localPath(location.pathname)) return url;
+    let id; try { id = decodeURIComponent(url.hash.slice(1)); } catch { return null; }
+    const data = await window.ensureGuideSearchManifest();
+    if (!Object.hasOwn(data.anchors,id)) return null;
+    const owner = new URL(data.anchors[id],location.origin);
+    if (localPath(url.pathname) !== "/" && localPath(url.pathname) !== localPath(location.pathname) &&
+      localPath(url.pathname) !== localPath(owner.pathname)) return null;
+    owner.search = url.search;
+    return owner;
+  };
   const afterLayout = async () => {
     let layoutTimeout;
     await Promise.race([d.fonts?.ready || Promise.resolve(), new Promise((resolve) => { layoutTimeout = setTimeout(resolve, 350); })]);
@@ -2943,20 +3074,27 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (!plainClick(event) || event.defaultPrevented) return;
     const link = event.target.closest?.("a[href]");
     if (!link || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
-    const url = new URL(link.href);
+    let url = new URL(link.href);
     if (![location.origin,search?.dataset.canonicalOrigin].includes(url.origin)) return;
-    const selection=url.hash?null:videoFromUrl(url),target=url.hash?targetFromHash(url.hash):targetFromPath(url.pathname);
-    if(!target||(url.search&&!selection))return;
+    if (link.hasAttribute("data-guide-expand") || link.hasAttribute("data-guide-return") || !knownRoute(url.pathname)) return;
+    if (url.search && ([...url.searchParams.keys()].some(key => key !== "t" && key !== "video") ||
+      url.pathname !== "/" && !url.pathname.startsWith("/video-saeed-ghezelbash-"))) return;
     event.preventDefault();
     const ticket = ++navigationTicket;
+    const original = url;
+    try { url = await resolveDestination(url); } catch { url = null; }
+    if (ticket !== navigationTicket) return;
+    if (!url) { location.assign(original.href); return; }
     const destination=url.pathname+url.search+url.hash;
     if(destination!==location.pathname+location.search+location.hash)window.saveGuideScrollState?.();
     const scrollGeneration=window.pauseGuideScrollState?.();
-    if(destination!==location.pathname+location.search+location.hash)history.pushState(null,"",destination);
     if(searchReady)closeResults();
-    const committed = window.syncGuidePageState ? await window.syncGuidePageState(url.pathname) : undefined;
-    if(ticket!==navigationTicket||destination!==location.pathname+location.search+location.hash)return;
-    if(committed===false){location.assign(destination);return}
+    const transaction = await window.prepareGuidePage(url.pathname);
+    if(ticket!==navigationTicket)return;
+    if(!transaction){location.assign(destination);return}
+    if(destination!==location.pathname+location.search+location.hash)
+      history.pushState({__completeGuideMode:transaction.mode},"",destination);
+    if(!window.commitGuidePage(transaction)){location.assign(destination);return}
     if(searchReady)closeResults();
     // The primary article is reconstructed from its focused HTML; resolve its
     // live nodes only after that partition is ready, including reused players.
@@ -3000,14 +3138,15 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       addEventListener("pageshow",recordPageShow);
     }
     try{
-      const committed = window.syncGuidePageState ? await window.syncGuidePageState(url.pathname) : undefined;
+      const committed = window.syncGuidePageState ? await window.syncGuidePageState(url.pathname,
+        {mode:history.state?.__completeGuideMode === "expanded" ? "expanded" : "focused"}) : undefined;
       if(ticket!==navigationTicket||url.href!==location.href)return;
       if(committed===false){location.assign(url.pathname+url.search+url.hash);return}
       const selection=videoFromUrl(new URL(location.href));
       const target=selection?.video||targetFromHash(location.hash)||targetFromPath(location.pathname);
       syncTarget(target);
       selectVideo(selection);
-      if(!interacted)focusTarget(target);
+      if(!interacted)focusTarget(position?.focus && d.getElementById(position.focus) || target);
       // Replacing primary/context nodes can shift native scroll anchoring.
       // Correct only a known entry after a real body commit; unchanged
       // fragments and entries without a snapshot retain native restoration.
@@ -3021,13 +3160,30 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if(position){for(const type of interactionTypes)removeEventListener(type,recordInteraction);removeEventListener("pageshow",recordPageShow)}
     }
   });
+  // A reloaded historical hash can name another focused owner. Resolve the
+  // shared inventory without expanding the full source, then replace this entry.
+  if (!restoringHistory && location.hash && !targetFromHash(location.hash)) {
+    const initialUrl = location.href, generation = navigationTicket;
+    try {
+      const resolved = await resolveDestination(new URL(initialUrl));
+      if (resolved && generation === navigationTicket && initialUrl === location.href) {
+        const transaction = await window.prepareGuidePage(resolved.pathname,{mode:"focused"});
+        if (generation === navigationTicket && initialUrl === location.href && transaction) {
+          history.replaceState(history.state,"",resolved.pathname+resolved.search+resolved.hash);
+          window.commitGuidePage(transaction);
+        }
+      }
+    } catch { /* An unknown hash retains its native URL and independently usable page. */ }
+  }
+  if (restoringHistory && savedScroll?.mode === "expanded" && !restorationInteraction && !restoredFromBFCache)
+    await window.expandCompleteGuide();
   const initialSelection=videoFromUrl(new URL(location.href)),
     initialTarget=initialSelection?.video||targetFromHash(location.hash)||(location.pathname!=="/"&&targetFromPath(location.pathname));
   // A full-document Back load may not use BFCache. In that case the browser
   // still owns its saved scroll position; do not apply fresh deep-link scrolling.
   let initialInteraction=Boolean(window.completeGuideInteraction);
   if(initialTarget && !restoringHistory && !initialInteraction){
-    // The shared guide is ready: position fresh deep links in the full document.
+    // Fresh links already resolve in their independently rendered document.
     selectVideo(initialSelection,{scroll:true,focus:Boolean(initialSelection)});
     if(!initialSelection)moveTo(initialTarget);
     for(const type of ["pointerdown","wheel","keydown"])
@@ -3043,7 +3199,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   }
   addEventListener("pageshow", (event) => {
     // BFCache and browser history own restored scroll; loading must not steal it.
-    if(event.persisted||restoringHistory||!initialTarget||initialInteraction)return;
+    if(event.persisted||restoringHistory||!initialTarget?.isConnected||initialInteraction)return;
     const rect=initialTarget.getBoundingClientRect();
     if(rect.bottom<=0||rect.top>=innerHeight)moveTo(initialTarget);
   });
@@ -3401,6 +3557,7 @@ export function compileCanonicalSource() {
       const templates = new Map(roots.filter(Boolean).map(node => [node["@id"], node]));
       const personId = SOURCE.canonicalOrigin + "/#saeed-ghezelbash";
       const person = byId.get(personId);
+      const practiceId = resolvePhysicianPractice(graph,{origin:SOURCE.canonicalOrigin})?.['@id'];
       const rootIds = new Set(templates.keys()), questions = new Set(visibleQuestionIds), media = new Set(visibleMediaIds);
       const answers = new Set(visibleQuestionIds.flatMap(id => values(byId.get(id)?.acceptedAnswer).map(ref => ref["@id"])));
       const skills = new Set(values(person.skills).map(ref => ref["@id"]));
@@ -3426,9 +3583,8 @@ export function compileCanonicalSource() {
         if (!source || types.some(type => infrastructureTypes.has(type)) ||
             (types.includes("Question") && !questions.has(id)) || (types.includes("Answer") && !answers.has(id)) ||
             (types.includes("VideoObject") && !media.has(id))) return undefined;
-        // Clinic meaning and language are identical on every focused route.
-        const isClinic = types.includes("MedicalClinic");
-        let node = schemaOnlyNode(graph, source, isClinic ? "fa-IR" : language);
+        const isClinic = id === practiceId;
+        let node = schemaOnlyNode(graph, source, language);
         if (!node) return undefined;
         if (id === personId) {
           node = pick(node, personKeys);
@@ -3504,8 +3660,7 @@ export function compileCanonicalSource() {
       const person = byId.get(values(home.mainEntity)[0]?.["@id"]);
       if (!person || !values(person["@type"]).includes("Person")) throw new Error("Homepage mainEntity must resolve to the canonical Person");
       const website = all.find((node) => values(node["@type"]).includes("WebSite"));
-      const clinic = all.find((node) => values(node["@type"]).includes("MedicalClinic") &&
-        (node.owner?.["@id"] === person["@id"] || node.founder?.["@id"] === person["@id"]));
+      const clinic = resolvePhysicianPractice(graph,{origin:SOURCE.canonicalOrigin});
       const primaryImageId = home.primaryImageOfPage?.["@id"] ?? person.image?.["@id"] ?? person.image;
       const primaryImage = byId.get(primaryImageId);
       const roots = [person, home, clinic, website, primaryImage,
@@ -4090,8 +4245,7 @@ export function compileCanonicalSource() {
       const authoredById = new Map(graph["@graph"].map((node) => [node["@id"], node]));
       const authoredPerson = authoredById.get(person["@id"]);
       const website = browser.find((node) => typed(node, "WebSite"));
-      const clinicSource = graph["@graph"].find((node) => typed(node, "MedicalClinic") &&
-        (node.owner?.["@id"] === person["@id"] || node.founder?.["@id"] === person["@id"]));
+      const clinicSource = resolvePhysicianPractice(graph,{origin:SOURCE.canonicalOrigin});
       const origin = new URL(canonicalUrl).origin;
       const paths = resources.map((entry) => entry.path);
       const resourceByPath = new Map(resources.map((entry) => [entry.path, entry]));
@@ -4977,27 +5131,38 @@ export function compileCanonicalSource() {
     '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
     .replace('</body>',canonicalDataScript+'</body>');
   const stampedHome = readerScope.stampGuideSource(rawHome);
-  // Internal entries need the authored article, not a second full document and
-  // its 1,592-node discovery graph. Keep exact DOM boundaries from this Home.
+  // Internal entries need the authored article and compact Search interface,
+  // rather than a second full document and its large discovery graph.
   // Content-addressed assets bind the article and lazy Home metadata together.
   const readerDocument = parse(stampedHome);
   const readerRoot = readerDocument.childNodes.find(node=>node.tagName==='html');
   const readerHead = readerRoot.childNodes.find(node=>node.tagName==='head');
   const readerBody = readerRoot.childNodes.find(node=>node.tagName==='body');
-  let readerArticle;
-  walk(readerBody,node=>{if(node.tagName==='article'&&attr(node,'class')?.split(/\s+/).includes('medical-guide'))readerArticle=node;});
+  let readerArticle, readerSearchUi;
+  walk(readerBody,node=>{
+    if(node.tagName==='article'&&attr(node,'class')?.split(/\s+/).includes('medical-guide'))readerArticle=node;
+    if(attr(node,'id')==='guide-search')readerSearchUi=node;
+  });
   const sourceSignature = attr(readerHead.childNodes.find(node=>node.tagName==='meta'&&attr(node,'name')==='guide-source-signature'),'content');
+  const searchAsset = asset('guide-search','json',JSON.stringify(buildGuideSearchManifest({
+    article:readerArticle, root:readerBody, sourceSignature, resources:SOURCE.routes.resources, htmlIdTargets:SOURCE.routes.htmlIdTargets,
+  })), 'application/json; charset=utf-8');
+  const lazySearchPointer = parseFragment(meta('guide-search-resource',searchAsset.path)).childNodes[0];
+  lazySearchPointer.parentNode = readerHead; readerHead.childNodes.push(lazySearchPointer);
   const metadataAsset = asset('guide-meta','json',JSON.stringify({schemaVersion:1,sourceSignature,
     canonicalGraph:{id:'canonical-entity-graph',text:json(homeGraph)},
     scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json')
       .map(node=>({id:attr(node,'id'),text:node.childNodes.map(child=>child.value??'').join('')}))}), 'application/json; charset=utf-8');
   readerHead.childNodes = readerHead.childNodes.filter(node=>node.tagName==='title'||node.tagName==='meta'||
     node.tagName==='link'&&['canonical','alternate'].includes(attr(node,'rel')));
-  readerBody.childNodes = [readerArticle]; readerArticle.parentNode = readerBody;
+  readerBody.childNodes = [readerArticle,readerSearchUi].filter(Boolean);
+  for(const node of readerBody.childNodes)node.parentNode = readerBody;
   const readerAsset = asset('guide','json',JSON.stringify({schemaVersion:1,sourceSignature,
     metadataPath:metadataAsset.path,html:serialize(readerDocument)}), 'application/json; charset=utf-8');
-  assets.push(readerAsset,metadataAsset);
-  const home = stampedHome.replace('</head>',meta('guide-reader-resource',readerAsset.path)+'</head>');
+  assets.push(readerAsset,metadataAsset,searchAsset);
+  // Head-only pointers are added after stamping the unchanged article. The
+  // manifest contains its source signature without a circular content hash.
+  const home = stampedHome.replace('</head>',meta('guide-reader-resource',readerAsset.path)+meta('guide-search-resource',searchAsset.path)+'</head>');
   htmlContract.assertDocumentContract(home);
   const records = routeDiscovery.deriveRouteDiscovery(home,SOURCE.graph,SOURCE.discovery,homeUrl);
   if (records.length + 1 !== SOURCE.routes.resources.length) throw new Error('Published route inventory drift');
@@ -5014,6 +5179,16 @@ export function compileCanonicalSource() {
     richResultsContract.assertRichResultsDocument(record.searchDocument,{primaryPageId});
   }
   const recordByPath = new Map(records.map(record => [record.path,record]));
+  const readerControls = record => {
+    const language = record.lang.split('-')[0];
+    const copy = {
+      fa:['مطالعه','مطالعه راهنمای کامل','بازگشت به مقاله','در حال بارگذاری راهنمای کامل…','بارگذاری انجام نشد؛ دوباره تلاش کنید.'],
+      en:['Reading','Read the complete guide','Return to this article','Loading the complete guide…','The guide could not load. Try again.'],
+      ar:['القراءة','قراءة الدليل الكامل','العودة إلى المقال','جارٍ تحميل الدليل الكامل…','تعذّر التحميل؛ حاول مجددًا.'],
+      ckb:['خوێندنەوە','خوێندنەوەی ڕێبەری تەواو','گەڕانەوە بۆ ئەم بابەتە','ڕێبەری تەواو بار دەکرێت…','بارکردن سەرکەوتوو نەبوو؛ دووبارە هەوڵ بدە.'],
+    }[language] || ['Reading','Read the complete guide','Return to this article','Loading the complete guide…','The guide could not load. Try again.'];
+    return '<nav data-guide-mode-controls aria-label="'+escape(copy[0])+'"><a data-guide-expand data-loading="'+escape(copy[3])+ '" data-error="'+escape(copy[4])+'" href="/#'+encodeURIComponent(record.htmlId)+'">'+escape(copy[1])+'</a><a data-guide-return hidden href="'+escape(record.path)+'">'+escape(copy[2])+'</a><p data-guide-expand-status role="status" aria-live="polite"></p></nav>';
+  };
   const article = htmlContract.inspectHtml(home).guideArticles[0], location = article.sourceCodeLocation;
   const homePrefix = home.slice(0,location.startOffset), homeSuffix = home.slice(location.endOffset).replace(canonicalDataScript,'');
   const render = path => {
@@ -5056,7 +5231,7 @@ export function compileCanonicalSource() {
       caption.childNodes=[firstHeading];firstHeading.parentNode=caption;
       set(firstHeading,'id',record.htmlId+'-page-heading');
     }
-    if(path==='/video-saeed-ghezelbash-kurdish-patient-review') {
+    if(path==='/video-saeed-ghezelbash-kurdish-patient-review' || SOURCE.discovery.focusedViews.some(view=>view.path===path)) {
       // The established video topic owns H1; the promoted rating remains supporting copy.
       const parent=firstHeading.parentNode, rating=firstHeading.childNodes;
       parent.childNodes.splice(parent.childNodes.indexOf(firstHeading)+1,0,...rating);
@@ -5094,7 +5269,7 @@ export function compileCanonicalSource() {
     const trustParent = trustAnchor.parentNode;
     trustParent.childNodes.splice(trustParent.childNodes.indexOf(trustAnchor)+1,0,...trustNodes);
     for (const node of trustNodes) node.parentNode = trustParent;
-    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
+    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + readerControls(record) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
     const document = parse(result);
     const head = document.childNodes.find(n=>n.tagName==='html').childNodes.find(n=>n.tagName==='head');
     head.childNodes = head.childNodes.filter(n => !(n.tagName==='title' || n.tagName==='script' && ['application/ld+json','application/json'].includes(attr(n,'type')) ||
@@ -5109,6 +5284,14 @@ export function compileCanonicalSource() {
     const extrasDoc=parseFragment(extras);
     for(const n of extrasDoc.childNodes){n.parentNode=head;head.childNodes.push(n);}
     const root = document.childNodes.find(n=>n.tagName==='html'),bodyNode=root.childNodes.find(n=>n.tagName==='body');set(bodyNode,'lang',record.lang);set(bodyNode,'dir',record.dir);set(root,'lang',record.lang);set(root,'dir',record.dir);set(root,'data-route-view','focused');
+    const localizedSearch = guideSearchCopy(record.lang,SOURCE.search.copy);
+    walk(bodyNode,node=>{
+      const id=attr(node,'id');
+      if(id==='guide-search'){set(node,'data-copy',JSON.stringify(localizedSearch));set(node,'aria-label',localizedSearch.ariaLabel);set(node,'lang',record.lang);set(node,'dir',record.dir);}
+      if(id==='guide-search-input'){set(node,'placeholder',localizedSearch.placeholder);set(node,'aria-label',localizedSearch.inputAriaLabel);}
+      if(id==='guide-search-results')set(node,'aria-label',localizedSearch.resultsAriaLabel);
+      if(id==='guide-search-status'){node.childNodes=parseFragment(escape(localizedSearch.initialStatus)).childNodes;for(const child of node.childNodes)child.parentNode=node;}
+    });
     return focusedMedia.projectFocusedMedia(serialize(document),record.canonicalUrl);
   };
   // All machine serializers consume the same compiled document identities used

@@ -8,11 +8,13 @@ const origin=SOURCE.canonicalOrigin;
 const byId=document=>new Map(document['@graph'].map(node=>[node['@id'],node]));
 
 test('ProfilePage omits date-only Google DateTime fields without changing the canonical date',()=>{
-  const before=structuredClone(SOURCE.graph);
-  const page=byId(projectHomeSearchGraph(SOURCE.graph,origin)).get(origin+'/webpage');
+  const graph=structuredClone(SOURCE.graph);
+  byId(graph).get(origin+'/webpage').dateModified={'@value':'2026-10-10','@type':'http://www.w3.org/2001/XMLSchema#date'};
+  const before=structuredClone(graph);
+  const page=byId(projectHomeSearchGraph(graph,origin)).get(origin+'/webpage');
   assert.equal(page.dateModified,undefined);
-  assert.deepEqual(SOURCE.graph,before);
-  assert.equal(byId(SOURCE.graph).get(origin+'/webpage').dateModified['@value'],'2026-10-10');
+  assert.deepEqual(graph,before);
+  assert.equal(byId(graph).get(origin+'/webpage').dateModified['@value'],'2026-10-10');
 });
 
 test('ProfilePage retains an actually recorded timestamp and its timezone',()=>{
@@ -22,10 +24,12 @@ test('ProfilePage retains an actually recorded timestamp and its timezone',()=>{
   assert.equal(byId(projectHomeSearchGraph(graph,origin)).get(origin+'/webpage').dateModified,recorded);
 });
 
-test('the corrected public profile uses its recorded markup-edit time and preserves the scientific date',()=>{
+test('the public profile uses its latest recorded document edit and preserves canonical source dates',()=>{
   const graph=structuredClone(SOURCE.graph),before=structuredClone(graph);
   const profileModifiedAt=SOURCE.profileMarkupModifiedAt;
-  assert.equal(byId(projectHomeSearchGraph(graph,origin,{profileModifiedAt})).get(origin+'/webpage').dateModified,'2026-10-30T03:58:16Z');
+  const recordedDocumentDate=byId(graph).get(origin+'/webpage').dateModified['@value'];
+  assert.ok(Date.parse(recordedDocumentDate)>Date.parse(profileModifiedAt));
+  assert.equal(byId(projectHomeSearchGraph(graph,origin,{profileModifiedAt})).get(origin+'/webpage').dateModified,recordedDocumentDate);
   assert.deepEqual(graph,before);
   for(const invalid of ['2026-10-30','2026-10-30T12:00:00','not a timestamp'])
     assert.throws(()=>projectHomeSearchGraph(graph,origin,{profileModifiedAt:invalid}),/recorded timestamp with timezone/);

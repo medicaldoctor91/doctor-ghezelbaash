@@ -7,11 +7,13 @@ from decimal import Decimal
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-POLICY = json.loads((ROOT / 'src/canonical/doi-policy.json').read_text())
+from release_plan import policy_template
+POLICY = policy_template()
 PATTERN = re.compile(r'10\.5281/zenodo\.\d+')
 
 
-def validate_policy(root, *, archive=False):
+def validate_policy(root, *, archive=False, expected_policy=None):
+    POLICY = expected_policy or policy_template()
     root = Path(root)
     concept = POLICY['concept']['doi']
     exact = POLICY['currentArchive']['doi']
@@ -87,7 +89,8 @@ def validate_policy(root, *, archive=False):
             'archiveBindingMode': archive}
 
 
-def validate_archive(root, *, online=False, legacy_home_projection=False):
+def validate_archive(root, *, online=False, legacy_home_projection=False, expected_policy=None):
+    POLICY = expected_policy or policy_template()
     import mlcroissant
     import pyarrow.parquet as pq
     import rdflib
@@ -188,7 +191,7 @@ def validate_archive(root, *, online=False, legacy_home_projection=False):
         assert hashlib.sha256(source.read_bytes()).hexdigest() == spec['sourceSha256'], name
         assert hashlib.sha256((root / spec['file']).read_bytes()).hexdigest() == spec['sha256'], name
         table_counts[name] = len(decoded)
-    validate_policy(root, archive=True)
+    validate_policy(root, archive=True, expected_policy=POLICY)
     return {'status': 'PASS', 'rdfTriples': triples, 'rdfTurtleCsvIsomorphic': True, 'SHACLConforms': bool(conforms), 'SHACLAdvancedFiveDocumentUnion': True,
             'croissantRows': len(records), 'croissantDistributionFiles': len(mapping), 'croissantOnlineURLExtraction': online,
             'fiveParquetExactRoundtrips': table_counts}

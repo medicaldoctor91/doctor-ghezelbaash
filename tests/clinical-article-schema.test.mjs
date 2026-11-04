@@ -105,6 +105,6 @@ test('every reviewed real clinical guide gets sourced Article metadata without c
     assert.equal(article.image,undefined,resource.path+' does not receive an inferred portrait image');
     assert.ok(assertBoundedSearchDocument(result).expandedObjects<4096,resource.path);
   }
-  assert.equal(SOURCE.graph['@graph'].length,1600);
+  assert.deepEqual(SOURCE.graph['@graph'].map(node=>node['@id']),before['@graph'].map(node=>node['@id']),'every canonical entity survives Article projection');
   assert.deepEqual(SOURCE.graph,before);
 });

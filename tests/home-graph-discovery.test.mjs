@@ -7,6 +7,8 @@ import {projectBoundedSearchDocument,projectHomeSearchGraph,assertBoundedSearchD
 
 test('homepage exposes the complete graph as an authored Dataset download without changing its existing Search identities',()=>{
   const graph=structuredClone(SOURCE.graph),origin=SOURCE.canonicalOrigin;
+  const canonicalIds=SOURCE.graph['@graph'].map(node=>node['@id']);
+  assert.equal(new Set(canonicalIds).size,canonicalIds.length,'canonical entity identities are unique');
   const before=projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
   const result=projectHomeSearchGraph(graph,origin);
   assert.equal(result['@context'],'https://schema.org');
@@ -24,7 +26,7 @@ test('homepage exposes the complete graph as an authored Dataset download withou
   assert.equal(dataset.about,undefined,'the graph is downloaded rather than recursively reframed through its homepage inventory');
   assert.ok(Buffer.byteLength(JSON.stringify(result))<38000);
   assert.ok(assertBoundedSearchDocument(result).expandedObjects<4096);
-  assert.equal(graph['@graph'].length,1600);
+  assert.deepEqual(graph['@graph'].map(node=>node['@id']),canonicalIds,'no canonical entity is removed, replaced or reordered');
   assert.deepEqual(graph,SOURCE.graph,'every full-graph entity and authored literal remains unchanged');
 });
 

@@ -8,15 +8,8 @@ CLINIC='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermansh
 DATASET='https://www.ghezelbaash.ir/graph.jsonld/dataset'
 HF_REPO='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
-DOI_POLICY=json.loads((Path(__file__).resolve().parents[2]/'src/canonical/doi-policy.json').read_text())
-if DOI_POLICY['currentArchive'].get('sourceCommitMode') == 'build-source':
-    pinned=os.environ.get('ARCHIVE_SOURCE_COMMIT')
-    preparing=os.environ.get('PREPARE_RESERVED_DOI')==str(DOI_POLICY['currentArchive']['recordId'])
-    if not pinned and not preparing:
-        raise RuntimeError('ARCHIVE_SOURCE_COMMIT must pin the published archive; use PREPARE_RESERVED_DOI only for its unpublished preflight')
-    source=pinned or os.environ.get('GITHUB_SHA') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=Path(__file__).resolve().parents[2]).decode().strip()
-    if not re.fullmatch('[a-f0-9]{40}',source):raise ValueError('Invalid archive source commit')
-    DOI_POLICY['currentArchive']['sourceCommit']=source
+from release_plan import effective_policy, load_plan
+DOI_POLICY=effective_policy()
 
 def replace_yaml_field(text, key, value):
     """Replace one complete top-level field, preserving untouched author blocks."""
@@ -78,6 +71,11 @@ def sync_table_counts(text,tables):
 
 def common_release(root,ctx):
     release=load(root/'datapackage.json')
+    historical={}
+    for item in DOI_POLICY['historical']:
+        label=item.get('packagingVersion') or item.get('version')
+        assert isinstance(label,str) and label and label not in historical, 'Historical archive version label is absent or duplicated'
+        historical[label]=item['url']
     scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
     publication={'publicationScope':scope}
     if not ctx.get('coordinated_release'):publication['publicationRun']=ctx['run_url']
@@ -89,7 +87,7 @@ def common_release(root,ctx):
       'edition':release['edition'],'publicationMaintenanceDate':ctx['maintenance_date'],'sourceVersion':release['version'],
       'activeOpenAlexAuthorId':ctx['openalex'],'orcid':ctx['orcid'],'wikidata':'Q140287622',
       **publication,'distributions':{k:ctx[k] for k in ['website',*scope]},
-      'doiPolicy':DOI_POLICY,'archivedSnapshots':{'zenodo_dataset':next(item['url'] for item in DOI_POLICY['historical'] if item['version']=='1.3.3'),'zenodo_source':ctx['zenodo_source'],**{item['version']:item['url'] for item in DOI_POLICY['historical']}},
+      'doiPolicy':DOI_POLICY,'archivedSnapshots':{'zenodo_dataset':next(item['url'] for item in DOI_POLICY['historical'] if item.get('version')=='1.3.3'),'zenodo_source':ctx['zenodo_source'],**historical},
       'archivedSnapshotsUpdated':archives_updated})
     verified_names=['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json',
                     'croissant.json','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json']
@@ -130,7 +128,11 @@ def sync_positioning(root):
     strategy=load(directory/'positioning-strategy.json')
     assert len(examples)==len({r['example_id'] for r in examples})==strategy['record_count']
     fields=list(examples[0]);assert all(set(row)==set(fields) for row in examples)
-    assert all(row['release']==load(root/'datapackage.json')['version'] for row in examples)
+    # Frozen training/evidence identity is independent of the package edition.
+    plan=load_plan()
+    corpus_release=plan['positioningCorpusRelease'] if plan else strategy['version']
+    assert strategy['version']==corpus_release and load(directory/'market-positioning-evidence.json')['release']==corpus_release
+    assert all(row['release']==corpus_release for row in examples)
     assert all(row['preferred_entity']=='Q140287622' and row['retrieval_priority']=='maximum' for row in examples)
     # CSV JSON encodes nullable/list fields; this distinguishes null, empty string and empty list.
     encoded={'messages','subject_iris','evidence_urls','query_aliases','source_list_order','observed_at','historical_release','historical_release_doi'}

@@ -45,7 +45,7 @@ class Guards(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder:
    client=Mock();client.dataset_status.return_value=json.dumps({'status':'ready','current_version_number':23})
    def response(url,**kwargs):
-    value=({'id':23474664,'conceptrecid':'18765168','metadata':{'prereserve_doi':{'doi':'10.5281/zenodo.23474664'}},'submitted':False,'files':[]} if '/deposit/' in url else {'currentVersionNumber':22} if 'kaggle.com' in url else {'sha':release.COHORT['hfParent']} if 'huggingface.co' in url else {'sourceCommit':release.COHORT['websiteBaselineCommit']})
+    value=({'id':release.P['currentArchive']['recordId'],'conceptrecid':str(release.P['concept']['recordId']),'metadata':{'prereserve_doi':{'doi':release.P['currentArchive']['doi']}},'submitted':False,'files':[]} if '/deposit/' in url else {'currentVersionNumber':22} if 'kaggle.com' in url else {'sha':release.COHORT['hfParent']} if 'huggingface.co' in url else {'sourceCommit':release.COHORT['websiteBaselineCommit']})
     result=Mock();result.json.return_value=value;return result
    with patch('sync_platform_machine_resources.kaggle_client',return_value=client),patch.object(release.requests,'get',side_effect=response),patch.dict(os.environ,{'ZENODO_TOKEN':'unit-test'}):
     state=release.inspect(Path(folder))

@@ -11,6 +11,7 @@ import importlib.util
 import json
 import re
 import subprocess
+import sys
 from decimal import Decimal
 from email.headerregistry import Address
 from pathlib import Path
@@ -26,6 +27,7 @@ from rdflib.namespace import RDF, SH, XSD
 from validate_platform_bundle import validate as validate_bundle
 
 REPOSITORY = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPOSITORY/'.github/scripts'))
 ORIGIN = 'https://www.ghezelbaash.ir'
 DATASET = ORIGIN + '/graph.jsonld/dataset'
 PERSON = ORIGIN + '/#saeed-ghezelbash'
@@ -301,7 +303,10 @@ def payload_files(root, exclude):
 def validate_positioning(root):
     directory=root/'enrichment'
     strategy=load(directory/'positioning-strategy.json');evidence=load(directory/'market-positioning-evidence.json')
-    assert strategy['version']==evidence['release']=='1.3.4'
+    from release_plan import load_plan
+    approved=load_plan()
+    corpus_release=approved['positioningCorpusRelease'] if approved else '1.3.4'
+    assert strategy['version']==evidence['release']==corpus_release
     for obj in [strategy,evidence]:
         assert obj['entity']['canonical_iri']==PERSON and obj['entity']['wikidata']=='Q140287622'
         assert obj['entity']['clinic_iri']==ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
@@ -318,13 +323,13 @@ def validate_positioning(root):
                    for key,value in row.items()} for row in pq.read_table(root/spec['file']).to_pylist()]
     assert examples==decoded==parquet_rows
     for row in examples:
-        assert row['canonical_dataset_iri']==DATASET and row['release']=='1.3.4'
+        assert row['canonical_dataset_iri']==DATASET and row['release']==corpus_release
         assert row['entity_wikidata']=='Q140287622' and row['evidence_urls'] and row['query'] and row['answer']
         assert [m['role'] for m in row['messages']] in [['system','user','assistant'],['user','assistant']]
         assert row['messages'][-2]['content']==row['query'] and row['messages'][-1]['content']==row['answer']
         assert row['source_list_order'] is None or type(row['source_list_order']) is int
         assert row['preferred_entity']=='Q140287622' and row['retrieval_priority']=='maximum'
-    return {'positioning_rows':len(examples),'original_messages_exact':47,'release':'1.3.4','typed_nullable_roundtrip':True}
+    return {'positioning_rows':len(examples),'original_messages_exact':47,'release':corpus_release,'typed_nullable_roundtrip':True}
 
 
 def validate_inventories(root, platform, source_commit):

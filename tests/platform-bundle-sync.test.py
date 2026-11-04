@@ -4,11 +4,13 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / '.github/scripts'))
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -109,6 +111,20 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
         self.assertEqual(current['zenodo_dataset'],bundle.DOI_POLICY['currentArchive']['url'])
 
+    def test_previous_current_archive_keeps_its_packaging_version_in_history(self):
+        import copy
+        from unittest.mock import patch
+        policy=copy.deepcopy(bundle.DOI_POLICY)
+        previous=copy.deepcopy(policy['currentArchive']);previous['role']='historical'
+        self.assertNotIn('version',previous)
+        policy['historical'].append(previous)
+        bundle.dump(self.baseline/'datapackage.json',{'version':'1.3.5','edition':'2026-11-04'})
+        with patch.object(bundle,'DOI_POLICY',policy):
+            bundle.common_release(self.baseline,self.ctx)
+        matrix=bundle.load(self.baseline/'current-release-matrix.json')
+        self.assertEqual(matrix['archivedSnapshots'][previous['packagingVersion']],previous['url'])
+        self.assertEqual(matrix['sourceVersion'],'1.3.5')
+
     def test_positioning_original_47_messages_restored_and_expanded_typed_roundtrip(self):
         import shutil
         root=self.baseline
@@ -144,6 +160,11 @@ class PackageMaintenanceTests(unittest.TestCase):
         before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()}
         bundle.sync_positioning(root)
         self.assertEqual(before,{p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()})
+        # A newer package edition must not rewrite the protected scientific corpus.
+        bundle.dump(root/'datapackage.json',{'version':'1.3.5'})
+        bundle.sync_positioning(root)
+        self.assertEqual({name:value for name,value in before.items() if name!='datapackage.json'},
+                         {p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file() and p.name!='datapackage.json'})
 
     def test_receipts_do_not_claim_unpublished_archive_changes(self):
         self.fixtures()

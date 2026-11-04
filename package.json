@@ -10,7 +10,7 @@
     "node": ">=22.19.0 <25"
   },
   "devDependencies": {
-    "astro": "7.2.8",
+    "astro": "7.3.3",
     "parse5": "8.0.1"
   },
   "packageManager": "npm@11.17.0",

@@ -4,10 +4,12 @@ on:
     inputs:
       operation:
         type: choice
-        options: [inspect, preflight, stage-draft, publish-frozen, verify-publication]
+        options: [inspect, preflight, stage-draft, publish-frozen, verify-runtime, verify-publication]
         required: true
       candidate_run: {type: string, required: false}
       reviewed_commit: {type: string, required: true}
+      approved_plan_json: {type: string, required: true, description: 'Reviewed finalized external release plan; real reservation and exact C/M refs required'}
+      approved_plan_sha256: {type: string, required: true, description: 'SHA256 of the exact approved_plan_json bytes'}
 permissions:
   contents: read
   actions: read
@@ -26,54 +28,99 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
       REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
       OPERATION: ${{ inputs.operation }}
+      CANDIDATE_RUN: ${{ inputs.candidate_run }}
+      GITHUB_TOKEN: ${{ github.token }}
       GIT_LFS_SKIP_SMUDGE: '1'
-      ARCHIVE_SOURCE_COMMIT: ${{ vars.ZENODO_23474664_SOURCE_COMMIT }}
-      PREPARE_RESERVED_DOI: ${{ (inputs.operation == 'preflight' || inputs.operation == 'inspect') && '23474664' || '' }}
+      ARCHIVE_SOURCE_COMMIT: ''
+      APPROVED_PLAN_JSON: ${{ inputs.approved_plan_json }}
+      APPROVED_PLAN_SHA256: ${{ inputs.approved_plan_sha256 }}
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0, persist-credentials: false}
+        with: {ref: '${{ inputs.reviewed_commit }}', fetch-depth: 0, persist-credentials: false}
       - run: test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+      - name: Bind exact reviewed plan, C/M refs and release tool inventory
+        run: |
+          python - <<'PYPLAN'
+          import hashlib,json,os,pathlib,sys
+          sys.path.insert(0,'.github/scripts')
+          from release_plan import validate_plan,validate_checkout
+          raw=os.environ['APPROVED_PLAN_JSON']
+          assert hashlib.sha256(raw.encode()).hexdigest()==os.environ['APPROVED_PLAN_SHA256'],'Approved plan bytes differ'
+          p=validate_plan(json.loads(raw))
+          assert p['context']=='new-reserved','Use the separate maintenance path for published editions'
+          validate_checkout(p)
+          target=pathlib.Path('/tmp/approved-release-plan.json');target.write_text(raw)
+          with open(os.environ['GITHUB_ENV'],'a') as output:
+              output.write('RELEASE_PLAN_PATH='+str(target)+'\n')
+              output.write('PREPARE_RESERVED_DOI='+str(p['policy']['currentArchive']['recordId'])+'\n')
+          PYPLAN
       - uses: actions/setup-node@v4
         if: inputs.operation != 'inspect'
         with: {node-version-file: .nvmrc, cache: npm}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - run: python -m pip install requests 'kaggle==2.2.4'
-      - name: Build and test all release inputs
+      - name: Install validation dependencies
         if: inputs.operation == 'preflight'
         run: |
           npm ci
-          python -m pip install 'huggingface_hub>=0.34,<1' 'pyarrow==22.0.0' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
-          node --test tests/*.test.mjs
+          python -m pip install 'huggingface_hub>=0.34,<1' 'pyarrow==22.0.0' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML playwright
+          python -m playwright install --with-deps chromium
+      - name: Run source unit fixtures without the publication plan
+        if: inputs.operation == 'preflight'
+        run: |
+          python .github/scripts/source_freeze.py check
+          unit_tests=()
+          for test_file in tests/*.test.mjs; do
+            case "$test_file" in
+              tests/physician-page-output.test.mjs|tests/guide-search-manifest.test.mjs) ;;
+              *) unit_tests+=("$test_file") ;;
+            esac
+          done
+          # RDF/SHACL subprocesses share CPU; serialize source fixtures on CI runners.
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' node --test --test-concurrency=1 "${unit_tests[@]}"
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/release-plan.test.py
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/release-recovery.test.py
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/coordinated-doi-release.test.py
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/doi-validation.test.py
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/platform-bundle-sync.test.py
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/platform-publication.test.py
+      - name: Build and validate the selected reserved-edition candidate
+        if: inputs.operation == 'preflight'
+        run: |
           npm run build
-          python tests/coordinated-doi-release.test.py
-          python tests/doi-validation.test.py
-          python tests/platform-bundle-sync.test.py
-          python tests/platform-publication.test.py
+          node --test tests/physician-page-output.test.mjs tests/guide-search-manifest.test.mjs
+          python tests/reader-browser-regression.py --dist dist --report /tmp/reader-browser-regression.json
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
       - name: Install frozen-publication dependencies
-        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-publication'
+        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-runtime' || inputs.operation == 'verify-publication'
         run: python -m pip install 'pyarrow==22.0.0' 'kaggle==2.2.4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
       - uses: actions/download-artifact@v4
-        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-publication'
+        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-runtime' || inputs.operation == 'verify-publication'
         with:
           name: frozen-coordinated-candidate
           run-id: ${{ inputs.candidate_run }}
           github-token: ${{ github.token }}
           path: /tmp/frozen-artifact/
       - name: Restore the validated artifact without rebuilding
-        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-publication'
+        if: inputs.operation == 'publish-frozen' || inputs.operation == 'stage-draft' || inputs.operation == 'verify-runtime' || inputs.operation == 'verify-publication'
         run: |
-          tar -xzf /tmp/frozen-artifact/candidate.tar.gz -C /tmp
+          python .github/scripts/release_recovery.py restore-candidate
           python - <<'PYGUARD'
-          import json,os
+          import json,os,sys
           p=json.load(open('/tmp/coordinated-release/release-plan.json'))
-          import subprocess
-          subprocess.run(['git','merge-base','--is-ancestor',p['sourceCommit'],os.environ['GITHUB_SHA']],check=True)
-          subprocess.run(['git','diff','--quiet',p['sourceCommit'],os.environ['GITHUB_SHA'],'--','src','public','build','package.json','package-lock.json','astro.config.mjs','.nvmrc'],check=True)
+          sys.path.insert(0,'.github/scripts')
+          from release_plan import load_plan,validate_checkout,validate_candidate_binding
+          approved=load_plan();validate_checkout(approved)
+          assert p['sourceCommit']==os.environ['GITHUB_SHA']==approved['refs']['buildSource'],'Exact reviewed M checkout required'
+          from pathlib import Path
+          validate_candidate_binding(Path('/tmp/coordinated-release'))
           PYGUARD
-      - run: python .github/scripts/coordinated_doi_release.py "$OPERATION"
+      - name: Execute validated release operation
+        run: |
+          python .github/scripts/release_recovery.py "$OPERATION"
+          python .github/scripts/coordinated_doi_release.py "$OPERATION"
       - name: Preserve the exact frozen candidate including its Git object
         if: inputs.operation == 'preflight' && success()
         run: tar -czf /tmp/candidate.tar.gz -C /tmp coordinated-release

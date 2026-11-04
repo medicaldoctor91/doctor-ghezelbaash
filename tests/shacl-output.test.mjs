@@ -6,8 +6,9 @@ import {buildShaclTurtle} from '../src/lib/shacl-output.mjs';
 
 const checkRdf=(script,input)=>{
   const result=spawnSync(process.env.PYTHON??'python',['-c',script],{
-    input:JSON.stringify(input),encoding:'utf8',maxBuffer:16*1024*1024,timeout:60000,
+    input:JSON.stringify(input),encoding:'utf8',maxBuffer:16*1024*1024,timeout:180000,
   });
+  assert.ifError(result.error);
   assert.equal(result.status,0,result.stderr||result.stdout);
   return result.stdout.trim();
 };

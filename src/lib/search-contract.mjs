@@ -1,4 +1,5 @@
 import {appendHomeDatasetDiscovery} from './home-graph-discovery.mjs';
+import {physicianIdentityIds,resolvePhysicianPractice} from './physician-identity.mjs';
 
 const values=v=>Array.isArray(v)?v:v==null?[]:[v];
 const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariable','Observation','SoftwareSourceCode','FAQPage']);
@@ -72,7 +73,9 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
   // supporting physician inventory happens to link back to them.
   for(const id of questions??[])resolve(id);
   for(const id of media??[])resolve(id);
-  for(const node of graph['@graph'])if(node['@id']===origin+'/#saeed-ghezelbash'||values(node['@type']).includes('MedicalClinic'))resolve(node['@id']);
+  const practice=resolvePhysicianPractice(graph,{origin});
+  resolve(physicianIdentityIds(origin).personId);
+  if(practice)resolve(practice['@id']);
   for(let i=0;i<queue.length;i++) {
     const node=queue[i],cleaned=clean(node);
     for(const key of Object.keys(node))delete node[key];Object.assign(node,cleaned);
@@ -110,11 +113,32 @@ const searchTopic=[...searchIdentity,'about','mainEntity','medicalSpecialty','pr
  * to the physician, while the physician's image uses the actual file URL;
  * these are both Schema.org forms and do not create image/creator cycles.
  */
+function validRecordedDate(value) {
+  return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&
+    Number.isFinite(Date.parse(value+'T00:00:00Z'))&&
+    new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+}
+
 function recordedMarkupTimestamp(value) {
   if(typeof value!=='string'||
-      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)||
+      !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-]\d{2}:[0-5]\d)$/.test(value)||
+      !validRecordedDate(value.slice(0,10))||
       !Number.isFinite(Date.parse(value)))throw new Error('Markup modification requires a recorded timestamp with timezone');
   return value;
+}
+
+/**
+ * A document's later content edit must survive an earlier shared markup edit.
+ * Keep the recorded lexical precision and timezone: calendar dates never gain
+ * an invented hour. Markup timestamps do not relabel review or publication.
+ */
+export function latestRecordedModification(documentValue,markupModifiedAt) {
+  const markup=recordedMarkupTimestamp(markupModifiedAt);
+  const document=documentValue&&typeof documentValue==='object'?documentValue['@value']:documentValue;
+  if(document==null)return markup;
+  if(validRecordedDate(document))return document>markup.slice(0,10)?document:markup;
+  const timestamp=recordedMarkupTimestamp(document);
+  return Date.parse(timestamp)>Date.parse(markup)?timestamp:markup;
 }
 
 export function projectBoundedSearchDocument(document,{graph,primaryPageId,language='fa-IR',visibleQuestionIds=[],visibleMediaIds=[],pagePurpose,visibleImageUrls=[],articleModifiedAt}={}) {
@@ -132,7 +156,8 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   const origin=new URL(primary['@id']).origin;
   const physicianId=origin+'/#saeed-ghezelbash';
   const physician=source.get(physicianId);
-  const clinic=[...source.values()].find(node=>values(node['@type']).some(type=>['MedicalClinic','PhysiciansOffice','LocalBusiness'].includes(type))&&node['@id']!==physicianId);
+  const practice=resolvePhysicianPractice(graph,{origin});
+  const clinic=practice&&source.get(practice['@id']);
   const home=values(primary['@type']).includes('ProfilePage')&&primary.url===origin+'/';
   const topicIds=new Set([...values(primary.mainEntity),...values(primary.about)].map(ref=>ref?.['@id']).filter(Boolean));
   // MedicalWebPage describes the document; Article describes its authored
@@ -150,7 +175,7 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       if(key in primary)article[key]=structuredClone(primary[key]);
     // Record the actual structured-metadata edit, independently of clinical
     // review dates and the unchanged original scientific edition.
-    if(articleModifiedAt!==undefined)article.dateModified=recordedMarkupTimestamp(articleModifiedAt);
+    if(articleModifiedAt!==undefined)article.dateModified=latestRecordedModification(primary.dateModified,articleModifiedAt);
     const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
       .some(type=>['WebPageElement','Article','Question','Answer'].includes(type)));
     if(content.length)article.hasPart=structuredClone(content);
@@ -263,7 +288,14 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
 export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir',{profileModifiedAt}={}) {
   const projected=projectBoundedSearchDocument(graph,{graph,primaryPageId:origin+'/webpage'});
   if(profileModifiedAt!==undefined) {
-    projected['@graph'].find(node=>node['@id']===origin+'/webpage').dateModified=recordedMarkupTimestamp(profileModifiedAt);
+    const primaryPageId=origin+'/webpage';
+    const authored=graph['@graph'].find(node=>node['@id']===primaryPageId);
+    const page=projected['@graph'].find(node=>node['@id']===primaryPageId);
+    const latest=latestRecordedModification(authored?.dateModified,profileModifiedAt);
+    // Google ProfilePage's optional dates require DateTime. If the latest
+    // authored edit has calendar precision, omit it rather than invent a time
+    // or present an older markup correction as the latest document change.
+    if(validRecordedDate(latest))delete page.dateModified;else page.dateModified=latest;
   }
   const result=appendHomeDatasetDiscovery(projected,graph,origin);
   assertBoundedSearchDocument(result);

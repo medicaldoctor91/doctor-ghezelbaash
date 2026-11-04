@@ -141,6 +141,32 @@ class FrozenSourceTests(unittest.TestCase):
             with self.assertRaisesRegex(freeze.FreezeError, 'changed frozen file'):
                 freeze.check(self.root)
 
+    def test_application_only_checkpoint_and_management_child_both_check_and_materialize(self):
+        historical_tag = 'historical-unchanged-fixture'
+        self.git('tag', historical_tag, self.commit)
+        for name in freeze.MANAGEMENT_ADDITIONS:
+            self.write(name, 'management fixture\n')
+        management = self.commit_change()
+        self.assertNotEqual(management, self.commit)
+        self.assertEqual(freeze.check(self.root, management)['status'], 'PASS')
+        destination = Path(self.folder.name) / 'application-only-recovery'
+        result = freeze.materialize(destination, self.root)
+        self.assertTrue(result['detached'])
+        self.assertEqual(subprocess.check_output(['git', '-C', str(destination), 'rev-parse', 'HEAD'], text=True).strip(), self.commit)
+        self.assertTrue(all(not (destination/name).exists() for name in freeze.MANAGEMENT_ADDITIONS))
+        self.assertEqual(self.git('rev-parse', historical_tag).strip(), self.commit)
+
+    def test_checkpoint_containing_management_is_not_a_valid_materialization_contract(self):
+        for name in freeze.MANAGEMENT_ADDITIONS:
+            self.write(name, 'management fixture\n')
+        bad_checkpoint = self.commit_change()
+        tree = self.git('rev-parse', 'HEAD^{tree}').strip()
+        self.git('tag', '-f', freeze.FROZEN_TAG, bad_checkpoint)
+        with mock.patch.object(freeze, 'FROZEN_COMMIT', bad_checkpoint), mock.patch.object(freeze, 'FROZEN_TREE', tree):
+            self.assertEqual(freeze.check(self.root)['status'], 'PASS')
+            with self.assertRaises(freeze.FreezeError):
+                freeze.materialize(Path(self.folder.name)/'invalid-recovery', self.root)
+
     def test_changed_commit_and_moved_tag_fail(self):
         self.write('src/main.mjs', 'later source\n')
         revision = self.commit_change()

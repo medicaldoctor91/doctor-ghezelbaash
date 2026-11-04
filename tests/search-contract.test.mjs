@@ -228,7 +228,7 @@ test('the real homepage Search document is finite and preserves clinical identit
 });
 
 test('clinical Search projection keeps the visible questions, breadcrumb and media without reciprocal inventories', () => {
-  const ids={topic:origin+'/treatment',clinic:origin+'/clinic',image:origin+'/portrait',question:origin+'/question',answer:origin+'/answer',video:origin+'/video',clip:origin+'/clip',breadcrumb:origin+'/breadcrumb',address:origin+'/address'};
+  const ids={topic:origin+'/treatment',clinic:origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',image:origin+'/portrait',question:origin+'/question',answer:origin+'/answer',video:origin+'/video',clip:origin+'/clip',breadcrumb:origin+'/breadcrumb',address:origin+'/address'};
   const graph={'@context':'https://schema.org','@graph':[
     {'@id':pageId,'@type':'MedicalWebPage',name:'Treatment',mainEntity:{'@id':ids.topic},author:{'@id':personId},isPartOf:{'@id':homeId},breadcrumb:{'@id':ids.breadcrumb}},
     {'@id':homeId,'@type':['ProfilePage','MedicalWebPage'],url:origin+'/',mainEntity:{'@id':personId}},
