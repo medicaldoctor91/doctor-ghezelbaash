@@ -1,6 +1,6 @@
 # Coordinated release contract
 
-The local implementation prepares a new website/Hugging Face/Kaggle/Notebook/Zenodo release. It does not reserve a DOI, activate a workflow or publish anything. The checked-in DOI policy continues to describe the actual previously published archive until a real reservation and the reviewed source binding exist.
+The release includes the website on Cloudflare Pages, Hugging Face, the Kaggle dataset and Notebook, and Zenodo. The checked-in DOI policy continues to describe the actual previously published archive until a real reservation and the reviewed source binding exist. Preparing source or running the default access audit does not publish any platform.
 
 ## Current and future identities
 
@@ -30,7 +30,15 @@ Scientific edition, clinical-review dates, document modification times, media up
 | New reserved edition | `RELEASE_PLAN_PATH` selects the actual approved plan; `PREPARE_RESERVED_DOI` equals its real new record; `ARCHIVE_SOURCE_COMMIT` is empty. Actual HEAD and `GITHUB_SHA` must equal M. |
 | Published maintenance of that edition | Use a reviewed `published-maintenance` plan, pin `ARCHIVE_SOURCE_COMMIT` to the newly published archive's M, and leave preparing mode empty. A later website build does not relabel the immutable archive. The coordinated new-edition workflow deliberately rejects this context; use a separately reviewed maintenance operation. |
 
-No current provider credential is inferred from repository secret names. In the local audit environment, only the GitHub token name was present; repository Actions secret/variable listing returned 403. No Zenodo/HF/Kaggle/Cloudflare runtime token was available to this local release runner. No new DOI or full publication readiness is claimed from fixtures.
+## GitHub execution before the new checkpoint
+
+Local credential availability and GitHub Actions access are separate checks. The repository token can dispatch Actions even though listing Actions secrets/variables returns 403. Run `41921964850` successfully dispatched the existing media inspector at reviewed commit `6ae90bd5422fb28a0773c1aca368383c6930d87d`; its authenticated Cloudflare project GET returned 200. This establishes that execution path and that read access, rather than full publication permission on every provider.
+
+The registered `inspect-media-delivery.yml` workflow also supports a default `access-audit` and an explicit `reserve` operation at an exact reviewed source SHA. It has no automatic trigger and does not bypass the final coordinated workflow's C/M/plan checks. Its reports contain selected public metadata and access outcomes, never credentials or a raw Cloudflare environment configuration. Each provider is checked with the credentials available inside Actions; absent local environment variables are not treated as evidence that repository secrets are absent.
+
+Reservation first captures fresh owner/public baselines and authenticates earlier bootstrap evidence. A source-, policy- and action-bound intent artifact must be durably uploaded and verified before a single Zenodo POST. A new-version request and a later DOI-reservation request require distinct durable intents and separate runs. An ambiguous write is resolved through owner GETs; starting a new runner does not authorize repeating it. These bootstrap receipts remain outside canonical source and do not constitute a published archive.
+
+After a real reservation, bind the actual DOI and versions before creating C/M. The final publication workflow remains disabled until its concrete source bindings and candidate are ready. Cloudflare automatic Git deployment stays disabled: the reviewed frozen website artifact is deployed explicitly by the coordinated controller. The immutable Zenodo archive is published last, after the website, Hugging Face, Kaggle dataset and executed Notebook have converged and passed their required runtime checks.
 
 ## Frozen artifacts and cross-run recovery
 

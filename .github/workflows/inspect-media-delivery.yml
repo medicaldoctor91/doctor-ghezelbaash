@@ -1,21 +1,77 @@
-name: Read-only media delivery configuration
+name: Inspect release access and reserve a new archive draft
 on:
   workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [access-audit, media-inspect, reserve]
+        default: access-audit
+        required: true
+      reviewed_commit:
+        type: string
+        description: Exact reviewed bootstrap source commit; required for audit and reservation
+        required: true
 permissions:
   contents: read
+  actions: read
+concurrency:
+  group: ${{ inputs.operation == 'reserve' && 'doctor-ghezelbaash-publication' || 'doctor-ghezelbaash-bootstrap-inspection' }}
+  cancel-in-progress: false
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
+    env:
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      OPERATION: ${{ inputs.operation }}
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      GITHUB_TOKEN: ${{ github.token }}
+      ARCHIVE_SOURCE_COMMIT: ''
+      RELEASE_PLAN_PATH: ''
+      PREPARE_RESERVED_DOI: ''
     steps:
       - uses: actions/checkout@v4
-        with: {persist-credentials: false}
+        with: {ref: '${{ inputs.reviewed_commit }}', fetch-depth: 0, persist-credentials: false}
+      - name: Require the exact reviewed dispatch source
+        run: test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install bootstrap read clients
+        if: inputs.operation != 'media-inspect'
+        run: python -m pip install requests 'kaggle==2.2.4'
+      - name: Inspect all publication providers without writes
+        if: inputs.operation == 'access-audit'
+        run: python .github/scripts/release_bootstrap.py access-audit --root /tmp/release-bootstrap
+      - name: Inspect owner state and prepare a durable reservation intent
+        if: inputs.operation == 'reserve'
+        run: python .github/scripts/release_bootstrap.py prepare-reservation --root /tmp/release-bootstrap
+      - name: Persist the reservation intent before any provider write
+        uses: actions/upload-artifact@v4
+        if: inputs.operation == 'reserve'
+        with:
+          name: release-bootstrap-intent
+          path: /tmp/release-bootstrap/bootstrap-intent.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Execute real DOI reservation
+        if: inputs.operation == 'reserve'
+        run: python .github/scripts/release_bootstrap.py reserve --root /tmp/release-bootstrap
       - name: Read Cloudflare delivery configuration only
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        if: inputs.operation == 'media-inspect'
         run: python .github/scripts/inspect_media_delivery.py
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && inputs.operation == 'media-inspect'
         with:
           name: media-delivery-readonly
           path: /tmp/media-delivery-evidence/
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.operation != 'media-inspect'
+        with:
+          name: release-bootstrap-evidence
+          path: /tmp/release-bootstrap/*.json
+          if-no-files-found: warn
+          retention-days: 90

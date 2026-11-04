@@ -81,6 +81,7 @@ jobs:
           env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' node --test --test-concurrency=1 "${unit_tests[@]}"
           env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/release-plan.test.py
           env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/release-recovery.test.py
+          env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/release-bootstrap.test.py
           env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/coordinated-doi-release.test.py
           env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/doi-validation.test.py
           env -u RELEASE_PLAN_PATH ARCHIVE_SOURCE_COMMIT="$REVIEWED_COMMIT" PREPARE_RESERVED_DOI='' python tests/platform-bundle-sync.test.py
