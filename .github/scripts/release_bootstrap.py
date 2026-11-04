@@ -179,6 +179,10 @@ def audit(root, env=None, clients=None, kaggle=None):
             report['providers'][name] = {'authenticated': False, 'status': 'FAILED',
                                         'errorType': type(error).__name__,
                                         'httpStatus': getattr(response, 'status_code', None)}
+            if isinstance(error, ModuleNotFoundError):
+                missing = error.name
+                if isinstance(missing, str) and re.fullmatch(r'[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*', missing) and len(missing) <= 120:
+                    report['providers'][name]['missingModule'] = missing
 
     def zn(client):
         state = zenodo_state(client, p)

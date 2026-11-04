@@ -178,6 +178,21 @@ class AuditTests(Fixtures):
         self.assertEqual(result['providers']['zenodo']['errorType'], 'RuntimeError')
         self.assertNotIn('never-store', (self.work / 'access-audit.json').read_text())
 
+    def test_missing_import_reports_only_bounded_module_name(self):
+        error = ModuleNotFoundError('never-store-token-or-provider-body', name='kaggle_sdk.dependencies')
+        with patch.object(self.zn, 'get', side_effect=error):
+            result = self.audit()
+        self.assertEqual(result['providers']['zenodo']['missingModule'], 'kaggle_sdk.dependencies')
+        self.assertNotIn('never-store', (self.work / 'access-audit.json').read_text())
+
+    def test_invalid_missing_import_name_is_not_exported(self):
+        for missing in ('token=never-store', 'https://never-store.example', 'x' * 121, None):
+            error = ModuleNotFoundError('never-store-exception-body', name=missing)
+            with self.subTest(name=missing), patch.object(self.zn, 'get', side_effect=error):
+                result = self.audit()
+            self.assertNotIn('missingModule', result['providers']['zenodo'])
+            self.assertNotIn('never-store', (self.work / 'access-audit.json').read_text())
+
     def test_wrong_published_control_checksum_blocks_only_zenodo(self):
         self.zn.bodies['doi-policy.json'] += b' '
         result = self.audit()

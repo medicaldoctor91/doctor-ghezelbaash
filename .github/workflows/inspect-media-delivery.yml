@@ -42,7 +42,10 @@ jobs:
         with: {python-version: '3.12'}
       - name: Install bootstrap read clients
         if: inputs.operation != 'media-inspect'
-        run: python -m pip install requests 'kaggle==2.2.4'
+        run: python -m pip install requests 'kaggle==2.2.4' 'six>=1.17,<2'
+      - name: Verify the installed Kaggle client imports
+        if: inputs.operation != 'media-inspect'
+        run: python -c 'from kaggle.api.kaggle_api_extended import KaggleApi'
       - name: Inspect all publication providers without writes
         if: inputs.operation == 'access-audit'
         run: python .github/scripts/release_bootstrap.py access-audit --root /tmp/release-bootstrap
