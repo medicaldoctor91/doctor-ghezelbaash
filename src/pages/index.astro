@@ -2549,6 +2549,9 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (readerMode === "expanded") return Promise.resolve(true);
     if (expansion && expansionPath === committedPath && expansionTicket === ticket) return expansion;
     d.dispatchEvent(new CustomEvent("guide:mode-intent"));
+    // A mode choice owns a newer scroll pause than the topic intent it cancels.
+    // Only that generation may resume recording after this transaction settles.
+    const scrollGeneration = window.pauseGuideScrollState();
     const path = committedPath, current = primaryArticle(), generation = ++ticket;
     navigationController?.abort();
     const control = d.querySelector("[data-guide-expand]"), status = d.querySelector("[data-guide-expand-status]");
@@ -2574,6 +2577,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (expansion === request) {
         current?.removeAttribute("aria-busy"); expansion = undefined;
       }
+      window.resumeGuideScrollState(scrollGeneration);
     });
     expansion = request; expansionPath = path; expansionTicket = generation;
     window.completeGuideReady = request;
@@ -2589,13 +2593,17 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     if (link.hasAttribute("data-guide-return")) {
       event.preventDefault();
       d.dispatchEvent(new CustomEvent("guide:mode-intent"));
+      const scrollGeneration = window.pauseGuideScrollState();
       const position = readingAnchor(), generation = ++ticket;
-      const prepared = await prepareReader(cache.get(committedPath), committedPath, true, "focused");
-      if (generation !== ticket) return;
-      commitReader(prepared, committedPath, true);
-      if (position) restoreAnchor(position);
-      window.saveGuideScrollState();
-      d.dispatchEvent(new CustomEvent("guide:primary-changed"));
+      navigationController?.abort();
+      try {
+        const prepared = await prepareReader(cache.get(committedPath), committedPath, true, "focused");
+        if (generation !== ticket) return;
+        commitReader(prepared, committedPath, true);
+        if (position) restoreAnchor(position);
+        window.saveGuideScrollState();
+        d.dispatchEvent(new CustomEvent("guide:primary-changed"));
+      } finally { window.resumeGuideScrollState(scrollGeneration); }
     }
   });
   window.completeGuideReady = Promise.resolve(fullSourceStatus === "ready");
@@ -2663,7 +2671,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     queryInfo=searchEngine.queryInfo;
 
   let copy = initialCopy;
-  let index, manifestStatus = "idle", composing = false;
+  let index, manifestStatus = "idle", composing = false, searchOpen = false, searchCleared = false;
   const searchStatusCopy = {
     fa:{loading:"در حال آماده‌سازی جست‌وجو…",error:"بارگذاری فهرست جست‌وجو انجام نشد؛ برای تلاش دوباره تایپ کنید."},
     en:{loading:"Preparing search…",error:"Search could not load. Type again to retry."},
@@ -2671,7 +2679,9 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     ckb:{loading:"گەڕان ئامادە دەکرێت…",error:"بارکردنی گەڕان سەرکەوتوو نەبوو؛ دووبارە بنووسە."},
   };
   const localizedSearchStatus = () => searchStatusCopy[d.documentElement.lang.split("-")[0]] || searchStatusCopy.fa;
-  const closeResults = () => { results.hidden = true; };
+  // Async index completion may update results, but only fresh user intent opens
+  // them again after Escape, focus leaving Search, or an outside pointer.
+  const closeResults = () => { searchOpen = false; results.hidden = true; };
   const requestSearch = () => {
     if (manifestStatus === "loading" || composing || norm(input.value).length < 2) return;
     manifestStatus = "loading"; search.setAttribute("aria-busy","true");
@@ -2684,10 +2694,10 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   };
   const render = () => {
     const q = queryInfo(input.value); results.replaceChildren();
-    if (composing || q.original.length < 2) { closeResults(); status.textContent = copy.minimumQuery; return; }
+    if (composing || q.original.length < 2) { results.hidden = true; status.textContent = searchCleared ? copy.cleared : copy.minimumQuery; return; }
     if (manifestStatus === "idle") requestSearch();
     if (manifestStatus !== "ready") {
-      closeResults(); status.textContent = localizedSearchStatus()[manifestStatus === "error" ? "error" : "loading"]; return;
+      results.hidden = true; status.textContent = localizedSearchStatus()[manifestStatus === "error" ? "error" : "loading"]; return;
     }
     const target = q.intent && intentTargets[q.intent];
     const hits = index.map(record => ({...record,rank:searchEngine.score(record,q)}))
@@ -2705,22 +2715,22 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (path) { context.className = "guide-search__result-context"; context.dir = "auto"; context.textContent = path; a.append(context); }
       li.append(a); results.append(li);
     }
-    results.hidden = false;
+    results.hidden = !searchOpen;
     status.textContent = hits.length ? copy.resultCount.replace("{count}",String(hits.length)) : copy.noResultsStatus;
   };
 
   if(searchReady){
     if(/Mac|iPhone|iPad/.test(navigator.userAgent))search.querySelector("kbd").textContent="⌘ K";
-    input.addEventListener("compositionstart",()=>{composing=true;closeResults()});
-    input.addEventListener("compositionend",()=>{composing=false;if(manifestStatus==="error")manifestStatus="idle";render()});
-    input.addEventListener("input",()=>{if(manifestStatus==="error")manifestStatus="idle";render()});
-    input.addEventListener("focus",()=>{if(norm(input.value).length>=2)render()});
+    input.addEventListener("compositionstart",()=>{composing=true;searchOpen=true;searchCleared=false;results.hidden=true});
+    input.addEventListener("compositionend",()=>{composing=false;searchOpen=true;searchCleared=false;if(manifestStatus==="error")manifestStatus="idle";render()});
+    input.addEventListener("input",()=>{searchOpen=true;searchCleared=false;if(manifestStatus==="error")manifestStatus="idle";render()});
+    input.addEventListener("focus",()=>{if(norm(input.value).length>=2){searchOpen=true;searchCleared=false;render()}});
     input.addEventListener("keydown",(event)=>{
       if(event.isComposing||event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
       if(event.key==="Escape"){
-        event.preventDefault();input.value="";closeResults();status.textContent=copy.cleared;
+        event.preventDefault();input.value="";searchCleared=true;closeResults();status.textContent=copy.cleared;
       }else if(["ArrowDown","ArrowUp","Enter"].includes(event.key)){
-        if(results.hidden)render();
+        if(results.hidden){searchOpen=true;searchCleared=false;render()}
         const links=results.querySelectorAll("a");
         if(!links.length)return;
         event.preventDefault();
@@ -2938,7 +2948,8 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       video.removeEventListener("blur",releaseKey);
       video.removeEventListener("error",stop);
       window.removeEventListener("blur",releaseKey);
-      window.removeEventListener("pagehide",stop);
+      window.removeEventListener("pagehide",pageHide);
+      window.removeEventListener("pageshow",pageShow);
       if(video.preload===requestedPreload)video.preload=originalPreload;
       if(cancelVideoSeek===stop)cancelVideoSeek=undefined;
       return {resume,guardedPauses,spaceDown};
@@ -2966,6 +2977,16 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       }else if(["ArrowLeft","ArrowRight","Home","End"].includes(event.key))stop();
     };
     const current=()=>!stopped&&video.isConnected&&location.href===selectedUrl&&(!mediaUrl||!video.currentSrc||video.currentSrc===mediaUrl.href);
+    const pageHide=event=>{if(!event.persisted)stop();};
+    const pageShow=event=>{
+      if(!event.persisted)return;
+      if(!current()){stop();return;}
+      // BFCache can suspend the native fetch before metadata arrives. Only an
+      // unfinished, still-owned seek retains this listener and may restart it.
+      // Completed seeks and manual scrubs have already removed the listener.
+      if(video.readyState===0){assigned=false;video.load();}
+      pump();
+    };
     const warmCache=async()=>{
       warming=true;
       try{
@@ -3024,7 +3045,8 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     video.addEventListener("blur",releaseKey);
     video.addEventListener("error",stop);
     window.addEventListener("blur",releaseKey);
-    window.addEventListener("pagehide",stop);
+    window.addEventListener("pagehide",pageHide);
+    window.addEventListener("pageshow",pageShow);
     video.preload=requestedPreload;
     pausePending();
     pump();
@@ -3036,7 +3058,12 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
   const localPath = path => path.replace(/\\/$/, "") || "/";
   const knownRoute = path => Object.hasOwn(contentRouteMap, localPath(path));
   const resolveDestination = async url => {
-    if (!url.hash || targetFromHash(url.hash) && localPath(url.pathname) === localPath(location.pathname)) return url;
+    if (!url.hash) return url;
+    const target = targetFromHash(url.hash);
+    // An expanded context includes other pages' IDs. Their presence must not
+    // turn a historical fragment into a new URL owned by the current topic.
+    if (target && !target.closest("[data-guide-context]") &&
+      localPath(url.pathname) === localPath(location.pathname)) return url;
     let id; try { id = decodeURIComponent(url.hash.slice(1)); } catch { return null; }
     const data = await window.ensureGuideSearchManifest();
     if (!Object.hasOwn(data.anchors,id)) return null;
@@ -3564,7 +3591,7 @@ export function compileCanonicalSource() {
       const coreCredentials = new Set(["credential-doctor-of-medicine", "irimc-credential-167430"].map(id => SOURCE.canonicalOrigin + "/" + id));
       const identityTypes = new Set(["Person", "MedicalClinic", "PhysiciansOffice", "LocalBusiness", "Organization", "EducationalOrganization", "CollegeOrUniversity", "WebSite", "ServiceChannel"]);
       const personKeys = new Set(["@id", "@type", "additionalType", "name", "givenName", "familyName", "additionalName", "alternateName",
-        "honorificPrefix", "jobTitle", "description", "disambiguatingDescription", "url", "mainEntityOfPage", "identifier", "sameAs",
+        "honorificPrefix", "jobTitle", "birthDate", "description", "disambiguatingDescription", "url", "mainEntityOfPage", "identifier", "sameAs",
         "image", "email", "telephone", "knowsLanguage", "nationality", "address", "geo", "practicesAt", "workLocation", "owns", "worksFor",
         "affiliation", "alumniOf", "medicalSpecialty", "areaServed", "potentialAction"]);
       const clinicKeys = new Set(["@id", "@type", "name", "alternateName", "description", "url", "identifier", "sameAs", "image", "logo",
@@ -4465,7 +4492,9 @@ export function compileCanonicalSource() {
           authoredSourceId: authoredEntity?.["@id"] ?? null,
           authoredSourceTypes: values(authoredEntity?.["@type"]),
         };
-        const description = focusedView?.description || scopedDescription(parsed, entity, byId, authoredById, language, mediaTarget);
+        const authoredProfileDescription = ["professional-biography", "clinic-profile"].includes(resource.pagePurpose)
+          ? normalize(localizedText(authoredById.get(url + "#webpage")?.description, language)) : "";
+        const description = focusedView?.description || authoredProfileDescription || scopedDescription(parsed, entity, byId, authoredById, language, mediaTarget);
         // A fine-grained heading inherits its existing authored section's topic.
         // An entity's own topic remains authoritative when it is explicitly set.
         const ownAbout = namedReferences(entity.about);
@@ -4926,7 +4955,7 @@ export function compileCanonicalSource() {
      * Apply edits to original source spans so authored text, data scripts, styles,
      * and executable CSP hashes remain byte-for-byte unchanged.
      */
-    function projectFocusedMedia(html, canonicalUrl) {
+    function projectFocusedMedia(html, canonicalUrl, { pagePurpose } = {}) {
       const source = String(html);
       const document = parse(source, { sourceCodeLocationInfo: true });
       let documentElement;
@@ -4950,6 +4979,14 @@ export function compileCanonicalSource() {
         if (node.tagName === "img") {
           addResource(attr(node, "src"));
           for (const value of sourceSetUrls(attr(node, "srcset"))) addResource(value);
+          if (pagePurpose === "professional-biography" && attr(node, "id") === "professional-biography-portrait-image") {
+            const location = node.sourceCodeLocation?.startTag;
+            if (!location) throw new Error("Biography portrait requires an authored start tag");
+            const startTag = source.slice(location.startOffset, location.endOffset)
+              .replace(/\s(?:loading|fetchpriority)="[^"]*"/g, "");
+            replacements.push({ start: location.startOffset, end: location.endOffset,
+              text: startTag.replace(/(\s*\/?>)$/, ' loading="eager" fetchpriority="high"$1') });
+          }
         }
         if (node.tagName === "source" && node.parentNode?.tagName === "picture")
           for (const value of sourceSetUrls(attr(node, "srcset"))) addResource(value);
@@ -5292,7 +5329,7 @@ export function compileCanonicalSource() {
       if(id==='guide-search-results')set(node,'aria-label',localizedSearch.resultsAriaLabel);
       if(id==='guide-search-status'){node.childNodes=parseFragment(escape(localizedSearch.initialStatus)).childNodes;for(const child of node.childNodes)child.parentNode=node;}
     });
-    return focusedMedia.projectFocusedMedia(serialize(document),record.canonicalUrl);
+    return focusedMedia.projectFocusedMedia(serialize(document),record.canonicalUrl,{pagePurpose:record.pagePurpose});
   };
   // All machine serializers consume the same compiled document identities used
   // by HTML. Authored multilingual facts remain intact; the page's primary

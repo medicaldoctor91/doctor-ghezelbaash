@@ -5,7 +5,7 @@ const values=v=>Array.isArray(v)?v:v==null?[]:[v];
 const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariable','Observation','SoftwareSourceCode','FAQPage']);
 const OMIT=Symbol('omit');
 const identityKeys=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
-const personBoundaryKeys=new Set([...identityKeys,'additionalType','givenName','familyName','additionalName','honorificPrefix','jobTitle','disambiguatingDescription','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage','nationality','areaServed','affiliation','alumniOf','potentialAction','hasOccupation','hasCredential','skills','knowsAbout','address','geo','telephone','email','practicesAt','workLocation','owns','image']);
+const personBoundaryKeys=new Set([...identityKeys,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage','nationality','areaServed','affiliation','alumniOf','potentialAction','hasOccupation','hasCredential','skills','knowsAbout','address','geo','telephone','email','practicesAt','workLocation','owns','image']);
 const clinicBoundaryKeys=new Set([...identityKeys,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','owner','founder','priceRange','areaServed','image','logo','location','containedInPlace','potentialAction','contactPoint','mainEntityOfPage']);
 const imageBoundaryKeys=new Set([...identityKeys,'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','about','creator','publisher','copyrightHolder','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','version','keywords','representativeOfPage']);
 const credentialBoundaryKeys=new Set([...identityKeys,'credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires']);
@@ -96,7 +96,7 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
 
 const searchIdentity=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
 const searchPage=[...searchIdentity,'inLanguage','dateCreated','dateModified','lastReviewed','author','publisher','reviewedBy','mainEntity','about','isPartOf','breadcrumb','primaryImageOfPage'];
-const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','affiliation','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
+const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','affiliation','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
 const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','areaServed','image','logo','location','containedInPlace','contactPoint'];
 const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','creator','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','representativeOfPage'];
 const searchVideo=[...searchImage,'description','publisher','copyrightHolder','about','uploadDate','duration','embedUrl','inLanguage','hasPart'];
@@ -165,7 +165,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   // wrapper. A clinic, a video or an access/contact page must not be retyped as
   // an article merely because it is the existing page's mainEntity.
   if(pagePurpose==='clinical-guide') {
-    if(home||!values(primary['@type']).includes('MedicalWebPage')||typeof primary.url!=='string')
+    const profileSubject=values(primary.mainEntity).some(ref=>values(source.get(ref?.['@id'])?.['@type'])
+      .some(type=>['Person','LocalBusiness','MedicalClinic','PhysiciansOffice','VideoObject'].includes(type)));
+    if(home||profileSubject||!values(primary['@type']).includes('MedicalWebPage')||typeof primary.url!=='string')
       throw new Error('Clinical Article requires its reviewed MedicalWebPage');
     const articleId=primary.url+'#article';
     if(source.has(articleId))throw new Error('Clinical Article identifier already exists: '+articleId);

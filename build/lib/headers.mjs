@@ -111,17 +111,20 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
 }
 export function generateSecurityTxt({origin,email,expires}){if(origin!=='https://www.ghezelbaash.ir')throw new Error('Unexpected canonical origin');if(!/^[^@\s]+@[^@\s]+$/.test(email))throw new Error('Invalid security contact email');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(expires))throw new Error('Expires must be an RFC3339 UTC timestamp');return `Contact: mailto:${email}\nExpires: ${expires}\nPreferred-Languages: fa, en\nCanonical: ${origin}/.well-known/security.txt\n`;}
 
-export function sealHeaders({headers,eligible,resourcePaths}){
-  // The 61 per-asset digests and every HTML preload/identity-alias rule cannot
-  // fit together in Pages' 100-rule budget. Retain the registered representation
-  // policies and shared static/security/preview policies. HTML already embeds
-  // its discovery links and preloads; _redirects owns the identity aliases.
+export function sealHeaders({headers,eligible,resourcePaths,workerDigestPaths=[]}){
+  // Worker-generated video responses publish their sealed full/partial digests
+  // in code: _headers does not apply to those responses. Keep their digest
+  // eligibility records, while reserving static rules for representation,
+  // explicit 404, security and preview policies within Pages' 100-rule budget.
+  const workerPaths=new Set(workerDigestPaths);
+  for(const name of workerPaths)if(!/^\/media\/videos\/.+\.(?:mp4|webm)$/.test(name)||!eligible[name])throw new Error('Invalid Worker-owned digest path: '+name);
   const retained=new Set([...resourcePaths,'/*','/assets/*','/assets/guide*','/media/*','/fonts/*',
-    'https://:project.pages.dev/*','https://:version.:project.pages.dev/*']);
+    '/404','/404.html','https://:project.pages.dev/*','https://:version.:project.pages.dev/*']);
   const blocks=new Map(headers.trim().split(/\n\s*\n/).filter(Boolean).map(block=>{
     const [pattern,...lines]=block.split('\n');return [pattern,lines];
   }).filter(([pattern])=>retained.has(pattern)));
   for(const [url,data] of Object.entries(eligible).sort(([a],[b])=>a.localeCompare(b))){
+    if(workerPaths.has(url))continue;
     const lines=(blocks.get(url)??[]).filter(line=>!/^\s*Content-Digest:/i.test(line));
     blocks.set(url,[...lines,`  Content-Digest: ${data.contentDigest}`]);
   }

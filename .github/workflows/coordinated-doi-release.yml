@@ -91,6 +91,7 @@ jobs:
           npm run build
           node --test tests/physician-page-output.test.mjs tests/guide-search-manifest.test.mjs
           python tests/reader-browser-regression.py --dist dist --report /tmp/reader-browser-regression.json
+          python tests/reader-bfcache-regression.py --dist dist --report /tmp/reader-bfcache-regression.json
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
       - name: Install frozen-publication dependencies

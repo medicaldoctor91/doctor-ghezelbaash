@@ -143,6 +143,37 @@ async def main():
         assert await page.locator('#guide-search').get_attribute('aria-busy') is None
         result['cases'].append(case);await ctx.close()
 
+        # Loading the shared index must preserve a later dismissal or cleared
+        # query. A fresh focus/input intent can reuse that completed index.
+        for dismissal in ['blur','escape','outside-pointer','clear-query']:
+            ctx,page,state=await fixture(browser,delay=1.2);await ready(page,'/botox')
+            search_input=page.locator('#guide-search-input')
+            await search_input.fill('فیلر')
+            await page.wait_for_function('document.querySelector("#guide-search").getAttribute("aria-busy")==="true"')
+            if dismissal=='blur':await search_input.evaluate('(n)=>n.blur()')
+            elif dismissal=='escape':await search_input.press('Escape')
+            elif dismissal=='outside-pointer':await page.locator('main h1').dispatch_event('pointerdown')
+            else:await search_input.fill('')
+            await page.wait_for_timeout(50)
+            dismissed_status=await page.locator('#guide-search-status').text_content()
+            assert await page.locator('#guide-search-results').is_hidden()
+            await page.wait_for_function('document.querySelector("#guide-search").getAttribute("aria-busy")===null')
+            assert await page.locator('#guide-search-results').is_hidden(),dismissal
+            if dismissal in ['escape','clear-query']:
+                assert await search_input.input_value()==''
+                assert await page.locator('#guide-search-status').text_content()==dismissed_status
+                assert await page.locator('#guide-search-results a').count()==0
+            else:
+                assert await search_input.input_value()=='فیلر'
+                await search_input.evaluate('(n)=>n.blur()');await search_input.focus()
+                assert await page.locator('#guide-search-results').is_visible()
+            await search_input.fill('فیلر لب')
+            assert await page.locator('#guide-search-results').is_visible()
+            assert await page.locator('#guide-search-results a').count()>0
+            assert manifest_count(state)==1 and guide_count(state)==0
+            result['cases'].append({'name':'pending Search preserves '+dismissal+' and fresh intent reuses index','manifestRequests':manifest_count(state),'errors':state['errors']})
+            assert not state['errors'] and not state['unexpectedRequests'];await ctx.close()
+
         ctx,page,state=await fixture(browser,fail_guide=True,fail_home_fetch=True,fail_manifest=True)
         await ready(page,'/botox');await page.locator('#guide-search-input').fill('فیلر')
         await page.wait_for_function('document.querySelector("#guide-search-status").textContent.includes("انجام نشد")')
@@ -237,6 +268,20 @@ async def main():
         result['cases'].append({'name':'clicked and initial cross-owner hashes resolve; unknown hash retains native focused URL','guideRequests':guide_count(state),'manifestRequests':manifest_count(state),'errors':state['errors']})
         assert not state['errors'] and not state['unexpectedRequests'];await ctx.close()
 
+        ctx,page,state=await fixture(browser);await ready(page,'/botox')
+        await page.locator('[data-guide-expand]').click()
+        assert await page.evaluate('window.completeGuideReady') is True
+        assert await page.locator('[data-guide-context] #duck-lips-from-filler-overcorrection').count()==1
+        await follow(page,'/botox#duck-lips-from-filler-overcorrection')
+        await committed(page,'/facial-filler-by-anatomic-area-and-cause')
+        assert page.url==BASE+'/facial-filler-by-anatomic-area-and-cause#duck-lips-from-filler-overcorrection'
+        assert await page.locator('main article #duck-lips-from-filler-overcorrection').count()==1
+        assert await page.locator('[data-guide-reader]').count()==1
+        assert await page.evaluate('window.guideReaderState().readerMode')=='expanded'
+        assert guide_count(state)==1 and manifest_count(state)==1
+        result['cases'].append({'name':'expanded context resolves cross-owner hash to public owner and retains mode','guideRequests':guide_count(state),'manifestRequests':manifest_count(state),'errors':state['errors']})
+        assert not state['errors'] and not state['unexpectedRequests'];await ctx.close()
+
         # A newer mode selection cancels a pending topic intent. Cancellation
         # must not be misclassified as network failure and native-navigate later.
         for mode in ['expand','return']:
@@ -253,8 +298,39 @@ async def main():
             assert page.url==BASE+'/botox'
             assert await page.evaluate('window.fixtureSession')=='mode-wins'
             assert await page.locator('[data-guide-reader]').count()==(1 if mode=='expand' else 0)
-            result['cases'].append({'name':'newer '+mode+' mode supersedes pending topic without native fallback','url':page.url,'errors':state['errors']})
+            # The superseding mode owns a new scroll-pause generation. Once it
+            # settles, later scroll and pagehide must save this reading point.
+            await page.evaluate('scrollTo(0,700)');await page.wait_for_timeout(1000)
+            saved=await page.evaluate('({y:scrollY,history:history.state.__completeGuideScroll?.y})')
+            assert abs(saved['y']-saved['history'])<2,saved
+            await page.goto(BASE+'/filler',wait_until='domcontentloaded')
+            await page.locator('#guide-search[data-mounted="true"]').wait_for()
+            await page.go_back(wait_until='domcontentloaded');await committed(page,'/botox')
+            await page.wait_for_function('(mode)=>document.documentElement.dataset.readerMode===mode',arg='expanded' if mode=='expand' else 'focused')
+            await page.wait_for_timeout(1000)
+            restored=await page.evaluate('scrollY')
+            assert abs(saved['y']-restored)<80,{'saved':saved,'restored':restored}
+            result['cases'].append({'name':'newer '+mode+' mode supersedes pending topic and resumes scroll history','url':page.url,'saved':saved,'restored':restored,'errors':state['errors']})
             assert not state['errors'] and not state['unexpectedRequests'];await ctx.close()
+
+        # An older mode request settling must not resume the newer navigation's
+        # pause. Its old article position cannot overwrite the pending entry.
+        ctx,page,state=await fixture(browser);await ready(page,'/botox')
+        guide_path='/assets/'+next((DIST/'assets').glob('guide.*.json')).name
+        state['delays'][guide_path]=.6;state['delays']['/upper-face-botox']=1.8
+        await page.evaluate('window.fixtureSession="pause-owner"')
+        await page.locator('[data-guide-expand]').click()
+        await follow(page,'/upper-face-botox');await page.wait_for_timeout(750)
+        assert await page.evaluate('window.completeGuideReady') is False
+        paused_position=await page.evaluate('history.state.__completeGuideScroll.y')
+        await page.evaluate('scrollTo(0,700)');await page.wait_for_timeout(650)
+        assert page.url==BASE+'/botox'
+        assert await page.evaluate('history.state.__completeGuideScroll.y')==paused_position
+        await committed(page,'/upper-face-botox');await page.wait_for_timeout(400)
+        assert await page.evaluate('window.fixtureSession')=='pause-owner'
+        assert await page.evaluate('Math.abs(scrollY-history.state.__completeGuideScroll.y)<2')
+        result['cases'].append({'name':'stale expansion completion cannot resume a newer navigation scroll pause','errors':state['errors']})
+        assert not state['errors'] and not state['unexpectedRequests'];await ctx.close()
 
         # Share the full-source download, but never reuse an invalidated page's
         # expansion transaction for the next focused page.

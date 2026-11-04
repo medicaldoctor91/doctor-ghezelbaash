@@ -28,7 +28,7 @@ test('the public profile uses its latest recorded document edit and preserves ca
   const graph=structuredClone(SOURCE.graph),before=structuredClone(graph);
   const profileModifiedAt=SOURCE.profileMarkupModifiedAt;
   const recordedDocumentDate=byId(graph).get(origin+'/webpage').dateModified['@value'];
-  assert.ok(Date.parse(recordedDocumentDate)>Date.parse(profileModifiedAt));
+  assert.ok(Date.parse(recordedDocumentDate)>=Date.parse(profileModifiedAt));
   assert.equal(byId(projectHomeSearchGraph(graph,origin,{profileModifiedAt})).get(origin+'/webpage').dateModified,recordedDocumentDate);
   assert.deepEqual(graph,before);
   for(const invalid of ['2026-10-30','2026-10-30T12:00:00','not a timestamp'])

@@ -40,6 +40,9 @@ export function createMediaRangeWorker(media,policy={}){
   // this release's policy even when identical video bytes reuse an older cache.
   for(const [name,value] of Object.entries(policy.headers??{}))headers.set(name,value);
   headers.delete('Link');headers.set('Cache-Control','public, max-age=3600, must-revalidate');
+  // Generated responses cannot rely on _headers. Publish the verified sealed
+  // digest even when the native asset or an older cache entry omitted it.
+  headers.set('Content-Digest',`sha-256=:${btoa(String.fromCharCode(...meta.sha256.match(/../g).map(byte=>parseInt(byte,16))))}:`);
   if(url.hostname==='doctor-ghezelbaash.pages.dev'||url.hostname.endsWith('.doctor-ghezelbaash.pages.dev'))headers.set('X-Robots-Tag','noindex');
   const modified=Date.parse(headers.get('Last-Modified')??'');
   const since=Date.parse(request.headers.get('If-Modified-Since')??'');

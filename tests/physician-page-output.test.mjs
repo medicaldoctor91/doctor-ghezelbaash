@@ -41,6 +41,7 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.ok(page,resource.path+' describes its own document');
     assert.deepEqual(ids(page.author),[personId],resource.path+' has the canonical physician author');
     assert.equal(document['@graph'].filter(node=>values(node['@type']).includes('Person')).length,1,resource.path);
+    assert.equal(actual.get(personId).birthDate,'1991-05-29',resource.path+' publishes the existing canonical birth date');
     const routeProfiles=document['@graph'].filter(node=>values(node['@type']).includes('ProfilePage'));
     assert.equal(routeProfiles.length,home?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;

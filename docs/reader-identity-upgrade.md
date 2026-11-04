@@ -16,6 +16,7 @@ npm ci
 npm run build
 node --test tests/*.test.mjs
 python tests/reader-browser-regression.py --dist dist
+python tests/reader-bfcache-regression.py --dist dist
 python tests/validate_canonical_invariants.py dist
 python tests/validate_machine_resources.py dist
 python tests/source-freeze.test.py
@@ -26,6 +27,14 @@ RDF/SHACL checks require the existing Python validator dependencies. Browser che
 The example archive pin applies to the current development baseline. After a new coordinated release, maintenance must use that edition's recorded archive source; the historical pin must never be inherited by a newly reserved candidate.
 
 The output contracts inspect all 72 pages and every manifest-owned anchor. The homepage active Search graph stays within its existing 38,000-byte repository budget while retaining its 22 profile links and 24 identifiers. The full graph retains all 1,600 entity identities.
+
+## Additional identity and lifecycle review
+
+The public birth date already present in the canonical Person is now retained in active Search markup, with its original date precision. The professional biography uses a person-first title, source-authored description and the existing licensed portrait as its visible and structured primary image. The deep image remains lazy on the comprehensive homepage and receives eager/high priority only on the focused biography. The clinic route is a practice profile whose main entity is the existing physician-owned practice, with a clear personal-practice title and ownership description; it is excluded from the clinical Article registry. The practice entity's official names and identifiers are unchanged.
+
+Further browser regressions cover scroll-state ownership after canceled navigation, dismissed Search results during a pending manifest request, and canonical ownership of anchors visible in expanded context. The separate HTTP/206 BFCache fixture requires actual persisted pagehide/pageshow and verifies pending timed seeking, completed seeking and manual cancellation. It complements the intercepted suite, whose full-document Back case alone does not establish BFCache reuse.
+
+Release sealing retains explicit `/404` and `/404.html` no-store/noindex policies within Pages' rule limit. All 61 eligible digests remain verified: 53 static rules plus the eight video responses already handled by the range Worker. Worker scope remains limited to those eight paths. Arbitrary missing paths retain native true-404 handling; their final status-specific cache policy is verified after deployment rather than inferred from `_headers` path matching.
 
 ## Publication boundary
 

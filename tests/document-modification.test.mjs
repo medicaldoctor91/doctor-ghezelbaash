@@ -37,7 +37,7 @@ test('a later document edit updates Article without changing publication, clinic
 
 test('ProfilePage keeps a later document edit and omits an imprecise newer date instead of publishing an older timestamp',()=>{
   const origin=SOURCE.canonicalOrigin,graph=structuredClone(SOURCE.graph),page=byId(graph).get(origin+'/webpage');
-  const profileModifiedAt=SOURCE.profileMarkupModifiedAt,contentModifiedAt='2026-11-03T21:36:49Z';
+  const profileModifiedAt='2026-10-30T03:58:16Z',contentModifiedAt='2026-11-03T21:36:49Z';
   page.dateModified=dateTime(contentModifiedAt);
   const before=structuredClone(graph);
   assert.equal(byId(projectHomeSearchGraph(graph,origin,{profileModifiedAt})).get(page['@id']).dateModified,contentModifiedAt);
@@ -48,6 +48,7 @@ test('ProfilePage keeps a later document edit and omits an imprecise newer date 
 
 test('per-document content dates reach the real Article projections without advancing unchanged pages or clinical reviews',()=>{
   const origin=SOURCE.canonicalOrigin,canonical=byId(SOURCE.graph),before=structuredClone(SOURCE.graph);
+  const recordedMarkupDates={profile:SOURCE.profileMarkupModifiedAt,article:SOURCE.articleMarkupModifiedAt};
   const dates=new Set();
   for(const resource of SOURCE.routes.resources.filter(resource=>resource.pagePurpose==='clinical-guide')) {
     const url=origin+resource.path,pageId=url+'#webpage',page=canonical.get(pageId);
@@ -62,7 +63,6 @@ test('per-document content dates reach the real Article projections without adva
   }
   assert.ok(dates.has(SOURCE.articleMarkupModifiedAt),'unchanged articles retain the previous recorded markup correction');
   assert.ok(dates.has('2026-11-03T21:36:49Z'),'edited articles retain their later recorded content finalization');
-  assert.equal(SOURCE.profileMarkupModifiedAt,'2026-11-03T13:59:18Z');
-  assert.equal(SOURCE.articleMarkupModifiedAt,'2026-10-30T04:17:44Z');
+  assert.deepEqual({profile:SOURCE.profileMarkupModifiedAt,article:SOURCE.articleMarkupModifiedAt},recordedMarkupDates,'projection does not rewrite recorded markup edit dates');
   assert.deepEqual(SOURCE.graph,before);
 });

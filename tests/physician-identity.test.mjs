@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SOURCE} from '../src/canonical/source.mjs';
+import {createHash} from 'node:crypto';
+import {SOURCE,AUTHORED_BODY} from '../src/canonical/source.mjs';
 import {physicianIdentityIds,resolvePhysicianPractice} from '../src/lib/physician-identity.mjs';
 import {closeSearchReferences,projectBoundedSearchDocument,projectHomeSearchGraph,assertBoundedSearchDocument,latestRecordedModification,truthText} from '../src/lib/search-contract.mjs';
 import {serializeInlineJsonLd} from '../src/lib/jsonld.mjs';
@@ -16,6 +17,7 @@ function fixture() {
   return {'@context':'https://schema.org','@graph':[
     {'@id':origin+'/treatment#webpage','@type':'MedicalWebPage',name:'Treatment'},
     {'@id':personId,'@type':['Person','IndividualPhysician'],name:'Physician',
+      birthDate:{'@value':'1991-05-29','@type':'http://www.w3.org/2001/XMLSchema#date'},
       owns:[{'@id':projectId},{'@id':practiceId}],practicesAt:{'@id':practiceId}},
     {'@id':projectId,'@type':'SoftwareSourceCode',name:'Owned data project',owner:{'@id':personId}},
     {'@id':origin+'/unrelated-clinic','@type':'MedicalClinic',name:'Unrelated clinic'},
@@ -65,6 +67,7 @@ test('focused reference closure explicitly seeds only the resolved personal prac
   const actual=byId(document);
   assert.deepEqual(actual.get(practiceId),canonical.get(practiceId));
   assert.ok(actual.has(personId));
+  assert.deepEqual(actual.get(personId).birthDate,canonical.get(personId).birthDate,'the focused authority boundary retains the recorded date');
   assert.equal(actual.has(origin+'/unrelated-clinic'),false,'an unrelated MedicalClinic is not an authority root');
   assert.equal(actual.has(origin+'/doctor-ghezelbaash-structured-data-project'),false);
 });
@@ -75,6 +78,7 @@ test('a projected practice template keeps the clinical identity fields validated
   const actual=byId(result);
   assert.equal(actual.get(practiceId).telephone,byId(graph).get(practiceId).telephone);
   assert.deepEqual(ids(actual.get(personId).owns),[practiceId]);
+  assert.equal(actual.get(personId).birthDate,'1991-05-29','the Search projection preserves date-only precision');
   assert.equal(actual.get(practiceId).owner,undefined);
   assert.equal(actual.get(practiceId).founder,undefined);
   assert.doesNotThrow(()=>assertBoundedSearchDocument(result));
@@ -94,6 +98,7 @@ test('the recorded homepage projection preserves convergence IDs and acyclic own
   assert.equal(values(person.identifier).length,24);
   assert.deepEqual(person.sameAs,authored.sameAs);
   assert.deepEqual(person.identifier,authored.identifier);
+  assert.equal(person.birthDate,authored.birthDate['@value']);
   assert.deepEqual(ids(person.owns),[clinicId]);
   assert.deepEqual(ids(person.practicesAt),[clinicId]);
   assert.equal(actual.get(clinicId).owner,undefined,'one-way ownership keeps the bounded Search document acyclic');
@@ -122,6 +127,7 @@ test('all declared routes preserve the physician author, page subject and locali
     const actual=byId(projected),primary=actual.get(primaryPageId);
     assert.deepEqual(ids(primary.author),[physicianId],resource.path+' retains its real physician author');
     assert.equal(projected['@graph'].filter(node=>values(node['@type']).includes('Person')).length,1,resource.path);
+    assert.equal(actual.get(physicianId).birthDate,'1991-05-29',resource.path+' retains the existing public birth date');
     assert.equal(projected['@graph'].filter(node=>values(node['@type']).includes('ProfilePage')).length,home?1:0,resource.path);
     assert.deepEqual(ids(primary.mainEntity),resource.pagePurpose==='clinical-guide'?[url+'#article']:ids(page.mainEntity),resource.path+' mainEntity');
     assert.ok(actual.has(clinicId),resource.path+' includes the same personal practice');
@@ -136,4 +142,12 @@ test('all declared routes preserve the physician author, page subject and locali
   }
   for(const language of ['fa','en','ar','ckb'])assert.ok(languages.has(language),'route coverage for '+language);
   assert.deepEqual(graph,before,'route Search projections preserve every canonical claim and identifier');
+});
+
+test('the existing owner-confirmed professional-authority statement remains verbatim',()=>{
+  const statements=[...AUTHORED_BODY.matchAll(/<span data-entity-authority-extension="true">[\s\S]*?<\/span>/g)];
+  assert.equal(statements.length,1);
+  const statement=statements[0][0];
+  assert.equal(Buffer.byteLength(statement,'utf8'),853);
+  assert.equal(createHash('sha256').update(statement).digest('hex'),'340ae843bfe465eae1928f2c321583cfe1ef25b29bcc997130d532ec0c80e312');
 });

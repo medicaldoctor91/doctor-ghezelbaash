@@ -3,7 +3,7 @@ import {applyDoiPolicy, DOI_POLICY} from '../lib/doi-policy.mjs';
 // Imported directly by rendering, materialization and validation.
 export const SOURCE = {
   // Recorded time of the Google profile-markup correction; independent of the scientific edition.
-  "profileMarkupModifiedAt": "2026-11-03T13:59:18Z",
+  "profileMarkupModifiedAt": "2026-11-04T15:04:33Z",
   "articleMarkupModifiedAt": "2026-10-30T04:17:44Z",
   "search": {
     "copy": {
@@ -2310,7 +2310,7 @@ export const SOURCE = {
           "@type": "Patient"
         },
         "dateModified": {
-          "@value": "2026-11-04T04:43:07Z",
+          "@value": "2026-11-04T21:33:43Z",
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
@@ -7991,8 +7991,8 @@ export const SOURCE = {
       {
         "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
         "@type": "WebPageElement",
-        "name": "پژوهش، آموزش و هویت علمی دکتر سعید قزلباش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه",
-        "description": "آثار علمی من با نام‌های Mohammad Saeed Ghezelbash و Saeed Ghezelbash در پایگاه‌های پژوهشی قابل ردیابی‌اند و بخشی از مسیر علمی‌ام از پژوهش‌های پزشکی و روان‌پزشکی آمده است؛ از پژوهش امگا ۳ در اختلال دوقطبی ، ارائه « Attachment style in dissociative depression » در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا پژوهش ۲۰۲۱ درباره افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک . ORCID ، OpenAlex و Google Scholar این رکوردها را به یک هویت پژوهشی واحد متصل می‌کنند.",
+        "name": "زندگی‌نامه حرفه‌ای دکتر سعید قزلباش؛ پژوهش و آموزش",
+        "description": "زندگی‌نامه حرفه‌ای دکتر سعید قزلباش: تحصیلات پزشکی، شماره نظام پزشکی ۱۶۷۴۳۰، سوابق پژوهشی، آموزش پزشکان و پیوند پروفایل‌های علمی ایشان.",
         "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
         "isPartOf": {
           "@id": "https://www.ghezelbaash.ir/webpage"
@@ -48430,7 +48430,7 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
         "name": [
           {
-            "@value": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
+            "@value": "مطب شخصی دکتر سعید قزلباش در کرمانشاه",
             "@language": "fa"
           },
           {
@@ -48515,10 +48515,10 @@ export const SOURCE = {
         "specialty": {
           "@id": "https://www.ghezelbaash.ir/medical-specialty-aesthetic-medicine"
         },
-        "description": "محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود. معاینه ، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، اصلاح یا ارجاع.",
+        "description": "مطب شخصی دکتر سعید قزلباش در کرمانشاه؛ ایشان مالک مطب و تنها ارائه‌دهنده خدمات پزشکی و زیبایی آن است. نشانی، ساعات مراجعه و نوبت‌دهی.",
         "dateModified": {
-          "@value": "2026-10-10",
-          "@type": "http://www.w3.org/2001/XMLSchema#date"
+          "@value": "2026-11-04T21:33:43Z",
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
       {
@@ -52284,7 +52284,7 @@ export const SOURCE = {
           {
             "@type": "ListItem",
             "position": 2,
-            "name": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم",
+            "name": "مطب شخصی دکتر سعید قزلباش در کرمانشاه",
             "item": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
           }
         ]
@@ -54338,8 +54338,8 @@ export const SOURCE = {
         "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#webpage",
         "@type": "WebPage",
         "url": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions",
-        "name": "پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه",
-        "description": "آثار علمی من با نام‌های Mohammad Saeed Ghezelbash و Saeed Ghezelbash در پایگاه‌های پژوهشی قابل ردیابی‌اند و بخشی از مسیر علمی‌ام از پژوهش‌های پزشکی و روان‌پزشکی آمده است؛ از پژوهش امگا ۳ در اختلال دوقطبی ، ارائه « Attachment style in dissociative depression » در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا پژوهش ۲۰۲۱ درباره افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک .",
+        "name": "زندگی‌نامه حرفه‌ای دکتر سعید قزلباش؛ پژوهش و آموزش",
+        "description": "زندگی‌نامه حرفه‌ای دکتر سعید قزلباش: تحصیلات پزشکی، شماره نظام پزشکی ۱۶۷۴۳۰، سوابق پژوهشی، آموزش پزشکان و پیوند پروفایل‌های علمی ایشان.",
         "inLanguage": "fa-IR",
         "isPartOf": [
           {
@@ -54380,11 +54380,14 @@ export const SOURCE = {
             "@id": "https://www.ghezelbaash.ir/video-saeed-ghezelbash-thread-lift-workshop#webpage"
           }
         ],
+        "primaryImageOfPage": {
+          "@id": "https://www.ghezelbaash.ir/image-saeed-ghezelbash-portrait-master"
+        },
         "breadcrumb": {
           "@id": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#breadcrumb"
         },
         "dateModified": {
-          "@value": "2026-11-03T21:36:49Z",
+          "@value": "2026-11-04T15:04:33Z",
           "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
         }
       },
@@ -54407,7 +54410,7 @@ export const SOURCE = {
           {
             "@type": "ListItem",
             "position": 3,
-            "name": "پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه",
+            "name": "زندگی‌نامه حرفه‌ای دکتر سعید قزلباش؛ پژوهش و آموزش",
             "item": "https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions"
           }
         ]
@@ -59722,11 +59725,11 @@ export const SOURCE = {
       {
         "path": "/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
         "htmlId": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
-        "title": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم",
+        "title": "مطب شخصی دکتر سعید قزلباش در کرمانشاه",
         "reason": "Clinic identity and visit-workflow hub with practical preparation and follow-up context.",
         "scope": "hub",
         "pageType": "MedicalWebPage",
-        "pagePurpose": "clinical-guide"
+        "pagePurpose": "clinic-profile"
       },
       {
         "path": "/facial-aging-differential-diagnosis",
@@ -59929,7 +59932,7 @@ export const SOURCE = {
       {
         "path": "/saeed-ghezelbash-research-education-and-clinical-decisions",
         "htmlId": "saeed-ghezelbash-research-education-and-clinical-decisions",
-        "title": "پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه",
+        "title": "زندگی‌نامه حرفه‌ای دکتر سعید قزلباش؛ پژوهش و آموزش",
         "reason": "Distinct professional biography with source-linked education, research history, identifiers and teaching context.",
         "scope": "topic",
         "pageType": "WebPage",
@@ -61028,6 +61031,9 @@ export const SOURCE = {
       "permanent-and-non-hyaluronic-acid-filler-complications": "/filler-complications-correction-and-aftercare#permanent-and-non-hyaluronic-acid-filler-complications",
       "permanent-filler-risks": "/filler#permanent-filler-risks",
       "persistent-edema-after-tear-trough-filler": "/filler#persistent-edema-after-tear-trough-filler",
+      "professional-biography-portrait": "/saeed-ghezelbash-research-education-and-clinical-decisions#professional-biography-portrait",
+      "professional-biography-portrait-caption": "/saeed-ghezelbash-research-education-and-clinical-decisions#professional-biography-portrait-caption",
+      "professional-biography-portrait-image": "/saeed-ghezelbash-research-education-and-clinical-decisions#professional-biography-portrait-image",
       "physician-biography": "/#physician-biography",
       "physician-biography-heading": "/#physician-biography-heading",
       "physician-researcher-academic-identity-ar-iq": "/aesthetic-guide-ar-iq#physician-researcher-academic-identity-ar-iq",
@@ -68109,7 +68115,11 @@ export const AUTHORED_BODY = [
   `<h3 id="saeed-ghezelbash-uncertainty-and-no-treatment">وقتی مطمئن نیستم، درمان را با اعتمادبه‌نفس مصنوعی جلو نمی‌برم</h3>`,
   `<p>پزشکی زیبایی پر از ناحیه خاکستری است. گاهی ماده قبلی دقیقاً معلوم نیست، ورم هنوز نخوابیده، حرکت صورت بعد از بوتاکس کامل تثبیت نشده، التهاب پوست فعال است یا بیمار هم‌زمان چند درمان انجام داده است. در این شرایط، سریع‌بودن لزوماً حرفه‌ای‌بودن نیست.</p>`,
   `<p>گاهی تصمیم درست این است که عکس‌های قبلی پیدا شوند. گاهی باید زمان بگذرد. گاهی باید سونوگرافی، آزمایش، ارزیابی تخصص دیگری یا جراحی وارد تصمیم شود. گاهی هم بهترین درمان، فعلاً هیچ درمانی است. <strong>من ترجیح می‌دهم یک تصمیم را دیرتر ولی با دلیل بگیرم تا اینکه روی ابهام، یک اقدام تازه سوار کنم.</strong></p>`,
-  `<h3 id="saeed-ghezelbash-research-education-and-clinical-decisions">پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه</h3>`,
+  `<h3 id="saeed-ghezelbash-research-education-and-clinical-decisions">زندگی‌نامه حرفه‌ای دکتر سعید قزلباش؛ پژوهش و آموزش</h3>`,
+  `<p>پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه</p>`,
+  `<figure aria-labelledby="professional-biography-portrait-caption" class="clinical-figure" data-entity-id="https://www.ghezelbaash.ir/image-saeed-ghezelbash-portrait-master" id="professional-biography-portrait">`,
+  `<img alt="دکتر محمدسعید (سعید) قزلباش با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" decoding="async" height="427" id="professional-biography-portrait-image" loading="lazy" sizes="(max-width: 720px) calc(100vw - 4rem), 640px" src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-768.webp 768w, /media/images/physician/saeed-ghezelbash-portrait-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w" width="640">`,
+  `<figcaption id="professional-biography-portrait-caption">دکتر محمدسعید (سعید) قزلباش، پزشک زیبایی در کرمانشاه. <bdi dir="ltr" lang="en">© 2023 Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic</bdi> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license external noopener" lang="en" dir="ltr">CC BY 4.0</a> · <a href="https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg" rel="external noopener">نسخه اصلی و اطلاعات مجوز</a></figcaption></figure>`,
   `<p>این سابقه تاریخ، شناسه و سند قابل تطبیق دارد. من <strong>دکتر محمدسعید (سعید) قزلباش</strong>، متولد ۲۹ مه ۱۹۹۱، دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ هستم. هویت حرفه‌ای من با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" rel="me external noopener">ثبت رسمی نظام پزشکی ایران</a> و هویت علمی‌ام با <a href="https://orcid.org/0009-0001-9346-8475" rel="me external noopener">ORCID 0009-0001-9346-8475</a>، <a href="https://openalex.org/A5146521397" rel="me external noopener">OpenAlex A5146521397</a>، <a href="https://scholar.google.com/citations?user=BcWBirUAAAAJ" rel="me external noopener">Google Scholar</a>، <a href="https://www.semanticscholar.org/author/-/3786699" rel="me external noopener">Semantic Scholar</a> و <a href="https://www.wikidata.org/wiki/Q140287622" rel="me external noopener">Wikidata Q140287622</a> قابل تطبیق است. رکورد عمومی ORCID دوره تحصیل پزشکی من در دانشگاه علوم پزشکی کرمانشاه را از سپتامبر ۲۰۰۹ تا مارس ۲۰۱۸ ثبت می‌کند و مقاله‌های ۲۰۱۶ و ۲۰۲۱ نیز وابستگی دانشگاهی من به دانشگاه علوم پزشکی کرمانشاه را در زمان انتشار همان آثار ثبت کرده‌اند.</p>`,
   `<p>ثبت حرفه‌ای من با شماره نظام پزشکی ۱۶۷۴۳۰ انجام شده و اعتبار ثبت‌شده آن تا ۲۰ فوریه ۲۰۲۹ است؛ مسیر استعلام رسمی نظام پزشکی هم در همین صفحه قرار دارد. عضویت‌های حرفه‌ای ثبت‌شده من شامل <span lang="en" dir="ltr">American Academy of Anti-Aging Medicine (A4M)</span> و <span lang="en" dir="ltr">International Association for Physicians in Aesthetic Medicine (IAPAM)</span> است.</p>`,
   `<p>آثار علمی من با نام‌های <strong>Mohammad Saeed Ghezelbash</strong> و <strong>Saeed Ghezelbash</strong> در پایگاه‌های پژوهشی قابل ردیابی‌اند و بخشی از مسیر علمی‌ام از <a href="https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/" rel="external noopener">پژوهش‌های پزشکی و روان‌پزشکی</a> آمده است؛ از <a href="https://pubmed.ncbi.nlm.nih.gov/27280013/" rel="external noopener">پژوهش امگا ۳ در اختلال دوقطبی</a>، ارائه «<a href="https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression" rel="external noopener">Attachment style in dissociative depression</a>» در هفدهمین کنگره جهانی روان‌پزشکی WPA در برلین در سال ۲۰۱۷ تا <a href="https://doi.org/10.3390/healthcare9091169" rel="external noopener">پژوهش ۲۰۲۱ درباره افسردگی، دلبستگی، نشانه‌های تجزیه‌ای و تجربه‌های تروماتیک</a>. <a href="https://orcid.org/0009-0001-9346-8475" rel="me external noopener">ORCID</a>، <a href="https://openalex.org/A5146521397" rel="me external noopener">OpenAlex</a> و <a href="https://scholar.google.com/citations?user=BcWBirUAAAAJ" rel="me external noopener">Google Scholar</a> این رکوردها را به یک هویت پژوهشی واحد متصل می‌کنند.</p>`,
@@ -68253,7 +68263,7 @@ export const AUTHORED_BODY = [
   `<p>برای کسی که از خارج کرمانشاه برای نظر دوم یا اصلاح نتیجه به دکتر سعید قزلباش مراجعه می‌کند، عکس‌های قبل و بعد، تاریخ درمان‌ها، نام محصولات، شرح علائم و گزارش‌های قبلی بخشی از خود تشخیص‌اند. بعضی پرونده‌ها در جلسه اول فقط ارزیابی می‌شوند و درمان باید عقب بیفتد؛ بعضی اصلاح‌ها مرحله‌ای‌اند. <a href="/choosing-an-aesthetic-doctor-in-kermanshah-and-iran">معیار انتخاب پزشک زیبایی در سطح ایران</a> در پرونده پیچیده دقیقاً از همین‌جا سخت‌تر می‌شود: پزشک باید بتواند قبل از اقدام، ابهام را کم کند.</p>`,
   `<p>برای ارزیابی اولیه می‌توانید اطلاعات را از <a href="https://ig.me/m/doctor.ghezelbaash">دایرکت مستقیم با دکتر سعید قزلباش</a> بفرستید یا با <a href="tel:+989308209494">۰۹۳۰ ۸۲۰ ۹۴۹۴</a> تماس بگیرید. این ارزیابی اولیه جای معاینه را نمی‌گیرد، اما می‌تواند روشن کند آیا پرونده ارزش مراجعه حضوری دارد، چه مدارکی لازم است و آیا احتمال چند مرحله درمان وجود دارد.</p></div></section>`,
   `<section aria-labelledby="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-heading" class="content-section" id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">`,
-  `<h2 id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-heading">کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم</h2>`,
+  `<h2 id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-heading">مطب شخصی دکتر سعید قزلباش در کرمانشاه</h2>`,
   `<p class="section-answer"><strong>محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود.</strong><a href="/diagnosis-before-aesthetic-treatment-selection">معاینه</a>، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، <a href="/aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> یا ارجاع.</p>`,
   `<p>کلینیک زیبایی دکتر سعید قزلباش، مطب شخصی دکتر سعید قزلباش در کرمانشاه است. دکتر قزلباش صاحب مطب و تنها پزشک ارائه‌دهندهٔ خدمات پزشکی و زیبایی آن است. مسئولیت پزشکی و حرفه‌ای مطب بر عهدهٔ ایشان است و تمام خدمات پزشکی و زیبایی ارائه‌شده در این مطب، شخصاً توسط خود ایشان انجام می‌شود و به پزشک دیگر یا اپراتور واگذار نمی‌شود.</p>`,
   `<figure aria-labelledby="caption-saeed-ghezelbash-clinical-team-master" id="image-saeed-ghezelbash-clinical-team-master"><picture id="image-saeed-ghezelbash-clinical-team-master-webp"><source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.avif 640w, /media/images/physician/saeed-ghezelbash-with-clinic-team-960.avif 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.avif 1600w" type="image/avif"><source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش با لباس پزشکی و گوشی پزشکی، همراه اعضای تصویر گروهی در کرمانشاه" decoding="async" height="427" loading="lazy" src="/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp" width="640" fetchpriority="low"></picture>`,
