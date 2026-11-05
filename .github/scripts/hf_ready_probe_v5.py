@@ -13,9 +13,9 @@ REVISION = '43b55ee2e50678cf3bcdca7b5d3fe0e4ee5c21c8'
 CONFIGS = ('clinical_passages', 'clinical_answers', 'entity_facts', 'query_matrix', 'market_positioning')
 BASE = 'https://datasets-server.huggingface.co/'
 REPORT = Path('/tmp/coordinated-v5-dispatch/hf-warmup.json')
-DEADLINE_SECONDS = 600
-REQUEST_TIMEOUT_SECONDS = 20
-BACKOFF_SECONDS = 20
+DEADLINE_SECONDS = 3600
+REQUEST_TIMEOUT_SECONDS = 90
+BACKOFF_SECONDS = 30
 MAX_BODY_BYTES = 8 * 1024 * 1024
 
 
