@@ -1,8 +1,8 @@
 """Browser regression for compiled dist; no production network is allowed.
 
 Build first with the documented ARCHIVE_SOURCE_COMMIT pin. Install the test
-prerequisite with `python -m pip install playwright` and either install its
-Chromium (`python -m playwright install chromium`) or use a system Chromium.
+prerequisite with `python -m pip install playwright` and either install Google
+Chrome (`python -m playwright install chrome`) or use a media-capable system Chromium.
 Run `python tests/reader-browser-regression.py --dist dist`; optional
 `--report /tmp/reader-browser-results.json` writes the detailed evidence.
 PLAYWRIGHT_CHROMIUM_EXECUTABLE selects an explicit browser executable.
@@ -95,13 +95,52 @@ async def follow(page,path):
 async def committed(page,path):
     await page.wait_for_function('(path)=>new URL(document.querySelector("link[rel=canonical]").href).pathname===path',arg=path)
 
+MEDIA_TRACE='''window.fixtureNativeMediaEvents=[];
+for(const type of ['loadstart','loadedmetadata','durationchange','loadeddata','canplay','seeking','seeked','suspend','error'])
+document.addEventListener(type,event=>{const v=event.target;if(!(v instanceof HTMLVideoElement))return;
+fixtureNativeMediaEvents.push({event:type,time:v.currentTime,ready:v.readyState,network:v.networkState,
+seeking:v.seeking,source:v.currentSrc,error:v.error?{code:v.error.code,message:v.error.message}:null});
+if(fixtureNativeMediaEvents.length>64)fixtureNativeMediaEvents.shift();},true);'''
+
+async def wait_native_video(page,report,state):
+    try:
+        await page.wait_for_function('(()=>{const v=document.querySelector("main video");return v&&v.readyState>=2&&Math.abs(v.currentTime-5)<.2})()',timeout=15000)
+    except Exception as error:
+        report['failure']={'name':'native timed video readiness','errorType':type(error).__name__,
+            'media':await page.locator('main video').evaluate('''(v)=>({time:v.currentTime,
+                readyState:v.readyState,networkState:v.networkState,seeking:v.seeking,
+                paused:v.paused,source:v.currentSrc,
+                h264:v.canPlayType('video/mp4; codecs="avc1.64001f"'),
+                av1:v.canPlayType('video/webm; codecs="av01.0.04M.08, opus"'),
+                seekable:Array.from({length:v.seekable.length},(_,i)=>[v.seekable.start(i),v.seekable.end(i)]),
+                sources:[...v.querySelectorAll('source')].map(s=>({source:s.src,type:s.type,support:v.canPlayType(s.type)})),
+                error:v.error?{code:v.error.code,message:v.error.message}:null})'''),
+            'nativeEvents':await page.evaluate('window.fixtureNativeMediaEvents||[]'),
+            'mediaRequests':[item for item in state['requests'] if item['type']=='media']}
+        report['passed']=len(report['cases'])
+        if OUT:
+            OUT.parent.mkdir(parents=True,exist_ok=True)
+            OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2))
+        print(json.dumps({'browser':report['browser'],'failure':report['failure']},ensure_ascii=False),flush=True)
+        raise
+
 async def main():
     result={'fixture':'Real compiled dist HTML/assets served by Playwright interception at canonical HTTPS origin; no production fetch/write; no claims of new delivery-header validation','cases':[]}
     async with async_playwright() as p:
-        executable=os.environ.get('PLAYWRIGHT_CHROMIUM_EXECUTABLE') or shutil.which('chromium') or shutil.which('chromium-browser')
+        executable=os.environ.get('PLAYWRIGHT_CHROMIUM_EXECUTABLE') or next((path for name in
+            ['chromium','chromium-browser','google-chrome','google-chrome-stable'] if (path:=shutil.which(name))),None)
+        if not executable:
+            raise RuntimeError('Install media-capable Chromium or Google Chrome, or set PLAYWRIGHT_CHROMIUM_EXECUTABLE; native media tests require an installed browser')
         options={'headless':True,'args':['--no-sandbox']}
-        if executable:options['executable_path']=executable
+        options['executable_path']=executable
         browser=await p.chromium.launch(**options)
+        probe=await browser.new_page()
+        result['browser']={'executable':executable,'version':browser.version,
+            'codecs':await probe.evaluate('''(()=>{const v=document.createElement('video');return {
+                h264:v.canPlayType('video/mp4; codecs="avc1.64001f"'),
+                av1:v.canPlayType('video/webm; codecs="av01.0.04M.08, opus"')}})()''')}
+        await probe.close()
+        print(json.dumps({'browserRuntime':result['browser']}),flush=True)
         ctx,page,state=await fixture(browser)
         await ready(page,'/botox');before=await page.locator('*').count()
         await page.wait_for_timeout(3000)
@@ -420,9 +459,11 @@ async def main():
         result['cases'].append({'name':'JavaScript-off standalone clinical content and real anchor links work','url':page.url,'errors':state['errors']})
         assert not state['errors'] and not state['unexpectedRequests'];await ctx.close()
 
-        ctx,page,state=await fixture(browser);await ready(page,'/video-saeed-ghezelbash-subcision-technique?t=5')
-        await page.wait_for_function('(()=>{const v=document.querySelector("main video");return v&&v.readyState>=2&&Math.abs(v.currentTime-5)<.2})()',timeout=15000)
-        video_state=await page.locator('main video').evaluate('(v)=>({time:v.currentTime,paused:v.paused,focused:v===document.activeElement})')
+        ctx,page,state=await fixture(browser)
+        await page.add_init_script(MEDIA_TRACE)
+        await ready(page,'/video-saeed-ghezelbash-subcision-technique?t=5')
+        await wait_native_video(page,result,state)
+        video_state=await page.locator('main video').evaluate('(v)=>({time:v.currentTime,paused:v.paused,focused:v===document.activeElement,source:v.currentSrc})')
         assert video_state['paused'] and video_state['focused']
         await page.locator('main video').press('Space')
         await page.wait_for_function('!document.querySelector("main video").paused')
