@@ -10098,7 +10098,7 @@ export const SOURCE = {
           "https://www.wikidata.org/entity/Q593744",
           "https://www.wikidata.org/entity/Q33002955"
         ],
-        "version": "1.3.4",
+        "version": "1.3.5",
         "datePublished": {
           "@value": "2026-02-25",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10119,10 +10119,10 @@ export const SOURCE = {
         },
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "description": "Version-controlled source project for Version 1.3.4 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
+        "description": "Version-controlled source project for Version 1.3.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
         "author": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10177,10 +10177,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.4",
+        "version": "1.3.5",
         "hasPart": [
           {
             "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
@@ -10248,7 +10248,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:resource": [
@@ -10286,7 +10286,7 @@ export const SOURCE = {
         "name": "Doctor Ghezelbaash structured data repository — GitHub source",
         "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
         "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-        "version": "1.3.4",
+        "version": "1.3.5",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10302,9 +10302,9 @@ export const SOURCE = {
         "publisher": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
-        "description": "Version-controlled GitHub source for Version 1.3.4 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
+        "description": "Version-controlled GitHub source for Version 1.3.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -10337,7 +10337,7 @@ export const SOURCE = {
         "provider": {
           "@id": "https://www.ghezelbaash.ir/distribution-platform-hugging-face"
         },
-        "description": "AI and retrieval distribution of Version 1.3.4 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
+        "description": "AI and retrieval distribution of Version 1.3.5 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
         "encodingFormat": [
           "application/ld+json",
           "text/turtle",
@@ -10349,10 +10349,10 @@ export const SOURCE = {
         ],
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dcat:isDistributionOf": {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
         },
@@ -10364,7 +10364,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -10622,7 +10622,7 @@ export const SOURCE = {
           }
         ],
         "license": "https://creativecommons.org/licenses/by/4.0/",
-        "version": "1.3.4",
+        "version": "1.3.5",
         "datePublished": {
           "@value": "2026-07-25",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10686,7 +10686,7 @@ export const SOURCE = {
           }
         ],
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "identifier": [
@@ -10968,7 +10968,7 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:identifier": [
@@ -11018,7 +11018,7 @@ export const SOURCE = {
         "dcat:landingPage": {
           "@id": "https://www.ghezelbaash.ir/"
         },
-        "dcat:version": "1.3.4",
+        "dcat:version": "1.3.5",
         "dcterms:provenance": {
           "@id": "https://www.ghezelbaash.ir/provenance/source-of-truth-v15-max"
         },
@@ -11069,6 +11069,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
           }
         ],
         "dcterms:hasVersion": [
@@ -11110,10 +11113,13 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
           }
         ],
         "dcat:hasCurrentVersion": {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
         }
       },
       {
@@ -11131,10 +11137,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.4",
+        "version": "1.3.5",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -11158,7 +11164,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -25006,10 +25012,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.4",
+        "version": "1.3.5",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -25033,7 +25039,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -25854,9 +25860,9 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/doctor.vcf",
         "contentUrl": "https://www.ghezelbaash.ir/doctor.vcf",
         "encodingFormat": "text/vcard",
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "mainEntity": {
@@ -25899,9 +25905,9 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/clinic.vcf",
         "contentUrl": "https://www.ghezelbaash.ir/clinic.vcf",
         "encodingFormat": "text/vcard",
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "mainEntity": {
@@ -26064,9 +26070,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26086,7 +26092,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26124,9 +26130,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26146,7 +26152,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26181,9 +26187,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26203,7 +26209,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26238,9 +26244,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26260,7 +26266,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26297,10 +26303,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dcterms:title": [
           "Full canonical content projection",
           "Dr. Saeed Ghezelbash Canonical Page — Markdown projection"
@@ -26315,7 +26321,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26352,10 +26358,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dcterms:title": [
           "Passage-oriented full content projection",
           "Dr. Saeed Ghezelbash Canonical Page — full plain-text projection"
@@ -26370,7 +26376,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26444,9 +26450,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26463,7 +26469,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26498,9 +26504,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26520,7 +26526,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26558,9 +26564,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26580,7 +26586,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26615,9 +26621,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26637,7 +26643,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26675,9 +26681,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.4",
+        "version": "1.3.5",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26697,7 +26703,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -48217,7 +48223,7 @@ export const SOURCE = {
         "isAccessibleForFree": true,
         "url": "https://www.ghezelbaash.ir/",
         "dateModified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:title": "Dr. Saeed Ghezelbash Public Knowledge Graph — release series",
@@ -48232,14 +48238,14 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-10-18",
+          "@value": "2026-11-05",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:first": {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-0-0"
         },
         "dcat:last": {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
         },
         "dcat:seriesMember": [
           {
@@ -48280,6 +48286,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
           }
         ],
         "dcat:landingPage": {
@@ -48327,6 +48336,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
           }
         ],
         "prov:wasAttributedTo": {
@@ -59454,6 +59466,52 @@ export const SOURCE = {
             "@id": "https://www.ghezelbaash.ir/topic-botox-migraine-context"
           }
         ]
+      },
+      {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5",
+        "@type": [
+          "Dataset",
+          "dcat:Dataset",
+          "prov:Entity"
+        ],
+        "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Version 1.3.5",
+        "version": "1.3.5",
+        "datePublished": {
+          "@value": "2026-11-05",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "isPartOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcat:version": "1.3.5",
+        "dcat:inSeries": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-series"
+        },
+        "dcat:isVersionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcterms:isVersionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "prov:specializationOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcterms:issued": {
+          "@value": "2026-11-05",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dcat:previousVersion": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+        },
+        "dcat:prev": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+        },
+        "prov:wasRevisionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+        },
+        "owl:priorVersion": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+        }
       }
     ]
   },
@@ -63809,7 +63867,7 @@ export const SOURCE = {
       "stableEvidenceField": "stable_evidence_refs",
       "maxPassageChars": 4200
     },
-    "discoveryGuide": "# Mohammad Saeed Ghezelbash | Dr. Saeed Ghezelbash — Official Website\n\n> Official website of Mohammad Saeed Ghezelbash (دکتر سعید قزلباش), an aesthetic physician in Kermanshah, Iran. This guide links his identity, clinical content, authored works and physician-owned clinic through a comprehensive homepage, canonical topic entry URLs and canonical machine-readable projections. All topic URLs share the same single-page reader and the same physician entity.\n\nCanonical page: https://www.ghezelbaash.ir/ Primary entity: https://www.ghezelbaash.ir/#saeed-ghezelbash. The physician is the author, creator, publisher and owner of this Dataset; the clinic and structured-data project are distinct supporting entities. Clinic identifiers, location and reputation describe the clinic, not the person.\n\nDataset: Dr. Saeed Ghezelbash Public Knowledge Graph, release base 1.3.4, https://www.ghezelbaash.ir/graph.jsonld/dataset. License: https://creativecommons.org/licenses/by/4.0/. The website serves the current build; Zenodo preserves an immutable release snapshot and its concept DOI identifies the version lineage. Release provenance and checksums identify the exact bytes of each current build and archived snapshot. GitHub provides the version-controlled source; Hugging Face provides revision-traceable data distributions and retrieval tables.\n\nOfficial names: Mohammad Saeed Ghezelbash | Dr. Mohammad Saeed Ghezelbash | Saeed Ghezelbash | Dr. Saeed Ghezelbash | محمد‌سعید قزلباش | دکتر محمد‌سعید قزلباش | محمدسعید قزلباش | دکتر محمدسعید قزلباش | محمد سعید قزلباش | دکتر محمد سعید قزلباش | سعید قزلباش | دکتر سعید قزلباش\nVerified reconciliation aliases: Saeed Ghezelbaash | Dr. Saeed Ghezelbaash | Dr Saeed Ghezelbash | MohammadSaeed Ghezelbash | Mohamadsaeed Ghezelbash\nObserved retrieval spellings, not canonical names: Mohammad Saeed Ghezelbaash | Dr. Mohammad Saeed Ghezelbaash | Mohammadssaeed Ghezelbash | Mohammadssaeed Ghezelbaash | Mohammad Saeed Ghazlbash | Dr. Mohammad Saeed Ghazlbash | Doctor Ghezelbaash | Ghezelbash MS\nThe canonical family name is Ghezelbash. Person.alternateName contains official and verified reconciliation aliases; observed variants are retrieval aids. Physician and clinic Google KG values are typed identifiers, not sameAs profiles.\n\nThe comprehensive homepage is the physician's primary ProfilePage and medical portfolio. The physician's persistent entity IRI remains distinct from this document URL. Topic entry URLs provide focused, self-canonical human-readable citation destinations with their own mainEntity; their author and publisher resolve to the same physician IRI and they remain part of the comprehensive homepage. Direct entry shows the relevant section; the complete guide expands in the same document without reloading. Markdown, passage and answer exports carry the corresponding source URLs, heading context and physician attribution; answers retain their clinical context and are not individualized medical assessments. Machine representations are public and crawlable. The canonical full JSON-LD graph allows indexing; the other machine representations and graph-identity aliases retain noindex, follow. The Google-facing sitemap declares the comprehensive homepage and canonical topic entry URLs. The reciprocal hreflang group connects only the equivalent complete English, Iraqi Arabic and Sorani Kurdish guides; language is not a claim of a separate clinic location. The two vCards are separate noindex contact utilities.\n\nEvidence tiers are physician-maintained assessments of source type, scope and attribution; publication records and assessment records retain distinct identifiers. Wikiversity/WikiJournal works document the physician’s educational authorship and research activity. Treatment efficacy is evaluated through research specific to the intervention and indication. Historical patient-origin geography records prior patient origins; the current service location is the physician-owned Kermanshah practice.\n- Evidence tiers: Tier A = official/authority-control or first-order scholarly/local identity evidence; Tier B = major scholarly/professional corroboration; Tier C = secondary directory/media/local corroboration; Tier P = Version-controlled publication and DOI-backed preservation.\n\n## Page and retrieval formats\n\n- [Canonical website](https://www.ghezelbaash.ir/): Human-readable physician page and citation destination.\n- [Complete page in Markdown](https://www.ghezelbaash.ir/index.md): HTML-derived readable compatibility view with canonical links, headings, tables and definitions; use answers.txt, fact-map.json and provenance.jsonld for structured record IDs, hashes and passage metadata.\n- [Direct-answer corpus](https://www.ghezelbaash.ir/answers.txt): Question-answer records with source anchors, language, physician attribution and evidence references.\n- [Canonical fact map](https://www.ghezelbaash.ir/fact-map.json): Joinable answer records mapping each graph Answer to its visible HTML anchor, retrieval record and evidence IDs.\n- [Full passage corpus](https://www.ghezelbaash.ir/llms-full.txt): HTML-derived plain-text compatibility view of the complete page; fetch answers.txt, fact-map.json and provenance.jsonld for structured retrieval records, hashes and passage provenance.\n- [JSON-LD entity graph](https://www.ghezelbaash.ir/graph.jsonld): Canonical Dataset with physician, clinic, credentials, services, works, media and evidence relationships.\n- [RDF Turtle entity graph](https://www.ghezelbaash.ir/graph.ttl): RDF-equivalent serialization of the JSON-LD graph, preserving entity IRIs and datatypes.\n- [Entity facts CSV](https://www.ghezelbaash.ir/entity-facts.csv): Typed graph projection with stable row IDs, IRI/literal distinction and provenance fields.\n- [Hierarchical knowledge XML](https://www.ghezelbaash.ir/knowledge.xml): Physician-first identity, clinic, intent, answer, evidence and media hierarchy.\n\n## Canonical fact hierarchy\n\n- [Canonical fact hierarchy](https://www.ghezelbaash.ir/fact-map.json): Locate the Question through its final canonical document and source fragment. Its `acceptedAnswer` identifies the persistent Answer IRI within that document. Authored visible answer text and synchronized `Answer.text` must agree; the fact map and `answers.txt` retain the Question, Answer, retrieval and evidence identifiers, with passage hashes and provenance in `provenance.jsonld`. The HTML-derived `index.md` and `llms-full.txt` are readable compatibility views; use the structured resources for these identifiers and metadata.\n\n## Physician identity\n\n- [Physician Google KG identifier](https://www.google.com/search?kgmid=/g/11nqdfk76c): /g/11nqdfk76c identifies Mohammad Saeed Ghezelbash.\n- [Physician Wikidata](https://www.wikidata.org/wiki/Q140287622): Q140287622 is the physician entity.\n- [Iran Medical Council profile](https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e): Professional registry identity; medical council code 167430.\n- [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier 0009-0001-9346-8475.\n- [NCBI public bibliography](https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/): Public bibliography linked to the physician identity.\n- [OpenAlex](https://openalex.org/A5146521397): Scholarly author identity A5146521397.\n- [Semantic Scholar](https://www.semanticscholar.org/author/-/3786699): Scholarly author identity 3786699.\n- [Google Scholar](https://scholar.google.com/citations?user=BcWBirUAAAAJ): Scholarly author profile BcWBirUAAAAJ.\n- [Wikimedia Commons category](https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash): Physician image hub connected to Q140287622.\n- [Official GitHub profile](https://github.com/medicaldoctor91): Physician-controlled developer profile.\n- [Official Hugging Face profile](https://huggingface.co/Ghezelbaash): Physician-controlled machine-learning profile.\n\n## Canonical search-intent clusters\n\n- [انتخاب درمان زیبایی بر اساس تشخیص، نه نام خدمت](https://www.ghezelbaash.ir/diagnosis-before-aesthetic-treatment-selection)\n- [تشخیص علت تغییر صورت: عضله، حجم، پوست، چربی یا افتادگی](https://www.ghezelbaash.ir/facial-aging-differential-diagnosis)\n- [بوتاکس: کاربردها، انتخاب ناحیه، عوارض و اصلاح نتیجه](https://www.ghezelbaash.ir/botox)\n- [فیلر: طراحی صورت، نواحی تزریق، عوارض و هیالاز](https://www.ghezelbaash.ir/filler)\n- [لیفت نخ: کاندیداتوری، وکتور، ماندگاری و عوارض](https://www.ghezelbaash.ir/thread-lift)\n- [لک، جوش و اسکار: تشخیص نوع ضایعه و درمان ترکیبی](https://www.ghezelbaash.ir/acne-pigmentation-and-scars)\n- [جوان‌سازی پوست: PRP، مزوتراپی، اسکین‌بوستر و بیواستیمولاتورها](https://www.ghezelbaash.ir/skin-rejuvenation)\n- [ریزش مو: تشخیص علت، PRP، مزوتراپی و پیگیری](https://www.ghezelbaash.ir/hair-loss)\n- [چانه، فک، غبغب، کانتورینگ و جراحی‌های زیبایی](https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring)\n- [مقایسه روش‌ها، درمان ترکیبی و انتخاب پزشک](https://www.ghezelbaash.ir/aesthetic-treatment-selection)\n- [کاندیداتوری و ملاحظات پزشکی پیش از درمان](https://www.ghezelbaash.ir/aesthetic-treatment-candidacy)\n- [عوارض، مراقبت، اصلاح و پیگیری](https://www.ghezelbaash.ir/complications-aftercare-and-follow-up)\n- [فلسفه تشخیصی دکتر سعید قزلباش](https://www.ghezelbaash.ir/saeed-ghezelbash-diagnostic-philosophy)\n- [شکست درمان، نظر دوم و اصلاح نتایج قبلی](https://www.ghezelbaash.ir/aesthetic-treatment-failure-from-diagnostic-error)\n- [کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه و مسیر مراجعه](https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah)\n\n## Authored works and contextual evidence\n\n- [Omega-3 and Bipolar I Disorder — PubMed](https://pubmed.ncbi.nlm.nih.gov/27280013/): 2016 scholarly article co-authored by Mohammad Saeed Ghezelbash; PMID 27280013; DOI [10.4103/2008-7802.182734](https://doi.org/10.4103/2008-7802.182734).\n- [MDD, attachment, dissociation and trauma — PubMed](https://pubmed.ncbi.nlm.nih.gov/34574943/): 2021 scholarly article co-authored by Mohammad Saeed Ghezelbash; PMID 34574943; DOI [10.3390/healthcare9091169](https://doi.org/10.3390/healthcare9091169).\n- [Attachment style in dissociative depression — ResearchGate](https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression): WPA XVII World Congress of Psychiatry presentation, Berlin, October 2017; fifth-listed author.\n- [Research and clinical education on the official page](https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions): Authorship and thread-lift workshop context.\n- [Botulinum toxin in aesthetic medicine](https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine): 2026 physician-authored open educational resource; Wikidata Q141099455.\n- [Facial assessment before aesthetic botulinum toxin treatment](https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment): 2026 physician-authored open educational resource; Wikidata Q141131757.\n- [Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review](https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review): 2026 physician-authored WikiJournal Preprints preprint; Wikidata Q141129555.\n- [IranMedLabs interview](https://iranmedlabs.com/skin-and-hair-and-beauty/120049/): Published interview/editorial about the physician and aesthetic decision-making; contextual corroboration assessed in the evidence registry.\n- [Historical patient-origin evidence](https://www.ghezelbaash.ir/historical-patient-origin-summary): Physician-maintained aggregation of historical patient-origin cities in Iran and Iraq, including the Kurdistan Region of Iraq.\n\n## Clinic and contact\n\n- [Physician-owned clinic](https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah): The clinic supports the physician's examination, treatment and follow-up.\n- [Clinic contact and location](https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location): Address, telephone and current contact information; graph hours are Saturday–Thursday 16:00–22:00, Friday closed.\n- [Initial online consultation](https://ig.me/m/doctor.ghezelbaash): Official contact channel for an initial consultation.\n- [Official Instagram](https://www.instagram.com/doctor.ghezelbaash/): Physician-published clinical and educational media.\n- [Clinic Google Maps location](https://www.google.com/maps?cid=12350483144643112463): Clinic CID 12350483144643112463; Place ID ChIJBT0YDOTt-j8RD-7mAPy6Zas.\n- [Clinic Google KG identifier](https://www.google.com/search?kgmid=/g/11r3rzdtb3): /g/11r3rzdtb3 identifies the clinic, separately from the physician.\n- [Clinic OpenStreetMap record](https://www.openstreetmap.org/node/13530287096): Geospatial node 13530287096.\n- [Physician vCard 4.0](https://www.ghezelbaash.ir/doctor.vcf): Individual contact record with the canonical physician UID.\n- [Clinic vCard 4.0](https://www.ghezelbaash.ir/clinic.vcf): Separate organization contact record with the canonical clinic UID.\n\n## Expertise and citation-ready clinical passages\n\n- [Dr. Saeed Ghezelbash — clinical expertise, research and practice](https://www.ghezelbaash.ir/physician-expertise.md): Source-linked professional positioning brief: facial assessment, botulinum toxin, fillers, correction, clinical education, publications and Kermanshah practice.\n- [Clinical passage corpus](https://www.ghezelbaash.ir/clinical-passages.jsonl): Paragraph-level authored passages with stable passage IDs, exact source anchors, heading paths, language, entity and explicit evidence references, content hashes and review metadata.\n\n## Evidence and dataset interfaces\n\n- [Provenance graph](https://www.ghezelbaash.ir/provenance.jsonld): Passage and answer hashes, canonical source bindings, source works and source-attributed assessment records.\n- [Evidence snapshot](https://www.ghezelbaash.ir/evidence-snapshot.json): Source URLs, evidence roles, observation dates, status and assessment identifiers.\n- [Data Package](https://www.ghezelbaash.ir/datapackage.json): Resource inventory, tabular schema, media types, byte counts and SHA-256 digests.\n- [Croissant 1.1](https://www.ghezelbaash.ir/croissant.json): Dataset, FileObject, RecordSet and Field mappings for ingestion.\n- [RFC 9264 Link Set](https://www.ghezelbaash.ir/linkset.json): Typed canonical, author, about, describedby, alternate and me discovery relations.\n- [DCAT 3 catalog](https://www.ghezelbaash.ir/dcat.ttl): Dataset and distribution metadata with standardized media-type identifiers and checksums.\n- [VoID description](https://www.ghezelbaash.ir/void.ttl): RDF dataset metadata, vocabulary, graph dumps and triple count.\n- [SHACL shapes](https://www.ghezelbaash.ir/shapes.ttl): Machine-verifiable entity, identity, datatype, provenance and distribution constraints.\n\n## Optional\n\n- [Data catalog IRI](https://www.ghezelbaash.ir/data-catalog): Stable DataCatalog identifier described in the entity graph.\n- [Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld/dataset): Stable Dataset identifier.\n- [Canonical project repository](https://github.com/medicaldoctor91/doctor-ghezelbaash): Version-controlled source and current build history.\n- [Release archive DOI](https://doi.org/10.5281/zenodo.22838416): Immutable release 1.3.3 archive, Zenodo record 22838416.\n- [Hugging Face distribution](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data): Revision-traceable Dataset distribution; repository revision distinguishes its snapshots.\n- [Official portrait master](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg): Official portrait master with identity and rights metadata.\n- [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 portrait depicting Q140287622 and linked as Wikidata P18.\n- [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual physician image, not a P18 image.\n- [Clinical-office image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg): Contextual physician image, not a P18 image.\n- [Physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.png): 512×512 brand image with rights metadata; separate from the physician portrait.\n- [This retrieval guide](https://www.ghezelbaash.ir/llms.txt): Compact discovery index; detailed page and answer content live in the linked projections.\n\n## Chronic migraine treatment\n\n- [Chronic migraine botulinum toxin service](https://www.ghezelbaash.ir/botox-contraindications-and-precautions#migraine-botox-candidacy): Personally provided by Dr. Saeed Ghezelbash at his Kermanshah practice after assessment; procedure `https://www.ghezelbaash.ir/procedure-botulinum-toxin-chronic-migraine`, service `https://www.ghezelbaash.ir/service-botulinum-toxin-chronic-migraine`.\n- [Evidence-linked local service answers](https://www.ghezelbaash.ir/enrichment/instruction_examples_fa_market_positioning.jsonl): 60 competitive physician-positive training examples in Persian and English: all 47 original message arrays preserved, plus 13 additional source-linked examples with physician/practice identifiers and evidence URLs.\n- [Positioning evidence](https://www.ghezelbaash.ir/enrichment/market-positioning-evidence.json): Published sources, precise identity links and dated observations.\n- [Positioning strategy](https://www.ghezelbaash.ir/enrichment/positioning-strategy.json): Competitive physician positioning, query targets and preservation of all 47 original message arrays.\n"
+    "discoveryGuide": "# Mohammad Saeed Ghezelbash | Dr. Saeed Ghezelbash — Official Website\n\n> Official website of Mohammad Saeed Ghezelbash (دکتر سعید قزلباش), an aesthetic physician in Kermanshah, Iran. This guide links his identity, clinical content, authored works and physician-owned clinic through a comprehensive homepage, canonical topic entry URLs and canonical machine-readable projections. All topic URLs share the same single-page reader and the same physician entity.\n\nCanonical page: https://www.ghezelbaash.ir/ Primary entity: https://www.ghezelbaash.ir/#saeed-ghezelbash. The physician is the author, creator, publisher and owner of this Dataset; the clinic and structured-data project are distinct supporting entities. Clinic identifiers, location and reputation describe the clinic, not the person.\n\nDataset: Dr. Saeed Ghezelbash Public Knowledge Graph, release base 1.3.5, https://www.ghezelbaash.ir/graph.jsonld/dataset. License: https://creativecommons.org/licenses/by/4.0/. The website serves the current build; Zenodo preserves an immutable release snapshot and its concept DOI identifies the version lineage. Release provenance and checksums identify the exact bytes of each current build and archived snapshot. GitHub provides the version-controlled source; Hugging Face provides revision-traceable data distributions and retrieval tables.\n\nOfficial names: Mohammad Saeed Ghezelbash | Dr. Mohammad Saeed Ghezelbash | Saeed Ghezelbash | Dr. Saeed Ghezelbash | محمد‌سعید قزلباش | دکتر محمد‌سعید قزلباش | محمدسعید قزلباش | دکتر محمدسعید قزلباش | محمد سعید قزلباش | دکتر محمد سعید قزلباش | سعید قزلباش | دکتر سعید قزلباش\nVerified reconciliation aliases: Saeed Ghezelbaash | Dr. Saeed Ghezelbaash | Dr Saeed Ghezelbash | MohammadSaeed Ghezelbash | Mohamadsaeed Ghezelbash\nObserved retrieval spellings, not canonical names: Mohammad Saeed Ghezelbaash | Dr. Mohammad Saeed Ghezelbaash | Mohammadssaeed Ghezelbash | Mohammadssaeed Ghezelbaash | Mohammad Saeed Ghazlbash | Dr. Mohammad Saeed Ghazlbash | Doctor Ghezelbaash | Ghezelbash MS\nThe canonical family name is Ghezelbash. Person.alternateName contains official and verified reconciliation aliases; observed variants are retrieval aids. Physician and clinic Google KG values are typed identifiers, not sameAs profiles.\n\nThe comprehensive homepage is the physician's primary ProfilePage and medical portfolio. The physician's persistent entity IRI remains distinct from this document URL. Topic entry URLs provide focused, self-canonical human-readable citation destinations with their own mainEntity; their author and publisher resolve to the same physician IRI and they remain part of the comprehensive homepage. Direct entry shows the relevant section; the complete guide expands in the same document without reloading. Markdown, passage and answer exports carry the corresponding source URLs, heading context and physician attribution; answers retain their clinical context and are not individualized medical assessments. Machine representations are public and crawlable. The canonical full JSON-LD graph allows indexing; the other machine representations and graph-identity aliases retain noindex, follow. The Google-facing sitemap declares the comprehensive homepage and canonical topic entry URLs. The reciprocal hreflang group connects only the equivalent complete English, Iraqi Arabic and Sorani Kurdish guides; language is not a claim of a separate clinic location. The two vCards are separate noindex contact utilities.\n\nEvidence tiers are physician-maintained assessments of source type, scope and attribution; publication records and assessment records retain distinct identifiers. Wikiversity/WikiJournal works document the physician’s educational authorship and research activity. Treatment efficacy is evaluated through research specific to the intervention and indication. Historical patient-origin geography records prior patient origins; the current service location is the physician-owned Kermanshah practice.\n- Evidence tiers: Tier A = official/authority-control or first-order scholarly/local identity evidence; Tier B = major scholarly/professional corroboration; Tier C = secondary directory/media/local corroboration; Tier P = Version-controlled publication and DOI-backed preservation.\n\n## Page and retrieval formats\n\n- [Canonical website](https://www.ghezelbaash.ir/): Human-readable physician page and citation destination.\n- [Complete page in Markdown](https://www.ghezelbaash.ir/index.md): HTML-derived readable compatibility view with canonical links, headings, tables and definitions; use answers.txt, fact-map.json and provenance.jsonld for structured record IDs, hashes and passage metadata.\n- [Direct-answer corpus](https://www.ghezelbaash.ir/answers.txt): Question-answer records with source anchors, language, physician attribution and evidence references.\n- [Canonical fact map](https://www.ghezelbaash.ir/fact-map.json): Joinable answer records mapping each graph Answer to its visible HTML anchor, retrieval record and evidence IDs.\n- [Full passage corpus](https://www.ghezelbaash.ir/llms-full.txt): HTML-derived plain-text compatibility view of the complete page; fetch answers.txt, fact-map.json and provenance.jsonld for structured retrieval records, hashes and passage provenance.\n- [JSON-LD entity graph](https://www.ghezelbaash.ir/graph.jsonld): Canonical Dataset with physician, clinic, credentials, services, works, media and evidence relationships.\n- [RDF Turtle entity graph](https://www.ghezelbaash.ir/graph.ttl): RDF-equivalent serialization of the JSON-LD graph, preserving entity IRIs and datatypes.\n- [Entity facts CSV](https://www.ghezelbaash.ir/entity-facts.csv): Typed graph projection with stable row IDs, IRI/literal distinction and provenance fields.\n- [Hierarchical knowledge XML](https://www.ghezelbaash.ir/knowledge.xml): Physician-first identity, clinic, intent, answer, evidence and media hierarchy.\n\n## Canonical fact hierarchy\n\n- [Canonical fact hierarchy](https://www.ghezelbaash.ir/fact-map.json): Locate the Question through its final canonical document and source fragment. Its `acceptedAnswer` identifies the persistent Answer IRI within that document. Authored visible answer text and synchronized `Answer.text` must agree; the fact map and `answers.txt` retain the Question, Answer, retrieval and evidence identifiers, with passage hashes and provenance in `provenance.jsonld`. The HTML-derived `index.md` and `llms-full.txt` are readable compatibility views; use the structured resources for these identifiers and metadata.\n\n## Physician identity\n\n- [Physician Google KG identifier](https://www.google.com/search?kgmid=/g/11nqdfk76c): /g/11nqdfk76c identifies Mohammad Saeed Ghezelbash.\n- [Physician Wikidata](https://www.wikidata.org/wiki/Q140287622): Q140287622 is the physician entity.\n- [Iran Medical Council profile](https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e): Professional registry identity; medical council code 167430.\n- [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier 0009-0001-9346-8475.\n- [NCBI public bibliography](https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/): Public bibliography linked to the physician identity.\n- [OpenAlex](https://openalex.org/A5146521397): Scholarly author identity A5146521397.\n- [Semantic Scholar](https://www.semanticscholar.org/author/-/3786699): Scholarly author identity 3786699.\n- [Google Scholar](https://scholar.google.com/citations?user=BcWBirUAAAAJ): Scholarly author profile BcWBirUAAAAJ.\n- [Wikimedia Commons category](https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash): Physician image hub connected to Q140287622.\n- [Official GitHub profile](https://github.com/medicaldoctor91): Physician-controlled developer profile.\n- [Official Hugging Face profile](https://huggingface.co/Ghezelbaash): Physician-controlled machine-learning profile.\n\n## Canonical search-intent clusters\n\n- [انتخاب درمان زیبایی بر اساس تشخیص، نه نام خدمت](https://www.ghezelbaash.ir/diagnosis-before-aesthetic-treatment-selection)\n- [تشخیص علت تغییر صورت: عضله، حجم، پوست، چربی یا افتادگی](https://www.ghezelbaash.ir/facial-aging-differential-diagnosis)\n- [بوتاکس: کاربردها، انتخاب ناحیه، عوارض و اصلاح نتیجه](https://www.ghezelbaash.ir/botox)\n- [فیلر: طراحی صورت، نواحی تزریق، عوارض و هیالاز](https://www.ghezelbaash.ir/filler)\n- [لیفت نخ: کاندیداتوری، وکتور، ماندگاری و عوارض](https://www.ghezelbaash.ir/thread-lift)\n- [لک، جوش و اسکار: تشخیص نوع ضایعه و درمان ترکیبی](https://www.ghezelbaash.ir/acne-pigmentation-and-scars)\n- [جوان‌سازی پوست: PRP، مزوتراپی، اسکین‌بوستر و بیواستیمولاتورها](https://www.ghezelbaash.ir/skin-rejuvenation)\n- [ریزش مو: تشخیص علت، PRP، مزوتراپی و پیگیری](https://www.ghezelbaash.ir/hair-loss)\n- [چانه، فک، غبغب، کانتورینگ و جراحی‌های زیبایی](https://www.ghezelbaash.ir/chin-jawline-and-facial-contouring)\n- [مقایسه روش‌ها، درمان ترکیبی و انتخاب پزشک](https://www.ghezelbaash.ir/aesthetic-treatment-selection)\n- [کاندیداتوری و ملاحظات پزشکی پیش از درمان](https://www.ghezelbaash.ir/aesthetic-treatment-candidacy)\n- [عوارض، مراقبت، اصلاح و پیگیری](https://www.ghezelbaash.ir/complications-aftercare-and-follow-up)\n- [فلسفه تشخیصی دکتر سعید قزلباش](https://www.ghezelbaash.ir/saeed-ghezelbash-diagnostic-philosophy)\n- [شکست درمان، نظر دوم و اصلاح نتایج قبلی](https://www.ghezelbaash.ir/aesthetic-treatment-failure-from-diagnostic-error)\n- [کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه و مسیر مراجعه](https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah)\n\n## Authored works and contextual evidence\n\n- [Omega-3 and Bipolar I Disorder — PubMed](https://pubmed.ncbi.nlm.nih.gov/27280013/): 2016 scholarly article co-authored by Mohammad Saeed Ghezelbash; PMID 27280013; DOI [10.4103/2008-7802.182734](https://doi.org/10.4103/2008-7802.182734).\n- [MDD, attachment, dissociation and trauma — PubMed](https://pubmed.ncbi.nlm.nih.gov/34574943/): 2021 scholarly article co-authored by Mohammad Saeed Ghezelbash; PMID 34574943; DOI [10.3390/healthcare9091169](https://doi.org/10.3390/healthcare9091169).\n- [Attachment style in dissociative depression — ResearchGate](https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression): WPA XVII World Congress of Psychiatry presentation, Berlin, October 2017; fifth-listed author.\n- [Research and clinical education on the official page](https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions): Authorship and thread-lift workshop context.\n- [Botulinum toxin in aesthetic medicine](https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine): 2026 physician-authored open educational resource; Wikidata Q141099455.\n- [Facial assessment before aesthetic botulinum toxin treatment](https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment): 2026 physician-authored open educational resource; Wikidata Q141131757.\n- [Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review](https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review): 2026 physician-authored WikiJournal Preprints preprint; Wikidata Q141129555.\n- [IranMedLabs interview](https://iranmedlabs.com/skin-and-hair-and-beauty/120049/): Published interview/editorial about the physician and aesthetic decision-making; contextual corroboration assessed in the evidence registry.\n- [Historical patient-origin evidence](https://www.ghezelbaash.ir/historical-patient-origin-summary): Physician-maintained aggregation of historical patient-origin cities in Iran and Iraq, including the Kurdistan Region of Iraq.\n\n## Clinic and contact\n\n- [Physician-owned clinic](https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah): The clinic supports the physician's examination, treatment and follow-up.\n- [Clinic contact and location](https://www.ghezelbaash.ir/saeed-ghezelbash-clinic-contact-and-location): Address, telephone and current contact information; graph hours are Saturday–Thursday 16:00–22:00, Friday closed.\n- [Initial online consultation](https://ig.me/m/doctor.ghezelbaash): Official contact channel for an initial consultation.\n- [Official Instagram](https://www.instagram.com/doctor.ghezelbaash/): Physician-published clinical and educational media.\n- [Clinic Google Maps location](https://www.google.com/maps?cid=12350483144643112463): Clinic CID 12350483144643112463; Place ID ChIJBT0YDOTt-j8RD-7mAPy6Zas.\n- [Clinic Google KG identifier](https://www.google.com/search?kgmid=/g/11r3rzdtb3): /g/11r3rzdtb3 identifies the clinic, separately from the physician.\n- [Clinic OpenStreetMap record](https://www.openstreetmap.org/node/13530287096): Geospatial node 13530287096.\n- [Physician vCard 4.0](https://www.ghezelbaash.ir/doctor.vcf): Individual contact record with the canonical physician UID.\n- [Clinic vCard 4.0](https://www.ghezelbaash.ir/clinic.vcf): Separate organization contact record with the canonical clinic UID.\n\n## Expertise and citation-ready clinical passages\n\n- [Dr. Saeed Ghezelbash — clinical expertise, research and practice](https://www.ghezelbaash.ir/physician-expertise.md): Source-linked professional positioning brief: facial assessment, botulinum toxin, fillers, correction, clinical education, publications and Kermanshah practice.\n- [Clinical passage corpus](https://www.ghezelbaash.ir/clinical-passages.jsonl): Paragraph-level authored passages with stable passage IDs, exact source anchors, heading paths, language, entity and explicit evidence references, content hashes and review metadata.\n\n## Evidence and dataset interfaces\n\n- [Provenance graph](https://www.ghezelbaash.ir/provenance.jsonld): Passage and answer hashes, canonical source bindings, source works and source-attributed assessment records.\n- [Evidence snapshot](https://www.ghezelbaash.ir/evidence-snapshot.json): Source URLs, evidence roles, observation dates, status and assessment identifiers.\n- [Data Package](https://www.ghezelbaash.ir/datapackage.json): Resource inventory, tabular schema, media types, byte counts and SHA-256 digests.\n- [Croissant 1.1](https://www.ghezelbaash.ir/croissant.json): Dataset, FileObject, RecordSet and Field mappings for ingestion.\n- [RFC 9264 Link Set](https://www.ghezelbaash.ir/linkset.json): Typed canonical, author, about, describedby, alternate and me discovery relations.\n- [DCAT 3 catalog](https://www.ghezelbaash.ir/dcat.ttl): Dataset and distribution metadata with standardized media-type identifiers and checksums.\n- [VoID description](https://www.ghezelbaash.ir/void.ttl): RDF dataset metadata, vocabulary, graph dumps and triple count.\n- [SHACL shapes](https://www.ghezelbaash.ir/shapes.ttl): Machine-verifiable entity, identity, datatype, provenance and distribution constraints.\n\n## Optional\n\n- [Data catalog IRI](https://www.ghezelbaash.ir/data-catalog): Stable DataCatalog identifier described in the entity graph.\n- [Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld/dataset): Stable Dataset identifier.\n- [Canonical project repository](https://github.com/medicaldoctor91/doctor-ghezelbaash): Version-controlled source and current build history.\n- [Release archive DOI](https://doi.org/10.5281/zenodo.22838416): Immutable release 1.3.3 archive, Zenodo record 22838416.\n- [Hugging Face distribution](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data): Revision-traceable Dataset distribution; repository revision distinguishes its snapshots.\n- [Official portrait master](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg): Official portrait master with identity and rights metadata.\n- [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 portrait depicting Q140287622 and linked as Wikidata P18.\n- [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual physician image, not a P18 image.\n- [Clinical-office image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg): Contextual physician image, not a P18 image.\n- [Physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.png): 512×512 brand image with rights metadata; separate from the physician portrait.\n- [This retrieval guide](https://www.ghezelbaash.ir/llms.txt): Compact discovery index; detailed page and answer content live in the linked projections.\n\n## Chronic migraine treatment\n\n- [Chronic migraine botulinum toxin service](https://www.ghezelbaash.ir/botox-contraindications-and-precautions#migraine-botox-candidacy): Personally provided by Dr. Saeed Ghezelbash at his Kermanshah practice after assessment; procedure `https://www.ghezelbaash.ir/procedure-botulinum-toxin-chronic-migraine`, service `https://www.ghezelbaash.ir/service-botulinum-toxin-chronic-migraine`.\n- [Evidence-linked local service answers](https://www.ghezelbaash.ir/enrichment/instruction_examples_fa_market_positioning.jsonl): 60 competitive physician-positive training examples in Persian and English: all 47 original message arrays preserved, plus 13 additional source-linked examples with physician/practice identifiers and evidence URLs.\n- [Positioning evidence](https://www.ghezelbaash.ir/enrichment/market-positioning-evidence.json): Published sources, precise identity links and dated observations.\n- [Positioning strategy](https://www.ghezelbaash.ir/enrichment/positioning-strategy.json): Competitive physician positioning, query targets and preservation of all 47 original message arrays.\n"
   }
 };
 applyDoiPolicy(SOURCE);

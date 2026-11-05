@@ -16,6 +16,23 @@ class Guards(unittest.TestCase):
    self.assertTrue(release.notebook_identity(root,public,evidence))
    public['metadata']['currentVersionNumber']=8
    with self.assertRaises(AssertionError):release.notebook_identity(root,public,evidence)
+ def test_historical_notebook_uses_its_archive_without_weakening_current_default(self):
+  from unittest.mock import patch
+  with tempfile.TemporaryDirectory() as folder:
+   root=Path(folder);(root/'notebook').mkdir();(root/'kaggle').mkdir()
+   notebook={'cells':[{'cell_type':'code','source':['historical code']}]};release.dump(root/'notebook/starter.ipynb',notebook)
+   (root/'kaggle/checksums.sha256').write_text('historical inputs')
+   plan={'notebookVersion':16,'kaggleVersion':32,'hfRevision':'a'*40,'sourceCommit':'b'*40};release.dump(root/'release-plan.json',plan)
+   public={'metadata':{'currentVersionNumber':16},'blob':{'source':json.dumps(notebook)}}
+   old='10.5281/zenodo.23474664';new='10.5281/zenodo.23965042'
+   evidence={'status':'PASS','kaggle_version':32,'upstream_revision':'a'*40,'source_commit':'b'*40,
+             'input_checksums_sha256':release.sha(root/'kaggle/checksums.sha256'),'exact_doi':old}
+   with patch.object(release,'P',{'currentArchive':{'doi':new}}):
+    with self.assertRaises(AssertionError):release.notebook_identity(root,public,evidence)
+    self.assertTrue(release.notebook_identity(root,public,evidence,expected_doi=old))
+    evidence['exact_doi']=new
+    self.assertTrue(release.notebook_identity(root,public,evidence))
+    with self.assertRaises(AssertionError):release.notebook_identity(root,public,evidence,expected_doi=old)
  def test_nbformat_source_string_and_line_array_are_equivalent(self):
   frozen={'cells':[{'cell_type':'markdown','source':['عنوان\n','متن'],'metadata':{}},{'cell_type':'code','source':['print(1)\n','print(2)'],'execution_count':None,'outputs':[]}]}
   public=json.loads(json.dumps(frozen))

@@ -221,7 +221,7 @@ def build_hf(dist,baseline,out,ctx):
     md += 'Croissant creator/publisher types, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
     md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and the source-dependent Viewer tables are rebuilt without changing their source-row semantics.\n\n'
     md += ('Build source: ' if ctx.get('coordinated_release') else 'Package publication run: ')+ctx['run_url']+'.\n'
-    if positioning:md += '\nThe '+str(positioning['rows'])+' competitive training examples include all 47 original message arrays unchanged plus additional source-linked examples, with typed nullable fields and current content baseline v1.3.4. The physician and practice keep distinct IRIs.\n'
+    if positioning:md += '\nThe '+str(positioning['rows'])+' competitive training examples include all 47 original message arrays unchanged plus additional source-linked examples, with typed nullable fields. The preserved positioning corpus retains version 1.3.4 within Dataset version '+release['version']+'. The physician and practice keep distinct IRIs.\n'
     if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
     if ctx['archived_snapshots_updated']:
         md += '\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
@@ -370,7 +370,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
     readme+=('Build source: ' if ctx.get('coordinated_release') else 'Package publication run: ')+ctx['run_url']+'.\n'
-    if 'market_positioning' in packaging['tables']:readme+='\nThe '+str(packaging['tables']['market_positioning']['rows'])+' competitive training examples preserve all 47 original message arrays and add source-linked examples, with content baseline v1.3.4 and lossless typed Parquet.\n'
+    if 'market_positioning' in packaging['tables']:readme+='\nThe '+str(packaging['tables']['market_positioning']['rows'])+' competitive training examples preserve all 47 original message arrays and add source-linked examples with lossless typed Parquet. The preserved positioning corpus retains version 1.3.4 within Dataset version '+release['version']+'.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
     readme+='\nCroissant, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
     readme+='The package includes `frictionless-datapackage.json` (the exact canonical `datapackage.json` bytes) and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '

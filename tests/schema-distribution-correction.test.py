@@ -167,13 +167,20 @@ class CorrectionTests(unittest.TestCase):
                          'source_commit': plan['sourceCommit'], 'input_checksums_sha256': hashlib.sha256(b'exact-reviewed-inputs\n').hexdigest(),
                          'exact_doi': correction.DOI}
             with patch.object(correction, 'read', lambda url: Response(body=json.dumps(public).encode())):
-                for field, wrong in [('kaggle_version', 31), ('upstream_revision', correction.PARENT), ('source_commit', correction.ORIGINAL), ('input_checksums_sha256', '0' * 64)]:
+                for field, wrong in [('kaggle_version', 31), ('upstream_revision', correction.PARENT), ('source_commit', correction.ORIGINAL), ('input_checksums_sha256', '0' * 64), ('exact_doi', '10.5281/zenodo.999999999')]:
                     stale = {**execution, field: wrong}
                     with patch.object(correction, 'public_post', lambda *a, value=stale, **k: Response(body=json.dumps(value).encode())):
                         with self.assertRaises(AssertionError):
                             correction.public_notebook_execution(work, plan)
                 with patch.object(correction, 'public_post', lambda *a, **k: Response(body=json.dumps(execution).encode())):
                     self.assertTrue(correction.public_notebook_execution(work, plan)['publicSourceAndExecutionVerified'])
+
+    def test_notebook_execution_rejects_another_archive_plan_before_remote_reads(self):
+        plan = self.plan(); plan['doi'] = '10.5281/zenodo.999999999'
+        with tempfile.TemporaryDirectory() as folder, patch.object(correction, 'read') as read, patch.object(correction, 'public_post') as public_post:
+            with self.assertRaises(AssertionError):
+                correction.public_notebook_execution(Path(folder), plan)
+            read.assert_not_called(); public_post.assert_not_called()
 
     def test_private_staging_does_not_claim_notebook_execution(self):
         plan = self.plan()

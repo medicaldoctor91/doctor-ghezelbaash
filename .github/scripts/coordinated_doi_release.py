@@ -353,14 +353,16 @@ def notebook_cells_for_comparison(notebook):
   cells.append(cell)
  return cells
 
-def notebook_identity(work,public,evidence):
+def notebook_identity(work,public,evidence,*,expected_doi=None):
  plan=json.loads((work/'release-plan.json').read_text());blob=public['blob'];source=json.loads(blob.get('source') or blob.get('sourceNullable'))
  assert public['metadata']['currentVersionNumber']==plan['notebookVersion'],'Notebook version has not converged'
  assert notebook_cells_for_comparison(source)==notebook_cells_for_comparison(json.loads((work/'notebook/starter.ipynb').read_text())),'Public notebook source differs'
  assert evidence['status']=='PASS' and evidence['kaggle_version']==plan['kaggleVersion']
  assert evidence['upstream_revision']==plan['hfRevision'] and evidence['source_commit']==plan['sourceCommit']
  assert evidence['input_checksums_sha256']==sha(work/'kaggle/checksums.sha256')
- assert evidence['exact_doi']==P['currentArchive']['doi']
+ # Historical maintenance verifies its own validated archive binding; the
+ # ordinary coordinated publication path still requires the current policy.
+ assert evidence['exact_doi']==(P['currentArchive']['doi'] if expected_doi is None else expected_doi)
  return True
 
 def publish_notebook(work,client):
