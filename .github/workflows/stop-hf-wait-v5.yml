@@ -1,0 +1,35 @@
+name: Stop obsolete HF readiness wait
+on:
+  push:
+    branches: [codex/coordinated-v5-launch-20261105]
+    paths: [.github/workflows/stop-hf-wait-v5.yml]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  stop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Cancel only the superseded read-only wait
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          assert os.environ['GITHUB_REPOSITORY']=='medicaldoctor91/doctor-ghezelbaash'
+          assert os.environ['GITHUB_RUN_ATTEMPT']=='1'
+          base='https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash/actions/runs/42109856210'
+          headers={'Authorization':'Bearer '+os.environ['GITHUB_TOKEN'],'Accept':'application/vnd.github+json'}
+          with urllib.request.urlopen(urllib.request.Request(base,headers=headers),timeout=30) as r:
+              run=json.load(r)
+          assert run['workflow_id']==408397199
+          assert run['head_sha']=='679c85de8827f4ca1b5566492aa25427bdef0d6d'
+          if run['status']=='completed':
+              print('Read-only wait already completed; no cancellation needed.')
+          else:
+              req=urllib.request.Request(base+'/cancel',headers=headers,data=b'',method='POST')
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  assert r.status==202
+              print('Cancellation accepted for the superseded read-only wait.')
+          PY
