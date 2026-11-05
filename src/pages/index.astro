@@ -5059,7 +5059,8 @@ export function compileCanonicalSource() {
     set(node,'data-intent-headings',JSON.stringify(SOURCE.search.intentHeadings));
   });
   walk(body, node => {
-    if (/^h[1-6]$/.test(node.tagName ?? '') && attr(node, 'id')) set(node, 'data-canonical-href', urlArchitecture.urlForHtmlId(attr(node,'id')));
+    // Search reads the same canonical htmlIdTargets ownership map directly;
+    // repeating every URL on each heading adds no browser or crawler behavior.
     if (node.tagName === 'a' && attr(node,'href')) set(node,'href',urlArchitecture.sourceNavigationUrl(attr(node,'href')));
   });
   // Existing titles become native permalinks; no navigation box or new copy.

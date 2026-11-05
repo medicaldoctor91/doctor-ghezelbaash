@@ -48,6 +48,11 @@ test('built manifest covers every canonical owner and source anchor without a si
   assert.equal(attr(elements.find(node=>node.tagName==='meta'&&attr(node,'name')==='guide-source-signature'),'content'),manifest.sourceSignature);
   assert.equal(descendants(article).includes(pointer),false);
   assert.deepEqual(manifest.anchors,SOURCE.routes.htmlIdTargets);
+  for(const record of manifest.records)assert.equal(record.href,manifest.anchors[record.id],record.id);
+  assert.equal(elements.some(node=>/^h[1-6]$/.test(node.tagName??'')&&attr(node,'data-canonical-href')),false,'emitted headings do not duplicate the build ownership map');
+  const canonicalStart=home.indexOf('<script id="canonical-entity-graph"');
+  assert.ok(canonicalStart>0);
+  assert.ok(Buffer.byteLength(home.slice(0,canonicalStart),'utf8')+8192<2_000_000,'all visible content and Search precede the inert graph within the crawl prefix');
   for(const resource of SOURCE.routes.resources)assert.ok(manifest.records.some(record=>new URL(record.href,SOURCE.canonicalOrigin).pathname===resource.path),resource.path);
   assert.ok(manifest.records.every(record=>record.summary.length<=220),'all summaries are bounded');
   const guidePath=attr(elements.find(node=>node.tagName==='meta'&&attr(node,'name')==='guide-reader-resource'),'content');
