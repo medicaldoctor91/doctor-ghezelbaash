@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "operation": "finalize-frozen-v5",
+  "sourceCommit": "9ed3cc7a83f21482cce51cc4445755d2e3089680",
+  "record": 23965042,
+  "requestNonce": "owner-authorized-global-hf-outage-finalize-v5-1"
+}

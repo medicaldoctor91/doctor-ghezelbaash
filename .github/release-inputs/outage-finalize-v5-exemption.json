@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "ownerAuthorizedExternalHfOutageException": true,
+  "waivedOnly": "external HF Dataset Viewer Search/Filter availability during confirmed provider outage",
+  "sourceCommit": "9ed3cc7a83f21482cce51cc4445755d2e3089680",
+  "record": 23965042,
+  "actualHfSearchFilterStatus": "PROVIDER_OUTAGE_NOT_PASS",
+  "conditionEvidence": {
+    "localFTS": "All three affected Parquet configurations pass local DuckDB 1.4.4 full-text search without data/schema changes.",
+    "independentPublicControl": "stanfordnlp/imdb returned the same HTTP500 AuthCheckHubRequestError as the target dataset.",
+    "providerMessage": "Authentication check on the Hugging Face Hub failed or timed out. Please try again later, it's a temporary internal issue.",
+    "frozenFiles": "Site185, HF204, Kaggle48 files and actual Notebook18 execution are verified by authenticated M5 publication evidence run42105467623."
+  },
+  "unchangedRequirements": [
+    "Exact original M5 C/M lineage, all33 source tool hashes, approved plan and frozen artifact",
+    "Unchanged source, scientific data, protected corpus, DOI, platform revisions and payload bytes",
+    "Actual current site/HF/Kaggle/Notebook identity, metadata and graph checks",
+    "Actual server-side SHA256 verification of all43 staged Zenodo files",
+    "Durable intent before one publish POST; ambiguous outcomes recovered by reads only",
+    "Public graph own DOI, all standalone/ZIP hashes, concept DOI and old archive immutability"
+  ],
+  "originalPlanIsUnmodified": true,
+  "operationalToolRoleIsSeparateFromFrozenApplicationSource": true,
+  "ownerAuthorizationSummary": "The owner explicitly authorized continuing this publication despite the independently confirmed external HF service outage, provided the dataset itself is sound.",
+  "localOwnerAuthorizationReceiptSHA256": "8327c9658c2e869b74ac916190c3acc3b69ca88488744b5246540fafab4687d5"
+}
