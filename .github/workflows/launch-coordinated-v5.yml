@@ -1,0 +1,39 @@
+name: Dispatch reviewed coordinated v5 operation
+on:
+  push:
+    branches: [codex/coordinated-v5-launch-20261105]
+    paths: [.github/release-inputs/coordinated-v5-request.json]
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: doctor-ghezelbaash-coordinated-v5-dispatch
+  cancel-in-progress: false
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate the exact source, plan, candidate and prior operation
+        run: python .github/scripts/dispatch_reviewed_v5.py prepare
+      - name: Preserve dispatch intent before the single POST
+        uses: actions/upload-artifact@v4
+        with:
+          name: coordinated-v5-dispatch-intent
+          path: /tmp/coordinated-v5-dispatch/intent.json
+          if-no-files-found: error
+      - name: Dispatch once using the repository Actions token
+        run: python .github/scripts/dispatch_reviewed_v5.py dispatch
+      - name: Preserve dispatch result and local attempt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coordinated-v5-dispatch-outcome
+          path: /tmp/coordinated-v5-dispatch/*.json
+          if-no-files-found: warn
