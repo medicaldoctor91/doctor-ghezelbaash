@@ -4,6 +4,8 @@ from pathlib import Path
 
 def validate_candidate(work):
     from platform_bundle import DOI_POLICY
+    from release_plan import load_plan, validate_dataset_baseline
+    approved=load_plan()
     cohort=DOI_POLICY['coordinatedRelease']
     work=Path(work);checked=[]
 
@@ -28,6 +30,9 @@ def validate_candidate(work):
         policy=json.loads((work/platform/'doi-policy.json').read_text())
         assert policy['currentArchive']['sourceCommit']==expected_source,('Archive source differs',platform)
     graph=json.loads((work/'website/graph.jsonld').read_text())
+    validate_dataset_baseline(graph, DOI_POLICY)
+    for platform in ['hf-stage','kaggle','archive']:
+        validate_dataset_baseline(json.loads((work/platform/'graph.jsonld').read_text()), DOI_POLICY)
     assert len(graph['@graph'])==cohort['expectedGraphNodes']
     assert len(rdflib.Graph().parse(work/'website/graph.jsonld',format='json-ld'))==cohort['expectedGraphTriples']
     from browser_projection import validate_home_projection
@@ -61,6 +66,10 @@ def validate_candidate(work):
                 assert value['releaseCohort']==DOI_POLICY['currentArchive']['doi']
     kg=work/'kaggle';control=json.loads((kg/'dataset-metadata.json').read_text());assert control['description']==(kg/'README.md').read_text()
     packaging=json.loads((work/'hf-stage/viewer/packaging.json').read_text())
+    if approved:
+        measured={name:spec['rows'] for name,spec in packaging['tables'].items()}
+        assert measured==approved['reviewedTables'], ('Derived table counts differ from editorially reviewed release',measured)
+        assert expected_source==approved['refs']['buildSource'], 'Candidate source differs from reviewed M'
     for key,label in [('entity_facts','facts'),('clinical_passages','clinical passages'),('query_matrix','queries'),('clinical_answers','source-linked answers')]:
         assert format(packaging['tables'][key]['rows'],',')+' '+label in control['subtitle']
     manifest=json.loads((kg/'kaggle-manifest.json').read_text())

@@ -1,11 +1,26 @@
 # Fixed source and isolated additions
 
-The current source-only baseline is commit `0afbefec50a5cd019608699af09ff67efa4c8212`,
-tree `36fb3d46e15a3cf0374585ee6187c15d581c7067`, containing 184 application files.
-Annotated tag `source-frozen-2026-10-30` identifies that checkpoint. The four
-freeze-management files remain separately in `main`; they are excluded from
-the materialized application snapshot, so its source has no self-referencing
-management pin. Run the guard and materialization command from `main`.
+The current v1.3.5 application baseline is commit `11ee42b298f96c8db8137d98247739e822a01483`,
+tree `1350ae57501cd1f6e01470f385014d8cf3c29e54`, containing 202 application files.
+Annotated tag `source-frozen-2026-11-05-v5` identifies it. Its direct management
+child restores exactly the four management files with these measured pins.
+The guard and materialization checks apply to this new snapshot.
+
+All earlier 5 November review candidates remain unchanged under their original
+`source-frozen-2026-11-05`, `source-frozen-2026-11-05-v2` and
+`source-frozen-2026-11-05-v3` and `source-frozen-2026-11-05-v4` tags and their reviewed management tags.
+This revision recognizes only the exact legacy reader.<12 lowercase hex>.js
+asset form during replacement of the complete HF mirror. The actual public
+baseline inventory and rejected-path regression tests cover that cleanup.
+Current query release metadata is bound to Dataset 1.3.5 while the independently
+protected positioning corpus retains its own version and bytes. The preceding
+heading compaction and all visible sections remain preserved.
+Earlier candidates were not publicly deployed.
+
+The historical 30 October baseline remains commit
+`0afbefec50a5cd019608699af09ff67efa4c8212`, tree
+`36fb3d46e15a3cf0374585ee6187c15d581c7067`, with 184 application files and tag
+`source-frozen-2026-10-30`. No historical commit or tag is rewritten.
 
 The earlier `source-frozen-2026-10-24` retains commit
 `fd4c523bbbc4103f10be89cec152dfdd436655aa`, tree
@@ -56,15 +71,17 @@ This source checkout is distinct from the existing published website payload at
 exact restoration uses the already verified published bytes, never a relabelled
 rebuild. The fixed cohort is recorded in [maintenance](maintenance-release.md).
 
-## Publication freeze
+## Controlled publication
 
-The seven write-capable maintenance/publication workflows are disabled in GitHub
-Actions. Their files remain intact. The read-only media inspector and source
-integrity check remain available. Cloudflare Git automatic production and preview
-deployment are disabled, including its global Git deployment switch.
+The old automatic publication paths remain disabled. Cloudflare automatic Git
+production and preview deployment remain disabled, including its global switch.
+The reviewed bootstrap reserved the real unpublished archive
+`10.5281/zenodo.23965042`; its receipts remain outside frozen source.
 
-An intentional future release requires explicitly ending this freeze, checking
-the then-current public cohort and using the existing coordinated release
-validation. Adding a file to `main` does not enable publication or create a new
-Hugging Face revision, Kaggle version or Zenodo record. The current DOI and all
-published platform files remain unchanged.
+The manual coordinated workflow may be enabled for the exact reviewed management
+commit, finalized external release plan and frozen candidate. It checks C/M
+lineage, source guards, tool hashes, provider baselines and platform bytes.
+Zenodo publication is last, after website, Hugging Face, Kaggle and Notebook
+runtime verification. Enabling that workflow does not publish a platform.
+Historical records and tags remain unchanged. See
+[the coordinated release contract](coordinated-release-plan.md).

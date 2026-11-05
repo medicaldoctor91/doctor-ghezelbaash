@@ -3,13 +3,17 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {sha256Hex} from './lib/hash.mjs';
 
-export async function renderMediaWorker({distDir,source}){
+export function mediaWorkerPaths(source){
  const paths=[...new Set(source.graph['@graph'].flatMap(node=>{
   if(![].concat(node['@type']??[]).includes('MediaObject')||typeof node.contentUrl!=='string')return [];
   const url=new URL(node.contentUrl);
   return url.origin===source.canonicalOrigin&&/^\/media\/videos\/.+\.(?:mp4|webm)$/.test(url.pathname)?[url.pathname]:[];
  }))].sort();
  assert.equal(paths.length,8,'Exactly the eight canonical video encodings use the range Worker');
+ return paths;
+}
+export async function renderMediaWorker({distDir,source}){
+ const paths=mediaWorkerPaths(source);
  const media={};
  for(const name of paths){const bytes=await fs.readFile(path.join(distDir,name.slice(1)));media[name]={bytes:bytes.length,sha256:sha256Hex(bytes),mediaType:name.endsWith('.mp4')?'video/mp4':'video/webm'};}
  const blocks=(await fs.readFile(path.join(distDir,'_headers'),'utf8')).trim().split(/\n\s*\n/).map(block=>block.split('\n'));

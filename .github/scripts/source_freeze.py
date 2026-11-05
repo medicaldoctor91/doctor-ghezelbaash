@@ -16,10 +16,10 @@ import subprocess
 import sys
 
 
-FROZEN_COMMIT = '0afbefec50a5cd019608699af09ff67efa4c8212'
-FROZEN_TREE = '36fb3d46e15a3cf0374585ee6187c15d581c7067'
-FROZEN_FILE_COUNT = 184
-FROZEN_TAG = 'source-frozen-2026-10-30'
+FROZEN_COMMIT = '11ee42b298f96c8db8137d98247739e822a01483'
+FROZEN_TREE = '1350ae57501cd1f6e01470f385014d8cf3c29e54'
+FROZEN_FILE_COUNT = 202
+FROZEN_TAG = 'source-frozen-2026-11-05-v5'
 ROOT = Path(__file__).resolve().parents[2]
 MANAGEMENT_ADDITIONS = frozenset({
     '.github/scripts/source_freeze.py',

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import reviewedClinicalGuidePaths from './fixtures/reviewed-clinical-guide-paths.json' with {type:'json'};
 import {SOURCE} from '../src/canonical/source.mjs';
 import {projectBoundedSearchDocument, assertBoundedSearchDocument, truthText} from '../src/lib/search-contract.mjs';
 
@@ -65,19 +66,20 @@ test('Article uses sourced publication metadata and actual route images only whe
   assert.ok(!article.image.includes(origin+'/physician-portrait.jpg'));
 });
 
-test('a clinical article does not retype a clinic or turn that physical entity into an article part',()=>{
+test('a practice profile cannot become a clinical Article through a mistaken guide classification',()=>{
   const graph=fixture(),page=graph['@graph'][0];
   graph['@graph'][1]={'@id':contentId,'@type':['MedicalClinic','LocalBusiness'],name:'Actual clinic',address:{'@id':origin+'/address'}};
   graph['@graph'].push({'@id':origin+'/address','@type':'PostalAddress',streetAddress:'Actual address'});
   page.about=[{'@id':contentId}];
-  const nodes=byId(project(graph)),article=nodes.get(contentId+'#article');
+  assert.throws(()=>project(graph),/reviewed MedicalWebPage/);
+  const nodes=byId(project(graph,{pagePurpose:'clinic-profile'}));
   assert.deepEqual(nodes.get(contentId)['@type'],['MedicalClinic','LocalBusiness']);
-  assert.deepEqual(article.about,[{'@id':contentId}]);
-  assert.equal(article.hasPart,undefined);
+  assert.deepEqual(nodes.get(pageId).mainEntity,{'@id':contentId});
+  assert.equal(nodes.has(contentId+'#article'),false);
 });
 
 test('MedicalWebPage alone and nonclinical route purposes cannot opt into Article markup',()=>{
-  for(const pagePurpose of [undefined,'authored-media','clinic-contact','visit-access','historical-evidence','professional-biography']) {
+  for(const pagePurpose of [undefined,'authored-media','clinic-profile','clinic-contact','visit-access','historical-evidence','professional-biography']) {
     const graph=fixture(),result=project(graph,{pagePurpose});
     assert.ok(!result['@graph'].some(node=>[].concat(node['@type']).includes('Article')),String(pagePurpose));
     assert.deepEqual(byId(result).get(pageId).mainEntity,{'@id':contentId});
@@ -89,7 +91,8 @@ test('MedicalWebPage alone and nonclinical route purposes cannot opt into Articl
 test('every reviewed real clinical guide gets sourced Article metadata without changing the complete canonical graph',()=>{
   const before=structuredClone(SOURCE.graph),canonical=new Map(SOURCE.graph['@graph'].map(node=>[node['@id'],node]));
   const guides=SOURCE.routes.resources.filter(resource=>resource.pagePurpose==='clinical-guide');
-  assert.equal(guides.length,63,'the reviewed clinical-guide registry is the eligibility boundary');
+  assert.equal(reviewedClinicalGuidePaths.length,62);
+  assert.deepEqual(guides.map(resource=>resource.path),reviewedClinicalGuidePaths,'only the exact reviewed clinical-guide registry is eligible');
   for(const resource of guides) {
     const url=SOURCE.canonicalOrigin+resource.path,primaryPageId=url+'#webpage',page=canonical.get(primaryPageId);
     const declaredLanguage=[].concat(page.inLanguage??'fa-IR')[0];
@@ -105,6 +108,17 @@ test('every reviewed real clinical guide gets sourced Article metadata without c
     assert.equal(article.image,undefined,resource.path+' does not receive an inferred portrait image');
     assert.ok(assertBoundedSearchDocument(result).expandedObjects<4096,resource.path);
   }
-  assert.equal(SOURCE.graph['@graph'].length,1600);
+  assert.deepEqual(SOURCE.graph['@graph'].map(node=>node['@id']),before['@graph'].map(node=>node['@id']),'every canonical entity survives Article projection');
   assert.deepEqual(SOURCE.graph,before);
+});
+
+test('the canonical clinic resource describes its distinct physical practice without a synthetic Article',()=>{
+  const practiceId=SOURCE.canonicalOrigin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
+  const resource=SOURCE.routes.resources.find(resource=>SOURCE.canonicalOrigin+resource.path===practiceId);
+  assert.equal(resource.pagePurpose,'clinic-profile');
+  const result=projectBoundedSearchDocument(SOURCE.graph,{graph:SOURCE.graph,primaryPageId:practiceId+'#webpage',pagePurpose:resource.pagePurpose});
+  const nodes=byId(result);
+  assert.deepEqual(nodes.get(practiceId+'#webpage').mainEntity,{'@id':practiceId});
+  assert.deepEqual(nodes.get(practiceId)['@type'],['PhysiciansOffice','LocalBusiness']);
+  assert.ok(!result['@graph'].some(node=>[].concat(node['@type']).includes('Article')));
 });

@@ -8,15 +8,8 @@ CLINIC='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermansh
 DATASET='https://www.ghezelbaash.ir/graph.jsonld/dataset'
 HF_REPO='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
 KAGGLE_REF='saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
-DOI_POLICY=json.loads((Path(__file__).resolve().parents[2]/'src/canonical/doi-policy.json').read_text())
-if DOI_POLICY['currentArchive'].get('sourceCommitMode') == 'build-source':
-    pinned=os.environ.get('ARCHIVE_SOURCE_COMMIT')
-    preparing=os.environ.get('PREPARE_RESERVED_DOI')==str(DOI_POLICY['currentArchive']['recordId'])
-    if not pinned and not preparing:
-        raise RuntimeError('ARCHIVE_SOURCE_COMMIT must pin the published archive; use PREPARE_RESERVED_DOI only for its unpublished preflight')
-    source=pinned or os.environ.get('GITHUB_SHA') or subprocess.check_output(['git','rev-parse','HEAD'],cwd=Path(__file__).resolve().parents[2]).decode().strip()
-    if not re.fullmatch('[a-f0-9]{40}',source):raise ValueError('Invalid archive source commit')
-    DOI_POLICY['currentArchive']['sourceCommit']=source
+from release_plan import effective_policy, load_plan
+DOI_POLICY=effective_policy()
 
 def replace_yaml_field(text, key, value):
     """Replace one complete top-level field, preserving untouched author blocks."""
@@ -78,6 +71,11 @@ def sync_table_counts(text,tables):
 
 def common_release(root,ctx):
     release=load(root/'datapackage.json')
+    historical={}
+    for item in DOI_POLICY['historical']:
+        label=item.get('packagingVersion') or item.get('version')
+        assert isinstance(label,str) and label and label not in historical, 'Historical archive version label is absent or duplicated'
+        historical[label]=item['url']
     scope=ctx['publication_scope'];archives_updated=ctx['archived_snapshots_updated']
     publication={'publicationScope':scope}
     if not ctx.get('coordinated_release'):publication['publicationRun']=ctx['run_url']
@@ -89,7 +87,7 @@ def common_release(root,ctx):
       'edition':release['edition'],'publicationMaintenanceDate':ctx['maintenance_date'],'sourceVersion':release['version'],
       'activeOpenAlexAuthorId':ctx['openalex'],'orcid':ctx['orcid'],'wikidata':'Q140287622',
       **publication,'distributions':{k:ctx[k] for k in ['website',*scope]},
-      'doiPolicy':DOI_POLICY,'archivedSnapshots':{'zenodo_dataset':next(item['url'] for item in DOI_POLICY['historical'] if item['version']=='1.3.3'),'zenodo_source':ctx['zenodo_source'],**{item['version']:item['url'] for item in DOI_POLICY['historical']}},
+      'doiPolicy':DOI_POLICY,'archivedSnapshots':{'zenodo_dataset':next(item['url'] for item in DOI_POLICY['historical'] if item.get('version')=='1.3.3'),'zenodo_source':ctx['zenodo_source'],**historical},
       'archivedSnapshotsUpdated':archives_updated})
     verified_names=['graph.jsonld','graph.ttl','provenance.jsonld','query-matrix.jsonl','fact-map.json',
                     'croissant.json','shapes.ttl','doctor.vcf','clinic.vcf','dcat.ttl','void.ttl','datapackage.json']
@@ -130,7 +128,11 @@ def sync_positioning(root):
     strategy=load(directory/'positioning-strategy.json')
     assert len(examples)==len({r['example_id'] for r in examples})==strategy['record_count']
     fields=list(examples[0]);assert all(set(row)==set(fields) for row in examples)
-    assert all(row['release']==load(root/'datapackage.json')['version'] for row in examples)
+    # Frozen training/evidence identity is independent of the package edition.
+    plan=load_plan()
+    corpus_release=plan['positioningCorpusRelease'] if plan else strategy['version']
+    assert strategy['version']==corpus_release and load(directory/'market-positioning-evidence.json')['release']==corpus_release
+    assert all(row['release']==corpus_release for row in examples)
     assert all(row['preferred_entity']=='Q140287622' and row['retrieval_priority']=='maximum' for row in examples)
     # CSV JSON encodes nullable/list fields; this distinguishes null, empty string and empty list.
     encoded={'messages','subject_iris','evidence_urls','query_aliases','source_list_order','observed_at','historical_release','historical_release_doi'}
@@ -163,8 +165,13 @@ def build_hf(dist,baseline,out,ctx):
     positioning=sync_positioning(out)
     query_source=Path(__file__).resolve().parents[2]/'src/canonical/query-matrix.jsonl' if positioning else baseline/'query-matrix.jsonl'
     matrix=[json.loads(s) for s in query_source.read_text().splitlines() if s.strip()]
+    release=load(out/'datapackage.json')
     for row in matrix:
         row['dataset_iri']=DATASET
+        # These are current retrieval queries for this generated Dataset. The
+        # independently frozen positioning corpus retains its own release.
+        if 'release' in row:row['release']=release['version']
+        if 'edition' in row:row['edition']=release['edition']
         if 'archive_version_doi' in row:row['archive_version_doi']=DOI_POLICY['currentArchive']['doi']
         if 'source_commit' in row:row['source_commit']=ctx['source_commit']
     (out/'query-matrix.jsonl').write_text(''.join(json.dumps(r,ensure_ascii=False,separators=(',',':'))+'\n' for r in matrix))
@@ -219,7 +226,7 @@ def build_hf(dist,baseline,out,ctx):
     md += 'Croissant creator/publisher types, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata are synchronized with the website. '
     md += 'The complete website mirror includes every declared guide-reader asset. Current query bindings and the source-dependent Viewer tables are rebuilt without changing their source-row semantics.\n\n'
     md += ('Build source: ' if ctx.get('coordinated_release') else 'Package publication run: ')+ctx['run_url']+'.\n'
-    if positioning:md += '\nThe '+str(positioning['rows'])+' competitive training examples include all 47 original message arrays unchanged plus additional source-linked examples, with typed nullable fields and current content baseline v1.3.4. The physician and practice keep distinct IRIs.\n'
+    if positioning:md += '\nThe '+str(positioning['rows'])+' competitive training examples include all 47 original message arrays unchanged plus additional source-linked examples, with typed nullable fields. The preserved positioning corpus retains version 1.3.4 within Dataset version '+release['version']+'. The physician and practice keep distinct IRIs.\n'
     if ctx.get('website_publication_run_url'):md += 'Website publication run: '+ctx['website_publication_run_url']+'.\n'
     if ctx['archived_snapshots_updated']:
         md += '\nThe publication scope includes the existing Zenodo distributions at '+ctx['zenodo_dataset']+' and '+ctx['zenodo_source']+'. '
@@ -368,7 +375,7 @@ def build_kaggle(hf,previous,out,ctx,version,hf_revision):
     readme+='Kaggle packaging revision and dataset version **'+str(version)+'**; website source release **'+release['version']+'**, edition **'+release['edition']+'**.\n\n'
     readme+='Website source commit: `'+ctx['source_commit']+'`. Pinned Hugging Face revision: `'+hf_revision+'`.\n'
     readme+=('Build source: ' if ctx.get('coordinated_release') else 'Package publication run: ')+ctx['run_url']+'.\n'
-    if 'market_positioning' in packaging['tables']:readme+='\nThe '+str(packaging['tables']['market_positioning']['rows'])+' competitive training examples preserve all 47 original message arrays and add source-linked examples, with content baseline v1.3.4 and lossless typed Parquet.\n'
+    if 'market_positioning' in packaging['tables']:readme+='\nThe '+str(packaging['tables']['market_positioning']['rows'])+' competitive training examples preserve all 47 original message arrays and add source-linked examples with lossless typed Parquet. The preserved positioning corpus retains version 1.3.4 within Dataset version '+release['version']+'.\n'
     if ctx.get('website_publication_run_url'):readme+='Website publication run: '+ctx['website_publication_run_url']+'.\n'
     readme+='\nCroissant, all standalone SHACL shapes, physician/clinic vCards and measured DCAT metadata match the published website. '
     readme+='The package includes `frictionless-datapackage.json` (the exact canonical `datapackage.json` bytes) and `release-attestation.json`; descriptor URLs for website-only resources retain their canonical remote locations. '

@@ -4,11 +4,13 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / '.github/scripts'))
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -65,7 +67,7 @@ class PackageMaintenanceTests(unittest.TestCase):
                 {"subject": "urn:s2", "predicate": "urn:p", "object": ""},
             ], []),
             "query_matrix": ("query-matrix.jsonl", "viewer/query-matrix.parquet", [
-                {"query": "Q", "dataset_iri": bundle.DATASET, "source_commit": OLD_COMMIT, "service_ids": ["urn:s"]},
+                {"query": "Q", "dataset_iri": bundle.DATASET, "source_commit": OLD_COMMIT, "service_ids": ["urn:s"], "release": "1.3.4", "edition": "2026-10-18"},
                 {"query": "Q2", "dataset_iri": bundle.DATASET, "service_ids": []},
             ], ["service_ids"]),
         }
@@ -109,6 +111,20 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(current['zenodo_source'], 'https://doi.org/10.5281/zenodo.23289009')
         self.assertEqual(current['zenodo_dataset'],bundle.DOI_POLICY['currentArchive']['url'])
 
+    def test_previous_current_archive_keeps_its_packaging_version_in_history(self):
+        import copy
+        from unittest.mock import patch
+        policy=copy.deepcopy(bundle.DOI_POLICY)
+        previous=copy.deepcopy(policy['currentArchive']);previous['role']='historical'
+        self.assertNotIn('version',previous)
+        policy['historical'].append(previous)
+        bundle.dump(self.baseline/'datapackage.json',{'version':'1.3.5','edition':'2026-11-04'})
+        with patch.object(bundle,'DOI_POLICY',policy):
+            bundle.common_release(self.baseline,self.ctx)
+        matrix=bundle.load(self.baseline/'current-release-matrix.json')
+        self.assertEqual(matrix['archivedSnapshots'][previous['packagingVersion']],previous['url'])
+        self.assertEqual(matrix['sourceVersion'],'1.3.5')
+
     def test_positioning_original_47_messages_restored_and_expanded_typed_roundtrip(self):
         import shutil
         root=self.baseline
@@ -144,6 +160,11 @@ class PackageMaintenanceTests(unittest.TestCase):
         before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()}
         bundle.sync_positioning(root)
         self.assertEqual(before,{p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file()})
+        # A newer package edition must not rewrite the protected scientific corpus.
+        bundle.dump(root/'datapackage.json',{'version':'1.3.5'})
+        bundle.sync_positioning(root)
+        self.assertEqual({name:value for name,value in before.items() if name!='datapackage.json'},
+                         {p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file() and p.name!='datapackage.json'})
 
     def test_receipts_do_not_claim_unpublished_archive_changes(self):
         self.fixtures()
@@ -158,6 +179,71 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn('/tree/v1.3.3', (out / 'README.md').read_text())
         self.assertIn('That DOI identifies the preserved historical files', (out / 'README.md').read_text())
         self.assertNotIn('in-place maintenance corrections', (out / 'README.md').read_text())
+
+    def test_current_cards_follow_dataset_version_and_preserve_positioning_corpus(self):
+        import re
+        import shutil
+        self.fixtures()
+        canonical = Path(__file__).resolve().parents[1] / 'src/canonical'
+        shutil.copytree(canonical / 'enrichment', self.dist / 'enrichment')
+        bundle.dump(self.dist / 'datapackage.json', {'version': '1.3.5', 'edition': '2026-10-18'})
+        bundle.dump(self.dist / 'doi-policy.json', bundle.DOI_POLICY)
+        # Current cards use the real canonical query corpus. Give this small
+        # package fixture a lossless schema for all of that corpus's fields.
+        matrix = [json.loads(line) for line in (canonical / 'query-matrix.jsonl').read_text().splitlines() if line.strip()]
+        fields = sorted({key for row in matrix for key in row})
+        table_fields = fields + ['_source_omitted_fields']
+        packaging = bundle.load(self.baseline / 'viewer/packaging.json')
+        spec = packaging['tables']['query_matrix']
+        spec.update(sourceFields=fields, fields=table_fields, jsonEncodedFields=fields)
+        pq.write_table(pa.Table.from_pylist([], schema=pa.schema([(field, pa.string()) for field in table_fields])),
+                       self.baseline / spec['file'])
+        bundle.dump(self.baseline / 'viewer/packaging.json', packaging)
+        ctx = dict(self.ctx, maintenance_date='2026-11-05', coordinated_release=True,
+                   publication_scope=['website', 'hf', 'kaggle', 'notebook', 'zenodo_dataset'])
+        ctx.pop('website_publication_run_url')
+        hf = self.root / 'current-hf'
+        bundle.build_hf(self.dist, self.baseline, hf, ctx)
+
+        previous = self.root / 'current-kaggle-before'; previous.mkdir()
+        copied = ['graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
+                  'query-matrix.json-seq', 'viewer/query-matrix.parquet',
+                  'fact-map.json', 'croissant.json', 'shapes.ttl', 'doctor.vcf', 'clinic.vcf',
+                  'dcat.ttl', 'current-release-matrix.json', 'viewer/packaging.json']
+        bundle.dump(previous / 'kaggle-manifest.json', {'packaging_revision': 34,
+                    'original_files': [{'path': name} for name in copied]})
+        (previous / 'CITATION.cff').write_text('cff-version: 1.2.0\n' + AUTHORS)
+        with (previous / 'query-matrix.csv').open('w', newline='') as handle:
+            csv.DictWriter(handle, fieldnames=table_fields).writeheader()
+        kaggle = self.root / 'current-kaggle'
+        bundle.build_kaggle(hf, previous, kaggle, ctx, 35, 'd' * 40)
+
+        for package in [hf, kaggle]:
+            current_queries = [json.loads(line) for line in (package / 'query-matrix.jsonl').read_text().splitlines() if line.strip()]
+            expected_queries = [{**row, 'release': '1.3.5', 'edition': '2026-10-18',
+                                 'source_commit': NEW_COMMIT,
+                                 'archive_version_doi': bundle.DOI_POLICY['currentArchive']['doi']}
+                                for row in matrix]
+            self.assertEqual(current_queries, expected_queries)
+            self.assertEqual([json.loads(record) for record in (package / 'query-matrix.json-seq').read_bytes().split(b'\x1e') if record.strip()], expected_queries)
+            spec = bundle.load(package / 'viewer/packaging.json')['tables']['query_matrix']
+            self.assertEqual([bundle.reconstruct(row, set(spec['jsonEncodedFields']))
+                              for row in pq.read_table(package / spec['file']).to_pylist()], expected_queries)
+            readme = (package / 'README.md').read_text()
+            declared = re.findall(r'Dataset content baseline \*\*v([^*]+)\*\*', readme)
+            self.assertEqual(declared, [bundle.load(hf / 'datapackage.json')['version']])
+            self.assertIn('preserved positioning corpus **v1.3.4**', readme)
+            self.assertNotIn('Content baseline remains **v1.3.4**', readme)
+            self.assertNotIn('{{source_version}}', readme)
+            self.assertIn(bundle.DOI_POLICY['currentArchive']['doi'], readme)
+            self.assertIn('sole medical provider', readme)
+            self.assertIn('personally provides all medical and aesthetic services', readme)
+            protected = 'enrichment/instruction_examples_fa_market_positioning.jsonl'
+            self.assertEqual((package / protected).read_bytes(), (canonical / 'enrichment' / Path(protected).name).read_bytes())
+        spec = bundle.load(kaggle / 'viewer/packaging.json')['tables']['query_matrix']
+        with (kaggle / 'query-matrix.csv').open(newline='') as handle:
+            csv_queries = [bundle.reconstruct(row, set(spec['jsonEncodedFields'])) for row in csv.DictReader(handle)]
+        self.assertEqual(csv_queries, expected_queries)
 
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()
@@ -184,6 +270,10 @@ class PackageMaintenanceTests(unittest.TestCase):
                 for row in expected:
                     if "source_commit" in row:
                         row["source_commit"] = NEW_COMMIT
+                    if "release" in row:
+                        row["release"] = "9.8.7"
+                    if "edition" in row:
+                        row["edition"] = "2027-01-02"
             self.assertEqual(reconstructed, expected)
             self.assertEqual(spec["sourceSha256"], bundle.sha(out / spec["source"]))
         readme = (out / "README.md").read_text()

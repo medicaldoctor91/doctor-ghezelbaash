@@ -8,9 +8,9 @@ const digest=b=>'sha-256=:'+createHash('sha256').update(b).digest('base64')+':';
 const etag=`"${hex}"`,url='https://www.ghezelbaash.ir/media/test.mp4';
 const policy={headers:{'X-Content-Type-Options':'nosniff','Content-Signal':'search=yes'}};
 const media={'/media/test.mp4':{bytes:bytes.length,sha256:hex,mediaType:'video/mp4'}};
-function harness({legacy=false,corrupt=false}={}){
+function harness({legacy=false,corrupt=false,digestHeader=digest(bytes)}={}){
  const original=globalThis.caches;let cached,fetches=0,puts=0,cacheKey;
- const full=()=>new Response(bytes,{headers:{'Content-Digest':digest(bytes),'Last-Modified':'Tue, 20 Oct 2026 00:00:00 GMT','Content-Length':'128','ETag':etag,'Link':'<old>; rel=canonical'}});
+ const full=()=>new Response(bytes,{headers:{...(digestHeader===null?{}:{'Content-Digest':digestHeader}),'Last-Modified':'Tue, 20 Oct 2026 00:00:00 GMT','Content-Length':'128','ETag':etag,'Link':'<old>; rel=canonical'}});
  if(legacy)cached=full();
  globalThis.caches={default:{async match(k){cacheKey=k.url;return cached?.clone();},async put(k,r){puts++;cacheKey=k.url;cached=r;}}};
  const worker=createMediaRangeWorker(media,policy);
@@ -39,6 +39,15 @@ test('empty HEAD, 304 and 416 never inherit a full-body Content-Digest',async()=
    const r=await h.fetch(headers,method);assert.equal(r.status,status);assert.equal((await r.arrayBuffer()).byteLength,0);assert.equal(r.headers.get('Content-Digest'),null);assert.equal(r.headers.get('ETag'),etag);if(method==='HEAD')assert.equal(r.headers.get('Content-Length'),'128');if(status===416)assert.equal(r.headers.get('Content-Range'),'bytes */128');
   }
  }finally{h.restore();}
+});
+test('full video digests come from sealed metadata when upstream or cached headers omit or misstate them',async()=>{
+ for(const legacy of [false,true])for(const digestHeader of [null,'sha-256=:obsolete:']){
+  const h=harness({legacy,digestHeader});try{
+   const full=await h.fetch();assert.equal(full.status,200);assert.equal(full.headers.get('Content-Digest'),digest(bytes));assert.deepEqual(new Uint8Array(await full.arrayBuffer()),bytes);
+   const partial=await h.fetch({Range:'bytes=0-9'});assert.equal(partial.status,206);assert.equal(partial.headers.get('Content-Digest'),digest(bytes.slice(0,10)));
+   await partial.arrayBuffer();
+  }finally{h.restore();}
+ }
 });
 test('sealed full-file verification still rejects wrong upstream bytes without caching',async()=>{
  const h=harness({corrupt:true});try{const r=await h.fetch({Range:'bytes=0-63'});assert.equal(r.status,502);assert.equal(h.state().puts,0);}finally{h.restore();}

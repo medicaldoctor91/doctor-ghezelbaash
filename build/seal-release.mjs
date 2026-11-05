@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { sha256Hex, sha384Sri, contentDigestSha256 } from './lib/hash.mjs';
 import {sealHeaders} from './lib/headers.mjs';
+import {mediaWorkerPaths} from './materialize-media-worker.mjs';
 const execFileAsync=promisify(execFile);
 
 async function exists(file){try{await fs.access(file);return true;}catch{return false;}}
@@ -31,7 +32,8 @@ export async function sealRelease({distDir,projectRoot,releaseDate}){
   await fs.writeFile(path.join(distDir,'content-digest-eligibility.json'),JSON.stringify(digestMetadata,null,2)+'\n');
   const resourcePaths=[...canonicalSource.machineResources,...canonicalSource.delivery.releaseResources]
     .map(resource=>resource.path).filter(name=>name!=='/_headers.content-digest.pending');
-  const headers=sealHeaders({headers:await fs.readFile(path.join(distDir,'_headers'),'utf8'),eligible,resourcePaths});
+  const headers=sealHeaders({headers:await fs.readFile(path.join(distDir,'_headers'),'utf8'),eligible,resourcePaths,
+    workerDigestPaths:mediaWorkerPaths(canonicalSource)});
   await fs.writeFile(path.join(distDir,'_headers'),headers);
   await fs.rm(path.join(distDir,'_headers.content-digest.pending'),{force:true});
   const lockBytes=await fs.readFile(path.join(projectRoot,'package-lock.json'));

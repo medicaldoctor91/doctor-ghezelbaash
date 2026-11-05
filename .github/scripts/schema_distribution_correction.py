@@ -347,11 +347,12 @@ def public_kaggle_downloads(work, plan):
 
 def public_notebook_execution(work, plan):
     """Require actual public results; a cached owner status is not a substitute."""
+    expected_plan(plan)
     public = read('https://www.kaggle.com/api/v1/kernels/pull/' + gates.NB).json()
     owner, slug = gates.NB.split('/')
     response = public_post('https://api.kaggle.com/v1/kernels.KernelsApiService/DownloadKernelOutput',
         json={'ownerSlug': owner, 'kernelSlug': slug, 'filePath': 'doi-release-execution.json', 'versionNumber': 16}, timeout=90)
-    gates.notebook_identity(work, public, response.json())
+    gates.notebook_identity(work, public, response.json(), expected_doi=plan['doi'])
     return {'status': 'PASS', 'version': 16, 'publicSourceAndExecutionVerified': True,
             'execution': response.json()}
 

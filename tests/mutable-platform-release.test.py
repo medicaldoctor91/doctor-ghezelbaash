@@ -216,11 +216,11 @@ class FrozenHomeProjectionTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):
   from browser_projection import expected_home_search_projection
-  origin='https://www.ghezelbaash.ir';person=origin+'/#saeed-ghezelbash';address=origin+'/clinic-postal-address'
+  origin='https://www.ghezelbaash.ir';person=origin+'/#saeed-ghezelbash';address=origin+'/clinic-postal-address';clinic=origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
   cls.graph={'@context':'https://schema.org','@graph':[
    {'@id':origin+'/webpage','@type':['ProfilePage','MedicalWebPage'],'url':origin+'/', 'name':'Physician profile','mainEntity':{'@id':person}},
-   {'@id':person,'@type':['Person','IndividualPhysician'],'name':'Example physician','telephone':'+980000000001','email':'mailto:test@example.invalid','address':{'@id':address}},
-   {'@id':origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','@type':['PhysiciansOffice','LocalBusiness'],'name':'Example clinic','telephone':'+980000000001','address':{'@id':address}},
+   {'@id':person,'@type':['Person','IndividualPhysician'],'name':'Example physician','telephone':'+980000000001','email':'mailto:test@example.invalid','address':{'@id':address},'owns':[{'@id':clinic}],'practicesAt':{'@id':clinic}},
+   {'@id':clinic,'@type':['PhysiciansOffice','LocalBusiness'],'name':'Example clinic','telephone':'+980000000001','address':{'@id':address},'owner':{'@id':person}},
    {'@id':address,'@type':'PostalAddress','streetAddress':'Example street','addressLocality':'Example city','addressCountry':'IR','postalCode':'0000000000'},
    {'@id':origin+'/graph.jsonld/dataset','@type':'Dataset','name':'Example physician-authored dataset',
     'description':'A complete public knowledge graph of the physician and supporting clinic.',

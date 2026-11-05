@@ -1,5 +1,6 @@
 """Validate the built representations with RDF, SHACL and the Croissant reader."""
 import csv
+import base64
 import hashlib
 import json
 import re
@@ -124,6 +125,57 @@ def validate_html(root, origin, graph):
     return {'html_documents': len(documents), 'browser_rdf_terms_checked': checked, 'license_images': len(images)}
 
 
+def validate_delivery(root, origin, graph):
+    blocks = {}
+    for block in re.split(r'\n\s*\n', (root / '_headers').read_text().strip()):
+        pattern, *lines = block.splitlines()
+        assert pattern not in blocks, ('Duplicate header policy', pattern)
+        blocks[pattern] = '\n'.join(lines)
+    assert len(blocks) <= 100, 'Cloudflare Pages header-rule limit exceeded'
+    for path in ['/404', '/404.html']:
+        assert re.search(r'^  Cache-Control: no-store$', blocks.get(path, ''), re.M), path
+        assert re.search(r'^  X-Robots-Tag: noindex$', blocks[path], re.M), path
+    assert 'X-Robots-Tag:' not in blocks['/*'], 'Error exclusions must not apply to normal HTML'
+    schema = rdflib.Namespace('https://schema.org/')
+    worker_paths = {
+        urlparse(str(url)).path
+        for media in graph.subjects(RDF.type, schema.MediaObject)
+        for url in graph.objects(media, schema.contentUrl)
+        if str(url).startswith(origin + '/media/videos/')
+        and re.search(r'\.(mp4|webm)$', str(url))
+    }
+    assert len(worker_paths) == 8
+    routes = json.loads((root / '_routes.json').read_text())
+    assert routes == {'version': 1, 'include': sorted(worker_paths), 'exclude': []}
+    # Verify the emitted Worker against source code and the actual sealed media
+    # bytes. A missing static digest is permitted only for these exact routes.
+    repository = Path(__file__).resolve().parents[1]
+    subprocess.run([
+        'node', '--input-type=module', '-e',
+        "import {SOURCE} from './src/canonical/source.mjs';"
+        "import {verifyMediaWorker} from './build/materialize-media-worker.mjs';"
+        "await verifyMediaWorker({distDir:process.argv[1],source:SOURCE});",
+        str(root),
+    ], cwd=repository, check=True)
+    eligibility = json.loads((root / 'content-digest-eligibility.json').read_text())
+    assert eligibility['status'] == 'configured-for-cloudflare-pages'
+    assert eligibility['algorithm'] == 'sha-256'
+    assert worker_paths <= set(eligibility['eligible'])
+    static_digests = 0
+    for path, metadata in eligibility['eligible'].items():
+        body = (root / path.lstrip('/')).read_bytes()
+        digest = hashlib.sha256(body).digest()
+        expected = 'sha-256=:' + base64.b64encode(digest).decode() + ':'
+        assert metadata == {'bytes': len(body), 'sha256': digest.hex(), 'contentDigest': expected}, path
+        if path in worker_paths:
+            assert 'Content-Digest:' not in blocks.get(path, ''), ('Worker digest duplicated in static rules', path)
+        else:
+            assert '  Content-Digest: ' + expected in blocks.get(path, ''), ('Missing static digest', path)
+            static_digests += 1
+    return {'static_content_digests': static_digests, 'worker_content_digests': len(worker_paths),
+            'content_digests': len(eligibility['eligible']), 'header_rules': len(blocks)}
+
+
 def validate(root):
     root = Path(root).resolve()
     repository = Path(__file__).resolve().parents[1]
@@ -146,6 +198,7 @@ def validate(root):
     graph = rdflib.Graph().parse(root / 'graph.jsonld', format='json-ld')
     assert isomorphic(graph, rdflib.Graph().parse(root / 'graph.ttl', format='turtle'))
     html_result = validate_html(root, origin, graph)
+    delivery_result = validate_delivery(root, origin, graph)
     shapes = rdflib.Graph().parse(root / 'shapes.ttl', format='turtle')
     authored = set(graph.subjects(RDF.type, SH.NodeShape))
     published = set(shapes.subjects(RDF.type, SH.NodeShape))
@@ -246,7 +299,7 @@ def validate(root):
     manifest = json.loads((root / 'integrity-manifest.json').read_text())
     for path, metadata in manifest['files'].items():
         assert (metadata['bytes'], metadata['sha256']) == measure(root / path.lstrip('/')), path
-    return {**html_result, 'node_shapes': len(published), 'dcat_measured_distributions': measured,
+    return {**html_result, **delivery_result, 'node_shapes': len(published), 'dcat_measured_distributions': measured,
             'data_package_hashes': package_hashes, 'croissant_rows_read': len(records),
             'integrity_files': len(manifest['files']), 'catalog_route': 200}
 
