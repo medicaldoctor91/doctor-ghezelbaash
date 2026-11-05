@@ -201,7 +201,10 @@ def validate_checkout(plan, root=ROOT):
 
 
 def obsolete_reader_asset(name):
-    return re.fullmatch(r'assets/(?:(?:guide|guide-meta)\.[a-f0-9]{12}\.(?:html|json)|guide-search\.[a-f0-9]{12}\.json)', name) is not None
+    # The published HF tree can retain multiple content-addressed runtimes.
+    # Callers remove only files absent from the complete new mirror; admit the
+    # generated reader JS form without permitting arbitrary JS or other assets.
+    return re.fullmatch(r'assets/(?:(?:guide|guide-meta)\.[a-f0-9]{12}\.(?:html|json)|guide-search\.[a-f0-9]{12}\.json|reader\.[a-f0-9]{12}\.js)', name) is not None
 
 
 def validate_dataset_baseline(graph, policy):

@@ -187,10 +187,35 @@ class ReleasePlanTests(unittest.TestCase):
                         steps.index(next(step for step in steps if step.get('name')=='Build and validate the selected reserved-edition candidate')))
 
     def test_reader_asset_cleanup_is_narrow(self):
-        for name in ['assets/guide.abcdef123456.html', 'assets/guide-meta.abcdef123456.json', 'assets/guide-search.abcdef123456.json']:
+        for name in ['assets/guide.abcdef123456.html', 'assets/guide.abcdef123456.json', 'assets/guide-meta.abcdef123456.json', 'assets/guide-search.abcdef123456.json', 'assets/reader.63584d2612aa.js', 'assets/reader.c860ea7c6a8f.js']:
             self.assertTrue(release.obsolete_reader_asset(name))
-        for name in ['assets/guide-search.json', 'assets/guide-search.x.js', 'assets/other.x.json', '../assets/guide.x.html', 'assets/guide-search.x/extra.json', 'assets/guide-search.important.json', 'assets/guide-search.abcdef123456.html']:
+        for name in ['assets/guide-search.json', 'assets/guide-search.x.js', 'assets/other.x.json', '../assets/guide.x.html', 'assets/guide-search.x/extra.json', 'assets/guide-search.important.json', 'assets/guide-search.abcdef123456.html', 'assets/reader.js', 'assets/reader.63584d2612aa.json', 'assets/reader.63584d2612a.js', 'assets/reader.63584d2612aaa.js', 'assets/reader.63584D2612AA.js', 'assets/reader.63584d2612aa.js.map', 'assets/reader.63584d2612aa.js/extra', 'assets/site.396fbb0b79dc.css', '../assets/reader.63584d2612aa.js', 'assets/../assets/reader.63584d2612aa.js', 'assets//reader.63584d2612aa.js', 'assets/reader.63584d2612aa.js\n']:
             self.assertFalse(release.obsolete_reader_asset(name))
+
+    def test_published_hf_reader_inventory_can_be_replaced_without_extra_deletions(self):
+        # Public HF parent ca61e0e2: both runtime revisions are tracked alongside
+        # the guide and the stylesheet. Only absent generated assets are removed.
+        previous = {
+            'assets/guide-meta.14616fd6ac6d.json',
+            'assets/guide.2c625772f14d.json',
+            'assets/reader.63584d2612aa.js',
+            'assets/reader.c860ea7c6a8f.js',
+            'assets/site.396fbb0b79dc.css',
+        }
+        generated = {
+            'assets/guide-meta.18f5165d54d0.json',
+            'assets/guide-search.baebf5951362.json',
+            'assets/guide.9ca37e298aaf.json',
+            'assets/reader.103a36d6fb38.js',
+            'assets/site.396fbb0b79dc.css',
+        }
+        removed = previous - generated
+        self.assertEqual(len(removed), 4)
+        self.assertTrue(all(release.obsolete_reader_asset(name) for name in removed))
+        self.assertEqual(previous - removed, {'assets/site.396fbb0b79dc.css'})
+        # The cleanup guard must still reject any undeclared non-reader file.
+        self.assertFalse(all(release.obsolete_reader_asset(name)
+                             for name in removed | {'assets/research-data.63584d2612aa.js'}))
 
     def test_resumed_candidate_binds_plan_controls_and_upload_bytes(self):
         plan=fixture()

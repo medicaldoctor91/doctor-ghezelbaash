@@ -165,8 +165,13 @@ def build_hf(dist,baseline,out,ctx):
     positioning=sync_positioning(out)
     query_source=Path(__file__).resolve().parents[2]/'src/canonical/query-matrix.jsonl' if positioning else baseline/'query-matrix.jsonl'
     matrix=[json.loads(s) for s in query_source.read_text().splitlines() if s.strip()]
+    release=load(out/'datapackage.json')
     for row in matrix:
         row['dataset_iri']=DATASET
+        # These are current retrieval queries for this generated Dataset. The
+        # independently frozen positioning corpus retains its own release.
+        if 'release' in row:row['release']=release['version']
+        if 'edition' in row:row['edition']=release['edition']
         if 'archive_version_doi' in row:row['archive_version_doi']=DOI_POLICY['currentArchive']['doi']
         if 'source_commit' in row:row['source_commit']=ctx['source_commit']
     (out/'query-matrix.jsonl').write_text(''.join(json.dumps(r,ensure_ascii=False,separators=(',',':'))+'\n' for r in matrix))

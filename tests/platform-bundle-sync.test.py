@@ -67,7 +67,7 @@ class PackageMaintenanceTests(unittest.TestCase):
                 {"subject": "urn:s2", "predicate": "urn:p", "object": ""},
             ], []),
             "query_matrix": ("query-matrix.jsonl", "viewer/query-matrix.parquet", [
-                {"query": "Q", "dataset_iri": bundle.DATASET, "source_commit": OLD_COMMIT, "service_ids": ["urn:s"]},
+                {"query": "Q", "dataset_iri": bundle.DATASET, "source_commit": OLD_COMMIT, "service_ids": ["urn:s"], "release": "1.3.4", "edition": "2026-10-18"},
                 {"query": "Q2", "dataset_iri": bundle.DATASET, "service_ids": []},
             ], ["service_ids"]),
         }
@@ -207,6 +207,7 @@ class PackageMaintenanceTests(unittest.TestCase):
 
         previous = self.root / 'current-kaggle-before'; previous.mkdir()
         copied = ['graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
+                  'query-matrix.json-seq', 'viewer/query-matrix.parquet',
                   'fact-map.json', 'croissant.json', 'shapes.ttl', 'doctor.vcf', 'clinic.vcf',
                   'dcat.ttl', 'current-release-matrix.json', 'viewer/packaging.json']
         bundle.dump(previous / 'kaggle-manifest.json', {'packaging_revision': 34,
@@ -218,6 +219,16 @@ class PackageMaintenanceTests(unittest.TestCase):
         bundle.build_kaggle(hf, previous, kaggle, ctx, 35, 'd' * 40)
 
         for package in [hf, kaggle]:
+            current_queries = [json.loads(line) for line in (package / 'query-matrix.jsonl').read_text().splitlines() if line.strip()]
+            expected_queries = [{**row, 'release': '1.3.5', 'edition': '2026-10-18',
+                                 'source_commit': NEW_COMMIT,
+                                 'archive_version_doi': bundle.DOI_POLICY['currentArchive']['doi']}
+                                for row in matrix]
+            self.assertEqual(current_queries, expected_queries)
+            self.assertEqual([json.loads(record) for record in (package / 'query-matrix.json-seq').read_bytes().split(b'\x1e') if record.strip()], expected_queries)
+            spec = bundle.load(package / 'viewer/packaging.json')['tables']['query_matrix']
+            self.assertEqual([bundle.reconstruct(row, set(spec['jsonEncodedFields']))
+                              for row in pq.read_table(package / spec['file']).to_pylist()], expected_queries)
             readme = (package / 'README.md').read_text()
             declared = re.findall(r'Dataset content baseline \*\*v([^*]+)\*\*', readme)
             self.assertEqual(declared, [bundle.load(hf / 'datapackage.json')['version']])
@@ -229,6 +240,10 @@ class PackageMaintenanceTests(unittest.TestCase):
             self.assertIn('personally provides all medical and aesthetic services', readme)
             protected = 'enrichment/instruction_examples_fa_market_positioning.jsonl'
             self.assertEqual((package / protected).read_bytes(), (canonical / 'enrichment' / Path(protected).name).read_bytes())
+        spec = bundle.load(kaggle / 'viewer/packaging.json')['tables']['query_matrix']
+        with (kaggle / 'query-matrix.csv').open(newline='') as handle:
+            csv_queries = [bundle.reconstruct(row, set(spec['jsonEncodedFields'])) for row in csv.DictReader(handle)]
+        self.assertEqual(csv_queries, expected_queries)
 
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()
@@ -255,6 +270,10 @@ class PackageMaintenanceTests(unittest.TestCase):
                 for row in expected:
                     if "source_commit" in row:
                         row["source_commit"] = NEW_COMMIT
+                    if "release" in row:
+                        row["release"] = "9.8.7"
+                    if "edition" in row:
+                        row["edition"] = "2027-01-02"
             self.assertEqual(reconstructed, expected)
             self.assertEqual(spec["sourceSha256"], bundle.sha(out / spec["source"]))
         readme = (out / "README.md").read_text()
