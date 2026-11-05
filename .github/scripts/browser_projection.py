@@ -5,7 +5,9 @@ JSON-LD format. New candidates must preserve the graph as inert JSON at the end
 of the body and publish the deterministic, acyclic search document in the head.
 """
 import json
+import hashlib
 import subprocess
+import tempfile
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -16,6 +18,21 @@ MAX_SEARCH_BYTES = 128 * 1024
 MAX_SEARCH_NODES = 512
 MAX_EXPANDED_COPIES = 5_000
 MAX_REFERENCE_DEPTH = 12
+
+# This already published edition has an older bounded projection, not the
+# earlier full-graph format. Its scientific and delivery sources are distinct.
+# Authenticate the captured policy and exact historical projector bytes rather
+# than applying today's projection rules to immutable historical HTML.
+HISTORICAL_BOUNDED_PROJECTION = {
+    'recordId': 23474664,
+    'policySHA256': 'f33a4ad12e8cfe8b00f2bd791680568eae217cc6c645f23f8935b0e47d61f575',
+    'scientificSource': 'ed767f6e6726e1453196e2ec2b312fcad00677e2',
+    'deliverySource': '0f72c5e6ef832adef66d003069e3e3c189cf5079',
+    'projectorFiles': {
+        'src/lib/search-contract.mjs': '2de57acddb9ff8ca38b50e02b46fa66bd917a6e4047d83b5868d1ab59015294d',
+        'src/lib/home-graph-discovery.mjs': 'ff749862447e29a151452d8b017871f89e08a0ec56da518ebec4856cd95be474',
+    },
+}
 
 
 def _values(value):
@@ -103,6 +120,45 @@ process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepag
     result = subprocess.run(['node', '--input-type=module', '-e', script], cwd=ROOT,
                             input=json.dumps(graph, ensure_ascii=False), text=True,
                             capture_output=True, check=True, timeout=30)
+    return json.loads(result.stdout)
+
+
+def expected_historical_home_search_projection(graph, policy):
+    """Reproduce one authenticated historical contract without current SOURCE."""
+    contract = HISTORICAL_BOUNDED_PROJECTION
+    fingerprint = hashlib.sha256(json.dumps(policy, sort_keys=True, ensure_ascii=False,
+                                           separators=(',', ':')).encode()).hexdigest()
+    assert fingerprint == contract['policySHA256'], 'Unrecognized captured historical projection policy'
+    archive = policy['currentArchive']
+    assert archive['recordId'] == contract['recordId']
+    assert archive['sourceCommit'] == contract['scientificSource']
+    assert archive['deliverySourceCommit'] == contract['deliverySource']
+    truth = {node['@id']: node for node in graph['@graph']}
+    identifier_id = 'https://www.ghezelbaash.ir/identifier-dataset-zenodo-current-archive'
+    identifier = truth.get(identifier_id, {})
+    assert identifier.get('value') == archive['doi'] and identifier.get('url') == archive['url'], 'Historical graph archive binding differs'
+    assert {'@id': identifier_id} in _values(truth[policy['canonicalDatasetIri']].get('identifier')), 'Historical Dataset archive identifier missing'
+    snapshot = truth.get(archive['url'], {})
+    assert snapshot.get('version') == archive['packagingVersion'], 'Historical graph packaging version differs'
+    assert snapshot.get('prov:wasDerivedFrom') == {'@id': 'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/' + archive['sourceCommit']}, 'Historical graph source binding differs'
+    with tempfile.TemporaryDirectory(prefix='captured-home-projector-') as folder:
+        stage = Path(folder)
+        for name, expected in contract['projectorFiles'].items():
+            source = subprocess.check_output(['git', 'show', contract['deliverySource'] + ':' + name], cwd=ROOT)
+            assert hashlib.sha256(source).hexdigest() == expected, 'Captured historical projector bytes differ'
+            (stage / Path(name).name).write_bytes(source)
+        script = """
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const {projectHomeSearchGraph}=await import(pathToFileURL(process.argv[1]));
+const graph=JSON.parse(fs.readFileSync(0,'utf8'));
+const homepage=graph['@graph'].find(n=>[n['@type']].flat().includes('ProfilePage')&&[n['@type']].flat().includes('MedicalWebPage'));
+if(!homepage||typeof homepage.url!=='string')throw new Error('Historical canonical homepage identity missing');
+process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepage.url).origin)));
+"""
+        result = subprocess.run(['node', '--input-type=module', '-e', script, str(stage / 'search-contract.mjs')],
+                                cwd=ROOT, input=json.dumps(graph, ensure_ascii=False), text=True,
+                                capture_output=True, check=True, timeout=30)
     return json.loads(result.stdout)
 
 
@@ -209,7 +265,7 @@ def _preserved_identity_claims(graph, nodes, origin):
                     assert _localized(nodes[image_id].get(key)) == _localized(original[key]), ('Licensed image claim changed', image_id, key)
 
 
-def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_graph=False):
+def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_graph=False, historical_policy=None):
     graph = json.loads(Path(graph_path).read_text())
     ids = {node['@id'] for node in graph['@graph']}
     assert len(ids) == len(graph['@graph']), 'Duplicate canonical entity identifiers'
@@ -238,13 +294,23 @@ def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_grap
     origin = parsed.scheme + '://' + parsed.netloc
     nodes, bounds = _structural_bounds(blocks[0], origin)
     _preserved_identity_claims(graph, nodes, origin)
-    assert blocks[0] == expected_home_search_projection(graph), 'Homepage search document differs from the canonical search projection'
+    if historical_policy is not None:
+        assert allow_legacy_full_graph, 'Historical projection requires explicit archive context'
+    captured_historical = (historical_policy is not None and
+                           historical_policy.get('currentArchive', {}).get('recordId') == HISTORICAL_BOUNDED_PROJECTION['recordId'])
+    if captured_historical:
+        expected = expected_historical_home_search_projection(graph, historical_policy)
+    else:
+        expected = expected_home_search_projection(graph)
+    assert blocks[0] == expected, 'Homepage search document differs from the canonical search projection'
     return {'status': 'PASS', **bounds, 'htmlBytes': len(parser.html.encode()), 'completeCanonicalGraph': True,
             'canonicalGraphStorage': 'application/json#canonical-entity-graph', 'canonicalNodes': len(ids),
             'recognizedSearchBytes': len(search['text'].encode()), 'recognizedSearchEndByte': search['end'],
             'visibleContentPrefixEndByte': canonical['start'], 'headerReserveBytes': HEADER_RESERVE_BYTES,
             'criticalPrefixIncludingHeaderReserveBytes': max(search['end'], canonical['start']) + HEADER_RESERVE_BYTES,
-            'crawlPrefixBytes': CRAWL_PREFIX_BYTES}
+            'crawlPrefixBytes': CRAWL_PREFIX_BYTES,
+            **({'historicalProjectionDeliverySource': HISTORICAL_BOUNDED_PROJECTION['deliverySource']}
+               if captured_historical else {})}
 
 
 def validate_home_html(graph_path, html):

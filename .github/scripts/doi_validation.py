@@ -124,10 +124,12 @@ def validate_archive(root, *, online=False, legacy_home_projection=False, expect
         inline=Inline();inline.feed((root/'index.html').read_text())
         # New archives preserve every canonical entity/value as inert JSON and
         # expose the bounded search projection. A historical archive's former
-        # full JSON-LD format must be requested explicitly by its caller.
+        # full JSON-LD or its captured bounded format must be requested explicitly
+        # with the historical policy. New candidates retain the current contract.
         from browser_projection import validate_home_projection
         validate_home_projection(root/'graph.jsonld', inline.blocks, (root/'index.html').read_bytes(),
-                                 allow_legacy_full_graph=legacy_home_projection)
+                                 allow_legacy_full_graph=legacy_home_projection,
+                                 historical_policy=POLICY if legacy_home_projection and expected_policy is not None else None)
     triples = len(g)
     g.parse(root / 'provenance.jsonld', format='json-ld')
     g.parse(root / 'dcat.ttl', format='turtle')

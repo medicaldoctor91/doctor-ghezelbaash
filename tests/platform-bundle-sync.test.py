@@ -180,6 +180,56 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertIn('That DOI identifies the preserved historical files', (out / 'README.md').read_text())
         self.assertNotIn('in-place maintenance corrections', (out / 'README.md').read_text())
 
+    def test_current_cards_follow_dataset_version_and_preserve_positioning_corpus(self):
+        import re
+        import shutil
+        self.fixtures()
+        canonical = Path(__file__).resolve().parents[1] / 'src/canonical'
+        shutil.copytree(canonical / 'enrichment', self.dist / 'enrichment')
+        bundle.dump(self.dist / 'datapackage.json', {'version': '1.3.5', 'edition': '2026-10-18'})
+        bundle.dump(self.dist / 'doi-policy.json', bundle.DOI_POLICY)
+        # Current cards use the real canonical query corpus. Give this small
+        # package fixture a lossless schema for all of that corpus's fields.
+        matrix = [json.loads(line) for line in (canonical / 'query-matrix.jsonl').read_text().splitlines() if line.strip()]
+        fields = sorted({key for row in matrix for key in row})
+        table_fields = fields + ['_source_omitted_fields']
+        packaging = bundle.load(self.baseline / 'viewer/packaging.json')
+        spec = packaging['tables']['query_matrix']
+        spec.update(sourceFields=fields, fields=table_fields, jsonEncodedFields=fields)
+        pq.write_table(pa.Table.from_pylist([], schema=pa.schema([(field, pa.string()) for field in table_fields])),
+                       self.baseline / spec['file'])
+        bundle.dump(self.baseline / 'viewer/packaging.json', packaging)
+        ctx = dict(self.ctx, maintenance_date='2026-11-05', coordinated_release=True,
+                   publication_scope=['website', 'hf', 'kaggle', 'notebook', 'zenodo_dataset'])
+        ctx.pop('website_publication_run_url')
+        hf = self.root / 'current-hf'
+        bundle.build_hf(self.dist, self.baseline, hf, ctx)
+
+        previous = self.root / 'current-kaggle-before'; previous.mkdir()
+        copied = ['graph.jsonld', 'graph.ttl', 'provenance.jsonld', 'query-matrix.jsonl',
+                  'fact-map.json', 'croissant.json', 'shapes.ttl', 'doctor.vcf', 'clinic.vcf',
+                  'dcat.ttl', 'current-release-matrix.json', 'viewer/packaging.json']
+        bundle.dump(previous / 'kaggle-manifest.json', {'packaging_revision': 34,
+                    'original_files': [{'path': name} for name in copied]})
+        (previous / 'CITATION.cff').write_text('cff-version: 1.2.0\n' + AUTHORS)
+        with (previous / 'query-matrix.csv').open('w', newline='') as handle:
+            csv.DictWriter(handle, fieldnames=table_fields).writeheader()
+        kaggle = self.root / 'current-kaggle'
+        bundle.build_kaggle(hf, previous, kaggle, ctx, 35, 'd' * 40)
+
+        for package in [hf, kaggle]:
+            readme = (package / 'README.md').read_text()
+            declared = re.findall(r'Dataset content baseline \*\*v([^*]+)\*\*', readme)
+            self.assertEqual(declared, [bundle.load(hf / 'datapackage.json')['version']])
+            self.assertIn('preserved positioning corpus **v1.3.4**', readme)
+            self.assertNotIn('Content baseline remains **v1.3.4**', readme)
+            self.assertNotIn('{{source_version}}', readme)
+            self.assertIn(bundle.DOI_POLICY['currentArchive']['doi'], readme)
+            self.assertIn('sole medical provider', readme)
+            self.assertIn('personally provides all medical and aesthetic services', readme)
+            protected = 'enrichment/instruction_examples_fa_market_positioning.jsonl'
+            self.assertEqual((package / protected).read_bytes(), (canonical / 'enrichment' / Path(protected).name).read_bytes())
+
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()
         out = self.root / "hf"

@@ -8,13 +8,15 @@ Per-document content modification dates now survive the Article/Profile projecti
 
 ## Local verification
 
-The historical published archive context is explicit for development checks:
+Build the reserved edition from the exact management checkout selected by its reviewed external plan:
 
 ```sh
-export ARCHIVE_SOURCE_COMMIT=ed767f6e6726e1453196e2ec2b312fcad00677e2
+unset ARCHIVE_SOURCE_COMMIT
+export RELEASE_PLAN_PATH=/absolute/path/to/approved-release-plan.json
+export PREPARE_RESERVED_DOI=23965042
 npm ci
 npm run build
-node --test tests/*.test.mjs
+node --test tests/physician-page-output.test.mjs tests/guide-search-manifest.test.mjs
 python tests/reader-browser-regression.py --dist dist
 python tests/reader-bfcache-regression.py --dist dist
 python tests/validate_canonical_invariants.py dist
@@ -22,11 +24,11 @@ python tests/validate_machine_resources.py dist
 python tests/source-freeze.test.py
 ```
 
-RDF/SHACL checks require the existing Python validator dependencies. Browser checks require Playwright plus Chromium; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can select a system installation. Browser fixtures serve real compiled output at the canonical HTTPS origin without production requests. They cover slow and failed manifest requests, query/IME races, stale navigation, explicit modes, language and head consistency, native fallbacks, scroll/focus history, JavaScript-off content and native timed video. The full-document Back case verifies a new document load; it does not claim BFCache coverage.
+RDF/SHACL checks require the existing Python validator dependencies. Browser checks require Playwright plus installed Google Chrome or media-capable Chromium; `PLAYWRIGHT_CHROMIUM_EXECUTABLE` selects the executable explicitly in Actions. Browser fixtures serve real compiled output without production requests. They cover slow and failed manifest requests, query/IME races, stale navigation, explicit modes, language and head consistency, native fallbacks, scroll/focus history, JavaScript-off content and native timed video. The full-document Back case verifies a new document load; it does not claim BFCache coverage. The separate HTTP fixture verifies actual persisted BFCache events.
 
-The example archive pin applies to the current development baseline. After a new coordinated release, maintenance must use that edition's recorded archive source; the historical pin must never be inherited by a newly reserved candidate.
+Source-only fixtures run separately with the publication plan unset and the reviewed source M pinned, as in the coordinated workflow. Historical-policy fixtures explicitly supply their captured old context. After publication, maintenance uses that edition's reviewed maintenance plan and recorded archive source; a historical source pin must never be inherited by a newly reserved candidate.
 
-The output contracts inspect all 72 pages and every manifest-owned anchor. The homepage active Search graph stays within its existing 38,000-byte repository budget while retaining its 22 profile links and 24 identifiers. The full graph retains all 1,600 entity identities.
+The output contracts inspect all 72 pages and every manifest-owned anchor. The homepage active Search graph stays within its existing 38,000-byte repository budget while retaining its 22 profile links and 24 identifiers. The full graph retains all original 1,600 entity identities and adds the new release/history bindings, for 1,602 nodes.
 
 ## Additional identity and lifecycle review
 
@@ -38,6 +40,6 @@ Release sealing retains explicit `/404` and `/404.html` no-store/noindex policie
 
 ## Publication boundary
 
-These are development changes, not a new published archive or deployment. The old source-freeze checkpoint and management guard are preserved; the historical guard is expected to reject a changed development tree until the new checkpoint is bound. The final coordinated release must reserve a real DOI, bind the canonical policy and selected Dataset/package versions, create application checkpoint C and management child M, and build the exact reviewed M. Historical archive sources and the protected positioning subcorpus retain their own provenance and versions.
+The edition binds real DOI `10.5281/zenodo.23965042`, Dataset/source `1.3.5` and archive packaging `1.3.5+zenodo.1`. Application checkpoint C and its management child M preserve the historical checkpoints and pin the new source independently. The guard checks the selected new snapshot; old tags are never moved to make it pass. Historical archive sources and the protected positioning subcorpus retain their own provenance and versions.
 
 The reviewed release-plan adapter and coordinated workflow validate the selected policy, source, tool inventory, frozen candidate, public platform versions and runtime gates before publication. Website, Hugging Face, Kaggle and Notebook verification precedes final Zenodo publication. No new DOI, public version, deployment or Google indexing outcome is implied by local test results.
