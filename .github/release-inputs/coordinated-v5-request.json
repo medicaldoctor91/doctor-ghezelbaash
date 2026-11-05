@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "operation": "stage-draft",
-  "previousRun": 42063635541,
-  "requestNonce": "stage-v5-2"
+  "operation": "publish-frozen",
+  "previousRun": 42068303179,
+  "requestNonce": "publish-v5-1"
 }
