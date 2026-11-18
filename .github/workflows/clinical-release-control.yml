@@ -1,37 +1,102 @@
-name: Stage the verified 1.3.6 Zenodo draft
+name: Register frozen 1.3.6 source and run coordinated preflight
 on:
   push:
     branches: [codex/clinical-release-control-2026-11-19]
 permissions: {}
+env:
+  BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r3
+  FREEZE_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r3
+  BUILD_SHA: 560a1ce9cee834c81443b6a9d97027a738930a13
+  FREEZE_SHA: 92d4b58fe5e5d0e20e55a4db3b4a9164d4887675
 jobs:
-  stage-frozen-candidate:
+  frozen-source:
     if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 8
     permissions:
-      actions: write
+      contents: write
     steps:
-      - name: Wait for the exact preflight and dispatch private draft staging
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CANDIDATE_RUN: '44407251302'
-          REVIEWED_COMMIT: 112f4f58d7c48c3abca29c26433297d776249ff9
-          BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r2
-          PLAN_SHA256: bf08f23f7be430677ffd5710723abfd7080bdb4f1d17652c745f60edcfe70c0c
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 72e2b8312efdeac04c696e94d02000423e56ae42
+          fetch-depth: 0
+      - name: Verify and record source checkpoints
         shell: bash
         run: |
           set -euo pipefail
-          endpoint="repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_RUN"
-          for attempt in $(seq 1 36); do
-            run=$(gh api "$endpoint")
-            jq -e --arg commit "$REVIEWED_COMMIT" '.head_sha==$commit and .event=="workflow_dispatch" and (.path|split("@")[0])==".github/workflows/coordinated-doi-release.yml"' <<<"$run" >/dev/null
-            if jq -e '.status=="completed"' <<<"$run" >/dev/null; then break; fi
-            sleep 15
-          done
-          jq -e '.status=="completed" and .conclusion=="success"' <<<"$run" >/dev/null
-          gh api "$endpoint/artifacts" | jq -e '[.artifacts[] | select(.name=="frozen-coordinated-candidate" and .expired==false)] | length==1' >/dev/null
-
-          plan="$RUNNER_TEMP/approved-clinical-release-1.3.6-r2.json"
+          bundle="$RUNNER_TEMP/clinical-1.3.6.bundle"
+          base64 --decode > "$bundle" <<'BUNDLE'
+          IyB2MiBnaXQgYnVuZGxlCi03MmUyYjgzMTJlZmRlYWMwNGM2OTZlOTRkMDIwMDA0MjNlNTZhZTQyIEZyZWV6ZSBjbGluaWNh
+          bCBhdHRyaWJ1dGlvbiB2ZXJzaW9uIDEuMy42CmRjNWQ1ODU4ZjEyYjI2NWMxZGJiZTdjYTJkMWE0YjI2MTZmODUyODYgcmVm
+          cy90YWdzL3NvdXJjZS1mcm96ZW4tMjAyNi0xMS0xOS1jbGluaWNhbC1hdHRyaWJ1dGlvbi0xLTMtNi1yMwpjMzUwZGM3Yjdh
+          YmNkZWNiZGFjYjMzYzg2MDkwOWQ2OWUwOTBjZDgyIHJlZnMvdGFncy9zb3VyY2UtYnVpbGQtMjAyNi0xMS0xOS1jbGluaWNh
+          bC1hdHRyaWJ1dGlvbi0xLTMtNi1yMwoKUEFDSwAAAAIAAAAVmBV4nLWQTWqGQBBE956i94HBdnR+IHwkEHKA3KBt2zigjoyt
+          ITl9JofIrngUr6C0iIDvQnQ9WwxDsJHIdxTszO3gh9H1GCdkz8ihOajIrhCCG9FiJ3OQrrUDW9ePiDFGjh2hIMfK5tDQpUsu
+          8EZKpyh8yCo1wOuleSNNeYfnTabEtE6ZNZeIL9cp5TR7LnKs3+Yz6XKNhvP2APRxaG106OGptbZtKt2SqvzbQPNe3/kRQGON
+          g69ahZvWNJHKBEs6q/BPDVR4SbfAUfItO+0szS9SIG9snxV4nLXNTUrFMBTF8XlXcedCSZqvBuSh4ALEHdw0pzbYNo/0Vnm7
+          ty7C2eEMfn9pAPFg5oh58C4GMySXQk4+qBh8hFWjn2dOo46uu3PDLhSHbJMbZzi4rDAoOMc2J5MsR+1ttuMYfHAdn7LURm8s
+          fEDoAyuuQa+n1I2l1J2eN+Qy8ZrrJLVF/XIeaEe/14b7+ug/iyxn6qe63UiH6JSJXgd6Usao7nq3IoJ/C3TvZSdZQA3fBT/I
+          pHvTe0pnWTPxnmkpx6X++XQR9yuZylrkQdOC6evofgF4iXKUyRF4nB2QS26EMBBE95yi95GRjbHBUhQl0mgOkBv404BHgFHT
+          jDQ5fWB2tah6VaoSHhgZXJPaYPoBDZoksZFojG9T0KH1Ttk2tX3f2c5U/NoQYlmWzBX7EfZyUEQxUPnDVTSysUIpoZyIc15z
+          9LPwzJTDwbmsQgktrCB9RUckuHn2OzL84oyngJ+Dy+IvK3wumK58KpELOfV97Eh7vRbCbX7VY+bpCPW55AtU54zUzqoOPqTW
+          sqru7zmgal1b8Ns2n6Q31a8Jnkh5yJhgyvuJvkrAU5zyE2Gjcv1RqPoHGOpdTsUQeJwtjl1qxCAUhd9dhe9F0dyMRiilha5g
+          duDPJbWYOJjrDLP7mjJvh8P5OF8NvxiJX4zyOqKLiAvMcdHzDMF4l5xVk/UWFgdjAYyeN+SxblsmRn7lR+0togg9lyQmNRmh
+          tdBOxJL3HH0Rnqjl0CnXXWgBwogGJ7li49+e/IHEr1hwBP7VqW7+nPL3DdPJpxqpNqc/+4HtkHtteCtPuWb66UEOkQ+urbso
+          cEZb/qYAFGNXvGd8YOJagjRDt7aUd0+jaa+rf+GXPfsDk8VU8psWeJy1jctKxTAUAPf9irMXSt65AREFv8CF+9Pk9DaSJiU5
+          Vfx7ez/C3TAMDHcicN6raOXNBem89iSNXy2ikJhWvQbUzqBdljQd2KkyeEVquWmpaE2EUZjogqNgklBCCKM0WYdk1IQnb63D
+          OzIOYvigQhfA28ltR86twvNOKUcsqUVuPcjXc1Afc22djvI73zNv5zLHtr+A9MEKHZz08CS0FtNl98xM/zaYPrHkhEzAG8Fx
+          LiWPjRLIWc8WsMctfxPgHXMdDJkHtJ8KR671igY9Ajh6+6LHevoD58p3Cv0FxGz780nZ40XV9mVK7lqQfZ5RlaJ4nAFdAKL/
+          nAScBCI0MDAwMCAuZ2l0aHViAE37tL1dQLQ9bE2HftDtXw2t3kSjsSIJARQIuTWcvMV/W8rXi3sJeai3mYFfL5M/AaAUxI2u
+          RaSo3WvrBMkXgXUaSbWmyUeT8wEp7fYoeKYEeJwzMQACheLkosyCkmKGmw/+f9Y0s3gwu+esjLjDdvH1+rwyJmAV5flF2Wk5
+          +eXFDKb1HtWJRadUGeumXSvg3fxm5f5t+wCxsByZ/wH9GU7HDVmeB9wl+OI12j/4hx4qxHicAR8A4P+uCa4JkEoU2VbZR1c5
+          rIgx+OfMpOn0+JHhHaCxXlAE99MQV2tAeJxbx9nEuWEV8+RrzDcAG0AE5HefHE0GH8DAzLrl0MmrXt6NxRC0ynic28LUwbSB
+          gxEACdAB+nzog1FPSPXcO3WQYfOsuXBIutBZenicaxS+ILThKPvmb+zdjAAjOwUv9ATEbPvzSdnjRdX2ZUruWpB9nlGVonic
+          m8Myh0XJxAAIFPTSM0sySpMYzPodZmQ5m3RsObPt2G33T18s368L2ajEySiy9+LXrlUWLsIvFq5Vlzr5lG02+zK/yfaMdwGZ
+          EB0EpgR4nDMxAAKF4uSizIKSYobwbVIxMeu6i5QsTrZY3WB+/2zuilUmYBXl+UXZaTn55cUMPyrTr87/f7hg1/n4rWcOPZ11
+          /eBtFgDmFCDI+AP9GU7HDVmeB9wl+OI12j/4hx4qxHicATgAx/+uCa4JkEoU2VbZR1c5rIgx+OfMpOn0+JHhHaCxXlwDFOBD
+          tWoZb4s0IEb5s8iC999DzcKyk84D4DDkHfn8AZ8cTQYfwMDMuuXQyate3o3FELTKeJzbwrSFaYMCo0jq91ZzvrytU1Itpcxu
+          PokO+fal4xgAnvkMwfsCxGz780nZ40XV9mVK7lqQfZ5RlaJ4nJvDModFycQACBT00jNLMkqTGFZLbNlUUHKU+9XN/IUVKy7J
+          8biaVmxU+sUIAEiJELSmBHicMzEAAoXi5KLMgpJihiudG3y2LFmmdrJYKSE2mKlijQTjUxOwivL8ouy0nPzyYoYflelX5/8/
+          XLDrfPzWM4eezrp+8DYLAM9eH83wN2HccJZGH8qJ0/UCQFdKK4INu77+eJydU01PE0EYTgPEhAsxSImQtKuYLI0F5nNntuih
+          YJUaFaXEGLAhs/MBa0pbdxdiI4SfwGEw3jx59GDSP+BPMPHgVa9e/QHaj1Cq8eScJu/H8z7zPO+cnabev019/DKWWStXNtc3
+          yqvFBzuPN9bvl1Y3y+uPKs5t5/W44zj2e8mxmZVx+62UPcl3Iw7CvkcBQYV+Re+4kZaNSJWVWxjk8xfZZqMWylZlrYio16lw
+          CeCYS+R7MPAA4B5XQAcwIAQbj0BDuI+hhsDzuUKeEIpqxAS7zLTAzGcCCLcPbp+MXj3xtcJSMsGxQZBwJKWmUEpCCGWUKqQx
+          4L7HgTtESOlaeKijVqVxEEndpfQ/KM2oYcKbNf2woUITalVMukgIIG8BwgVANiEtAFLAeOuc79dRx/4cvXGPS069gCoDAiOR
+          9ikkgSACQcmwxAQGfkcXDxsNfWQUZ8xwTZRkBHJEJFLneFtjycmAThzJpVoYLDX3WnEoQ1FfCJWuJ2HSWtx/EXepdcQNpAJG
+          qgCKjpgYSM8oIBEwgDJNKDRKs4ARDgGluEMKBJoxzBUJAqiHH3/cvx7n25/HdibsQdq1S1NpPrRCi7s6mReR3OsovX2xINVc
+          r1HEsY4SRzbqSSRkYgvp5fbzqZmUnZ6esB/Sr2iv/S+jVhv7+2Hi5p0BbDwcr+bat6afXbKlySuzHW+kjuNFEe0ebqPq0dFB
+          XWkT1rU6tmeZp/Zl9pr9kZmbzw8o9Af2PP3D0rzjurmqbWbn2jB7en323x+m120/FZdHcrlxm7k7076z8m7EwpXJ9q/Sm9Rv
+          Csv9SXv4eWfVn//DcLrPX7XMwuWa18HbBHic+8x8mHnDZMbJhxkNAB6bBIj0B76ScLnFIaEqslu3cl4D+BCUvrjBeJwFwTsO
+          wjAMAFC1IwNn6FbGfOzYHjqGEaQKdUBCyHHSidtwDqRKXKCH4EC8ty/7sn06lVChIK8NG1bXgmuICrXEAio+QQVmSoTj4Txf
+          7/nyvM05D9MwUmBJYNEzchRVCspxNYeEJYGX6o3MG7+P/aOL31f/O/0BzDEghv4P+IcORCjj3kGkl1PNkdMQnB+eCQ54nB2N
+          MU7EMBREBQI6ChpEt7+hWoji2I6dEyAaJCR68uP/s/Eqile2tdJyCqSchFtwHzgAFs0UM29mfupf+bm9HGP44PX7bPPedw2p
+          QduRNWuqualZa1Q0yEFhJ1pFylrTGt3DhAlyZIbeNLZrlZPCais7RNOglaOrtdFDq0RHwhknnO0f1puL2xXPn7aPUfYVPOcE
+          5CO7DG7yM0HklEMROBTTJ55PkNer681rBW+TTyU/+uTDAkhU3ieGmXfoTiAqWenSCvsyFiIMfiG/7CCHfyryzJgYjjh7wgJU
+          X/cvd39rzVG+ph1KmzCqE7uYEeQ7UaMG/NXU1dw=
+          BUNDLE
+          printf '%s  %s\n' 0c0734d8327168e17e97021f2df4b437d92df48fa31666a1bf2d66e8f7dc9f52 "$bundle" | sha256sum --check
+          git bundle verify "$bundle"
+          git fetch --no-tags "$bundle" "refs/tags/$FREEZE_TAG:refs/tags/$FREEZE_TAG" "refs/tags/$BUILD_TAG:refs/tags/$BUILD_TAG"
+          test "$(git rev-parse "$FREEZE_TAG^{commit}")" = "$FREEZE_SHA"
+          test "$(git rev-parse "$BUILD_TAG^{commit}")" = "$BUILD_SHA"
+          test "$(git rev-parse "$BUILD_SHA^")" = "$FREEZE_SHA"
+          git checkout --detach "$BUILD_SHA"
+          python3 .github/scripts/source_freeze.py check
+          python3 tests/source-freeze.test.py
+          git push --atomic origin "refs/tags/$FREEZE_TAG:refs/tags/$FREEZE_TAG" "refs/tags/$BUILD_TAG:refs/tags/$BUILD_TAG"
+          test "$(git ls-remote --exit-code origin "refs/tags/$BUILD_TAG^{}" | cut -f1)" = "$BUILD_SHA"
+  coordinated-preflight:
+    needs: frozen-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    permissions:
+      actions: write
+    steps:
+      - name: Verify the approved release-plan bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          plan="$RUNNER_TEMP/approved-clinical-release-1.3.6.json"
           base64 --decode > "$plan" <<'PLAN'
           ewogICJzY2hlbWFWZXJzaW9uIjogMSwKICAiY29udGV4dCI6ICJuZXctcmVzZXJ2ZWQiLAogICJwb2xpY3kiOiB7CiAgICAi
           c2NoZW1hVmVyc2lvbiI6ICIxLjAiLAogICAgImNhbm9uaWNhbERhdGFzZXRJcmkiOiAiaHR0cHM6Ly93d3cuZ2hlemVsYmFh
@@ -49,7 +114,7 @@ jobs:
           biI6ICI0M2I1NWVlMmU1MDY3OGNmM2JjZGNhN2I1ZDNmZTBlNGVlNWMyMWM4IiwKICAgICAgImJpbmRpbmdTdGF0dXMiOiAi
           YXNzaWduZWQtcmVsZWFzZS1iaW5kaW5nOyBhdmFpbGFiaWxpdHkgcmVjb3JkZWQgaW4gZXh0ZXJuYWwgcHVibGljYXRpb24g
           cmVjZWlwdHMiLAogICAgICAic291cmNlQ29tbWl0TW9kZSI6ICJidWlsZC1zb3VyY2UiLAogICAgICAic291cmNlQ29tbWl0
-          IjogIjExMmY0ZjU4ZDdjNDhjM2FiY2EyOWMyNjQzMzI5N2Q3NzYyNDlmZjkiCiAgICB9LAogICAgImhpc3RvcmljYWwiOiBb
+          IjogIjU2MGExY2U5Y2VlODM0YzgxNDQzYjZhOWQ5NzAyN2E3Mzg5MzBhMTMiCiAgICB9LAogICAgImhpc3RvcmljYWwiOiBb
           CiAgICAgIHsKICAgICAgICAiZG9pIjogIjEwLjUyODEvemVub2RvLjE4NzY1MTY5IiwKICAgICAgICAidXJsIjogImh0dHBz
           Oi8vZG9pLm9yZy8xMC41MjgxL3plbm9kby4xODc2NTE2OSIsCiAgICAgICAgInZlcnNpb24iOiAiMS4wLjAiLAogICAgICAg
           ICJyb2xlIjogImhpc3RvcmljYWwiLAogICAgICAgICJlbnRpdHlJcmkiOiAiaHR0cHM6Ly93d3cuZ2hlemVsYmFhc2guaXIv
@@ -262,14 +327,14 @@ jobs:
           YWY4IiwKICAicmVzZXJ2YXRpb24iOiB7CiAgICAicHJldmlvdXNSZWNvcmQiOiAyMzk2NTA0MiwKICAgICJyZXNlcnZlZFJl
           Y29yZCI6IDI0MzU0NzkxLAogICAgInJlc2VydmVkRG9pIjogIjEwLjUyODEvemVub2RvLjI0MzU0NzkxIiwKICAgICJjb25j
           ZXB0RG9pIjogIjEwLjUyODEvemVub2RvLjE4NzY1MTY4IiwKICAgICJwdWJsaXNoZWQiOiBmYWxzZQogIH0sCiAgInJlZnMi
-          OiB7CiAgICAiYXBwbGljYXRpb25DaGVja3BvaW50IjogIjQxYzgxN2IwMTg1YTY4Mzc0MTkyYjdjODkxMzA1ZDhiM2ViOGRl
-          YTMiLAogICAgImJ1aWxkU291cmNlIjogIjExMmY0ZjU4ZDdjNDhjM2FiY2EyOWMyNjQzMzI5N2Q3NzYyNDlmZjkiLAogICAg
-          InB1YmxpY2F0aW9uVG9vbENvbW1pdCI6ICIxMTJmNGY1OGQ3YzQ4YzNhYmNhMjljMjY0MzMyOTdkNzc2MjQ5ZmY5IiwKICAg
+          OiB7CiAgICAiYXBwbGljYXRpb25DaGVja3BvaW50IjogIjkyZDRiNThmZTVlNWQwZTIwZTU1YTRkYjNiNGE5MTY0ZDQ4ODc2
+          NzUiLAogICAgImJ1aWxkU291cmNlIjogIjU2MGExY2U5Y2VlODM0YzgxNDQzYjZhOWQ5NzAyN2E3Mzg5MzBhMTMiLAogICAg
+          InB1YmxpY2F0aW9uVG9vbENvbW1pdCI6ICI1NjBhMWNlOWNlZTgzNGM4MTQ0M2I2YTlkOTcwMjdhNzM4OTMwYTEzIiwKICAg
           ICJyZXZpZXdlZFJlZiI6ICJyZWZzL3RhZ3Mvc291cmNlLWJ1aWxkLTIwMjYtMTEtMTktY2xpbmljYWwtYXR0cmlidXRpb24t
-          MS0zLTYtcjIiLAogICAgInRvb2xJbnZlbnRvcnkiOiB7CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYXJjaGl2ZV9idW5kbGUu
+          MS0zLTYtcjMiLAogICAgInRvb2xJbnZlbnRvcnkiOiB7CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYXJjaGl2ZV9idW5kbGUu
           cHkiOiAiZDc3ZjMzZjYwNGM4YWM1Y2VlMDE0YzJiMzViYzVlZmZkNzY3MTVjMDg1MTgwOTAzNzUyNzI3MTNjZTliYjZmNCIs
-          CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYnJvd3Nlcl9wcm9qZWN0aW9uLnB5IjogIjU2OTkwNDlmZGZjNzhiYzk1MGViZjg0
-          ZGQ1OTBlYzBmNjM0N2QxNDY3OWJiNTZhMTc4NjgzYzMyZjU1MzAyYzEiLAogICAgICAiLmdpdGh1Yi9zY3JpcHRzL2NhbmRp
+          CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYnJvd3Nlcl9wcm9qZWN0aW9uLnB5IjogImQ0MjM2YTc3MTA0YjY3NDU4OWE3ODQ1
+          NWZkMDI4MTNkNjg3YzNiNGFkODgxYjk2ODA2NDJmMzFjMTFjMDU0MjEiLAogICAgICAiLmdpdGh1Yi9zY3JpcHRzL2NhbmRp
           ZGF0ZV9jb250cmFjdC5weSI6ICJlN2QzNGVlMzkzMzdiMTFlMmM5YzJjNWE4ZWY0YzA3NzAzYzhiOTdkNDAxZTg1M2EyNzVk
           YmQ2ZDJiMDMxYzY0IiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9jb29yZGluYXRlZF9kb2lfcmVsZWFzZS5weSI6ICI4OTRj
           ZTQzYmRjMmE4ZjgyNTRhMzFiNzJkZTFmZDQwMzYwNDNmM2E3ZGE2YzEyYTBkZmQzZGUxMTM5ZDU2YzY3IiwKICAgICAgIi5n
@@ -297,8 +362,8 @@ jobs:
           ZS5weSI6ICIwYzFhOWE0ZWE4Y2RmYmMyMTE5ZDc0OWQxNGRmMWVmYjc4N2QxODdiYTBmZDIxNzNjYmIzODQ4ZjE4NmY4Y2Nl
           IiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9zY2hlbWFfZGlzdHJpYnV0aW9uX2NvcnJlY3Rpb24ucHkiOiAiMjRiOTU5MDlm
           MWYzMDM3MTlhOGE1MTUwYWRlNDMxMTg1NzJjZTBjM2Y3MTA1ZTkxYjJhOTc2OWMwZDdlNDkzYyIsCiAgICAgICIuZ2l0aHVi
-          L3NjcmlwdHMvc291cmNlX2ZyZWV6ZS5weSI6ICI0MzM0MGIxZWNkY2YxNzZmYWJiOGM5MWUxODY0YzkzZjNiNGY1MTcxOGY0
-          ZTExNDhjZmU0ZWE1NTRhYTAxODJjIiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9zeW5jX3BsYXRmb3JtX21hY2hpbmVfcmVz
+          L3NjcmlwdHMvc291cmNlX2ZyZWV6ZS5weSI6ICI1OGQzYmFhMjYzZGExZTMxODdjM2IwMzk3NjczZDYwMDNiYmI5ODI5NThm
+          Y2U1YWI0OWEwYTM1ZWQwNTkyZjdkIiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9zeW5jX3BsYXRmb3JtX21hY2hpbmVfcmVz
           b3VyY2VzLnB5IjogIjllZmUwYzMzMzZlNzYxZWRhMDhiNWRkODFmODUwY2FjNjkxMGRmNzhmODdlYjQ5NmJlMjE1YmI4NTc3
           NzQwMjAiLAogICAgICAiLmdpdGh1Yi9zY3JpcHRzL3plbm9kb19jb3JyZWN0aW9uX2J1bmRsZS5weSI6ICI2ODZkODI1MWI4
           MTU2MTdjNzBjOGQyNWE5ZTJjNWJjM2Y0YmM3MjkxZDY1OWM3MDA4MmExYTYyNDA5NjI4Njk4IiwKICAgICAgIi5naXRodWIv
@@ -339,6 +404,36 @@ jobs:
           biI6IDQ0NDA0NTM4OTIxCiAgfSwKICAibWVhc3VyZWRFdmlkZW5jZSI6IHsKICAgICJjbGluaWNhbFBsYW5DSSI6IDQ0NDAz
           MDY1MjIyLAogICAgInJlc2VydmF0aW9uUnVuIjogNDQ0MDU2Mzc4MzEKICB9Cn0K
           PLAN
-          printf '%s  %s\n' "$PLAN_SHA256" "$plan" | sha256sum --check
-          jq -n --arg tag "$BUILD_TAG" --arg commit "$REVIEWED_COMMIT" --arg candidate "$CANDIDATE_RUN" --rawfile plan "$plan" --arg digest "$PLAN_SHA256" '{ref:$tag,inputs:{operation:"stage-draft",reviewed_commit:$commit,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
+          printf '%s  %s\n' 1ac4b1a5342ff25821b157db54f3c3d763f2e4ca022c15a64ee23b496750fc87 "$plan" | sha256sum --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: approved-clinical-release-plan-1.3.6
+          path: ${{ runner.temp }}/approved-clinical-release-1.3.6.json
+          if-no-files-found: error
+      - name: Dispatch existing coordinated preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          plan="$RUNNER_TEMP/approved-clinical-release-1.3.6.json"
+          jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --rawfile plan "$plan" --arg digest 1ac4b1a5342ff25821b157db54f3c3d763f2e4ca022c15a64ee23b496750fc87 '{ref:$tag,inputs:{operation:"preflight",reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/coordinated-doi-release.yml/dispatches" --input -
+      - name: Wait for the candidate and stage only the unpublished archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          plan="$RUNNER_TEMP/approved-clinical-release-1.3.6.json"
+          runs_endpoint="repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$BUILD_SHA&event=workflow_dispatch&per_page=10"
+          for attempt in $(seq 1 55); do
+            run=$(gh api "$runs_endpoint" | jq -c '[.workflow_runs[] | select((.path|split("@")[0])==".github/workflows/coordinated-doi-release.yml")] | sort_by(.id) | first // {}')
+            if jq -e '.status=="completed"' <<<"$run" >/dev/null; then break; fi
+            sleep 15
+          done
+          jq -e --arg commit "$BUILD_SHA" '.head_sha==$commit and .status=="completed" and .conclusion=="success"' <<<"$run" >/dev/null
+          candidate=$(jq -r '.id' <<<"$run")
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts" | jq -e '[.artifacts[] | select(.name=="frozen-coordinated-candidate" and .expired==false)] | length==1' >/dev/null
+          jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --arg candidate "$candidate" --rawfile plan "$plan" --arg digest 1ac4b1a5342ff25821b157db54f3c3d763f2e4ca022c15a64ee23b496750fc87 '{ref:$tag,inputs:{operation:"stage-draft",reviewed_commit:$commit,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
             gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/coordinated-doi-release.yml/dispatches" --input -
