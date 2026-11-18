@@ -6,6 +6,22 @@ const unique = value => [...new Set(value)].sort();
 const normalize = value => String(value).normalize('NFC').replace(/\r\n?/g, '\n').trim();
 const sha256 = value => createHash('sha256').update(value, 'utf8').digest('hex');
 const typed = (node, type) => values(node?.['@type']).includes(type);
+const attributionQuestions = new Set([
+  'question-which-non-surgical-aesthetic-treatments-are-available-ar-iq',
+  'question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq',
+  'question-which-non-surgical-aesthetic-treatments-are-available-en',
+  'question-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq',
+  'question-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq',
+  'question-does-dr-ghezelbash-accept-filler-correction-cases-en',
+  'question-saeed-ghezelbash-counterfactual-aesthetic-reasoning',
+  'question-saeed-ghezelbash-layered-facial-analysis',
+]);
+const clinicalLead = {
+  fa: 'دکتر سعید قزلباش ارائه‌دهندهٔ خدمات بالینی مطب خود در کرمانشاه است.',
+  en: 'Dr. Saeed Ghezelbash provides the clinical services at his practice in Kermanshah.',
+  ar: 'الدكتور سعيد قزلباش هو مقدم الخدمات السريرية في عيادته في كرمانشاه.',
+  ckb: 'دکتۆر سەعید قزلباش پێشکەشکاری خزمەتگوزارییە کلینیکییەکانی مطبەکەی لە کرماشانە.',
+};
 
 function literal(value, language = '') {
   const list = values(value);
@@ -102,9 +118,13 @@ export function buildRetrievalRecords(source) {
       const reviewNodes = [answer, question, page].filter(Boolean);
       const reviewer = reviewNodes.find(node => ids(node.reviewedBy).length);
       const reviewDate = reviewNodes.find(node => node.reviewedAt != null || node.lastReviewed != null);
+      const lead = attributionQuestions.has(question['@id'].split('#').at(-1))
+        && clinicalLead[language.toLowerCase().split('-')[0]];
       records.push({
         questionId: question['@id'], answerId,
-        question: questionText, answer: answerText, language,
+        question: questionText,
+        ...(lead ? { clinicalProviderId: source.canonicalOrigin + '/#saeed-ghezelbash', answerLead: lead } : {}),
+        answer: answerText, language,
         sourceUrl, htmlId, htmlUrl,
         passageId: `${source.canonicalOrigin}/provenance.jsonld/passage-${sha256(question['@id'] + '\u0000' + answerId)}`,
         aboutIds,
@@ -125,7 +145,8 @@ export function buildRetrievalRecords(source) {
 }
 
 const textFields = [
-  ['questionId', 'Question ID'], ['answerId', 'Answer ID'], ['question', 'Question'], ['answer', 'Answer'],
+  ['questionId', 'Question ID'], ['answerId', 'Answer ID'], ['question', 'Question'],
+  ['clinicalProviderId', 'Clinical provider ID'], ['answerLead', 'Answer introduction'], ['answer', 'Answer'],
   ['language', 'Language'], ['sourceUrl', 'Source'], ['htmlId', 'HTML ID'], ['htmlUrl', 'HTML URL'], ['passageId', 'Passage ID'],
   ['aboutIds', 'About IDs'], ['graphNodeIds', 'Graph Node IDs'], ['evidenceIds', 'Evidence IDs'],
   ['claimEvidenceIds', 'Claim Evidence IDs'], ['entityEvidenceIds', 'Entity Evidence IDs'], ['provenanceClass', 'Provenance Class'],
@@ -134,7 +155,8 @@ const textFields = [
 ];
 
 export function serializeAnswersText(records) {
-  return records.map(record => textFields.map(([field, label]) => `${label}: ${JSON.stringify(record[field])}`).join('\n')).join('\n\n---\n\n') + '\n';
+  return records.map(record => textFields.filter(([field]) => Object.hasOwn(record, field))
+    .map(([field, label]) => `${label}: ${JSON.stringify(record[field])}`).join('\n')).join('\n\n---\n\n') + '\n';
 }
 
 export function buildAnswersText(source) {

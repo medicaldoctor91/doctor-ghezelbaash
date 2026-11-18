@@ -128,8 +128,9 @@ test('all declared routes preserve the physician author, page subject and locali
     assert.deepEqual(ids(primary.author),[physicianId],resource.path+' retains its real physician author');
     assert.equal(projected['@graph'].filter(node=>values(node['@type']).includes('Person')).length,1,resource.path);
     assert.equal(actual.get(physicianId).birthDate,'1991-05-29',resource.path+' retains the existing public birth date');
-    assert.equal(projected['@graph'].filter(node=>values(node['@type']).includes('ProfilePage')).length,home?1:0,resource.path);
-    assert.deepEqual(ids(primary.mainEntity),resource.pagePurpose==='clinical-guide'?[url+'#article']:ids(page.mainEntity),resource.path+' mainEntity');
+    const biography=resource.pagePurpose==='professional-biography';
+    assert.equal(projected['@graph'].filter(node=>values(node['@type']).includes('ProfilePage')).length,home||biography?1:0,resource.path);
+    assert.deepEqual(ids(primary.mainEntity),ids(page.mainEntity),resource.path+' mainEntity');
     assert.ok(actual.has(clinicId),resource.path+' includes the same personal practice');
     for(const key of ['name','description'])if(key in clinic)
       assert.equal(actual.get(clinicId)[key],truthText(clinic[key],language),resource.path+' practice '+key);
