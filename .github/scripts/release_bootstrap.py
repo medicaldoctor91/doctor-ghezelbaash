@@ -297,14 +297,34 @@ class History:
         response.raise_for_status()
         return archive_controls(response.content)
 
-    def validate_intent(self, intent, marker, run):
+    def validate_intent_run(self, intent, marker, run):
         old = intent['context']
         assert old['runId'] == run['id'] and old['runAttempt'] == run['run_attempt'], 'Intent run binding differs'
         assert run['head_sha'] == old['sourceCommit'], 'Intent source differs from authenticated run'
-        for key in ('schemaVersion', 'repository', 'workflowPath', 'sourceCommit', 'toolSHA256',
-                    'canonicalPolicySHA256', 'previousRecord', 'conceptDoi', 'reviewedRef'):
+        for key in ('schemaVersion', 'repository', 'workflowPath', 'conceptDoi'):
             assert old[key] == marker[key], 'Previous reservation belongs to another reviewed bootstrap binding: ' + key
         assert intent['action'] in {'new-version', 'reserve-doi', 'recover-existing'}, 'Unexpected reservation action'
+
+    def validate_intent(self, intent, marker, run):
+        self.validate_intent_run(intent, marker, run)
+        old = intent['context']
+        for key in ('sourceCommit', 'toolSHA256', 'canonicalPolicySHA256', 'previousRecord', 'reviewedRef'):
+            assert old[key] == marker[key], 'Previous reservation belongs to another reviewed bootstrap binding: ' + key
+
+    def verify_published_predecessor(self, intent, marker, run, artifacts):
+        self.validate_intent_run(intent, marker, run)
+        old = intent['context']
+        evidence = [item for item in artifacts if item['name'] == EVIDENCE_ARTIFACT]
+        assert len(evidence) == 1, 'Prior edition reservation has no unique durable outcome'
+        controls = self.controls(evidence[0]); outcome = controls.get('reservation-outcome.json', {})
+        assert outcome.get('context') == old and outcome.get('action') == intent['action'], 'Prior edition outcome binding differs'
+        published = policy()['currentArchive']
+        assert published['recordId'] == marker['previousRecord'], 'Published predecessor binding differs'
+        assert outcome.get('record') == published['recordId'] and outcome.get('status') == 'RESERVED', 'Prior edition has no completed reservation for the published predecessor'
+        assert controls.get('reservation.json') == {
+            'previousRecord': old['previousRecord'], 'reservedRecord': published['recordId'],
+            'reservedDoi': published['doi'], 'conceptDoi': marker['conceptDoi'], 'published': False,
+        }, 'Prior edition receipt does not match the audited published predecessor'
 
     def prior(self, marker):
         runs = []
@@ -332,6 +352,9 @@ class History:
                 continue
             assert len(intents) == 1, 'Ambiguous prior reservation intents'
             controls = self.controls(intents[0]); intent = controls['bootstrap-intent.json']
+            if intent['context']['previousRecord'] != marker['previousRecord']:
+                self.verify_published_predecessor(intent, marker, run, artifacts)
+                continue
             self.validate_intent(intent, marker, run)
             recovered.append(intent)
         return recovered

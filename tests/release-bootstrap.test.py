@@ -338,25 +338,31 @@ def packed(intent=None, entries=()):
 
 
 class HistoryTests(Fixtures):
-    def fixture(self, marker=None, intent=None, run=None, absent=False, expired=False, executed=False):
+    def fixture(self, marker=None, intent=None, run=None, absent=False, expired=False, executed=False, evidence=None):
         marker = marker or bootstrap.context(self.env)
         intent = intent or {'context': dict(marker, runId=90), 'action': 'new-version'}
         prior = {'id': 90, 'head_sha': SOURCE, 'event': 'workflow_dispatch', 'path': bootstrap.WORKFLOW,
                  'status': 'completed', 'run_attempt': 1}
         prior.update(run or {})
         blob = packed(intent)
+        evidence_blob = packed(entries=[(name, json.dumps(value)) for name, value in (evidence or {}).items()])
         def read(url, **kwargs):
             if url.endswith('/runs'):
                 return Response({'workflow_runs': [prior]})
             if url.endswith('/runs/90/artifacts'):
                 items = [] if absent else [{'id': 80, 'name': bootstrap.INTENT_ARTIFACT,
                                              'expired': expired, 'size_in_bytes': len(blob)}]
+                if evidence is not None:
+                    items.append({'id': 81, 'name': bootstrap.EVIDENCE_ARTIFACT,
+                                  'expired': False, 'size_in_bytes': len(evidence_blob)})
                 return Response({'total_count': len(items), 'artifacts': items})
             if url.endswith('/runs/90/jobs'):
                 steps = [{'name': bootstrap.STEP, 'conclusion': 'success'}] if executed else []
                 return Response({'total_count': 1, 'jobs': [{'steps': steps}]})
             if url.endswith('/artifacts/80/zip'):
                 return Response(content=blob)
+            if url.endswith('/artifacts/81/zip'):
+                return Response(content=evidence_blob)
             raise AssertionError('Unexpected GitHub GET')
         client = Mock(); client.get.side_effect = read
         client.post.side_effect = AssertionError('History must never POST')
@@ -389,6 +395,26 @@ class HistoryTests(Fixtures):
                 history.prior(marker)
         history, marker = self.fixture(expired=True)
         with self.assertRaisesRegex(AssertionError, 'unavailable'):
+            history.prior(marker)
+
+    def test_completed_previous_edition_requires_receipt_matching_the_published_predecessor(self):
+        marker = bootstrap.context(self.env)
+        old = dict(marker, runId=90, previousRecord=17, sourceCommit=OLD_SOURCE)
+        intent = {'context': old, 'action': 'new-version'}
+        run = {'head_sha': OLD_SOURCE}
+        receipt = {'previousRecord': 17, 'reservedRecord': 22, 'reservedDoi': '10.5281/zenodo.22',
+                   'conceptDoi': POLICY['concept']['doi'], 'published': False}
+        outcome = {'status': 'RESERVED', 'action': 'new-version', 'record': 22, 'context': old}
+        evidence = {'reservation-outcome.json': outcome, 'reservation.json': receipt}
+        history, _ = self.fixture(marker=marker, intent=intent, run=run, evidence=evidence)
+        self.assertEqual(history.prior(marker), [])
+        for bad in ({}, {**evidence, 'reservation-outcome.json': {**outcome, 'record': 23}},
+                    {**evidence, 'reservation.json': {**receipt, 'reservedDoi': '10.5281/zenodo.23'}}):
+            history, _ = self.fixture(marker=marker, intent=intent, run=run, evidence=bad)
+            with self.subTest(evidence=bad), self.assertRaisesRegex(AssertionError, 'Prior edition'):
+                history.prior(marker)
+        history, _ = self.fixture(marker=marker, intent=intent, run=run)
+        with self.assertRaisesRegex(AssertionError, 'no unique durable outcome'):
             history.prior(marker)
 
     def test_active_prior_run_blocks_reservation(self):
