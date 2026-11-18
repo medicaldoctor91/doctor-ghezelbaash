@@ -454,7 +454,7 @@ jobs:
           dispatch() {
             jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --arg operation "$1" \
               --arg candidate "${2:-}" --rawfile plan "$plan" --arg digest "$PLAN_SHA256" \
-              '{ref:$tag,inputs:{operation:$operation,reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest} + if $candidate == "" then {} else {candidate_run:$candidate} end}' \
+              '{ref:$tag,inputs:({operation:$operation,reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest} + (if $candidate == "" then {} else {candidate_run:$candidate} end))}' \
               | gh api --method POST "$workflow/dispatches" --input -
           }
           latest() {
