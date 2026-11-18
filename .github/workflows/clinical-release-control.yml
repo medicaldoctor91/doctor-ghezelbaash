@@ -1,20 +1,31 @@
-name: Start the reviewed Zenodo reservation
+name: Verify predecessor and start the journaled Zenodo reservation
 on:
   push:
     branches: [codex/clinical-release-control-2026-11-19]
 permissions: {}
 jobs:
-  reserve:
+  reviewed-reservation:
     if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       actions: write
+      contents: write
     steps:
-      - name: Dispatch the existing journaled reservation workflow
+      - name: Publish reviewed bootstrap ref and dispatch the existing reservation
         env:
           GH_TOKEN: ${{ github.token }}
+          BOOTSTRAP_TAG: release-bootstrap-clinical-attribution-2026-11-19-v1
+          BOOTSTRAP_SHA: cf238d32afbe851805b93260a5d5fbfd179b2e54
+        shell: bash
         run: |
+          set -euo pipefail
+          if current=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$BOOTSTRAP_TAG" --jq .object.sha 2>/dev/null); then
+            test "$current" = "$BOOTSTRAP_SHA"
+          else
+            gh api --silent --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$BOOTSTRAP_TAG" -f sha="$BOOTSTRAP_SHA"
+          fi
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$BOOTSTRAP_TAG" --jq .object.sha)" = "$BOOTSTRAP_SHA"
           gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/inspect-media-delivery.yml/dispatches" --input - <<'REQUEST'
-          {"ref":"source-frozen-clinical-attribution-2026-11-18-management","inputs":{"operation":"reserve","reviewed_commit":"8552509b3f52ee01b8c6633e4164bf3257f8363d"}}
+          {"ref":"release-bootstrap-clinical-attribution-2026-11-19-v1","inputs":{"operation":"reserve","reviewed_commit":"cf238d32afbe851805b93260a5d5fbfd179b2e54"}}
           REQUEST
