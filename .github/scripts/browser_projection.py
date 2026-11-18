@@ -33,6 +33,21 @@ HISTORICAL_BOUNDED_PROJECTION = {
         'src/lib/home-graph-discovery.mjs': 'ff749862447e29a151452d8b017871f89e08a0ec56da518ebec4856cd95be474',
     },
 }
+HISTORICAL_PROJECTIONS = {
+    HISTORICAL_BOUNDED_PROJECTION['recordId']: HISTORICAL_BOUNDED_PROJECTION,
+    23965042: {
+        'recordId': 23965042,
+        'policySHA256': '40838c2961b600868d0eb1b443f641f48931e10698d26aad5e27a77ea3797a0a',
+        'scientificSource': '9ed3cc7a83f21482cce51cc4445755d2e3089680',
+        'deliverySource': '9ed3cc7a83f21482cce51cc4445755d2e3089680',
+        'profileModifiedAt': '2026-11-04T15:04:33Z',
+        'projectorFiles': {
+            'src/lib/search-contract.mjs': '8c856b5df0bfc2e9514ba4a21c73c341b960063fe192fd877f8e4dc741824c2d',
+            'src/lib/home-graph-discovery.mjs': 'ff749862447e29a151452d8b017871f89e08a0ec56da518ebec4856cd95be474',
+            'src/lib/physician-identity.mjs': '641bcd0fcdb1aea330c6fd0c20f057e451fde7b7481055314b0be7738d4bb1e0',
+        },
+    },
+}
 
 
 def _values(value):
@@ -125,14 +140,15 @@ process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepag
 
 def expected_historical_home_search_projection(graph, policy):
     """Reproduce one authenticated historical contract without current SOURCE."""
-    contract = HISTORICAL_BOUNDED_PROJECTION
+    archive = policy['currentArchive']
+    contract = HISTORICAL_PROJECTIONS.get(archive['recordId'])
+    assert contract, 'Unrecognized captured historical projection policy'
     fingerprint = hashlib.sha256(json.dumps(policy, sort_keys=True, ensure_ascii=False,
                                            separators=(',', ':')).encode()).hexdigest()
     assert fingerprint == contract['policySHA256'], 'Unrecognized captured historical projection policy'
-    archive = policy['currentArchive']
     assert archive['recordId'] == contract['recordId']
     assert archive['sourceCommit'] == contract['scientificSource']
-    assert archive['deliverySourceCommit'] == contract['deliverySource']
+    assert archive.get('deliverySourceCommit', archive['sourceCommit']) == contract['deliverySource']
     truth = {node['@id']: node for node in graph['@graph']}
     identifier_id = 'https://www.ghezelbaash.ir/identifier-dataset-zenodo-current-archive'
     identifier = truth.get(identifier_id, {})
@@ -154,9 +170,10 @@ const {projectHomeSearchGraph}=await import(pathToFileURL(process.argv[1]));
 const graph=JSON.parse(fs.readFileSync(0,'utf8'));
 const homepage=graph['@graph'].find(n=>[n['@type']].flat().includes('ProfilePage')&&[n['@type']].flat().includes('MedicalWebPage'));
 if(!homepage||typeof homepage.url!=='string')throw new Error('Historical canonical homepage identity missing');
-process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepage.url).origin)));
+process.stdout.write(JSON.stringify(projectHomeSearchGraph(graph,new URL(homepage.url).origin,{profileModifiedAt:process.argv[2]||undefined})));
 """
-        result = subprocess.run(['node', '--input-type=module', '-e', script, str(stage / 'search-contract.mjs')],
+        result = subprocess.run(['node', '--input-type=module', '-e', script,
+                                 str(stage / 'search-contract.mjs'), contract.get('profileModifiedAt', '')],
                                 cwd=ROOT, input=json.dumps(graph, ensure_ascii=False), text=True,
                                 capture_output=True, check=True, timeout=30)
     return json.loads(result.stdout)
@@ -297,7 +314,7 @@ def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_grap
     if historical_policy is not None:
         assert allow_legacy_full_graph, 'Historical projection requires explicit archive context'
     captured_historical = (historical_policy is not None and
-                           historical_policy.get('currentArchive', {}).get('recordId') == HISTORICAL_BOUNDED_PROJECTION['recordId'])
+                           HISTORICAL_PROJECTIONS.get(historical_policy.get('currentArchive', {}).get('recordId')))
     if captured_historical:
         expected = expected_historical_home_search_projection(graph, historical_policy)
     else:
@@ -309,7 +326,7 @@ def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_grap
             'visibleContentPrefixEndByte': canonical['start'], 'headerReserveBytes': HEADER_RESERVE_BYTES,
             'criticalPrefixIncludingHeaderReserveBytes': max(search['end'], canonical['start']) + HEADER_RESERVE_BYTES,
             'crawlPrefixBytes': CRAWL_PREFIX_BYTES,
-            **({'historicalProjectionDeliverySource': HISTORICAL_BOUNDED_PROJECTION['deliverySource']}
+            **({'historicalProjectionDeliverySource': captured_historical['deliverySource']}
                if captured_historical else {})}
 
 
