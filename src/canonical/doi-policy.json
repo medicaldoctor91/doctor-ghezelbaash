@@ -9,16 +9,16 @@
     "meaning": "Persistent public collection and latest-version entry point"
   },
   "currentArchive": {
-    "doi": "10.5281/zenodo.23965042",
-    "url": "https://doi.org/10.5281/zenodo.23965042",
-    "recordId": 23965042,
-    "packagingVersion": "1.3.5+zenodo.1",
-    "contentBaseline": "1.3.5",
-    "edition": "2026-10-18",
+    "doi": "10.5281/zenodo.24354791",
+    "url": "https://doi.org/10.5281/zenodo.24354791",
+    "recordId": 24354791,
+    "packagingVersion": "1.3.6+zenodo.1",
+    "contentBaseline": "1.3.6",
+    "edition": "2026-11-19",
     "role": "current_exact",
     "meaning": "Exact reproducible snapshot of this release cohort; publication receipts establish live availability.",
     "sourceCommitReference": "release-provenance.json#/sourceCommit",
-    "inputBaselineHfRevision": "ca61e0e2dfce8d4245045873c8fd058467e4976d",
+    "inputBaselineHfRevision": "43b55ee2e50678cf3bcdca7b5d3fe0e4ee5c21c8",
     "bindingStatus": "assigned-release-binding; availability recorded in external publication receipts",
     "sourceCommitMode": "build-source"
   },
@@ -145,6 +145,16 @@
       "sourceCommit": "ed767f6e6726e1453196e2ec2b312fcad00677e2",
       "originalScientificSourceCommit": "ed767f6e6726e1453196e2ec2b312fcad00677e2",
       "deliverySourceCommit": "0f72c5e6ef832adef66d003069e3e3c189cf5079"
+    },
+    {
+      "recordId": 23965042,
+      "doi": "10.5281/zenodo.23965042",
+      "url": "https://doi.org/10.5281/zenodo.23965042",
+      "packagingVersion": "1.3.5+zenodo.1",
+      "contentBaseline": "1.3.5",
+      "edition": "2026-10-18",
+      "sourceCommit": "9ed3cc7a83f21482cce51cc4445755d2e3089680",
+      "role": "historical"
     }
   ],
   "relations": {
@@ -155,23 +165,23 @@
     "identity": "No DOI sameAs on Person, Clinic or canonical Dataset IRI"
   },
   "downloadBindings": {
-    "recordId": 23965042,
-    "publicPrefix": "https://zenodo.org/records/23965042/files/",
-    "apiPrefix": "https://zenodo.org/api/records/23965042/files/",
-    "bundle": "https://zenodo.org/records/23965042/files/dr-saeed-ghezelbash-dataset-1.3.5-zenodo.1.zip",
+    "recordId": 24354791,
+    "publicPrefix": "https://zenodo.org/records/24354791/files/",
+    "apiPrefix": "https://zenodo.org/api/records/24354791/files/",
+    "bundle": "https://zenodo.org/records/24354791/files/dr-saeed-ghezelbash-dataset-1.3.6-zenodo.1.zip",
     "role": "download_binding"
   },
   "archiveMutationPolicy": "Published payload and upstream/ receipts remain immutable. Metadata-only DOI introduction alignment never creates a new version. A necessary payload release must reserve its real DOI before generating record-bound descriptors.",
   "coordinatedRelease": {
-    "hfParent": "ca61e0e2dfce8d4245045873c8fd058467e4976d",
-    "websiteBaselineCommit": "7dc53a5d75aeb4954cc598216be0bff2ada75e7e",
-    "kaggleBaselineVersion": 34,
-    "kaggleTargetVersion": 35,
-    "notebookBaselineVersion": 17,
-    "notebookTargetVersion": 18,
-    "previousZenodoRecord": 23474664,
-    "expectedGraphNodes": 1602,
-    "expectedGraphTriples": 22270,
+    "hfParent": "43b55ee2e50678cf3bcdca7b5d3fe0e4ee5c21c8",
+    "websiteBaselineCommit": "9ed3cc7a83f21482cce51cc4445755d2e3089680",
+    "kaggleBaselineVersion": 35,
+    "kaggleTargetVersion": 36,
+    "notebookBaselineVersion": 18,
+    "notebookTargetVersion": 19,
+    "previousZenodoRecord": 23965042,
+    "expectedGraphNodes": 1666,
+    "expectedGraphTriples": 22840,
     "baselineAuthority": "Authenticated Kaggle owner ready state; public default is recorded separately and must converge before Zenodo publication"
   }
 }

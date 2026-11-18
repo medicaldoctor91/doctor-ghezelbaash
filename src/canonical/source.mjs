@@ -96,7 +96,7 @@ export const SOURCE = {
       }
     }
   },
-  "edition": "2026-10-18",
+  "edition": "2026-11-19",
   "canonicalOrigin": "https://www.ghezelbaash.ir",
   "graph": {
     "@context": {
@@ -10099,7 +10099,7 @@ export const SOURCE = {
           "https://www.wikidata.org/entity/Q593744",
           "https://www.wikidata.org/entity/Q33002955"
         ],
-        "version": "1.3.5",
+        "version": "1.3.6",
         "datePublished": {
           "@value": "2026-02-25",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10120,10 +10120,10 @@ export const SOURCE = {
         },
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "description": "Version-controlled source project for Version 1.3.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
+        "description": "Version-controlled source project for Version 1.3.6 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
         "author": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10178,10 +10178,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "hasPart": [
           {
             "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
@@ -10249,7 +10249,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:resource": [
@@ -10287,7 +10287,7 @@ export const SOURCE = {
         "name": "Doctor Ghezelbaash structured data repository — GitHub source",
         "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
         "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10303,9 +10303,9 @@ export const SOURCE = {
         "publisher": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
-        "description": "Version-controlled GitHub source for Version 1.3.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
+        "description": "Version-controlled GitHub source for Version 1.3.6 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -10338,7 +10338,7 @@ export const SOURCE = {
         "provider": {
           "@id": "https://www.ghezelbaash.ir/distribution-platform-hugging-face"
         },
-        "description": "AI and retrieval distribution of Version 1.3.5 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
+        "description": "AI and retrieval distribution of Version 1.3.6 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
         "encodingFormat": [
           "application/ld+json",
           "text/turtle",
@@ -10350,10 +10350,10 @@ export const SOURCE = {
         ],
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dcat:isDistributionOf": {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
         },
@@ -10365,7 +10365,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -10623,7 +10623,7 @@ export const SOURCE = {
           }
         ],
         "license": "https://creativecommons.org/licenses/by/4.0/",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "datePublished": {
           "@value": "2026-07-25",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10687,7 +10687,7 @@ export const SOURCE = {
           }
         ],
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "identifier": [
@@ -10969,7 +10969,7 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:identifier": [
@@ -11019,7 +11019,7 @@ export const SOURCE = {
         "dcat:landingPage": {
           "@id": "https://www.ghezelbaash.ir/"
         },
-        "dcat:version": "1.3.5",
+        "dcat:version": "1.3.6",
         "dcterms:provenance": {
           "@id": "https://www.ghezelbaash.ir/provenance/source-of-truth-v15-max"
         },
@@ -11073,6 +11073,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "dcterms:hasVersion": [
@@ -11117,10 +11120,13 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "dcat:hasCurrentVersion": {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
         }
       },
       {
@@ -11138,10 +11144,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -11165,7 +11171,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -25013,10 +25019,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -25040,7 +25046,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -25861,9 +25867,9 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/doctor.vcf",
         "contentUrl": "https://www.ghezelbaash.ir/doctor.vcf",
         "encodingFormat": "text/vcard",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "mainEntity": {
@@ -25906,9 +25912,9 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/clinic.vcf",
         "contentUrl": "https://www.ghezelbaash.ir/clinic.vcf",
         "encodingFormat": "text/vcard",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "mainEntity": {
@@ -26071,9 +26077,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26093,7 +26099,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26131,9 +26137,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26153,7 +26159,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26188,9 +26194,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26210,7 +26216,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26245,9 +26251,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26267,7 +26273,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26304,10 +26310,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dcterms:title": [
           "Full canonical content projection",
           "Dr. Saeed Ghezelbash Canonical Page — Markdown projection"
@@ -26322,7 +26328,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26359,10 +26365,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dcterms:title": [
           "Passage-oriented full content projection",
           "Dr. Saeed Ghezelbash Canonical Page — full plain-text projection"
@@ -26377,7 +26383,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26451,9 +26457,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26470,7 +26476,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26505,9 +26511,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26527,7 +26533,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26565,9 +26571,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26587,7 +26593,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26622,9 +26628,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26644,7 +26650,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26682,9 +26688,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26704,7 +26710,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -48246,7 +48252,7 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-0-0"
         },
         "dcat:last": {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
         },
         "dcat:seriesMember": [
           {
@@ -48290,6 +48296,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "dcat:landingPage": {
@@ -59512,6 +59521,52 @@ export const SOURCE = {
         },
         "owl:priorVersion": {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
+        }
+      },
+      {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6",
+        "@type": [
+          "Dataset",
+          "dcat:Dataset",
+          "prov:Entity"
+        ],
+        "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Version 1.3.6",
+        "version": "1.3.6",
+        "datePublished": {
+          "@value": "2026-11-19",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "isPartOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcat:version": "1.3.6",
+        "dcat:inSeries": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-series"
+        },
+        "dcat:isVersionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcterms:isVersionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "prov:specializationOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcterms:issued": {
+          "@value": "2026-11-19",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dcat:previousVersion": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        },
+        "dcat:prev": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        },
+        "prov:wasRevisionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        },
+        "owl:priorVersion": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
         }
       }
     ]
