@@ -15,8 +15,8 @@ jobs:
       - name: Publish reviewed bootstrap ref and dispatch the existing reservation
         env:
           GH_TOKEN: ${{ github.token }}
-          BOOTSTRAP_TAG: release-bootstrap-clinical-attribution-2026-11-19-v1
-          BOOTSTRAP_SHA: cf238d32afbe851805b93260a5d5fbfd179b2e54
+          BOOTSTRAP_TAG: release-bootstrap-clinical-attribution-2026-11-19-v2
+          BOOTSTRAP_SHA: 74a7926307978f3f5351919bcfe4d76345cefd51
         shell: bash
         run: |
           set -euo pipefail
@@ -27,5 +27,5 @@ jobs:
           fi
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$BOOTSTRAP_TAG" --jq .object.sha)" = "$BOOTSTRAP_SHA"
           gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/inspect-media-delivery.yml/dispatches" --input - <<'REQUEST'
-          {"ref":"release-bootstrap-clinical-attribution-2026-11-19-v1","inputs":{"operation":"reserve","reviewed_commit":"cf238d32afbe851805b93260a5d5fbfd179b2e54"}}
+          {"ref":"release-bootstrap-clinical-attribution-2026-11-19-v2","inputs":{"operation":"reserve","reviewed_commit":"74a7926307978f3f5351919bcfe4d76345cefd51"}}
           REQUEST
