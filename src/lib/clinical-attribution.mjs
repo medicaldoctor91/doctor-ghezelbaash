@@ -14,15 +14,15 @@ const servicePages = {
   '/thread-lift': 'procedure-thread-lift',
 };
 
-export function clinicalArticleForPage(page, content) {
+export function clinicalArticleForPage(page, content, {isPrimary = true} = {}) {
   const article = {
     '@id': page.url + '#article',
     '@type': 'Article',
     url: page.url,
     headline: structuredClone(page.name),
     inLanguage: structuredClone(page.inLanguage),
-    mainEntityOfPage: page.url,
   };
+  if (isPrimary) article.mainEntityOfPage = page.url;
   for (const property of ['description', 'author', 'publisher', 'about', 'datePublished', 'dateModified']) {
     if (property in page) article[property] = structuredClone(page[property]);
   }
@@ -72,9 +72,9 @@ export function applyClinicalAttribution(source) {
       }
       const content = values(page.mainEntity).filter(item =>
         values(nodes.get(item['@id'])?.['@type']).some(type => ['WebPageElement', 'Question', 'Answer'].includes(type)));
-      const article = clinicalArticleForPage(page, content);
-      graph.push(article);
       const service = get(servicePages[route.path]);
+      const article = clinicalArticleForPage(page, content, {isPrimary: !service});
+      graph.push(article);
       page.mainEntity = ref((service ?? article)['@id']);
       if (service) page.hasPart = [...values(page.hasPart), ref(article['@id'])];
     } else if (route.pagePurpose === 'professional-biography') {
