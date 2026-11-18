@@ -1,4 +1,5 @@
 import {applyDoiPolicy, DOI_POLICY} from '../lib/doi-policy.mjs';
+import {applyClinicalAttribution} from '../lib/clinical-attribution.mjs';
 // Canonical facts, route/delivery policy and authored corpus.
 // Imported directly by rendering, materialization and validation.
 export const SOURCE = {
@@ -72,7 +73,7 @@ export const SOURCE = {
     }
   },
   "validation": {
-    "shaclSupplement": "@prefix sh: <http://www.w3.org/ns/shacl#> .\n@prefix schema: <https://schema.org/> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n@prefix ex: <https://www.ghezelbaash.ir/> .\n@prefix dcat: <http://www.w3.org/ns/dcat#> .\n@prefix dct: <http://purl.org/dc/terms/> .\n@prefix prov: <http://www.w3.org/ns/prov#> .\n@prefix spdx: <http://spdx.org/rdf/terms#> .\n\n# Supplemental contracts for the published data union. Canonical graph-authored\n# SHACL definitions are compiled alongside these constraints into shapes.ttl.\n\nex:PhysicianEntityShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Person ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:IndividualPhysician ] ;\n  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:mainEntityOfPage ; sh:hasValue ex:webpage ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:name ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:owns ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:practicesAt ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:workLocation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\n  sh:not [ sh:property [ sh:path schema:worksFor ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] ] ;\n  sh:not [ sh:property [ sh:path schema:affiliation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] ] ;\n  sh:property [ sh:path schema:medicalSpecialty ; sh:hasValue ex:medical-specialty-aesthetic-medicine ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:availableService ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:identifier ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:sameAs ; sh:minCount 1 ] .\n\nex:ClinicAssetShape a sh:NodeShape ;\n  sh:targetNode ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:PhysiciansOffice ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:LocalBusiness ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:founder ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:employee ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:medicalSpecialty ; sh:hasValue ex:medical-specialty-aesthetic-medicine ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:availableService ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:identifier ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:openingHoursSpecification ; sh:minCount 2 ] ;\n  sh:property [ sh:path schema:priceRange ; sh:datatype xsd:string ] .\n\nex:WebPageDominanceShape a sh:NodeShape ;\n  sh:targetNode ex:webpage ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalWebPage ] ;\n  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:dateModified ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:author ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:publisher ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] .\n\nex:PrimaryHomeProfileShape a sh:NodeShape ;\n  sh:targetClass schema:ProfilePage ;\n  sh:in ( ex:webpage ) .\n\nex:CanonicalDatasetRoleShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;\n  sh:property [ sh:path schema:creator ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:publisher ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:distribution ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:dateModified ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path <https://www.ghezelbaash.ir/ontology/evidenceAssessmentRegistry> ; sh:nodeKind sh:IRI ; sh:class prov:Collection ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  # Each serialization may encode the same destination as an IRI or anyURI.\n  # This exact value set permits one semantic target, without accepting a\n  # language-tagged URL or forcing unlike RDF terms to share maxCount 1.\n  sh:property [ sh:path schema:url ; sh:minCount 1 ;\n    sh:in ( <https://www.ghezelbaash.ir/> \"https://www.ghezelbaash.ir/\"^^xsd:anyURI ) ] ;\n  sh:property [ sh:path schema:sameAs ; sh:maxCount 0 ] .\n\nex:DataCatalogRoleShape a sh:NodeShape ;\n  sh:targetNode ex:data-catalog ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:DataCatalog ] ;\n  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/dcat.ttl> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:dataset ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld/dataset> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:GitHubSourceRoleShape a sh:NodeShape ;\n  sh:targetNode ex:project-github-source ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:SoftwareSourceCode ] ;\n  sh:property [ sh:path schema:codeRepository ; sh:hasValue <https://github.com/medicaldoctor91/doctor-ghezelbaash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;\n  sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .\n\nex:MedicalConditionTreatmentShape a sh:NodeShape ;\n  sh:targetClass schema:MedicalCondition ;\n  sh:property [ sh:path schema:possibleTreatment ; sh:class schema:MedicalTherapy ; sh:minCount 1 ] .\n\nex:FridayClosedShape a sh:NodeShape ;\n  sh:targetNode ex:clinic-friday-closed ;\n  sh:property [ sh:path schema:opens ; sh:in ( \"00:00:00\" \"00:00:00\"^^xsd:time ) ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:closes ; sh:in ( \"00:00:00\" \"00:00:00\"^^xsd:time ) ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:AvailableServiceProviderShape a sh:NodeShape ;\n  sh:targetObjectsOf schema:availableService ;\n  sh:or ( [ sh:class schema:Service ] [ sh:class schema:MedicalProcedure ] [ sh:class schema:MedicalTest ] [ sh:class schema:MedicalTherapy ] ) ;\n  sh:or (\n    [ sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ]\n    [ sh:in ( ex:procedure-botulinum-toxin-chronic-migraine ) ;\n      sh:property [ sh:path [ sh:inversePath dct:subject ] ; sh:hasValue ex:service-botulinum-toxin-chronic-migraine ;\n        sh:qualifiedValueShape [ sh:class schema:Service ; sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ] ; sh:qualifiedMinCount 1 ] ]\n  ) .\n\nex:ImageLicenseShape a sh:NodeShape ;\n  sh:targetClass schema:ImageObject ;\n  sh:property [ sh:path schema:license ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:copyrightNotice ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:acquireLicensePage ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:creditText ; sh:minCount 1 ] .\n\n# Dates retain their recorded precision. A date-only source never requires an\n# invented time, while an existing timestamp must remain a real dateTime.\nex:CalendarValueShape a sh:NodeShape ;\n  sh:targetObjectsOf schema:birthDate, schema:dateCreated, schema:dateModified,\n    schema:datePublished, schema:lastReviewed, schema:startDate, schema:endDate,\n    schema:observationDate, dct:issued, dct:modified ;\n  sh:or ( [ sh:datatype xsd:date ] [ sh:datatype xsd:dateTime ] [ sh:datatype xsd:gYearMonth ] ) .\n\nex:UploadTimestampShape a sh:NodeShape ;\n  sh:targetObjectsOf schema:uploadDate ;\n  sh:datatype xsd:dateTime .\n\nex:ServiceCategoryShape a sh:NodeShape ;\n  sh:targetSubjectsOf schema:category ;\n  # Educational/referral-only procedures retain their clinical category without\n  # asserting that the physician provides them as a practice service.\n  sh:or ( [ sh:class schema:Service ] [ sh:class schema:MedicalProcedure ] ) ;\n  sh:property [ sh:path schema:category ; sh:nodeKind sh:IRI ; sh:class schema:DefinedTerm ; sh:minCount 1 ] ;\n  sh:sparql [\n    sh:message \"A curated service category must also be a documented subject of that service.\" ;\n    sh:select \"\"\"\n      PREFIX schema: <https://schema.org/>\n      PREFIX dct: <http://purl.org/dc/terms/>\n      SELECT $this ?value WHERE {\n        $this schema:category ?value .\n        FILTER NOT EXISTS { $this dct:subject ?value . }\n      }\n    \"\"\"\n  ] .\n\nex:PublishedServiceProviderShape a sh:NodeShape ;\n  sh:targetClass schema:Service ;\n  sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\n# This pair has one specific subject; pairwise equality alone would also pass\n# when both questions and answers point to the same unrelated procedure.\nex:MelasmaAnswerSubjectShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/acne-pigmentation-and-scars#question-melasma-recurrence-and-multimodal-treatment>,\n    <https://www.ghezelbaash.ir/acne-pigmentation-and-scars#answer-melasma-recurrence-and-multimodal-treatment> ;\n  sh:property [ sh:path schema:about ; sh:hasValue ex:procedure-melasma-treatment ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:DcatDistributionShape a sh:NodeShape ;\n  # The compiler supplies every locally measured registry distribution as an\n  # explicit target. Unlike remote landing pages, these files have actual byte\n  # sizes and checksums. Additional measured distributions remain constrained.\n  sh:targetSubjectsOf dcat:byteSize ;\n  sh:class dcat:Distribution ;\n  sh:nodeKind sh:IRI ;\n  sh:property [ sh:path dcat:downloadURL ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path dcat:mediaType ; sh:nodeKind sh:IRI ; sh:pattern \"^https://www[.]iana[.]org/assignments/media-types/[^/]+/[^/]+$\" ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path dcat:byteSize ; sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path spdx:checksum ; sh:class spdx:Checksum ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:DistributionChecksumShape a sh:NodeShape ;\n  sh:targetObjectsOf spdx:checksum ;\n  sh:property [ sh:path spdx:algorithm ; sh:hasValue spdx:checksumAlgorithm_sha256 ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path spdx:checksumValue ; sh:datatype xsd:hexBinary ; sh:pattern \"^[0-9a-fA-F]{64}$\" ; sh:minCount 1 ; sh:maxCount 1 ] .\n\n# An evidence assessment is our record about a source, not the source itself.\n# Ordinary source nodes remain unconstrained by this first-party assessment\n# contract even when both have the standard prov:Entity type.\nex:EvidenceAssessmentShape a sh:NodeShape ;\n  sh:targetClass prov:Collection ;\n  sh:or (\n    [ sh:not [ sh:pattern \"^https://www[.]ghezelbaash[.]ir/provenance[.]jsonld/assessment-\" ] ]\n    [\n      sh:class schema:CreativeWork ;\n      sh:property [ sh:path schema:creator ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path schema:isBasedOn ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path schema:about ; sh:equals schema:isBasedOn ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path schema:dateModified ; sh:maxCount 0 ] ;\n      sh:property [ sh:path schema:additionalType ; sh:maxCount 0 ] ;\n      sh:property [\n        sh:path prov:hadMember ;\n        sh:qualifiedValueShape [\n          sh:property [ sh:path schema:propertyID ; sh:hasValue \"role\" ] ;\n          sh:property [ sh:path schema:value ; sh:in ( \"identity-reference\" \"medical-reference\" \"first-party-release-preservation\" ) ; sh:minCount 1 ; sh:maxCount 1 ]\n        ] ;\n        sh:qualifiedMinCount 1 ; sh:qualifiedMaxCount 1\n      ]\n    ]\n  ) .\n\nex:EvidenceObservationDateShape a sh:NodeShape ;\n  sh:targetClass schema:PropertyValue ;\n  sh:or (\n    [ sh:not [ sh:property [ sh:path schema:propertyID ; sh:hasValue \"verifiedAt\" ] ] ]\n    [ sh:property [ sh:path schema:value ; sh:datatype xsd:string ; sh:pattern \"^[0-9]{4}-[0-9]{2}-[0-9]{2}$\" ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path dct:date ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ]\n  ) .\n\n\n# Corrected authority anchors are part of the RDF contract, not only JS tests.\nex:CityCubeIdentityShape a sh:NodeShape ;\n  sh:targetNode ex:place-messe-berlin-citycube ;\n  sh:property [ sh:path schema:name ; sh:hasValue \"CityCube Berlin\" ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q15108815> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:IranMedicalCouncilIdentityShape a sh:NodeShape ;\n  sh:targetNode ex:organization-iran-medical-council ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Organization ] ;\n  sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q5944740> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:PersonalFacebookProfileShape a sh:NodeShape ;\n  sh:targetNode ex:profile-facebook-ghezelbaash ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:ClinicFacebookProfileShape a sh:NodeShape ;\n  sh:targetNode ex:profile-facebook-doctor-ghezelbaash ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:ClinicInstagramProfileShape a sh:NodeShape ;\n  sh:targetNode ex:profile-instagram-doctor-ghezelbaash ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\n# Only these shared professional pages describe both existing entities. The\n# canonical homepage and personal Facebook retain their single-person contracts.\n# The evidence representation of Instagram must describe the same two subjects.\nex:ProfessionalSocialSubjectShape a sh:NodeShape ;\n  sh:targetNode ex:profile-facebook-doctor-ghezelbaash,\n    ex:profile-instagram-doctor-ghezelbaash, ex:evidence-instagram ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:minCount 2 ; sh:maxCount 2 ;\n    sh:in ( <https://www.ghezelbaash.ir/#saeed-ghezelbash> ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] .\n\n# Validate current physician identity ownership.\nex:CoreEntityWikidataOwnershipShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;\n  sh:sparql [\n    sh:message \"Wikidata ownership must remain physician-specific; the clinic has no declared Wikidata identity.\" ;\n    sh:select \"\"\"\n      PREFIX schema: <https://schema.org/>\n      PREFIX ex: <https://www.ghezelbaash.ir/>\n      SELECT $this WHERE {\n        {\n          <https://www.ghezelbaash.ir/#saeed-ghezelbash> schema:sameAs ?value .\n          FILTER(CONTAINS(STR(?value), \"wikidata.org/\") &&\n                 STR(?value) != \"https://www.wikidata.org/entity/Q140287622\")\n        } UNION {\n          <https://www.ghezelbaash.ir/#saeed-ghezelbash> schema:identifier ?identifier .\n          ?identifier schema:propertyID \"Wikidata item ID\" ; schema:value ?value .\n          FILTER(STR(?value) != \"Q140287622\")\n        } UNION {\n          ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah\n            (schema:sameAs|schema:identifier/schema:url) ?value .\n          FILTER(CONTAINS(STR(?value), \"wikidata.org/\"))\n        } UNION {\n          ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah schema:identifier ?identifier .\n          ?identifier schema:propertyID \"Wikidata item ID\" .\n        }\n      }\n    \"\"\"\n  ] .\n\nex:ChronicMigraineTherapyShape a sh:NodeShape ;\n  sh:targetNode ex:procedure-botulinum-toxin-chronic-migraine ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalTherapy ] ;\n  sh:property [ sh:path schema:provider ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:availableChannel ; sh:maxCount 0 ] .\nex:ChronicMigraineServiceShape a sh:NodeShape ;\n  sh:targetNode ex:service-botulinum-toxin-chronic-migraine ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Service ] ;\n  sh:property [ sh:path dct:subject ; sh:hasValue ex:procedure-botulinum-toxin-chronic-migraine ; sh:maxCount 2 ; sh:in ( ex:procedure-botulinum-toxin-chronic-migraine ex:topic-botox-migraine-context ) ] ;\n  sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:availableChannel ; sh:hasValue ex:in-person-clinic-service-channel ] .\n",
+    "shaclSupplement": "@prefix sh: <http://www.w3.org/ns/shacl#> .\n@prefix schema: <https://schema.org/> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n@prefix ex: <https://www.ghezelbaash.ir/> .\n@prefix dcat: <http://www.w3.org/ns/dcat#> .\n@prefix dct: <http://purl.org/dc/terms/> .\n@prefix prov: <http://www.w3.org/ns/prov#> .\n@prefix spdx: <http://spdx.org/rdf/terms#> .\n\n# Supplemental contracts for the published data union. Canonical graph-authored\n# SHACL definitions are compiled alongside these constraints into shapes.ttl.\n\nex:PhysicianEntityShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Person ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:IndividualPhysician ] ;\n  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:mainEntityOfPage ; sh:hasValue ex:webpage ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:name ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:owns ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:practicesAt ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:workLocation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;\n  sh:not [ sh:property [ sh:path schema:worksFor ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] ] ;\n  sh:not [ sh:property [ sh:path schema:affiliation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] ] ;\n  sh:property [ sh:path schema:medicalSpecialty ; sh:hasValue ex:medical-specialty-aesthetic-medicine ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:availableService ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:identifier ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:sameAs ; sh:minCount 1 ] .\n\nex:ClinicAssetShape a sh:NodeShape ;\n  sh:targetNode ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:PhysiciansOffice ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:LocalBusiness ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:founder ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:employee ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:medicalSpecialty ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iran ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:areaServed ; sh:hasValue ex:country-iraq ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:availableService ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:hasOfferCatalog ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:identifier ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:openingHoursSpecification ; sh:minCount 2 ] ;\n  sh:property [ sh:path schema:priceRange ; sh:datatype xsd:string ] .\n\nex:WebPageDominanceShape a sh:NodeShape ;\n  sh:targetNode ex:webpage ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalWebPage ] ;\n  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:dateModified ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:author ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:publisher ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ] .\n\nex:PhysicianProfilePageShape a sh:NodeShape ;\n  sh:targetClass schema:ProfilePage ;\n  sh:in ( ex:webpage <https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions#webpage> ) ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:maxCount 1 ] .\n\nex:CanonicalDatasetRoleShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;\n  sh:property [ sh:path schema:creator ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:publisher ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:distribution ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:dateModified ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path <https://www.ghezelbaash.ir/ontology/evidenceAssessmentRegistry> ; sh:nodeKind sh:IRI ; sh:class prov:Collection ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  # Each serialization may encode the same destination as an IRI or anyURI.\n  # This exact value set permits one semantic target, without accepting a\n  # language-tagged URL or forcing unlike RDF terms to share maxCount 1.\n  sh:property [ sh:path schema:url ; sh:minCount 1 ;\n    sh:in ( <https://www.ghezelbaash.ir/> \"https://www.ghezelbaash.ir/\"^^xsd:anyURI ) ] ;\n  sh:property [ sh:path schema:sameAs ; sh:maxCount 0 ] .\n\nex:DataCatalogRoleShape a sh:NodeShape ;\n  sh:targetNode ex:data-catalog ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:DataCatalog ] ;\n  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/dcat.ttl> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:dataset ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld/dataset> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:GitHubSourceRoleShape a sh:NodeShape ;\n  sh:targetNode ex:project-github-source ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:SoftwareSourceCode ] ;\n  sh:property [ sh:path schema:codeRepository ; sh:hasValue <https://github.com/medicaldoctor91/doctor-ghezelbaash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;\n  sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .\n\nex:MedicalConditionTreatmentShape a sh:NodeShape ;\n  sh:targetClass schema:MedicalCondition ;\n  sh:property [ sh:path schema:possibleTreatment ; sh:class schema:MedicalTherapy ; sh:minCount 1 ] .\n\nex:FridayClosedShape a sh:NodeShape ;\n  sh:targetNode ex:clinic-friday-closed ;\n  sh:property [ sh:path schema:opens ; sh:in ( \"00:00:00\" \"00:00:00\"^^xsd:time ) ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:closes ; sh:in ( \"00:00:00\" \"00:00:00\"^^xsd:time ) ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:AvailableServiceProviderShape a sh:NodeShape ;\n  sh:targetObjectsOf schema:availableService ;\n  sh:or ( [ sh:class schema:Service ] [ sh:class schema:MedicalProcedure ] [ sh:class schema:MedicalTest ] [ sh:class schema:MedicalTherapy ] ) ;\n  sh:or (\n    [ sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ]\n    [ sh:in ( ex:procedure-botulinum-toxin-chronic-migraine ) ;\n      sh:property [ sh:path [ sh:inversePath dct:subject ] ; sh:hasValue ex:service-botulinum-toxin-chronic-migraine ;\n        sh:qualifiedValueShape [ sh:class schema:Service ; sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ] ; sh:qualifiedMinCount 1 ] ]\n  ) .\n\nex:ImageLicenseShape a sh:NodeShape ;\n  sh:targetClass schema:ImageObject ;\n  sh:property [ sh:path schema:license ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:copyrightNotice ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:acquireLicensePage ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:creditText ; sh:minCount 1 ] .\n\n# Dates retain their recorded precision. A date-only source never requires an\n# invented time, while an existing timestamp must remain a real dateTime.\nex:CalendarValueShape a sh:NodeShape ;\n  sh:targetObjectsOf schema:birthDate, schema:dateCreated, schema:dateModified,\n    schema:datePublished, schema:lastReviewed, schema:startDate, schema:endDate,\n    schema:observationDate, dct:issued, dct:modified ;\n  sh:or ( [ sh:datatype xsd:date ] [ sh:datatype xsd:dateTime ] [ sh:datatype xsd:gYearMonth ] ) .\n\nex:UploadTimestampShape a sh:NodeShape ;\n  sh:targetObjectsOf schema:uploadDate ;\n  sh:datatype xsd:dateTime .\n\nex:ServiceCategoryShape a sh:NodeShape ;\n  sh:targetSubjectsOf schema:category ;\n  # Educational/referral-only procedures retain their clinical category without\n  # asserting that the physician provides them as a practice service.\n  sh:or ( [ sh:class schema:Service ] [ sh:class schema:MedicalProcedure ] ) ;\n  sh:property [ sh:path schema:category ; sh:nodeKind sh:IRI ; sh:class schema:DefinedTerm ; sh:minCount 1 ] ;\n  sh:sparql [\n    sh:message \"A curated service category must also be a documented subject of that service.\" ;\n    sh:select \"\"\"\n      PREFIX schema: <https://schema.org/>\n      PREFIX dct: <http://purl.org/dc/terms/>\n      SELECT $this ?value WHERE {\n        $this schema:category ?value .\n        FILTER NOT EXISTS { $this dct:subject ?value . }\n      }\n    \"\"\"\n  ] .\n\nex:PublishedServiceProviderShape a sh:NodeShape ;\n  sh:targetClass schema:Service ;\n  sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:availableChannel ; sh:class schema:ServiceChannel ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:or (\n    [ sh:not [ sh:in ( ex:free-online-aesthetic-initial-consultation ) ] ;\n      sh:property [ sh:path ( schema:availableChannel schema:serviceLocation ) ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:maxCount 1 ] ]\n    [ sh:in ( ex:free-online-aesthetic-initial-consultation ) ;\n      sh:property [ sh:path schema:availableChannel ; sh:hasValue ex:online-consultation-channel ] ;\n      sh:property [ sh:path ( schema:availableChannel schema:serviceLocation ) ; sh:maxCount 0 ] ]\n  ) .\n\nex:ClinicalServiceListShape a sh:NodeShape ;\n  sh:targetNode ex:clinical-services-offer-catalog ;\n  sh:class schema:ItemList ;\n  sh:not [ sh:class schema:OfferCatalog ] ;\n  sh:property [ sh:path ( schema:itemListElement schema:item ) ; sh:class schema:Service ; sh:minCount 1 ] .\n\n# This pair has one specific subject; pairwise equality alone would also pass\n# when both questions and answers point to the same unrelated procedure.\nex:MelasmaAnswerSubjectShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/acne-pigmentation-and-scars#question-melasma-recurrence-and-multimodal-treatment>,\n    <https://www.ghezelbaash.ir/acne-pigmentation-and-scars#answer-melasma-recurrence-and-multimodal-treatment> ;\n  sh:property [ sh:path schema:about ; sh:hasValue ex:procedure-melasma-treatment ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:DcatDistributionShape a sh:NodeShape ;\n  # The compiler supplies every locally measured registry distribution as an\n  # explicit target. Unlike remote landing pages, these files have actual byte\n  # sizes and checksums. Additional measured distributions remain constrained.\n  sh:targetSubjectsOf dcat:byteSize ;\n  sh:class dcat:Distribution ;\n  sh:nodeKind sh:IRI ;\n  sh:property [ sh:path dcat:downloadURL ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path dcat:mediaType ; sh:nodeKind sh:IRI ; sh:pattern \"^https://www[.]iana[.]org/assignments/media-types/[^/]+/[^/]+$\" ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path dcat:byteSize ; sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path spdx:checksum ; sh:class spdx:Checksum ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:DistributionChecksumShape a sh:NodeShape ;\n  sh:targetObjectsOf spdx:checksum ;\n  sh:property [ sh:path spdx:algorithm ; sh:hasValue spdx:checksumAlgorithm_sha256 ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path spdx:checksumValue ; sh:datatype xsd:hexBinary ; sh:pattern \"^[0-9a-fA-F]{64}$\" ; sh:minCount 1 ; sh:maxCount 1 ] .\n\n# An evidence assessment is our record about a source, not the source itself.\n# Ordinary source nodes remain unconstrained by this first-party assessment\n# contract even when both have the standard prov:Entity type.\nex:EvidenceAssessmentShape a sh:NodeShape ;\n  sh:targetClass prov:Collection ;\n  sh:or (\n    [ sh:not [ sh:pattern \"^https://www[.]ghezelbaash[.]ir/provenance[.]jsonld/assessment-\" ] ]\n    [\n      sh:class schema:CreativeWork ;\n      sh:property [ sh:path schema:creator ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path schema:isBasedOn ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path schema:about ; sh:equals schema:isBasedOn ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path schema:dateModified ; sh:maxCount 0 ] ;\n      sh:property [ sh:path schema:additionalType ; sh:maxCount 0 ] ;\n      sh:property [\n        sh:path prov:hadMember ;\n        sh:qualifiedValueShape [\n          sh:property [ sh:path schema:propertyID ; sh:hasValue \"role\" ] ;\n          sh:property [ sh:path schema:value ; sh:in ( \"identity-reference\" \"medical-reference\" \"first-party-release-preservation\" ) ; sh:minCount 1 ; sh:maxCount 1 ]\n        ] ;\n        sh:qualifiedMinCount 1 ; sh:qualifiedMaxCount 1\n      ]\n    ]\n  ) .\n\nex:EvidenceObservationDateShape a sh:NodeShape ;\n  sh:targetClass schema:PropertyValue ;\n  sh:or (\n    [ sh:not [ sh:property [ sh:path schema:propertyID ; sh:hasValue \"verifiedAt\" ] ] ]\n    [ sh:property [ sh:path schema:value ; sh:datatype xsd:string ; sh:pattern \"^[0-9]{4}-[0-9]{2}-[0-9]{2}$\" ; sh:minCount 1 ; sh:maxCount 1 ] ;\n      sh:property [ sh:path dct:date ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ]\n  ) .\n\n\n# Corrected authority anchors are part of the RDF contract, not only JS tests.\nex:CityCubeIdentityShape a sh:NodeShape ;\n  sh:targetNode ex:place-messe-berlin-citycube ;\n  sh:property [ sh:path schema:name ; sh:hasValue \"CityCube Berlin\" ; sh:minCount 1 ] ;\n  sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q15108815> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:IranMedicalCouncilIdentityShape a sh:NodeShape ;\n  sh:targetNode ex:organization-iran-medical-council ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Organization ] ;\n  sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q5944740> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:PersonalFacebookProfileShape a sh:NodeShape ;\n  sh:targetNode ex:profile-facebook-ghezelbaash ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:ClinicFacebookProfileShape a sh:NodeShape ;\n  sh:targetNode ex:profile-facebook-doctor-ghezelbaash ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\nex:ClinicInstagramProfileShape a sh:NodeShape ;\n  sh:targetNode ex:profile-instagram-doctor-ghezelbaash ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:owner ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:minCount 1 ; sh:maxCount 1 ] .\n\n# Only these shared professional pages describe both existing entities. The\n# canonical homepage and personal Facebook retain their single-person contracts.\n# The evidence representation of Instagram must describe the same two subjects.\nex:ProfessionalSocialSubjectShape a sh:NodeShape ;\n  sh:targetNode ex:profile-facebook-doctor-ghezelbaash,\n    ex:profile-instagram-doctor-ghezelbaash, ex:evidence-instagram ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:WebPage ] ;\n  sh:property [ sh:path rdf:type ; sh:hasValue prov:Entity ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:minCount 2 ; sh:maxCount 2 ;\n    sh:in ( <https://www.ghezelbaash.ir/#saeed-ghezelbash> ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ) ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ] ;\n  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ] .\n\n# Validate current physician identity ownership.\nex:CoreEntityWikidataOwnershipShape a sh:NodeShape ;\n  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld/dataset> ;\n  sh:sparql [\n    sh:message \"Wikidata ownership must remain physician-specific; the clinic has no declared Wikidata identity.\" ;\n    sh:select \"\"\"\n      PREFIX schema: <https://schema.org/>\n      PREFIX ex: <https://www.ghezelbaash.ir/>\n      SELECT $this WHERE {\n        {\n          <https://www.ghezelbaash.ir/#saeed-ghezelbash> schema:sameAs ?value .\n          FILTER(CONTAINS(STR(?value), \"wikidata.org/\") &&\n                 STR(?value) != \"https://www.wikidata.org/entity/Q140287622\")\n        } UNION {\n          <https://www.ghezelbaash.ir/#saeed-ghezelbash> schema:identifier ?identifier .\n          ?identifier schema:propertyID \"Wikidata item ID\" ; schema:value ?value .\n          FILTER(STR(?value) != \"Q140287622\")\n        } UNION {\n          ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah\n            (schema:sameAs|schema:identifier/schema:url) ?value .\n          FILTER(CONTAINS(STR(?value), \"wikidata.org/\"))\n        } UNION {\n          ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah schema:identifier ?identifier .\n          ?identifier schema:propertyID \"Wikidata item ID\" .\n        }\n      }\n    \"\"\"\n  ] .\n\nex:ChronicMigraineTherapyShape a sh:NodeShape ;\n  sh:targetNode ex:procedure-botulinum-toxin-chronic-migraine ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalTherapy ] ;\n  sh:property [ sh:path schema:provider ; sh:maxCount 0 ] ;\n  sh:property [ sh:path schema:availableChannel ; sh:maxCount 0 ] .\nex:ChronicMigraineServiceShape a sh:NodeShape ;\n  sh:targetNode ex:service-botulinum-toxin-chronic-migraine ;\n  sh:property [ sh:path rdf:type ; sh:hasValue schema:Service ] ;\n  sh:property [ sh:path dct:subject ; sh:hasValue ex:procedure-botulinum-toxin-chronic-migraine ; sh:maxCount 2 ; sh:in ( ex:procedure-botulinum-toxin-chronic-migraine ex:topic-botox-migraine-context ) ] ;\n  sh:property [ sh:path schema:provider ; sh:hasValue <https://www.ghezelbaash.ir/#saeed-ghezelbash> ; sh:maxCount 1 ] ;\n  sh:property [ sh:path schema:availableChannel ; sh:hasValue ex:in-person-clinic-service-channel ] .\n",
     "phases": {
       "source": {
         "description": "Authored facts and constraints without compiled byte measurements.",
@@ -95,7 +96,7 @@ export const SOURCE = {
       }
     }
   },
-  "edition": "2026-10-18",
+  "edition": "2026-11-19",
   "canonicalOrigin": "https://www.ghezelbaash.ir",
   "graph": {
     "@context": {
@@ -10098,7 +10099,7 @@ export const SOURCE = {
           "https://www.wikidata.org/entity/Q593744",
           "https://www.wikidata.org/entity/Q33002955"
         ],
-        "version": "1.3.5",
+        "version": "1.3.6",
         "datePublished": {
           "@value": "2026-02-25",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10119,10 +10120,10 @@ export const SOURCE = {
         },
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "description": "Version-controlled source project for Version 1.3.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
+        "description": "Version-controlled source project for Version 1.3.6 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is the source repository, Zenodo provides immutable DOI preservation, Hugging Face provides AI/retrieval distribution, and Kaggle provides data-science and notebook distribution.",
         "author": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10177,10 +10178,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "hasPart": [
           {
             "@id": "https://www.ghezelbaash.ir/historical-patient-origin-summary"
@@ -10248,7 +10249,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:resource": [
@@ -10286,7 +10287,7 @@ export const SOURCE = {
         "name": "Doctor Ghezelbaash structured data repository — GitHub source",
         "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
         "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -10302,9 +10303,9 @@ export const SOURCE = {
         "publisher": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
-        "description": "Version-controlled GitHub source for Version 1.3.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
+        "description": "Version-controlled GitHub source for Version 1.3.6 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         }
       },
@@ -10337,7 +10338,7 @@ export const SOURCE = {
         "provider": {
           "@id": "https://www.ghezelbaash.ir/distribution-platform-hugging-face"
         },
-        "description": "AI and retrieval distribution of Version 1.3.5 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
+        "description": "AI and retrieval distribution of Version 1.3.6 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
         "encodingFormat": [
           "application/ld+json",
           "text/turtle",
@@ -10349,10 +10350,10 @@ export const SOURCE = {
         ],
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dcat:isDistributionOf": {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
         },
@@ -10364,7 +10365,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -10622,7 +10623,7 @@ export const SOURCE = {
           }
         ],
         "license": "https://creativecommons.org/licenses/by/4.0/",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "datePublished": {
           "@value": "2026-07-25",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
@@ -10686,7 +10687,7 @@ export const SOURCE = {
           }
         ],
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "identifier": [
@@ -10968,7 +10969,7 @@ export const SOURCE = {
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcterms:identifier": [
@@ -11018,7 +11019,7 @@ export const SOURCE = {
         "dcat:landingPage": {
           "@id": "https://www.ghezelbaash.ir/"
         },
-        "dcat:version": "1.3.5",
+        "dcat:version": "1.3.6",
         "dcterms:provenance": {
           "@id": "https://www.ghezelbaash.ir/provenance/source-of-truth-v15-max"
         },
@@ -11072,6 +11073,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "dcterms:hasVersion": [
@@ -11116,10 +11120,13 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "dcat:hasCurrentVersion": {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
         }
       },
       {
@@ -11137,10 +11144,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -11164,7 +11171,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -25012,10 +25019,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "creator": {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
         },
@@ -25039,7 +25046,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -25860,9 +25867,9 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/doctor.vcf",
         "contentUrl": "https://www.ghezelbaash.ir/doctor.vcf",
         "encodingFormat": "text/vcard",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "mainEntity": {
@@ -25905,9 +25912,9 @@ export const SOURCE = {
         "url": "https://www.ghezelbaash.ir/clinic.vcf",
         "contentUrl": "https://www.ghezelbaash.ir/clinic.vcf",
         "encodingFormat": "text/vcard",
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "mainEntity": {
@@ -26070,9 +26077,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26092,7 +26099,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26130,9 +26137,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26152,7 +26159,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26187,9 +26194,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26209,7 +26216,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26244,9 +26251,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26266,7 +26273,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26303,10 +26310,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dcterms:title": [
           "Full canonical content projection",
           "Dr. Saeed Ghezelbash Canonical Page — Markdown projection"
@@ -26321,7 +26328,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26358,10 +26365,10 @@ export const SOURCE = {
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dcterms:title": [
           "Passage-oriented full content projection",
           "Dr. Saeed Ghezelbash Canonical Page — full plain-text projection"
@@ -26376,7 +26383,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26450,9 +26457,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26469,7 +26476,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26504,9 +26511,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26526,7 +26533,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26564,9 +26571,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26586,7 +26593,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26621,9 +26628,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26643,7 +26650,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -26681,9 +26688,9 @@ export const SOURCE = {
         },
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "isAccessibleForFree": true,
-        "version": "1.3.5",
+        "version": "1.3.6",
         "dateModified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "about": {
@@ -26703,7 +26710,7 @@ export const SOURCE = {
           "@id": "https://creativecommons.org/licenses/by/4.0/"
         },
         "dcterms:modified": {
-          "@value": "2026-11-05",
+          "@value": "2026-11-19",
           "@type": "http://www.w3.org/2001/XMLSchema#date"
         },
         "dcat:accessURL": {
@@ -48245,7 +48252,7 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-0-0"
         },
         "dcat:last": {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
         },
         "dcat:seriesMember": [
           {
@@ -48289,6 +48296,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "dcat:landingPage": {
@@ -48339,6 +48349,9 @@ export const SOURCE = {
           },
           {
             "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6"
           }
         ],
         "prov:wasAttributedTo": {
@@ -59512,6 +59525,52 @@ export const SOURCE = {
         "owl:priorVersion": {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-4"
         }
+      },
+      {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-6",
+        "@type": [
+          "Dataset",
+          "dcat:Dataset",
+          "prov:Entity"
+        ],
+        "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Version 1.3.6",
+        "version": "1.3.6",
+        "datePublished": {
+          "@value": "2026-11-19",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "isPartOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcat:version": "1.3.6",
+        "dcat:inSeries": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-series"
+        },
+        "dcat:isVersionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcterms:isVersionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "prov:specializationOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/dataset"
+        },
+        "dcterms:issued": {
+          "@value": "2026-11-19",
+          "@type": "http://www.w3.org/2001/XMLSchema#date"
+        },
+        "dcat:previousVersion": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        },
+        "dcat:prev": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        },
+        "prov:wasRevisionOf": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        },
+        "owl:priorVersion": {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld/release-1-3-5"
+        }
       }
     ]
   },
@@ -63871,6 +63930,7 @@ export const SOURCE = {
   }
 };
 applyDoiPolicy(SOURCE);
+applyClinicalAttribution(SOURCE);
 
 export const AUTHORED_BODY = [
   ` <a class="skip-link" href="#main-content" lang="fa-IR" dir="rtl">پرش به محتوای اصلی</a> `,

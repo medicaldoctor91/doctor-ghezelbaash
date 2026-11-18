@@ -43,9 +43,10 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.equal(document['@graph'].filter(node=>values(node['@type']).includes('Person')).length,1,resource.path);
     assert.equal(actual.get(personId).birthDate,'1991-05-29',resource.path+' publishes the existing canonical birth date');
     const routeProfiles=document['@graph'].filter(node=>values(node['@type']).includes('ProfilePage'));
-    assert.equal(routeProfiles.length,home?1:0,resource.path+' profile scope');
+    const biography=resource.pagePurpose==='professional-biography';
+    assert.equal(routeProfiles.length,home||biography?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;
-    const expected=resource.pagePurpose==='clinical-guide'?[url+'#article']:ids(canonical.get(pageId).mainEntity);
+    const expected=ids(authored.mainEntity);
     assert.deepEqual(ids(page.mainEntity),expected,resource.path+' mainEntity');
     if(resource.pagePurpose==='clinical-guide') {
       const article=actual.get(url+'#article');
@@ -60,6 +61,21 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.ok(language,resource.path+' declares its document language');
     assert.equal(attr(element,'dir'),language.startsWith('en')?'ltr':'rtl',resource.path+' writing direction');
     assert.ok(actual.has(practiceId),resource.path+' keeps the same physician-owned practice');
+    for(const service of actual.values()) {
+      if(!values(service['@type']).includes('Service'))continue;
+      assert.deepEqual(ids(service.provider),[personId],service['@id']+' provider');
+      const [channelId]=ids(service.availableChannel);
+      const channel=actual.get(channelId);
+      assert.ok(values(channel?.['@type']).includes('ServiceChannel'),service['@id']+' local channel');
+      const authoredChannel=canonical.get(ids(canonical.get(service['@id']).availableChannel)[0]);
+      assert.deepEqual(ids(channel.serviceLocation),ids(authoredChannel.serviceLocation),service['@id']+' local service location');
+    }
+    if(resource.path==='/filler') {
+      for(const slug of ['facial-and-lip-dermal-filler','body-dermal-filler','autologous-fat-grafting','gluteal-body-filler'])
+        assert.ok(values(actual.get(origin+'/procedure-'+slug)?.['@type']).includes('Service'),slug);
+    }
+    for(const property of ['medicalSpecialty','availableService','hasOfferCatalog'])
+      assert.ok(!(property in actual.get(practiceId)),resource.path+' clinic '+property);
     for(const key of ['name','description'])if(key in clinic) {
       // The practice currently has Persian and English authored literals.
       // Other document languages retain the renderer's English fallback.
@@ -77,5 +93,5 @@ test('every built public HTML page preserves its author, main subject, localized
       t.diagnostic(`Built homepage Search script: ${Buffer.byteLength(raw,'utf8')}/38000 UTF-8 bytes`);
     }
   }
-  assert.equal(profiles,1,'only the physician homepage is a ProfilePage');
+  assert.equal(profiles,2,'the homepage and the professional biography are physician profiles');
 });

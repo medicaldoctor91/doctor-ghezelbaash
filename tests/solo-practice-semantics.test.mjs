@@ -108,6 +108,6 @@ test('personally provided migraine therapy has a separate correctly scoped acces
   assert.ok(refIds(service['dcterms:subject']).includes(therapyId));
   assert.ok(refIds(service.availableChannel).includes('https://www.ghezelbaash.ir/in-person-clinic-service-channel'));
   assert.ok(refIds(person.availableService).includes(therapyId));
-  assert.ok(refIds(clinic.availableService).includes(therapyId));
+  assert.deepEqual(refIds(clinic.availableService), [], 'clinic is a location, not a clinical service provider');
   assert.ok(refIds(nodes.find(n=>n['@id'].endsWith('/in-person-clinic-service-channel')).providesService).includes(serviceId));
 });

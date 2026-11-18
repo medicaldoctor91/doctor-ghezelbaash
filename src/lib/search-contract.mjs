@@ -1,4 +1,5 @@
 import {appendHomeDatasetDiscovery} from './home-graph-discovery.mjs';
+import {clinicalArticleForPage} from './clinical-attribution.mjs';
 import {physicianIdentityIds,resolvePhysicianPractice} from './physician-identity.mjs';
 
 const values=v=>Array.isArray(v)?v:v==null?[]:[v];
@@ -6,7 +7,7 @@ const blocked=new Set(['Dataset','DataDownload','DataCatalog','StatisticalVariab
 const OMIT=Symbol('omit');
 const identityKeys=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
 const personBoundaryKeys=new Set([...identityKeys,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','mainEntityOfPage','worksFor','medicalSpecialty','knowsLanguage','nationality','areaServed','affiliation','alumniOf','potentialAction','hasOccupation','hasCredential','skills','knowsAbout','address','geo','telephone','email','practicesAt','workLocation','owns','image']);
-const clinicBoundaryKeys=new Set([...identityKeys,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','owner','founder','priceRange','areaServed','image','logo','location','containedInPlace','potentialAction','contactPoint','mainEntityOfPage']);
+const clinicBoundaryKeys=new Set([...identityKeys,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','owner','founder','priceRange','areaServed','image','logo','location','containedInPlace','potentialAction','contactPoint','mainEntityOfPage']);
 const imageBoundaryKeys=new Set([...identityKeys,'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','about','creator','publisher','copyrightHolder','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','version','keywords','representativeOfPage']);
 const credentialBoundaryKeys=new Set([...identityKeys,'credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires']);
 const termBoundaryKeys=new Set([...identityKeys,'termCode','inDefinedTermSet']);
@@ -97,7 +98,7 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
 const searchIdentity=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
 const searchPage=[...searchIdentity,'inLanguage','dateCreated','dateModified','lastReviewed','author','publisher','reviewedBy','mainEntity','about','isPartOf','breadcrumb','primaryImageOfPage'];
 const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','affiliation','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
-const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','medicalSpecialty','areaServed','image','logo','location','containedInPlace','contactPoint'];
+const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','areaServed','image','logo','location','containedInPlace','contactPoint'];
 const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','creator','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','representativeOfPage'];
 const searchVideo=[...searchImage,'description','publisher','copyrightHolder','about','uploadDate','duration','embedUrl','inLanguage','hasPart'];
 const searchArticle=['@id','@type','url','headline','description','inLanguage','datePublished','dateModified','author','publisher','image','about','hasPart','mainEntityOfPage'];
@@ -105,6 +106,8 @@ const searchQuestion=[...searchIdentity,'acceptedAnswer','answerCount','about','
 const searchAnswer=[...searchIdentity,'text','about','inLanguage'];
 const searchLeaf=[...searchIdentity,'propertyID','value','unitCode','unitText','termCode','inDefinedTermSet','credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires','roleName','hasOccupation','streetAddress','addressLocality','addressRegion','addressCountry','postalCode','latitude','longitude','dayOfWeek','opens','closes','validFrom','validThrough','contactType','availableLanguage','telephone','email','containedInPlace'];
 const searchTopic=[...searchIdentity,'about','mainEntity','medicalSpecialty','procedureType','bodyLocation','howPerformed','preparation','followup','status','medicineSystem'];
+const searchService=[...searchTopic,'serviceType','provider','availableChannel','areaServed'];
+const searchChannel=[...searchIdentity,'serviceLocation','serviceUrl','servicePhone','availableLanguage'];
 
 /**
  * Publish a page's Search surface without recursively importing the knowledge
@@ -153,6 +156,12 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   indexInline(graph['@graph']);indexInline(document['@graph']);
   let primary=source.get(primaryPageId);
   if(!primary)throw new Error('Search projection requires its primary page');
+  const authoredPrimary=truth.get(primaryPageId);
+  if(authoredPrimary?.mainEntity) {
+    primary={...primary,mainEntity:authoredPrimary.mainEntity};
+    if(pagePurpose==='professional-biography')primary['@type']=authoredPrimary['@type'];
+    source.set(primaryPageId,primary);
+  }
   const origin=new URL(primary['@id']).origin;
   const physicianId=origin+'/#saeed-ghezelbash';
   const physician=source.get(physicianId);
@@ -160,34 +169,41 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   const clinic=practice&&source.get(practice['@id']);
   const home=values(primary['@type']).includes('ProfilePage')&&primary.url===origin+'/';
   const topicIds=new Set([...values(primary.mainEntity),...values(primary.about)].map(ref=>ref?.['@id']).filter(Boolean));
+  const serviceIds=new Set([...values((authoredPrimary??primary).mainEntity),...values((authoredPrimary??primary).about)]
+    .map(ref=>ref?.['@id']).filter(id=>values(source.get(id)?.['@type']).includes('Service')));
   // MedicalWebPage describes the document; Article describes its authored
   // clinical guide. Only the reviewed route purpose enables this publication
   // wrapper. A clinic, a video or an access/contact page must not be retyped as
   // an article merely because it is the existing page's mainEntity.
+  let secondaryArticleId;
   if(pagePurpose==='clinical-guide') {
     const profileSubject=values(primary.mainEntity).some(ref=>values(source.get(ref?.['@id'])?.['@type'])
       .some(type=>['Person','LocalBusiness','MedicalClinic','PhysiciansOffice','VideoObject'].includes(type)));
     if(home||profileSubject||!values(primary['@type']).includes('MedicalWebPage')||typeof primary.url!=='string')
       throw new Error('Clinical Article requires its reviewed MedicalWebPage');
     const articleId=primary.url+'#article';
-    if(source.has(articleId))throw new Error('Clinical Article identifier already exists: '+articleId);
-    const article={'@id':articleId,'@type':'Article',url:primary.url,headline:structuredClone(primary.name),
-      inLanguage:structuredClone(primary.inLanguage??language),mainEntityOfPage:primary.url};
-    for(const key of ['description','author','publisher','about','datePublished','dateModified'])
-      if(key in primary)article[key]=structuredClone(primary[key]);
+    const authoredArticle=truth.get(articleId);
+    const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
+      .some(type=>['WebPageElement','Question','Answer'].includes(type)));
+    const article=authoredArticle?structuredClone(authoredArticle):clinicalArticleForPage(primary,content);
+    article.inLanguage??=language;
     // Record the actual structured-metadata edit, independently of clinical
     // review dates and the unchanged original scientific edition.
     if(articleModifiedAt!==undefined)article.dateModified=latestRecordedModification(primary.dateModified,articleModifiedAt);
-    const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
-      .some(type=>['WebPageElement','Article','Question','Answer'].includes(type)));
-    if(content.length)article.hasPart=structuredClone(content);
     // These URLs come from images actually present in this route's article.
     // The physician's portrait/logo is not an editorial-image fallback, and
     // publication dates are never inferred from review or build timestamps.
     const images=[...new Set(visibleImageUrls)];
     if(images.length)article.image=images;
     source.set(articleId,article);
-    primary={...primary,mainEntity:{'@id':articleId}};
+    if(authoredArticle&&values(source.get(primary.mainEntity?.['@id'])?.['@type']).includes('Service')) {
+      secondaryArticleId=articleId;
+      const articleTopics=new Set(values(article.about).map(ref=>ref?.['@id']));
+      const pageTopics=values(primary.about).filter(ref=>!articleTopics.has(ref?.['@id']));
+      primary={...primary,about:pageTopics,hasPart:{'@id':articleId}};
+    } else {
+      primary={...primary,mainEntity:{'@id':articleId}};
+    }
     source.set(primaryPageId,primary);
   }
   const selected=new Map(),queue=[];
@@ -224,13 +240,22 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   }
   function resolve(id){
     if(selected.has(id))return true;
-    const node=source.get(id),types=values(node?.['@type']);
+    const authored=truth.get(id);
+    const node=values(authored?.['@type']).some(type=>['Service','ServiceChannel'].includes(type))?authored:source.get(id);
+    let types=values(node?.['@type']);
     if(!node||!types.length||types.some(type=>blocked.has(type)))return false;
+    // A treatment mentioned only as a topic in an FAQ, video or comparison
+    // does not turn the route into an offer for that treatment. Keep its
+    // medical type without importing a second service and provider inventory.
+    const isTopicOnly=types.includes('Service')&&types.length>1&&!serviceIds.has(id);
+    if(isTopicOnly)types=types.filter(type=>type!=='Service');
     let keys;
-    if(id===primaryPageId)keys=searchPage;
+    if(id===primaryPageId)keys=secondaryArticleId?[...searchPage,'hasPart']:searchPage;
     else if(id===physicianId)keys=searchPerson;
     else if(node===clinic)keys=searchClinic;
     else if(types.includes('Article'))keys=searchArticle;
+    else if(types.includes('Service'))keys=searchService;
+    else if(types.includes('ServiceChannel'))keys=searchChannel;
     else if(types.includes('ImageObject'))keys=searchImage;
     else if(types.includes('VideoObject'))keys=searchVideo;
     else if(types.includes('Clip'))keys=[...searchIdentity,'startOffset','endOffset'];
@@ -240,7 +265,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     else if(types.includes('WebSite'))keys=[...searchIdentity,'inLanguage','publisher'];
     else if(types.some(type=>leafTypes.has(type)))keys=searchLeaf;
     else keys=topicIds.has(id)?searchTopic:searchIdentity;
-    const output={};selected.set(id,output);queue.push({node,output,keys});return true;
+    const output={};selected.set(id,output);
+    queue.push({node:isTopicOnly?{...node,'@type':types.length===1?types[0]:types}:node,output,keys});
+    return true;
   }
   resolve(primaryPageId);
   if(physician)resolve(physicianId);
@@ -260,6 +287,14 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       // Keep the clinical ownership claim without importing the separately
       // described software/data project into the physician profile surface.
       else if(key==='owns'&&node['@id']===physicianId)item=values(node[key]).filter(ref=>ref?.['@id']===clinic?.['@id']).map(ref=>normalized(ref,key));
+      // This service is already a direct route subject. Repeating it from each
+      // question and answer expands the same provider and practice many times.
+      else if(key==='about'&&values(node['@type']).some(type=>['Question','Answer'].includes(type))) {
+        const original=values(node[key]);
+        const contextual=original.filter(ref=>!serviceIds.has(ref?.['@id']));
+        item=contextual.length===original.length?normalized(node[key],key)
+          :normalized(Array.isArray(node[key])?contextual:contextual[0]??[],key);
+      }
       else if((key==='image'||key==='logo')&&(node['@id']===physicianId||node===clinic))item=imageUrls(node[key]);
       else if((key==='width'||key==='height')&&node[key]?.['@id'])item=node[key].value??source.get(node[key]['@id'])?.value??OMIT;
       else item=normalized(node[key],key);
@@ -312,7 +347,8 @@ export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedOb
   if(!Array.isArray(nodes)||!nodes.length||nodes.length>maxNodes)throw new Error('Search graph node budget exceeded');
   const byId=new Map(nodes.map(node=>[node['@id'],node]));
   if(byId.size!==nodes.length)throw new Error('Duplicate Search entity identifier');
-  const origin=new URL(nodes[0]['@id']).origin;
+  const rootId=nodes[0]['@id'];
+  const origin=new URL(rootId).origin;
   const edges=new Map();
   function refs(value,out){
     if(Array.isArray(value)){for(const item of value)refs(item,out);return;}
@@ -329,12 +365,12 @@ export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedOb
     if(active.has(id))throw new Error('Cyclic Search entity reference: '+[...active,id].join(' -> '));
     if(memo.has(id))return memo.get(id);
     active.add(id);let count=1,height=0;
-    for(const target of edges.get(id)){const child=expanded(target);count+=child.count;height=Math.max(height,child.height+1);if(count>maxExpandedObjects)throw new Error('Search graph expansion budget exceeded');}
+    for(const target of edges.get(id)){const child=expanded(target);count+=child.count;height=Math.max(height,child.height+1);if(count>maxExpandedObjects)throw new Error('Search graph expansion budget exceeded: '+rootId);}
     if(height>maxDepth)throw new Error('Search graph depth budget exceeded');
     const result={count,height};active.delete(id);memo.set(id,result);return result;
   }
   let total=0,height=0;
-  for(const id of byId.keys()){const result=expanded(id);total+=result.count;height=Math.max(height,result.height);if(total>maxExpandedObjects)throw new Error('Search graph expansion budget exceeded');}
+  for(const id of byId.keys()){const result=expanded(id);total+=result.count;height=Math.max(height,result.height);if(total>maxExpandedObjects)throw new Error('Search graph expansion budget exceeded: '+rootId);}
   return {nodes:nodes.length,expandedObjects:total,maxDepth:height};
 }
 

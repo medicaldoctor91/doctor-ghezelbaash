@@ -1,10 +1,26 @@
 # Fixed source and isolated additions
 
-The current v1.3.5 application baseline is commit `11ee42b298f96c8db8137d98247739e822a01483`,
+The validated 1.3.6 application checkpoint is `41c817b0185a68374192b7c891305d8b3eb8dea3`,
+tree `f16fcbccacdd08a381e602910487ffae29851e47`, containing 204 application files, tagged `source-frozen-2026-11-19-clinical-attribution-1-3-6-r2`.
+The direct management child restores the four frozen-source management files.
+The preceding candidate remains available under its original immutable tags.
+
+The clinical attribution 1.3.6 application checkpoint is `1a5a97b4382322af686b313ca340d3efa4919fce`,
+tree `1e810749f93cbe30ad7c16b78974870936ba27a2`, with 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6`.
+Its direct management child restores exactly the four source-freeze management files.
+The coordinated publication uses the verified management build and a separately bound release plan.
+
+The earlier approved clinical-attribution application checkpoint is `25365752e2665d2eaba77e8f805cc0f79dee9183`,
+tree `e299a2fbb0e47d8209ca2dc8921f1a032bb92cc4`, containing 204 application files.
+Annotated tag `source-frozen-clinical-attribution-2026-11-18` identifies it.
+The application files are byte-identical to `60db571865b967d27fededafd284b291a0e0d403`. The management
+child restores the four source-freeze management files with the measured pins.
+
+The previous v1.3.5 application baseline remains commit `11ee42b298f96c8db8137d98247739e822a01483`,
 tree `1350ae57501cd1f6e01470f385014d8cf3c29e54`, containing 202 application files.
 Annotated tag `source-frozen-2026-11-05-v5` identifies it. Its direct management
 child restores exactly the four management files with these measured pins.
-The guard and materialization checks apply to this new snapshot.
+Its historical guard and materialization remain available from that management child.
 
 All earlier 5 November review candidates remain unchanged under their original
 `source-frozen-2026-11-05`, `source-frozen-2026-11-05-v2` and

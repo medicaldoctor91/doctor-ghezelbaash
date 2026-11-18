@@ -78,7 +78,10 @@ def validate_html(root, origin, graph):
                 context = json.load(response)
         return {'contextUrl': None, 'documentUrl': url, 'document': context}
     schema = rdflib.Namespace('https://schema.org/')
-    selected = {schema[key] for key in ['url', 'sameAs', 'dayOfWeek', 'additionalType', 'procedureType', 'eventAttendanceMode']}
+    selected = {schema[key] for key in [
+        'url', 'sameAs', 'dayOfWeek', 'additionalType', 'procedureType', 'eventAttendanceMode',
+        'mainEntity', 'provider', 'availableChannel', 'serviceLocation', 'practicesAt',
+    ]}
     checked = 0
     for file in root.glob('*.html'):
         if file.name == '404.html':
@@ -203,7 +206,7 @@ def validate(root):
     authored = set(graph.subjects(RDF.type, SH.NodeShape))
     published = set(shapes.subjects(RDF.type, SH.NodeShape))
     assert authored <= published, 'Standalone SHACL omitted authored shapes'
-    assert len(published) == 67, len(published)
+    assert len(published) == 68, len(published)
 
     dcat = rdflib.Graph().parse(root / 'dcat.ttl', format='turtle')
     DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')

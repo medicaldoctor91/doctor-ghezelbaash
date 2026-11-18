@@ -5039,7 +5039,7 @@ export function compileCanonicalSource() {
   if (!page || person?.url !== homeUrl || person?.mainEntityOfPage?.['@id'] !== page['@id'] ||
       page.mainEntity?.['@id'] !== person['@id'] || !page['@type'].includes('ProfilePage'))
     throw new Error('Home/physician identity disagreement');
-  if(SOURCE.graph['@graph'].filter(node=>(Array.isArray(node['@type'])?node['@type']:[node['@type']]).includes('ProfilePage')).length!==1)
+  if(SOURCE.graph['@graph'].filter(node=>(Array.isArray(node['@type'])?node['@type']:[node['@type']]).includes('ProfilePage')).length!==2)
     throw new Error('Competing physician profile documents');
   const local = pageDiscoveryJsonld.localizedText, escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
   const json = serializeInlineJsonLd;
