@@ -1,5 +1,7 @@
 # Fixed source and isolated additions
 
+The frozen 1.3.6 application checkpoint `92d4b58fe5e5d0e20e55a4db3b4a9164d4887675` has tree `728964c3185839aa72a83fc0575b6419d1c7c1c8`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r3`. Its direct child restores precisely the four freeze-management files. This revision adds the legacy 1.3.5 projector binding to the release validator.
+
 The validated 1.3.6 application checkpoint is `41c817b0185a68374192b7c891305d8b3eb8dea3`,
 tree `f16fcbccacdd08a381e602910487ffae29851e47`, containing 204 application files, tagged `source-frozen-2026-11-19-clinical-attribution-1-3-6-r2`.
 The direct management child restores the four frozen-source management files.
