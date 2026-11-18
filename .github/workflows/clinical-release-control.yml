@@ -1,0 +1,94 @@
+name: Record clinical source freeze and inspect release baselines
+on:
+  push:
+    branches: [codex/clinical-release-control-2026-11-19]
+
+permissions: {}
+
+jobs:
+  source-freeze:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      APPLICATION_TAG: source-frozen-clinical-attribution-2026-11-18
+      MANAGEMENT_TAG: source-frozen-clinical-attribution-2026-11-18-management
+      APPLICATION_COMMIT: 25365752e2665d2eaba77e8f805cc0f79dee9183
+      MANAGEMENT_COMMIT: 8552509b3f52ee01b8c6633e4164bf3257f8363d
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 60db571865b967d27fededafd284b291a0e0d403
+          fetch-depth: 0
+      - name: Verify and record the frozen source
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle="$RUNNER_TEMP/clinical-freeze.bundle"
+          base64 --decode > "$bundle" <<'BUNDLE'
+          IyB2MiBnaXQgYnVuZGxlCi02MGRiNTcxODY1Yjk2N2QyN2ZlZGVkYWZkMjg0YjI5MWEwZTBkNDAzIEFwcGx5IGFwcHJvdmVk
+          IGNsaW5pY2FsIGF0dHJpYnV0aW9uIGFjcm9zcyBzaXRlIHByb2plY3Rpb25zCjcxZTU3YWZhZjc1MmJhMmJmNWRkY2I1NGU0
+          ZmFiZGE0NGM4N2VmYzggcmVmcy90YWdzL3NvdXJjZS1mcm96ZW4tY2xpbmljYWwtYXR0cmlidXRpb24tMjAyNi0xMS0xOApk
+          NmZlNmRiZjY3MTdhOGUzODE3MzNlZGEzNzU5Y2ZkNTk0MjRjZTc5IHJlZnMvdGFncy9zb3VyY2UtZnJvemVuLWNsaW5pY2Fs
+          LWF0dHJpYnV0aW9uLTIwMjYtMTEtMTgtbWFuYWdlbWVudAoKUEFDSwAAAAIAAAAQnBR4nK2MwWqEMBRF937F25cpMTFGYShl
+          1v2J5/NmDNUkxDht/75SSr+gqwvnHG4tABnfwk3Gs3Anvp8FZvRQ7WR7Dd+1Wqxxk7ZN5oJYSVvTW2c1dN/bWYMndg6DH5QV
+          Ud6NMzC2g2n4qEsq9JaEVypYwTvOXcBlP8n1F13+0Cs+ecsrnkN88BrmF2rdaJVxo+voSRmjGknbFmrFP982txBnqgtoT0cR
+          XEKsuJdQv+h+cDlV+rERH8Q5r0G4hhRJFsh7TmfdfAMyKm3GkRR4nK2QQUoEMRBF9zlF9jKSrnR3ukDE1ay8RCWppoPpJGRq
+          RDy9UcQTuPqfB/8tvnRmzYBIsHtveHZxA4OBIIYNYdonMha8RwhhVo06F9GriX5x07YuHlcXwe0cOdIeYZs94JiwibOxiu5y
+          1K5fa6CsO2emG488mPptkKdfdPlDL/xBZ8v8mMo75RSf9eRwMdahs/rBWGtUqOeZRPifteo6nvhkLQfrkFNJ324S6cnfJdWi
+          qbU84E8PB4e3VlMR9QVsaWoDyA94nE2NS07EMBBE9z5F75GRP/InEhrBnkt0Op0Zg2NbjmcEnJ6AALGq0lOVXp1fmAYYZ70L
+          zrDx3i2GccYQOK5ROSK1hmlhnnS0Yrw3BqrbloYYeIa9XjuxXHv94CIpp5IIs8QxepqvI9UijTJeai11/HqcucNzPTbQOTPu
+          fOSFse8HefhB8g898htuLfN9KjfMaTmBDpNTNhrl4U5Zq4R4aq3XGy/wa4d/dsDW8gG/O12YXltNZYhPpXJT1ssReJxNjklq
+          AzEQRfd9itoHBQ2WLIMJOUB2OYGkLnUr0YS6bOKcPo3JtCp41P//Nf+GgcBqLTU/eRW1ROTC22CMUngQ5uCjkvoYrTJqnujW
+          EUIrJdFEboGtXUZAFkf7xMpCTjUFl5kjGslfKLXKJJeGCcGEZcVVt2DBeg8vOOCl7e8wMKPbcL8rurHt5PyN2C96xg9XesbH
+          VK8up/kJxPGkubKSG3jgSvFper3bQKqEy0h0g79BiG0ArQiu99GuOMOPLPyThbBieO9tb5i+AKkBYIP0BNlPDzhuwJeryqSu
+          hfJQilVBKdvweJybwzKHRcnEAAgU9NIzSzJKkxiy5qReXOH2X+HYb7HsM/Z/Ns42N1y0UYmTUeR5Lsu/y8sjzY/rJhrJVjgV
+          n9bcxTnZnvEuAIphG5mmBHicMzEAAoXi5KLMgpJihvdPZI8d/TzP2p3x87WF2T0XpgTGK5mAVZTnF2Wn5eSXFzP8qEy/Ov//
+          4YJd5+O3njn0dNb1g7dZADDuIeTwAjVuh6kssc/JFDX6ETpU3DFz+cgteJxbx7mOc8MuZpEZKeY1FnmHdqZJW+6z/xfgb7B7
+          X+7kc8wPAN1lDm78AeEXbgY0eHeHGvbRbhlVUZfKFJVaeJzbwrSFaYMCo8ibxq4Qr8NsFxXtJe3bnzDsWypyWwUAnCULGv0F
+          2U8POG7Al6vKpK6F8lCKVUEp2/B4nAFdAKL/nAScBCI0MDAwMCAuZ2l0aHViALsUFlUSxJb3MDALfU01U+NWKwmosSIJARQI
+          uTWcvMV/W8rXi3sJeai3mYFfL5M/AaAUfkReyVrs1o+nVRw4F66H3oFx00uT8wEpFMUk+qYEeJwzMQACheLkosyCkmKGL08t
+          8/pL181vtj147JSeRMCTPH4GE7CK8vyi7LSc/PJiBtN6j+rEolOqjHXTrhXwbn6zcv+2fQDA4R0Ud+EXbgY0eHeHGvbRbhlV
+          UZfKFJVaeJzbwtTBtIGDEQAJ0AH6fCWImVQPP8+U6ZMIrk+/Ib6bOIWPeJxrFL4gtOEo++Zv7N2MACM7BS/3CVAJWpv1tVZS
+          0GDDSYZXaEw+431WeJwFwT0KwjAUAGDaUfAADmK3ugSS1+ZvcKyjYpEOLjV5eYFAqSD1JD2DoyA4eBEP5Pc9u2/3fmVXkJWS
+          WgKBUjIAOe+0JhMNl4g8ahuIrDBVudi3x0tz6M9t0xS7oiSw1kH0nlOtgwFu0UFAY0FE4XgF3ltAnJf5KqvnMl9vcEhjQjcw
+          N0335B9Tuo0MOCgmBBPmc8p/2z8dYywN8SE7Sxen4EVAQXjrG5MYwOP4fNSZHnicbZC7bhUxEIZ1ilCcDilUUaQpUArIrmzv
+          vaehT8+O7fHZEXuT7T2INHkFUB6AF6BBeRMqHgefnCZINJblGX3+/v/3zc93394/4Lr65UgWzMgzGxwzjNGz3iIvM6TpmB6f
+          72Yg83ldeI7AAXpVFXXVVIpUXVdWEWpsGmpdKypjhGs6S9TJtuhv99ETQU+q61A5rQWVjW2V6Ayqt9a0nZJOoiiU1p0ypuxv
+          wSxzxOQzH0CJ8lG8uvz+57r4n2KmhKozKTPZ9sCW5siOKQDHfH830KO8uPzgCfTXSNl5nAAQF+hrYXXVyLaudFc3VjWOLFl0
+          VrWlVl0yImFLUfQ5nEDXu6uHOBC4ZfMQ0mEocynYPcGEMx5oSnBwPKbPv3Ac4LQ8EYbNp3ZXnkO+PxnB6unIyxbgKPMir/7p
+          WGOgFJLA05Tyh1TENHGEXkqi8tenN7u7jzHAwCEu/jnJYUNvAWebLCJ5xpHvz6wzAvCIPKIek7lfpmSF8aWwGXi0T0+7H6//
+          Ak0dtAF7NW6HqSyxz8kUNfoROlTcMXP5yC14nFvH2cS5YRXz5GvMNwAbQATke/h5Z9Wf/8Nwus9ftczC5ZrXwdsEeJz7zHyY
+          ecNkxsmHGQ0AHpsEiDxk4HCYgHZkR5iuI/Ji+Q+ukLYH
+          BUNDLE
+          printf '%s  %s\n' b7d7ffd7d16e98806a3aa8650e7753d715316053c9c471f720202429ea5aafa8 "$bundle" | sha256sum --check
+          git bundle verify "$bundle"
+          git fetch --no-tags "$bundle" "refs/tags/$APPLICATION_TAG:refs/tags/$APPLICATION_TAG" "refs/tags/$MANAGEMENT_TAG:refs/tags/$MANAGEMENT_TAG"
+          test "$(git rev-parse "$APPLICATION_TAG^{commit}")" = "$APPLICATION_COMMIT"
+          test "$(git rev-parse "$MANAGEMENT_TAG^{commit}")" = "$MANAGEMENT_COMMIT"
+          test "$(git rev-parse "$APPLICATION_COMMIT^")" = "60db571865b967d27fededafd284b291a0e0d403"
+          test "$(git rev-parse "$MANAGEMENT_COMMIT^")" = "$APPLICATION_COMMIT"
+          git checkout --detach "$MANAGEMENT_COMMIT"
+          python3 .github/scripts/source_freeze.py check
+          python3 tests/source-freeze.test.py
+          python3 .github/scripts/source_freeze.py materialize "$RUNNER_TEMP/clinical-frozen-source"
+          git push --atomic origin "refs/tags/$APPLICATION_TAG:refs/tags/$APPLICATION_TAG" "refs/tags/$MANAGEMENT_TAG:refs/tags/$MANAGEMENT_TAG"
+          test "$(git ls-remote --exit-code origin "refs/tags/$APPLICATION_TAG^{}" | cut -f1)" = "$APPLICATION_COMMIT"
+          test "$(git ls-remote --exit-code origin "refs/tags/$MANAGEMENT_TAG^{}" | cut -f1)" = "$MANAGEMENT_COMMIT"
+
+  provider-audit:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch the existing read-only provider audit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/inspect-media-delivery.yml/dispatches" --input - <<'REQUEST'
+          {"ref":"clinical-attribution-2026-11-18","inputs":{"operation":"access-audit","reviewed_commit":"60db571865b967d27fededafd284b291a0e0d403"}}
+          REQUEST
