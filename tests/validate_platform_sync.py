@@ -75,11 +75,12 @@ def import_bundle_builder():
     return module
 
 
-def resources():
+def canonical_contract():
     return json.loads(subprocess.check_output([
         'node', '--input-type=module', '-e',
         "import {SOURCE} from './src/canonical/source.mjs';"
-        "console.log(JSON.stringify(SOURCE.machineResources));",
+        "import {buildShaclTurtle} from './src/lib/shacl-output.mjs';"
+        "console.log(JSON.stringify({resources:SOURCE.machineResources,shacl:buildShaclTurtle(SOURCE)}));",
     ], cwd=REPOSITORY))
 
 
@@ -113,7 +114,7 @@ def shape_closure(graph, roots):
     return output
 
 
-def validate_shapes_and_dcat(root, registry, lookup):
+def validate_shapes_and_dcat(root, registry, lookup, canonical_shapes):
     graph = rdflib.Graph().parse(root / 'graph.jsonld', format='json-ld')
     assert isomorphic(graph, rdflib.Graph().parse(root / 'graph.ttl', format='turtle')), \
         'JSON-LD and Turtle changed graph semantics'
@@ -133,10 +134,10 @@ def validate_shapes_and_dcat(root, registry, lookup):
     shapes = rdflib.Graph().parse(root / 'shapes.ttl', format='turtle')
     authored = set(graph.subjects(RDF.type, SH.NodeShape))
     published = set(shapes.subjects(RDF.type, SH.NodeShape))
-    assert len(authored) == 38, ('Unexpected authored contract', len(authored))
+    expected = rdflib.Graph().parse(data=canonical_shapes, format='turtle')
+    assert isomorphic(shapes, expected), 'Standalone SHACL differs from the reviewed source shapes'
     assert authored <= published, ('Standalone SHACL omitted authored shapes',
                                    sorted(map(str, authored - published)))
-    assert len(published) == 67, ('Incomplete standalone SHACL', len(published))
     assert isomorphic(shape_closure(graph, authored), shape_closure(shapes, authored)), \
         'Standalone SHACL changed or omitted authored constraints'
 
@@ -422,8 +423,9 @@ def validate(root, *, platform, source_commit, canonical_root=None):
 
     result = {'platform': platform}
     # Check the missing contract first, so old packages fail on the actual defect.
-    registry = resources()
-    result.update(validate_shapes_and_dcat(root, registry, lookup))
+    contract = canonical_contract()
+    registry = contract['resources']
+    result.update(validate_shapes_and_dcat(root, registry, lookup, contract['shacl']))
     result['bundle'] = validate_bundle(root, query=True, reader=platform == 'hf', rdf=True)
     result.update(validate_croissant(root, lookup, registry))
     result.update(validate_vcards(root))

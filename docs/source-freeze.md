@@ -1,5 +1,7 @@
 # Fixed source and isolated additions
 
+The coordinated 1.3.6 application checkpoint `fe10f7a348dd5aa1f95b78e50919ba31bac06eca` has tree `84e89bb7776c8ebbfed578d89f4c9e78eb4700cc`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r5`. Its direct child restores the four freeze-management files. Platform validation checks the exact canonical SHACL constraints rather than counting shapes from a prior edition.
+
 The coordinated 1.3.6 checkpoint `3921761a92fd15b4bbd874c8cb0abe27faf81bcc` has tree `d0a10d4ea68c028f52f89672112038c7fba42f43`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r4`. The direct child restores the four freeze-management files. Its exporter preserves the optional clinical-provider and introduction fields in the Parquet distribution.
 
 The frozen 1.3.6 application checkpoint `92d4b58fe5e5d0e20e55a4db3b4a9164d4887675` has tree `728964c3185839aa72a83fc0575b6419d1c7c1c8`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r3`. Its direct child restores precisely the four freeze-management files. This revision adds the legacy 1.3.5 projector binding to the release validator.
