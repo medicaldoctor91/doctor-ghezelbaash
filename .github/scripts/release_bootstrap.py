@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 import sys
 import time
+from urllib.parse import urlsplit
 import zipfile
 
 import requests
@@ -271,7 +272,8 @@ def archive_controls(content):
             assert not path.is_absolute() and '..' not in path.parts, 'Unsafe bootstrap evidence name'
             assert path.parts not in names and (entry.external_attr >> 16) & 0o170000 != 0o120000, 'Duplicate or symbolic bootstrap evidence'
             names.add(path.parts)
-            if path.name in {'bootstrap-intent.json', 'reservation.json', 'reservation-outcome.json'}:
+            if path.name in {'bootstrap-intent.json', 'reservation.json', 'reservation-outcome.json',
+                             'bootstrap-failure.json', 'zenodo-bootstrap-attempt.json'}:
                 assert path.name not in selected and entry.file_size <= 1024 * 1024, 'Ambiguous or oversized bootstrap control'
                 selected[path.name] = json.loads(archive.read(entry))
     return selected
@@ -291,11 +293,20 @@ class History:
         assert result['total_count'] <= 100, 'Incomplete artifact inventory'
         return result['artifacts']
 
-    def controls(self, item):
+    def controls(self, item, delays=(0,)):
         assert not item['expired'] and item['size_in_bytes'] <= MAX_ARTIFACT, 'Bootstrap artifact unavailable'
-        response = self.client.get(self.base + '/actions/artifacts/' + str(item['id']) + '/zip', timeout=60)
-        response.raise_for_status()
-        return archive_controls(response.content)
+        endpoint = self.base + '/actions/artifacts/' + str(item['id']) + '/zip'
+        for delay in delays:
+            if delay:
+                time.sleep(delay)
+            try:
+                response = self.client.get(endpoint, timeout=60)
+                response.raise_for_status()
+                return archive_controls(response.content)
+            except requests.HTTPError as error:
+                status = error.response.status_code
+                if delay == delays[-1] or status not in {403, 404, 409, 429, 500, 502, 503, 504}:
+                    raise
 
     def validate_intent_run(self, intent, marker, run):
         old = intent['context']
@@ -326,6 +337,20 @@ class History:
             'reservedDoi': published['doi'], 'conceptDoi': marker['conceptDoi'], 'published': False,
         }, 'Prior edition receipt does not match the audited published predecessor'
 
+    def failed_before_write(self, intent, marker, run, artifacts):
+        if run.get('conclusion') != 'failure':
+            return False
+        evidence = [item for item in artifacts if item['name'] == EVIDENCE_ARTIFACT]
+        if len(evidence) != 1:
+            return False
+        self.validate_intent_run(intent, marker, run)
+        controls = self.controls(evidence[0])
+        return (controls.get('bootstrap-intent.json') == intent
+                and controls.get('bootstrap-failure.json', {}).get('operation') == 'reserve'
+                and 'zenodo-bootstrap-attempt.json' not in controls
+                and 'reservation-outcome.json' not in controls
+                and 'reservation.json' not in controls)
+
     def prior(self, marker):
         runs = []
         for page in range(1, 101):
@@ -355,6 +380,8 @@ class History:
             if intent['context']['previousRecord'] != marker['previousRecord']:
                 self.verify_published_predecessor(intent, marker, run, artifacts)
                 continue
+            if self.failed_before_write(intent, marker, run, artifacts):
+                continue
             self.validate_intent(intent, marker, run)
             recovered.append(intent)
         return recovered
@@ -366,7 +393,7 @@ class History:
         self.validate_intent(intent, marker, run)
         selected = [item for item in self.artifacts(run['id']) if item['name'] == INTENT_ARTIFACT]
         assert len(selected) == 1, 'Durable current reservation intent is unavailable'
-        assert self.controls(selected[0])['bootstrap-intent.json'] == intent, 'Durable intent differs from local intent'
+        assert self.controls(selected[0], delays=(0, 3, 8, 15))['bootstrap-intent.json'] == intent, 'Durable intent differs from local intent'
 
 
 def choose_action(state, prior):
@@ -460,6 +487,15 @@ def main():
         # Assertion text is authored here; HTTP/provider exceptions can contain sensitive bodies/URLs.
         if isinstance(error, AssertionError):
             failure['reason'] = str(error)
+        if isinstance(error, requests.HTTPError) and error.response is not None:
+            failure['httpStatus'] = error.response.status_code
+            location = urlsplit(error.response.url or '')
+            if location.hostname in {'api.github.com', 'zenodo.org'}:
+                failure['httpService'] = location.hostname
+                if re.fullmatch(r'/[A-Za-z0-9/_.-]{1,220}', location.path):
+                    failure['httpPath'] = location.path
+            else:
+                failure['httpService'] = 'artifact-storage-or-provider'
         dump(args.root / 'bootstrap-failure.json', failure)
         print(json.dumps(failure), flush=True)
         return 1

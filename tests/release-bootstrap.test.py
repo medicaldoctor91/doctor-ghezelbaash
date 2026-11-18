@@ -417,6 +417,19 @@ class HistoryTests(Fixtures):
         with self.assertRaisesRegex(AssertionError, 'no unique durable outcome'):
             history.prior(marker)
 
+    def test_same_edition_retry_requires_authenticated_evidence_that_no_post_began(self):
+        marker = bootstrap.context(self.env)
+        old = dict(marker, runId=90, sourceCommit=OLD_SOURCE)
+        intent = {'context': old, 'action': 'new-version'}
+        run = {'head_sha': OLD_SOURCE, 'conclusion': 'failure'}
+        evidence = {'bootstrap-intent.json': intent, 'bootstrap-failure.json': {'operation': 'reserve'}}
+        history, _ = self.fixture(marker=marker, intent=intent, run=run, evidence=evidence)
+        self.assertEqual(history.prior(marker), [])
+        for name in ('zenodo-bootstrap-attempt.json', 'reservation-outcome.json', 'reservation.json'):
+            history, _ = self.fixture(marker=marker, intent=intent, run=run, evidence={**evidence, name: {}})
+            with self.subTest(entry=name), self.assertRaisesRegex(AssertionError, 'another reviewed bootstrap'):
+                history.prior(marker)
+
     def test_active_prior_run_blocks_reservation(self):
         history, marker = self.fixture(run={'status': 'in_progress'})
         with self.assertRaisesRegex(AssertionError, 'still active'):
