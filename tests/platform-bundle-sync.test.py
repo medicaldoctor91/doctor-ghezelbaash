@@ -247,6 +247,9 @@ class PackageMaintenanceTests(unittest.TestCase):
 
     def test_hf_receipts_hash_corrected_companions_and_preserve_viewer_contract(self):
         originals = self.fixtures()
+        answers = originals['clinical_answers'][2]
+        answers[0].update(clinicalProviderId=bundle.PERSON, answerLead='Clinical services are provided by the physician.')
+        bundle.dump(self.dist / 'fact-map.json', {'records': answers})
         out = self.root / "hf"
         packaging = bundle.build_hf(self.dist, self.baseline, out, self.ctx)
         receipt = bundle.load(out / "release-attestation.json")
@@ -264,6 +267,8 @@ class PackageMaintenanceTests(unittest.TestCase):
         self.assertEqual(matrix["archivedSnapshots"]["zenodo_dataset"], "https://doi.org/10.5281/zenodo.22838416")
         for name, (_, _, original, encoded) in originals.items():
             spec = packaging["tables"][name]
+            if name == 'clinical_answers':
+                self.assertEqual(spec['sourceFields'][-2:], ['clinicalProviderId', 'answerLead'])
             reconstructed = [bundle.reconstruct(row, set(encoded)) for row in pq.read_table(out / spec["file"]).to_pylist()]
             expected = [dict(row) for row in original]
             if name == "query_matrix":

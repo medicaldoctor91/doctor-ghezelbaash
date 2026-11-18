@@ -182,6 +182,14 @@ def build_hf(dist,baseline,out,ctx):
     for name,spec in packaging['tables'].items():
         if name=='market_positioning':continue
         original=rows(out,spec);schema=pq.read_schema(baseline/spec['file']);encoded=set(spec.get('jsonEncodedFields',[]));table_rows=[]
+        if name == 'clinical_answers':
+            for field in ('clinicalProviderId', 'answerLead'):
+                if field not in spec['sourceFields'] and any(field in row for row in original):
+                    assert field not in schema.names
+                    assert all(field not in row or isinstance(row[field], str) for row in original), ('Invalid clinical attribution field', field)
+                    schema = schema.append(pa.field(field, pa.string()))
+                    spec['sourceFields'].append(field)
+                    spec['fields'] = schema.names
         for row in original:
             dst={};omitted=[]
             for k in spec['sourceFields']:
