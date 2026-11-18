@@ -1,5 +1,7 @@
 # Fixed source and isolated additions
 
+The coordinated 1.3.6 application checkpoint `d5af127c8554d201b5c77bcf32b56c4d849f5b47` has tree `37e766a4e7a2fc042f3c169bed7ceccd5cc69eac`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r6`. Its direct management child restores the four source-freeze files. Supporting articles on service-focused pages are linked with `hasPart`. The named service remains the sole `mainEntity`.
+
 The coordinated 1.3.6 application checkpoint `fe10f7a348dd5aa1f95b78e50919ba31bac06eca` has tree `84e89bb7776c8ebbfed578d89f4c9e78eb4700cc`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r5`. Its direct child restores the four freeze-management files. Platform validation checks the exact canonical SHACL constraints rather than counting shapes from a prior edition.
 
 The coordinated 1.3.6 checkpoint `3921761a92fd15b4bbd874c8cb0abe27faf81bcc` has tree `d0a10d4ea68c028f52f89672112038c7fba42f43`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r4`. The direct child restores the four freeze-management files. Its exporter preserves the optional clinical-provider and introduction fields in the Parquet distribution.

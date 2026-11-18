@@ -51,8 +51,19 @@ test('every built public HTML page preserves its author, main subject, localized
     if(resource.pagePurpose==='clinical-guide') {
       const article=actual.get(url+'#article');
       assert.ok(values(article?.['@type']).includes('Article'),resource.path);
+      const authoredArticle=canonical.get(article['@id']);
       assert.deepEqual(ids(article.author),[personId],resource.path+' article author');
       assert.equal(article.dateModified,latestRecordedModification(authored.dateModified,SOURCE.articleMarkupModifiedAt),resource.path+' Article date');
+      const serviceIsPrimary=values(canonical.get(expected[0])?.['@type']).includes('Service');
+      if(serviceIsPrimary) {
+        assert.ok(ids(authored.hasPart).includes(article['@id']),resource.path+' canonical supporting article');
+        assert.ok(ids(page.hasPart).includes(article['@id']),resource.path+' inline supporting article');
+        assert.ok(!Object.hasOwn(authoredArticle,'mainEntityOfPage'),resource.path+' canonical article is secondary');
+        assert.ok(!Object.hasOwn(article,'mainEntityOfPage'),resource.path+' inline article is secondary');
+      } else {
+        assert.equal(authoredArticle.mainEntityOfPage,url,resource.path+' canonical primary article');
+        assert.equal(article.mainEntityOfPage,url,resource.path+' inline primary article');
+      }
     }
     assert.equal(page.dateModified,home?latestRecordedModification(authored.dateModified,SOURCE.profileMarkupModifiedAt):authoredDate,resource.path+' document date');
     assert.equal(sitemapDates.get(url),authoredDate,resource.path+' sitemap uses its own recorded document edit');
@@ -71,6 +82,7 @@ test('every built public HTML page preserves its author, main subject, localized
       assert.deepEqual(ids(channel.serviceLocation),ids(authoredChannel.serviceLocation),service['@id']+' local service location');
     }
     if(resource.path==='/filler') {
+      assert.deepEqual(ids(page.mainEntity),[origin+'/procedure-facial-and-lip-dermal-filler'],resource.path+' primary service');
       for(const slug of ['facial-and-lip-dermal-filler','body-dermal-filler','autologous-fat-grafting','gluteal-body-filler'])
         assert.ok(values(actual.get(origin+'/procedure-'+slug)?.['@type']).includes('Service'),slug);
     }
