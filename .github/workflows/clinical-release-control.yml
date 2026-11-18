@@ -4,10 +4,10 @@ on:
     branches: [codex/clinical-release-control-2026-11-19]
 permissions: {}
 env:
-  BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r4
-  FREEZE_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r4
-  BUILD_SHA: 4a1d59811f7f5cf009ce40eb268ced51c240be5f
-  FREEZE_SHA: 3921761a92fd15b4bbd874c8cb0abe27faf81bcc
+  BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r5
+  FREEZE_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r5
+  BUILD_SHA: 0f9560776355ab088242e391bd48f0d759c21881
+  FREEZE_SHA: fe10f7a348dd5aa1f95b78e50919ba31bac06eca
 jobs:
   frozen-source:
     if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19'
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: 71805f9836c08e07ec04dfa2888c2812521c62c8
+          ref: 9faaab4eb970b1ad79333be46bd33b9c9e60a13d
           fetch-depth: 0
       - name: Verify and record source checkpoints
         shell: bash
@@ -26,54 +26,50 @@ jobs:
           set -euo pipefail
           bundle="$RUNNER_TEMP/clinical-1.3.6.bundle"
           base64 --decode > "$bundle" <<'BUNDLE'
-          IyB2MiBnaXQgYnVuZGxlCi03MTgwNWY5ODM2YzA4ZTA3ZWMwNGRmYTI4ODhjMjgxMjUyMWM2MmM4IFByZXNlcnZlIHRoZSBw
-          dWJsaXNoZWQgMS4zLjUgcHJvamVjdGlvbiBkdXJpbmcgMS4zLjYgdmFsaWRhdGlvbgoxMDE0NDI3MjZkNTg1NzNiNGQ2MTFj
-          OGZiYTljNmU3NzQ5NGRiZWY4IHJlZnMvdGFncy9zb3VyY2UtZnJvemVuLTIwMjYtMTEtMTktY2xpbmljYWwtYXR0cmlidXRp
-          b24tMS0zLTYtcjQKZmNhNDQ0OGRjYjZjMDE5ODlhNTYzMzQ2YTFiOWM3MGNkNDA3ODFhOSByZWZzL3RhZ3Mvc291cmNlLWJ1
-          aWxkLTIwMjYtMTEtMTktY2xpbmljYWwtYXR0cmlidXRpb24tMS0zLTYtcjQKClBBQ0sAAAACAAAAF5QVeJy1kFFKxTAQRf+7
-          ivkXSyZp2hQeoiAuwB1MkoktNJ2STkFdvd2Ef4fDgQtXGzNkQ2jywDSGZGwo3pYwj5NFtMaFNJVIgy2D6w5qvCvENNuUpxgy
-          sy+Y3DCyCcHgbKeC0Xq0llyhji5dpME7KZ2s8Mkb3wBvl0olXWWHR+W8JtqyJJU24+t1cjv7XRof20//tepyxT5JfQGcZm8G
-          g+jhyThnutvWVZX/baD7uN/5ZdCF4S6OjZUBe9ePUORqz8dGWqRV4O9DmsJ5y8TdH7xrbq+SF3ictY7BSsYwEITvfYq9CyWb
-          Nk0K8qMg4vHHN9gm2zbQJjXdiL691XfwNgwz34wUZuiNcWNwOPVdh6wtT4PFcbYGyYy91hYnsspic1DhJGDRKTOPrhu8cqws
-          e9WHmbRzzmuH2mj0g/auoSprLvBCQicLvPPGl4DnKnkniTnB484hetpC9pLLiE/15HK2KRc+tu92ibLWqfV5vwHa0aheIRp4
-          UF2nmsvdowj/20BzL3ylPxn8FtMvBUikxKn+oefIWzghJpCV4a0uS0wLvJJnoBSAil/j1b1T+ajXOf46cpHmB6mpePDtCIBn
-          eJwFwcENwyAMAEApz0zhX38RJo6BYfLAxqj5hIhSqWt0pT46UCfo3W/6TvvoZmBeKHpHYUMN7NE0J+eYWQolymslRs9c5it3
-          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
-          RS9aR3tQc5fFZIfa/QW59tc=
+          IyB2MiBnaXQgYnVuZGxlCi05ZmFhYWI0ZWI5NzBiMWFkNzkzMzNiZTQ2YmQzM2I5YzllNjBhMTNkIEZyZWV6ZSB0aGUgbG9z
+          c2xlc3MgdmVyc2lvbiAxLjMuNiBwbGF0Zm9ybSBleHBvcnRzCjBkYzAyNDlkZWRmZWUzYjM4OTQ1M2U3NDQ4NWZiYmM5N2Ji
+          YjRlMjEgcmVmcy90YWdzL3NvdXJjZS1mcm96ZW4tMjAyNi0xMS0xOS1jbGluaWNhbC1hdHRyaWJ1dGlvbi0xLTMtNi1yNQph
+          OWJhNTc3NjllZTQ1ZmUzNTViMWVmN2MxY2M4ZjVlNzM2NzgxNmQ5IHJlZnMvdGFncy9zb3VyY2UtYnVpbGQtMjAyNi0xMS0x
+          OS1jbGluaWNhbC1hdHRyaWJ1dGlvbi0xLTMtNi1yNQoKUEFDSwAAAAIAAAAUmBV4nLWQUUrGMBCE33uKfRdK2iZNFkQUxAN4
+          g02ysYWmKen2/9XTG72Db8Mw3wyMVGZwmh16b62dg2PvE0djXXSYdEC2zdJWqRC6gyrvApMepzQzKtI8KMvaJESDpKzCMRBG
+          9s7ENHZ0yVIqvJLQyQLvvHET8HJJySRr2eExc1wDbbEEKRWH5+vkevZ7qXxsX/3HKsvl+1DyEwwWjdLKOIQHNU2qa25eRfjf
+          Brq39s43w60Rv11DP/Uz3BsC/ElB4NhIUqkZzoWOlqNtjX+z3Q+TA3EokBV4nLWOQWrFIBBA9znF7AuiUWOE8mnhH6D0BqNO
+          GiFxPmbyaW/fQM/Q3eNt3pNOBFjKlEjHJYQUgnPTSJPH5JzzmsZ5TnYZo5/j8MBOTWAho5eA1s2leESzRJ/CTF5HExNakzDr
+          iTIOeMrKHe4oeJDAJ210AbyfwjtK5QavO5WacSuchXs0b+dB/VCNOz22H/VVZT2TyrzfwITotdPXB7xoa/Vw2b2K0L8Fho/a
+          QFYC+sYsYJRVE2TmXmpDoQJP3Gr56xx89kzDL7mxbcbIEHicHY9BTsQwEATvecXckSPPep3EEkIgIR7AD8bOJGtkx5EzAZbX
+          k+ytD13q6uK/OAhMjHrqyVyHcbREODnr+4Gtdug8GfQUdMeBGrmvDKHkHKURmmErew2splr+eFEXfekUokKnQopLDJQUidTo
+          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
+          acK0
           BUNDLE
-          printf '%s  %s\n' 227fb096a6d188f85e762f84bc15b9f4e8f8c5b3a0a8cee940abb7175281e771 "$bundle" | sha256sum --check
+          printf '%s  %s\n' b988dcee7ee76b1c8d847184225b069fe1495246ac8b68bd4cc12599abc4bc87 "$bundle" | sha256sum --check
           git bundle verify "$bundle"
           git fetch --no-tags "$bundle" "refs/tags/$FREEZE_TAG:refs/tags/$FREEZE_TAG" "refs/tags/$BUILD_TAG:refs/tags/$BUILD_TAG"
           test "$(git rev-parse "$FREEZE_TAG^{commit}")" = "$FREEZE_SHA"
@@ -113,7 +109,7 @@ jobs:
           biI6ICI0M2I1NWVlMmU1MDY3OGNmM2JjZGNhN2I1ZDNmZTBlNGVlNWMyMWM4IiwKICAgICAgImJpbmRpbmdTdGF0dXMiOiAi
           YXNzaWduZWQtcmVsZWFzZS1iaW5kaW5nOyBhdmFpbGFiaWxpdHkgcmVjb3JkZWQgaW4gZXh0ZXJuYWwgcHVibGljYXRpb24g
           cmVjZWlwdHMiLAogICAgICAic291cmNlQ29tbWl0TW9kZSI6ICJidWlsZC1zb3VyY2UiLAogICAgICAic291cmNlQ29tbWl0
-          IjogIjRhMWQ1OTgxMWY3ZjVjZjAwOWNlNDBlYjI2OGNlZDUxYzI0MGJlNWYiCiAgICB9LAogICAgImhpc3RvcmljYWwiOiBb
+          IjogIjBmOTU2MDc3NjM1NWFiMDg4MjQyZTM5MWJkNDhmMGQ3NTljMjE4ODEiCiAgICB9LAogICAgImhpc3RvcmljYWwiOiBb
           CiAgICAgIHsKICAgICAgICAiZG9pIjogIjEwLjUyODEvemVub2RvLjE4NzY1MTY5IiwKICAgICAgICAidXJsIjogImh0dHBz
           Oi8vZG9pLm9yZy8xMC41MjgxL3plbm9kby4xODc2NTE2OSIsCiAgICAgICAgInZlcnNpb24iOiAiMS4wLjAiLAogICAgICAg
           ICJyb2xlIjogImhpc3RvcmljYWwiLAogICAgICAgICJlbnRpdHlJcmkiOiAiaHR0cHM6Ly93d3cuZ2hlemVsYmFhc2guaXIv
@@ -326,11 +322,11 @@ jobs:
           YWY4IiwKICAicmVzZXJ2YXRpb24iOiB7CiAgICAicHJldmlvdXNSZWNvcmQiOiAyMzk2NTA0MiwKICAgICJyZXNlcnZlZFJl
           Y29yZCI6IDI0MzU0NzkxLAogICAgInJlc2VydmVkRG9pIjogIjEwLjUyODEvemVub2RvLjI0MzU0NzkxIiwKICAgICJjb25j
           ZXB0RG9pIjogIjEwLjUyODEvemVub2RvLjE4NzY1MTY4IiwKICAgICJwdWJsaXNoZWQiOiBmYWxzZQogIH0sCiAgInJlZnMi
-          OiB7CiAgICAiYXBwbGljYXRpb25DaGVja3BvaW50IjogIjM5MjE3NjFhOTJmZDE1YjRiYmQ4NzRjOGNiMGFiZTI3ZmFmODFi
-          Y2MiLAogICAgImJ1aWxkU291cmNlIjogIjRhMWQ1OTgxMWY3ZjVjZjAwOWNlNDBlYjI2OGNlZDUxYzI0MGJlNWYiLAogICAg
-          InB1YmxpY2F0aW9uVG9vbENvbW1pdCI6ICI0YTFkNTk4MTFmN2Y1Y2YwMDljZTQwZWIyNjhjZWQ1MWMyNDBiZTVmIiwKICAg
+          OiB7CiAgICAiYXBwbGljYXRpb25DaGVja3BvaW50IjogImZlMTBmN2EzNDhkZDVhYTFmOTViNzhlNTA5MTliYTMxYmFjMDZl
+          Y2EiLAogICAgImJ1aWxkU291cmNlIjogIjBmOTU2MDc3NjM1NWFiMDg4MjQyZTM5MWJkNDhmMGQ3NTljMjE4ODEiLAogICAg
+          InB1YmxpY2F0aW9uVG9vbENvbW1pdCI6ICIwZjk1NjA3NzYzNTVhYjA4ODI0MmUzOTFiZDQ4ZjBkNzU5YzIxODgxIiwKICAg
           ICJyZXZpZXdlZFJlZiI6ICJyZWZzL3RhZ3Mvc291cmNlLWJ1aWxkLTIwMjYtMTEtMTktY2xpbmljYWwtYXR0cmlidXRpb24t
-          MS0zLTYtcjQiLAogICAgInRvb2xJbnZlbnRvcnkiOiB7CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYXJjaGl2ZV9idW5kbGUu
+          MS0zLTYtcjUiLAogICAgInRvb2xJbnZlbnRvcnkiOiB7CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYXJjaGl2ZV9idW5kbGUu
           cHkiOiAiZDc3ZjMzZjYwNGM4YWM1Y2VlMDE0YzJiMzViYzVlZmZkNzY3MTVjMDg1MTgwOTAzNzUyNzI3MTNjZTliYjZmNCIs
           CiAgICAgICIuZ2l0aHViL3NjcmlwdHMvYnJvd3Nlcl9wcm9qZWN0aW9uLnB5IjogImQ0MjM2YTc3MTA0YjY3NDU4OWE3ODQ1
           NWZkMDI4MTNkNjg3YzNiNGFkODgxYjk2ODA2NDJmMzFjMTFjMDU0MjEiLAogICAgICAiLmdpdGh1Yi9zY3JpcHRzL2NhbmRp
@@ -361,8 +357,8 @@ jobs:
           ZS5weSI6ICIwYzFhOWE0ZWE4Y2RmYmMyMTE5ZDc0OWQxNGRmMWVmYjc4N2QxODdiYTBmZDIxNzNjYmIzODQ4ZjE4NmY4Y2Nl
           IiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9zY2hlbWFfZGlzdHJpYnV0aW9uX2NvcnJlY3Rpb24ucHkiOiAiMjRiOTU5MDlm
           MWYzMDM3MTlhOGE1MTUwYWRlNDMxMTg1NzJjZTBjM2Y3MTA1ZTkxYjJhOTc2OWMwZDdlNDkzYyIsCiAgICAgICIuZ2l0aHVi
-          L3NjcmlwdHMvc291cmNlX2ZyZWV6ZS5weSI6ICJjMGVjMzYxNGZiZWMyZWFhMjIzMzlmZjk3N2JiNjAwMGFkYzU4ZmQzNTAw
-          YWU0MzJjN2IzZTJlNDNkMTEyZWI3IiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9zeW5jX3BsYXRmb3JtX21hY2hpbmVfcmVz
+          L3NjcmlwdHMvc291cmNlX2ZyZWV6ZS5weSI6ICI1ZTI2OTY5MmFmMGJjMGRhNjgwOTA0NWJmN2E2MjYyNDFhYmQwZjhiYjRk
+          ZWQ1NmU3YTY0MTM2MTIyZDUzNGI5IiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9zeW5jX3BsYXRmb3JtX21hY2hpbmVfcmVz
           b3VyY2VzLnB5IjogIjllZmUwYzMzMzZlNzYxZWRhMDhiNWRkODFmODUwY2FjNjkxMGRmNzhmODdlYjQ5NmJlMjE1YmI4NTc3
           NzQwMjAiLAogICAgICAiLmdpdGh1Yi9zY3JpcHRzL3plbm9kb19jb3JyZWN0aW9uX2J1bmRsZS5weSI6ICI2ODZkODI1MWI4
           MTU2MTdjNzBjOGQyNWE5ZTJjNWJjM2Y0YmM3MjkxZDY1OWM3MDA4MmExYTYyNDA5NjI4Njk4IiwKICAgICAgIi5naXRodWIv
@@ -403,7 +399,7 @@ jobs:
           biI6IDQ0NDA0NTM4OTIxCiAgfSwKICAibWVhc3VyZWRFdmlkZW5jZSI6IHsKICAgICJjbGluaWNhbFBsYW5DSSI6IDQ0NDAz
           MDY1MjIyLAogICAgInJlc2VydmF0aW9uUnVuIjogNDQ0MDU2Mzc4MzEKICB9Cn0K
           PLAN
-          printf '%s  %s\n' eaf3a3089cd3e8bc5626b15e9efb1c85922363835798cf550f4e185f04522e52 "$plan" | sha256sum --check
+          printf '%s  %s\n' bc61e483a1c7472e7a849f783ecbb7655abc606d88da7b5980da74b2e05121b3 "$plan" | sha256sum --check
       - uses: actions/upload-artifact@v4
         with:
           name: approved-clinical-release-plan-1.3.6
@@ -416,7 +412,7 @@ jobs:
         run: |
           set -euo pipefail
           plan="$RUNNER_TEMP/approved-clinical-release-1.3.6.json"
-          jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --rawfile plan "$plan" --arg digest eaf3a3089cd3e8bc5626b15e9efb1c85922363835798cf550f4e185f04522e52 '{ref:$tag,inputs:{operation:"preflight",reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
+          jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --rawfile plan "$plan" --arg digest bc61e483a1c7472e7a849f783ecbb7655abc606d88da7b5980da74b2e05121b3 '{ref:$tag,inputs:{operation:"preflight",reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
             gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/coordinated-doi-release.yml/dispatches" --input -
       - name: Wait for the candidate and stage only the unpublished archive
         env:
@@ -434,5 +430,5 @@ jobs:
           jq -e --arg commit "$BUILD_SHA" '.head_sha==$commit and .status=="completed" and .conclusion=="success"' <<<"$run" >/dev/null
           candidate=$(jq -r '.id' <<<"$run")
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts" | jq -e '[.artifacts[] | select(.name=="frozen-coordinated-candidate" and .expired==false)] | length==1' >/dev/null
-          jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --arg candidate "$candidate" --rawfile plan "$plan" --arg digest eaf3a3089cd3e8bc5626b15e9efb1c85922363835798cf550f4e185f04522e52 '{ref:$tag,inputs:{operation:"stage-draft",reviewed_commit:$commit,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
+          jq -n --arg tag "$BUILD_TAG" --arg commit "$BUILD_SHA" --arg candidate "$candidate" --rawfile plan "$plan" --arg digest bc61e483a1c7472e7a849f783ecbb7655abc606d88da7b5980da74b2e05121b3 '{ref:$tag,inputs:{operation:"stage-draft",reviewed_commit:$commit,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' |
             gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/coordinated-doi-release.yml/dispatches" --input -
