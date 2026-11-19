@@ -1,19 +1,20 @@
-name: Prepare the clarified provider-and-location candidate
+name: Prepare the corrected chronic migraine candidate
 on:
   push:
-    branches: [codex/rebuild-clinical-candidate-r10-2026-11-19]
+    branches: [codex/rebuild-clinical-candidate-r11-2026-11-19]
 permissions: {}
 jobs:
   freeze:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/rebuild-clinical-candidate-r11-2026-11-19'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write
     env:
-      APPLICATION_SHA: 971448c5af10b3e1e10f687ed80767338e96b4f9
-      BUILD_SHA: b5578cf1f94292da62b9be4e0d130d7330a650ff
-      APPLICATION_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r10
-      BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r10
+      APPLICATION_SHA: 0ed720e025bdb7279d3cf2120b050544b88cadbd
+      BUILD_SHA: a16d10594c253ce4e633cf3246f37b181311aba4
+      APPLICATION_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r11
+      BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r11
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,9 +23,64 @@ jobs:
       - name: Verify and register the reviewed source
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "b5578cf1f94292da62b9be4e0d130d7330a650ff"
+          bundle="$RUNNER_TEMP/reviewed-source.bundle"
+          base64 -d > "$bundle" <<'SOURCE_BUNDLE'
+          IyB2MiBnaXQgYnVuZGxlCi1iNTU3OGNmMWY5NDI5MmRhNjJiOWJlNGUwZDEzMGQ3MzMwYTY1MGZm
+          IFBpbiB0aGUgdmVyaWZpZWQgbG9jYXRpb24tcm9sZSB2YWxpZGF0aW9uIGFuZCBwaHlzaWNpYW4g
+          aWRlbnRpdHkgZm9yIDEuMy42CmExNmQxMDU5NGMyNTNjZTRlNjMzY2YzMjQ2ZjM3YjE4MTMxMWFi
+          YTQgcmVmcy9oZWFkcy90cmFuc2Zlci1jbGluaWNhbC1jYW5kaWRhdGUtcjExCgpQQUNLAAAAAgAA
+          ABCVD3iclctRagMhEIDhd08x74FlRleNEEKhF+gVxnFkpYkuGxd6/KZH6NMPH/zzUAWt6DgkElHE
+          6jPX1RJTyjGgFtLVKtekZHY+tE94Y7SoaH0uOdqYipNqyWJGj35d8/UqXHIxfM5tHPA5iv7ATf7y
+          MXbt3BYZzztQTB5D8BThgs6heeuzzan/ecxX6zA3hXMvPLUALW4JII/Wm/ADXuM8REE2le99tD7N
+          L3jRSxSQEHiclY5RCsIwEET/c4r9F2XbNE0LIoIn2SQbDdikpFvQ25sewa9hhvdgpDLD5IzB3s2k
+          0TLqDoOeAruIdhysMzQExzQ5VCtVzgINt5OPXZyHfu4Djc11PDCGTmOwWiONBmNUtMurVHiUwB+4
+          +iPuZeVM6eLLcoPOzgbHxho4YdNUW5ckwv846vGmmuIXlvSslDKDVCZZjqckUpPbJZUMlAOkfF65
+          bkfznrdN/QB6/VAG/QcsSbqzPHYA5U9PUMa6VLkBwHIslHicm8Myh0XJxAAIFPTSM0sySpMYIv+t
+          fX7i9Dx9y2/xh1+4FBSLz+lh2KjEyShi2Cj6MOeOwuPNU44oNZ5UMu3dt33hZHvGBhPn+RNeT5vo
+          uknyYtw2Dw/xdS6NUwogZpakFpcUMyzsTwt8ef/8bt7D8xKVZz74djHsyMLJnxk1AeYZN6KmBHic
+          MzEAAoXi5KLMgpJihr837/4+/GPZ6t02vCp7qrKk1UKWbTUBqyjPL8pOy8kvB6rZ/cmwwJRv4tYV
+          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
+          BH14O3c=
+          SOURCE_BUNDLE
+          printf '%s  %s\n' '9dd1be9b4e118a3a10655a24793f11f878be9177cf3c6d7a202c9d5863c0e5b9' "$bundle" | sha256sum --check -
+          git bundle verify "$bundle"
+          git fetch --no-tags "$bundle" refs/heads/transfer-clinical-candidate-r11
+          test "$(git rev-parse FETCH_HEAD)" = "$BUILD_SHA"
+          test "$(git rev-parse "$APPLICATION_SHA^")" = "b5578cf1f94292da62b9be4e0d130d7330a650ff"
+          git checkout --detach "$BUILD_SHA"
           test "$(git rev-parse HEAD)" = "$BUILD_SHA"
           test "$(git rev-parse HEAD^)" = "$APPLICATION_SHA"
-          test "$(git rev-parse "$APPLICATION_SHA^{tree}")" = 75b386aebe013e616612fcd47b3b80ca587c545c
+          test "$(git rev-parse "$APPLICATION_SHA^{tree}")" = 8b5502b9a307e0310d38debf07647b5a4dbea8b0
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           ensure_tag() {
@@ -36,10 +92,10 @@ jobs:
               git tag -a "$tag" "$commit" -m "$message"
             fi
           }
-          ensure_tag "$APPLICATION_TAG" "$APPLICATION_SHA" 'Reviewed clinical attribution application snapshot 1.3.6 r10'
-          ensure_tag "$BUILD_TAG" "$BUILD_SHA" 'Reviewed clinical attribution coordinated build 1.3.6 r10'
+          ensure_tag "$APPLICATION_TAG" "$APPLICATION_SHA" 'Reviewed clinical attribution application snapshot 1.3.6 r11'
+          ensure_tag "$BUILD_TAG" "$BUILD_SHA" 'Reviewed clinical attribution coordinated build 1.3.6 r11'
           python .github/scripts/source_freeze.py check
-          git push --atomic origin "refs/tags/$APPLICATION_TAG" "refs/tags/$BUILD_TAG"
+          git push --atomic origin "HEAD:refs/heads/clinical-attribution-1-3-6-practice-identity" "refs/tags/$APPLICATION_TAG" "refs/tags/$BUILD_TAG"
   prepare:
     needs: freeze
     runs-on: ubuntu-latest
@@ -49,9 +105,9 @@ jobs:
       contents: read
     env:
       GH_TOKEN: ${{ github.token }}
-      BUILD_SHA: b5578cf1f94292da62b9be4e0d130d7330a650ff
-      BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r10
-      PLAN_SHA256: ba5ca0b10952171e0635b99a2a0c4d6e56baa5aa3f219f14ccb36f8d76a9e7ec
+      BUILD_SHA: a16d10594c253ce4e633cf3246f37b181311aba4
+      BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r11
+      PLAN_SHA256: 89e8dca21549455e480dc864d9aa82e30f35c3dd402fc0ce50ef2c808029de24
     steps:
       - name: Validate the exact build and stage the existing private draft
         run: |
@@ -88,7 +144,7 @@ jobs:
           ICAgImJhc2VsaW5lQXV0aG9yaXR5IjogIkF1dGhlbnRpY2F0ZWQgS2FnZ2xlIG93bmVyIHJlYWR5
           IHN0YXRlOyBwdWJsaWMgZGVmYXVsdCBpcyByZWNvcmRlZCBzZXBhcmF0ZWx5IGFuZCBtdXN0IGNv
           bnZlcmdlIGJlZm9yZSBaZW5vZG8gcHVibGljYXRpb24iLAogICAgICAiZXhwZWN0ZWRHcmFwaE5v
-          ZGVzIjogMTY2NiwKICAgICAgImV4cGVjdGVkR3JhcGhUcmlwbGVzIjogMjI4MjgsCiAgICAgICJo
+          ZGVzIjogMTY2NiwKICAgICAgImV4cGVjdGVkR3JhcGhUcmlwbGVzIjogMjI4MjksCiAgICAgICJo
           ZlBhcmVudCI6ICI0M2I1NWVlMmU1MDY3OGNmM2JjZGNhN2I1ZDNmZTBlNGVlNWMyMWM4IiwKICAg
           ICAgImthZ2dsZUJhc2VsaW5lVmVyc2lvbiI6IDM1LAogICAgICAia2FnZ2xlVGFyZ2V0VmVyc2lv
           biI6IDM2LAogICAgICAibm90ZWJvb2tCYXNlbGluZVZlcnNpb24iOiAxOCwKICAgICAgIm5vdGVi
@@ -104,8 +160,8 @@ jobs:
           bGVhc2UgY29ob3J0OyBwdWJsaWNhdGlvbiByZWNlaXB0cyBlc3RhYmxpc2ggbGl2ZSBhdmFpbGFi
           aWxpdHkuIiwKICAgICAgInBhY2thZ2luZ1ZlcnNpb24iOiAiMS4zLjYremVub2RvLjEiLAogICAg
           ICAicmVjb3JkSWQiOiAyNDM1NDc5MSwKICAgICAgInJvbGUiOiAiY3VycmVudF9leGFjdCIsCiAg
-          ICAgICJzb3VyY2VDb21taXQiOiAiYjU1NzhjZjFmOTQyOTJkYTYyYjliZTRlMGQxMzBkNzMzMGE2
-          NTBmZiIsCiAgICAgICJzb3VyY2VDb21taXRNb2RlIjogImJ1aWxkLXNvdXJjZSIsCiAgICAgICJz
+          ICAgICJzb3VyY2VDb21taXQiOiAiYTE2ZDEwNTk0YzI1M2NlNGU2MzNjZjMyNDZmMzdiMTgxMzEx
+          YWJhNCIsCiAgICAgICJzb3VyY2VDb21taXRNb2RlIjogImJ1aWxkLXNvdXJjZSIsCiAgICAgICJz
           b3VyY2VDb21taXRSZWZlcmVuY2UiOiAicmVsZWFzZS1wcm92ZW5hbmNlLmpzb24jL3NvdXJjZUNv
           bW1pdCIsCiAgICAgICJ1cmwiOiAiaHR0cHM6Ly9kb2kub3JnLzEwLjUyODEvemVub2RvLjI0MzU0
           NzkxIgogICAgfSwKICAgICJkb3dubG9hZEJpbmRpbmdzIjogewogICAgICAiYXBpUHJlZml4Ijog
@@ -360,12 +416,12 @@ jobs:
           ICAgICJzY2hlbWFWZXJzaW9uIjogIjEuMCIKICB9LAogICJwcmV2aW91c1BvbGljeVNIQTI1NiI6
           ICI0MDgzOGMyOTYxYjYwMDg2OGQwZWIxYjQ0M2Y2NDFmNDg5MzFlMTA2OThkMjZhYWQ1ZTI3YTc3
           ZWEzNzk3YTBhIiwKICAicHVibGljYXRpb25EYXRlIjogIjIwMjYtMTEtMTkiLAogICJyZWZzIjog
-          ewogICAgImFwcGxpY2F0aW9uQ2hlY2twb2ludCI6ICI5NzE0NDhjNWFmMTBiM2UxZTEwZjY4N2Vk
-          ODA3NjczMzhlOTZiNGY5IiwKICAgICJidWlsZFNvdXJjZSI6ICJiNTU3OGNmMWY5NDI5MmRhNjJi
-          OWJlNGUwZDEzMGQ3MzMwYTY1MGZmIiwKICAgICJwdWJsaWNhdGlvblRvb2xDb21taXQiOiAiYjU1
-          NzhjZjFmOTQyOTJkYTYyYjliZTRlMGQxMzBkNzMzMGE2NTBmZiIsCiAgICAicmV2aWV3ZWRSZWYi
+          ewogICAgImFwcGxpY2F0aW9uQ2hlY2twb2ludCI6ICIwZWQ3MjBlMDI1YmRiNzI3OWQzY2YyMTIw
+          YjA1MDU0NGI4OGNhZGJkIiwKICAgICJidWlsZFNvdXJjZSI6ICJhMTZkMTA1OTRjMjUzY2U0ZTYz
+          M2NmMzI0NmYzN2IxODEzMTFhYmE0IiwKICAgICJwdWJsaWNhdGlvblRvb2xDb21taXQiOiAiYTE2
+          ZDEwNTk0YzI1M2NlNGU2MzNjZjMyNDZmMzdiMTgxMzExYWJhNCIsCiAgICAicmV2aWV3ZWRSZWYi
           OiAicmVmcy90YWdzL3NvdXJjZS1idWlsZC0yMDI2LTExLTE5LWNsaW5pY2FsLWF0dHJpYnV0aW9u
-          LTEtMy02LXIxMCIsCiAgICAidG9vbEludmVudG9yeSI6IHsKICAgICAgIi5naXRodWIvc2NyaXB0
+          LTEtMy02LXIxMSIsCiAgICAidG9vbEludmVudG9yeSI6IHsKICAgICAgIi5naXRodWIvc2NyaXB0
           cy9hcmNoaXZlX2J1bmRsZS5weSI6ICJkNzdmMzNmNjA0YzhhYzVjZWUwMTRjMmIzNWJjNWVmZmQ3
           NjcxNWMwODUxODA5MDM3NTI3MjcxM2NlOWJiNmY0IiwKICAgICAgIi5naXRodWIvc2NyaXB0cy9i
           cm93c2VyX3Byb2plY3Rpb24ucHkiOiAiZDQyMzZhNzcxMDRiNjc0NTg5YTc4NDU1ZmQwMjgxM2Q2
@@ -404,8 +460,8 @@ jobs:
           ZGYxZWZiNzg3ZDE4N2JhMGZkMjE3M2NiYjM4NDhmMTg2ZjhjY2UiLAogICAgICAiLmdpdGh1Yi9z
           Y3JpcHRzL3NjaGVtYV9kaXN0cmlidXRpb25fY29ycmVjdGlvbi5weSI6ICIyNGI5NTkwOWYxZjMw
           MzcxOWE4YTUxNTBhZGU0MzExODU3MmNlMGMzZjcxMDVlOTFiMmE5NzY5YzBkN2U0OTNjIiwKICAg
-          ICAgIi5naXRodWIvc2NyaXB0cy9zb3VyY2VfZnJlZXplLnB5IjogIjVjZWE0ODdjOGYwYTMwODM4
-          NjI2MjUzMTdhODk0MDBiMzM2MzBjMGVmNmM3MDUyNjBmZjI1MDdkODM3ZGYzOWEiLAogICAgICAi
+          ICAgIi5naXRodWIvc2NyaXB0cy9zb3VyY2VfZnJlZXplLnB5IjogIjJlY2VjNDAyOTA2MTBlYTky
+          N2M4ZmFmMjhmZDZlNzM2MDAxOWVlNzcyZTA4NTBiMTMwMTUzMWI4ZDUyM2JjNTEiLAogICAgICAi
           LmdpdGh1Yi9zY3JpcHRzL3N5bmNfcGxhdGZvcm1fbWFjaGluZV9yZXNvdXJjZXMucHkiOiAiOWVm
           ZTBjMzMzNmU3NjFlZGEwOGI1ZGQ4MWY4NTBjYWM2OTEwZGY3OGY4N2ViNDk2YmUyMTViYjg1Nzc3
           NDAyMCIsCiAgICAgICIuZ2l0aHViL3NjcmlwdHMvemVub2RvX2NvcnJlY3Rpb25fYnVuZGxlLnB5
@@ -440,7 +496,7 @@ jobs:
           ZERvaSI6ICIxMC41MjgxL3plbm9kby4yNDM1NDc5MSIsCiAgICAicmVzZXJ2ZWRSZWNvcmQiOiAy
           NDM1NDc5MQogIH0sCiAgInJldmlld2VkVGFibGVzIjogewogICAgImNsaW5pY2FsX2Fuc3dlcnMi
           OiAxMjUsCiAgICAiY2xpbmljYWxfcGFzc2FnZXMiOiAzMjc2LAogICAgImVudGl0eV9mYWN0cyI6
-          IDIyODI4LAogICAgIm1hcmtldF9wb3NpdGlvbmluZyI6IDYwLAogICAgInF1ZXJ5X21hdHJpeCI6
+          IDIyODI5LAogICAgIm1hcmtldF9wb3NpdGlvbmluZyI6IDYwLAogICAgInF1ZXJ5X21hdHJpeCI6
           IDg3NgogIH0sCiAgInNjaGVtYVZlcnNpb24iOiAxLAogICJ3ZWJzaXRlUHJldmlvdXNEZXBsb3lt
           ZW50SWQiOiAiZGY3MjdjNmQtNDk4YS00MjQ5LTg3OGItZmYwNzM5MjFhMmNjIgp9Cg==
           PLAN_BASE64
