@@ -1,26 +1,26 @@
-name: Refine and validate the existing 1.3.6 DOI release
+name: Publish the verified refinement of the existing 1.3.6 DOI
 on:
   push:
     branches: [codex/clinical-release-control-2026-11-19]
 permissions: {}
 jobs:
-  refine:
+  publish:
     if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19' && github.run_attempt == 1
     runs-on: ubuntu-latest
-    timeout-minutes: 85
+    timeout-minutes: 8
     permissions:
-      contents: write
+      contents: read
       actions: write
     env:
       GH_TOKEN: ${{ github.token }}
-      C_SHA: d579b61e662c22515dbeab5a936a195169fb2a8d
       M_SHA: eafb138d596a91504ed0af66e2557f52848e36b6
       BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r14
-      SOURCE_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r14
       PLAN_SHA: b44852d641f30d46c4dfa19481abc6ed6fd7b4f560b1baf7836a0881aebb7ce3
+      MANIFEST_SHA: 3a0f7b427e42d8d96a39f6e6b597aa1003fd26dcffc64d1c8ac44d8483793a7c
+      PREFLIGHT: '44534049479'
+      STAGING: '44535403502'
     steps:
-      - name: Validate exact refs and run coordinated preflight
-        id: preflight
+      - name: Verify preflight and the staged record then dispatch the frozen release
         shell: bash
         run: |
           set -euo pipefail
@@ -414,91 +414,13 @@ jobs:
           MjFiN2FhYzQtYTYzYS00OTFjLWFmZWQtMjBhMWQxMTJjMDAyIgp9Cg==
           PLAN
           printf '%s  %s\n' "$PLAN_SHA" "$plan" | sha256sum --check -
-          jq -e --arg m "$M_SHA" --arg c "$C_SHA" '.refs.buildSource==$m and .refs.applicationCheckpoint==$c and .reservation.reservedRecord==24354791 and .reservation.reservedDoi=="10.5281/zenodo.24354791" and .reservation.published==false and .policy.currentArchive.contentBaseline=="1.3.6" and .policy.currentArchive.packagingVersion=="1.3.6+zenodo.1"' "$plan" >/dev/null
-          gh api "$repo/git/commits/$M_SHA" | jq -e --arg c "$C_SHA" '(.parents | length)==1 and .parents[0].sha==$c' >/dev/null
           branch=$(gh api "$repo/git/ref/heads/clinical-attribution-1-3-6-practice-identity" --jq '.object.sha')
           test "$branch" = "$M_SHA"
-          for pair in "$SOURCE_TAG:$C_SHA" "$BUILD_TAG:$M_SHA"; do
-            tag=${pair%%:*}
-            target=${pair##*:}
-            if found=$(gh api "$repo/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null); then
-              test "$found" = "$target"
-            else
-              gh api -X POST "$repo/git/refs" -f "ref=refs/tags/$tag" -f "sha=$target" --jq '.ref'
-            fi
-          done
-          function launch() {
-            local operation=$1 candidate=$2
-            jq -n --arg ref "$BUILD_TAG" --arg m "$M_SHA" --arg operation "$operation" --arg candidate "$candidate" --rawfile plan "$plan" --arg digest "$PLAN_SHA" '{ref:$ref,inputs:{operation:$operation,reviewed_commit:$m,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' | gh api -X POST "$workflow/dispatches" --input -
-          }
-          function find_new_run() {
-            local before=$1
-            for ((i=0;i<30;i++)); do
-              runs=$(gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=30" | jq --argjson prior "$before" '[.workflow_runs[] | .id | select(. as $id | $prior | index($id) | not)]')
-              if test "$(jq 'length' <<<"$runs")" -gt 0; then
-                jq -er 'select(length==1) | .[0]' <<<"$runs"
-                return
-              fi
-              sleep 8
-            done
-            return 1
-          }
-          function wait_for_run() {
-            local run=$1
-            for ((i=0;i<125;i++)); do
-              state=$(gh api "$repo/actions/runs/$run" | jq -r '.status+":"+(.conclusion//"")')
-              if test "$state" = completed:success; then return 0; fi
-              if [[ "$state" = completed:* ]]; then echo "Release workflow $run finished with $state"; return 1; fi
-              sleep 20
-            done
-            return 1
-          }
-          before=$(gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=30" | jq '[.workflow_runs[].id]')
-          test "$before" = '[]'
-          launch preflight ''
-          preflight=$(find_new_run "$before")
-          echo "Preflight $preflight"
-          wait_for_run "$preflight"
-          echoes=$(gh api "$repo/actions/runs/$preflight/artifacts" | jq -e '[.artifacts[] | select(.name=="frozen-coordinated-candidate" and .expired==false)] | length==1')
-          test "$echoes" = true
-          echo "run=$preflight" >> "$GITHUB_OUTPUT"
-      - name: Re-stage the same unpublished DOI, then publish under the existing live gates
-        shell: bash
-        env:
-          PREFLIGHT: ${{ steps.preflight.outputs.run }}
-        run: |
-          set -euo pipefail
-          repo="repos/$GITHUB_REPOSITORY"
-          workflow="$repo/actions/workflows/coordinated-doi-release.yml"
-          plan="$RUNNER_TEMP/approved-release-plan.json"
-          branch=$(gh api "$repo/git/ref/heads/clinical-attribution-1-3-6-practice-identity" --jq '.object.sha')
-          test "$branch" = "$M_SHA"
-          function launch() {
-            jq -n --arg ref "$BUILD_TAG" --arg m "$M_SHA" --arg operation "$1" --arg candidate "$PREFLIGHT" --rawfile plan "$plan" --arg digest "$PLAN_SHA" '{ref:$ref,inputs:{operation:$operation,reviewed_commit:$m,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' | gh api -X POST "$workflow/dispatches" --input -
-          }
-          all=$(gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=30" | jq -c '[.workflow_runs[].id]')
-          test "$all" = "[$PREFLIGHT]"
-          launch stage-draft
-          stage=''
-          for ((i=0;i<30;i++)); do
-            all=$(gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=30" | jq --argjson p "$PREFLIGHT" '[.workflow_runs[].id | select(. != $p)]')
-            if test "$(jq 'length' <<<"$all")" -gt 0; then stage=$(jq -er 'select(length==1) | .[0]' <<<"$all"); break; fi
-            sleep 8
-          done
-          test -n "$stage"
-          echo "Staging run $stage"
-          staged=false
-          for ((i=0;i<100;i++)); do
-            state=$(gh api "$repo/actions/runs/$stage" | jq -r '.status+":"+(.conclusion//"")')
-            if test "$state" = completed:success; then staged=true; break; fi
-            if [[ "$state" = completed:* ]]; then echo "Staging $stage finished with $state"; exit 1; fi
-            sleep 20
-          done
-          test "$staged" = true
+          test "$(gh api "$repo/git/ref/tags/$BUILD_TAG" --jq '.object.sha')" = "$M_SHA"
+          gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=25" | jq -e --argjson p "$PREFLIGHT" --argjson s "$STAGING" --arg sha "$M_SHA" '(.workflow_runs | map(.id) | sort)==([$p,$s] | sort) and (.workflow_runs | all(.head_sha==$sha and .conclusion=="success"))' >/dev/null
           receipt="$RUNNER_TEMP/staged-receipt"
-          gh run download "$stage" --repo "$GITHUB_REPOSITORY" --name coordinated-release-evidence --dir "$receipt"
-          jq -e --arg m "$M_SHA" '.status=="PASS" and .record==24354791 and .doi=="10.5281/zenodo.24354791" and .sourceCommit==$m and .published==false and .serverFilesSha256Verified==.files' "$receipt/zenodo-stage-report.json" >/dev/null
-          all=$(gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=30" | jq --argjson p "$PREFLIGHT" --argjson s "$stage" -e '[.workflow_runs[].id] | sort == ([$p,$s] | sort)')
-          test "$all" = true
-          launch publish-frozen
-          echo 'Dispatched publication of the exact frozen 1.3.6 refinement.'
+          gh run download "$STAGING" --repo "$GITHUB_REPOSITORY" --name coordinated-release-evidence --dir "$receipt"
+          printf '%s  %s\n' "$MANIFEST_SHA" "$receipt/frozen-sha256.json" | sha256sum --check -
+          printf '%s  %s\n' "$PLAN_SHA" "$receipt/approved-release-plan.json" | sha256sum --check -
+          jq -e --arg m "$M_SHA" '.status=="PASS" and .record==24354791 and .doi=="10.5281/zenodo.24354791" and .sourceCommit==$m and .published==false and .serverFilesSha256Verified==true and .files==43' "$receipt/zenodo-stage-report.json" >/dev/null
+          jq -n --arg ref "$BUILD_TAG" --arg m "$M_SHA" --arg candidate "$PREFLIGHT" --rawfile plan "$plan" --arg digest "$PLAN_SHA" '{ref:$ref,inputs:{operation:"publish-frozen",reviewed_commit:$m,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' | gh api -X POST "$workflow/dispatches" --input -
