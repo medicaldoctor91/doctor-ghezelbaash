@@ -1,5 +1,7 @@
 # Fixed source and isolated additions
 
+The coordinated 1.3.6 application checkpoint `0ed720e025bdb7279d3cf2120b050544b88cadbd` has tree `8b5502b9a307e0310d38debf07647b5a4dbea8b0` and 204 application files. The Persian clinical guide includes its verified chronic migraine service as a topic and uses the existing channel to locate in-person treatment.
+
 The coordinated 1.3.6 application checkpoint `971448c5af10b3e1e10f687ed80767338e96b4f9` has tree `75b386aebe013e616612fcd47b3b80ca587c545c` and 204 application files. Its direct management child restores the four source-freeze files. The exported SHACL rules enforce the practice's place-only service role and the physician's primary subject on the professional Instagram identity.
 
 The coordinated 1.3.6 application checkpoint `66cbfb40b132539313865db4fa03eb078bc84d1d` has tree `80928c7626f60b85cfa4d825516d04db43381e3f` and 204 application files. Its direct management child restores the four source-freeze files. The clinical data keeps the physician and his practice as separately identified entities and makes the physician the sole clinical provider and the practice the location of his in-person services.
