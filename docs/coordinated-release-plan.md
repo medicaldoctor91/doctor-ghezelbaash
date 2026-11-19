@@ -6,7 +6,9 @@ The release includes the website on Cloudflare Pages, Hugging Face, the Kaggle d
 
 Keep the Person `https://www.ghezelbaash.ir/#saeed-ghezelbash`, physician-owned practice `https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`, Dataset `https://www.ghezelbaash.ir/graph.jsonld/dataset` and collection DOI distinct and stable. A new exact archive DOI identifies a snapshot, never the physician or practice.
 
-The reserved Dataset/source package is `1.3.5`, with exact archive packaging `1.3.5+zenodo.1` and real DOI `10.5281/zenodo.23965042`. The preserved positioning corpus remains `1.3.4`. These are independent version roles. The canonical source binds the active catalog, projects, distribution versions and current-version chain before its application checkpoint. The new release has its own technical date; earlier version nodes and scientific/clinical dates retain their original values. Candidate validation requires the actual canonical Dataset version in every platform graph to equal the selected archive's `contentBaseline`. `sync_positioning` preserves the historical corpus, its 47 original message arrays and protected JSONL/CSV/Parquet bytes inside this new enclosing package.
+For the selected release, use the approved plan’s `policy.currentArchive.contentBaseline` for the Dataset/source version, `packagingVersion` for the exact archive version and `doi` for its citation. The plan binds those values to `reservation.reservedRecord` and `reservation.reservedDoi`. The separately versioned positioning corpus is recorded in `positioningCorpusRelease`. Candidate validation checks the Dataset version in every platform graph against the selected content baseline. `sync_positioning` preserves the historical corpus, its 47 original message arrays and the protected JSONL, CSV and Parquet files.
+
+Use the coordinated publication receipt and public DOI verification to confirm that the selected archive is available before announcing the exact snapshot. The collection DOI remains the general latest-version entry point.
 
 Scientific edition, clinical-review dates, document modification times, media upload/event dates, archive publication date, packaging maintenance date and HF commit timestamp retain their own meanings. The release plan records them separately; it does not manufacture fresh medical-review dates.
 
@@ -30,11 +32,13 @@ Scientific edition, clinical-review dates, document modification times, media up
 | New reserved edition | `RELEASE_PLAN_PATH` selects the actual approved plan; `PREPARE_RESERVED_DOI` equals its real new record; `ARCHIVE_SOURCE_COMMIT` is empty. Actual HEAD and `GITHUB_SHA` must equal M. |
 | Published maintenance of that edition | Use a reviewed `published-maintenance` plan, pin `ARCHIVE_SOURCE_COMMIT` to the newly published archive's M, and leave preparing mode empty. A later website build does not relabel the immutable archive. The coordinated new-edition workflow deliberately rejects this context; use a separately reviewed maintenance operation. |
 
-## GitHub execution before the new checkpoint
+## Historical GitHub execution for 1.3.5
 
 Local credential availability and GitHub Actions access are separate checks. The repository token can dispatch Actions even though listing Actions secrets/variables returns 403. Run `41921964850` successfully dispatched the existing media inspector at reviewed commit `6ae90bd5422fb28a0773c1aca368383c6930d87d`; its authenticated Cloudflare project GET returned 200. This establishes that execution path and that read access, rather than full publication permission on every provider.
 
-All four authenticated provider reads passed in run `41923983120`; run `41924204532` durably reserved the real unpublished record `23965042`. Fresh read-only run `42005324865` on 5 November confirmed the same draft/DOI, unchanged previous archive policy and file inventory, HF parent `ca61e0e2dfce8d4245045873c8fd058467e4976d`, Kaggle owner/public version 34, completed Notebook version 17 and the existing Cloudflare deployment. The intended provider increments are Kaggle 35 and Notebook 18. An explicit `six` dependency and an import smoke check cover the observed Kaggle 2.2.4 packaging gap on a fresh runner.
+All four authenticated provider reads passed in run `41923983120`; run `41924204532` durably reserved the real unpublished record `23965042`. Fresh read-only run `42005324865` on 5 November confirmed the same draft/DOI, unchanged previous archive policy and file inventory, HF parent `ca61e0e2dfce8d4245045873c8fd058467e4976d`, Kaggle owner/public version 34, completed Notebook version 17 and the existing Cloudflare deployment. That release targeted Kaggle 35 and Notebook 18. An explicit `six` dependency and an import smoke check cover the observed Kaggle 2.2.4 packaging gap on a fresh runner.
+
+## Browser and reservation tooling
 
 Browser validation uses explicitly installed Google Chrome in Actions and preserves native timed-seek, playback and real BFCache assertions. Failure reports record the selected source, native media state, codec support, seekable ranges and bounded event/request history in a separate artifact. The four WebM sources declare their measured AV1 Main/level 4/8-bit profile as `av01.0.04M.08, opus`; original media bytes, transcripts and MP4 fallbacks remain intact.
 
