@@ -31,5 +31,23 @@ jobs:
           raw = json.loads(api.dataset_status(dataset, format='json(status,current_version_number)'))
           response = requests.get('https://api.kaggle.com/v1/datasets/view/' + dataset, timeout=25)
           response.raise_for_status()
-          print(json.dumps({'observed_owner_version': raw['current_version_number'], 'observed_owner_status': raw['status'], 'observed_public_default': response.json()['currentVersionNumber']}))
+          info = response.json()
+          public = {'observed_owner_version':raw['current_version_number'], 'observed_owner_status':raw['status'], 'observed_public_default':info['currentVersionNumber'],'recent_public_versions':[{k:x.get(k) for k in ('versionNumber','status')} for x in info.get('versions',[]) if x.get('versionNumber',0)>=35]}
+          print(json.dumps(public))
+          import hashlib
+          from concurrent.futures import ThreadPoolExecutor
+          options = {'kaggle_exact_manifest': ('https://www.kaggle.com/api/v1/datasets/download/' + dataset + '/kaggle-manifest.json', {'datasetVersionNumber':36,'raw':'true'}), 'hf_preview': ('https://datasets-server.huggingface.co/first-rows',{'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train'}), 'hf_search': ('https://datasets-server.huggingface.co/search',{'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train','query':'بوتاکس'}), 'hf_filter': ('https://datasets-server.huggingface.co/filter',{'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train','where':chr(34)+'language'+chr(34)+'='+chr(39)+'fa'+chr(39),'length':2})}
+          def probe(item):
+              name,(url,params)=item
+              try:
+                  r=requests.get(url,params=params,timeout=25,headers={'Cache-Control':'no-cache'})
+                  data={'status':r.status_code,'revision':r.headers.get('X-Revision')}
+                  if r.ok:
+                      j=r.json()
+                      if name.startswith('kaggle'):data.update({k:j.get(k) for k in ('desired_kaggle_version','website_source_commit','upstream_revision')})
+                      else:data['rows']=len(j.get('rows',[]))
+                  return name,data
+              except Exception as exc:
+                  return name,{'error':type(exc).__name__}
+          with ThreadPoolExecutor(max_workers=4) as pool:print(json.dumps({'public_diagnostics':dict(pool.map(probe,options.items()))}))
           PY
