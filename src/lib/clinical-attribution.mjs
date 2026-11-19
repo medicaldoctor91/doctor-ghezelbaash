@@ -41,7 +41,13 @@ export function applyClinicalAttribution(source) {
   const online = get('free-online-aesthetic-initial-consultation');
   const consultation = get('aesthetic-medical-consultation');
 
-  for (const property of ['medicalSpecialty', 'availableService', 'hasOfferCatalog']) delete clinic[property];
+  for (const property of ['medicalSpecialty', 'availableService', 'hasOfferCatalog', 'areaServed']) delete clinic[property];
+  clinic.description = [
+    {'@value': 'مطب شخصی دکتر سعید قزلباش در کرمانشاه؛ محل طبابت و ارائهٔ حضوری خدمات بالینی دکتر قزلباش، تنها پزشک معالج و ارائه‌دهندهٔ خدمات بالینی این مطب.', '@language': 'fa'},
+    {'@value': 'The private medical practice and in-person care location of Dr. Saeed Ghezelbash in Kermanshah, Iran. Dr. Ghezelbash is the sole treating physician and clinical service provider at this location.', '@language': 'en'},
+  ];
+  physician.disambiguatingDescription += ' ایشان تنها پزشک معالج و ارائه‌دهندهٔ خدمات بالینی در مطب شخصی خود در کرمانشاه است.';
+  get('in-person-clinic-service-channel').description = 'Physical access to in-person clinical care provided by Dr. Saeed Ghezelbash at his Kermanshah practice.';
   delete physician.hasOfferCatalog;
   clinic.subjectOf = values(clinic.subjectOf).filter(item => item['@id'] !== get('webpage')['@id']);
   get('online-consultation-contact-point').contactType = 'appointment scheduling and reception';
@@ -80,10 +86,13 @@ export function applyClinicalAttribution(source) {
     } else if (route.pagePurpose === 'professional-biography') {
       page['@type'] = ['ProfilePage', route.pageType];
       page.mainEntity = ref(physician['@id']);
+    } else if (route.pagePurpose === 'clinic-profile') {
+      page.about = [ref(clinic['@id']), ref(physician['@id'])];
+      delete page.specialty;
     } else if (route.pagePurpose === 'clinic-contact') {
       page.mainEntity = ref(clinic['@id']);
       page.about = [...values(page.about), ref(consultation['@id']), ref(online['@id'])];
     }
   }
-  source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole provider of the listed clinical services. For in-person services, follow the service channel to the Kermanshah practice.';
+  source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }

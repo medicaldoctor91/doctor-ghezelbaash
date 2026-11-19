@@ -95,8 +95,12 @@ test('every built public HTML page preserves its author, main subject, localized
       for(const slug of ['facial-and-lip-dermal-filler','body-dermal-filler','autologous-fat-grafting','gluteal-body-filler'])
         assert.ok(values(actual.get(origin+'/procedure-'+slug)?.['@type']).includes('Service'),slug);
     }
-    for(const property of ['medicalSpecialty','availableService','hasOfferCatalog'])
+    for(const property of ['medicalSpecialty','availableService','hasOfferCatalog','areaServed'])
       assert.ok(!(property in actual.get(practiceId)),resource.path+' clinic '+property);
+    if(resource.pagePurpose==='clinic-profile') {
+      assert.deepEqual(ids(page.mainEntity),[practiceId],resource.path+' practice page subject');
+      assert.deepEqual(ids(page.about),[practiceId,personId],resource.path+' practice and physician identities');
+    }
     for(const key of ['name','description'])if(key in clinic) {
       // The practice currently has Persian and English authored literals.
       // Other document languages retain the renderer's English fallback.
