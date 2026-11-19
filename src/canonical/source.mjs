@@ -51289,6 +51289,9 @@ export const SOURCE = {
             "@id": "https://www.ghezelbaash.ir/procedure-botulinum-toxin-aesthetic-treatment"
           },
           {
+            "@id": "https://www.ghezelbaash.ir/service-botulinum-toxin-chronic-migraine"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/biomedical-concept-botulinum-toxin-a"
           },
           {
@@ -59467,9 +59470,6 @@ export const SOURCE = {
           "@id": "https://www.ghezelbaash.ir/topic-botox-migraine-context"
         },
         "serviceType": "Botulinum toxin treatment for chronic migraine",
-        "areaServed": {
-          "@id": "https://www.ghezelbaash.ir/city-kermanshah"
-        },
         "url": "https://www.ghezelbaash.ir/botox-contraindications-and-precautions#migraine-botox-candidacy",
         "dcterms:subject": [
           {

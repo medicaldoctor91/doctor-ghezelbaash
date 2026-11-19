@@ -95,6 +95,16 @@ test('every built public HTML page preserves its author, main subject, localized
       for(const slug of ['facial-and-lip-dermal-filler','body-dermal-filler','autologous-fat-grafting','gluteal-body-filler'])
         assert.ok(values(actual.get(origin+'/procedure-'+slug)?.['@type']).includes('Service'),slug);
     }
+    if(resource.path==='/botox-contraindications-and-precautions') {
+      const serviceId=origin+'/service-botulinum-toxin-chronic-migraine';
+      const article=actual.get(url+'#article');
+      assert.deepEqual(ids(page.mainEntity),[article['@id']]);
+      assert.ok(ids(article.about).includes(serviceId));
+      assert.ok(ids(page.about).includes(serviceId));
+      assert.ok(values(actual.get(serviceId)?.['@type']).includes('Service'));
+      assert.equal(actual.get(serviceId).areaServed,undefined);
+      assert.ok(find(dom,node=>attr(node,'id')==='migraine-botox-candidacy'));
+    }
     for(const property of ['medicalSpecialty','availableService','hasOfferCatalog','areaServed'])
       assert.ok(!(property in actual.get(practiceId)),resource.path+' clinic '+property);
     if(resource.pagePurpose==='clinic-profile') {

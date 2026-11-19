@@ -181,7 +181,7 @@
     "notebookTargetVersion": 19,
     "previousZenodoRecord": 23965042,
     "expectedGraphNodes": 1666,
-    "expectedGraphTriples": 22828,
+    "expectedGraphTriples": 22829,
     "baselineAuthority": "Authenticated Kaggle owner ready state; public default is recorded separately and must converge before Zenodo publication"
   }
 }

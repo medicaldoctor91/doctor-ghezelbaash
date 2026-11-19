@@ -60,6 +60,9 @@ test('approved plan: in-person service channel locates the practice', () => {
     const expected = online ? 'https://www.ghezelbaash.ir/online-consultation-channel' : channel['@id'];
     assert.deepEqual(ids(service.availableChannel), [expected], service['@id']);
     assert.deepEqual(ids(node(expected).serviceLocation), online ? [] : [CLINIC], service['@id']);
+    for (const areaId of ids(service.areaServed)) {
+      assert.ok(!values(node(areaId)?.['@type']).includes('City'), service['@id'] + ' uses its channel for city-level location');
+    }
   }
 });
 
