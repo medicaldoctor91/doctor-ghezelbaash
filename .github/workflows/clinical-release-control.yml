@@ -1,107 +1,229 @@
-name: Complete the staged 1.3.6 release after Hugging Face Search and Filter recover
+name: Audit the 18 November plan on the public site
 on:
   push:
     branches: [codex/clinical-release-control-2026-11-19]
 permissions: {}
 jobs:
-  readiness:
-    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19' && github.run_attempt == 1
+  live-audit:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash'
     runs-on: ubuntu-latest
-    timeout-minutes: 64
-    permissions:
-      contents: read
-      actions: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      M_SHA: eafb138d596a91504ed0af66e2557f52848e36b6
-      HF_SHA: 63b71242a5f2e91a90537d51c4542b071a26be3a
-      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
-      BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r14
-      PLAN_SHA: b44852d641f30d46c4dfa19481abc6ed6fd7b4f560b1baf7836a0881aebb7ce3
-      MANIFEST_SHA: 3a0f7b427e42d8d96a39f6e6b597aa1003fd26dcffc64d1c8ac44d8483793a7c
-      PREFLIGHT: '44534049479'
-      STAGING: '44535403502'
-      INITIAL: '44536199973'
-      PRIOR: '44543482916'
+    timeout-minutes: 6
     steps:
-      - name: Verify prior publication progress and test freshly served Viewer functions
+      - name: Read public sitemap pages and distributions without using cached revision data
         shell: bash
         run: |
           set -euo pipefail
-          repo="repos/$GITHUB_REPOSITORY"
-          workflow="$repo/actions/workflows/coordinated-doi-release.yml"
-          gh api "$repo/actions/runs/$PRIOR" | jq -e --arg sha "$M_SHA" '.head_sha==$sha and .run_attempt==1 and .status=="completed" and .conclusion=="failure"' >/dev/null
-          receipt="$RUNNER_TEMP/release-receipt"
-          gh run download "$PRIOR" --repo "$GITHUB_REPOSITORY" --name coordinated-release-evidence --dir "$receipt"
-          printf '%s  %s\n' "$MANIFEST_SHA" "$receipt/frozen-sha256.json" | sha256sum --check -
-          printf '%s  %s\n' "$PLAN_SHA" "$receipt/approved-release-plan.json" | sha256sum --check -
-          jq -e --arg src "$M_SHA" --argjson run "$PRIOR" '.sourceCommit==$src and .runId==$run and .operation=="publish-frozen"' "$receipt/release-workflow-context.json" >/dev/null
-          jq -e '.status=="PASS" and .result.version==37 and .result.filesSha256Matched==48' "$receipt/kaggle-live.json" >/dev/null
-          jq -e --arg src "$M_SHA" --arg hf "$HF_SHA" '.status=="PASS" and .result.version==20 and (.result.executionEvidence | .source_commit==$src and .upstream_revision==$hf and .exact_doi=="10.5281/zenodo.24354791" and .status=="PASS")' "$receipt/notebook-live.json" >/dev/null
-          test ! -f "$receipt/zenodo-publish-attempt.json"
+          python -m pip install -q 'rdflib>=7,<8'
           python - <<'PY'
-          from concurrent.futures import ThreadPoolExecutor
-          import json, os, time
-          from urllib.error import HTTPError, URLError
-          from urllib.parse import urlencode
+          import collections, concurrent.futures, csv, hashlib, io, json, os, re, time
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urlsplit
           from urllib.request import Request, urlopen
-          hf = os.environ['HF_REPO']
-          revision = os.environ['HF_SHA']
-          viewer = 'https://datasets-server.huggingface.co/'
-          terms = {'clinical_passages':'ghezelbaash','clinical_answers':'ghezelbaash','entity_facts':'Patient','query_matrix':'ghezelbaash','market_positioning':'positioning'}
-          def fetch(url):
-              try:
-                  req = Request(url,headers={'Cache-Control':'no-cache','Pragma':'no-cache','Accept':'application/json'})
-                  with urlopen(req,timeout=24) as response:
-                      return response.status,response.headers,json.load(response)
-              except HTTPError as exc:
-                  try: failure=json.loads(exc.read(1800))
-                  except (ValueError,OSError): failure={}
-                  return exc.code,exc.headers,failure if isinstance(failure,dict) else {}
-              except (OSError, URLError, ValueError):
-                  return None,{},{}
-          def raw(endpoint, dataset, **params):
-              return fetch(viewer+endpoint+'?'+urlencode({'dataset':dataset,'live_audit':time.time_ns(),**params}))
-          def info(result):
-              status,headers,data=result
-              return {'http':status,'revision':headers.get('X-Revision'),'error':headers.get('X-Error-Code'),
-                      'message':str(data.get('error',''))[:230], 'rows':len(data.get('rows',[]))}
-          def positive(result):
-              status,headers,payload=result
-              return status==200 and headers.get('X-Revision')==revision and payload.get('partial') is False and bool(payload.get('rows'))
-          def probe(config):
-              params={'config':config,'split':'train'}
-              search=raw('search',hf,**params,query=terms[config],length=2)
-              if not positive(search):return config,False,{'search':info(search)}
-              preview=raw('rows',hf,**params,offset=0,length=1)
-              if not positive(preview):return config,False,{'search':info(search),'preview':info(preview)}
-              first=preview[2]['rows'][0]['row']
-              field,value=next((key,val) for key,val in first.items() if isinstance(val,str) and val and len(val)<200)
-              escaped=value.replace(chr(39),chr(39)*2)
-              where=f'{chr(34)}{field}{chr(34)}={chr(39)}{escaped}{chr(39)}'
-              filt=raw('filter',hf,**params,where=where,length=2)
-              okay=positive(filt) and all(row['row'].get(field)==value for row in filt[2]['rows'])
-              return config,okay,{'search':info(search),'filter':info(filt)}
-          control = {'config':'plain_text','split':'train','length':2}
-          control_search=raw('search','stanfordnlp/imdb',**control,query='movie')
-          control_filter=raw('filter','stanfordnlp/imdb',**control,where=chr(34)+'label'+chr(34)+'=1')
-          print(json.dumps({'controlIMDb':{'search':info(control_search),'filter':info(control_filter)}}),flush=True)
-          deadline=time.monotonic()+57*60
-          while time.monotonic()<deadline:
-              current=fetch('https://huggingface.co/api/datasets/'+hf)
-              if current[0]==200 and current[2]['sha']!=revision:
-                  raise SystemExit('Hugging Face changed outside the reviewed refinement.')
-              with ThreadPoolExecutor(max_workers=3) as pool:
-                  results=list(pool.map(probe,terms))
-              print(json.dumps({'probes':{name:observed for name,passed,observed in results}}),flush=True)
-              if all(passed for name,passed,observed in results):
-                  print('All five public Search and Filter probes passed at the exact release revision.',flush=True)
-                  break
-              time.sleep(70)
-          else:
-              raise SystemExit('Waiting period ended before live Viewer acceptance.')
+          from xml.etree import ElementTree as ET
+          
+          from rdflib import Graph, URIRef
+          
+          BASE = 'https://www.ghezelbaash.ir'
+          P = BASE + '/#saeed-ghezelbash'
+          C = BASE + '/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          ON = BASE + '/free-online-aesthetic-initial-consultation'
+          CAT = BASE + '/clinical-services-offer-catalog'
+          S = 'https://schema.org/'
+          FORBIDDEN = {'medicalSpecialty', 'availableService', 'hasOfferCatalog'}
+          LOCAL = os.environ.get('AUDIT_LOCAL_DIST')
+          errors = collections.defaultdict(list)
+          
+          def values(v):
+              return [] if v is None else v if isinstance(v, list) else [v]
+          
+          def ids(v):
+              return [x if isinstance(x, str) else x.get('@id') for x in values(v)
+                      if isinstance(x, str) or isinstance(x, dict) and '@id' in x]
+          
+          def types(node):
+              return {x.removeprefix(S).removeprefix('schema:') for x in values(node.get('@type'))}
+          
+          def read(path):
+              if LOCAL:
+                  name = 'index.html' if path == '/' else path.lstrip('/')
+                  file = Path(LOCAL)/name
+                  return (file if file.is_file() else Path(str(file)+'.html')).read_bytes()
+              url = BASE + path + ('&' if '?' in path else '?') + 'release_audit=' + str(time.time_ns())
+              req = Request(url, headers={'Cache-Control':'no-cache','Pragma':'no-cache','Accept-Encoding':'identity'})
+              for attempt in range(3):
+                  try:
+                      with urlopen(req, timeout=25) as r:
+                          assert r.status==200 and urlsplit(r.url).hostname==urlsplit(BASE).hostname, (r.status,r.url)
+                          return r.read()
+                  except OSError:
+                      if attempt == 2:
+                          raise
+                      time.sleep(0.7)
+          
+          def check(category, condition, label):
+              if not condition:
+                  errors[category].append(label)
+          
+          class Markup(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=False)
+                  self.blocks = []
+                  self.current = None
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if tag == 'script' and attrs.get('type','').lower() == 'application/ld+json':
+                      self.current = []
+              def handle_data(self, data):
+                  if self.current is not None:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag == 'script' and self.current is not None:
+                      self.blocks.append(json.loads(''.join(self.current)))
+                      self.current = None
+          
+          def definitions(doc):
+              for obj in values(doc):
+                  if not isinstance(obj,dict):
+                      continue
+                  if '@graph' in obj:
+                      yield from definitions(obj['@graph'])
+                  if obj.get('@id') and (obj.get('@type') or len(obj)>1):
+                      yield obj
+                  for key,v in obj.items():
+                      if key not in {'@graph','@context'} and isinstance(v,(dict,list)):
+                          yield from definitions(v)
+          
+          FILES = ['/release-provenance.json','/sitemap.xml','/graph.jsonld','/graph.ttl','/entity-facts.csv',
+                   '/knowledge.xml','/provenance.jsonld','/fact-map.json','/answers.txt','/llms.txt','/llms-full.txt','/physician-expertise.md']
+          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as pool:
+              raw = dict(zip(FILES,pool.map(read,FILES)))
+          revision=json.loads(raw[FILES[0]])['sourceCommit']
+          paths=[urlsplit(el.text).path or '/' for el in ET.fromstring(raw['/sitemap.xml']).findall('./{*}url/{*}loc')]
+          central=json.loads(raw['/graph.jsonld'])['@graph']
+          g={n['@id']:n for n in central if '@id' in n}
+          services={n['@id']:n for n in central if 'Service' in types(n)}
+          channels=lambda n: ids(n.get('availableChannel'))
+          for sid,n in services.items():
+              check('graph-provider',ids(n.get('provider'))==[P],sid)
+              cids=channels(n)
+              expected=[] if sid==ON else [C]
+              check('graph-channel',len(cids)==1 and cids[0] in g and 'ServiceChannel' in types(g[cids[0]]) and
+                    ids(g[cids[0]].get('serviceLocation'))==expected,sid)
+          check('graph-identity', {'Person','IndividualPhysician'} <= types(g[P]) and 'PhysiciansOffice' in types(g[C]),'types')
+          check('graph-identity',ids(g[P].get('practicesAt'))==[C] and bool(g[P].get('medicalSpecialty')) and
+                not (ids(g[P].get('sameAs')) and C in ids(g[P].get('sameAs'))) and P not in ids(g[C].get('sameAs')),'identity link')
+          check('graph-identity',all(g[C].get(p) for p in ('hasMap','address','geo','contactPoint')),'place details')
+          check('graph-clinic-projection',not(FORBIDDEN & g[C].keys()) and not g[P].get('hasOfferCatalog'),'general catalog/clinic attribution')
+          catalog=g[CAT]
+          items=values(catalog.get('itemListElement'))
+          refs=[ref for item in items for ref in ids(item.get('item'))]
+          check('graph-catalog',types(catalog)=={'ItemList'} and catalog.get('numberOfItems')==len(refs)==len(services)==len(set(refs))
+                and set(refs)==set(services) and [item.get('position') for item in items]==list(range(1,len(items)+1)),'general list')
+          offers=[n for n in central if 'Offer' in types(n)]
+          for offer in offers:
+              check('graph-offers',ids(offer.get('offeredBy'))==[P] and len(ids(offer.get('itemOffered')))==1 and
+                    all(i in services for i in ids(offer.get('itemOffered'))),offer['@id'])
+          check('graph-offers',len(offers)==2,'offer count')
+          
+          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as pool:
+              pages=dict(zip(paths,pool.map(read,paths)))
+          page_kinds=collections.Counter()
+          sample={}
+          inline=collections.Counter()
+          all_service_ids=set()
+          for route,data in pages.items():
+              parser=Markup()
+              parser.feed(data.decode('utf-8'))
+              nodes=list(n for block in parser.blocks for n in definitions(block))
+              by={}
+              top_nodes=[n for block in parser.blocks if isinstance(block,dict) for n in block.get('@graph',[]) if n.get('@id')]
+              for n in nodes:
+                  if n['@id'] not in by or len(n)>len(by[n['@id']]):
+                      by[n['@id']]=n
+              pageid=BASE+'/webpage' if route=='/' else BASE+route+'#webpage'
+              page=by.get(pageid,{})
+              main=ids(page.get('mainEntity'))
+              check('page-mainentity',len(main)==1 and main==ids(g.get(pageid,{}).get('mainEntity')),route)
+              check('page-mainentity-node',len(main)==1 and main[0] in by and main[0] in g,route)
+              kind=sorted(types(g.get(main[0],{}))) if main else []
+              label='Service' if 'Service' in kind else 'Article' if 'Article' in kind else '+'.join(kind)
+              page_kinds[label]+=1
+              if route in ('/','/filler') or label not in sample:
+                  sample[route if route in ('/','/filler') else label]={'path':route,'main':main,'types':kind}
+              if 'Article' in kind:
+                  article=by.get(main[0],{})
+                  check('article-identity',ids(article.get('author'))==[P] and bool(article.get('about')),route)
+                  if page.get('lastReviewed') or g.get(pageid,{}).get('reviewedBy'):
+                      check('article-reviewer',ids(page.get('reviewedBy'))==[P],route)
+              all_clinics=[n for n in nodes if n.get('@id')==C]
+              check('page-clinic-present',bool(all_clinics),route)
+              for n in all_clinics:
+                  check('page-clinic-projection',not(FORBIDDEN&n.keys()),route)
+              relevant=[n for n in top_nodes if 'Service' in types(n)]
+              if relevant: inline['pages_with_service']+=1
+              for n in relevant:
+                  sid=n['@id']; all_service_ids.add(sid);inline['service_occurrences']+=1
+                  check('page-provider',ids(n.get('provider'))==[P] and sid in services,route+' '+sid)
+                  cids=channels(n)
+                  check('page-channel',len(cids)==1 and 'ServiceChannel' in types(by.get(cids[0],{})) and
+                        ids(by[cids[0]].get('serviceLocation'))==([] if sid==ON else [C]) and P in by and C in by,
+                        route+' '+sid)
+                  if route=='/filler': inline['filler_services']+=1
+              for n in nodes:
+                  if 'Service' in types(n) and n not in relevant:
+                      inline['nested_typed_services']+=1
+                      check('nested-page-provider',ids(n.get('provider'))==[P],route+' '+n['@id'])
+          
+          def all_rdf(graph):
+              schema=lambda p:URIRef(S+p)
+              rdf_type=URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+              check('ttl-services',set(map(str,graph.subjects(rdf_type,schema('Service'))))==set(services),'service identifiers')
+              for sid in services:
+                  check('ttl-services',set(map(str,graph.objects(URIRef(sid),schema('provider'))))=={P},sid)
+                  ch=list(graph.objects(URIRef(sid),schema('availableChannel')))
+                  check('ttl-channel',len(ch)==1 and set(map(str,graph.objects(ch[0],schema('serviceLocation'))))==
+                        (set() if sid==ON else {C}),sid)
+              check('ttl-clinic',all(not list(graph.objects(URIRef(C),schema(p))) for p in FORBIDDEN),'clinic properties')
+          
+          ttl=Graph().parse(data=raw['/graph.ttl'].decode(),format='turtle')
+          all_rdf(ttl)
+          csv_rows=list(csv.DictReader(io.StringIO(raw['/entity-facts.csv'].decode())))
+          keys=collections.defaultdict(list)
+          for row in csv_rows: keys[(row['subject'],row['predicate'])].append(row['object'])
+          for sid in services:
+              check('csv-provider',keys[(sid,S+'provider')]==[P],sid)
+              ch=keys[(sid,S+'availableChannel')]
+              check('csv-channel',len(ch)==1 and keys[(ch[0],S+'serviceLocation')]==([] if sid==ON else [C]),sid)
+          check('csv-clinic',all(not keys[(C,S+p)] for p in FORBIDDEN),'clinic properties')
+          check('csv-rows',len({r['row_id'] for r in csv_rows})==len(csv_rows),'duplicate IDs')
+          prov=json.loads(raw['/provenance.jsonld'])
+          xml=ET.fromstring(raw['/knowledge.xml'])
+          xml_services=xml.findall('./services/service')
+          check('xml-service-ids',len(xml_services)==len(services) and {n.get('id') for n in xml_services}==set(services),'per-service ID inventory')
+          xml_with_roles=sum(1 for n in xml_services if any('provider' in str(k).lower() for k in n.attrib) or
+                             any('provider' in child.tag.lower() for child in n))
+          fact=json.loads(raw['/fact-map.json'])['records']
+          lead=[r for r in fact if r.get('answerLead')]
+          check('machine-readable-answers',len(lead)==8 and all(r.get('clinicalProviderId')==P for r in lead),'eight direct attribution answer leads')
+          review=[{'id':n['@id'],'reviewed':ids(n.get('itemReviewed')),'about':ids(n.get('about')),'mentions':ids(n.get('mentions')),
+                   'hasRating':bool(n.get('reviewRating'))} for n in central if 'Review' in types(n) and n.get('@id')]
+          mapobs=[{'id':i,'about':ids(n.get('observationAbout')),'date':n.get('observationDate'),'source':ids(n.get('prov:wasDerivedFrom'))}
+                  for i,n in g.items() if '/observation-clinic-google-maps-rating-' in i]
+          claim=g[BASE+'/claim-clinic-sole-treating-physician-and-clinical-provider']
+          check('claim-preserved',ids(claim.get('author'))==[P] and set(ids(claim.get('about')))=={P,C} and
+                {n.get('@language') for n in values(claim.get('name'))}=={'fa','en'},'solo practice bilingual claim')
+          print(json.dumps({'live':not bool(LOCAL),'source':revision,'pages':len(pages),'graphServices':len(services),
+                'inPerson':sum(1 for sid in services if sid!=ON),'online':len(services)-sum(1 for sid in services if sid!=ON),
+                'inline':inline,'distinctServicesSeenInline':len(all_service_ids),'mainEntityTypes':page_kinds,'samples':sample,
+                'ttlStatements':len(ttl),'csvStatements':len(csv_rows),'xmlServices':len(xml_services),'xmlExplicitProvider':xml_with_roles,
+                'xmlIdentityNodes':[xml.find(s).attrib for s in ('physician','clinic')],
+                'offers':[{'id':n['@id'],'provider':ids(n.get('offeredBy')),'item':ids(n.get('itemOffered'))} for n in offers],
+                'physicianAvailableServiceTypes':dict(collections.Counter('+'.join(sorted(types(g.get(i,{})))) for i in ids(g[P].get('availableService')))),
+                'aggregateRating':{'physician':g[P].get('aggregateRating'),'clinic':g[C].get('aggregateRating')},
+                'maps':mapobs,'answers':len(fact),'leadCount':len(lead),'sourceHashes':{p:hashlib.sha256(v).hexdigest() for p,v in raw.items()},
+                'reviews':review,'workshop':{k:ids(g[BASE+'/advanced-thread-lift-workshop-tehran-1403-11'].get(k)) for k in ('instructor','organizer')},
+                'referralSamples':{k:{p:g[BASE+'/'+k].get(p) for p in ('name','description','serviceType','provider','availableChannel')}
+                                   for k in ('procedure-blepharoplasty','procedure-rhinoplasty','procedure-facelift','procedure-body-aesthetic-surgery')},
+                'findings':{k:{'count':len(v),'examples':v[:12]} for k,v in errors.items()}},ensure_ascii=False))
           PY
-          gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=25" | jq -e --argjson pre "$PREFLIGHT" --argjson draft "$STAGING" --argjson first "$INITIAL" --argjson prior "$PRIOR" '(.workflow_runs | map(.id) | sort)==([$pre,$draft,$first,$prior] | sort)' >/dev/null
-          test "$(gh api "$repo/git/ref/tags/$BUILD_TAG" --jq '.object.sha')" = "$M_SHA"
-          plan="$receipt/approved-release-plan.json"
-          jq -n --arg ref "$BUILD_TAG" --arg commit "$M_SHA" --arg candidate "$PREFLIGHT" --rawfile plan "$plan" --arg digest "$PLAN_SHA" '{ref:$ref,inputs:{operation:"publish-frozen",reviewed_commit:$commit,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' | gh api -X POST "$workflow/dispatches" --input -
