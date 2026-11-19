@@ -103,7 +103,7 @@ const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption',
 const searchVideo=[...searchImage,'description','publisher','copyrightHolder','about','uploadDate','duration','embedUrl','inLanguage','hasPart'];
 const searchArticle=['@id','@type','url','headline','description','inLanguage','datePublished','dateModified','author','publisher','image','about','hasPart','mainEntityOfPage'];
 const searchQuestion=[...searchIdentity,'acceptedAnswer','answerCount','about','inLanguage'];
-const searchAnswer=[...searchIdentity,'text','about','inLanguage'];
+const searchAnswer=[...searchIdentity,'text','author','about','inLanguage'];
 const searchLeaf=[...searchIdentity,'propertyID','value','unitCode','unitText','termCode','inDefinedTermSet','credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires','roleName','hasOccupation','streetAddress','addressLocality','addressRegion','addressCountry','postalCode','latitude','longitude','dayOfWeek','opens','closes','validFrom','validThrough','contactType','availableLanguage','telephone','email','containedInPlace'];
 const searchTopic=[...searchIdentity,'about','mainEntity','medicalSpecialty','procedureType','bodyLocation','howPerformed','preparation','followup','status','medicineSystem'];
 const searchService=[...searchTopic,'serviceType','provider','availableChannel','areaServed'];
@@ -349,28 +349,47 @@ export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedOb
   if(byId.size!==nodes.length)throw new Error('Duplicate Search entity identifier');
   const rootId=nodes[0]['@id'];
   const origin=new URL(rootId).origin;
+  const {personId}=physicianIdentityIds(origin);
+  // Each answer can repeat the already present physician identity. Keep the
+  // original budget for the rest of the graph and bound the full expansion.
+  const maxWithAnswerAuthors=2*maxExpandedObjects;
   const edges=new Map();
-  function refs(value,out){
-    if(Array.isArray(value)){for(const item of value)refs(item,out);return;}
+  function refs(value,out,answerAuthor){
+    if(Array.isArray(value)){for(const item of value)refs(item,out,answerAuthor);return;}
     if(!value||typeof value!=='object')return;
     if(value['@id']) {
-      if(byId.has(value['@id']))out.push(value['@id']);
+      if(byId.has(value['@id']))out.push({target:value['@id'],answerAuthor:answerAuthor&&value['@id']===personId});
       else if(value['@id'].startsWith(origin+'/'))throw new Error('Unresolved local Search entity: '+value['@id']);
     }
-    for(const [key,item]of Object.entries(value))if(key!=='@id'&&key!=='@type')refs(item,out);
+    for(const [key,item]of Object.entries(value))if(key!=='@id'&&key!=='@type')refs(item,out,false);
   }
-  for(const node of nodes){const out=[];for(const[key,item]of Object.entries(node))if(key!=='@id'&&key!=='@type')refs(item,out);edges.set(node['@id'],out);}
+  for(const node of nodes){
+    const out=[],answer=values(node['@type']).includes('Answer');
+    for(const [key,item]of Object.entries(node))if(key!=='@id'&&key!=='@type')refs(item,out,answer&&key==='author');
+    edges.set(node['@id'],out);
+  }
   const memo=new Map(),active=new Set();
   function expanded(id){
     if(active.has(id))throw new Error('Cyclic Search entity reference: '+[...active,id].join(' -> '));
     if(memo.has(id))return memo.get(id);
-    active.add(id);let count=1,height=0;
-    for(const target of edges.get(id)){const child=expanded(target);count+=child.count;height=Math.max(height,child.height+1);if(count>maxExpandedObjects)throw new Error('Search graph expansion budget exceeded: '+rootId);}
+    active.add(id);let count=1,baseCount=1,height=0;
+    for(const {target,answerAuthor} of edges.get(id)){
+      const child=expanded(target);
+      count+=child.count;
+      if(!answerAuthor)baseCount+=child.baseCount;
+      height=Math.max(height,child.height+1);
+      if(baseCount>maxExpandedObjects||count>maxWithAnswerAuthors)throw new Error('Search graph expansion budget exceeded: '+rootId);
+    }
     if(height>maxDepth)throw new Error('Search graph depth budget exceeded');
-    const result={count,height};active.delete(id);memo.set(id,result);return result;
+    const result={count,baseCount,height};active.delete(id);memo.set(id,result);return result;
   }
-  let total=0,height=0;
-  for(const id of byId.keys()){const result=expanded(id);total+=result.count;height=Math.max(height,result.height);if(total>maxExpandedObjects)throw new Error('Search graph expansion budget exceeded: '+rootId);}
+  let total=0,baseTotal=0,height=0;
+  for(const id of byId.keys()){
+    const result=expanded(id);
+    total+=result.count;baseTotal+=result.baseCount;
+    height=Math.max(height,result.height);
+    if(baseTotal>maxExpandedObjects||total>maxWithAnswerAuthors)throw new Error('Search graph expansion budget exceeded: '+rootId);
+  }
   return {nodes:nodes.length,expandedObjects:total,maxDepth:height};
 }
 

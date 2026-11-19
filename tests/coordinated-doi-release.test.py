@@ -226,6 +226,46 @@ class Guards(unittest.TestCase):
    with self.assertRaises(AssertionError):release.assert_viewer_result_rows(broken,expected,'fixture','search')
 
 class StagedPublishGuards(unittest.TestCase):
+ def test_public_verification_requires_the_exact_doi_landing_page(self):
+  import doi_release
+  from unittest.mock import patch, Mock
+  archive=release.P['currentArchive'];concept=release.P['concept']
+  record=archive['recordId'];previous=release.COHORT['previousZenodoRecord']
+  landing=f'https://zenodo.org/records/{record}'
+  cases=[
+   (200,landing,None),
+   (200,landing+'0',AssertionError),
+   (200,f'https://example.org/records/{record}',AssertionError),
+   (200,f'https://zenodo.org/doi/{archive["doi"]}',AssertionError),
+   (302,landing,AssertionError),
+   (404,archive['url'],doi_release.requests.HTTPError),
+  ]
+  for status,url,error in cases:
+   with self.subTest(status=status,url=url), tempfile.TemporaryDirectory() as folder:
+    root=Path(folder)
+    release.dump(root/'payload.json',{'files':{},'sourceCommit':'a'*40,'upstreamParentChecksums':{}})
+    (root/'live-downloads').mkdir()
+    with doi_release.zipfile.ZipFile(root/'live-downloads'/Path(release.P['downloadBindings']['bundle']).name,'w') as zipped:
+     zipped.writestr('checksums.sha256','')
+    current=Mock()
+    current.json.return_value={'id':record,'doi':archive['doi'],'conceptdoi':concept['doi'],
+     'metadata':{'version':archive['packagingVersion'],'resource_type':{'type':'dataset'}},'files':[]}
+    parent=Mock();parent.json.return_value={'files':[]}
+    resolved=doi_release.requests.Response();resolved.status_code=status;resolved.url=url
+    replies={f'https://zenodo.org/api/records/{record}':current,
+             f'https://zenodo.org/api/records/{previous}':parent,
+             concept['url']:Mock(url=landing),archive['url']:resolved}
+    with patch.object(doi_release.requests,'get',side_effect=lambda url,**_:replies[url]) as get, \
+         patch('doi_validation.validate_archive',return_value={'status':'PASS'}):
+     if error:
+      with self.assertRaises(error):doi_release.verify_published(previous,root)
+      self.assertFalse((root/'publication-report.json').exists())
+     else:
+      doi_release.verify_published(previous,root)
+      result=json.loads((root/'publication-report.json').read_text())
+      self.assertEqual(result['exactDoiLandingUrl'],landing)
+     self.assertIn(archive['url'],[call.args[0] for call in get.call_args_list])
+
  def test_description_typography_does_not_hide_content_or_link_changes(self):
   import doi_release
   expected='<p>This record\u2019s files: <a href="https://doi.org/10.5281/zenodo.23474664">archive</a>.</p>'
