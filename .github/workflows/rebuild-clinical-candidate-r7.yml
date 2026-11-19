@@ -1,49 +1,10 @@
-name: Rebuild corrected clinical release candidate
+name: Replace the private Zenodo draft with the verified candidate
 on:
   push:
     branches: [codex/rebuild-clinical-candidate-r7-2026-11-19]
 permissions: {}
 jobs:
-  freeze:
-    name: Verify and register the corrected source
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    env:
-      APPLICATION_SHA: fb8233f294a946bba7574641bb301ef2f895696c
-      BUILD_SHA: 36aff34d1342a5e22a6b1923b6922e9c4ccd0c33
-      APPLICATION_TAG: source-frozen-2026-11-19-clinical-attribution-1-3-6-r7
-      BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r7
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: clinical-attribution-1-3-6-exact-doi
-          fetch-depth: 0
-      - name: Check exact source and add the new annotated tags
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$BUILD_SHA"
-          test "$(git rev-parse HEAD^)" = "$APPLICATION_SHA"
-          test "$(git rev-parse "$APPLICATION_SHA^{tree}")" = 05feb2044d638459d407ec5a96fd9b317eaa019a
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          ensure_tag() {
-            local tag="$1" commit="$2" message="$3"
-            if git show-ref --verify --quiet "refs/tags/$tag"; then
-              test "$(git cat-file -t "refs/tags/$tag")" = tag
-              test "$(git rev-parse "refs/tags/$tag^{commit}")" = "$commit"
-            else
-              git tag -a "$tag" "$commit" -m "$message"
-            fi
-          }
-          ensure_tag "$APPLICATION_TAG" "$APPLICATION_SHA" 'Reviewed clinical attribution application snapshot 1.3.6 r7'
-          ensure_tag "$BUILD_TAG" "$BUILD_SHA" 'Reviewed clinical attribution coordinated build 1.3.6 r7'
-          python .github/scripts/source_freeze.py check
-          git push --atomic origin "refs/tags/$APPLICATION_TAG" "refs/tags/$BUILD_TAG"
-  rebuild:
-    name: Rebuild and validate the four-platform package
-    needs: freeze
+  stage:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -51,13 +12,20 @@ jobs:
       contents: read
     env:
       GH_TOKEN: ${{ github.token }}
-      BUILD_SHA: 36aff34d1342a5e22a6b1923b6922e9c4ccd0c33
+      SOURCE_SHA: 36aff34d1342a5e22a6b1923b6922e9c4ccd0c33
       BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r7
       PLAN_SHA256: 28b61ea45e34b71c3e656ef490b6902037f670ef9159d906071203d7e2d94b63
+      CANDIDATE_RUN: '44433785878'
+      CANDIDATE_ARTIFACT: '14487644050'
     steps:
-      - name: Dispatch build and validation only
+      - name: Verify the exact artifact and dispatch private draft staging
         run: |
           set -euo pipefail
+          api="repos/$GITHUB_REPOSITORY/actions"
+          gh api "$api/runs/$CANDIDATE_RUN" | jq -e --arg sha "$SOURCE_SHA" \
+            '.head_sha == $sha and .conclusion == "success" and .event == "workflow_dispatch" and .path == ".github/workflows/coordinated-doi-release.yml"'
+          gh api "$api/runs/$CANDIDATE_RUN/artifacts" | jq -e --argjson id "$CANDIDATE_ARTIFACT" \
+            '.artifacts | map(select(.name == "frozen-coordinated-candidate" and .id == $id and .expired == false)) | length == 1'
           plan="$RUNNER_TEMP/approved-release-plan.json"
           base64 -d > "$plan" <<'PLAN_BASE64'
           ewogICJhcHByb3ZlZFB1YmxpY2F0aW9uU2NvcGUiOiBbCiAgICAid2Vic2l0ZSIsCiAgICAiaGYi
@@ -447,7 +415,7 @@ jobs:
           bnRJZCI6ICJkZjcyN2M2ZC00OThhLTQyNDktODc4Yi1mZjA3MzkyMWEyY2MiCn0K
           PLAN_BASE64
           printf '%s  %s\n' "$PLAN_SHA256" "$plan" | sha256sum --check -
-          jq -n --arg ref "$BUILD_TAG" --arg commit "$BUILD_SHA" --rawfile plan "$plan" \
-            --arg digest "$PLAN_SHA256" \
-            '{ref:$ref,inputs:{operation:"preflight",reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest}}' \
-            | gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/coordinated-doi-release.yml/dispatches" --input -
+          jq -n --arg ref "$BUILD_TAG" --arg commit "$SOURCE_SHA" --rawfile plan "$plan" \
+            --arg digest "$PLAN_SHA256" --arg candidate "$CANDIDATE_RUN" \
+            '{ref:$ref,inputs:{operation:"stage-draft",reviewed_commit:$commit,approved_plan_json:$plan,approved_plan_sha256:$digest,candidate_run:$candidate}}' \
+            | gh api --method POST "$api/workflows/coordinated-doi-release.yml/dispatches" --input -
