@@ -1,53 +1,85 @@
-name: Read Kaggle processing status for 1.3.6
+name: Check exact and default public Kaggle files for 1.3.6
 on:
   push:
     branches: [codex/clinical-release-control-2026-11-19]
-permissions:
-  contents: read
+permissions: {}
 jobs:
   observe:
     if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 8
+    permissions:
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: f66aff6ada76a3694cb88b7de54d678a6b5f29b6
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: python -m pip install 'kaggle==2.2.4' 'six>=1.17,<2' requests
-      - name: Read the Kaggle owner version and public default
-        env:
-          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      - name: Compare public output with the approved frozen hashes
         run: |
-          python - <<'PY'
-          import json
-          import requests
-          from kaggle.api.kaggle_api_extended import KaggleApi
-          dataset = 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
-          api = KaggleApi()
-          api.authenticate()
-          raw = json.loads(api.dataset_status(dataset, format='json(status,current_version_number)'))
-          response = requests.get('https://api.kaggle.com/v1/datasets/view/' + dataset, timeout=25)
-          response.raise_for_status()
-          info = response.json()
-          public = {'observed_owner_version':raw['current_version_number'], 'observed_owner_status':raw['status'], 'observed_public_default':info['currentVersionNumber'],'recent_public_versions':[{k:x.get(k) for k in ('versionNumber','status')} for x in info.get('versions',[]) if x.get('versionNumber',0)>=35]}
-          print(json.dumps(public))
-          import hashlib
+          set -euo pipefail
+          gh run download 44471851883 --repo "$GITHUB_REPOSITORY" --name coordinated-release-evidence --dir "$RUNNER_TEMP/preflight"
+          FROZEN_MANIFEST="$RUNNER_TEMP/preflight/frozen-sha256.json" python - <<'PY'
           from concurrent.futures import ThreadPoolExecutor
-          options = {'kaggle_exact_manifest': ('https://www.kaggle.com/api/v1/datasets/download/' + dataset + '/kaggle-manifest.json', {'datasetVersionNumber':36,'raw':'true'}), 'hf_preview': ('https://datasets-server.huggingface.co/first-rows',{'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train'}), 'hf_search': ('https://datasets-server.huggingface.co/search',{'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train','query':'بوتاکس'}), 'hf_filter': ('https://datasets-server.huggingface.co/filter',{'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train','where':chr(34)+'language'+chr(34)+'='+chr(39)+'fa'+chr(39),'length':2})}
-          def probe(item):
-              name,(url,params)=item
+          from urllib.parse import quote, urlencode
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError
+          import hashlib
+          import io
+          import json
+          import os
+          import time
+          import zipfile
+          from pathlib import Path
+          root = 'https://www.kaggle.com/api/v1/datasets/'
+          dataset = 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+          expected = json.loads(Path(os.environ['FROZEN_MANIFEST']).read_text())['kaggle']
+          expected = {k:v for k,v in expected.items() if k not in {'dataset-metadata.json','kernel-metadata.json'}}
+          def read(url):
+              with urlopen(Request(url, headers={'Cache-Control':'no-cache','Pragma':'no-cache'}), timeout=35) as r:
+                  return r.read(), r.headers
+          def control_query(label, base):
               try:
-                  r=requests.get(url,params=params,timeout=25,headers={'Cache-Control':'no-cache'})
-                  data={'status':r.status_code,'revision':r.headers.get('X-Revision')}
-                  if r.ok:
-                      j=r.json()
-                      if name.startswith('kaggle'):data.update({k:j.get(k) for k in ('desired_kaggle_version','website_source_commit','upstream_revision')})
-                      else:data['rows']=len(j.get('rows',[]))
-                  return name,data
-              except Exception as exc:
-                  return name,{'error':type(exc).__name__}
-          with ThreadPoolExecutor(max_workers=4) as pool:print(json.dumps({'public_diagnostics':dict(pool.map(probe,options.items()))}))
+                  data,_=read(base)
+                  j=json.loads(data)
+                  return label,{'version':j.get('currentVersionNumber')}
+              except HTTPError as e:
+                  return label,{'status':e.code}
+              except Exception as e:
+                  return label,{'error':type(e).__name__}
+          def compare_zip(label, suffix):
+              try:
+                  body,_=read(root+'download/'+dataset+suffix)
+                  with zipfile.ZipFile(io.BytesIO(body)) as z:
+                      names={n for n in z.namelist() if not n.endswith('/')}
+                      matched=sum(hashlib.sha256(z.read(n)).hexdigest()==expected[n] for n in names & expected.keys())
+                      data=json.loads(z.read('kaggle-manifest.json'))
+                  return label,{'desired_version':data.get('desired_kaggle_version'),'source':data.get('website_source_commit'),'matching_files':matched,'expected_files':len(expected),'inventory_matches':names==set(expected)}
+              except HTTPError as e:
+                  return label,{'status':e.code}
+              except Exception as e:
+                  return label,{'error':type(e).__name__}
+          def exact_file(item):
+              name, digest = item
+              try:
+                  body,_=read(root+'download/'+dataset+'/'+quote(name,safe='')+'?datasetVersionNumber=36&raw=true')
+                  return name, hashlib.sha256(body).hexdigest()==digest
+              except HTTPError as e:
+                  return name, e.code
+              except Exception as e:
+                  return name, type(e).__name__
+          def viewer_probe(params):
+              try:
+                  q=urlencode({'dataset':'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','config':'clinical_passages','split':'train','live_audit':time.time_ns(),**params[1]})
+                  data,headers=read('https://datasets-server.huggingface.co/'+params[0]+'?'+q)
+                  return params[0],{'revision':headers.get('X-Revision'),'rows':len(json.loads(data).get('rows',[]))}
+              except HTTPError as e:
+                  return params[0],{'status':e.code}
+              except Exception as e:
+                  return params[0],{'error':type(e).__name__}
+          view='https://api.kaggle.com/v1/datasets/view/'+dataset
+          controls=dict(control_query(k,v) for k,v in {'kaggle_api':view,'kaggle_api_cache_bust':view+'?release_audit='+str(time.time_ns()),'kaggle_www':root+'view/'+dataset}.items())
+          with ThreadPoolExecutor(max_workers=5) as pool:
+              exact=dict(pool.map(exact_file,expected.items()))
+              zips=dict(pool.map(lambda v:compare_zip(*v),[('exact_zip','?datasetVersionNumber=36'),('default_zip','')]))
+              viewer=dict(pool.map(viewer_probe,[('first-rows',{}),('search',{'query':'بوتاکس','length':2}),('filter',{'where':chr(34)+'language'+chr(34)+'='+chr(39)+'fa'+chr(39),'length':2})]))
+          print(json.dumps({'current_public_check':controls,'kaggle_exact_files':{'matching':sum(v is True for v in exact.values()),'expected':len(exact),'failures':{k:v for k,v in exact.items() if v is not True}},'kaggle_zips':zips,'hf_viewer':viewer}))
           PY
