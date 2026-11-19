@@ -276,3 +276,19 @@ test('Search graph depth is checked even when a shared child was memoized earlie
   const root={'@id':pageId,'@type':'MedicalWebPage',about:{'@id':shared['@id']}};
   assert.throws(()=>assertBoundedSearchDocument({'@graph':[leaf,shared,root]},{maxDepth:1}),/depth budget/);
 });
+
+test('answer authorship has a bounded allowance without relaxing other Search references', () => {
+  const leaves=['first','second'].map(name=>({'@id':origin+'/'+name,'@type':'Thing'}));
+  const physician={'@id':origin+'/#saeed-ghezelbash','@type':'Person',knowsAbout:leaves.map(node=>({'@id':node['@id']}))};
+  const author={'@id':physician['@id']};
+  const answer={'@id':origin+'/answer','@type':'Answer',author};
+  const page={'@id':pageId,'@type':'MedicalWebPage',about:[{'@id':answer['@id']},author]};
+  const document={'@graph':[page,answer,physician,...leaves]};
+  const limits={maxExpandedObjects:11};
+  assert.equal(assertBoundedSearchDocument(document,limits).expandedObjects,17);
+  answer.author=[author,author];
+  assert.throws(()=>assertBoundedSearchDocument(document,limits),/expansion budget/);
+  delete answer.author;
+  answer.about=author;
+  assert.throws(()=>assertBoundedSearchDocument(document,limits),/expansion budget/);
+});

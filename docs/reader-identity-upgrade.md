@@ -13,7 +13,9 @@ Build the reserved edition from the exact management checkout selected by its re
 ```sh
 unset ARCHIVE_SOURCE_COMMIT
 export RELEASE_PLAN_PATH=/absolute/path/to/approved-release-plan.json
-export PREPARE_RESERVED_DOI=23965042
+python3 .github/scripts/release_plan.py --check-checkout
+PREPARE_RESERVED_DOI="$(python3 -c 'import json, os; print(json.load(open(os.environ["RELEASE_PLAN_PATH"]))["reservation"]["reservedRecord"])')"
+export PREPARE_RESERVED_DOI
 npm ci
 npm run build
 node --test tests/physician-page-output.test.mjs tests/guide-search-manifest.test.mjs
@@ -40,6 +42,6 @@ Release sealing retains explicit `/404` and `/404.html` no-store/noindex policie
 
 ## Publication boundary
 
-The edition binds real DOI `10.5281/zenodo.23965042`, Dataset/source `1.3.5` and archive packaging `1.3.5+zenodo.1`. Application checkpoint C and its management child M preserve the historical checkpoints and pin the new source independently. The guard checks the selected new snapshot; old tags are never moved to make it pass. Historical archive sources and the protected positioning subcorpus retain their own provenance and versions.
+The approved plan’s `policy.currentArchive` binds the selected exact DOI, Dataset/source version and archive packaging version. Application checkpoint C and its management child M preserve the historical checkpoints and pin the new source independently. The guard checks the selected new snapshot; old tags are never moved to make it pass. Historical archive sources and the protected positioning subcorpus retain their own provenance and versions.
 
 The reviewed release-plan adapter and coordinated workflow validate the selected policy, source, tool inventory, frozen candidate, public platform versions and runtime gates before publication. Website, Hugging Face, Kaggle and Notebook verification precedes final Zenodo publication. No new DOI, public version, deployment or Google indexing outcome is implied by local test results.

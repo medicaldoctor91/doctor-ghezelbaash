@@ -15,11 +15,11 @@ This repository contains the authored website for **Saeed Ghezelbash / سعید 
 | `.github/workflows/` | Explicitly dispatched maintenance and publication entrypoints |
 | `tests/` | Source, schema, package, provenance and preservation contracts |
 
-The homepage exposes a bounded 85-node initial JSON-LD projection. The complete 1,602-node canonical graph retains the original 1,600 identities and remains in its inert `canonical-entity-graph` JSON container and at `/graph.jsonld`. The 72 authored pages retain their own metadata and route-specific schemas, including dedicated `Article` entities on 62 clinical-guide pages. The physician-owned practice is a practice profile. Structured-data recognition and search indexing are separate observations.
+The homepage exposes a bounded initial JSON-LD projection. The complete canonical graph is available in its inert `canonical-entity-graph` JSON container and at `/graph.jsonld`. The 72 authored pages retain their own metadata and route-specific schemas. Clinical guides have dedicated `Article` entities, and the physician-owned practice has a separate practice profile. Structured-data recognition and search indexing are separate observations.
 
 ## Source checkpoint
 
-Dataset/source version `1.3.5` uses exact archive packaging `1.3.5+zenodo.1` and real DOI `10.5281/zenodo.23965042`. The protected positioning corpus remains `1.3.4`. The application checkpoint and its separate management/build child are recorded in [source freeze](docs/source-freeze.md); release builds use the exact reviewed management tag and external plan. A default-branch merge is not relabelled as that build source. Earlier frozen and archive refs retain their original contents.
+Read the selected Dataset/source version, archive packaging version and exact DOI from the approved release plan’s `policy.currentArchive` fields. The protected positioning corpus has its own version, recorded in `positioningCorpusRelease`. The application checkpoint and its separate management/build child are recorded in [source freeze](docs/source-freeze.md); release builds use the exact reviewed management tag and external plan. A default-branch merge is not relabelled as that build source. Earlier frozen and archive refs retain their original contents.
 
 A source tag identifies repository contents. Platform publication and execution receipts establish live availability. See the [coordinated release contract](docs/coordinated-release-plan.md), [historical maintenance and recovery](docs/maintenance-release.md) and [DOI policy](docs/doi-policy.md) for the separate source, collection, snapshot and provider-version roles.
 
@@ -31,7 +31,9 @@ Use the Node version in `.nvmrc`, the committed npm lockfile and the exact revie
 npm ci
 unset ARCHIVE_SOURCE_COMMIT
 export RELEASE_PLAN_PATH=/absolute/path/to/approved-release-plan.json
-export PREPARE_RESERVED_DOI=23965042
+python3 .github/scripts/release_plan.py --check-checkout
+PREPARE_RESERVED_DOI="$(python3 -c 'import json, os; print(json.load(open(os.environ["RELEASE_PLAN_PATH"]))["reservation"]["reservedRecord"])')"
+export PREPARE_RESERVED_DOI
 npm run build
 ```
 

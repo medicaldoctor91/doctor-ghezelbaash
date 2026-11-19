@@ -64,7 +64,7 @@ def context(source_commit,run_id,maintenance_date=None):
 
 def sync_table_counts(text,tables):
     for name,spec in tables.items():
-        pattern=r'(\*\*'+re.escape(name)+r':?\*\*:?\s*)([\d,]+)'
+        pattern=r'(\*\*'+re.escape(name)+r':?\*\*(?: \(default\))?:?[ \t]*)([\d,]+)'
         text=re.sub(pattern,lambda match:match[1]+(format(spec['rows'],',d') if ',' in match[2] else str(spec['rows'])),text)
     return text
 

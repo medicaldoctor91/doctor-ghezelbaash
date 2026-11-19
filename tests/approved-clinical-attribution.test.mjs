@@ -17,11 +17,32 @@ test('approved plan: physician is the sole clinical Service provider', () => {
   assert.ok(ids(node(PERSON).practicesAt).includes(CLINIC));
 });
 
-test('approved plan: clinic has no specialty, service offering or offer catalog properties', () => {
+test('the clinic describes the place of care and retains its separate local identity', () => {
+  const origin = SOURCE.canonicalOrigin;
   const clinic = node(CLINIC);
   assert.ok(clinic);
-  for (const property of ['medicalSpecialty', 'availableService', 'hasOfferCatalog']) {
+  for (const property of ['medicalSpecialty', 'availableService', 'hasOfferCatalog', 'areaServed']) {
     assert.equal(values(clinic[property]).length, 0, 'forbidden clinic property: ' + property);
+  }
+  assert.deepEqual(ids(clinic.owner), [PERSON]);
+  assert.ok(clinic.address && clinic.geo && clinic.hasMap && clinic.openingHoursSpecification);
+  assert.deepEqual(ids(node(PERSON).medicalSpecialty), [origin + '/medical-specialty-aesthetic-medicine']);
+  assert.deepEqual(ids(node(PERSON).areaServed), [origin + '/country-iran', origin + '/country-iraq']);
+  const googleIdentifiers = entity => ids(entity.identifier).map(node)
+    .map(identifier => identifier?.value).filter(value => typeof value === 'string' && value.startsWith('/g/'));
+  assert.deepEqual(googleIdentifiers(clinic), ['/g/11r3rzdtb3']);
+  assert.deepEqual(googleIdentifiers(node(PERSON)), ['/g/11nqdfk76c']);
+  assert.match(values(clinic.description).find(entry => entry['@language'] === 'en')['@value'],
+    /in-person care location of Dr\. Saeed Ghezelbash/);
+  assert.match(node(origin + '/in-person-clinic-service-channel').description, /provided by Dr\. Saeed Ghezelbash/);
+  const practicePage = node(CLINIC + '#webpage');
+  assert.deepEqual(ids(practicePage.mainEntity), [CLINIC]);
+  assert.deepEqual(ids(practicePage.about), [CLINIC, PERSON]);
+  assert.equal(practicePage.specialty, undefined);
+  for (const slug of ['profile-instagram-doctor-ghezelbaash', 'evidence-instagram']) {
+    const profile = node(origin + '/' + slug);
+    assert.deepEqual(ids(profile.mainEntity), [PERSON]);
+    assert.deepEqual(new Set(ids(profile.about)), new Set([PERSON, CLINIC]));
   }
 });
 
@@ -39,6 +60,9 @@ test('approved plan: in-person service channel locates the practice', () => {
     const expected = online ? 'https://www.ghezelbaash.ir/online-consultation-channel' : channel['@id'];
     assert.deepEqual(ids(service.availableChannel), [expected], service['@id']);
     assert.deepEqual(ids(node(expected).serviceLocation), online ? [] : [CLINIC], service['@id']);
+    for (const areaId of ids(service.areaServed)) {
+      assert.ok(!values(node(areaId)?.['@type']).includes('City'), service['@id'] + ' uses its channel for city-level location');
+    }
   }
 });
 

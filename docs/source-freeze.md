@@ -1,5 +1,19 @@
 # Fixed source and isolated additions
 
+The refined 1.3.6 application checkpoint `d579b61e662c22515dbeab5a936a195169fb2a8d` has tree `8517bd4f385a157961b4a92723948bde932a45e2` and 204 application files. The platform card uses measured Viewer table counts and the release plan updates the existing reserved record.
+
+The coordinated 1.3.6 application checkpoint `957f4b9770a3c14aca01dcab702f16d859138974` has tree `8bd43ffe41c8473e08551ca2eaf49a7db0422bc2` and 204 application files. The release instructions and local build examples read the selected archive version and DOI bindings from the exact approved plan.
+
+The coordinated 1.3.6 application checkpoint `100f5a2f27ee1639884d75afadad7ccf6c02df00` has tree `e8be045de4f25bf6582a340ff4145cee6c97a517` and 204 application files. The Persian clinical guide includes its verified chronic migraine service as a topic and uses the existing channel to locate in-person treatment.
+
+The coordinated 1.3.6 application checkpoint `971448c5af10b3e1e10f687ed80767338e96b4f9` has tree `75b386aebe013e616612fcd47b3b80ca587c545c` and 204 application files. Its direct management child restores the four source-freeze files. The exported SHACL rules enforce the practice's place-only service role and the physician's primary subject on the professional Instagram identity.
+
+The coordinated 1.3.6 application checkpoint `66cbfb40b132539313865db4fa03eb078bc84d1d` has tree `80928c7626f60b85cfa4d825516d04db43381e3f` and 204 application files. Its direct management child restores the four source-freeze files. The clinical data keeps the physician and his practice as separately identified entities and makes the physician the sole clinical provider and the practice the location of his in-person services.
+
+The coordinated 1.3.6 application checkpoint `f58c5cca179bed286b2289792c3deae0de92bff1` has tree `9c527caa864c700f25d4818e6e8ab054b808298f` and 204 application files. Its direct management child restores the four source-freeze files. The focused Search documents preserve each answer's canonical author and check the bounded expansion of those links.
+
+The coordinated 1.3.6 application checkpoint `fb8233f294a946bba7574641bb301ef2f895696c` has tree `05feb2044d638459d407ec5a96fd9b317eaa019a` and 204 application files. Its direct management child restores the four source-freeze files. Final publication verification now follows the exact edition DOI and requires its public landing page to return HTTP 200 for the intended Zenodo record.
+
 The coordinated 1.3.6 application checkpoint `d5af127c8554d201b5c77bcf32b56c4d849f5b47` has tree `37e766a4e7a2fc042f3c169bed7ceccd5cc69eac`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r6`. Its direct management child restores the four source-freeze files. Supporting articles on service-focused pages are linked with `hasPart`. The named service remains the sole `mainEntity`.
 
 The coordinated 1.3.6 application checkpoint `fe10f7a348dd5aa1f95b78e50919ba31bac06eca` has tree `84e89bb7776c8ebbfed578d89f4c9e78eb4700cc`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r5`. Its direct child restores the four freeze-management files. Platform validation checks the exact canonical SHACL constraints rather than counting shapes from a prior edition.

@@ -66,7 +66,7 @@ test('the canonical sole-provider claim has no exception for another service pro
   for (const service of services) assert.deepEqual(refIds(service.provider), [PERSON], service['@id']);
 });
 
-test('published SHACL rejects clinic employment edges while allowing unrelated affiliations', () => {
+test('published SHACL rejects clinic employment and service coverage while allowing unrelated affiliations', () => {
   const result = spawnSync(process.env.PYTHON ?? 'python', ['-c', `
 import json,sys,rdflib
 from pyshacl import validate
@@ -79,6 +79,10 @@ selected=['https://www.ghezelbaash.ir/PhysicianEntityShape','https://www.ghezelb
 def conforms():
     return validate(graph,shacl_graph=shapes,use_shapes=selected)[0]
 assert conforms(),'Current graph must conform'
+coverage=(clinic,schema.areaServed,rdflib.URIRef('https://www.ghezelbaash.ir/country-iran'))
+graph.add(coverage)
+assert not conforms(),'The physical practice was accepted as having its own service area'
+graph.remove(coverage)
 for triple in [(person,schema.worksFor,clinic),(person,schema.affiliation,clinic),(clinic,schema.employee,person)]:
     graph.add(triple)
     assert not conforms(),'Legacy relationship accepted: '+str(triple)

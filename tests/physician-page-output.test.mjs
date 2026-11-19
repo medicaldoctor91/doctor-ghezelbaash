@@ -26,6 +26,7 @@ test('every built public HTML page preserves its author, main subject, localized
     entry.match(/<loc>([^<]+)<\/loc>/)?.[1],entry.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1],
   ]));
   let profiles=0;
+  const answersWithVerifiedAuthors=new Set();
   for(const resource of SOURCE.routes.resources) {
     const home=resource.path==='/',url=origin+resource.path;
     const filename=home?'index.html':resource.path.slice(1)+'.html';
@@ -72,6 +73,14 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.ok(language,resource.path+' declares its document language');
     assert.equal(attr(element,'dir'),language.startsWith('en')?'ltr':'rtl',resource.path+' writing direction');
     assert.ok(actual.has(practiceId),resource.path+' keeps the same physician-owned practice');
+    for(const answer of actual.values()) {
+      if(!values(answer['@type']).includes('Answer'))continue;
+      const answerId=answer['@id'];
+      const authoredAnswer=canonical.get(answerId);
+      assert.ok(authoredAnswer,answerId+' has a canonical source');
+      assert.deepEqual(ids(answer.author),ids(authoredAnswer.author),answerId+' preserves its canonical author');
+      if(authoredAnswer.author)answersWithVerifiedAuthors.add(answerId);
+    }
     for(const service of actual.values()) {
       if(!values(service['@type']).includes('Service'))continue;
       assert.deepEqual(ids(service.provider),[personId],service['@id']+' provider');
@@ -86,8 +95,22 @@ test('every built public HTML page preserves its author, main subject, localized
       for(const slug of ['facial-and-lip-dermal-filler','body-dermal-filler','autologous-fat-grafting','gluteal-body-filler'])
         assert.ok(values(actual.get(origin+'/procedure-'+slug)?.['@type']).includes('Service'),slug);
     }
-    for(const property of ['medicalSpecialty','availableService','hasOfferCatalog'])
+    if(resource.path==='/botox-contraindications-and-precautions') {
+      const serviceId=origin+'/service-botulinum-toxin-chronic-migraine';
+      const article=actual.get(url+'#article');
+      assert.deepEqual(ids(page.mainEntity),[article['@id']]);
+      assert.ok(ids(article.about).includes(serviceId));
+      assert.ok(ids(page.about).includes(serviceId));
+      assert.ok(values(actual.get(serviceId)?.['@type']).includes('Service'));
+      assert.equal(actual.get(serviceId).areaServed,undefined);
+      assert.ok(find(dom,node=>attr(node,'id')==='migraine-botox-candidacy'));
+    }
+    for(const property of ['medicalSpecialty','availableService','hasOfferCatalog','areaServed'])
       assert.ok(!(property in actual.get(practiceId)),resource.path+' clinic '+property);
+    if(resource.pagePurpose==='clinic-profile') {
+      assert.deepEqual(ids(page.mainEntity),[practiceId],resource.path+' practice page subject');
+      assert.deepEqual(ids(page.about),[practiceId,personId],resource.path+' practice and physician identities');
+    }
     for(const key of ['name','description'])if(key in clinic) {
       // The practice currently has Persian and English authored literals.
       // Other document languages retain the renderer's English fallback.
@@ -106,4 +129,7 @@ test('every built public HTML page preserves its author, main subject, localized
     }
   }
   assert.equal(profiles,2,'the homepage and the professional biography are physician profiles');
+  assert.deepEqual(answersWithVerifiedAuthors,new Set([...canonical.values()]
+    .filter(node=>values(node['@type']).includes('Answer')&&node.author)
+    .map(node=>node['@id'])),'all authored answers preserve their author in the built pages');
 });
