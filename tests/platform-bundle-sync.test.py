@@ -230,6 +230,10 @@ class PackageMaintenanceTests(unittest.TestCase):
             self.assertEqual([bundle.reconstruct(row, set(spec['jsonEncodedFields']))
                               for row in pq.read_table(package / spec['file']).to_pylist()], expected_queries)
             readme = (package / 'README.md').read_text()
+            passage_count = bundle.load(package / 'viewer/packaging.json')['tables']['clinical_passages']['rows']
+            label = '**clinical_passages** (default):' if package == hf else '**clinical_passages:**'
+            expected_count = str(passage_count) if package == hf else f'{passage_count:,}'
+            self.assertIn(f'{label} {expected_count} authored', readme)
             declared = re.findall(r'Dataset content baseline \*\*v([^*]+)\*\*', readme)
             self.assertEqual(declared, [bundle.load(hf / 'datapackage.json')['version']])
             self.assertIn('preserved positioning corpus **v1.3.4**', readme)
