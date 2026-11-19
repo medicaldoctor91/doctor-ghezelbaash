@@ -7,7 +7,7 @@ import hashlib
 import io
 import subprocess
 import zipfile
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 from pathlib import Path
 
 import requests
@@ -301,6 +301,7 @@ def verify_published(previous, work):
     from doi_validation import validate_archive, validate_policy
     p=policy();payload=json.loads((work/'payload.json').read_text());record=p['currentArchive']['recordId']
     response=requests.get('https://zenodo.org/api/records/'+str(record),timeout=90);response.raise_for_status();live=response.json()
+    assert live['id'] == record, 'Published Zenodo record ID differs'
     assert live['doi']==p['currentArchive']['doi'] and live['conceptdoi']==p['concept']['doi']
     assert live['metadata']['version']==p['currentArchive']['packagingVersion'] and live['metadata']['resource_type']['type']=='dataset'
     assert {item['key']:item['checksum'].removeprefix('md5:') for item in live['files']}=={key:spec['md5'] for key,spec in payload['files'].items()}
@@ -329,9 +330,17 @@ def verify_published(previous, work):
     assert {item['key']:item['checksum'] for item in parent.json()['files']}==payload['upstreamParentChecksums'], 'Previous archive changed'
     concept=requests.get(p['concept']['url'],timeout=60);concept.raise_for_status()
     assert '/'+str(record) in concept.url, ('Concept DOI has not converged',concept.url)
+    # A public record can be available through the API before its DOI resolves.
+    exact = requests.get(p['currentArchive']['url'], timeout=60)
+    exact.raise_for_status()
+    landing = urlsplit(exact.url)
+    assert exact.status_code == 200, ('Exact DOI landing page HTTP status', exact.status_code)
+    assert (landing.scheme == 'https' and landing.netloc == 'zenodo.org'
+            and landing.path.rstrip('/') in (f'/records/{record}', f'/record/{record}')), (
+                'Exact DOI did not resolve to the published Zenodo record', exact.url)
     report={'status':'PASS','record':record,'doi':live['doi'],'conceptDoi':live['conceptdoi'],'sourceCommit':payload['sourceCommit'],
             'filesDownloadedAndSha256Verified':len(live['files']),'zipSha256':hashlib.sha256((downloads/zipfile_name).read_bytes()).hexdigest(),
-            'previousRecordUnchanged':previous,'liveValidation':result}
+            'previousRecordUnchanged':previous,'exactDoiLandingUrl':exact.url,'liveValidation':result}
     dump(work/'publication-report.json',report);print(json.dumps(report),flush=True)
 
 
