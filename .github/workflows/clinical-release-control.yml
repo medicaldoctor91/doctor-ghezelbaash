@@ -1,13 +1,13 @@
-name: Resume the same 1.3.6 refinement after the public outputs match
+name: Complete the staged 1.3.6 release after Hugging Face Search and Filter recover
 on:
   push:
     branches: [codex/clinical-release-control-2026-11-19]
 permissions: {}
 jobs:
-  resume:
+  readiness:
     if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-release-control-2026-11-19' && github.run_attempt == 1
     runs-on: ubuntu-latest
-    timeout-minutes: 85
+    timeout-minutes: 64
     permissions:
       contents: read
       actions: write
@@ -15,87 +15,93 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       M_SHA: eafb138d596a91504ed0af66e2557f52848e36b6
       HF_SHA: 63b71242a5f2e91a90537d51c4542b071a26be3a
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
       BUILD_TAG: source-build-2026-11-19-clinical-attribution-1-3-6-r14
       PLAN_SHA: b44852d641f30d46c4dfa19481abc6ed6fd7b4f560b1baf7836a0881aebb7ce3
       MANIFEST_SHA: 3a0f7b427e42d8d96a39f6e6b597aa1003fd26dcffc64d1c8ac44d8483793a7c
       PREFLIGHT: '44534049479'
       STAGING: '44535403502'
-      PRIOR: '44536199973'
+      INITIAL: '44536199973'
+      PRIOR: '44543482916'
     steps:
-      - name: Continue only once the public Kaggle ZIP and HF Viewer match
+      - name: Verify prior publication progress and test freshly served Viewer functions
         shell: bash
         run: |
           set -euo pipefail
           repo="repos/$GITHUB_REPOSITORY"
           workflow="$repo/actions/workflows/coordinated-doi-release.yml"
-          prior_state=''
-          for ((i=0;i<66;i++)); do
-            prior_state=$(gh api "$repo/actions/runs/$PRIOR" | jq -er --arg sha "$M_SHA" 'select(.head_sha==$sha and .event=="workflow_dispatch") | .status+":"+(.conclusion//"")')
-            if [[ "$prior_state" = completed:* ]]; then break; fi
-            sleep 30
-          done
-          if test "$prior_state" = completed:success; then echo 'The initial publication completed.'; exit 0; fi
-          test "$prior_state" = completed:failure
+          gh api "$repo/actions/runs/$PRIOR" | jq -e --arg sha "$M_SHA" '.head_sha==$sha and .run_attempt==1 and .status=="completed" and .conclusion=="failure"' >/dev/null
           receipt="$RUNNER_TEMP/release-receipt"
           gh run download "$PRIOR" --repo "$GITHUB_REPOSITORY" --name coordinated-release-evidence --dir "$receipt"
           printf '%s  %s\n' "$MANIFEST_SHA" "$receipt/frozen-sha256.json" | sha256sum --check -
           printf '%s  %s\n' "$PLAN_SHA" "$receipt/approved-release-plan.json" | sha256sum --check -
-          jq -e --arg src "$M_SHA" --argjson run "$PRIOR" --arg hash "$MANIFEST_SHA" '.sourceCommit==$src and .runId==$run and .operation=="publish-frozen" and .frozenManifestSHA256==$hash' "$receipt/release-workflow-context.json" >/dev/null
-          jq -e --arg src "$M_SHA" '.sourceCommit==$src and .version==37 and .action=="create-dataset-version"' "$receipt/kaggle-submission-attempt.json" >/dev/null
+          jq -e --arg src "$M_SHA" --argjson run "$PRIOR" '.sourceCommit==$src and .runId==$run and .operation=="publish-frozen"' "$receipt/release-workflow-context.json" >/dev/null
+          jq -e '.status=="PASS" and .result.version==37 and .result.filesSha256Matched==48' "$receipt/kaggle-live.json" >/dev/null
+          jq -e --arg src "$M_SHA" --arg hf "$HF_SHA" '.status=="PASS" and .result.version==20 and (.result.executionEvidence | .source_commit==$src and .upstream_revision==$hf and .exact_doi=="10.5281/zenodo.24354791" and .status=="PASS")' "$receipt/notebook-live.json" >/dev/null
           test ! -f "$receipt/zenodo-publish-attempt.json"
-          RECEIPTS="$receipt" python - <<'PY'
-          import hashlib, io, json, os, time, zipfile
-          from pathlib import Path
-          from urllib.error import URLError
+          python - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor
+          import json, os, time
+          from urllib.error import HTTPError, URLError
           from urllib.parse import urlencode
           from urllib.request import Request, urlopen
-          kg = 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
-          hf = 'doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
-          frozen = json.loads((Path(os.environ['RECEIPTS'])/'frozen-sha256.json').read_text())['kaggle']
-          frozen = {n:h for n,h in frozen.items() if n not in {'dataset-metadata.json','kernel-metadata.json'}}
+          hf = os.environ['HF_REPO']
           revision = os.environ['HF_SHA']
-          def read(url):
-              with urlopen(Request(url, headers={'Cache-Control':'no-cache','Pragma':'no-cache'}), timeout=25) as response:
-                  return response.read(),response.headers
-          def body(url):
-              return json.loads(read(url)[0])
-          def viewer(endpoint, params):
-              query = urlencode({'dataset':hf,'live_audit':time.time_ns(),**params})
-              data,headers = read('https://datasets-server.huggingface.co/'+endpoint+'?'+query)
-              return json.loads(data),headers.get('X-Revision')
-          deadline = time.monotonic()+46*60
-          while time.monotonic()<deadline:
+          viewer = 'https://datasets-server.huggingface.co/'
+          terms = {'clinical_passages':'ghezelbaash','clinical_answers':'ghezelbaash','entity_facts':'Patient','query_matrix':'ghezelbaash','market_positioning':'positioning'}
+          def fetch(url):
               try:
-                  source = body('https://www.ghezelbaash.ir/release-provenance.json')['sourceCommit']
-                  if source != os.environ['M_SHA']: raise SystemExit('Website no longer points at the refined source.')
-                  current = body('https://huggingface.co/api/datasets/'+hf)['sha']
-                  if current != revision: raise SystemExit('Hugging Face changed outside this release.')
-                  view = body('https://api.kaggle.com/v1/datasets/view/'+kg)
-                  default = view['currentVersionNumber']
-                  if default not in {36,37} or any(v['versionNumber']>37 for v in view.get('versions',[])):
-                      raise SystemExit('Unexpected Kaggle version.')
-                  size, seen = viewer('size',{})
-                  counts = {c['config']:c['num_rows'] for c in size['size']['configs']}
-                  print(json.dumps({'kaggle':default,'hfRevision':seen,'entityFacts':counts.get('entity_facts')}),flush=True)
-                  expected = {'clinical_passages':3276,'clinical_answers':125,'entity_facts':22829,'query_matrix':876,'market_positioning':60}
-                  if default==37 and seen==revision and counts==expected and not size.get('pending') and not size.get('failed'):
-                      params = {'config':'clinical_passages','split':'train','length':2}
-                      search, sr = viewer('search',{**params,'query':'ghezelbaash'})
-                      filt, fr = viewer('filter',{**params,'where':chr(34)+'language'+chr(34)+'='+chr(39)+'fa-IR'+chr(39)})
-                      if sr==fr==revision and search.get('rows') and filt.get('rows'):
-                          zipped,_ = read('https://www.kaggle.com/api/v1/datasets/download/'+kg)
-                          with zipfile.ZipFile(io.BytesIO(zipped)) as z:
-                              names={m.filename for m in z.infolist() if not m.is_dir()}
-                              if names==set(frozen) and all(hashlib.sha256(z.read(n)).hexdigest()==h for n,h in frozen.items()):
-                                  print('Kaggle default SHA-256 parity and refined Viewer probes passed.',flush=True)
-                                  break
-              except (URLError,TimeoutError,json.JSONDecodeError,zipfile.BadZipFile) as exc:
-                  print(type(exc).__name__,getattr(exc,'code',''),flush=True)
-              time.sleep(45)
+                  req = Request(url,headers={'Cache-Control':'no-cache','Pragma':'no-cache','Accept':'application/json'})
+                  with urlopen(req,timeout=24) as response:
+                      return response.status,response.headers,json.load(response)
+              except HTTPError as exc:
+                  try: failure=json.loads(exc.read(1800))
+                  except (ValueError,OSError): failure={}
+                  return exc.code,exc.headers,failure if isinstance(failure,dict) else {}
+              except (OSError, URLError, ValueError):
+                  return None,{},{}
+          def raw(endpoint, dataset, **params):
+              return fetch(viewer+endpoint+'?'+urlencode({'dataset':dataset,'live_audit':time.time_ns(),**params}))
+          def info(result):
+              status,headers,data=result
+              return {'http':status,'revision':headers.get('X-Revision'),'error':headers.get('X-Error-Code'),
+                      'message':str(data.get('error',''))[:230], 'rows':len(data.get('rows',[]))}
+          def positive(result):
+              status,headers,payload=result
+              return status==200 and headers.get('X-Revision')==revision and payload.get('partial') is False and bool(payload.get('rows'))
+          def probe(config):
+              params={'config':config,'split':'train'}
+              search=raw('search',hf,**params,query=terms[config],length=2)
+              if not positive(search):return config,False,{'search':info(search)}
+              preview=raw('rows',hf,**params,offset=0,length=1)
+              if not positive(preview):return config,False,{'search':info(search),'preview':info(preview)}
+              first=preview[2]['rows'][0]['row']
+              field,value=next((key,val) for key,val in first.items() if isinstance(val,str) and val and len(val)<200)
+              escaped=value.replace(chr(39),chr(39)*2)
+              where=f'{chr(34)}{field}{chr(34)}={chr(39)}{escaped}{chr(39)}'
+              filt=raw('filter',hf,**params,where=where,length=2)
+              okay=positive(filt) and all(row['row'].get(field)==value for row in filt[2]['rows'])
+              return config,okay,{'search':info(search),'filter':info(filt)}
+          control = {'config':'plain_text','split':'train','length':2}
+          control_search=raw('search','stanfordnlp/imdb',**control,query='movie')
+          control_filter=raw('filter','stanfordnlp/imdb',**control,where=chr(34)+'label'+chr(34)+'=1')
+          print(json.dumps({'controlIMDb':{'search':info(control_search),'filter':info(control_filter)}}),flush=True)
+          deadline=time.monotonic()+57*60
+          while time.monotonic()<deadline:
+              current=fetch('https://huggingface.co/api/datasets/'+hf)
+              if current[0]==200 and current[2]['sha']!=revision:
+                  raise SystemExit('Hugging Face changed outside the reviewed refinement.')
+              with ThreadPoolExecutor(max_workers=3) as pool:
+                  results=list(pool.map(probe,terms))
+              print(json.dumps({'probes':{name:observed for name,passed,observed in results}}),flush=True)
+              if all(passed for name,passed,observed in results):
+                  print('All five public Search and Filter probes passed at the exact release revision.',flush=True)
+                  break
+              time.sleep(70)
           else:
-              raise SystemExit('Public outputs have not converged; DOI remains subject to the existing acceptance gates.')
+              raise SystemExit('Waiting period ended before live Viewer acceptance.')
           PY
-          gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=25" | jq -e --argjson p "$PREFLIGHT" --argjson s "$STAGING" --argjson r "$PRIOR" '(.workflow_runs | map(.id) | sort)==([$p,$s,$r] | sort)' >/dev/null
+          gh api "$workflow/runs?head_sha=$M_SHA&event=workflow_dispatch&per_page=25" | jq -e --argjson pre "$PREFLIGHT" --argjson draft "$STAGING" --argjson first "$INITIAL" --argjson prior "$PRIOR" '(.workflow_runs | map(.id) | sort)==([$pre,$draft,$first,$prior] | sort)' >/dev/null
           test "$(gh api "$repo/git/ref/tags/$BUILD_TAG" --jq '.object.sha')" = "$M_SHA"
           plan="$receipt/approved-release-plan.json"
-          jq -n --arg ref "$BUILD_TAG" --arg m "$M_SHA" --arg candidate "$PREFLIGHT" --rawfile plan "$plan" --arg digest "$PLAN_SHA" '{ref:$ref,inputs:{operation:"publish-frozen",reviewed_commit:$m,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' | gh api -X POST "$workflow/dispatches" --input -
+          jq -n --arg ref "$BUILD_TAG" --arg commit "$M_SHA" --arg candidate "$PREFLIGHT" --rawfile plan "$plan" --arg digest "$PLAN_SHA" '{ref:$ref,inputs:{operation:"publish-frozen",reviewed_commit:$commit,candidate_run:$candidate,approved_plan_json:$plan,approved_plan_sha256:$digest}}' | gh api -X POST "$workflow/dispatches" --input -
