@@ -48,6 +48,9 @@ export function applyClinicalAttribution(source) {
   ];
   physician.disambiguatingDescription += ' ایشان تنها پزشک معالج و ارائه‌دهندهٔ خدمات بالینی در مطب شخصی خود در کرمانشاه است.';
   get('in-person-clinic-service-channel').description = 'Physical access to in-person clinical care provided by Dr. Saeed Ghezelbash at his Kermanshah practice.';
+  for (const slug of ['profile-instagram-doctor-ghezelbaash', 'evidence-instagram']) {
+    get(slug).mainEntity = ref(physician['@id']);
+  }
   delete physician.hasOfferCatalog;
   clinic.subjectOf = values(clinic.subjectOf).filter(item => item['@id'] !== get('webpage')['@id']);
   get('online-consultation-contact-point').contactType = 'appointment scheduling and reception';

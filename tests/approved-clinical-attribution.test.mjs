@@ -39,6 +39,11 @@ test('the clinic describes the place of care and retains its separate local iden
   assert.deepEqual(ids(practicePage.mainEntity), [CLINIC]);
   assert.deepEqual(ids(practicePage.about), [CLINIC, PERSON]);
   assert.equal(practicePage.specialty, undefined);
+  for (const slug of ['profile-instagram-doctor-ghezelbaash', 'evidence-instagram']) {
+    const profile = node(origin + '/' + slug);
+    assert.deepEqual(ids(profile.mainEntity), [PERSON]);
+    assert.deepEqual(new Set(ids(profile.about)), new Set([PERSON, CLINIC]));
+  }
 });
 
 test('approved plan: neither physician nor clinic points to a general OfferCatalog', () => {
