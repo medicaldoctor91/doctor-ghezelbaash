@@ -23,11 +23,13 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          import sys
-          sys.path.insert(0, '.github/scripts')
-          from sync_platform_machine_resources import kaggle_client
-          from coordinated_doi_release import KG, owner_state, get
-          state = owner_state(kaggle_client())
-          public = get('https://api.kaggle.com/v1/datasets/view/' + KG).json()
-          print(json.dumps({'owner': state, 'currentPublicDefault': public['currentVersionNumber']}))
+          import requests
+          from kaggle.api.kaggle_api_extended import KaggleApi
+          dataset = 'saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+          api = KaggleApi()
+          api.authenticate()
+          raw = json.loads(api.dataset_status(dataset, format='json(status,current_version_number)'))
+          response = requests.get('https://api.kaggle.com/v1/datasets/view/' + dataset, timeout=25)
+          response.raise_for_status()
+          print(json.dumps({'observed_owner_version': raw['current_version_number'], 'observed_owner_status': raw['status'], 'observed_public_default': response.json()['currentVersionNumber']}))
           PY
