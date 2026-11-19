@@ -1,5 +1,7 @@
 # Fixed source and isolated additions
 
+The coordinated 1.3.6 application checkpoint `fb8233f294a946bba7574641bb301ef2f895696c` has tree `05feb2044d638459d407ec5a96fd9b317eaa019a` and 204 application files. Its direct management child restores the four source-freeze files. Final publication verification now follows the exact edition DOI and requires its public landing page to return HTTP 200 for the intended Zenodo record.
+
 The coordinated 1.3.6 application checkpoint `d5af127c8554d201b5c77bcf32b56c4d849f5b47` has tree `37e766a4e7a2fc042f3c169bed7ceccd5cc69eac`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r6`. Its direct management child restores the four source-freeze files. Supporting articles on service-focused pages are linked with `hasPart`. The named service remains the sole `mainEntity`.
 
 The coordinated 1.3.6 application checkpoint `fe10f7a348dd5aa1f95b78e50919ba31bac06eca` has tree `84e89bb7776c8ebbfed578d89f4c9e78eb4700cc`, 204 application files and annotated tag `source-frozen-2026-11-19-clinical-attribution-1-3-6-r5`. Its direct child restores the four freeze-management files. Platform validation checks the exact canonical SHACL constraints rather than counting shapes from a prior edition.
