@@ -123,8 +123,8 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.doesNotThrow(()=>assertBoundedSearchDocument(document),resource.path);
     if(home) {
       assert.ok(Buffer.byteLength(raw,'utf8')<=38000,'actual emitted homepage Search script fits its byte budget');
-      assert.equal(actual.get(personId).sameAs.length,22);
-      assert.equal(values(actual.get(personId).identifier).length,24);
+      assert.equal(actual.get(personId).sameAs.length,23);
+      assert.equal(values(actual.get(personId).identifier).length,25);
       t.diagnostic(`Built homepage Search script: ${Buffer.byteLength(raw,'utf8')}/38000 UTF-8 bytes`);
     }
   }

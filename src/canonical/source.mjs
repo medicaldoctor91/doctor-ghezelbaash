@@ -5894,6 +5894,9 @@ export const SOURCE = {
             "@id": "https://www.ghezelbaash.ir/identifier-person-semantic-scholar"
           },
           {
+            "@id": "https://www.ghezelbaash.ir/identifier-person-researchgate"
+          },
+          {
             "@id": "https://www.ghezelbaash.ir/identifier-person-facebook"
           },
           {
@@ -5931,6 +5934,7 @@ export const SOURCE = {
           "https://openalex.org/A5146521397",
           "https://scholar.google.com/citations?user=BcWBirUAAAAJ",
           "https://www.semanticscholar.org/author/-/3786699",
+          "https://www.researchgate.net/profile/Saeed-Ghezelbash-2",
           "https://profile.google.com/@doctor.ghezelbaash",
           "https://www.instagram.com/doctor.ghezelbaash/",
           "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
@@ -22641,6 +22645,16 @@ export const SOURCE = {
         "propertyID": "ORCID",
         "value": "0009-0001-9346-8475",
         "url": "https://orcid.org/0009-0001-9346-8475"
+      },
+      {
+        "@id": "https://www.ghezelbaash.ir/identifier-person-researchgate",
+        "@type": "PropertyValue",
+        "propertyID": "ResearchGate profile ID",
+        "value": "Saeed-Ghezelbash-2",
+        "url": "https://www.researchgate.net/profile/Saeed-Ghezelbash-2",
+        "prov:wasDerivedFrom": {
+          "@id": "https://www.wikidata.org/wiki/Q140287622#P2038"
+        }
       },
       {
         "@id": "https://www.ghezelbaash.ir/district-1-kermanshah",

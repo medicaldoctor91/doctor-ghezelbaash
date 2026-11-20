@@ -94,10 +94,16 @@ test('the recorded homepage projection preserves convergence IDs and acyclic own
   const actual=byId(projected),person=actual.get(physicianId);
   assert.equal(actual.get(SOURCE.canonicalOrigin+'/webpage').dateModified,
     latestRecordedModification(canonical.get(SOURCE.canonicalOrigin+'/webpage').dateModified,SOURCE.profileMarkupModifiedAt));
-  assert.equal(person.sameAs.length,22);
-  assert.equal(values(person.identifier).length,24);
+  assert.equal(person.sameAs.length,23);
+  assert.equal(values(person.identifier).length,25);
   assert.deepEqual(person.sameAs,authored.sameAs);
   assert.deepEqual(person.identifier,authored.identifier);
+  const researchGateUrl='https://www.researchgate.net/profile/Saeed-Ghezelbash-2';
+  const researchGateId=SOURCE.canonicalOrigin+'/identifier-person-researchgate';
+  assert.ok(person.sameAs.includes(researchGateUrl));
+  assert.ok(ids(person.identifier).includes(researchGateId));
+  assert.equal(actual.get(researchGateId).value,'Saeed-Ghezelbash-2');
+  assert.equal(actual.get(researchGateId).url,researchGateUrl);
   assert.equal(person.birthDate,authored.birthDate['@value']);
   assert.deepEqual(ids(person.owns),[clinicId]);
   assert.deepEqual(ids(person.practicesAt),[clinicId]);
