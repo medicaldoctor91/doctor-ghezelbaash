@@ -1,5 +1,6 @@
 const values = value => value == null ? [] : Array.isArray(value) ? value : [value];
 const ref = id => ({'@id': id});
+const provideService = ref('http://purl.org/goodrelations/v1#ProvideService');
 
 // These focused pages describe a specific service the physician provides.
 // They still contain a separately attributable authored Article.
@@ -14,6 +15,25 @@ const servicePages = {
   '/thread-lift': 'procedure-thread-lift',
 };
 
+const fillerSafety = 'https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/dermal-fillers-soft-tissue-fillers';
+const threadLiftReview = 'https://pubmed.ncbi.nlm.nih.gov/41988336/';
+// These are citations already linked in the visible clinical guides.
+const clinicalCitations = {
+  '/acne-scars': ['https://pubmed.ncbi.nlm.nih.gov/30856634/'],
+  '/aesthetic-treatment-failure-from-diagnostic-error': ['https://pmc.ncbi.nlm.nih.gov/articles/PMC11702150/', fillerSafety],
+  '/body-filler': ['https://www.fda.gov/consumers/consumer-updates/dermal-filler-dos-and-donts-wrinkles-lips-and-more'],
+  '/chin-jawline-and-facial-contouring': ['https://www.fda.gov/drugs/buying-using-medicine-safely/using-fat-dissolving-injections-are-not-fda-approved-can-be-harmful'],
+  '/collagen-stimulation-sculptra-and-liquid-thread': ['https://pubmed.ncbi.nlm.nih.gov/40118148/', 'https://www.fda.gov/medical-devices/recently-approved-devices/sculptra-p030050s039'],
+  '/filler': [fillerSafety],
+  '/filler-complications-correction-and-aftercare': [fillerSafety],
+  '/filler-treatment-exclusion-criteria': ['https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/fda-approved-dermal-fillers'],
+  '/hair-loss-diagnostic-assessment-before-prp-and-mesotherapy': ['https://pubmed.ncbi.nlm.nih.gov/38284294/'],
+  '/hyaluronidase-filler-dissolution-limitations': ['https://pubmed.ncbi.nlm.nih.gov/34840662/', 'https://pubmed.ncbi.nlm.nih.gov/41517528/'],
+  '/subcision-for-tethered-acne-scars': ['https://pubmed.ncbi.nlm.nih.gov/36315903/'],
+  '/thread-lift-complications-preparation-and-aftercare': ['https://pmc.ncbi.nlm.nih.gov/articles/PMC11702150/', threadLiftReview],
+  '/thread-lift-pre-treatment-assessment': [threadLiftReview],
+};
+
 export function clinicalArticleForPage(page, content, {isPrimary = true} = {}) {
   const article = {
     '@id': page.url + '#article',
@@ -23,11 +43,52 @@ export function clinicalArticleForPage(page, content, {isPrimary = true} = {}) {
     inLanguage: structuredClone(page.inLanguage),
   };
   if (isPrimary) article.mainEntityOfPage = page.url;
-  for (const property of ['description', 'author', 'publisher', 'about', 'datePublished', 'dateModified']) {
+  for (const property of ['description', 'author', 'publisher', 'about', 'citation', 'datePublished', 'dateModified']) {
     if (property in page) article[property] = structuredClone(page[property]);
   }
   if (content.length) article.hasPart = structuredClone(content);
   return article;
+}
+
+function connectPhysicianServices(graph, physician, origin) {
+  const physicianId = physician['@id'];
+  const services = graph.filter(node => values(node['@type']).includes('Service'));
+  const existing = new Map();
+  for (const offer of graph) {
+    if (!values(offer['@type']).includes('Offer') || offer.offeredBy?.['@id'] !== physicianId) continue;
+    const item = offer.itemOffered?.['@id'];
+    if (existing.has(item)) throw new Error('Duplicate physician offer for ' + item);
+    existing.set(item, offer);
+  }
+
+  const clinicalTopics = new Set(values(physician.availableService).map(item => item['@id']));
+  const knownTopics = new Set(values(physician.knowsAbout).map(item => typeof item === 'string' ? item : item['@id']));
+  // The physician's existing subcision skill already names the same topic.
+  if (knownTopics.has(origin + '/skill-subcision')) clinicalTopics.delete(origin + '/procedure-subcision');
+  const newTopics = [];
+  const offerIds = [];
+  const graphIds = new Set(graph.map(node => node['@id']));
+  for (const service of services) {
+    const id = service['@id'];
+    const providers = values(service.provider);
+    if (providers.length !== 1 || providers[0]['@id'] !== physicianId) continue;
+    if (clinicalTopics.has(id) && !knownTopics.has(id)) newTopics.push(ref(id));
+
+    let offer = existing.get(id);
+    if (!offer) {
+      const offerId = id + '-offer';
+      if (graphIds.has(offerId)) throw new Error('Clinical offer identifier already exists: ' + offerId);
+      offer = {'@id': offerId, '@type': 'Offer', itemOffered: ref(id), offeredBy: ref(physicianId)};
+      graph.push(offer);
+      graphIds.add(offerId);
+    }
+    offer.businessFunction ??= structuredClone(provideService);
+    offerIds.push(ref(offer['@id']));
+    service.offers = ref(offer['@id']);
+  }
+  physician.knowsAbout = [...values(physician.knowsAbout), ...newTopics];
+  const mergedOffers = new Map([...values(physician.makesOffer), ...offerIds].map(offer => [offer['@id'], offer]));
+  physician.makesOffer = [...mergedOffers.values()];
 }
 
 export function applyClinicalAttribution(source) {
@@ -65,6 +126,15 @@ export function applyClinicalAttribution(source) {
   }
   catalog.itemListElement = [...itemsByService.values()].map((item, index) => ({...item, position: index + 1}));
   catalog.numberOfItems = catalog.itemListElement.length;
+  connectPhysicianServices(graph, physician, origin);
+
+  const medicalDegree = get('credential-doctor-of-medicine');
+  const orcidEducation = ref(get('evidence-orcid-education-38054873')['@id']);
+  medicalDegree.subjectOf = [...values(medicalDegree.subjectOf), orcidEducation];
+  medicalDegree['prov:wasDerivedFrom'] = [...values(medicalDegree['prov:wasDerivedFrom']), orcidEducation];
+  const medicalRegistration = get('irimc-credential-167430');
+  medicalRegistration['prov:wasDerivedFrom'] = [...values(medicalRegistration['prov:wasDerivedFrom']),
+    ref('https://pub.orcid.org/v3.0/0009-0001-9346-8475/qualification/38813233')];
 
   const performance = get('clinical-performance-dataset');
   performance.about = [ref(physician['@id'])];
@@ -83,6 +153,8 @@ export function applyClinicalAttribution(source) {
         values(nodes.get(item['@id'])?.['@type']).some(type => ['WebPageElement', 'Question', 'Answer'].includes(type)));
       const service = get(servicePages[route.path]);
       const article = clinicalArticleForPage(page, content, {isPrimary: !service});
+      const citations = clinicalCitations[route.path];
+      if (citations) article.citation = citations.map(ref);
       graph.push(article);
       page.mainEntity = ref((service ?? article)['@id']);
       if (service) page.hasPart = [...values(page.hasPart), ref(article['@id'])];

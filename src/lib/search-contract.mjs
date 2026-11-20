@@ -98,10 +98,11 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
 const searchIdentity=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
 const searchPage=[...searchIdentity,'inLanguage','dateCreated','dateModified','lastReviewed','author','publisher','reviewedBy','mainEntity','about','isPartOf','breadcrumb','primaryImageOfPage'];
 const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','affiliation','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
+const profileTopics=['skill-botulinum-toxin-injection','skill-dermal-filler-injection','skill-subcision','skill-thread-lifting','skill-hyaluronidase-filler-revision-complication-management'];
 const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','areaServed','image','logo','location','containedInPlace','contactPoint'];
 const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','creator','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','representativeOfPage'];
 const searchVideo=[...searchImage,'description','publisher','copyrightHolder','about','uploadDate','duration','embedUrl','inLanguage','hasPart'];
-const searchArticle=['@id','@type','url','headline','description','inLanguage','datePublished','dateModified','author','publisher','image','about','hasPart','mainEntityOfPage'];
+const searchArticle=['@id','@type','url','headline','description','inLanguage','datePublished','dateModified','author','publisher','image','about','hasPart','mainEntityOfPage','citation'];
 const searchQuestion=[...searchIdentity,'acceptedAnswer','answerCount','about','inLanguage'];
 const searchAnswer=[...searchIdentity,'text','author','about','inLanguage'];
 const searchLeaf=[...searchIdentity,'propertyID','value','unitCode','unitText','termCode','inDefinedTermSet','credentialCategory','educationalLevel','competencyRequired','recognizedBy','validIn','expires','roleName','hasOccupation','streetAddress','addressLocality','addressRegion','addressCountry','postalCode','latitude','longitude','dayOfWeek','opens','closes','validFrom','validThrough','contactType','availableLanguage','telephone','email','containedInPlace'];
@@ -168,6 +169,7 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   const practice=resolvePhysicianPractice(graph,{origin});
   const clinic=practice&&source.get(practice['@id']);
   const home=values(primary['@type']).includes('ProfilePage')&&primary.url===origin+'/';
+  const physicianProfile=values(primary['@type']).includes('ProfilePage')&&primary.mainEntity?.['@id']===physicianId;
   const topicIds=new Set([...values(primary.mainEntity),...values(primary.about)].map(ref=>ref?.['@id']).filter(Boolean));
   const serviceIds=new Set([...values((authoredPrimary??primary).mainEntity),...values((authoredPrimary??primary).about)]
     .map(ref=>ref?.['@id']).filter(id=>values(source.get(id)?.['@type']).includes('Service')));
@@ -254,7 +256,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     else if(id===physicianId)keys=searchPerson;
     else if(node===clinic)keys=searchClinic;
     else if(types.includes('Article'))keys=searchArticle;
-    else if(types.includes('Service'))keys=searchService;
+    else if(types.includes('Service'))keys=id===primary.mainEntity?.['@id']?[...searchService,'offers']:searchService;
+    // The exact offer resolves here without cycling back to its service or physician.
+    else if(types.includes('Offer'))keys=['@id','@type','businessFunction'];
     else if(types.includes('ServiceChannel'))keys=searchChannel;
     else if(types.includes('ImageObject'))keys=searchImage;
     else if(types.includes('VideoObject'))keys=searchVideo;
@@ -313,6 +317,14 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
           values(parent.hasPart).at(-1)?.['@id']===node['@id']&&
           Number.isFinite(node.startOffset)&&Number.isFinite(seconds)&&seconds>node.startOffset)
         output.endOffset=seconds;
+    }
+    if(physicianProfile&&node['@id']===physicianId) {
+      // Publish a concise set of labels from the canonical topics without
+      // importing the full clinical graph into either profile page.
+      const known=new Set(values(truth.get(physicianId)?.knowsAbout).map(topic=>topic?.['@id']??topic));
+      const topics=profileTopics.map(slug=>origin+'/'+slug).filter(id=>known.has(id))
+        .map(id=>truthText(truth.get(id)?.name,language)).filter(Boolean);
+      if(topics.length)output.knowsAbout=topics;
     }
   }
   const result={'@context':'https://schema.org','@graph':[...selected.values()]};

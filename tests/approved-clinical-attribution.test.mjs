@@ -51,6 +51,40 @@ test('approved plan: neither physician nor clinic points to a general OfferCatal
   assert.equal(values(node(CLINIC).hasOfferCatalog).length, 0);
 });
 
+test('each physician-provided service has one service offer without inventing terms', () => {
+  const offers = graph.filter(entry => values(entry['@type']).includes('Offer'));
+  assert.equal(offers.length, services.length);
+  assert.deepEqual(new Set(offers.flatMap(offer => ids(offer.itemOffered))),
+    new Set(services.map(service => service['@id'])));
+  assert.deepEqual(new Set(ids(node(PERSON).makesOffer)), new Set(offers.map(offer => offer['@id'])));
+  assert.equal(node(CLINIC).makesOffer, undefined);
+  const originalOffers = new Set(['free-online-aesthetic-initial-consultation-offer', 'aesthetic-revision-and-second-opinion-offer']
+    .map(slug => SOURCE.canonicalOrigin + '/' + slug));
+  for (const offer of offers) {
+    assert.deepEqual(ids(offer.offeredBy), [PERSON], offer['@id']);
+    assert.equal(ids(offer.itemOffered).length, 1, offer['@id']);
+    assert.deepEqual(ids(offer.businessFunction), ['http://purl.org/goodrelations/v1#ProvideService']);
+    assert.deepEqual(ids(node(ids(offer.itemOffered)[0]).offers), [offer['@id']]);
+    if (!originalOffers.has(offer['@id'])) {
+      for (const field of ['price', 'priceCurrency', 'priceSpecification', 'availability']) {
+        assert.ok(!(field in offer), offer['@id'] + ' ' + field);
+      }
+    }
+  }
+  assert.ok([...originalOffers].every(id => node(id)));
+});
+
+test('physician topics include distinct clinical services and preserve the existing subcision topic', () => {
+  const known = ids(node(PERSON).knowsAbout);
+  const origin = SOURCE.canonicalOrigin;
+  assert.ok(known.length > services.length);
+  assert.equal(known.length, new Set(known).size);
+  assert.ok(known.includes(origin + '/skill-subcision'));
+  assert.ok(!known.includes(origin + '/procedure-subcision'));
+  assert.ok(!known.includes(origin + '/free-online-aesthetic-initial-consultation'));
+  assert.ok(known.includes(origin + '/procedure-botulinum-toxin-palmar-hyperhidrosis'));
+});
+
 test('approved plan: in-person service channel locates the practice', () => {
   const channel = node('https://www.ghezelbaash.ir/in-person-clinic-service-channel');
   assert.ok(channel);
