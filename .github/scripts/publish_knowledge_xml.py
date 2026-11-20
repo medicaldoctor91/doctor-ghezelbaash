@@ -17,7 +17,7 @@ import yaml
 from platform_bundle import (
     DOI_POLICY, HF_REPO, KAGGLE_REF, build_hf, build_kaggle, context, dump, load, sha,
 )
-from sync_platform_machine_resources import download_kaggle, guard_kaggle_version, kaggle_client, relative_path
+from sync_platform_machine_resources import REPOSITORY, download_kaggle, guard_kaggle_version, kaggle_client, relative_path
 from coordinated_doi_release import inventory, owner_state, retry, verify_kaggle, verify_site
 
 SOURCE = '3853f71d8d49cbbba00eabaafd7b4a76093caac1'
@@ -206,7 +206,7 @@ def package_inputs(work, dist, revision_info):
             before['source_commit'] = SOURCE
         assert before == after, 'Query data changed outside its source reference'
     for folder, platform in [(hf,'hf'),(kg,'kaggle')]:
-        subprocess.run([sys.executable, str(Path(__file__).resolve().parents[2]/'tests/validate_platform_sync.py'),
+        subprocess.run([sys.executable, str(REPOSITORY/'tests/validate_platform_sync.py'),
                         str(folder), '--platform', platform, '--source-commit', SOURCE,
                         '--report', str(work/(platform+'-validation.json'))], check=True)
     return revision
@@ -245,6 +245,39 @@ def verify_then_update_metadata(work, client, expected):
         client.dataset_metadata_update(KAGGLE_REF,str(folder))
     return state
 
+def rebuild_catalogs(dist, manifest):
+    # Use the normal generators in dependency order over the final file bytes.
+    javascript = r"""
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {SOURCE} from './src/canonical/source.mjs';
+import {buildDcatTurtle, buildDataPackage, buildCroissantWithStats} from './src/lib/machine-output.mjs';
+
+const folder = process.argv[1];
+const stats = new Map();
+for (const resource of SOURCE.machineResources) {
+  const filename = path.join(folder, resource.path.slice(1));
+  if (!fs.existsSync(filename)) continue;
+  const body = fs.readFileSync(filename);
+  stats.set(resource.path, {bytes: body.length, sha256: createHash('sha256').update(body).digest('hex')});
+}
+for (const file of ['/dcat.ttl', '/datapackage.json', '/croissant.json']) stats.delete(file);
+function write(file, value) {
+  const body = Buffer.from(value);
+  fs.writeFileSync(path.join(folder, file.slice(1)), body);
+  stats.set(file, {bytes: body.length, sha256: createHash('sha256').update(body).digest('hex')});
+}
+write('/dcat.ttl', buildDcatTurtle(SOURCE, stats));
+write('/datapackage.json', JSON.stringify(buildDataPackage(SOURCE, stats)) + '\n');
+write('/croissant.json', JSON.stringify(buildCroissantWithStats(SOURCE, stats)) + '\n');
+"""
+    subprocess.run(['node', '--input-type=module', '-e', javascript, str(dist)], cwd=REPOSITORY, check=True)
+    for name in ('datapackage.json','dcat.ttl','croissant.json'):
+        file = dist/name
+        manifest['files']['/'+name].update(bytes=file.stat().st_size,sha256=sha(file))
+    dump(dist/'integrity-manifest.json',manifest)
+
 def main(dist, work, mode):
     site = load(dist/'release-provenance.json')
     website = load(dist/'integrity-manifest.json')
@@ -269,35 +302,9 @@ def main(dist, work, mode):
             assert load_from_bytes(baseline) == load(candidate)
         write_bytes(candidate,baseline)
         website['files']['/'+name] = before['files']['/'+name]
-    package_path = work/'website/datapackage.json'
-    package = load(package_path)
-    policy = website['files']['/doi-policy.json']
-    for resource in package['resources']:
-        if resource['path'].endswith('/doi-policy.json'):
-            resource.update(bytes=policy['bytes'],hash='sha256:'+policy['sha256'])
-    package_path.write_text(json.dumps(package,ensure_ascii=False,separators=(',',':'))+'\n')
-    # Update the measured DCAT policy entry to match the preserved policy bytes.
-    dcat_path=work/'website/dcat.ttl'
-    from rdflib import Graph, URIRef
-    dcat=Graph().parse(dcat_path,format='turtle')
-    distribution=URIRef(ORIGIN+'doi-policy.json/distribution')
-    dcat_ns='http://www.w3.org/ns/dcat#'
-    spdx_ns='http://spdx.org/rdf/terms#'
-    import re
-    checksum=dcat.value(distribution,URIRef(spdx_ns+'checksum'))
-    old_sha=dcat.value(checksum,URIRef(spdx_ns+'checksumValue')) if checksum else None
-    old_size=dcat.value(distribution,URIRef(dcat_ns+'byteSize'))
-    if old_sha and str(old_sha) != policy['sha256']:
-        line=next(line for line in dcat_path.read_text().splitlines()
-                  if line.startswith('<'+str(distribution)+'> '))
-        updated=line.replace(str(old_sha),policy['sha256'])
-        if old_size is not None:
-            updated=re.sub(r'(byteSize> ")\d+',lambda m:m[1]+str(policy['bytes']),updated)
-        dcat_path.write_text(dcat_path.read_text().replace(line,updated))
-    for name in ('datapackage.json','dcat.ttl'):
-        path=work/'website'/name
-        website['files']['/'+name].update(bytes=path.stat().st_size,sha256=sha(path))
-    dump(work/'website/integrity-manifest.json',website)
+    rebuild_catalogs(work/'website', website)
+    subprocess.run([sys.executable, str(REPOSITORY/'tests/validate_machine_resources.py'),
+                    str(work/'website')], cwd=REPOSITORY, check=True)
     review(work/'website',before)
     revision = package_inputs(work,work/'website',hf_info)
     plan={'sourceCommit':SOURCE,'hfParent':BASE_HF,'hfRevision':revision,
