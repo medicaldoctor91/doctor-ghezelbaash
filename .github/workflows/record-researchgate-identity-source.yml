@@ -1,0 +1,60 @@
+name: Record the verified ResearchGate identity source
+on:
+  push:
+    branches: [codex/researchgate-identity-transfer-1-3-6]
+permissions:
+  contents: write
+jobs:
+  record:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/researchgate-identity-transfer-1-3-6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 3853f71d8d49cbbba00eabaafd7b4a76093caac1
+          fetch-depth: 0
+      - name: Verify and record the exact reviewed source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle="$RUNNER_TEMP/researchgate-source.bundle"
+          commit='aa5b90da8fc9302d411588153d075d6a78976d28'
+          tree='9a33808131e2a3d9d7047a9a12f54045b53f012d'
+          ref='refs/heads/codex/researchgate-physician-identity-1-3-6'
+          base64 --decode >"$bundle" <<'BUNDLE'
+          IyB2MiBnaXQgYnVuZGxlCi0zODUzZjcxZDhkNDljYmJiYTAwZWFiYWFmZDdiNGE3NjA5M2NhYWMx
+          IFByZXNlcnZlIGNsaW5pY2FsIHNlcnZpY2UgYXR0cmlidXRpb24gaW4ga25vd2xlZGdlIFhNTAph
+          YTViOTBkYThmYzkzMDJkNDExNTg4MTUzZDA3NWQ2YTc4OTc2ZDI4IHJlZnMvaGVhZHMvY29kZXgv
+          cmVzZWFyY2hnYXRlLXBoeXNpY2lhbi1pZGVudGl0eS0xLTMtNgoKUEFDSwAAAAIAAAAIlRB4nJWL
+          QWpDIRBA955i9oUy/vFXhRIKXWTTVW4w6siXJip+U9rbN8kNsnrweG8OEfBM5NBp0rIwJZ8sGsue
+          9ZJXg2YNK2XUS1Kdh9QJ5G7C6uSS8TGEwIjCgTknGwzbN/QUmaNWfJ1bG/DZkvzCe7zjo3WpXF5j
+          uxxAW79q5xft4QWJUN3spcwpzzzqq9RvmJvAj4ySiyToMvZW+Qwn2YVH3I48BfpouZwFZnvUffvb
+          Syxc1T/seFGi8AQc8DMknMst2XhBZKl3pbxDdACIbXicm8Myh2XDfkYTo91PTuwWXBsmL7KdV1Yj
+          45n3c6lNJgZAoFCSWlxSzFDrU/Kiq+OcT+yJ5QEVHXNtHdZMrp78mVETAFFVGw2iBnicMzEAAoXk
+          xLz8vMzkxByGXd/YF7y+FLzOzmC1r9M681KOJ5t+mIDV5GQmMXRwukx75LnjqfnCk68eSGowtL9I
+          0IXIFiSmpxYzcHzbM0ty2l1v6YdyjLt/uh+auK5rJgCUqSkZ+wEm0y9IfUwnWPqZWpJsN/wZO1BY
+          hXic+8X4i3HCMxEJlf96t9d6JdYZ2GWIzEsVPnJXjwEAq38Lav4eT0G40esx63kk5jdHzvL68Esg
+          6lV4nIXOOy9DcQCG8bSnF0VvB4e69KKoW6m2qEvRIhgkTYydikPFSUixmKSR2Cv81y6abiKRdCBY
+          bcwi/QpWi3hiMEkMv/V9n4u7gv7lsaA/OdWd6m+l66Ilpx6omdxGdlvoFpVVkVpxypXropQ2iv2y
+          ZBDpabvsyu1t7Wjq8FpGVTeDS1n1WNXWMwfZYFg4ryRFvL8oAfFUllyXSaNNeKvRxjOtJMEAI0ww
+          owYW1KIO9RWtZP18+zmt+w3JHJ77NEV8fLH6HLPbxMOh0y3/cZ6QdZ7/Am/GzUkRutdZhecobjf5
+          U+FQJCYSr/plUc06TGe7eRvscMAJGQ1oRBMUNKMFLrSiDe3ogBseeOFDJ/zoQjd6EEAv+tCPAQwi
+          iCEMI4QRhBFBFKMYwzhimMAkpjCNOGYwizkkkMR8ZTe/0N/2DTtNvAj6A3V3voQ1cPFhkWBosKLg
+          4jRi9T4feJwBOgDF/4ETgROwoQQUoFLcjxfNuoBHT4ouYNoUtn72FriTtQQmFLtY+7DVr5rkwAR/
+          8TSN5XMUzSGus+8EkgQaBxwg+BdUj5EoNAFZByudla5h6CtuQvm20Hic+x44LXTDQwlG48mPJEyY
+          TDUnx3OKTk6QZJ9sIhmWkZyfV1yiUJRanJpYlJzhnliSGlqUY6ueUVJSUGylr19eXq4Hk0wHSurl
+          pZboFxTlp2XmpOoHJ6ampui6Z6RWpeYkJRZn6BqpW3MpKGAa6ZliO5lHQrI+MyU1ryQzLTO1SLcg
+          tag4P08X2Wyw5sTi4tSiEr38bA2ICr3ixNxUx2K9zLzknNKU1GINNKdqaqLqykwphulE2KYJ0S6M
+          rt8zRXPyQilZTTQxvbLEnNJUHXVM/012FJFTRlddWpSjg+aqza2SRfwAzZyHVfsBIaSOxpD2u/Dn
+          uBMVMVoLQDB7cMV4nPvt+dtzw2MlFmNNa67JioLCk38pGTCabtZWvsAIAJloCaKLtzm6caTde4wQ
+          KTWUfzOs+Dt98g==
+          BUNDLE
+          printf '%s  %s\n' f4e592901aaaa70292b432779a9361882e6d4dd662993dbe06fafd60c80532f3 "$bundle" | sha256sum --check
+          git bundle verify "$bundle"
+          git fetch --no-tags "$bundle" "$ref"
+          test "$(git rev-parse FETCH_HEAD)" = "$commit"
+          test "$(git rev-parse "$commit^")" = '3853f71d8d49cbbba00eabaafd7b4a76093caac1'
+          test "$(git rev-parse "$commit^{tree}")" = "$tree"
+          git push origin "$commit:$ref"
+          test "$(git ls-remote --exit-code origin "$ref" | cut -f1)" = "$commit"
