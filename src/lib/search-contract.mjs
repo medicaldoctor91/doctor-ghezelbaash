@@ -220,6 +220,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     if(!value||typeof value!=='object')return value;
     if('@value' in value)return value['@value'];
     if(value['@id']) {
+      // Keep external citations as links, including external pages described
+      // elsewhere in the canonical graph as evidence sources.
+      if(key==='citation'&&!value['@id'].startsWith(origin+'/'))return {'@id':value['@id']};
       const target=source.get(value['@id']);
       if(!target) {
         if(value['@id'].startsWith(origin+'/'))throw new Error('Unresolved local Search entity: '+value['@id']);

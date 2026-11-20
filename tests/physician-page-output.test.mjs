@@ -47,6 +47,7 @@ test('every built public HTML page preserves its author, main subject, localized
     const biography=resource.pagePurpose==='professional-biography';
     assert.equal(routeProfiles.length,home||biography?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;
+    if(home||biography)assert.equal(values(actual.get(personId).knowsAbout).length,5);
     const expected=ids(authored.mainEntity);
     assert.deepEqual(ids(page.mainEntity),expected,resource.path+' mainEntity');
     if(resource.pagePurpose==='clinical-guide') {
@@ -54,6 +55,9 @@ test('every built public HTML page preserves its author, main subject, localized
       assert.ok(values(article?.['@type']).includes('Article'),resource.path);
       const authoredArticle=canonical.get(article['@id']);
       assert.deepEqual(ids(article.author),[personId],resource.path+' article author');
+      assert.deepEqual(ids(article.citation),ids(authoredArticle.citation),resource.path+' inline citations');
+      for(const citation of ids(article.citation))
+        assert.ok(find(dom,node=>node.tagName==='a'&&attr(node,'href')===citation),resource.path+' visible citation');
       assert.equal(article.dateModified,latestRecordedModification(authored.dateModified,SOURCE.articleMarkupModifiedAt),resource.path+' Article date');
       const serviceIsPrimary=values(canonical.get(expected[0])?.['@type']).includes('Service');
       if(serviceIsPrimary) {
@@ -61,6 +65,9 @@ test('every built public HTML page preserves its author, main subject, localized
         assert.ok(ids(page.hasPart).includes(article['@id']),resource.path+' inline supporting article');
         assert.ok(!Object.hasOwn(authoredArticle,'mainEntityOfPage'),resource.path+' canonical article is secondary');
         assert.ok(!Object.hasOwn(article,'mainEntityOfPage'),resource.path+' inline article is secondary');
+        const offerId=canonical.get(expected[0]).offers['@id'];
+        assert.deepEqual(ids(actual.get(expected[0]).offers),[offerId],resource.path+' focused offer');
+        assert.equal(actual.get(offerId)?.['@type'],'Offer',resource.path+' resolves the focused offer');
       } else {
         assert.equal(authoredArticle.mainEntityOfPage,url,resource.path+' canonical primary article');
         assert.equal(article.mainEntityOfPage,url,resource.path+' inline primary article');
