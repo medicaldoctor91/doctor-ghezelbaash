@@ -62,7 +62,7 @@ export function maximizeCanonicalPhysicianGraphAttribution(source,physician,orig
     physician.knowsAbout=[...many(physician.knowsAbout),ref(topicId)];
     known.add(topicId);knowledgeAdded++;
   }
-  if(knowledgeAdded!==13 && known.size!==244)
+  if(knowledgeAdded!==13 && known.size!==246)
     throw new Error('Canonical authored Article.about medical concepts drift');
 
   // 2b. Close research topics already explicitly named as subject of the
