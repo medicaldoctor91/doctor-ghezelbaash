@@ -59,7 +59,14 @@ function globalBlock(delivery){
 function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}){
   const lines=[resource.path];
   if(detachHtml){lines.push('  ! Cache-Control','  ! Link');}
-  const cache=resource.indexing==='canonical-html'?delivery.html.cacheControl:delivery.machine.cacheControl;
+  // These release-cohort resources have stable URLs but change bytes on
+  // publication. A one-hour freshness lifetime can expose old CSV while a
+  // newer graph.jsonld and release-provenance are already public. Force a
+  // revalidation on each request, while retaining ETag-based cache benefits.
+  // Versioned /assets/*, video and image caching policies remain unchanged.
+  const cache=resource.indexing==='canonical-html'
+    ? delivery.html.cacheControl
+    : 'public, max-age=0, must-revalidate';
   lines.push(`  Cache-Control: ${cache}`);
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
