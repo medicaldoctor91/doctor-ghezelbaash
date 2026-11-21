@@ -1,0 +1,29 @@
+name: Audit WCAG accessibility across all 72 published pages (read-only)
+on:
+  push:
+    branches: [codex/136-live-site-full-audit-fixes-20261121]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated WCAG browser audit tools
+        run: |
+          npm install --no-save --no-package-lock playwright@1.57.0 @axe-core/playwright@4.10.2
+          npx playwright install --with-deps chromium
+      - name: Audit 72 pages against axe-core WCAG A and AA
+        run: node .github/scripts/audit_live_accessibility_136.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wcag-136-72-page-live-audit
+          path: /tmp/136-wcag-audit/*.json
+          if-no-files-found: warn
