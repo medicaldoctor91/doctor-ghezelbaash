@@ -27,7 +27,7 @@ authored=set(data.subjects(RDF.type,SH.NodeShape))
 published=set(shapes.subjects(RDF.type,SH.NodeShape))
 assert len(authored)==38,len(authored)
 assert authored<=published,sorted(str(x) for x in authored-published)
-assert len(published)==69,len(published)
+assert len(published)==71,len(published)
 ok,_,report=validate(data,shacl_graph=shapes,advanced=True,meta_shacl=True)
 assert ok,report
 person=rdflib.URIRef('https://www.ghezelbaash.ir/#saeed-ghezelbash')
@@ -36,8 +36,8 @@ data.remove((person,credential,None))
 ok,results,_=validate(data,shacl_graph=shapes,advanced=True)
 assert not ok,'The exported canonical credential contract did not run'
 assert any(results.objects(None,SH.resultPath)),len(results)
-print('69 shapes; canonical graph conforms; missing credential rejected')
-`,{graph:SOURCE.graph,shapes:output}),'69 shapes; canonical graph conforms; missing credential rejected');
+print('71 shapes; canonical graph conforms; missing credential rejected')
+`,{graph:SOURCE.graph,shapes:output}),'71 shapes; canonical graph conforms; missing credential rejected');
   assert.equal(JSON.stringify(SOURCE),before);
   assert.equal(buildShaclTurtle(SOURCE),output);
 });
