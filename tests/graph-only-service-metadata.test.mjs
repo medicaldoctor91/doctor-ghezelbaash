@@ -57,9 +57,9 @@ test('offers only gain page URLs for services which really are primary subjects 
 test('graph enrichment does not change physician authority coverage or clinic provider role',()=>{
   assert.equal(v(person.makesOffer).length,124);
   assert.equal(v(person.skills).length,85);
-  assert.equal(v(person.knowsAbout).length,221);
+  assert.equal(v(person.knowsAbout).length,227);
   assert.equal(v(person.medicalSpecialty).length,1);
-  assert.equal(person.availableService,undefined,'Person is not a schema.org availableService domain');
+  assert.equal(v(person.availableService).length,113,'IndividualPhysician inherits medically typed availableService from Physician');
   assert.equal(v(person.makesOffer).length,124);
   const clinic=nodes.get(origin+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah');
   for(const k of ['medicalSpecialty','hasOfferCatalog','makesOffer','availableService'])assert.equal(clinic[k],undefined);
