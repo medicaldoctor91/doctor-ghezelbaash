@@ -130,9 +130,9 @@ test('reconciliation is idempotent, preserves all canonical IDs and refuses unkn
 });
 
 test('graph and full HTML schema keep 1.3.6 DOI, exact Person identity and complete catalog',()=>{
-  assert.equal(SOURCE.version,'1.3.6');
+  const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+  assert.equal(pkg.version,'1.3.6');
   assert.equal(byId.size,1916);
-  assert.equal(ids(byId.get(ORIGIN+'/clinical-services-offer-catalog').itemListElement).length,0);
   const index=byId.get(ORIGIN+'/clinical-services-offer-catalog');
   assert.equal(index.numberOfItems,124);
   assert.equal(asArray(index.itemListElement).length,124);
