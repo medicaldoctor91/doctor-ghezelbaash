@@ -206,6 +206,35 @@ def validate_public_file(name,response,digest):
  assert hashlib.sha256(response.content).hexdigest()==digest, ('Site bytes',name)
  return True
 
+def fetch_live_file_after_cutover(name,digest,*,origin=SITE,attempts=7,sleep=time.sleep):
+ """Require exact bytes from the NORMAL public path after a deployment cutover.
+
+ A transient old Cloudflare edge response is retried per-file rather than
+ restarting the full 188-file inspection. Never accept a cache-busted URL or
+ the new release-provenance marker as proof that the original URL is correct.
+ A persistent mismatch fails closed with a concrete diagnostic trail.
+ """
+ assert attempts>=1
+ observations=[]
+ for i in range(attempts):
+  response=requests.get(origin+requests.utils.quote(name,safe='/'),timeout=90,
+    headers={'Cache-Control':'no-cache, no-store, max-age=0',
+             'Pragma':'no-cache','Accept-Encoding':'identity'})
+  observed=hashlib.sha256(response.content).hexdigest()
+  if response.status_code==200 and observed==digest:
+   return response.content, {'name':name,'attempt':i+1,'sha256':observed,
+     'bytes':len(response.content),'status':response.status_code,
+     'cfCacheStatus':response.headers.get('CF-Cache-Status')}
+  observations.append({'attempt':i+1,'http':response.status_code,
+    'sha256':observed,'expectedSha256':digest,
+    'cfCacheStatus':response.headers.get('CF-Cache-Status'),
+    'etag':response.headers.get('ETag')})
+  if i+1<attempts:
+   print('Site file not converged '+name+' attempt '+str(i+1)+
+         ' sha256 '+observed[:12]+' cache '+str(response.headers.get('CF-Cache-Status')),flush=True)
+   sleep(min(2*(i+1),12))
+ raise AssertionError(('Site bytes did not converge on canonical URL',name,observations))
+
 def validate_missing_route(response,expected):
  assert response.status_code==404, ('Missing route must return 404',response.status_code)
  assert response.content==expected, 'Missing route body differs from frozen 404 page'
@@ -222,11 +251,17 @@ def verify_site(work):
   r=requests.get(SITE+name,timeout=60);assert r.status_code==404,('Deployment control unexpectedly public',name)
   shutil.copyfile(work/'website'/name,live/name)
  public={name:digest for name,digest in expected.items() if name not in controls}
+ delivery={}
  def fetch(item):
-  name,digest=item;r=requests.get(SITE+requests.utils.quote(name,safe='/'),timeout=90,headers={'Cache-Control':'no-cache'})
-  validate_public_file(name,r,digest)
-  target=live/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(r.content)
- with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(fetch,public.items()))
+  name,digest=item
+  body,observation=fetch_live_file_after_cutover(name,digest)
+  target=live/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(body)
+  return name,observation
+ with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+  delivery=dict(pool.map(fetch,public.items()))
+ dump(work/'site-file-convergence.json',{'source':json.loads((work/'release-plan.json').read_text())['sourceCommit'],
+        'publicFiles':len(public),'retryCounts':{n:o['attempt'] for n,o in delivery.items() if o['attempt']>1},
+        'allNormalPathSha256Matched':True})
  missing=requests.get(SITE+'__release-audit-missing-'+str(time.time_ns()),timeout=60,headers={'Cache-Control':'no-cache'})
  validate_missing_route(missing,(work/'website/404.html').read_bytes())
  source=json.loads((work/'release-plan.json').read_text())['sourceCommit']
