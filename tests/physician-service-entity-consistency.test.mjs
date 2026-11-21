@@ -66,7 +66,7 @@ test('124 Service/Offer loops and inherited IndividualPhysician.availableService
   }
   assert.ok(ids(physician['dcterms:relation']).includes(legacyMigraine),
     'The legacy MedicalTherapy still has a generic RDF relation to physician');
-  assert.equal(ids(physician.knowsAbout).length,227);
+  assert.equal(ids(physician.knowsAbout).length,229);
   assert.equal(offers.filter(n=>n.url).length,10);
   assert.ok(physician.hasOfferCatalog,'User-approved Person OfferCatalog is preserved');
   const clinic=byId.get(ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah');
