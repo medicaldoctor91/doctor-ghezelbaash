@@ -111,7 +111,8 @@ test('personally provided migraine therapy has a separate correctly scoped acces
   assert.deepEqual(refIds(service.provider),[PERSON]);
   assert.ok(refIds(service['dcterms:subject']).includes(therapyId));
   assert.ok(refIds(service.availableChannel).includes('https://www.ghezelbaash.ir/in-person-clinic-service-channel'));
-  assert.equal(person.availableService,undefined,'Person uses Service.provider and makesOffer, not out-of-domain availableService');
+  assert.equal(refIds(person.availableService).length,113,'IndividualPhysician inherits medically typed availableService');
+  assert.ok(refIds(person.availableService).includes(therapyId),'Bare migraine MedicalTherapy remains an independently accessible clinical treatment');
   assert.ok(refIds(person['dcterms:relation']).includes(therapyId), 'Legacy MedicalTherapy remains linked, without an invalid Service declaration');
   assert.deepEqual(refIds(clinic.availableService), [], 'clinic is a location, not a clinical service provider');
   assert.ok(refIds(nodes.find(n=>n['@id'].endsWith('/in-person-clinic-service-channel')).providesService).includes(serviceId));

@@ -1,6 +1,7 @@
 import {enforceVideoKeyMomentEligibility} from './video-key-moments.mjs';
 import {connectClinicalContentToServices} from './clinical-content-backlinks.mjs';
 import {enforcePhysicianOfferShaclContract} from './physician-offer-shacl-contract.mjs';
+import {enrichEvidenceBoundedMedicalAuthority} from './clinical-medical-authority.mjs';
 import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
@@ -185,6 +186,9 @@ export function applyClinicalAttribution(source) {
   connectEvidenceScopedServiceWorks(graph, physician, origin);
   // Only backlink exact authored Articles/Videos whose existing about includes this Service.
   connectClinicalContentToServices(graph, physician['@id'], origin);
+  // Medical ontology (typed procedures, conditions and independently authored evidence)
+  // is derived only after all authored Articles have been materialized.
+  enrichEvidenceBoundedMedicalAuthority(graph, physician, origin);
   // Google Clip/SeekToAction key moments require a >=30-second video.
   // Suppress only unsupported structured chapters; visible watch-page chapters remain.
   enforceVideoKeyMomentEligibility(graph);

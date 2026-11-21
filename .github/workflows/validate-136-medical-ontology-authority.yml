@@ -1,0 +1,111 @@
+name: Validate 1.3.6 physician MedicalTherapy and MedicalCondition authority
+on:
+  push:
+    branches: [codex/136-medical-ontology-authority-20261121]
+permissions:
+  contents: read
+concurrency:
+  group: 136-medical-authority-unpublished
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned website and graph validation dependencies
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - name: Build immutable-artifact-compatible site, full graph, all 72 pages and SHACL
+        run: npm run build
+      - name: Test full clinical, crawl, identity and medical-ontology assertions
+        run: node --test --test-concurrency=1 tests/*.test.mjs
+      - name: Independently validate JSON-LD RDF and active homepage parity
+        run: |
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+      - name: Release invariants, counts, evidence and frozen exact DOI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,xml.etree.ElementTree as ET
+          root=Path('dist')
+          raw=(root/'graph.jsonld').read_bytes()
+          graph=json.loads(raw)['@graph']
+          by={n['@id']:n for n in graph}
+          person=by['https://www.ghezelbaash.ir/#saeed-ghezelbash']
+          many=lambda x:x if isinstance(x,list) else [] if x is None else [x]
+          ident=lambda x:x if isinstance(x,str) else x['@id']
+          link=lambda x:{ident(v) for v in many(x)}
+          typ=lambda n:many(n.get('@type'))
+          services=[x for x in graph if 'Service' in typ(x)]
+          offers=[x for x in graph if 'Offer' in typ(x)]
+          therapies=[x for x in graph if 'MedicalTherapy' in typ(x)]
+          procedures=[x for x in graph if 'MedicalProcedure' in typ(x)]
+          conditions=[x for x in graph if 'MedicalCondition' in typ(x)]
+          assert len(graph)==1916
+          assert len(services)==len(offers)==124
+          assert len(therapies)==21 and len(procedures)==97 and len(conditions)==8
+          assert len(link(person['availableService']))==113
+          assert link(person['makesOffer'])=={o['@id'] for o in offers}
+          assert len(link(person['knowsAbout']))==229
+          assert {x['@id'] for x in conditions}<=link(person['knowsAbout'])
+          assert all(link(s['provider'])=={person['@id']} for s in services)
+          assert all(ident(o['offeredBy'])==person['@id'] for o in offers)
+          assert len([o for o in offers if o.get('url')])==10
+          assert len([s for s in services if many(s.get('subjectOf'))])==122
+          assert all('procedure-rhinoplasty' not in x for x in link(person['availableService']))
+          assert all('procedure-cryolipolysis' not in x for x in link(person['availableService']))
+          assert sum(len(many(c.get('subjectOf'))) for c in conditions)==18
+          smap=ET.parse(root/'sitemap.xml').getroot()
+          pages=[x.text for row in smap if row.tag.endswith('url') for x in row if x.tag.endswith('loc')]
+          assert len(pages)==72
+          index=(root/'index.html').read_bytes()
+          end=index.index(b'</script>',index.index(b'id="canonical-entity-graph"'))+len(b'</script>')
+          assert end<2000000,('HEAD 2MB budget',end)
+          pol=json.loads((root/'doi-policy.json').read_text())
+          assert pol['currentArchive']['doi']=='10.5281/zenodo.24354791'
+          assert pol['currentArchive']['contentBaseline']=='1.3.6'
+          assert pol['currentArchive']['sourceCommit']=='eafb138d596a91504ed0af66e2557f52848e36b6'
+          assert pol['concept']['doi']=='10.5281/zenodo.18765168'
+          proof={'status':'PASS','version':'1.3.6','published':False,
+                 'graphNodes':len(graph),'offeredServices':len(services),
+                 'physicianMedicalAvailable':113,'medicalConditionCount':8,
+                 'conditionWorkBacklinks':18,'totalPersonKnowledgeTopics':len(link(person['knowsAbout'])),
+                 'sitemapPages':len(pages),'endOfActiveHomepageJSONLD':end,
+                 'doi':pol['currentArchive']['doi'],
+                 'graphSHA256':hashlib.sha256(raw).hexdigest()}
+          (root/'medical-authority-audit-136.json').write_text(json.dumps(proof,indent=2))
+          print(json.dumps(proof,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: validated-medical-ontology-authority-136
+          path: |
+            dist/medical-authority-audit-136.json
+            dist/graph.jsonld
+            dist/index.html
+            dist/shapes.ttl
+            dist/release-provenance.json
+            dist/doi-policy.json
+            dist/integrity-manifest.json
+            dist/sitemap.xml
+          retention-days: 30
