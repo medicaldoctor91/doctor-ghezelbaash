@@ -61,8 +61,9 @@ export function enforcePhysicianOfferShaclContract(source) {
     if(!valid)throw new Error('Unknown SHACL baseline: medical or Offer contract weakened');
     return false;
   }
+  // ClinicAssetShape intentionally forbids availableService, because the clinic
+  // is a dependent location; that existing maxCount=0 must remain untouched.
   if(original.includes('ex:PhysicianOfferProviderLoopShape') ||
-      original.includes('sh:path schema:availableService ; sh:maxCount 0') ||
       original.split(historicalAvailableService).length!==2)
     throw new Error('Unknown SHACL baseline: refuse weak or obsolete clinical contract');
   const a=original.indexOf(historicalShape),b=original.indexOf(nextShape,a);
