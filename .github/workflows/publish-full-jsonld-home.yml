@@ -1,8 +1,9 @@
 name: Publish full canonical RDF JSON-LD first in homepage
 # Complete graph validation permits other Person entities while preserving one physician ID.
+# Deployment must be explicitly dispatched after the cross-platform release gates.
+# A development-branch merge must never publish only the website.
 on:
-  push:
-    branches: [codex/full-rdf-jsonld-homepage-first-1-3-6]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
