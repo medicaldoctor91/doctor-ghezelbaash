@@ -35,6 +35,40 @@ const exclusions = new Set([
 
 const uniqueIds = values => [...new Set(many(values).map(id))].filter(Boolean);
 
+const reviewedMedicalConditionPromotions=Object.freeze([
+  // Existing named concepts and identifiers (SNOMED/MeSH) already occur in the
+  // public canonical graph; this only gives them their correct disease type.
+  ['biomedical-concept-telogen-effluvium','procedure-telogen-effluvium'],
+  ['biomedical-concept-hyperhidrosis','procedure-botox-hyperhidrosis'],
+]);
+function promoteExistingEvidenceSupportedConditions(nodes,origin,physicianId) {
+  let promoted=0;
+  for(const [conditionSlug,procedureSlug] of reviewedMedicalConditionPromotions){
+    const condition=nodes.get(origin+'/'+conditionSlug);
+    const therapy=nodes.get(origin+'/'+procedureSlug);
+    if(!condition || !has(condition,'DefinedTerm') ||
+      !therapy || !has(therapy,'Service') ||
+      !uniqueIds(therapy.provider).includes(physicianId) ||
+      !uniqueIds(therapy['dcterms:subject']).includes(condition['@id']))
+      throw new Error('Missing physician/service and concept evidence for '+conditionSlug);
+    if(conditionSlug==='biomedical-concept-hyperhidrosis' && !has(therapy,'MedicalTherapy')) {
+      if(!has(therapy,'MedicalProcedure'))throw new Error('Hyperhidrosis injection must already be MedicalProcedure');
+      therapy['@type']=[...types(therapy),'MedicalTherapy'];
+    }
+    if (!has(therapy,'MedicalTherapy'))
+      throw new Error('MedicalCondition.possibleTreatment must point to MedicalTherapy: '+procedureSlug);
+    if(!has(condition,'MedicalCondition')){
+      condition['@type']=[...types(condition),'MedicalCondition'];
+      promoted++;
+    }
+    const existing=uniqueIds(condition.possibleTreatment);
+    if(existing.length && (existing.length!==1 || existing[0]!==therapy['@id']))
+      throw new Error('Unreviewed condition treatment already exists: '+conditionSlug);
+    condition.possibleTreatment=ref(therapy['@id']);
+  }
+  return promoted;
+}
+
 export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) {
   if (!Array.isArray(graph) || !physician?.['@id'] || typeof origin !== 'string')
     throw new TypeError('Expected canonical graph, physician and origin');
@@ -43,6 +77,7 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
   const physicianId=physician['@id'];
   const nodes=new Map(graph.map(n=>[n['@id'],n]));
   if (nodes.size !== graph.length) throw new Error('Duplicate graph identifiers');
+  const supportedConditionsPromoted=promoteExistingEvidenceSupportedConditions(nodes,origin,physicianId);
   const services=graph.filter(n=>has(n,'Service'));
   const medicalEntities=graph.filter(n=>MEDICAL_RANGES.some(t=>has(n,t)));
   const conditions=graph.filter(n=>has(n,'MedicalCondition'));
@@ -54,7 +89,7 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
   const recognizedSurgerySet=new Set([...exclusions].map(slug=>origin+'/'+slug));
   if (notDelivered.length !== exclusions.size ||
       notDelivered.some(n=>!recognizedSurgerySet.has(n['@id'])) ||
-      services.length!==124 || conditions.length!==6 || medicallyTypedServices.length!==121)
+      services.length!==124 || conditions.length!==8 || medicallyTypedServices.length!==121)
     throw new Error('Clinical inventory drift: reviewed exclusion/source counts changed');
   if (!has(therapy,'MedicalTherapy') || has(therapy,'Service') ||
       !has(migraineService,'Service') ||
@@ -113,6 +148,7 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
     selectedAvailableService:selected.length,
     excludedSurgeryAssessments:exclusions.size,
     medicallyTypedConditions:conditions.length,
+    supportedConditionsPromoted,
     conditionKnowledgeAdded:addedConditionIds.length,
     physicianMedicalConditionKnowledge:conditions.every(c=>knownSet.has(c['@id'])),
     conditionSubjectOfEdgesAdded:conditionSubjectOfEdges
