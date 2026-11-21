@@ -52,10 +52,11 @@ export function validateAndCorrectPhysicianServiceAttribution(graph, physician, 
       throw new Error('Offer/service/provider loop not reciprocal: ' + service['@id']);
   }
 
-  // availableService's declared schema.org range is MedicalProcedure /
-  // MedicalTest / MedicalTherapy, and its domain is Physician / MedicalClinic /
-  // Hospital, NOT Person with generic Service values. The 121 misleading
-  // Person -> Service edges should not be expanded to 124.
+  // IndividualPhysician inherits Physician.availableService. Its expected
+  // values are MedicalProcedure / MedicalTest / MedicalTherapy, never generic
+  // Service-only subjects. Clear the historical mixed list temporarily; the
+  // evidence-bounded medical authority pass reconstructs the medically typed
+  // list and excludes assessment-only surgery after all Articles are complete.
   const oldAvailable = uniqueIds(many(physician.availableService));
   const legacyMigraine = origin + '/procedure-botulinum-toxin-chronic-migraine';
   const nonServices = oldAvailable.filter(id => !serviceIds.has(id));
@@ -69,7 +70,7 @@ export function validateAndCorrectPhysicianServiceAttribution(graph, physician, 
 
   delete physician.availableService;
   if (physician.availableService !== undefined)
-    throw new Error('Incompatible Person.availableService survived');
+    throw new Error('Mixed legacy availableService survived its normalization stage');
   if (!physician.hasOfferCatalog)
     throw new Error('Physician offer catalog unexpectedly absent');
   return {
