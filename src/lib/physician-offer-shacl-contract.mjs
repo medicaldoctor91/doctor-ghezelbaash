@@ -56,8 +56,7 @@ export function enforcePhysicianOfferShaclContract(source) {
   if(original.includes('ex:IndividualPhysicianAvailableMedicalCareShape')) {
     const valid=original.includes(physicianContract) &&
       original.includes(medicalShape) &&
-      !original.includes(historicalAvailableService) &&
-      !original.includes('sh:path schema:availableService ; sh:maxCount 0');
+      !original.includes(historicalAvailableService); // ClinicAssetShape still correctly has maxCount=0.
     if(!valid)throw new Error('Unknown SHACL baseline: medical or Offer contract weakened');
     return false;
   }
