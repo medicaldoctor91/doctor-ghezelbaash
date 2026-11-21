@@ -20,7 +20,7 @@ test('113 IndividualPhysician.availableService values are genuine, sourced, non-
   assert.equal(ids(physician.availableService).length,113);
   assert.equal(new Set(ids(physician.availableService)).size,113);
   assert.equal(graph.filter(n=>types(n).includes('Service')).length,124);
-  assert.equal(graph.filter(n=>types(n).includes('MedicalTherapy')).length,20);
+  assert.equal(graph.filter(n=>types(n).includes('MedicalTherapy')).length,21);
   assert.equal(graph.filter(n=>types(n).includes('MedicalProcedure')).length,97);
   assert.equal(graph.filter(n=>types(n).includes('DiagnosticProcedure')).length,6);
   const noSurgery=[
@@ -46,8 +46,8 @@ test('113 IndividualPhysician.availableService values are genuine, sourced, non-
 });
 
 test('all six medical conditions are physician knowledge topics with only true authored Article subjectOf links',()=>{
-  assert.equal(conditions.length,6);
-  assert.equal(ids(physician.knowsAbout).length,227);
+  assert.equal(conditions.length,8);
+  assert.equal(ids(physician.knowsAbout).length,229);
   const knowledge=new Set(ids(physician.knowsAbout));
   let backlinks=0,articles=0;
   for(const condition of conditions) {
