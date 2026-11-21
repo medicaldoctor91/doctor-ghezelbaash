@@ -62,10 +62,10 @@ jobs:
           conditions=[x for x in graph if 'MedicalCondition' in typ(x)]
           assert len(graph)==1916
           assert len(services)==len(offers)==124
-          assert len(therapies)==20 and len(procedures)==97 and len(conditions)==6
+          assert len(therapies)==21 and len(procedures)==97 and len(conditions)==8
           assert len(link(person['availableService']))==113
           assert link(person['makesOffer'])=={o['@id'] for o in offers}
-          assert len(link(person['knowsAbout']))==227
+          assert len(link(person['knowsAbout']))==229
           assert {x['@id'] for x in conditions}<=link(person['knowsAbout'])
           assert all(link(s['provider'])=={person['@id']} for s in services)
           assert all(ident(o['offeredBy'])==person['@id'] for o in offers)
@@ -87,7 +87,7 @@ jobs:
           assert pol['concept']['doi']=='10.5281/zenodo.18765168'
           proof={'status':'PASS','version':'1.3.6','published':False,
                  'graphNodes':len(graph),'offeredServices':len(services),
-                 'physicianMedicalAvailable':113,'medicalConditionCount':6,
+                 'physicianMedicalAvailable':113,'medicalConditionCount':8,
                  'conditionWorkBacklinks':18,'totalPersonKnowledgeTopics':227,
                  'sitemapPages':len(pages),'endOfActiveHomepageJSONLD':end,
                  'doi':pol['currentArchive']['doi'],
