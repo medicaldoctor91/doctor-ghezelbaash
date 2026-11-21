@@ -480,7 +480,7 @@ const knowledgeRows = [
   [
     "skin-barrier-and-irritancy",
     "Skin barrier function and irritation in rejuvenation care",
-    "procedure-skin-rejuvenation"
+    "procedure-energy-based-skin-treatment"
   ],
   [
     "collagen-remodeling-biology",
