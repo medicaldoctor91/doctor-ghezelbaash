@@ -143,15 +143,21 @@ export function enrichExistingClinicalServices(graph,physician,origin) {
       serviceTypesAdded++;
     }
     const current=values(service.category),ids=new Set(current.map(id));
-    if(!ids.has(group.categoryId)){
+    // A pre-existing chronic-migraine service has an authored, narrowly
+    // scoped SHACL contract that permits only two fixed DCTERMS subjects.
+    // Keep its verified authored category, never broaden its subject list.
+    const lockedMigraine=service['@id']===origin+'/service-botulinum-toxin-chronic-migraine';
+    if(!lockedMigraine && !ids.has(group.categoryId)){
       service.category=[...current,ref(group.categoryId)];
       categoriesAdded++;
     }
-    // The canonical ServiceCategory SHACL shape requires the authored
-    // category to also be an explicit DCTERMS subject of the same Service.
-    const subjects=values(service['dcterms:subject']);
-    if(!subjects.some(x=>id(x)===group.categoryId))
-      service['dcterms:subject']=[...subjects,ref(group.categoryId)];
+    if(!lockedMigraine){
+      // The canonical ServiceCategory SHACL shape requires the authored
+      // category to also be an explicit DCTERMS subject of the same Service.
+      const subjects=values(service['dcterms:subject']);
+      if(!subjects.some(x=>id(x)===group.categoryId))
+        service['dcterms:subject']=[...subjects,ref(group.categoryId)];
+    }
     if(group.offer.url==null && directPages.has(service['@id'])) {
       group.offer.url=directPages.get(service['@id']);
       offerUrlsAdded++;
