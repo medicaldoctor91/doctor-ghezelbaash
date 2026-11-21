@@ -1,6 +1,6 @@
 import {enforceVideoKeyMomentEligibility} from './video-key-moments.mjs';
 import {connectClinicalContentToServices} from './clinical-content-backlinks.mjs';
-import {reconcilePhysicianAvailableServices, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
+import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
 const values = value => value == null ? [] : Array.isArray(value) ? value : [value];
@@ -133,8 +133,8 @@ export function applyClinicalAttribution(source) {
   catalog.numberOfItems = catalog.itemListElement.length;
   connectPhysicianServices(graph, physician, origin);
   strengthenPhysicianAuthority(graph, physician, origin);
-  // Exact Service-provider parity; migrate legacy MedicalTherapy to knowsAbout.
-  reconcilePhysicianAvailableServices(graph, physician, origin);
+  // Schema.org-consistent Person↔Service/Offer parity; retain the older therapy as a generic RDF relation.
+  validateAndCorrectPhysicianServiceAttribution(graph, physician, origin);
 
   const medicalDegree = get('credential-doctor-of-medicine');
   const orcidEducation = ref(get('evidence-orcid-education-38054873')['@id']);
