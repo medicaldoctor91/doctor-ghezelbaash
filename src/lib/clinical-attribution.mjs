@@ -8,6 +8,7 @@ import {closeNativePhysicianAuthoritySchema} from './physician-schema-native-clo
 import {closePhysicianAndPracticeContactGraph} from './physician-practice-contact-closure.mjs';
 import {closePhysicianWebAndVideoSubjectOf} from './physician-subjectof-context-closure.mjs';
 import {closePhysicianPublishingAndPatientIntake} from './physician-publishing-intake-closure.mjs';
+import {linkHistoricAriaHospital} from './physician-historical-hospital-closure.mjs';
 import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
@@ -213,5 +214,7 @@ export function applyClinicalAttribution(source) {
   closePhysicianWebAndVideoSubjectOf(source, physician);
   // Graph-native physician editorial principles and current intake status.
   closePhysicianPublishingAndPatientIntake(graph, physician);
+  // Historic Aria Hospital (Google Maps ID): contextualize existing 2020–2021 Role, not a present job.
+  linkHistoricAriaHospital(source, physician);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
