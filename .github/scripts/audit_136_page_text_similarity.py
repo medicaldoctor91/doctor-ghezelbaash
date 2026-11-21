@@ -34,7 +34,7 @@ class CorpusParser(HTMLParser):
   if tag=='html':self.lang=a.get('lang','')
   if tag=='article' and 'medical-guide' in a.get('class','').split():
    self.article_depth+=1
-  elif self.article_depth:self.article_depth+=1
+  elif self.article_depth and tag not in {'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}:self.article_depth+=1
   if tag in ('script','style','template','noscript'):self.ignore+=1
  def handle_endtag(self,tag):
   if tag in ('script','style','template','noscript') and self.ignore:self.ignore-=1
@@ -46,7 +46,9 @@ def fetch(url):
  r.raise_for_status()
  p=CorpusParser();p.feed(r.content.decode('utf-8'))
  text=' '.join(p.parts)
- tokens=re.findall(r'[\\w\\u0600-\\u06FF]+',unicodedata.normalize('NFKC',text).lower())
+ tokens=[]
+ for token in re.split('[^\\u0600-\\u06FFa-zA-Z0-9_]+',unicodedata.normalize('NFKC',text).lower()):
+  if token:tokens.append(token)
  return {'url':url,'lang':p.lang,'words':len(tokens),'uniqueTerms':len(set(tokens)),'textChars':len(text),
          'shingles':set(tuple(tokens[i:i+5]) for i in range(max(0,len(tokens)-4)))}
 def jac(a,b):
