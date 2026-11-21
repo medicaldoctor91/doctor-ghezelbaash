@@ -58,13 +58,14 @@ jobs:
           ids=lambda arr:{ident(x) for x in many(arr)}
           assert len(G)==1916
           assert len(services)==len(offers)==124
-          assert ids(person['availableService'])=={s['@id'] for s in services}
+          assert 'availableService' not in person, 'Person.availableService has out-of-domain and out-of-range assertions'
           assert all(ids(s['provider'])=={person['@id']} for s in services)
+          assert all(len(ids(s.get('offers')))==1 for s in services)
+          assert ids(person['makesOffer'])=={o['@id'] for o in offers}
           assert len([o for o in offers if o.get('url')])==10
           assert person.get('hasOfferCatalog')
           assert all(ident(o.get('offeredBy'))==person['@id'] for o in offers)
-          assert origin+'/procedure-botulinum-toxin-chronic-migraine' not in ids(person['availableService'])
-          assert origin+'/procedure-botulinum-toxin-chronic-migraine' in ids(person.get('knowsAbout'))
+          assert origin+'/procedure-botulinum-toxin-chronic-migraine' in ids(person.get('dcterms:relation'))
           assert len([s for s in services if not many(s.get('subjectOf'))])==2
           assert (root/'index.html').is_file() and (root/'sitemap.xml').is_file()
           html=(root/'index.html').read_bytes()
@@ -81,7 +82,9 @@ jobs:
           receipt={'status':'PASS','operation':'build-only','published':False,'version':'1.3.6',
             'graphNodes':len(G),'providedServices':len(services),'offerCount':len(offers),
             'offerUrlCount':len([o for o in offers if o.get('url')]),
-            'personAvailableService':len(ids(person['availableService'])),
+            'personAvailableService':0,
+            'schemaCorrectPersonAvailableServiceAbsent':True,
+            'personMakesOffer':len(ids(person['makesOffer'])),
             'servicesWithSubjectOf':len([s for s in services if many(s.get('subjectOf'))]),
             'mainHeadScriptEndByte':end,'remainingBefore2MB':2000000-end,
             'sitemapPages':len(locs),'doi':policy['currentArchive']['doi'],
