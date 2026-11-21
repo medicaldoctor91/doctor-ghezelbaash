@@ -1,0 +1,66 @@
+name: Validate 1.3.6 technical hardening pre-release (no deployment)
+on:
+  push:
+    branches: [codex/136-pre-release-technical-hardening-20261121]
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-tech-hardening-qa
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deterministic build and validators
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check requests 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML 'pyarrow==22.0.0'
+      - name: Generate exact pre-release website distribution
+        run: npm run build
+      - name: Check JavaScript invariants, full homepage HEAD JSON-LD and typed RDF/SHACL
+        run: |
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_machine_resources.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+      - name: Exercise delivery convergence negative and positive tests
+        run: |
+          python tests/site-delivery-convergence.test.py
+          python tests/mutable-platform-release.test.py
+      - name: Preserve PASS receipt without publishing anywhere
+        if: success()
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path('dist')
+          files=['graph.jsonld','index.html','integrity-manifest.json','release-provenance.json','entity-facts.csv']
+          evidence={'status':'PASS','scope':'no external writes','release':'1.3.6','headCommit':os.environ['GITHUB_SHA'],
+                    'sha256':{n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in files}}
+          pathlib.Path('/tmp/pre-release-136-proof.json').write_text(json.dumps(evidence,indent=2))
+          print(json.dumps(evidence,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: verified-136-technical-pre-release
+          path: |
+            /tmp/pre-release-136-proof.json
+            dist/integrity-manifest.json
+            dist/release-provenance.json
+          retention-days: 30
+          compression-level: 0
