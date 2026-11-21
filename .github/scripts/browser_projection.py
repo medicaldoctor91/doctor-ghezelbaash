@@ -360,3 +360,19 @@ def validate_home_html(graph_path, html):
     parser = _InlineDocuments(html.decode() if isinstance(html, bytes) else html)
     parser.feed(parser.html)
     return validate_home_projection(graph_path, [item['document'] for item in parser.search], html)
+
+def require_current_active_head_jsonld(graph_path, html):
+    """Mandatory 1.3.6 release gate, not an archive-format compatibility validator.
+
+    Fail closed if the current release reverts to bounded search JSON-LD,
+    inert BODY JSON, duplicate JSON-LD, or an embedded graph not identical to
+    the stand-alone graph.jsonld. Historical archive validation deliberately
+    keeps its separate version-specific contracts.
+    """
+    proof = validate_home_html(graph_path, html)
+    assert proof['status'] == 'PASS', 'Current homepage projection failed'
+    assert proof['canonicalGraphStorage'] == 'application/ld+json#canonical-entity-graph', (
+        '1.3.6 MUST publish the full active canonical graph in HEAD, not a legacy inert projection')
+    assert proof['canonicalGraphEndByte'] + 16_000 < CRAWL_PREFIX_BYTES, (
+        '1.3.6 full JSON-LD overran the 2 MB HTML-first budget')
+    return proof
