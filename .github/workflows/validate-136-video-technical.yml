@@ -37,6 +37,15 @@ jobs:
           python tests/active-home-canonical-projection.test.py
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python tests/immutable-archive.test.py
+      - name: Read-only live video delivery check (MP4 HEAD/206 Range/Content-Digest and watch pages)
+        run: python tests/live-video-http-diagnostics.py dist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-video-delivery-evidence-136
+          path: /tmp/live-video-http-diagnostics.json
+          if-no-files-found: warn
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         if: success()
         with:
