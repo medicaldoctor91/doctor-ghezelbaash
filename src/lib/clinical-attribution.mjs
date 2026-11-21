@@ -1,5 +1,6 @@
 import {enforceVideoKeyMomentEligibility} from './video-key-moments.mjs';
 import {connectClinicalContentToServices} from './clinical-content-backlinks.mjs';
+import {enforcePhysicianOfferShaclContract} from './physician-offer-shacl-contract.mjs';
 import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
@@ -187,5 +188,7 @@ export function applyClinicalAttribution(source) {
   // Google Clip/SeekToAction key moments require a >=30-second video.
   // Suppress only unsupported structured chapters; visible watch-page chapters remain.
   enforceVideoKeyMomentEligibility(graph);
+  // Keep the canonical published SHACL in lockstep with the Person / Offer / Service graph.
+  enforcePhysicianOfferShaclContract(source);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
