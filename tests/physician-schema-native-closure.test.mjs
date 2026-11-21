@@ -15,15 +15,15 @@ const nodes=SOURCE.graph['@graph'];
 const byId=new Map(nodes.map(n=>[n['@id'],n]));
 const physician=byId.get(PERSON);
 
-test('Person ↔ clinical practice uses schema.org worksFor, employee and medicalSpecialty',()=>{
+test('solo-practice clinical attribution preserves owner/founder/practicesAt, not invented employee or clinic specialty',()=>{
   const clinic=byId.get(CLINIC);
-  assert.deepEqual(ids(physician.worksFor),[CLINIC]);
+  assert.equal(physician.worksFor,undefined);
   assert.deepEqual(ids(physician.practicesAt),[CLINIC]);
   assert.deepEqual(ids(physician.workLocation).slice(0,1),[CLINIC]);
-  assert.deepEqual(ids(clinic.employee),[PERSON]);
+  assert.equal(clinic.employee,undefined);
   assert.deepEqual(ids(clinic.owner),[PERSON]);
   assert.deepEqual(ids(clinic.founder),[PERSON]);
-  assert.deepEqual(ids(clinic.medicalSpecialty),[SPECIALTY]);
+  assert.equal(clinic.medicalSpecialty,undefined);
   assert.deepEqual(ids(physician.medicalSpecialty),[SPECIALTY]);
 });
 
