@@ -114,7 +114,7 @@ export function enrichMedicalResearchAndSpecialtyGraph(source,physician,origin=O
     }
     recorded.push({condition:condition['@id'],scholarlyArticle:article['@id']});
   }
-  if(![231,244].includes(refs(physician.knowsAbout).length) ||
+  if(![231,246].includes(refs(physician.knowsAbout).length) ||
      graph.filter(n=>typed(n,'MedicalCondition')).length!==10)
     throw new Error('Incomplete clinical/research subject graph');
 
