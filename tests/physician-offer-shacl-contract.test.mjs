@@ -8,23 +8,35 @@ const PERSON='https://www.ghezelbaash.ir/#saeed-ghezelbash';
 const many=x=>x==null?[]:Array.isArray(x)?x:[x];
 const id=x=>typeof x==='string'?x:x?.['@id'];
 
-test('published SHACL rejects out-of-domain Person.availableService and requires exact 124 clinical Offers',()=>{
+test('published SHACL requires 113 valid IndividualPhysician medical treatments plus all 124 Offers',()=>{
   const sh=SOURCE.validation.shaclSupplement;
-  assert.ok(sh.includes('sh:path schema:availableService ; sh:maxCount 0'));
+  assert.ok(sh.includes('sh:path schema:availableService ; sh:minCount 113 ; sh:maxCount 113'));
+  assert.ok(sh.includes('sh:targetObjectsOf schema:availableService'));
+  assert.ok(sh.includes('ex:IndividualPhysicianAvailableMedicalCareShape a sh:NodeShape'));
+  assert.ok(sh.includes('[ sh:class schema:MedicalProcedure ]'));
+  assert.ok(sh.includes('[ sh:class schema:DiagnosticProcedure ]'));
+  assert.ok(sh.includes('[ sh:class schema:MedicalTherapy ]'));
+  assert.ok(sh.includes('sh:not [ sh:in ( ex:procedure-blepharoplasty'));
   assert.ok(sh.includes('sh:path schema:makesOffer ; sh:class schema:Offer ; sh:minCount 124 ; sh:maxCount 124'));
   assert.ok(sh.includes('sh:path schema:hasOfferCatalog ; sh:class schema:OfferCatalog ; sh:minCount 1 ; sh:maxCount 1'));
   assert.ok(sh.includes('ex:PhysicianOfferProviderLoopShape a sh:NodeShape'));
   assert.ok(sh.includes('sh:targetObjectsOf schema:makesOffer'));
   assert.ok(!sh.includes('ex:AvailableServiceProviderShape a sh:NodeShape'));
-  assert.ok(!sh.includes('sh:targetObjectsOf schema:availableService'));
   const exported=buildShaclTurtle(SOURCE);
+  assert.ok(exported.includes('IndividualPhysicianAvailableMedicalCareShape'));
   assert.ok(exported.includes('PhysicianOfferProviderLoopShape'));
-  assert.ok(!exported.includes('AvailableServiceProviderShape'));
   const graph=SOURCE.graph['@graph'];
   const p=graph.find(n=>n['@id']===PERSON);
-  assert.equal(p.availableService,undefined);
+  const lookup=new Map(graph.map(n=>[n['@id'],n]));
+  assert.ok(many(p['@type']).includes('IndividualPhysician'));
+  assert.equal(many(p.availableService).length,113);
   assert.equal(many(p.makesOffer).length,124);
   assert.equal(many(p.hasOfferCatalog).length,1);
+  assert.ok(many(p.availableService).every(x=>{
+    const target=lookup.get(id(x));
+    return target && many(target['@type']).some(t=>['MedicalProcedure','MedicalTherapy','DiagnosticProcedure','MedicalTest'].includes(t));
+  }));
+  assert.ok(!many(p.availableService).some(x=>/rhinoplasty|facelift|blepharoplasty/.test(id(x))));
   const services=graph.filter(n=>many(n['@type']).includes('Service'));
   const offers=graph.filter(n=>many(n['@type']).includes('Offer'));
   assert.equal(services.length,124);
@@ -33,18 +45,17 @@ test('published SHACL rejects out-of-domain Person.availableService and requires
   assert.ok(offers.every(n=>id(n.offeredBy)===PERSON && many(n.itemOffered).length===1));
 });
 
-test('SHACL migration is idempotent and refuses unknown stale or weakened shape contracts',()=>{
+test('medical SHACL migration is idempotent and rejects corrupted cardinality/exclusion contracts',()=>{
   const src=structuredClone(SOURCE);
-  assert.equal(enforcePhysicianOfferShaclContract(src),false,'build-time migration must be idempotent');
+  assert.equal(enforcePhysicianOfferShaclContract(src),false);
   assert.deepEqual(src.validation.shaclSupplement,SOURCE.validation.shaclSupplement);
-  const stale=structuredClone(SOURCE);
-  stale.validation.shaclSupplement=stale.validation.shaclSupplement.replace(
-    'sh:path schema:availableService ; sh:maxCount 0',
-    'sh:path schema:availableService ; sh:minCount 1');
-  assert.throws(()=>enforcePhysicianOfferShaclContract(stale),/Unknown SHACL baseline/);
-  const omitted=structuredClone(SOURCE);
-  omitted.validation.shaclSupplement=omitted.validation.shaclSupplement.replace(
+  for(const phrase of [
+    'sh:path schema:availableService ; sh:minCount 113 ; sh:maxCount 113',
     'sh:path schema:makesOffer ; sh:class schema:Offer ; sh:minCount 124 ; sh:maxCount 124',
-    'sh:path schema:makesOffer ; sh:maxCount 1');
-  assert.throws(()=>enforcePhysicianOfferShaclContract(omitted),/Unknown SHACL baseline/);
+    'ex:procedure-autologous-fat-grafting'
+  ]) {
+    const broken=structuredClone(SOURCE);
+    broken.validation.shaclSupplement=broken.validation.shaclSupplement.replace(phrase,'BROKEN-CONTRACT');
+    assert.throws(()=>enforcePhysicianOfferShaclContract(broken),/Unknown SHACL baseline/);
+  }
 });
