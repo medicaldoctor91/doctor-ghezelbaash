@@ -147,6 +147,11 @@ export function enrichExistingClinicalServices(graph,physician,origin) {
       service.category=[...current,ref(group.categoryId)];
       categoriesAdded++;
     }
+    // The canonical ServiceCategory SHACL shape requires the authored
+    // category to also be an explicit DCTERMS subject of the same Service.
+    const subjects=values(service['dcterms:subject']);
+    if(!subjects.some(x=>id(x)===group.categoryId))
+      service['dcterms:subject']=[...subjects,ref(group.categoryId)];
     if(group.offer.url==null && directPages.has(service['@id'])) {
       group.offer.url=directPages.get(service['@id']);
       offerUrlsAdded++;
