@@ -259,6 +259,10 @@ class FrozenHomeProjectionTests(unittest.TestCase):
    with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as folder:
     root=Path(folder);self.fixture(root,legacy=mutation=='legacy',mismatched=mutation=='mismatched')
     with contextlib.ExitStack() as stack:
+     # The historical projection's local Node projector is not a provider write;
+     # use the exactly computed fixture in this isolated no-publication test.
+     if mutation=='legacy':
+      stack.enter_context(patch('browser_projection.expected_home_search_projection',return_value=self.search))
      stack.enter_context(patch.object(release,'load',side_effect=[plan,{'status':'PASS'}]))
      stack.enter_context(patch.object(release,'guard_frozen'));stack.enter_context(patch.object(release,'guard_hf_git'))
      operations=[stack.enter_context(patch.object(owner,name)) for owner,name in [
