@@ -47,14 +47,19 @@ test('every built public HTML page preserves its author, main subject, localized
     const biography=resource.pagePurpose==='professional-biography';
     assert.equal(routeProfiles.length,home||biography?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;
-    if(home||biography) {
-      assert.equal(values(actual.get(personId).knowsAbout).length,5);
-      assert.equal(values(actual.get(personId).skills).length,12);
-      assert.equal(values(actual.get(personId).availableService).length,6);
-      const catalog=origin+'/physician-clinical-offer-catalog';
-      assert.deepEqual(ids(actual.get(personId).hasOfferCatalog),[catalog]);
-      assert.equal(actual.get(catalog)?.['@type'],'OfferCatalog');
-    }
+    if(home||biography)assert.equal(values(actual.get(personId).knowsAbout).length,5);
+    const supplemental=find(dom,node=>node.tagName==='script'&&attr(node,'id')==='schema-physician-clinical-authority');
+    if(home||biography){
+      assert.ok(supplemental,resource.path+' carries compact physician authority schema');
+      const parsed=JSON.parse(supplemental.childNodes.map(n=>n.value??'').join(''));
+      const other=new Map(parsed['@graph'].map(n=>[n['@id'],n]));
+      const p=other.get(personId),catalog=other.get(origin+'/physician-clinical-offer-catalog');
+      assert.equal(values(p.skills).length,12);
+      assert.equal(values(p.availableService).length,6);
+      assert.equal(catalog['@type'],'OfferCatalog');
+      for(const item of [...values(p.skills),...values(p.availableService)])
+        assert.ok(other.has(item['@id']),'Supplementary identity reference is self-contained');
+    } else assert.equal(supplemental,undefined,resource.path+' does not include unrelated physician inventory');
     const expected=ids(authored.mainEntity);
     assert.deepEqual(ids(page.mainEntity),expected,resource.path+' mainEntity');
     if(resource.pagePurpose==='clinical-guide') {

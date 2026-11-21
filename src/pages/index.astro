@@ -13,6 +13,7 @@ import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
 import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {physicianAuthoritySupplement} from "../lib/physician-authority-supplement.mjs";
 import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
 import {resolvePhysicianPractice} from "../lib/physician-identity.mjs";
 import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, renderMedicalTrust} from "../lib/search-contract.mjs";
@@ -5166,7 +5167,9 @@ export function compileCanonicalSource() {
   const canonicalDataScript='<script id="canonical-entity-graph" type="application/json">'+json(homeGraph)+'</script>';
   const rawHome = shell(baseHead + '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' + `<link rel="stylesheet" href="${assets[0].path}">` +
-    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
+    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' +
+    '<script id="schema-physician-clinical-authority" type="application/ld+json">' +
+    json(physicianAuthoritySupplement(SOURCE.graph,{origin:base,language:'fa-IR'})) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
     .replace('</body>',canonicalDataScript+'</body>');
   const stampedHome = readerScope.stampGuideSource(rawHome);
   // Internal entries need the authored article and compact Search interface,
@@ -5318,7 +5321,10 @@ export function compileCanonicalSource() {
     const routeImage=thumbnail?SOURCE.graph['@graph'].find(n=>n.contentUrl===thumbnail&&[n['@type']].flat().includes('ImageObject'))??{contentUrl:thumbnail,encodingFormat:new URL(thumbnail).pathname.endsWith('.webp')?'image/webp':'image/jpeg',name:byId.get(watch.videoId).name}:social;
     const extras = '<title>' + escape(record.documentTitle) + '</title>' + meta('description',record.description) + meta('author',local(person.name,record.lang)) + socialMeta(record.documentTitle,record.description,record.canonicalUrl,record.lang,record.pageType,locales,routeImage) +
       '<link rel="canonical" href="' + record.canonicalUrl + '">' + record.alternates.map(a=>'<link rel="alternate" hreflang="'+escape(a.hrefLang)+'" href="'+escape(a.href)+'">').join('') +
-      '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.searchDocument)+'</script>';
+      '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.searchDocument)+'</script>' +
+      (record.pagePurpose==='professional-biography'
+        ? '<script id="schema-physician-clinical-authority" type="application/ld+json">'+json(physicianAuthoritySupplement(SOURCE.graph,{origin:base,language:record.lang}))+'</script>'
+        : '');
     const extrasDoc=parseFragment(extras);
     for(const n of extrasDoc.childNodes){n.parentNode=head;head.childNodes.push(n);}
     const root = document.childNodes.find(n=>n.tagName==='html'),bodyNode=root.childNodes.find(n=>n.tagName==='body');set(bodyNode,'lang',record.lang);set(bodyNode,'dir',record.dir);set(root,'lang',record.lang);set(root,'dir',record.dir);set(root,'data-route-view','focused');

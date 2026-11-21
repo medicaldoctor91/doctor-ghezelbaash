@@ -99,16 +99,6 @@ const searchIdentity=['@id','@type','name','alternateName','description','url','
 const searchPage=[...searchIdentity,'inLanguage','dateCreated','dateModified','lastReviewed','author','publisher','reviewedBy','mainEntity','about','isPartOf','breadcrumb','primaryImageOfPage'];
 const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','affiliation','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
 const profileTopics=['skill-botulinum-toxin-injection','skill-dermal-filler-injection','skill-subcision','skill-thread-lifting','skill-hyaluronidase-filler-revision-complication-management'];
-const profileSkills=['skill-botulinum-toxin-injection','skill-dermal-filler-injection','skill-thread-lifting',
-  'skill-subcision','skill-hyaluronidase-filler-revision-complication-management',
-  'skill-skin-rejuvenation','skill-acne-scar-assessment-multimodal-treatment-planning',
-  'skill-hair-loss-evaluation-treatment-planning','skill-periprocedural-risk-complication-management',
-  'skill-melasma-multimodal-planning','skill-facial-thread-vector-planning',
-  'skill-tear-trough-filler-candidacy'];
-const profileServices=['procedure-botulinum-toxin-aesthetic-treatment',
-  'procedure-facial-and-lip-dermal-filler','procedure-thread-lift','procedure-subcision',
-  'procedure-skin-mesotherapy','procedure-hair-loss-evaluation-and-treatment'];
-
 const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','areaServed','image','logo','location','containedInPlace','contactPoint'];
 const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','creator','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','representativeOfPage'];
 const searchVideo=[...searchImage,'description','publisher','copyrightHolder','about','uploadDate','duration','embedUrl','inLanguage','hasPart'];
@@ -180,7 +170,6 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   const clinic=practice&&source.get(practice['@id']);
   const home=values(primary['@type']).includes('ProfilePage')&&primary.url===origin+'/';
   const physicianProfile=values(primary['@type']).includes('ProfilePage')&&primary.mainEntity?.['@id']===physicianId;
-  const profileServiceIds=new Set(physicianProfile?profileServices.map(slug=>origin+'/'+slug):[]);
   const topicIds=new Set([...values(primary.mainEntity),...values(primary.about)].map(ref=>ref?.['@id']).filter(Boolean));
   const serviceIds=new Set([...values((authoredPrimary??primary).mainEntity),...values((authoredPrimary??primary).about)]
     .map(ref=>ref?.['@id']).filter(id=>values(source.get(id)?.['@type']).includes('Service')));
@@ -268,9 +257,6 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     let keys;
     if(id===primaryPageId)keys=secondaryArticleId?[...searchPage,'hasPart']:searchPage;
     else if(id===physicianId)keys=searchPerson;
-    // The profile references a tiny, nonrecursive subset of its actual clinical services.
-    else if(profileServiceIds.has(id))keys=['@id','@type','name'];
-    else if(types.includes('OfferCatalog'))keys=['@id','@type','name'];
     else if(node===clinic)keys=searchClinic;
     else if(types.includes('Article'))keys=searchArticle;
     else if(types.includes('Service'))keys=id===primary.mainEntity?.['@id']?[...searchService,'offers']:searchService;
@@ -342,15 +328,6 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       const topics=profileTopics.map(slug=>origin+'/'+slug).filter(id=>known.has(id))
         .map(id=>truthText(truth.get(id)?.name,language)).filter(Boolean);
       if(topics.length)output.knowsAbout=topics;
-      const skills=profileSkills.map(slug=>origin+'/'+slug)
-        .map(id=>truth.get(id)).filter(Boolean).map(node=>truthText(node.name,language)).filter(Boolean);
-      if(skills.length)output.skills=skills;
-      const services=profileServices.map(slug=>origin+'/'+slug)
-        .filter(id=>profileServiceIds.has(id)&&truth.has(id))
-        .map(id=>normalized({'@id':id},'availableService')).filter(item=>item!==OMIT);
-      if(services.length)output.availableService=services;
-      const catalogId=origin+'/physician-clinical-offer-catalog';
-      if(truth.has(catalogId))output.hasOfferCatalog=normalized({'@id':catalogId},'hasOfferCatalog');
     }
   }
   const result={'@context':'https://schema.org','@graph':[...selected.values()]};
