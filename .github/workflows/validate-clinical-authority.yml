@@ -1,7 +1,7 @@
 name: Validate extended physician clinical authority graph
 on:
   push:
-    branches: [codex/clinical-authority-graph-1-3-6]
+    branches: [codex/clinical-authority-graph-1-3-6, codex/targeted-article-video-service-backlinks-20261121]
   workflow_dispatch:
 permissions:
   contents: read
