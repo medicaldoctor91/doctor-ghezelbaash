@@ -280,7 +280,7 @@ def fresh_viewer_reads(work,original,*,max_attempts=7,sleeper=time.sleep):
     'headers':dict(r.headers),'bytes':len(r.content),
     'sha256':hashlib.sha256(r.content).hexdigest(),
     'attempt':attempt+1,'transient':transient,'maxAttempts':max_attempts})
-   if r.ok:return r
+   if 200<=r.status_code<400:return r
    if not transient or attempt+1==max_attempts:r.raise_for_status()
    delay=min(2*(2**attempt),20)
    print('HF Viewer endpoint still indexing '+urlsplit(url).path+
