@@ -256,18 +256,38 @@ def verify_media(w):
   out[path]={'fullSHA256':meta['sha256'],'partialChecks':checks,'HEAD304416':True}
  return out
 
-def fresh_viewer_reads(work,original):
- """Refresh Viewer API cache keys only; retain all revision/row/type gates."""
+def fresh_viewer_reads(work,original,*,max_attempts=7,sleeper=time.sleep):
+ """Retry only independently identified transient Viewer indexing/gateway failures.
+
+ Preserve every response (including failed requests) and keep all frozen
+ hashes, revision, typed rows, search, filter and statistics gates unchanged.
+ Never convert ResponseNotReady or any other 5xx into a successful result.
+ No retries for 4xx, malformed 200 responses or unexpected application errors.
+ """
  from urllib.parse import urlsplit
+ assert isinstance(max_attempts,int) and 1<=max_attempts<=10, 'Invalid bounded Viewer retry count'
  def fresh(url):
   if urlsplit(url).netloc!='datasets-server.huggingface.co':return original(url)
-  token=str(time.time_ns())
-  r=requests.get(url,params={'live_audit':token},headers={'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache','Accept-Encoding':'identity'},timeout=90)
   folder=Path(work)/'viewer-response-evidence';folder.mkdir(exist_ok=True)
-  name=token+'-'+urlsplit(url).path.strip('/').replace('/','-')
-  (folder/(name+'.body')).write_bytes(r.content)
-  dump(folder/(name+'.json'),{'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'requestedURL':url,'finalURL':r.url,'status':r.status_code,'headers':dict(r.headers),'bytes':len(r.content),'sha256':hashlib.sha256(r.content).hexdigest()})
-  r.raise_for_status();return r
+  for attempt in range(max_attempts):
+   token=str(time.time_ns())
+   r=requests.get(url,params={'live_audit':token},headers={'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache','Accept-Encoding':'identity'},timeout=90)
+   name=token+'-'+urlsplit(url).path.strip('/').replace('/','-')
+   transient=(r.status_code==500 and r.headers.get('x-error-code')=='ResponseNotReady') or r.status_code in (502,503,504)
+   (folder/(name+'.body')).write_bytes(r.content)
+   dump(folder/(name+'.json'),{'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+    'requestedURL':url,'finalURL':r.url,'status':r.status_code,
+    'headers':dict(r.headers),'bytes':len(r.content),
+    'sha256':hashlib.sha256(r.content).hexdigest(),
+    'attempt':attempt+1,'transient':transient,'maxAttempts':max_attempts})
+   if 200<=r.status_code<400:return r
+   if not transient or attempt+1==max_attempts:r.raise_for_status()
+   delay=min(2*(2**attempt),20)
+   print('HF Viewer endpoint still indexing '+urlsplit(url).path+
+         ', attempt '+str(attempt+1)+'/'+str(max_attempts)+
+         ', HTTP '+str(r.status_code)+'; preserving exact failure',flush=True)
+   sleeper(delay)
+  raise AssertionError('Unreachable Viewer retry termination')
  return fresh
 
 def guard_hf_git(w,plan):

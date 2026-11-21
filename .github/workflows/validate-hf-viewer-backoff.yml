@@ -1,0 +1,32 @@
+name: Validate fail-closed Hugging Face Viewer retry (unit only)
+on:
+  push:
+    branches: [codex/hf-dataset-viewer-eventual-consistency-20261121]
+permissions:
+  contents: read
+jobs:
+  retry-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies without any provider credentials
+        run: python -m pip install requests 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' PyYAML
+      - name: Require endpoint-level backoff and fail-closed non-transient errors
+        run: |
+          python -m py_compile .github/scripts/mutable_platform_release.py
+          python tests/hf-viewer-eventual-indexing.test.py
+          python tests/mutable-platform-release.test.py
+      - name: Verify publication controller remains credential-free for this test
+        run: |
+          test -z "${HF_TOKEN:-}"
+          test -z "${ZENODO_TOKEN:-}"
+          test -z "${KAGGLE_API_TOKEN:-}"
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
