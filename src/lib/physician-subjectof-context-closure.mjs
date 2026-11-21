@@ -62,7 +62,15 @@ export function closePhysicianWebAndVideoSubjectOf(source,physician) {
   const all=Object.values(ctx).filter(v=>v&&typeof v==='object'&&
     !Array.isArray(v)&&typeof v['@id']==='string'&&
     prefixes.some(({prefix})=>v['@id'].startsWith(prefix))).length;
-  if(all!==44)throw new Error('JSON-LD context definitions were not losslessly preserved');
+  // At this stage of the normal pipeline all 44 aliases are explicit.
+  // After the historical hospital close, 18 schema.org mappings use the
+  // equivalent inherited @vocab definition with their @type:'@id' retained.
+  const implicitSchemaTerms=Object.entries(ctx).filter(([k,v])=>v&&
+    typeof v==='object'&&!Array.isArray(v) && v['@id']===undefined &&
+    v['@type']==='@id' && !k.startsWith('@')).length;
+  if(!((all===44 && implicitSchemaTerms===0) ||
+       (all===26 && implicitSchemaTerms===18)))
+    throw new Error('JSON-LD context definitions were not losslessly preserved');
   if(new Set(ids(physician.subjectOf)).size!==172)
     throw new Error('Duplicate or unresolved authored/about media subjectOf');
   const graphIds=new Set(graph.map(n=>n['@id']));
