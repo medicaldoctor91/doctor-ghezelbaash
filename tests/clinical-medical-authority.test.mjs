@@ -47,7 +47,7 @@ test('113 IndividualPhysician.availableService values are genuine, sourced, non-
 
 test('eight clinically treated MedicalConditions retain exact authored Article backlinks',()=>{
   assert.equal(conditions.length,8);
-  assert.equal(ids(physician.knowsAbout).length,244);
+  assert.equal(ids(physician.knowsAbout).length,246);
   const knowledge=new Set(ids(physician.knowsAbout));
   let backlinks=0,articles=0;
   for(const condition of conditions) {
