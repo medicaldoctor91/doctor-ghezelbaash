@@ -1,7 +1,7 @@
 name: Verify published 1.3.6 by exact frozen candidate (GET-only)
 on:
   push:
-    branches: [codex/136-readonly-publication-reconciliation-20261121]
+    branches: [codex/136-readonly-publication-reconciliation-20261121, codex/136-hf-viewer-runtime-reverify-20261121]
   workflow_dispatch:
 permissions:
   contents: read
