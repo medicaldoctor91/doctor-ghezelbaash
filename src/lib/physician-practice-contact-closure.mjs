@@ -23,6 +23,7 @@ const RECEPTION_ACTION=ROOT+'/action-contact-clinic';
 const PHONE='+989308209494';
 const EMAIL='doctor@ghezelbaash.ir';
 const DM='https://ig.me/m/doctor.ghezelbaash';
+const CLINIC_YANDEX='https://yandex.com/maps/org/63459342435/';
 const arr=x=>x==null?[]:Array.isArray(x)?x:[x];
 const id=x=>typeof x==='string'?x:x?.['@id'];
 const refs=x=>arr(x).map(id).filter(Boolean);
@@ -72,6 +73,19 @@ export function closePhysicianAndPracticeContactGraph(graph,physician){
   clinic.email=EMAIL;
   reception.email=EMAIL;
 
+  // Yandex Maps independently lists this same Kermanshah practice, phone
+  // and official website (verified 2026-11-22). This is a CLINIC identity,
+  // never an interchangeable physician sameAs.
+  if(!arr(clinic.hasMap).includes(CLINIC_YANDEX))
+    throw new Error('Verified Yandex location is not a canonical office map');
+  if(clinic.sameAs!==undefined && !arr(clinic.sameAs).every(x=>typeof x==='string'))
+    throw new Error('Unexpected clinic sameAs target');
+  const knownClinicIdentities=new Set(arr(clinic.sameAs));
+  if(!knownClinicIdentities.has(CLINIC_YANDEX))
+    clinic.sameAs=[...arr(clinic.sameAs),CLINIC_YANDEX];
+  if(arr(physician.sameAs).includes(CLINIC_YANDEX))
+    throw new Error('Practice listing incorrectly used as physician sameAs');
+
   // Keep the EXISTING reception path for both person and office, while the
   // physician's own direct DM route is described by a separate ContactPoint.
   // This is an inline blank node; it does not claim a second physical office.
@@ -105,5 +119,5 @@ export function closePhysicianAndPracticeContactGraph(graph,physician){
      clinic.email!==reception.email)
     throw new Error('Incomplete doctor vs office contact disambiguation');
   return {doctorContactModes:2,clinicContactModes:1,sharedTelephone:PHONE,
-    distinctDirectOnlineContact:true,additionalGraphEntityIds:0};
+    distinctDirectOnlineContact:true,verifiedClinicSameAs:CLINIC_YANDEX,additionalGraphEntityIds:0};
 }
