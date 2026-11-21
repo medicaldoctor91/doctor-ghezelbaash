@@ -48,7 +48,7 @@ test('every built public HTML page preserves its author, main subject, localized
       assert.deepEqual(ids(person.owns),ids(canonical.get(personId).owns),
         'all authored ownership relations, including the separate data project, must remain intact');
       assert.equal(values(person.skills).length,85);
-      assert.equal(values(person.knowsAbout).length,231);
+      assert.equal(values(person.knowsAbout).length,244);
       assert.equal(values(person.makesOffer).length,124);
       assert.ok(actual.has(practiceId));
       profiles++;
