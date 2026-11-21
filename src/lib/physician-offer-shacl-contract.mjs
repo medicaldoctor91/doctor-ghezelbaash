@@ -26,10 +26,16 @@ export function enforcePhysicianOfferShaclContract(source) {
   if(typeof validation?.shaclSupplement!=='string')
     throw new TypeError('Source supplemental SHACL required');
   const original=validation.shaclSupplement;
-  if(original.includes('ex:PhysicianOfferProviderLoopShape') &&
-     original.includes('sh:path schema:availableService ; sh:maxCount 0') &&
-     !original.includes('sh:targetObjectsOf schema:availableService'))
-    return false; // Idempotent. Canonical graph may be materialized repeatedly.
+  if(original.includes('ex:PhysicianOfferProviderLoopShape')) {
+    const complete=original.includes('sh:path schema:availableService ; sh:maxCount 0') &&
+      original.includes('sh:path schema:makesOffer ; sh:class schema:Offer ; sh:minCount 124 ; sh:maxCount 124') &&
+      original.includes('sh:path schema:hasOfferCatalog ; sh:class schema:OfferCatalog ; sh:minCount 1 ; sh:maxCount 1') &&
+      original.includes(validatedOfferShape) &&
+      !original.includes('sh:targetObjectsOf schema:availableService') &&
+      !original.includes(historicalAvailableService);
+    if (!complete) throw new Error('Unknown SHACL baseline: published Offer contract weakened or corrupted');
+    return false; // Idempotent, but never accept an incomplete current contract.
+  }
 
   const count=original.split(historicalAvailableService).length-1;
   const start=original.indexOf(historicalShape);
