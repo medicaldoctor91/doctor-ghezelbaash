@@ -24,46 +24,61 @@ const contextualWorks = Object.freeze([
   ['procedure-mesogel-under-eye', '/skin-rejuvenation', 'mentions'],
 ]);
 
-export function reconcilePhysicianAvailableServices(graph, physician, origin) {
+export function validateAndCorrectPhysicianServiceAttribution(graph, physician, origin) {
   if (!Array.isArray(graph) || !physician?.['@id'] || !origin)
     throw new TypeError('Expected canonical graph, physician and origin');
   const physicianId = physician['@id'];
   const nodes = new Map(graph.map(n => [n['@id'], n]));
   if (nodes.size !== graph.length) throw new Error('Duplicate canonical node IDs');
-  const physicianServices = graph.filter(n => hasType(n,'Service') &&
-    uniqueIds(many(n.provider)).length === 1 &&
-    idOf(many(n.provider)[0]) === physicianId);
-  if (physicianServices.length !== graph.filter(n => hasType(n,'Service')).length)
-    throw new Error('Service provider conflict: physician cannot claim services of other providers');
+  const services = graph.filter(n => hasType(n, 'Service'));
+  const offers = graph.filter(n => hasType(n, 'Offer'));
+  const serviceIds = new Set(services.map(n => n['@id']));
+  const personOfferIds = uniqueIds(many(physician.makesOffer));
 
-  const existing = many(physician.availableService).map(idOf);
-  if (new Set(existing).size !== existing.length)
-    throw new Error('Duplicate physician.availableService references');
-  const physicianServiceIds = new Set(physicianServices.map(n => n['@id']));
-  const legacy = existing.filter(id => !physicianServiceIds.has(id));
-  const legacyMigraine = origin + '/procedure-botulinum-toxin-chronic-migraine';
-  // The legacy object is a MedicalTherapy rather than a Service. It remains
-  // accessible as medical subject knowledge, not a misleading Service entry.
-  if (legacy.some(id => id !== legacyMigraine || !hasType(nodes.get(id),'MedicalTherapy')))
-    throw new Error('Unexpected non-Service in physician.availableService: ' + legacy.join(', '));
-  const previous = new Set(existing);
-  physician.availableService = [
-    ...existing.filter(id => physicianServiceIds.has(id)).map(ref),
-    ...physicianServices.filter(n => !previous.has(n['@id'])).map(n => ref(n['@id'])),
-  ];
-  if (legacy.includes(legacyMigraine) &&
-      !many(physician.knowsAbout).some(v => idOf(v) === legacyMigraine)) {
-    physician.knowsAbout = [...many(physician.knowsAbout), ref(legacyMigraine)];
+  if (personOfferIds.length !== services.length ||
+      offers.length !== services.length ||
+      personOfferIds.some(id => !hasType(nodes.get(id), 'Offer')))
+    throw new Error('Person.makesOffer inventory differs from physician clinical Service inventory');
+  for (const service of services) {
+    const providerIds = uniqueIds(many(service.provider));
+    if (providerIds.length !== 1 || providerIds[0] !== physicianId)
+      throw new Error('Service.provider does not uniquely point to physician: ' + service['@id']);
+    const offerIds = uniqueIds(many(service.offers));
+    if (offerIds.length !== 1 || !personOfferIds.includes(offerIds[0]))
+      throw new Error('Missing direct physician Offer for ' + service['@id']);
+    const offer = nodes.get(offerIds[0]);
+    if (idOf(offer.itemOffered) !== service['@id'] ||
+        idOf(offer.offeredBy) !== physicianId)
+      throw new Error('Offer/service/provider loop not reciprocal: ' + service['@id']);
   }
-  const finalIds = physician.availableService.map(idOf);
-  if (new Set(finalIds).size !== physicianServices.length ||
-      finalIds.length !== physicianServices.length ||
-      finalIds.some(id => !physicianServiceIds.has(id)))
-    throw new Error('Physician.availableService does not exactly equal provided Services');
-  return {services: physicianServices.length,
-    added: finalIds.filter(id => !previous.has(id)),
-    migratedLegacy: legacy,
-    availableServiceCount: finalIds.length};
+
+  // availableService's declared schema.org range is MedicalProcedure /
+  // MedicalTest / MedicalTherapy, and its domain is Physician / MedicalClinic /
+  // Hospital, NOT Person with generic Service values. The 121 misleading
+  // Person -> Service edges should not be expanded to 124.
+  const oldAvailable = uniqueIds(many(physician.availableService));
+  const legacyMigraine = origin + '/procedure-botulinum-toxin-chronic-migraine';
+  const nonServices = oldAvailable.filter(id => !serviceIds.has(id));
+  if (nonServices.some(id => id !== legacyMigraine || !hasType(nodes.get(id),'MedicalTherapy')))
+    throw new Error('Unrecognized historical availableService edge: ' + nonServices.join(','));
+  // Keep the one legitimately distinct MedicalTherapy connected without
+  // representing it as another offer or independent Service.
+  if (nonServices.includes(legacyMigraine) &&
+      !many(physician['dcterms:relation']).some(v => idOf(v) === legacyMigraine))
+    physician['dcterms:relation'] = [...many(physician['dcterms:relation']), ref(legacyMigraine)];
+
+  delete physician.availableService;
+  if (physician.availableService !== undefined)
+    throw new Error('Incompatible Person.availableService survived');
+  if (!physician.hasOfferCatalog)
+    throw new Error('Physician offer catalog unexpectedly absent');
+  return {
+    serviceCount: services.length,
+    offerCount: offers.length,
+    removedNonconformingAvailableService: oldAvailable.length,
+    retainedMigraineMedicalTherapy: nonServices.includes(legacyMigraine),
+    personMakesOfferCount: personOfferIds.length,
+  };
 }
 
 export function connectEvidenceScopedServiceWorks(graph, physician, origin) {
