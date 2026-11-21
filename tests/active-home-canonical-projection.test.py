@@ -15,7 +15,7 @@ proof = require_current_active_head_jsonld(graph_path, html)
 assert proof["status"] == "PASS"
 assert proof["canonicalGraphStorage"] == "application/ld+json#canonical-entity-graph"
 assert proof["nodes"] >= 1900
-assert proof["criticalReserveBytes"] > 16_000
+assert proof["criticalReserveBytes"] > 4_096  # Hard 2 MB window with explicit 4 KB byte reserve
 
 # The validator must fail closed if the purported canonical external graph
 # differs in even one node from the embedded schema.
