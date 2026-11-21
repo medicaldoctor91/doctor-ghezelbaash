@@ -19,6 +19,8 @@ test('doctor is directly reachable for online assessment and also via the office
   assert.equal(person.telephone,phone);
   assert.equal(clinic.telephone,phone);
   assert.equal(clinic.email,email);
+  assert.ok(all(clinic.sameAs).includes('https://yandex.com/maps/org/63459342435/'));
+  assert.ok(!all(person.sameAs).includes('https://yandex.com/maps/org/63459342435/'),'A clinic listing cannot become a personal identity');
   assert.deepEqual(ids(clinic.contactPoint),[receptionistId]);
   const contacts=all(person.contactPoint);
   assert.equal(contacts.length,2);
@@ -54,7 +56,7 @@ test('contact graph closure is bytewise idempotent and rejects fabricated second
   const before=JSON.stringify(cloned);
   const receipt=closePhysicianAndPracticeContactGraph(cloned,p);
   assert.deepEqual(receipt,{doctorContactModes:2,clinicContactModes:1,sharedTelephone:phone,
-    distinctDirectOnlineContact:true,additionalGraphEntityIds:0});
+    distinctDirectOnlineContact:true,verifiedClinicSameAs:'https://yandex.com/maps/org/63459342435/',additionalGraphEntityIds:0});
   assert.equal(JSON.stringify(cloned),before);
   const wrong=structuredClone(graph);
   const w=wrong.find(x=>x['@id']===personId);
