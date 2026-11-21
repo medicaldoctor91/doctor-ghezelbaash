@@ -18,7 +18,7 @@ async function run(){
     try{
       page=await context.newPage();
       await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});
-      const findings=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).run();
+      const findings=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa']).analyze();
       entry.violations=findings.violations.map(v=>({
         id:v.id,impact:v.impact,description:v.description,helpUrl:v.helpUrl,
         affectedCount:v.nodes.length,
@@ -42,4 +42,7 @@ const summary={date:new Date().toISOString(),site:root,pages:urls.length,audited
 };
 fs.writeFileSync(dir+'/summary.json',JSON.stringify(summary,null,2));
 fs.writeFileSync(dir+'/pages.json',JSON.stringify(reports,null,2));
+if(summary.pagesWithExceptions.length) console.error('WCAG audit errors:',summary.pagesWithExceptions.length);
 console.log(JSON.stringify({date:summary.date,pages:summary.pages,audited:summary.audited,pagesWithViolations:summary.pagesWithViolations,totalViolations:summary.totalViolations,counts:summary.counts.slice(0,20),exceptions:summary.pagesWithExceptions},null,2));
+
+if(summary.pagesWithExceptions.length) process.exitCode=2;
