@@ -74,7 +74,19 @@ jobs:
           html=Path('dist/index.html').read_text()
           assert '<script id="schema-core-mainentity" type="application/ld+json">' not in html
           assert '<script id="schema-physician-clinical-authority" type="application/ld+json">' not in html
-          assert html.count('type="application/ld+json"')==1,'Homepage must contain exactly one standard JSON-LD script'
+          # Count actual parsed HTML script elements, not JavaScript source
+          # strings containing the literal MIME type.
+          from html.parser import HTMLParser
+          class SchemaScripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids=[]
+              def handle_starttag(self,tag,attrs):
+                  if tag=='script' and dict(attrs).get('type')=='application/ld+json':
+                      self.ids.append(dict(attrs).get('id'))
+          parser=SchemaScripts()
+          parser.feed(html)
+          assert parser.ids==['canonical-entity-graph'],('Homepage JSON-LD scripts',parser.ids)
           from pathlib import Path
           import re
           document=re.search(r'<script id="canonical-entity-graph" type="application/ld\+json">([\s\S]*?)</script>',html)
