@@ -50,7 +50,9 @@ def xml_urls(url):
     if 'error' in result or result['status']!=200: raise RuntimeError('Cannot fetch sitemap '+repr(result))
     text=requests.get(url,timeout=TIMEOUT).content
     tree=ET.fromstring(text)
-    return sorted({el.text.strip() for el in tree.iter() if el.tag.endswith('}loc') and el.text and el.text.strip().startswith(BASE)})
+    # Count HTML page locs only; never image:loc or other sitemap media entries.
+    return sorted({el.text.strip() for el in tree.findall('.//{*}url/{*}loc')
+                   if el.text and el.text.strip().startswith(BASE)})
 
 def parse_one(result):
     if 'error' in result:return {**result,'errors':['request_error']}
