@@ -47,6 +47,7 @@ jobs:
           node --test --test-concurrency=1 tests/*.test.mjs
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
+          python tests/active-home-canonical-projection.test.py
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python tests/mutable-platform-release.test.py
           python tests/immutable-archive.test.py
