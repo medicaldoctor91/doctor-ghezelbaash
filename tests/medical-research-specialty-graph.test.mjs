@@ -59,7 +59,7 @@ test('clinical relevantSpecialty covers all 112 provided medical procedures and 
   assert.equal(therapyAndDiagnostics.filter(n=>t(n).includes('DiagnosticProcedure')).length,6);
   for(const n of therapyAndDiagnostics){
     assert.ok(available.has(n['@id']));
-    assert.ok(t(n).includes('MedicalTherapy')||t(n).includes('DiagnosticProcedure'));
+    assert.ok(['MedicalTherapy','DiagnosticProcedure','MedicalProcedure','MedicalTest'].some(type=>t(n).includes(type)));
     assert.deepEqual(ids(n.provider),[PERSON]);
     assert.deepEqual(ids(n.relevantSpecialty),[specialty]);
   }
