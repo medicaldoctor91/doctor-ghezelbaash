@@ -16,6 +16,30 @@ class Tests(unittest.TestCase):
     with self.assertRaisesRegex(AssertionError,'Superseded archive-citation candidate'):
      release.publish(Path('/unused'))
     for operation in operations:operation.assert_not_called()
+ def test_mutable_citation_versions_preserve_archive_boundary(self):
+  import inspect
+  policy=release.DOI_POLICY
+  self.assertEqual(policy['currentArchive']['contentBaseline'],'1.3.6')
+  self.assertEqual(policy['currentArchive']['doi'],'10.5281/zenodo.24354791')
+  source='a'*40
+  self.assertEqual(release.mutable_citation_version('hf',source),'1.3.6+source.'+'a'*12)
+  self.assertEqual(release.mutable_citation_version('kaggle',40),'1.3.6+kaggle.40')
+  self.assertNotIn('1.3.4',release.mutable_citation_version('hf',source))
+  self.assertNotIn('1.3.4',release.mutable_citation_version('kaggle',40))
+  for platform,revision,exception in [
+   ('hf','not-a-real-commit',AssertionError),
+   ('kaggle','40',AssertionError),
+   ('kaggle',0,AssertionError),
+   ('archive',40,ValueError),
+  ]:
+   with self.subTest(platform=platform,revision=revision):
+    with self.assertRaises(exception):
+     release.mutable_citation_version(platform,revision)
+  pipeline=inspect.getsource(release.preflight)
+  self.assertIn("version=mutable_citation_version('hf',source)",pipeline)
+  self.assertIn("version=mutable_citation_version('kaggle',expected['kaggleVersion']+1)",pipeline)
+  self.assertGreaterEqual(pipeline.count("cff.pop('doi',None)"),2,
+     'Mutable distribution CFF must not claim the published exact archive DOI as its own')
  def test_scope_includes_notebook_distribution(self):
   import tempfile
   from platform_bundle import common_release, dump, load
