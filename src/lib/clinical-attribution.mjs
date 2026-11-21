@@ -130,7 +130,6 @@ export function applyClinicalAttribution(source) {
   catalog.numberOfItems = catalog.itemListElement.length;
   connectPhysicianServices(graph, physician, origin);
   strengthenPhysicianAuthority(graph, physician, origin);
-  enrichExistingClinicalServices(graph, physician, origin);
 
   const medicalDegree = get('credential-doctor-of-medicine');
   const orcidEducation = ref(get('evidence-orcid-education-38054873')['@id']);
@@ -173,5 +172,8 @@ export function applyClinicalAttribution(source) {
       page.about = [...values(page.about), ref(consultation['@id']), ref(online['@id'])];
     }
   }
+  // Apply metadata only after route mainEntity values are finalized;
+  // this prevents comparative educational pages from being offer landing URLs.
+  enrichExistingClinicalServices(graph, physician, origin);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
