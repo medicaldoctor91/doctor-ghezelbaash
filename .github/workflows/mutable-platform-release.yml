@@ -58,6 +58,7 @@ jobs:
           npm ci
           node --test tests/*.test.mjs
           npm run build
+          python tests/active-home-canonical-projection.test.py
           python tests/coordinated-doi-release.test.py
           python tests/platform-bundle-sync.test.py
           python tests/platform-publication.test.py
