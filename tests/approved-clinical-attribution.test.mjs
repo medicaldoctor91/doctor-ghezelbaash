@@ -46,9 +46,23 @@ test('the clinic describes the place of care and retains its separate local iden
   }
 });
 
-test('approved plan: neither physician nor clinic points to a general OfferCatalog', () => {
-  assert.equal(values(node(PERSON).hasOfferCatalog).length, 0);
-  assert.equal(values(node(CLINIC).hasOfferCatalog).length, 0);
+test('separate physician OfferCatalog is hierarchical; clinic never makes offers', () => {
+  const origin=SOURCE.canonicalOrigin;
+  const root=node(origin+'/physician-clinical-offer-catalog');
+  assert.equal(root['@type'],'OfferCatalog');
+  assert.deepEqual(ids(node(PERSON).hasOfferCatalog),[root['@id']]);
+  assert.equal(values(node(CLINIC).hasOfferCatalog).length,0);
+  assert.equal(root.numberOfItems,values(root.itemListElement).length);
+  const groups=ids(root.itemListElement).map(node);
+  const listed=groups.flatMap(group=>values(group.itemListElement).map(item=>item.item['@id']));
+  assert.equal(new Set(listed).size,services.length);
+  assert.deepEqual(new Set(listed),new Set(ids(node(PERSON).makesOffer)));
+  assert.ok(groups.length>=6);
+  for(const group of groups) {
+    assert.equal(group['@type'],'OfferCatalog');
+    assert.equal(group.numberOfItems,group.itemListElement.length);
+  }
+  assert.equal(node(CLINIC).makesOffer,undefined);
 });
 
 test('each physician-provided service has one service offer without inventing terms', () => {
@@ -139,4 +153,25 @@ test('clinical answer introductions expose the physician and preserve the author
   assert.match(english.answer, /^Botox, dermal fillers/);
   assert.ok(serializeAnswersText([english]).includes(
     `Answer introduction: ${JSON.stringify(english.answerLead)}\nAnswer: ${JSON.stringify(english.answer)}`));
+});
+
+test('extended skill and clinical knowledge registry are evidence-scoped, unique, resolved and distinct from specialty',()=>{
+  const origin=SOURCE.canonicalOrigin;
+  const p=node(PERSON);
+  const skills=ids(p.skills),topics=ids(p.knowsAbout);
+  assert.ok(skills.length>=80,'Curated skills total');
+  assert.ok(topics.length>=200,'Clinical knowledge topic total');
+  assert.equal(new Set(skills).size,skills.length);
+  assert.equal(new Set(topics).size,topics.length);
+  const allServiceIds=new Set(services.map(n=>n['@id']));
+  for(const id of [...skills,...topics].filter(id=>id.startsWith(origin+'/'))) {
+    const term=node(id);
+    assert.ok(term,id+' resolves');
+    assert.ok(term['@type']?.includes?.('DefinedTerm') || term['@type']==='DefinedTerm' ||
+      term['@type']?.includes?.('Service') || term['@type']?.includes?.('MedicalProcedure'),id);
+    if(id.includes('/clinical-topic-')||id.includes('/skill-')&&term['dcterms:relation']) {
+      assert.ok(allServiceIds.has(ids(term['dcterms:relation'])[0]),id+' maps to authored Service');
+    }
+  }
+  assert.equal(ids(p.medicalSpecialty).length,1,'No invented professional specialty');
 });
