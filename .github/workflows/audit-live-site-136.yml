@@ -1,0 +1,28 @@
+name: Inspect all 72 published pages and graph discoverability (read-only)
+on:
+  push:
+    branches: [codex/136-live-site-full-audit-fixes-20261121]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install HTTP and HTML inspection libraries
+        run: python -m pip install requests beautifulsoup4 lxml
+      - name: Crawl all 72 published pages and public machine resources
+        run: python .github/scripts/audit_live_site_prepublication.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complete-72-page-website-and-graph-audit
+          path: /tmp/136-site-audit/*.json
+          if-no-files-found: warn
+          retention-days: 30
