@@ -6,7 +6,7 @@ permissions:
   contents: read
 concurrency:
   group: 136-physician-service-entity-consistency
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   full-release-candidate:
     runs-on: ubuntu-latest
