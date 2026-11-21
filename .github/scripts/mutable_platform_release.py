@@ -249,9 +249,9 @@ def guard_hf_git(w,plan):
 
 def guard_frozen_home_projection(w):
  """Recheck actual restored HTML before any publication API can write."""
- from browser_projection import validate_home_html
+ from browser_projection import require_current_active_head_jsonld
  home=w/'website/index.html';graph=w/'website/graph.jsonld'
- proof=validate_home_html(graph,home.read_bytes())
+ proof=require_current_active_head_jsonld(graph,home.read_bytes())
  proof.update(homepageSHA256=sha(home),canonicalGraphSHA256=sha(graph))
  dump(w/'frozen-home-projection.json',proof)
  return proof
