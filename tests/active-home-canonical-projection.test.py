@@ -58,12 +58,17 @@ except AssertionError:
 else:
     raise AssertionError("Current release accepted an inert/legacy canonical graph")
 
-# The script must finish before the reserved HTML crawl boundary.
+# Test must exceed the actual measured byte budget. A hardcoded 20 KB
+# padding can remain below the crawl limit after unrelated metadata shrinks.
+# This test adapts to the built file and is therefore not a false negative.
+padding_bytes = max(20_000, 2_000_000 - proof["canonicalGraphEndByte"] + 16_001)
 oversized = html.replace(
     b'<script id="canonical-entity-graph" type="application/ld+json">',
-    b' ' * 20_000 + b'<script id="canonical-entity-graph" type="application/ld+json">',
+    b' ' * padding_bytes + b'<script id="canonical-entity-graph" type="application/ld+json">',
     1,
 )
+assert oversized != html
+
 try:
     require_current_active_head_jsonld(graph_path, oversized)
 except AssertionError:
