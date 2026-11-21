@@ -117,6 +117,7 @@ def describe(url, kind):
     p.feed(r.content.decode("utf-8"))
     kinds = []
     ids = []
+    definitions = {}
     schema_errors = []
     for script in p.scripts:
         try:
@@ -125,10 +126,25 @@ def describe(url, kind):
             if not isinstance(entities, list):
                 raise ValueError("JSON-LD not an object or array of objects")
             kinds.append(len(entities))
-            ids.extend(x.get("@id") for x in entities if isinstance(x, dict) and x.get("@id"))
+            for entity in entities:
+                if isinstance(entity, dict) and entity.get("@id"):
+                    ids.append(entity["@id"])
+                    definitions.setdefault(entity["@id"], []).append(entity)
         except (ValueError, TypeError) as exc:
             schema_errors.append(str(exc)[:180])
+    # A second JSON-LD script may legitimately add complementary descriptions
+    # to the same entity. It is NOT a duplicate page error by itself.
+    duplicates = {}
+    for identifier, nodes in definitions.items():
+        if len(nodes) < 2:
+            continue
+        keys = set().union(*(n.keys() for n in nodes))
+        differences = sorted(key for key in keys
+                             if len({json.dumps(n.get(key), sort_keys=True, ensure_ascii=False)
+                                     for n in nodes}) > 1)
+        duplicates[identifier] = differences
     d.update(
+        repeatedEntityDefinitions=duplicates,
         canonicals=p.canonical, robots=p.robots, ogUrls=p.og_urls,
         lang=p.lang, titles=p.title, h1=p.h1,
         ldScripts=len(p.scripts), ldEntityCounts=kinds, ldIDsSha256=hashlib.sha256(
@@ -151,13 +167,15 @@ def audit_one(url):
             errors.append(f"{agent}: wrong canonical {data['canonicals']}")
         if len(data["h1"]) != 1 or len(data["titles"]) != 1 or not data["lang"]:
             errors.append(f"{agent}: missing/multiple title, H1 or html lang")
-        if data["ldScripts"] != 1 or data["ldErrors"]:
-            errors.append(f"{agent}: invalid/duplicate JSON-LD")
+        if data["ldScripts"] < 1 or data["ldErrors"]:
+            errors.append(f"{agent}: absent or invalid JSON-LD")
+        if url == ORIGIN and (data["ldScripts"] != 1 or data["ldInHead"] != [True]):
+            errors.append(f"{agent}: homepage must have exactly one JSON-LD graph in HEAD")
         if any("noindex" in x.lower() for x in data["robots"]) or "noindex" in data["xRobots"].lower():
             errors.append(f"{agent}: unexpectedly blocked indexing")
         if data["ogUrls"] and data["ogUrls"] != [url]:
             errors.append(f"{agent}: Open Graph URL does not equal canonical")
-    keys = ("canonicals", "robots", "ogUrls", "lang", "titles", "h1", "ldScripts", "ldEntityCounts", "ldIDsSha256", "ldErrors")
+    keys = ("canonicals", "robots", "ogUrls", "lang", "titles", "h1", "ldScripts", "ldEntityCounts", "ldIDsSha256", "ldErrors", "repeatedEntityDefinitions")
     differences = [key for key in keys if normal.get(key) != google.get(key)]
     if differences:
         errors.append("Googlebot/ordinary semantic mismatch: " + ", ".join(differences))
