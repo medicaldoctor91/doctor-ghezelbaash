@@ -81,6 +81,15 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
   const services=graph.filter(n=>has(n,'Service'));
   const medicalEntities=graph.filter(n=>MEDICAL_RANGES.some(t=>has(n,t)));
   const conditions=graph.filter(n=>has(n,'MedicalCondition'));
+  const clinicalConditions=conditions.filter(n=>uniqueIds(n.possibleTreatment).length);
+  const researchConditions=conditions.filter(n=>!uniqueIds(n.possibleTreatment).length);
+  const allowedResearchIds=new Set([
+    origin+'/biomedical-concept-major-depressive-disorder',
+    origin+'/biomedical-concept-bipolar-disorder',
+  ]);
+  if(researchConditions.some(n=>!allowedResearchIds.has(n['@id'])) ||
+     new Set(researchConditions.map(n=>n['@id'])).size!==researchConditions.length)
+    throw new Error('Unreviewed MedicalCondition lacks clinical therapy or documented research attribution');
   const therapy=nodes.get(origin+'/procedure-botulinum-toxin-chronic-migraine');
   const migraineService=nodes.get(origin+'/service-botulinum-toxin-chronic-migraine');
   const medicallyTypedServices=services.filter(n=>MEDICAL_RANGES.some(t=>has(n,t)));
@@ -89,7 +98,7 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
   const recognizedSurgerySet=new Set([...exclusions].map(slug=>origin+'/'+slug));
   if (notDelivered.length !== exclusions.size ||
       notDelivered.some(n=>!recognizedSurgerySet.has(n['@id'])) ||
-      services.length!==124 || conditions.length!==8 || medicallyTypedServices.length!==121)
+      services.length!==124 || clinicalConditions.length!==8 || medicallyTypedServices.length!==121)
     throw new Error('Clinical inventory drift: reviewed exclusion/source counts changed');
   if (!has(therapy,'MedicalTherapy') || has(therapy,'Service') ||
       !has(migraineService,'Service') ||
@@ -117,7 +126,7 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
   const known=uniqueIds(physician.knowsAbout), knownSet=new Set(known);
   const addedConditionIds=[];
   let conditionSubjectOfEdges=0;
-  for (const condition of conditions) {
+  for (const condition of clinicalConditions) {
     const possibilities=uniqueIds(condition.possibleTreatment);
     if (!possibilities.length || !possibilities.every(t=>{
       const target=nodes.get(t);
@@ -147,10 +156,11 @@ export function enrichEvidenceBoundedMedicalAuthority(graph, physician, origin) 
     eligibleMedicalServices:eligible.length,
     selectedAvailableService:selected.length,
     excludedSurgeryAssessments:exclusions.size,
-    medicallyTypedConditions:conditions.length,
+    medicallyTypedConditions:clinicalConditions.length,
+    researchOnlyMedicalConditions:researchConditions.length,
     supportedConditionsPromoted,
     conditionKnowledgeAdded:addedConditionIds.length,
-    physicianMedicalConditionKnowledge:conditions.every(c=>knownSet.has(c['@id'])),
+    physicianMedicalConditionKnowledge:clinicalConditions.every(c=>knownSet.has(c['@id'])),
     conditionSubjectOfEdgesAdded:conditionSubjectOfEdges
   };
 }
