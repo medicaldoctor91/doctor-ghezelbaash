@@ -2205,7 +2205,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       metas: [...doc.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map(copy),
       canonical: copy(doc.head.querySelector('link[rel="canonical"]')),
       alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map(copy),
-      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map(copy),
+      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].filter(node=>node.id!=="canonical-entity-graph").map(copy),
       canonicalGraphScript: copy(doc.getElementById("canonical-entity-graph")),
       searchUi: copy(doc.getElementById("guide-search")),
     };
@@ -2419,9 +2419,12 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     for (const node of d.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],meta[name="guide-source-signature"],meta[name="guide-search-resource"],#guide-reader-scope,link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
     for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
     d.getElementById("canonical-entity-graph")?.remove();
-    for (const node of [...state.metas, state.sourceMarker, state.searchMarker, state.scopeScript, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean))
+    for (const node of [...state.metas, state.sourceMarker, state.searchMarker, state.scopeScript, state.canonical, ...state.alternates].filter(Boolean))
       d.head.append(node.cloneNode(true));
-    if (state.canonicalGraphScript) d.body.append(state.canonicalGraphScript.cloneNode(true));
+    // The complete RDF JSON-LD remains the first structured-data script even
+    // when the progressive reader restores the homepage without a reload.
+    if (state.canonicalGraphScript) d.head.append(state.canonicalGraphScript.cloneNode(true));
+    for (const node of state.scripts) d.head.append(node.cloneNode(true));
     const search = d.getElementById("guide-search"), ui = state.searchUi;
     if (search && ui) {
       for (const attr of ["aria-label","lang","dir","data-copy"]) {
@@ -2462,7 +2465,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
         });
         if (metadata.canonicalGraph) {
           JSON.parse(metadata.canonicalGraph.text);
-          const script = d.createElement("script"); script.type = "application/json";
+          const script = d.createElement("script"); script.type = "application/ld+json";
           script.id = "canonical-entity-graph"; script.textContent = metadata.canonicalGraph.text;
           state.canonicalGraphScript = script;
         }
@@ -5164,13 +5167,15 @@ export function compileCanonicalSource() {
   };
   const shell = (head, body, lang='fa-IR', dir='rtl', focused=false) => '<!doctype html><html lang="' + lang + '" dir="' + dir + '" prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"' +
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
-  const canonicalDataScript='<script id="canonical-entity-graph" type="application/json">'+json(homeGraph)+'</script>';
-  const rawHome = shell(baseHead + '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
-    '<link rel="canonical" href="' + homeUrl + '">' + `<link rel="stylesheet" href="${assets[0].path}">` +
+  // Full canonical RDF (all vocabularies) is the FIRST JSON-LD script in the
+  // homepage HEAD. Nothing is filtered or reserialized as Schema.org-only.
+  const canonicalDataScript='<script id="canonical-entity-graph" type="application/ld+json">'+json(homeGraph)+'</script>';
+  const rawHome = shell(baseHead + `<link rel="stylesheet" href="${assets[0].path}">` + canonicalDataScript +
+    '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
+    '<link rel="canonical" href="' + homeUrl + '">' +
     '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' +
     '<script id="schema-physician-clinical-authority" type="application/ld+json">' +
-    json(physicianAuthoritySupplement(SOURCE.graph,{origin:base,language:'fa-IR'})) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
-    .replace('</body>',canonicalDataScript+'</body>');
+    json(physicianAuthoritySupplement(SOURCE.graph,{origin:base,language:'fa-IR'})) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
   const stampedHome = readerScope.stampGuideSource(rawHome);
   // Internal entries need the authored article and compact Search interface,
   // rather than a second full document and its large discovery graph.
@@ -5192,7 +5197,7 @@ export function compileCanonicalSource() {
   lazySearchPointer.parentNode = readerHead; readerHead.childNodes.push(lazySearchPointer);
   const metadataAsset = asset('guide-meta','json',JSON.stringify({schemaVersion:1,sourceSignature,
     canonicalGraph:{id:'canonical-entity-graph',text:json(homeGraph)},
-    scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json')
+    scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json'&&attr(node,'id')!=='canonical-entity-graph')
       .map(node=>({id:attr(node,'id'),text:node.childNodes.map(child=>child.value??'').join('')}))}), 'application/json; charset=utf-8');
   readerHead.childNodes = readerHead.childNodes.filter(node=>node.tagName==='title'||node.tagName==='meta'||
     node.tagName==='link'&&['canonical','alternate'].includes(attr(node,'rel')));
