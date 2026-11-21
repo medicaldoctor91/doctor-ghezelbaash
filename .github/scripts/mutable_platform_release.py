@@ -35,6 +35,22 @@ def snapshot(w):
  for name in ['release-provenance.json','integrity-manifest.json']:(w/('before-'+name)).write_bytes(read(SITE+name).content)
  print(json.dumps(state),flush=True);return state
 
+def mutable_citation_version(platform, revision):
+    """Label mutable bytes by the approved 1.3.6 baseline, not archived packaging.
+
+    A current HF commit or Kaggle dataset revision is NOT a replacement for
+    the immutable Zenodo exact-DOI snapshot. Keep their citations distinct.
+    """
+    baseline=DOI_POLICY['currentArchive']['contentBaseline']
+    assert re.fullmatch(r'[0-9]+[.][0-9]+[.][0-9]+',baseline), 'Invalid content baseline'
+    if platform=='hf':
+        assert isinstance(revision,str) and re.fullmatch(r'[a-f0-9]{40}',revision), 'Invalid HF source commit'
+        return baseline+'+source.'+revision[:12]
+    if platform=='kaggle':
+        assert isinstance(revision,int) and revision>0, 'Invalid Kaggle version'
+        return baseline+'+kaggle.'+str(revision)
+    raise ValueError('Unknown mutable citation platform '+str(platform))
+
 def archive_scope(text, published=False, *, archive=None):
  if published:
   binding=archive or DOI_POLICY['currentArchive']
@@ -156,7 +172,7 @@ def preflight(w,expected):
  # CFF describes these mutable bytes by source and preserves the archive's own citation.
  import yaml
  if (hf/'CITATION.cff').exists():
-  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=DOI_POLICY['currentArchive']['contentBaseline']+'+source.'+source[:12],url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
+  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=mutable_citation_version('hf',source),url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
   for ref in cff.get('references',[]):
    if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
   (hf/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
@@ -176,7 +192,7 @@ def preflight(w,expected):
  scope_notebook_archive(kg/'starter.ipynb',archive_doi=archive['doi'],archive_source_commit=archive['sourceCommit'])
  # The archive citation remains a reference; changed mutable bytes keep their own version.
  import yaml
- cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=DOI_POLICY['currentArchive']['contentBaseline']+'+kaggle.'+str(expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
+ cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=mutable_citation_version('kaggle',expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
  for ref in cff.get('references',[]):
   if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
  (kg/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))

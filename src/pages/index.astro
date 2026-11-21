@@ -15,6 +15,7 @@ import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mj
 import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
 import {physicianAuthoritySupplement} from "../lib/physician-authority-supplement.mjs";
 import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
+import {renderEvidenceRelatedVideos} from "../lib/evidence-related-video-links.mjs";
 import {resolvePhysicianPractice} from "../lib/physician-identity.mjs";
 import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, renderMedicalTrust} from "../lib/search-contract.mjs";
 export const prerender = true;
@@ -5323,7 +5324,7 @@ export function compileCanonicalSource() {
     const trustParent = trustAnchor.parentNode;
     trustParent.childNodes.splice(trustParent.childNodes.indexOf(trustAnchor)+1,0,...trustNodes);
     for (const node of trustNodes) node.parentNode = trustParent;
-    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + readerControls(record) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
+    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + readerControls(record) + topicNavigation.renderTopicNavigation(record) + renderEvidenceRelatedVideos({record,recordByPath,graph:SOURCE.graph,physicianId:person['@id']}) + '</article>' + homeSuffix;
     const document = parse(result);
     const head = document.childNodes.find(n=>n.tagName==='html').childNodes.find(n=>n.tagName==='head');
     head.childNodes = head.childNodes.filter(n => !(n.tagName==='title' || n.tagName==='script' && ['application/ld+json','application/json'].includes(attr(n,'type')) ||

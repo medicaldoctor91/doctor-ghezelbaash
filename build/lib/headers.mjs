@@ -68,6 +68,9 @@ function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}
     ? delivery.html.cacheControl
     : 'public, max-age=0, must-revalidate';
   lines.push(`  Cache-Control: ${cache}`);
+  // The canonical machine URL must not persist an obsolete cohort in CF CDN.
+  // Browser revalidation alone does not govern intermediary edge storage.
+  if(resource.indexing!=='canonical-html')lines.push('  Cloudflare-CDN-Cache-Control: no-store');
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
   const profile=profileFor(delivery,resource.indexing);
