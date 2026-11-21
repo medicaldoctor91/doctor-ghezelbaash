@@ -1,0 +1,55 @@
+name: Validate focused 1.3.6 metadata without altering public release
+on:
+  push:
+    branches: [codex/136-focused-metadata-hardening-20261121]
+permissions:
+  contents: read
+jobs:
+  meta-and-crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      # Published immutable Zenodo 1.3.6 archive source; never infer from development HEAD.
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build all 72 canonical pages and complete JSON-LD
+        run: npm run build
+      - name: Reject metadata regressions and validate sitewide internal links, canonical head, crawl budget
+        run: |
+          node --test --test-concurrency=1 tests/concise-focused-meta-description.test.mjs tests/site-static-seo-integrity.test.mjs tests/72-page-indexability-and-internal-navigation.test.mjs tests/home-canonical-rdf-head.test.mjs
+          python tests/active-home-canonical-projection.test.py
+      - name: Save machine-readable proof without deployment
+        if: success()
+        run: |
+          python - <<'PY'
+          import json,hashlib, pathlib
+          root=pathlib.Path('dist')
+          index=(root/'index.html').read_bytes()
+          graph=(root/'graph.jsonld').read_bytes()
+          report={'status':'build-finished','candidateCommit':'${{ github.sha }}',
+                  'homepageSHA256':hashlib.sha256(index).hexdigest(),
+                  'canonicalGraphSHA256':hashlib.sha256(graph).hexdigest(),
+                  'graphEntities':len(json.loads(graph)['@graph']),
+                  'published':False}
+          pathlib.Path('metadata-release-gate-result.json').write_text(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: focused-meta-136-validation
+          path: metadata-release-gate-result.json
+          if-no-files-found: warn
+          retention-days: 30
