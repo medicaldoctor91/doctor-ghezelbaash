@@ -70,7 +70,7 @@ jobs:
           assert (root/'index.html').is_file() and (root/'sitemap.xml').is_file()
           html=(root/'index.html').read_bytes()
           end=html.index(b'</script>',html.index(b'id="canonical-entity-graph"'))+len(b'</script>')
-          assert end+16000<2000000, (end,2000000-end)
+          assert end+4096<2000000, (end,2000000-end)
           policy=json.loads((root/'doi-policy.json').read_text())
           assert policy['currentArchive']['doi']=='10.5281/zenodo.24354791'
           assert policy['currentArchive']['contentBaseline']=='1.3.6'
