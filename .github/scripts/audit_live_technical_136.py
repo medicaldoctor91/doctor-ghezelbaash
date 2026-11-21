@@ -72,7 +72,10 @@ def read_site():
     status,final,headers,body=get_bytes(ORIGIN+"/sitemap.xml",limit=400_000)
     assert status==200,("sitemap",status)
     root=ET.fromstring(body)
-    locs=[n.text.strip() for n in root.iter() if n.tag.endswith("}loc") or n.tag=="loc"]
+    ns={"s":"http://www.sitemaps.org/schemas/sitemap/0.9"}
+    locs=[item.text.strip() for item in root.findall("./s:url/s:loc",ns) if item.text]
+    assert locs, "No HTML URLs found in sitemap url/loc"
+    # image:loc is NOT a web page. Audit those as media assets, separately.
     return list(dict.fromkeys(locs))
 
 def page_worker(url):
