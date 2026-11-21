@@ -1,7 +1,7 @@
 name: Browser audit all 72 pages on mobile and desktop (read-only)
 on:
   push:
-    branches: [codex/136-live-site-full-audit-fixes-20261121]
+    branches: [codex/136-comprehensive-quality-gates-20261121]
 permissions:
   contents: read
 jobs:
