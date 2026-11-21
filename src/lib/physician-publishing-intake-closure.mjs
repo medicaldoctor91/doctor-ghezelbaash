@@ -11,7 +11,7 @@ const CLINIC=ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
 const POLICY=Object.freeze({
   '@type':'CreativeWork',
   name:'Clinical editorial principles',
-  text:'Physician-authored, medically reviewed, cited and dated clinical content.'
+  text:'Physician-authored, medically reviewed and cited.'
 });
 const types=n=>Array.isArray(n?.['@type'])?n['@type']:[n?.['@type']];
 export function closePhysicianPublishingAndPatientIntake(graph,physician) {
