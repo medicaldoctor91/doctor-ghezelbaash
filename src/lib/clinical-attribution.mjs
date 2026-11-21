@@ -1,4 +1,5 @@
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
+import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
 const values = value => value == null ? [] : Array.isArray(value) ? value : [value];
 const ref = id => ({'@id': id});
 const provideService = ref('http://purl.org/goodrelations/v1#ProvideService');
@@ -129,6 +130,7 @@ export function applyClinicalAttribution(source) {
   catalog.numberOfItems = catalog.itemListElement.length;
   connectPhysicianServices(graph, physician, origin);
   strengthenPhysicianAuthority(graph, physician, origin);
+  enrichExistingClinicalServices(graph, physician, origin);
 
   const medicalDegree = get('credential-doctor-of-medicine');
   const orcidEducation = ref(get('evidence-orcid-education-38054873')['@id']);
