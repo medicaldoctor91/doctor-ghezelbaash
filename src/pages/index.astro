@@ -2454,10 +2454,11 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (mode === "expanded" && !await loadFullSource()) return null;
       // Lazy Home payloads omit the discovery graph. Load its bounded head only
       // for a real Home transition, never for a focused topic or Search query.
-      if (key === "/" && state.metadataPath && !state.scripts.length) {
+      if (key === "/" && state.metadataPath && !state.canonicalGraphScript) {
         const metadata = await fetchContent(state.metadataPath, {json:true, signal:controller.signal});
         if (metadata.schemaVersion !== 1 || metadata.sourceSignature !== state.sourceSignature ||
-          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 1) return null;
+          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 0 ||
+          !metadata.canonicalGraph) return null;
         state.scripts = metadata.scripts.map(({id,text}) => {
           JSON.parse(text);
           const script = d.createElement("script"); script.type = "application/ld+json";
@@ -5180,9 +5181,9 @@ export function compileCanonicalSource() {
   const rawHome = shell(firstHead + `<link rel="stylesheet" href="${assets[0].path}">` + canonicalDataScript + remainingHead +
     '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' +
-    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' +
-    '<script id="schema-physician-clinical-authority" type="application/ld+json">' +
-    json(physicianAuthoritySupplement(SOURCE.graph,{origin:base,language:'fa-IR'})) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
+    // The sole homepage JSON-LD document is the entire canonical RDF graph.
+    // Do not append a competing or partial Schema.org authority projection.
+    discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
   const stampedHome = readerScope.stampGuideSource(rawHome);
   // Internal entries need the authored article and compact Search interface,
   // rather than a second full document and its large discovery graph.

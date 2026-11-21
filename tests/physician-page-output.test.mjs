@@ -32,11 +32,26 @@ test('every built public HTML page preserves its author, main subject, localized
     const filename=home?'index.html':resource.path.slice(1)+'.html';
     const html=readFileSync(new URL('../dist/'+filename,import.meta.url),'utf8');
     const dom=parse(html),element=find(dom,node=>node.tagName==='html');
-    const script=find(dom,node=>node.tagName==='script'&&attr(node,'id')==='schema-core-mainentity');
+    const script=find(dom,node=>node.tagName==='script'&&attr(node,'id')===(home?'canonical-entity-graph':'schema-core-mainentity'));
     assert.ok(script,resource.path+' emits the active Search document');
     assert.equal(attr(script,'type'),'application/ld+json',resource.path);
     const raw=script.childNodes.map(node=>node.value??'').join(''),document=JSON.parse(raw);
     const actual=new Map(document['@graph'].map(node=>[node['@id'],node]));
+    if(home) {
+      assert.deepEqual(document,SOURCE.graph,'homepage publishes exactly the full canonical RDF graph');
+      assert.equal([...dom.childNodes].filter(node=>node.tagName==='html').length,1);
+      assert.equal(document['@graph'].filter(node=>values(node['@type']).includes('Person')).length,1);
+      const page=actual.get(origin+'/webpage'),person=actual.get(personId);
+      assert.deepEqual(ids(page.mainEntity),[personId]);
+      assert.deepEqual(ids(page.author),[personId]);
+      assert.deepEqual(ids(person.owns),[practiceId]);
+      assert.equal(values(person.skills).length,85);
+      assert.equal(values(person.knowsAbout).length,221);
+      assert.equal(values(person.makesOffer).length,124);
+      assert.ok(actual.has(practiceId));
+      profiles++;
+      continue; // Focused-page projections have a deliberately different contract.
+    }
     const pageId=home?origin+'/webpage':url+'#webpage',page=actual.get(pageId);
     const authored=canonical.get(pageId),authoredDate=authored.dateModified?.['@value']??authored.dateModified;
     assert.ok(page,resource.path+' describes its own document');
@@ -47,9 +62,9 @@ test('every built public HTML page preserves its author, main subject, localized
     const biography=resource.pagePurpose==='professional-biography';
     assert.equal(routeProfiles.length,home||biography?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;
-    if(home||biography)assert.equal(values(actual.get(personId).knowsAbout).length,5);
+    if(biography)assert.equal(values(actual.get(personId).knowsAbout).length,5);
     const supplemental=find(dom,node=>node.tagName==='script'&&attr(node,'id')==='schema-physician-clinical-authority');
-    if(home||biography){
+    if(biography){
       assert.ok(supplemental,resource.path+' carries compact physician authority schema');
       const parsed=JSON.parse(supplemental.childNodes.map(n=>n.value??'').join(''));
       const other=new Map(parsed['@graph'].map(n=>[n['@id'],n]));
@@ -140,12 +155,8 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.equal(actual.get(practiceId).owner,undefined,resource.path+' avoids inverse ownership expansion');
     assert.equal(actual.get(practiceId).founder,undefined,resource.path+' avoids inverse founder expansion');
     assert.doesNotThrow(()=>assertBoundedSearchDocument(document),resource.path);
-    if(home) {
-      assert.ok(Buffer.byteLength(raw,'utf8')<=38000,'actual emitted homepage Search script fits its byte budget');
-      assert.equal(actual.get(personId).sameAs.length,23);
-      assert.equal(values(actual.get(personId).identifier).length,25);
-      t.diagnostic(`Built homepage Search script: ${Buffer.byteLength(raw,'utf8')}/38000 UTF-8 bytes`);
-    }
+    // The homepage is verified above as the full graph. Focused JSON-LD
+    // projections are checked here and by the Search contract tests.
   }
   assert.equal(profiles,2,'the homepage and the professional biography are physician profiles');
   assert.deepEqual(answersWithVerifiedAuthors,new Set([...canonical.values()]

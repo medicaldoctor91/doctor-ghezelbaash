@@ -21,7 +21,7 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
   assert.equal(full.length,1,'exactly one complete canonical graph script');
   assert.equal(attr(full[0],'type'),'application/ld+json');
   assert.equal(full[0].parentNode?.tagName,'head');
-  assert.equal(ldScripts[0],full[0],'complete graph must precede all focused JSON-LD');
+  assert.deepEqual(ldScripts,[full[0]],'homepage contains exactly one JSON-LD script');
   const graph=JSON.parse(contents(full[0]));
   assert.ok(graph['@context']&&Array.isArray(graph['@graph']));
   assert.ok(graph['@graph'].length>=1900,'no missing canonical nodes');
@@ -34,10 +34,9 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
   assert.ok(fullEnd<html.indexOf('</head>'),'complete graph ends within HEAD');
   assert.ok(fullEnd<html.indexOf('<body'),'full graph precedes all visible text');
   assert.ok(!/<script id="canonical-entity-graph" type="application\/json">/.test(html));
-  for(const name of ['schema-core-mainentity','schema-physician-clinical-authority']){
-    assert.equal(scripts.filter(node=>attr(node,'id')===name).length,1);
-    assert.ok(html.indexOf('id="'+name+'"')>fullEnd,'the contextual projection follows the complete graph');
-  }
+  for(const name of ['schema-core-mainentity','schema-physician-clinical-authority'])
+    assert.equal(scripts.filter(node=>attr(node,'id')===name).length,0,
+      'homepage must not publish duplicate or partial JSON-LD projections');
 });
 test('the complete JSON-LD is fully received before the strict 2,000,000 byte Googlebot budget',()=>{
   const first2MB=2_000_000;
@@ -54,7 +53,7 @@ test('progressive reader can restore the canonical graph as a single standard HE
   assert.equal(metadata.canonicalGraph.id,'canonical-entity-graph');
   assert.deepEqual(JSON.parse(metadata.canonicalGraph.text),exported);
   assert.equal(metadata.scripts.filter(x=>x.id==='canonical-entity-graph').length,0);
-  assert.ok(metadata.scripts.some(x=>x.id==='schema-core-mainentity'));
+  assert.deepEqual(metadata.scripts,[],'home route metadata must not restore duplicate schema projections');
   const jsRef=html.match(/<script id="site-runtime" defer src="([^"]+)"/);
   assert.ok(jsRef);
   const js=readFileSync(new URL('../dist'+jsRef[1],import.meta.url),'utf8');
