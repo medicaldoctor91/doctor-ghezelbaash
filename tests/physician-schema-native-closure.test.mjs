@@ -43,7 +43,8 @@ test('University.alumni and Person.contactPoint are reciprocally grounded',()=>{
   const clinic=byId.get(CLINIC);
   assert.ok(ids(physician.alumniOf).includes(SCHOOL));
   assert.ok(ids(university.alumni).includes(PERSON));
-  assert.deepEqual(ids(physician.contactPoint),ids(clinic.contactPoint));
+  assert.deepEqual(ids(physician.contactPoint).filter(Boolean),ids(clinic.contactPoint));
+  assert.equal(arr(physician.contactPoint).length,2,'Physician retains office reception plus his online consultation contact');
   assert.deepEqual(ids(physician.hasCredential).includes(BASE+'/credential-doctor-of-medicine'),true);
   assert.equal(physician.honorificSuffix,'M.D.');
   assert.equal(physician.occupationalCategory,'Physician');
