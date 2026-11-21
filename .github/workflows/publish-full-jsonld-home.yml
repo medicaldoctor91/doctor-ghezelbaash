@@ -75,14 +75,14 @@ jobs:
           assert '<script id="schema-core-mainentity" type="application/ld+json">' not in html
           assert '<script id="schema-physician-clinical-authority" type="application/ld+json">' not in html
           assert html.count('type="application/ld+json"')==1,'Homepage must contain exactly one standard JSON-LD script'
-                    from pathlib import Path
+          from pathlib import Path
           import re
           document=re.search(r'<script id="canonical-entity-graph" type="application/ld\+json">([\s\S]*?)</script>',html)
           assert document,'Complete JSON-LD script not found'
           assert html.count('<script id="canonical-entity-graph"')==1,'Duplicate canonical graph'
           assert document.end()<html.index('</head>'),'Full JSON-LD must be in head'
           assert document.end()<html.index('<body'),'Full JSON-LD must precede textual body'
-          assert document.start()<html.index('<script id="schema-core-mainentity"')
+          assert document.start()<html.index('<title>')
           assert html.lower().find('<meta charset=')>=0 and html.lower().find('<meta charset=')<document.start()
           assert html.find('rel="stylesheet"')<document.start(),'load CSS before parsing large JSON-LD'
           assert document.start()<html.index('<title>'),'full graph before text title'
