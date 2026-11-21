@@ -26,13 +26,17 @@ test('Canonical Person.subjectOf closes existing WebPage/VideoObject about and m
   assert.ok(newTypes.length>=6,'Physician video authorship and biography connections must remain');
 });
 
-test('44 JSON-LD @context property aliases preserve schema.org and local ontology IRIs without changing graph keys',()=>{
+test('44 IRI-typed properties survive lossless 26 explicit + 18 @vocab schema alias compaction',()=>{
   const ctx=SOURCE.graph['@context'];
   assert.equal(ctx.schema,'https://schema.org/');
   assert.equal(ctx.kg,ORIGIN+'/ontology/');
   const aliases=Object.values(ctx).filter(v=>v&&typeof v==='object'&&!Array.isArray(v)&&
     typeof v['@id']==='string' && /^(schema|kg):/.test(v['@id']));
-  assert.equal(aliases.length,44);
+  assert.equal(aliases.length,26);
+  const implicit=Object.entries(ctx).filter(([k,v])=>v && typeof v==='object' && !Array.isArray(v) &&
+    v['@id']===undefined && v['@type']==='@id' && !k.startsWith('@'));
+  assert.equal(implicit.length,18);
+  assert.ok(implicit.every(([key])=>typeof key==='string' && key.length>0));
   for(const v of aliases){
     assert.equal(v['@type'],'@id');
     const [prefix,suffix]=v['@id'].split(':',2);
@@ -50,7 +54,7 @@ test('SubjectOf and context compaction are fully deterministic and idempotent',(
   const result=closePhysicianWebAndVideoSubjectOf(copy,person);
   assert.deepEqual({added:result.addedSubjects,shortened:result.shortenedMappings,
     subjects:result.physicianSubjectOf,aliases:result.contextMappings},
-    {added:0,shortened:0,subjects:172,aliases:44});
+    {added:0,shortened:0,subjects:172,aliases:26});
   assert.equal(JSON.stringify(copy),before,'Never change graph on repeated materialization');
   const invalid=structuredClone(SOURCE);
   const p=invalid.graph['@graph'].find(n=>n['@id']===PERSON);
