@@ -1,0 +1,43 @@
+name: Validate 72-page SEO and internal-link release regression (no deployment)
+on:
+  push:
+    branches: [codex/136-comprehensive-quality-gates-20261121]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tested build and schema standards libraries
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0'
+      - name: Build and validate all 72 canonical pages
+        run: |
+          npm run build
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: canonical-72-page-regression-evidence
+          path: |
+            dist/release-provenance.json
+            dist/integrity-manifest.json
+          if-no-files-found: warn
