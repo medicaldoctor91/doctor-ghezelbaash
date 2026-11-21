@@ -86,7 +86,7 @@ test('graph-only research/specialty enrichment is idempotent and fails closed if
   const p=copy.graph['@graph'].find(n=>n['@id']===PERSON);
   const before=JSON.stringify(copy);
   const result=enrichMedicalResearchAndSpecialtyGraph(copy,p,ORIGIN);
-  assert.deepEqual({clinical:result.clinicalConditions,research:result.researchConditions,
+  assert.deepEqual({clinical:result.clinicalConditions,research:result.researchConditions.length,
     therapyDiagnostics:result.medicallySpecializedServices,conditions:result.medicallySpecializedConditions},
     {clinical:8,research:2,therapyDiagnostics:26,conditions:8});
   assert.equal(JSON.stringify(copy),before,'Re-running must preserve output exactly');
