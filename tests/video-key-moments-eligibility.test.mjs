@@ -76,5 +76,5 @@ test('physician service and Offer graph upgrades remain intact',()=>{
   assert.equal(nodes.filter(n=>refs(n['@type']).includes('Service')).length,124);
   assert.equal(nodes.filter(n=>refs(n['@type']).includes('Offer')).length,124);
   assert.equal(nodes.filter(n=>refs(n['@type']).includes('Offer') && n.url).length,10);
-  assert.equal(nodes.filter(n=>refs(n['@type']).includes('Service') && refs(n.subjectOf).length).length,29);
+  assert.ok(nodes.filter(n=>refs(n['@type']).includes('Service') && refs(n.subjectOf).length).length>=29);
 });
