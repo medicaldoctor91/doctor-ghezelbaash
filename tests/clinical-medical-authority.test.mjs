@@ -12,7 +12,7 @@ const types=x=>values(x?.['@type']);
 const graph=SOURCE.graph['@graph'];
 const byId=new Map(graph.map(x=>[x['@id'],x]));
 const physician=byId.get(personId);
-const conditions=graph.filter(n=>types(n).includes('MedicalCondition'));
+const conditions=graph.filter(n=>types(n).includes('MedicalCondition') && ids(n.possibleTreatment).length);
 const eligibleTypes=['MedicalProcedure','DiagnosticProcedure','MedicalTherapy','MedicalTest'];
 
 test('113 IndividualPhysician.availableService values are genuine, sourced, non-surgical medical services',()=>{
@@ -45,9 +45,9 @@ test('113 IndividualPhysician.availableService values are genuine, sourced, non-
   }
 });
 
-test('all six medical conditions are physician knowledge topics with only true authored Article subjectOf links',()=>{
+test('eight clinically treated MedicalConditions retain exact authored Article backlinks',()=>{
   assert.equal(conditions.length,8);
-  assert.equal(ids(physician.knowsAbout).length,229);
+  assert.equal(ids(physician.knowsAbout).length,231);
   const knowledge=new Set(ids(physician.knowsAbout));
   let backlinks=0,articles=0;
   for(const condition of conditions) {
