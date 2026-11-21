@@ -77,7 +77,10 @@ jobs:
           assert policy['currentArchive']['sourceCommit']=='eafb138d596a91504ed0af66e2557f52848e36b6'
           assert policy['concept']['doi']=='10.5281/zenodo.18765168'
           from xml.etree import ElementTree as ET
-          locs=[node.text for node in ET.parse(root/'sitemap.xml').iter() if node.tag.endswith('loc')]
+          # Only canonical sitemap url/loc entries, not nested image:image/image:loc.
+          sitemap=ET.parse(root/'sitemap.xml')
+          locs=[loc.text for url in sitemap.getroot() if url.tag.endswith('url')
+                for loc in url if loc.tag.endswith('loc')]
           assert len(locs)==72,(len(locs),locs[:3])
           receipt={'status':'PASS','operation':'build-only','published':False,'version':'1.3.6',
             'graphNodes':len(G),'providedServices':len(services),'offerCount':len(offers),
