@@ -1,0 +1,28 @@
+name: Audit 1.3.6 live site technical defects before next release
+on:
+  push:
+    branches: [codex/136-pre-release-technical-hardening-20261121]
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-tech-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check requests
+      - name: Audit all sitemap pages, canonical URLs, internal hrefs, local resources and cross-page fragments
+        run: python .github/scripts/audit_live_technical_136.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pre-release-live-technical-audit
+          path: /tmp/live-site-technical-audit/live-audit.json
+          if-no-files-found: warn
+          retention-days: 30
