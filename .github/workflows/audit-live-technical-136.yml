@@ -17,12 +17,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - run: python -m pip install --disable-pip-version-check requests
+      - name: Verify cutover hash-check retry algorithm with strict regression tests
+        run: python tests/site-delivery-convergence.test.py
       - name: Audit all sitemap pages, canonical URLs, internal hrefs, local resources and cross-page fragments
         run: python .github/scripts/audit_live_technical_136.py
+      - name: Audit full homepage JSON-LD and machine/video HTTP contracts
+        run: python .github/scripts/audit_live_contracts_136.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: pre-release-live-technical-audit
-          path: /tmp/live-site-technical-audit/live-audit.json
+          path: |
+            /tmp/live-site-technical-audit/live-audit.json
+            /tmp/live-contract-audit/contract-audit.json
           if-no-files-found: warn
           retention-days: 30
