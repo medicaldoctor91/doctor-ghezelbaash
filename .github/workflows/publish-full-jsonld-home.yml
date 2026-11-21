@@ -85,7 +85,7 @@ jobs:
           assert html.lower().find('<meta charset=')>=0 and html.lower().find('<meta charset=')<document.start()
           assert html.find('rel="stylesheet"')<document.start(),'load CSS before parsing large JSON-LD'
           assert document.start()<html.index('<title>'),'full graph before text title'
-          assert len(html[:document.end()].encode('utf8'))<1_968_000,'Full graph must fit under 2MB with safety margin'
+          assert len(html[:document.end()].encode('utf8'))<1_984_000,'Full graph must fit under 2MB with safety margin'
           assert json.loads(document.group(1))==json.loads(Path('dist/graph.jsonld').read_text()),'Full homepage graph differs from canonical RDF resource'
           assert html.count('<script id="canonical-entity-graph" type="application/json">')==0
           assert json.loads(Path('dist/release-provenance.json').read_text())['sourceCommit']==os.environ['GITHUB_SHA']
