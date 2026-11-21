@@ -11,6 +11,7 @@ jobs:
     env:
       ASTRO_TELEMETRY_DISABLED: '1'
       GIT_LFS_SKIP_SMUDGE: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
     steps:
       - uses: actions/checkout@v4
         with:
