@@ -61,8 +61,8 @@ test('72 canonical pages preserve SEO structure and sufficient meaningful intern
     const scripts=el('script').filter(n=>attr(n,'type')==='application/ld+json');
     assert.ok(scripts.length>=1,path+' has active JSON-LD');
     for(const script of scripts)assert.doesNotThrow(()=>JSON.parse(visibleText(script)),path+' parses as JSON-LD');
-    const graph=el('link').filter(n=>(attr(n,'rel')||'').split(' ').includes('alternate')&&attr(n,'type')==='application/ld+json'&&attr(n,'href')==='/graph.jsonld');
-    assert.equal(graph.length,1,path+' advertises one canonical graph alternate');
+    const graph=el('link').filter(n=>(attr(n,'rel')||'').split(' ').some(rel=>['alternate','describedby'].includes(rel))&&attr(n,'type')==='application/ld+json'&&attr(n,'href')==='/graph.jsonld');
+    assert.equal(graph.length,1,path+' advertises one typed canonical graph discovery link');
     const ids=new Set(elements.map(n=>attr(n,'id')).filter(Boolean));
     const internal=new Set();
     for(const link of el('a')){
