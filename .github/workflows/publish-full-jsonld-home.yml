@@ -45,6 +45,7 @@ jobs:
       - name: Validate source and complete built release
         run: |
           npm run build
+          python tests/active-home-canonical-projection.test.py
           node --test --test-concurrency=1 tests/*.test.mjs
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python tests/validate_machine_resources.py dist

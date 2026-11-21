@@ -1,8 +1,8 @@
-"""Validate preserved canonical data and the bounded homepage search projection.
+"""Validate the published homepage projection without weakening historical contracts.
 
-Published historical archives can explicitly opt into their former complete
-JSON-LD format. New candidates must preserve the graph as inert JSON at the end
-of the body and publish the deterministic, acyclic search document in the head.
+Published historical archives retain their explicit bounded/inert formats.
+The current 1.3.6 website publishes one complete canonical graph as active
+JSON-LD in the HEAD before the 2 MB crawl boundary, with no duplicate scripts.
 """
 import json
 import hashlib
@@ -290,6 +290,31 @@ def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_grap
     parser.feed(parser.html)
     assert len(blocks) == 1 and len(parser.search) == 1, 'Homepage must contain one recognized search JSON-LD document'
     assert [item['document'] for item in parser.search] == blocks, 'Parsed homepage search JSON-LD differs from supplied blocks'
+    # New production format: one *active*, complete JSON-LD document, as the
+    # first canonical schema script in HEAD. The old inert and historical
+    # projection checks below remain intact and are not loosened.
+    full = parser.search[0]
+    if full['id'] == 'canonical-entity-graph':
+        assert historical_policy is None, 'Archived formats require their original projection contract'
+        assert not parser.canonical, 'Duplicate inert canonical graph alongside the active graph'
+        assert full['inHead'] and not full['inBody'], 'Full RDF graph must be published in HEAD'
+        assert full['document'] == graph, 'Full homepage JSON-LD differs from graph.jsonld'
+        html_text = parser.html
+        assert '<head' in html_text and '</head>' in html_text and '<body' in html_text, 'HTML boundaries missing'
+        head_close = len(html_text[:html_text.index('</head>')].encode('utf-8'))
+        body_open = len(html_text[:html_text.index('<body')].encode('utf-8'))
+        title_open = html_text.find('<title>')
+        assert title_open > 0 and full['start'] < len(html_text[:title_open].encode('utf-8')), 'Full graph must precede TITLE'
+        assert full['end'] < head_close and full['end'] < body_open, 'Full graph must finish before the body'
+        assert full['end'] + 16_000 < CRAWL_PREFIX_BYTES, 'Full graph must fit within 2 MB with 16 kB reserve'
+        homepage = next((node for node in graph['@graph'] if {'ProfilePage', 'MedicalWebPage'} <= set(_values(node.get('@type')))), None)
+        person = next((node for node in graph['@graph'] if node.get('@id') == 'https://www.ghezelbaash.ir/#saeed-ghezelbash'), None)
+        assert homepage and homepage.get('mainEntity', {}).get('@id') == person['@id'], 'Homepage identity does not lead to physician'
+        assert person and 'Person' in _values(person.get('@type')), 'Canonical physician identity missing'
+        return {'status': 'PASS', 'nodes': len(ids), 'htmlBytes': len(html_text.encode('utf-8')),
+                'completeCanonicalGraph': True, 'canonicalGraphStorage': 'application/ld+json#canonical-entity-graph',
+                'canonicalGraphEndByte': full['end'], 'crawlPrefixBytes': CRAWL_PREFIX_BYTES,
+                'criticalReserveBytes': CRAWL_PREFIX_BYTES - full['end']}
     if allow_legacy_full_graph and not parser.canonical:
         assert blocks[0] == graph, 'Historical homepage inline graph differs from the complete canonical graph'
         return {'status': 'PASS', 'nodes': len(ids), 'htmlBytes': len(parser.html.encode()),
@@ -335,3 +360,19 @@ def validate_home_html(graph_path, html):
     parser = _InlineDocuments(html.decode() if isinstance(html, bytes) else html)
     parser.feed(parser.html)
     return validate_home_projection(graph_path, [item['document'] for item in parser.search], html)
+
+def require_current_active_head_jsonld(graph_path, html):
+    """Mandatory 1.3.6 release gate, not an archive-format compatibility validator.
+
+    Fail closed if the current release reverts to bounded search JSON-LD,
+    inert BODY JSON, duplicate JSON-LD, or an embedded graph not identical to
+    the stand-alone graph.jsonld. Historical archive validation deliberately
+    keeps its separate version-specific contracts.
+    """
+    proof = validate_home_html(graph_path, html)
+    assert proof['status'] == 'PASS', 'Current homepage projection failed'
+    assert proof['canonicalGraphStorage'] == 'application/ld+json#canonical-entity-graph', (
+        '1.3.6 MUST publish the full active canonical graph in HEAD, not a legacy inert projection')
+    assert proof['canonicalGraphEndByte'] + 16_000 < CRAWL_PREFIX_BYTES, (
+        '1.3.6 full JSON-LD overran the 2 MB HTML-first budget')
+    return proof

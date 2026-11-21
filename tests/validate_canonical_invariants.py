@@ -73,6 +73,14 @@ def validate(root: Path):
     if not (root / "graph.jsonld").is_file() or not (root / "index.html").is_file():
         raise AssertionError(f"built dist is incomplete: {root}")
 
+    # The active full-graph HEAD layout is a permanent 1.3.6 canonical
+    # invariant, not merely a one-off release workflow preference.
+    scripts = Path(__file__).resolve().parents[1] / ".github" / "scripts"
+    sys.path.insert(0, str(scripts))
+    from browser_projection import require_current_active_head_jsonld
+    homepage_schema = require_current_active_head_jsonld(
+        root / "graph.jsonld", (root / "index.html").read_bytes())
+
     files = list(text_files(root))
     combined = "\n".join(text for _, text in files)
 
@@ -153,6 +161,12 @@ def validate(root: Path):
         "clinic_place_id": CLINIC_PLACE,
         "clinic_osm_node": CLINIC_OSM,
         "solo_practice": True,
+        "homepage_schema": {
+            "storage": homepage_schema["canonicalGraphStorage"],
+            "nodes": homepage_schema["nodes"],
+            "end_byte": homepage_schema["canonicalGraphEndByte"],
+            "remaining_byte_reserve": homepage_schema["criticalReserveBytes"],
+        },
     }
 
 

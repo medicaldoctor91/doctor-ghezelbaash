@@ -156,7 +156,7 @@ def preflight(w,expected):
  # CFF describes these mutable bytes by source and preserves the archive's own citation.
  import yaml
  if (hf/'CITATION.cff').exists():
-  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+source.'+source[:12],url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
+  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=DOI_POLICY['currentArchive']['contentBaseline']+'+source.'+source[:12],url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
   for ref in cff.get('references',[]):
    if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
   (hf/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
@@ -176,7 +176,7 @@ def preflight(w,expected):
  scope_notebook_archive(kg/'starter.ipynb',archive_doi=archive['doi'],archive_source_commit=archive['sourceCommit'])
  # The archive citation remains a reference; changed mutable bytes keep their own version.
  import yaml
- cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+kaggle.'+str(expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
+ cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=DOI_POLICY['currentArchive']['contentBaseline']+'+kaggle.'+str(expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
  for ref in cff.get('references',[]):
   if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
  (kg/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
@@ -249,9 +249,9 @@ def guard_hf_git(w,plan):
 
 def guard_frozen_home_projection(w):
  """Recheck actual restored HTML before any publication API can write."""
- from browser_projection import validate_home_html
+ from browser_projection import require_current_active_head_jsonld
  home=w/'website/index.html';graph=w/'website/graph.jsonld'
- proof=validate_home_html(graph,home.read_bytes())
+ proof=require_current_active_head_jsonld(graph,home.read_bytes())
  proof.update(homepageSHA256=sha(home),canonicalGraphSHA256=sha(graph))
  dump(w/'frozen-home-projection.json',proof)
  return proof
