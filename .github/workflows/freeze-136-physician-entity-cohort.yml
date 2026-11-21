@@ -1,0 +1,99 @@
+name: Freeze updated 1.3.6 physician entity for coordinated release (no publication)
+on:
+  push:
+    branches: [codex/136-physician-entity-release-preflight-20261121]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: doctor-ghezelbaash-136-entity-readonly-preflight
+  cancel-in-progress: true
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      BASELINE_HF: ff4183c3e68bc383b8a47cf356dbebc1d716c823
+      BASELINE_SITE: 29e6c519e55252c70f8b22c0ada2061f1dd332fe
+      BASELINE_KAGGLE: '40'
+      BASELINE_NOTEBOOK: '21'
+      GIT_LFS_SKIP_SMUDGE: '1'
+      # Only required for authenticated reading the current private owner baseline.
+      # No provider mutation step exists in this workflow.
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - name: Checkout exact candidate with no persisted GitHub credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked website and RDF/platform validators
+        run: |
+          npm ci
+          python -m pip install requests 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - name: Build exact 1.3.6 graph, 72 pages, metadata and machine resources
+        run: npm run build
+      - name: Enforce physician Service/Offer and no legacy RDF contract
+        run: |
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/mutable-platform-release.test.py
+          python tests/hf-viewer-eventual-indexing.test.py
+          python tests/site-delivery-convergence.test.py
+          python tests/kaggle-baseline.test.py
+          python tests/immutable-archive.test.py
+      - name: Audit incoming frozen candidate before provider read
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('dist')
+          graph=json.loads((root/'graph.jsonld').read_text())['@graph']
+          person=next(x for x in graph if x['@id']=='https://www.ghezelbaash.ir/#saeed-ghezelbash')
+          many=lambda x:x if isinstance(x,list) else [] if x is None else [x]
+          assert len(graph)==1916
+          assert 'availableService' not in person
+          assert len(many(person.get('makesOffer')))==124
+          assert len([x for x in graph if 'Service' in many(x.get('@type'))])==124
+          assert len([x for x in graph if 'Offer' in many(x.get('@type'))])==124
+          assert len([x for x in graph if 'Service' in many(x.get('@type')) and many(x.get('subjectOf'))])==122
+          policy=json.loads((root/'doi-policy.json').read_text())
+          assert policy['currentArchive']['doi']=='10.5281/zenodo.24354791'
+          assert policy['currentArchive']['contentBaseline']=='1.3.6'
+          assert policy['currentArchive']['sourceCommit']=='eafb138d596a91504ed0af66e2557f52848e36b6'
+          print('PREPUBLICATION GRAPH/DOI CONTRACT PASS',flush=True)
+          PY
+      - name: Independently confirm existing site/HF/Kaggle/Notebook versions and immutable Zenodo archive
+        run: python .github/scripts/mutable_platform_release.py preflight
+      - name: Preserve byte-frozen candidate, without any deployment
+        if: success()
+        run: tar -czf /tmp/candidate.tar.gz -C /tmp mutable-release
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: frozen-mutable-candidate
+          path: /tmp/candidate.tar.gz
+          compression-level: 0
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: physician-entity-release-136-preflight-receipts
+          path: |
+            /tmp/mutable-release/*.json
+            /tmp/mutable-release/*.log
+            /tmp/mutable-release/viewer-response-evidence/
+          if-no-files-found: warn
+          retention-days: 30
