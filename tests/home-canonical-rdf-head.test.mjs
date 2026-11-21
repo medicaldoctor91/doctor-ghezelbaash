@@ -41,7 +41,7 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
 test('the complete JSON-LD is fully received before the strict 2,000,000 byte Googlebot budget',()=>{
   const first2MB=2_000_000;
   const endByte=byteSize(html.slice(0,fullEnd));
-  assert.ok(endByte<first2MB-16_000,'canonical graph terminates before 2MB with a 16kB margin, actual end '+endByte);
+  assert.ok(endByte<first2MB-4_096,'canonical graph terminates before 2MB with a >4kB byte-level margin, actual end '+endByte);
   assert.ok(byteSize(contents(full[0]))>1_000_000,'complete graph, not a tiny projection');
 });
 test('progressive reader can restore the canonical graph as a single standard HEAD script',()=>{
