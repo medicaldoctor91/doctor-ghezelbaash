@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {enrichEvidenceBoundedMedicalAuthority} from '../src/lib/clinical-medical-authority.mjs';
 import {parse} from 'parse5';
 import {SOURCE} from '../src/canonical/source.mjs';
 import {
@@ -38,14 +39,20 @@ function findTag(node,tag) {
   return null;
 }
 
-test('124 physician clinical Services have exact reciprocal Offer/provider links without out-of-domain availableService',()=>{
+test('124 Service/Offer loops and inherited IndividualPhysician.availableService have valid medical range',()=>{
   assert.equal(types(physician).includes('Person'),true);
   const services=graph.filter(n=>types(n).includes('Service'));
   const offers=graph.filter(n=>types(n).includes('Offer'));
   assert.equal(services.length,124);
   assert.equal(offers.length,124);
-  assert.equal(physician.availableService,undefined,
-    'Schema.org availableService has Physician/Clinic domain and MedicalTherapy/Procedure/Test range, not Person→Service');
+  assert.ok(types(physician).includes('IndividualPhysician'));
+  assert.equal(ids(physician.availableService).length,113);
+  assert.ok(ids(physician.availableService).includes(legacyMigraine));
+  const validMedicalTypes=['MedicalProcedure','MedicalTherapy','MedicalTest','DiagnosticProcedure'];
+  for(const therapy of ids(physician.availableService))
+    assert.ok(validMedicalTypes.some(t=>types(byId.get(therapy)).includes(t)), therapy+' has invalid availableService range');
+  assert.ok(!ids(physician.availableService).includes(ORIGIN+'/procedure-rhinoplasty'),
+    'Consultation-only surgical options must not masquerade as performed operations');
   const personOfferIds=new Set(ids(physician.makesOffer));
   assert.equal(personOfferIds.size,124);
   assert.deepEqual(personOfferIds,new Set(offers.map(n=>n['@id'])));
@@ -59,7 +66,7 @@ test('124 physician clinical Services have exact reciprocal Offer/provider links
   }
   assert.ok(ids(physician['dcterms:relation']).includes(legacyMigraine),
     'The legacy MedicalTherapy still has a generic RDF relation to physician');
-  assert.equal(ids(physician.knowsAbout).length,221);
+  assert.equal(ids(physician.knowsAbout).length,227);
   assert.equal(offers.filter(n=>n.url).length,10);
   assert.ok(physician.hasOfferCatalog,'User-approved Person OfferCatalog is preserved');
   const clinic=byId.get(ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah');
@@ -118,9 +125,13 @@ test('service/Offer normalization is idempotent and fails closed on unrecognized
   const beforeIds=cloned.map(n=>n['@id']);
   const result=validateAndCorrectPhysicianServiceAttribution(cloned,P,ORIGIN);
   assert.deepEqual(result,{serviceCount:124,offerCount:124,
-    removedNonconformingAvailableService:0,retainedMigraineMedicalTherapy:false,
+    removedNonconformingAvailableService:113,retainedMigraineMedicalTherapy:true,
     personMakesOfferCount:124});
-  assert.equal(P.availableService,undefined);
+  assert.equal(P.availableService,undefined,'Transition stage strips legacy mixture');
+  const rebound=enrichEvidenceBoundedMedicalAuthority(cloned,P,ORIGIN);
+  assert.equal(rebound.selectedAvailableService,113);
+  assert.equal(rebound.conditionKnowledgeAdded,0,'No duplicate condition topics');
+  assert.equal(rebound.conditionSubjectOfEdgesAdded,0,'No duplicate Article backlinks');
   assert.deepEqual(cloned.map(n=>n['@id']),beforeIds);
   const context=connectEvidenceScopedServiceWorks(cloned,P,ORIGIN);
   assert.equal(context.length,4);
