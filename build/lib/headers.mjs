@@ -59,8 +59,13 @@ function globalBlock(delivery){
 function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}){
   const lines=[resource.path];
   if(detachHtml){lines.push('  ! Cache-Control','  ! Link');}
-  const cache=resource.indexing==='canonical-html'?delivery.html.cacheControl:delivery.machine.cacheControl;
+  // Unversioned machine URLs change across deploys; one-hour browser/edge
+  // TTL can return stale CSV after graph.jsonld already changed.
+  // Preserve long-lived cache for content-hashed /assets/*.
+  const machine=resource.indexing!=='canonical-html';
+  const cache=machine?'public, max-age=0, must-revalidate':delivery.html.cacheControl;
   lines.push(`  Cache-Control: ${cache}`);
+  if(machine)lines.push('  Cloudflare-CDN-Cache-Control: no-store');
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
   const profile=profileFor(delivery,resource.indexing);
@@ -96,7 +101,7 @@ export function generateHeaders({origin,routes,cssPath,watchPosters=new Map(),ea
       const representation=pattern.startsWith('/provenance.jsonld/')?policy.provenanceRepresentation:policy.representation;
       const resource=machineResources.find(r=>r.path===representation);
       if(!resource)throw new Error('Unregistered identity representation '+representation);
-      blocks.push(`${pattern}\n  ! Link\n  ! Cache-Control\n  Content-Type: ${contentType(resource)}\n  X-Robots-Tag: noindex, follow\n  Access-Control-Allow-Origin: *\n  Access-Control-Expose-Headers: Link, Content-Type\n  Cross-Origin-Resource-Policy: cross-origin\n  Cache-Control: ${delivery.machine.cacheControl}\n  Link: <${representation}>; rel=describedby; type="${resource.mediaType}"`);
+      blocks.push(`${pattern}\n  ! Link\n  ! Cache-Control\n  Content-Type: ${contentType(resource)}\n  X-Robots-Tag: noindex, follow\n  Access-Control-Allow-Origin: *\n  Access-Control-Expose-Headers: Link, Content-Type\n  Cross-Origin-Resource-Policy: cross-origin\n  Cache-Control: public, max-age=0, must-revalidate\n  Cloudflare-CDN-Cache-Control: no-store\n  Link: <${representation}>; rel=describedby; type="${resource.mediaType}"`);
     }
   }
   blocks.push(`/assets/*\n  ! Link\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable`);
