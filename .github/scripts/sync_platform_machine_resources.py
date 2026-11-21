@@ -87,7 +87,7 @@ def verify_website_run(url, source_commit, *, allow_promoted_source=False):
                                '.', ':!.github', ':!tests', ':!reports'],
                               cwd=REPOSITORY, capture_output=True).returncode == 0, 'Product inputs differ from deployed source'
     assert run['status'] == 'completed' and run['conclusion'] == 'success', 'Website deployment run did not complete successfully'
-    assert run['path'] == '.github/workflows/machine-readable-interop.yml', 'Expected the scoped website deployment workflow'
+    assert run['path'] in {'.github/workflows/machine-readable-interop.yml', '.github/workflows/deploy-clinical-authority.yml'}, 'Unexpected website deployment workflow'
 
 
 def extract_package(archive, root):
@@ -317,7 +317,7 @@ def publish(args, ctx, control):
         parent_commit=args.hf_revision,
         operations=[CommitOperationAdd(path_in_repo=file.relative_to(stage).as_posix(),
                                        path_or_fileobj=str(file)) for file in changes],
-        commit_message=f'Preserve original positioning and distribute {positioning_rows} competitive training examples (v1.3.4 maintenance)',
+        commit_message=f'Synchronize 1.3.6 clinical authority graph with {positioning_rows} preserved training examples',
         commit_description='Published website source ' + args.website_commit + '; package run ' + ctx['run_url'])
     revision = result.oid
     report = {'websiteSourceCommit': args.website_commit, 'publicationRun': ctx['run_url'],
@@ -353,7 +353,7 @@ def publish(args, ctx, control):
     ambiguous_error = None
     try:
         response = client.dataset_create_version(str(kg_stage),
-            version_notes=f'Maintain content baseline v1.3.4: preserve original positioning and distribute {positioning_rows} typed competitive training examples',
+            version_notes=f'Publish verified 1.3.6 clinical authority graph; preserve {positioning_rows} positioning examples',
             quiet=True, convert_to_csv=False, delete_old_versions=False, dir_mode='zip')
         if response is None or getattr(response, 'invalid_tags', None) or str(getattr(response, 'status', '')).lower() != 'ok':
             ambiguous_error = 'Kaggle did not return a confirmed successful version submission'
@@ -366,7 +366,7 @@ def publish(args, ctx, control):
 
     desired_version = args.kaggle_version + 1
     verified = None
-    for attempt in range(30):
+    for attempt in range(120):
         view = json.loads(fetch('https://api.kaggle.com/v1/datasets/view/' + KAGGLE_REF))
         assert int(view['currentVersionNumber']) <= desired_version, 'A newer external Kaggle version appeared during verification'
         assert not any(int(item['versionNumber']) > desired_version for item in view.get('versions', [])), 'A newer Kaggle version appeared during verification'
@@ -383,7 +383,7 @@ def publish(args, ctx, control):
                 verified = candidate
                 break
             except (AssertionError, urllib.error.URLError, zipfile.BadZipFile, json.JSONDecodeError, TimeoutError):
-                if attempt == 29:
+                if attempt == 119:
                     raise
         time.sleep(10)
     assert verified is not None, 'Kaggle publication was not confirmed; inspect public version before any retry'

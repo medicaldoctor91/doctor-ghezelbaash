@@ -1,0 +1,63 @@
+name: Synchronize clinical authority release to Hugging Face and Kaggle
+on:
+  push:
+    branches: [codex/clinical-authority-graph-1-3-6]
+    paths:
+      - '.github/workflows/sync-clinical-authority.yml'
+      - '.github/scripts/sync_platform_machine_resources.py'
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/clinical-authority-graph-1-3-6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with: {node-version: 22.19.0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install distribution and semantic validators
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check requests PyYAML 'six>=1.17,<2' 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.25,<2' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0'
+      - name: Preflight pinned public release baseline and required credentials
+        run: |
+          test -n "$HF_TOKEN" && test -n "$KAGGLE_API_TOKEN"
+          python - <<'PY'
+          import json,urllib.request
+          from urllib.parse import urlencode
+          origin='https://www.ghezelbaash.ir/'
+          req=urllib.request.Request(origin+'release-provenance.json?'+urlencode({'authority_sync':'648be742e8cad0018c1d5f0d1d5d9e6b67eac610'}),headers={'Cache-Control':'no-cache'})
+          assert json.load(urllib.request.urlopen(req))['sourceCommit']=='648be742e8cad0018c1d5f0d1d5d9e6b67eac610','Website source not the validated deployment'
+          hf=json.load(urllib.request.urlopen('https://huggingface.co/api/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'))
+          assert hf['sha']=='f3b4be2bfa9cec365b12255df943bce0c4302fd1','Hugging Face baseline changed independently'
+          kg=json.load(urllib.request.urlopen('https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'))
+          assert kg['currentVersionNumber']==38,'Kaggle baseline changed independently'
+          print('Independent public release baselines verified')
+          PY
+      - name: Stage, validate and publish synchronized dataset releases
+        run: |
+          python .github/scripts/sync_platform_machine_resources.py             --root "$RUNNER_TEMP/clinical-authority-sync"             --compiled-root "$RUNNER_TEMP/unavailable-compiled-dist"             --hf-revision f3b4be2bfa9cec365b12255df943bce0c4302fd1             --kaggle-version 38             --website-commit 648be742e8cad0018c1d5f0d1d5d9e6b67eac610             --website-run-url https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/44847609575
+      - name: Retain publication receipts and validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: authority-publication-receipts
+          path: |
+            ${{ runner.temp }}/clinical-authority-sync/*report.json
+            ${{ runner.temp }}/clinical-authority-sync/*validation.json
+            ${{ runner.temp }}/clinical-authority-sync/context.json
+            ${{ runner.temp }}/clinical-authority-sync/publication-report.json
+          if-no-files-found: ignore

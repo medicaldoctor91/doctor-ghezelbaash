@@ -2,6 +2,10 @@ name: Deploy validated 1.3.6 clinical authority enhancements
 on:
   push:
     branches: [codex/clinical-authority-graph-1-3-6]
+    paths:
+      - 'src/**'
+      - 'build/**'
+      - 'tests/**'
 permissions:
   contents: read
 concurrency:
