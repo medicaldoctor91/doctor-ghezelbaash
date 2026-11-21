@@ -3,6 +3,7 @@ import {connectClinicalContentToServices} from './clinical-content-backlinks.mjs
 import {enforcePhysicianOfferShaclContract} from './physician-offer-shacl-contract.mjs';
 import {enrichEvidenceBoundedMedicalAuthority} from './clinical-medical-authority.mjs';
 import {enrichMedicalResearchAndSpecialtyGraph} from './medical-research-specialty-graph.mjs';
+import {maximizeCanonicalPhysicianGraphAttribution} from './physician-max-attribution.mjs';
 import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
@@ -198,5 +199,7 @@ export function applyClinicalAttribution(source) {
   // Research-only disease concepts and relevant medical specialty are graph-only.
   // No psychiatric treatment is added to availableService or Offer inventory.
   enrichMedicalResearchAndSpecialtyGraph(source, physician, origin);
+  // Close all provable physician inverse-author / medical topic / specialty links.
+  maximizeCanonicalPhysicianGraphAttribution(source, physician, origin);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
