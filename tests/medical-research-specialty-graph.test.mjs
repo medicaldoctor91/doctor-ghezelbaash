@@ -21,7 +21,7 @@ test('two already authored disease research subjects are typed MedicalCondition 
   const med=nodes.filter(n=>t(n).includes('MedicalCondition'));
   assert.equal(med.length,10);
   assert.equal(med.filter(n=>ids(n.possibleTreatment).length).length,8);
-  assert.equal(ids(physician.knowsAbout).length,231);
+  assert.equal(ids(physician.knowsAbout).length,244);
   const liveOffers=new Set(ids(physician.availableService));
   const rawOfferIds=new Set(ids(physician.makesOffer));
   assert.equal(liveOffers.size,113);
@@ -44,16 +44,16 @@ test('two already authored disease research subjects are typed MedicalCondition 
   }
 });
 
-test('clinical relevantSpecialty is grounded and bounded: 20 therapies, six diagnostic procedures, eight treated conditions',()=>{
+test('clinical relevantSpecialty covers all 112 provided medical procedures and eight treated conditions',()=>{
   const specialty=ORIGIN+'/medical-specialty-aesthetic-medicine';
   assert.equal(id(physician.medicalSpecialty),specialty);
   assert.ok(t(map.get(specialty)).includes('MedicalSpecialty'));
   const available=new Set(ids(physician.availableService));
   const relevant=nodes.filter(n=>ids(n.relevantSpecialty).includes(specialty));
-  assert.equal(relevant.length,34,'Avoid overspecifying specialty on all 112 procedures');
+  assert.equal(relevant.length,120,'All actual available medical services plus eight clinical conditions');
   const therapyAndDiagnostics=relevant.filter(n=>t(n).includes('Service'));
   const conditions=relevant.filter(n=>t(n).includes('MedicalCondition'));
-  assert.equal(therapyAndDiagnostics.length,26);
+  assert.equal(therapyAndDiagnostics.length,112);
   assert.equal(conditions.length,8);
   assert.equal(therapyAndDiagnostics.filter(n=>t(n).includes('MedicalTherapy')).length,20);
   assert.equal(therapyAndDiagnostics.filter(n=>t(n).includes('DiagnosticProcedure')).length,6);
