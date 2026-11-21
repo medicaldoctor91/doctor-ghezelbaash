@@ -227,30 +227,37 @@ class FrozenHomeProjectionTests(unittest.TestCase):
     'creator':{'@id':person},'license':'https://creativecommons.org/licenses/by/4.0/'},
    {'@id':origin+'/graph.jsonld/download','@type':'DataDownload','contentUrl':origin+'/graph.jsonld','encodingFormat':'application/ld+json'}]}
   cls.search=expected_home_search_projection(cls.graph)
- def fixture(self,root,*,legacy=False,cyclic=False):
+ def fixture(self,root,*,legacy=False,mismatched=False):
   website=root/'website';website.mkdir()
   release.dump(website/'graph.jsonld',self.graph)
-  search=json.loads(json.dumps(self.search))
-  if cyclic:
-   physician=next(node for node in search['@graph'] if 'Person' in (node['@type'] if isinstance(node['@type'],list) else [node['@type']]))
-   physician['mainEntityOfPage']={'@id':'https://www.ghezelbaash.ir/webpage'}
   def dump(value):return json.dumps(value,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
-  ld='<script id="schema-core-mainentity" type="application/ld+json">'+dump(self.graph if legacy else search)+'</script>'
-  canonical='' if legacy else '<script id="canonical-entity-graph" type="application/json">'+dump(self.graph)+'</script>'
-  (website/'index.html').write_text('<!doctype html><html><head>'+ld+'</head><body><p>Visible authored content</p>'+canonical+'</body></html>')
+  if legacy:
+   # An otherwise valid old-format projection must be rejected for current 1.3.6.
+   ld='<script id="schema-core-mainentity" type="application/ld+json">'+dump(self.search)+'</script>'
+   inert='<script id="canonical-entity-graph" type="application/json">'+dump(self.graph)+'</script>'
+   html='<!doctype html><html><head>'+ld+'</head><body><p>Visible authored content</p>'+inert+'</body></html>'
+  else:
+   import copy
+   active=copy.deepcopy(self.graph)
+   if mismatched:
+    active['@graph'].append({'@id':'https://www.ghezelbaash.ir/unauthorized-extra-node','@type':'Thing'})
+   ld='<script id="canonical-entity-graph" type="application/ld+json">'+dump(active)+'</script>'
+   html='<!doctype html><html><head><meta charset="utf-8">'+ld+'<title>Physician profile</title></head><body><p>Visible authored content</p></body></html>'
+  (website/'index.html').write_text(html)
  def test_restored_home_is_rechecked_from_actual_bytes(self):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);self.fixture(root)
    proof=release.guard_frozen_home_projection(root)
-   self.assertEqual(proof['status'],'PASS');self.assertEqual(proof['canonicalGraphStorage'],'application/json#canonical-entity-graph')
+   self.assertEqual(proof['status'],'PASS')
+   self.assertEqual(proof['canonicalGraphStorage'],'application/ld+json#canonical-entity-graph')
    self.assertEqual(proof['homepageSHA256'],release.sha(root/'website/index.html'))
    self.assertEqual(proof['canonicalGraphSHA256'],release.sha(root/'website/graph.jsonld'))
    self.assertEqual(json.loads((root/'frozen-home-projection.json').read_text()),proof)
- def test_old_format_or_reintroduced_cycle_blocks_all_publication_operations(self):
+ def test_inert_format_or_embedded_graph_drift_blocks_all_publication_operations(self):
   plan={'candidateSchema':'mutable-distributions-4','archiveWrites':False,'archivePublicStatus':200,'hfRevision':'a'*40}
-  for mutation,message in [('legacy','inert canonical-entity-graph'),('cyclic','Cyclic search reference')]:
+  for mutation,message in [('legacy','MUST publish'),('mismatched','Full homepage JSON-LD differs')]:
    with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as folder:
-    root=Path(folder);self.fixture(root,legacy=mutation=='legacy',cyclic=mutation=='cyclic')
+    root=Path(folder);self.fixture(root,legacy=mutation=='legacy',mismatched=mutation=='mismatched')
     with contextlib.ExitStack() as stack:
      stack.enter_context(patch.object(release,'load',side_effect=[plan,{'status':'PASS'}]))
      stack.enter_context(patch.object(release,'guard_frozen'));stack.enter_context(patch.object(release,'guard_hf_git'))
