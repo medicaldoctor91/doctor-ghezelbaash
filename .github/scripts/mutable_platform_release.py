@@ -42,7 +42,7 @@ def mutable_citation_version(platform, revision):
     the immutable Zenodo exact-DOI snapshot. Keep their citations distinct.
     """
     baseline=DOI_POLICY['currentArchive']['contentBaseline']
-    assert re.fullmatch(r'\\d+\\.\\d+\\.\\d+',baseline), 'Invalid content baseline'
+    assert re.fullmatch(r'[0-9]+[.][0-9]+[.][0-9]+',baseline), 'Invalid content baseline'
     if platform=='hf':
         assert isinstance(revision,str) and re.fullmatch(r'[a-f0-9]{40}',revision), 'Invalid HF source commit'
         return baseline+'+source.'+revision[:12]
