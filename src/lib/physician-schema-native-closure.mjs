@@ -3,7 +3,10 @@
  *
  * Reuse ONLY canonical, existing physician→organization/clinic, degree and
  * contact facts; populate their correctly typed semantic counterparts.
- * No invented legal registration, employer, certification, venue or identity.
+ * No invented employment, registration, certification, venue or identity.
+ * Private solo practice intentionally uses owner/founder/practicesAt rather
+ * than Person.worksFor, Clinic.employee or Clinic.medicalSpecialty. The
+ * existing SHACL explicitly prohibits those three counterproductive edges.
  */
 const ROOT='https://www.ghezelbaash.ir';
 const DOCTOR=ROOT+'/#saeed-ghezelbash';
@@ -74,7 +77,6 @@ export function closeNativePhysicianAuthoritySchema(graph,physician){
 
   const added={};
   const add=(name,delta)=>{added[name]=(added[name]||0)+delta;};
-  add('Person.worksFor',setExactRef(physician,'worksFor',CLINIC));
   for(const org of memberOf){
     add('Person.affiliation',addUnique(physician,'affiliation',org));
     add('Organization.member',addUnique(nodes.get(org),'member',DOCTOR));
@@ -82,18 +84,16 @@ export function closeNativePhysicianAuthoritySchema(graph,physician){
   add('Person.contactPoint',setExactRef(physician,'contactPoint',contact));
   add('Person.occupationalCategory',setExactText(physician,'occupationalCategory','Physician'));
   add('Person.honorificSuffix',setExactText(physician,'honorificSuffix','M.D.'));
-  add('PhysiciansOffice.employee',setExactRef(clinic,'employee',DOCTOR));
-  add('PhysiciansOffice.medicalSpecialty',setExactRef(clinic,'medicalSpecialty',MEDICINE));
   add('University.alumni',addUnique(university,'alumni',DOCTOR));
 
   // Preserve source-authoritative directed edge types. Reverse links must be
   // exact: never infer credentials or certify additional medical specialties.
   if(refs(physician.affiliation).length!==memberOf.length ||
      !memberOf.every(org=>refs(nodes.get(org).member).includes(DOCTOR)) ||
-     refs(physician.worksFor)[0]!==CLINIC ||
-     refs(clinic.employee)[0]!==DOCTOR ||
-     refs(university.alumni).includes(DOCTOR)===false ||
-     refs(clinic.medicalSpecialty)[0]!==MEDICINE)
+     physician.worksFor!==undefined ||
+     clinic.employee!==undefined ||
+     clinic.medicalSpecialty!==undefined ||
+     refs(university.alumni).includes(DOCTOR)===false)
     throw new Error('Incomplete native Schema.org authority closure');
   return {added,totalNewEdges:Object.values(added).reduce((a,b)=>a+b,0)};
 }
