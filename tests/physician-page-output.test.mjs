@@ -47,7 +47,14 @@ test('every built public HTML page preserves its author, main subject, localized
     const biography=resource.pagePurpose==='professional-biography';
     assert.equal(routeProfiles.length,home||biography?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;
-    if(home||biography)assert.equal(values(actual.get(personId).knowsAbout).length,5);
+    if(home||biography) {
+      assert.equal(values(actual.get(personId).knowsAbout).length,5);
+      assert.equal(values(actual.get(personId).skills).length,12);
+      assert.equal(values(actual.get(personId).availableService).length,6);
+      const catalog=origin+'/physician-clinical-offer-catalog';
+      assert.deepEqual(ids(actual.get(personId).hasOfferCatalog),[catalog]);
+      assert.equal(actual.get(catalog)?.['@type'],'OfferCatalog');
+    }
     const expected=ids(authored.mainEntity);
     assert.deepEqual(ids(page.mainEntity),expected,resource.path+' mainEntity');
     if(resource.pagePurpose==='clinical-guide') {
