@@ -37,7 +37,11 @@ test('the intentional full homepage HEAD script cache remains revalidated',()=>{
 
 test('graph identity rewrite URLs must not offer hour-long stale copies',()=>{
   const patterns=[...groups.entries()].filter(([path])=>path.startsWith('/procedure-')||path.startsWith('/service-'));
-  assert.ok(patterns.length>0,'Missing subject rewrite header policy');
+  // The sealed _headers file may omit aliases to stay below Pages' 100-rule
+  // limit. In that case the public rewrite is delivered by graph.jsonld.
+  const redirects=readFileSync(new URL('../dist/_redirects',import.meta.url),'utf8');
+  assert.match(redirects,/^\/procedure-botulinum-toxin-chronic-migraine \/graph\.jsonld 200$/m);
+  assert.match(redirects,/^\/service-botulinum-toxin-chronic-migraine \/graph\.jsonld 200$/m);
   for(const [path,body] of patterns){
     assert.match(body,/Cloudflare-CDN-Cache-Control: no-store/,path);
     assert.match(body,/Cache-Control: public, max-age=0, must-revalidate/,path);
