@@ -19,6 +19,7 @@ jobs:
       ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
       HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
       KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
