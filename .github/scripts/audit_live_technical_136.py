@@ -138,7 +138,8 @@ def main():
             if p:
                 path,fragment,full=p
                 if path not in pagemap:assets[urljoin(ORIGIN,path)].add(page["url"])
-    targets=dict(links)
+    targets=collections.defaultdict(set)
+    for path,sources in links.items():targets[path].update(sources)
     for path,sources in assets.items():targets[path].update(sources)
     # Avoid a request storm on a site with many repeated links.
     unique=list(targets)[:800]
