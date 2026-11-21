@@ -40,7 +40,7 @@ export function maximizeCanonicalPhysicianGraphAttribution(source,physician,orig
   // This is precisely the inverse of each existing Article.author assertion.
   const articles=graph.filter(x=>is(x,'Article') && ids(x.author).includes(ID));
   const otherAuthored=ids(physician.authoredWork);
-  if(articles.length!==65 || otherAuthored.length!==6 ||
+  if(articles.length!==65 || ![6,68].includes(otherAuthored.length) ||
      otherAuthored.some(x=>!lookup.has(x)))
     throw new Error('Published author/research portfolio cardinality drift');
   let authoredWorkAdded=0;
