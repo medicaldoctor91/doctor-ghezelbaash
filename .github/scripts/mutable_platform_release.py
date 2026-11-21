@@ -157,7 +157,21 @@ def preflight(w,expected):
  with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(hub_file,load(w/'hf-before-info.json')['siblings']))
  for n,v in load(baseline/'dist-sha256.json')['files'].items():assert sha(baseline/n)==v['sha256'],('HF baseline integrity',n)
  kg_before=w/'kaggle-before'
- kg_baseline=prepare_baseline(w,KAGGLE_REF,expected['kaggleVersion'],state['hfRevision'],load(baseline/'release-provenance.json')['sourceCommit'],read,extract_package,kg_publication)
+ # A failed previous cohort may already have advanced HF/site while Kaggle
+ # remains pinned to its older exact-version input. Verify BOTH time-specific
+ # baselines instead of silently treating old Kaggle files as a new HF revision.
+ historical_hf=expected.get('kaggleHistoricalHfRevision',state['hfRevision'])
+ historical_site=expected.get('kaggleHistoricalSiteSource',load(baseline/'release-provenance.json')['sourceCommit'])
+ assert re.fullmatch(r'[a-f0-9]{40}',historical_hf), 'Invalid historical Kaggle upstream revision'
+ assert re.fullmatch(r'[a-f0-9]{40}',historical_site), 'Invalid historical Kaggle source commit'
+ if historical_hf!=state['hfRevision'] or historical_site!=load(baseline/'release-provenance.json')['sourceCommit']:
+  old_provenance=read('https://huggingface.co/datasets/'+HF_REPO+'/resolve/'+historical_hf+'/release-provenance.json').json()
+  assert old_provenance['sourceCommit']==historical_site, 'Historical Kaggle upstream HF/site provenance mismatch'
+ dump(w/'kaggle-historical-lineage.json',{'kaggleBaselineVersion':expected['kaggleVersion'],
+   'kaggleHistoricalHFRevision':historical_hf,'kaggleHistoricalWebsiteSource':historical_site,
+   'currentHFRevision':state['hfRevision'],'currentWebsiteSource':state['siteSource'],
+   'historicalProvenanceChecked':True,'newDatasetWillUseFrozenCurrentHF':True})
+ kg_baseline=prepare_baseline(w,KAGGLE_REF,expected['kaggleVersion'],historical_hf,historical_site,read,extract_package,kg_publication)
  ctx=mutable_context(source)
  # Keep platform_bundle's resolved archive source pin; its template has no sourceCommit.
  hf=w/'hf-stage';build_hf(w/'website',baseline,hf,ctx)
@@ -406,7 +420,7 @@ def complete_notebook_exact_version(w):
 def main():
  p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','publish-primary-viewer','complete-notebook','complete-notebook-exact-version']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
  if a.operation=='inspect':snapshot(a.root)
- elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK'])})
+ elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK']),'kaggleHistoricalHfRevision':os.environ.get('BASELINE_KAGGLE_UPSTREAM_HF',os.environ['BASELINE_HF']),'kaggleHistoricalSiteSource':os.environ.get('BASELINE_KAGGLE_UPSTREAM_SITE',os.environ['BASELINE_SITE'])})
  elif a.operation=='complete-notebook':complete_notebook(a.root)
  elif a.operation=='complete-notebook-exact-version':complete_notebook_exact_version(a.root)
  else:publish(a.root,runtime_features=a.operation!='publish-primary-viewer')
