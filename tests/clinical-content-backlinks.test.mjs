@@ -48,7 +48,7 @@ test('Offer URLs, person identity and service inventory remain untouched', () =>
   assert.equal(offers.filter(n => n.url).length, 10);
   assert.equal(many(physician.makesOffer).length, 124);
   assert.equal(many(physician.skills).length, 85);
-  assert.equal(many(physician.knowsAbout).length, 244);
+  assert.equal(many(physician.knowsAbout).length, 246);
 });
 
 test('no backlinks are synthesized for other authors, unrelated content or off-site URLs', () => {
