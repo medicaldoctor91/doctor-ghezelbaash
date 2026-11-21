@@ -69,10 +69,10 @@ jobs:
           assert len([x for x in graph if 'Service' in many(x.get('@type'))])==124
           assert len([x for x in graph if 'Offer' in many(x.get('@type'))])==124
           assert len([x for x in graph if 'Service' in many(x.get('@type')) and many(x.get('subjectOf'))])==122
-          assert len([x for x in graph if 'MedicalCondition' in many(x.get('@type'))])==8
+          assert len([x for x in graph if 'MedicalCondition' in many(x.get('@type'))])==10
           assert len([x for x in graph if 'MedicalTherapy' in many(x.get('@type'))])==21
-          assert len(many(person.get('knowsAbout')))==229
-          assert sum(len(many(x.get('subjectOf'))) for x in graph if 'MedicalCondition' in many(x.get('@type')))==18
+          assert len(many(person.get('knowsAbout')))==231
+          assert sum(len(many(x.get('subjectOf'))) for x in graph if 'MedicalCondition' in many(x.get('@type')))==20
           assert not any('procedure-rhinoplasty' in str(x) for x in person['availableService'])
           policy=json.loads((root/'doi-policy.json').read_text())
           assert policy['currentArchive']['doi']=='10.5281/zenodo.24354791'
