@@ -65,6 +65,31 @@ export function maximizeCanonicalPhysicianGraphAttribution(source,physician,orig
   if(knowledgeAdded!==13 && known.size!==244)
     throw new Error('Canonical authored Article.about medical concepts drift');
 
+  // 2b. Close research topics already explicitly named as subject of the
+  // physician's existing ScholarlyArticle and authored presentation.
+  // These are topics of scholarship only: no new therapy or psychiatric care.
+  const scholarlyTopics=[
+    ['biomedical-concept-omega-3-fatty-acids','article-omega-3-bipolar-i-2016'],
+    ['biomedical-concept-dissociative-disorders','presentation-attachment-style-dissociative-depression-2017']
+  ];
+  let scholarlyKnowledgeAdded=0,scholarlySubjectOfAdded=0;
+  for(const [conceptSlug,workSlug] of scholarlyTopics){
+    const topic=lookup.get(origin+'/'+conceptSlug);
+    const work=lookup.get(origin+'/'+workSlug);
+    if(!is(topic,'DefinedTerm') ||
+       !work || !ids(work.author).includes(ID) ||
+       !ids(work.about).includes(topic['@id']) ||
+       !ids(physician.authoredWork).includes(work['@id']) ||
+       !['ScholarlyArticle','PresentationDigitalDocument'].some(t=>is(work,t)))
+      throw new Error('Canonical research topic authorship missing: '+conceptSlug);
+    if(appendIfMissing(physician,'knowsAbout',topic['@id']))
+      scholarlyKnowledgeAdded++;
+    if(appendIfMissing(topic,'subjectOf',work['@id']))
+      scholarlySubjectOfAdded++;
+    if(topic.possibleTreatment || topic.relevantSpecialty)
+      throw new Error('Do not infer therapy or clinical specialty from authored research');
+  }
+
   // 3. All 112 clinician-offered medically typed Services are already in
   // IndividualPhysician.availableService. MedicalEntity.relevantSpecialty
   // may truthfully connect the aesthetic medical procedures to this same
@@ -100,7 +125,7 @@ export function maximizeCanonicalPhysicianGraphAttribution(source,physician,orig
       specialtySubjectOfAdded++;
 
   if(ids(physician.authoredWork).length!==68 ||
-     ids(physician.knowsAbout).length!==244 ||
+     ids(physician.knowsAbout).length!==246 ||
      clinicalMedical.filter(x=>ids(x.relevantSpecialty)[0]!==specialtyId).length ||
      specialtySubjectOfAdded<0)
     throw new Error('Incomplete physician graph-only attribution closure');
@@ -124,6 +149,8 @@ export function maximizeCanonicalPhysicianGraphAttribution(source,physician,orig
     personAuthoredWork:ids(physician.authoredWork).length,
     additionalPhysicianKnowsAbout:knowledgeAdded,
     personKnowsAbout:ids(physician.knowsAbout).length,
+    additionalScholarlyTopics:scholarlyKnowledgeAdded,
+    scholarlyTopicSubjectOfEdges:scholarlySubjectOfAdded,
     actualMedicalServiceSpecialtyAdded:specialtyAdded,
     attributedMedicalServices:clinicalMedical.length,
     physicianAuthoredSpecialtyBacklinksAdded:specialtySubjectOfAdded,
