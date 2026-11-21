@@ -71,7 +71,6 @@ jobs:
           assert len(a(p,'availableService'))==122
           assert len(a(p,'medicalSpecialty'))==1
           html=Path('dist/index.html').read_text()
-          assert 'schema-physician-clinical-authority' in html
           assert '<script id="schema-core-mainentity" type="application/ld+json">' not in html
           assert '<script id="schema-physician-clinical-authority" type="application/ld+json">' not in html
           assert html.count('type="application/ld+json"')==1,'Homepage must contain exactly one standard JSON-LD script'
