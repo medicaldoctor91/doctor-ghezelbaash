@@ -56,7 +56,7 @@ def jac(a,b):
  return len(a & b)/len(a | b)
 def main():
  root=ET.fromstring(requests.get(BASE+'sitemap.xml',timeout=60).content)
- urls=[n.text for n in root.findall('.//{*}loc') if n.text and urlsplit(n.text).netloc=='www.ghezelbaash.ir']
+ urls=[n.text for n in root.findall('.//{*}url/{*}loc') if n.text and urlsplit(n.text).netloc=='www.ghezelbaash.ir']
  urls=list(dict.fromkeys(urls))
  assert len(urls)==72,('Unexpected approved canonical sitemap count',len(urls))
  targets=[u for u in urls if u!=BASE]
