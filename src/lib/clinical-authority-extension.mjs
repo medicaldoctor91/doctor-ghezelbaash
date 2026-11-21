@@ -643,6 +643,7 @@ export function strengthenPhysicianAuthority(graph, physician, origin) {
       '@id': id, '@type':['DefinedTerm','skos:Concept',originSlug(origin,'ontology/AestheticClinicalSkill')],
       name, termCode:'SKILL-'+slug.toUpperCase().replace(/-/g,'_'),
       inDefinedTermSet:ref(originSlug(origin,'clinical-skill-registry')),
+      'skos:inScheme':ref(originSlug(origin,'clinical-skill-registry')),
       description:'Physician-declared clinical competency in the scope of an existing described clinical service; not an independent qualification or outcome certification.',
       'dcterms:relation':relatedService(origin,serviceSlug)
     });
