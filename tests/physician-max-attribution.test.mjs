@@ -30,7 +30,7 @@ test('Every authored Article is now directly reachable through Person.authoredWo
 test('All original authored Article medical about-topics become physician knowsAbout, excluding clinic, location and self',()=>{
   const authored=nodes.filter(n=>typed(n,'Article')&&ids(n.author).includes(PERSON));
   const knowledge=new Set(ids(person.knowsAbout));
-  assert.equal(knowledge.size,244,'231 medically reviewed knowledge references plus 13 authored medical subjects');
+  assert.equal(knowledge.size,246,'231 medically reviewed knowledge references plus 13 authored medical subjects');
   const topicTypes=['DefinedTerm','MedicalSpecialty','MedicalProcedure','MedicalTherapy','MedicalCondition'];
   for(const article of authored)
     for(const topicId of ids(article.about)){
@@ -81,7 +81,9 @@ test('Exhaustive graph authority closure is deterministic, idempotent and fail-c
     directPhysicianAuthoredWorkAdded:0,
     personAuthoredWork:68,
     additionalPhysicianKnowsAbout:0,
-    personKnowsAbout:244,
+    personKnowsAbout:246,
+    additionalScholarlyTopics:0,
+    scholarlyTopicSubjectOfEdges:0,
     actualMedicalServiceSpecialtyAdded:0,
     attributedMedicalServices:112,
     physicianAuthoredSpecialtyBacklinksAdded:0,
