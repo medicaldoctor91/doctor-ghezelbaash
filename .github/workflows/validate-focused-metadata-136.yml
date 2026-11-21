@@ -10,6 +10,8 @@ jobs:
     timeout-minutes: 45
     env:
       ASTRO_TELEMETRY_DISABLED: '1'
+      # Published immutable Zenodo 1.3.6 archive source; never infer from development HEAD.
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,7 +32,7 @@ jobs:
           node --test --test-concurrency=1 tests/concise-focused-meta-description.test.mjs tests/site-static-seo-integrity.test.mjs tests/72-page-indexability-and-internal-navigation.test.mjs tests/home-canonical-rdf-head.test.mjs
           python tests/active-home-canonical-projection.test.py
       - name: Save machine-readable proof without deployment
-        if: always()
+        if: success()
         run: |
           python - <<'PY'
           import json,hashlib, pathlib
