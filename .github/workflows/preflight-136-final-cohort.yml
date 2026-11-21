@@ -25,7 +25,7 @@ jobs:
       BASELINE_KAGGLE: '39'
       # Kaggle v39 predates the HF/site partial cutover; validate those historical pins separately.
       BASELINE_KAGGLE_UPSTREAM_HF: 8028f12c86daf3c940f6ed9e2d822fd5e3803f68
-      BASELINE_KAGGLE_UPSTREAM_SITE: c0166f525fd19c4c0292af00548bdfcbdb8876c9
+      BASELINE_KAGGLE_UPSTREAM_SITE: 648be742e8cad0018c1d5f0d1d5d9e6b67eac610
       BASELINE_NOTEBOOK: '20'
       GIT_LFS_SKIP_SMUDGE: '1'
     steps:
