@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {parse} from 'parse5';
 import {SOURCE} from '../src/canonical/source.mjs';
 import {
-  reconcilePhysicianAvailableServices,
+  validateAndCorrectPhysicianServiceAttribution,
   connectEvidenceScopedServiceWorks,
 } from '../src/lib/physician-service-entity-consistency.mjs';
 
@@ -38,26 +38,30 @@ function findTag(node,tag) {
   return null;
 }
 
-test('all 124 offered physician Services are in Person.availableService, no misleading MedicalTherapy',()=>{
+test('124 physician clinical Services have exact reciprocal Offer/provider links without out-of-domain availableService',()=>{
   assert.equal(types(physician).includes('Person'),true);
   const services=graph.filter(n=>types(n).includes('Service'));
-  const offered=graph.filter(n=>types(n).includes('Offer'));
+  const offers=graph.filter(n=>types(n).includes('Offer'));
   assert.equal(services.length,124);
-  assert.equal(offered.length,124);
-  const providerIds=services.map(n=>{
-    assert.deepEqual(ids(n.provider),[PERSON],n['@id']+' must have single Person provider');
-    return n['@id'];
-  });
-  const available=ids(physician.availableService);
-  assert.equal(available.length,124);
-  assert.equal(new Set(available).size,124);
-  assert.deepEqual(new Set(available),new Set(providerIds));
-  assert.ok(!available.includes(legacyMigraine),'MedicalTherapy must not masquerade as Service');
-  assert.ok(ids(physician.knowsAbout).includes(legacyMigraine),
-    'Keep medically relevant legacy MedicalTherapy in subject-knowledge relation');
-  assert.equal(ids(physician.makesOffer).length,124);
-  assert.equal(offered.filter(n=>n.url).length,10);
-  assert.ok(physician.hasOfferCatalog,'Existing user-approved offer catalog is preserved');
+  assert.equal(offers.length,124);
+  assert.equal(physician.availableService,undefined,
+    'Schema.org availableService has Physician/Clinic domain and MedicalTherapy/Procedure/Test range, not Person→Service');
+  const personOfferIds=new Set(ids(physician.makesOffer));
+  assert.equal(personOfferIds.size,124);
+  assert.deepEqual(personOfferIds,new Set(offers.map(n=>n['@id'])));
+  for(const service of services){
+    assert.deepEqual(ids(service.provider),[PERSON],service['@id']+' provider');
+    assert.equal(ids(service.offers).length,1);
+    const offer=byId.get(ids(service.offers)[0]);
+    assert.ok(offer,'Service Offer missing');
+    assert.equal(id(offer.itemOffered),service['@id']);
+    assert.equal(id(offer.offeredBy),PERSON);
+  }
+  assert.ok(ids(physician['dcterms:relation']).includes(legacyMigraine),
+    'The legacy MedicalTherapy still has a generic RDF relation to physician');
+  assert.equal(ids(physician.knowsAbout).length,221);
+  assert.equal(offers.filter(n=>n.url).length,10);
+  assert.ok(physician.hasOfferCatalog,'User-approved Person OfferCatalog is preserved');
   const clinic=byId.get(ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah');
   assert.equal(clinic.availableService,undefined);
   assert.equal(clinic.hasOfferCatalog,undefined);
@@ -107,26 +111,28 @@ test('actual authored HTML supports each relationship; no fabricated topic endor
   }
 });
 
-test('reconciliation is idempotent, preserves all canonical IDs and refuses unknown non-Services',()=>{
+test('service/Offer normalization is idempotent and fails closed on unrecognized historical references',()=>{
   const cloned=structuredClone(graph);
   const nodes=new Map(cloned.map(n=>[n['@id'],n]));
   const P=nodes.get(PERSON);
   const beforeIds=cloned.map(n=>n['@id']);
-  const result=reconcilePhysicianAvailableServices(cloned,P,ORIGIN);
-  assert.deepEqual(result.added,[]);
-  assert.deepEqual(result.migratedLegacy,[]);
-  assert.equal(result.availableServiceCount,124);
+  const result=validateAndCorrectPhysicianServiceAttribution(cloned,P,ORIGIN);
+  assert.deepEqual(result,{serviceCount:124,offerCount:124,
+    removedNonconformingAvailableService:0,retainedMigraineMedicalTherapy:false,
+    personMakesOfferCount:124});
+  assert.equal(P.availableService,undefined);
   assert.deepEqual(cloned.map(n=>n['@id']),beforeIds);
   const context=connectEvidenceScopedServiceWorks(cloned,P,ORIGIN);
   assert.equal(context.length,4);
   assert.equal(context.filter(x=>x.relationship==='about').length,2);
   assert.equal(context.filter(x=>x.relationship==='mentions').length,2);
   assert.deepEqual(cloned,graph,'Repeat should make no changes to graph');
+
   const bad=structuredClone(graph);
   const badPhysician=bad.find(n=>n['@id']===PERSON);
-  badPhysician.availableService.push({'@id':ORIGIN+'/unknown-extra-service'});
-  assert.throws(()=>reconcilePhysicianAvailableServices(bad,badPhysician,ORIGIN),
-    /Unexpected non-Service/);
+  badPhysician.availableService=[{'@id':ORIGIN+'/unknown-extra-service'}];
+  assert.throws(()=>validateAndCorrectPhysicianServiceAttribution(bad,badPhysician,ORIGIN),
+    /Unrecognized historical availableService edge/);
 });
 
 test('graph and full HTML schema keep 1.3.6 DOI, exact Person identity and complete catalog',()=>{
