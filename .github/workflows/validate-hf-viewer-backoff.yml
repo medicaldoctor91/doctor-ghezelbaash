@@ -8,6 +8,8 @@ jobs:
   retry-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
     steps:
       - uses: actions/checkout@v4
         with:
