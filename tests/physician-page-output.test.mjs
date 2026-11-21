@@ -40,7 +40,7 @@ test('every built public HTML page preserves its author, main subject, localized
     if(home) {
       assert.deepEqual(document,SOURCE.graph,'homepage publishes exactly the full canonical RDF graph');
       assert.equal([...dom.childNodes].filter(node=>node.tagName==='html').length,1);
-      assert.equal(document['@graph'].filter(node=>values(node['@type']).includes('Person')).length,1);
+      assert.equal(document['@graph'].filter(node=>node['@id']===personId).length,1,'the canonical physician is unique even when other Persons occur in the complete graph');
       const page=actual.get(origin+'/webpage'),person=actual.get(personId);
       assert.deepEqual(ids(page.mainEntity),[personId]);
       assert.deepEqual(ids(page.author),[personId]);
