@@ -1,7 +1,7 @@
 name: Validate crawler parity across all 72 pages and full RDF graph (read-only)
 on:
   push:
-    branches: [codex/136-crawler-parity-72-gate-20261121]
+    branches: [codex/136-crawler-parity-72-gate-20261121, codex/full-rdf-jsonld-homepage-first-1-3-6]
 permissions:
   contents: read
 concurrency:
