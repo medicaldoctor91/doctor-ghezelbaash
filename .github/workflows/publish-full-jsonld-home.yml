@@ -2,8 +2,6 @@ name: Publish full canonical RDF JSON-LD first in homepage
 on:
   push:
     branches: [codex/full-rdf-jsonld-homepage-first-1-3-6]
-    paths:
-      - '.github/workflows/publish-full-jsonld-home.yml'
 permissions:
   contents: read
 concurrency:
@@ -84,6 +82,9 @@ jobs:
           assert document.end()<html.index('</head>'),'Full JSON-LD must be in head'
           assert document.end()<html.index('<body'),'Full JSON-LD must precede textual body'
           assert document.start()<html.index('<script id="schema-core-mainentity"')
+          assert html.lower().find('<meta charset=')>=0 and html.lower().find('<meta charset=')<document.start()
+          assert html.find('rel="stylesheet"')<document.start(),'load CSS before parsing large JSON-LD'
+          assert document.start()<html.index('<title>'),'full graph before text title'
           assert len(html[:document.end()].encode('utf8'))<1_968_000,'Full graph must fit under 2MB with safety margin'
           assert json.loads(document.group(1))==json.loads(Path('dist/graph.jsonld').read_text()),'Full homepage graph differs from canonical RDF resource'
           assert html.count('<script id="canonical-entity-graph" type="application/json">')==0

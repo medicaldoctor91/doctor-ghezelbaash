@@ -27,6 +27,10 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
   assert.ok(graph['@graph'].length>=1900,'no missing canonical nodes');
   assert.deepEqual(graph,exported,'every property, RDF vocabulary and entity is retained');
   assert.ok(fullEnd>firstOpen);
+  assert.ok(html.toLowerCase().indexOf('<meta charset=')>=0);
+  assert.ok(html.toLowerCase().indexOf('<meta charset=')<firstOpen,'first UTF-8 declaration before the large graph');
+  assert.ok(html.indexOf('rel="stylesheet"')<firstOpen,'critical stylesheet can load before the large graph');
+  assert.ok(firstOpen<html.indexOf('<title>'),'full graph before document title and text');
   assert.ok(fullEnd<html.indexOf('</head>'),'complete graph ends within HEAD');
   assert.ok(fullEnd<html.indexOf('<body'),'full graph precedes all visible text');
   assert.ok(!/<script id="canonical-entity-graph" type="application\/json">/.test(html));
