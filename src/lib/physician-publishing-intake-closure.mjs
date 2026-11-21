@@ -25,7 +25,9 @@ export function closePhysicianPublishingAndPatientIntake(graph,physician) {
      clinic?.owner?.['@id']!==PERSON ||
      clinic?.founder?.['@id']!==PERSON ||
      physician.practicesAt?.['@id']!==CLINIC ||
-     (physician.hospitalAffiliation!==undefined))
+     (physician.hospitalAffiliation!==undefined &&
+       (physician.hospitalAffiliation['@id']!=='https://maps.app.goo.gl/cknJK2yufL2e9idHA' ||
+        physician.hospitalAffiliation['@type']!=='Hospital')))
     throw new Error('Clinic ownership or historical hospital identity contract changed');
 
   // Acceptance at the sole physician/practice is a current operational flag,
@@ -44,9 +46,8 @@ export function closePhysicianPublishingAndPatientIntake(graph,physician) {
     throw new Error('Unexpected editorial policy content');
   physician.publishingPrinciples=structuredClone(POLICY);
 
-  // A former hospital technical-director occupation does not identify a
-  // specific Hospital. hospitalAffiliation is reserved for a named, grounded
-  // Hospital and cannot validly be fabricated from that historical Role.
+  // The former technical-director role is linked later to the specifically
+  // named Aria Hospital; this routine never invents current hospital work.
   return {publisherPolicy:'inline-CreativeWork',acceptingPhysician:true,
     acceptingPractice:true,hospitalAffiliationAdded:false};
 }
