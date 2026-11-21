@@ -21,7 +21,7 @@ test('two already authored disease research subjects are typed MedicalCondition 
   const med=nodes.filter(n=>t(n).includes('MedicalCondition'));
   assert.equal(med.length,10);
   assert.equal(med.filter(n=>ids(n.possibleTreatment).length).length,8);
-  assert.equal(ids(physician.knowsAbout).length,244);
+  assert.equal(ids(physician.knowsAbout).length,246);
   const liveOffers=new Set(ids(physician.availableService));
   const rawOfferIds=new Set(ids(physician.makesOffer));
   assert.equal(liveOffers.size,113);
