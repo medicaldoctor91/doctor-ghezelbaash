@@ -1,3 +1,4 @@
+import {connectClinicalContentToServices} from './clinical-content-backlinks.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
 const values = value => value == null ? [] : Array.isArray(value) ? value : [value];
@@ -175,5 +176,7 @@ export function applyClinicalAttribution(source) {
   // Apply metadata only after route mainEntity values are finalized;
   // this prevents comparative educational pages from being offer landing URLs.
   enrichExistingClinicalServices(graph, physician, origin);
+  // Only backlink exact authored Articles/Videos whose existing about includes this Service.
+  connectClinicalContentToServices(graph, physician['@id'], origin);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
