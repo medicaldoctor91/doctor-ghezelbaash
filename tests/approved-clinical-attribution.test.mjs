@@ -94,7 +94,7 @@ test('physician topics include distinct clinical services and preserve the exist
   assert.ok(known.length > services.length);
   assert.equal(known.length, new Set(known).size);
   assert.ok(known.includes(origin + '/skill-subcision'));
-  assert.ok(!known.includes(origin + '/procedure-subcision'));
+  assert.ok(known.includes(origin + '/procedure-subcision'),'Authored clinical Article.about makes the provided subcision Service an explicit knowledge topic');
   assert.ok(!known.includes(origin + '/free-online-aesthetic-initial-consultation'));
   assert.ok(known.includes(origin + '/procedure-botulinum-toxin-palmar-hyperhidrosis'));
 });
@@ -155,7 +155,7 @@ test('clinical answer introductions expose the physician and preserve the author
     `Answer introduction: ${JSON.stringify(english.answerLead)}\nAnswer: ${JSON.stringify(english.answer)}`));
 });
 
-test('extended skill and clinical knowledge registry are evidence-scoped, unique, resolved and distinct from specialty',()=>{
+test('extended clinical knowledge registry includes authored medical subjects and its existing specialty concept',()=>{
   const origin=SOURCE.canonicalOrigin;
   const p=node(PERSON);
   const skills=ids(p.skills),topics=ids(p.knowsAbout);
@@ -168,7 +168,8 @@ test('extended skill and clinical knowledge registry are evidence-scoped, unique
     const term=node(id);
     assert.ok(term,id+' resolves');
     assert.ok(term['@type']?.includes?.('DefinedTerm') || term['@type']==='DefinedTerm' ||
-      term['@type']?.includes?.('Service') || term['@type']?.includes?.('MedicalProcedure'),id);
+      term['@type']?.includes?.('Service') || term['@type']?.includes?.('MedicalProcedure') ||
+      term['@type']?.includes?.('MedicalSpecialty'),id);
     if(id.includes('/clinical-topic-')||id.includes('/skill-')&&term['dcterms:relation']) {
       assert.ok(allServiceIds.has(ids(term['dcterms:relation'])[0]),id+' maps to authored Service');
     }
