@@ -1,7 +1,7 @@
-name: Verify full active homepage JSON-LD, 72 pages, and four live platforms (read-only)
+name: Verify final physician Entity Home, all 72 live pages and four platforms (read-only)
 on:
   push:
-    branches: [audit/full-active-home-four-platform-20261122]
+    branches: [audit/entity-home-final-4platform-20261122]
   workflow_dispatch:
 permissions:
   contents: read
