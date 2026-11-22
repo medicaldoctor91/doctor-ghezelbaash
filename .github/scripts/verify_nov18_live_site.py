@@ -82,7 +82,7 @@ assert {n["@id"] for n in active["@graph"]}=={n["@id"] for n in graph}
 assert len(extract(home_html))==1, "Only full active canonical JSON-LD is permitted"
 # The strengthened Entity Home must be publicly visible and crawlable without
 # changing the canonical source RDF or introducing another Person identity.
-proof=re.search(rb'<section class="entity-home-evidence"[\\s\\S]*?</section>',home_html)
+proof=re.search(rb'<section class="entity-home-evidence"[\s\S]*?</section>',home_html)
 assert proof and proof.end()<1_998_000, "Professional evidence is missing from first 2MB"
 section=proof.group(0)
 assert b'data-canonical-person="https://www.ghezelbaash.ir/#saeed-ghezelbash"' in section
