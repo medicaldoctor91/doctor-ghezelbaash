@@ -1,0 +1,59 @@
+name: Comprehensive Python live architecture and semantic website audit (read only)
+on:
+  push:
+    branches: [audit/deep-python-site-architecture-20261123]
+permissions:
+  contents: read
+jobs:
+  production-python:
+    name: Deep read-only live HTML / semantic RDF audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install Python HTML parsers and HTTP client
+        run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml
+      - name: Compile auditor (fail fast for syntax issues)
+        run: python -m py_compile .github/audits/deep_live_structure_audit_20261123.py
+      - name: Run sitewide live audit with no production writes
+        run: python .github/audits/deep_live_structure_audit_20261123.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deep-live-python-architecture-audit
+          path: audit-output/
+          retention-days: 30
+          if-no-files-found: warn
+  source-tests:
+    name: Independent reproducible source build / tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install exact locked dependencies
+        run: npm ci
+      - name: Rebuild website from deployed source content; do not publish
+        run: npm run build
+      - name: Run identity, output and search graph contract tests
+        run: node --test --test-concurrency=1 tests/search-contract.test.mjs tests/physician-identity.test.mjs tests/physician-page-output.test.mjs tests/machine-cache-freshness.test.mjs tests/google-rich-result-warnings.test.mjs
+      - name: Validate complete materialized website outputs
+        run: |
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_machine_resources.py dist
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-test-diagnostics
+          path: |
+            dist/release-provenance.json
+            dist/integrity-manifest.json
+          retention-days: 14
+          if-no-files-found: ignore
