@@ -1,0 +1,32 @@
+name: PR489 publication state and Kaggle v41 source integrity (read-only)
+on:
+  push:
+    branches: [release/pr489-publication-gates-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pr489-coordinated-publication-preflight-readonly
+  cancel-in-progress: true
+jobs:
+  cross-platform-diagnosis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install Kaggle owner read-only client
+        run: python -m pip install 'kaggle==2.2.4' requests
+      - name: Check authenticated Kaggle status, public version and exact 48-file corpus
+        run: python .github/scripts/pr489_publication_state.py
+      - name: Retain findings without attempting deployment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr489-publication-gates-readonly
+          path: /tmp/pr489-publication-state.json
+          if-no-files-found: warn
