@@ -50,6 +50,38 @@ test('clinical and media provenance follows positive authorship or creation evid
   assert.deepEqual(copy, graph);
 });
 
+test('all directly authored or created resources carry physician provenance, without credit for coverage', () => {
+  const values = x => x == null ? [] : Array.isArray(x) ? x : [x];
+  const identifier = x => typeof x === 'string' ? x : x?.['@id'];
+  const credits = item => ['author', 'creator'].some(key =>
+    values(item[key]).some(agent => identifier(agent) === doctor));
+  const attributed = item => values(item['prov:wasAttributedTo']).some(agent =>
+    [doctor, 'site:#saeed-ghezelbash'].includes(identifier(agent)));
+  const directlyCredited = graph['@graph'].filter(item => credits(item));
+  assert.equal(directlyCredited.length, 427, 'Published author/creator inventory drift');
+  for (const work of directlyCredited) {
+    assert.ok(attributed(work), 'Missing direct author/creator provenance: ' + work['@id']);
+  }
+  for (const slug of [
+    'historical-patient-origin-summary',
+    'doctor-ghezelbaash-structured-data-project',
+    'presentation-attachment-style-dissociative-depression-2017',
+    'project-huggingface-dataset', 'project-kaggle-dataset',
+    'graph.jsonld/download', 'external-identity-evidence-registry',
+    'wikiversity-botulinum-toxin-aesthetic-medicine',
+  ]) {
+    assert.ok(credits(node(slug)), 'Positive author/creator evidence absent: ' + slug);
+    assert.ok(attributed(node(slug)), 'Doctor attribution not closed: ' + slug);
+  }
+  // Publishing material about somebody does not make them its author.
+  const website = node('website');
+  assert.equal(website.publisher['@id'], doctor);
+  assert.equal(website['prov:wasAttributedTo'], undefined);
+  const interview = node('evidence-iranmedlabs-interview');
+  assert.ok(!credits(interview));
+  assert.ok(!attributed(interview));
+});
+
 test('canonical wire compaction changes only the spelling of XSD literal datatypes', () => {
   const wire = JSON.parse(serializeCanonicalGraph(graph));
   function restore(value) {
