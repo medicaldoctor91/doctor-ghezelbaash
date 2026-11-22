@@ -17,7 +17,7 @@ const ldScripts=scripts.filter(n=>attr(n,'type')==='application/ld+json');
 
 test('canonical RDF graph remains fully embedded and exactly matches published graph.jsonld',()=>{
   assert.equal(full.length,1);
-  assert.equal(attr(full[0],'type'),'application/json','RDF is available without an advanced JSON-LD context in Google's homepage Rich Results markup');
+  assert.equal(attr(full[0],'type'),'application/json',"RDF is available without an advanced JSON-LD context in Google's homepage Rich Results markup");
   assert.equal(full[0].parentNode?.tagName,'body');
   assert.deepEqual(JSON.parse(scriptText(full[0])),canonical,'no entity, property or RDF triple can be silently dropped');
   assert.ok(canonical['@graph'].length>=1900);
