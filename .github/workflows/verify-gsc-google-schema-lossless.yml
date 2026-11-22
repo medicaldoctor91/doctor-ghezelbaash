@@ -56,7 +56,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib,json,requests
-          base='https://53fbc4c2.doctor-ghezelbaash.pages.dev'
+          base='https://19d67396.doctor-ghezelbaash.pages.dev'
           headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'}
           html=requests.get(base+'/',headers=headers,timeout=90)
           graph=requests.get(base+'/graph.jsonld',headers=headers,timeout=90)
@@ -73,6 +73,14 @@ jobs:
           assert len(data['@graph'])==1916
           assert len({n['@id'] for n in data['@graph']})==1916
           h1=html.content.index(b'<h1')
-          assert h1<2_000_000,'Homepage main heading should be crawlable after priority JSON-LD'
-          print(json.dumps({'preview':'PASS','nodes':1916,'activeScriptEndByte':end+9,'H1Byte':h1,'graphSHA256':hashlib.sha256(graph.content).hexdigest()}))
+          section=html.content.index(b'class="entity-home-evidence"')
+          section_end=html.content.index(b'</section>',section)+len(b'</section>')
+          # Googlebot's 2MB budget includes HTTP response headers (Oct 2026 update).
+          # Hold at least 8KB for headers, even if this particular response is leaner.
+          header_bytes=sum(len(k.encode())+len(v.encode())+4 for k,v in html.headers.items())+64
+          reserve=max(8192,header_bytes)
+          assert end+9<h1<section<section_end
+          assert section_end+reserve<2_000_000,('Human-readable expertise and full RDF must fit including HTTP response headers',section_end,reserve)
+          assert html.content.index(b'<link rel="canonical"')<2_000_000-reserve
+          print(json.dumps({'preview':'PASS','nodes':1916,'activeScriptEndByte':end+9,'H1Byte':h1,'EntityHomeEvidenceEndByte':section_end,'HeaderReserveBytes':reserve,'graphSHA256':hashlib.sha256(graph.content).hexdigest()}))
           PY
