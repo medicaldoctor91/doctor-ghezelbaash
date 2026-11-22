@@ -425,6 +425,63 @@ def require_current_google_compatible_projection(graph_path, html):
     }
 
 
+
+def require_current_full_semantic_jsonld(graph_path, html):
+    """Primary contract: all canonical RDF in one active JSON-LD HEAD script.
+
+    Unlike Schema.org-only projections, every authored entity survives. Eighteen
+    coercion definitions are replaced with explicit @id objects in the
+    serialization; the standalone canonical file remains byte-identical.
+    """
+    import re
+    payload = html if isinstance(html,bytes) else html.encode('utf8')
+    parser = _InlineDocuments(payload.decode('utf8'))
+    parser.feed(parser.html)
+    assert len(parser.search)==1 and not parser.canonical, (
+        'Homepage must contain exactly one active full RDF JSON-LD script')
+    full=parser.search[0]
+    assert full['id']=='canonical-entity-graph' and full['inHead'] and not full['inBody']
+    assert full['end'] < CRAWL_PREFIX_BYTES, 'Full RDF falls outside the Googlebot 2MB retrieval window'
+    assert full['end'] < payload.index(b'</head>'), 'Complete JSON-LD must precede visible HTML'
+    assert full['start'] < payload.index(b'<title>'), 'Complete RDF must precede page title'
+    assert payload.index(b'<body') > full['end'], 'RDF must be received before text'
+    assert not re.search(rb'<script\\b[^>]*id=["\\']schema-core-mainentity',payload), (
+        'Partial profile projection may not replace complete active graph')
+    original=json.loads(Path(graph_path).read_text())
+    active=full['document']
+    originals={node['@id'] for node in original['@graph']}
+    active_ids={node['@id'] for node in active['@graph']}
+    assert len(originals)==len(original['@graph'])>=1900
+    assert len(active_ids)==len(active['@graph']) and active_ids==originals, (
+        'Active JSON-LD must include every original canonical entity exactly once')
+    assert original['@context'].get('@vocab')=='https://schema.org/'
+    iri_terms=[
+      'image','url','sameAs','contentUrl','serviceUrl','dayOfWeek',
+      'additionalType','codeRepository','target','hasMap','license',
+      'measuredProperty','procedureType','thumbnailUrl','acquireLicensePage',
+      'eventAttendanceMode','isBasedOn','inDefinedTermSet'
+    ]
+    for key in iri_terms:
+        assert original['@context'].get(key)=={'@type':'@id'},key
+        assert key not in active['@context'],'Coercion reintroduced: '+key
+    script = """
+import fs from 'node:fs';
+import {serializeCanonicalGraph} from './src/lib/jsonld.mjs';
+const graph=JSON.parse(fs.readFileSync(0,'utf8'));
+process.stdout.write(serializeCanonicalGraph(graph));
+"""
+    expected=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,
+                            input=json.dumps(original,ensure_ascii=False),text=True,
+                            capture_output=True,check=True,timeout=60)
+    assert active==json.loads(expected.stdout), (
+        'Active full graph differs from deterministic lossless RDF serializer')
+    return {'status':'PASS','nodes':len(originals),
+            'canonicalGraphStorage':'application/ld+json#canonical-entity-graph',
+            'canonicalGraphEndByte':full['end'],
+            'criticalReserveBytes':CRAWL_PREFIX_BYTES-full['end'],
+            'htmlBytes':len(payload),'crawlPrefixBytes':CRAWL_PREFIX_BYTES}
+
+
 def require_current_active_head_jsonld(graph_path, html):
     """Mandatory 1.3.6 release gate, not an archive-format compatibility validator.
 
