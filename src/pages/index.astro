@@ -2423,9 +2423,9 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     d.getElementById("canonical-entity-graph")?.remove();
     for (const node of [...state.metas, state.sourceMarker, state.searchMarker, state.scopeScript, state.canonical, ...state.alternates].filter(Boolean))
       d.head.append(node.cloneNode(true));
-    // The complete RDF JSON-LD remains the first structured-data script even
-    // when the progressive reader restores the homepage without a reload.
-    if (state.canonicalGraphScript) d.head.append(state.canonicalGraphScript.cloneNode(true));
+    // Keep the complete RDF payload available to the reader without making
+    // Google parse its advanced context as homepage Rich Results markup.
+    if (state.canonicalGraphScript) d.body.append(state.canonicalGraphScript.cloneNode(true));
     for (const node of state.scripts) d.head.append(node.cloneNode(true));
     const search = d.getElementById("guide-search"), ui = state.searchUi;
     if (search && ui) {
@@ -2459,7 +2459,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (key === "/" && state.metadataPath && !state.canonicalGraphScript) {
         const metadata = await fetchContent(state.metadataPath, {json:true, signal:controller.signal});
         if (metadata.schemaVersion !== 1 || metadata.sourceSignature !== state.sourceSignature ||
-          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 0 ||
+          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 1 ||
           !metadata.canonicalGraph) return null;
         state.scripts = metadata.scripts.map(({id,text}) => {
           JSON.parse(text);
@@ -2468,7 +2468,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
         });
         if (metadata.canonicalGraph) {
           JSON.parse(metadata.canonicalGraph.text);
-          const script = d.createElement("script"); script.type = "application/ld+json";
+          const script = d.createElement("script"); script.type = "application/json";
           script.id = "canonical-entity-graph"; script.textContent = metadata.canonicalGraph.text;
           state.canonicalGraphScript = script;
         }
@@ -5170,23 +5170,22 @@ export function compileCanonicalSource() {
   };
   const shell = (head, body, lang='fa-IR', dir='rtl', focused=false) => '<!doctype html><html lang="' + lang + '" dir="' + dir + '" prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"' +
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
-  // Full canonical RDF (all vocabularies) is the FIRST JSON-LD script in the
-  // homepage HEAD. Nothing is filtered or reserialized as Schema.org-only.
+  // Google's homepage parser receives a compact Schema.org projection first.
+  // The complete, unchanged RDF graph remains embedded as JSON data after the
+  // visible page and independently available as /graph.jsonld (application/ld+json).
+  // This preserves every canonical entity/triple while avoiding Google's
+  // unsupported advanced JSON-LD @context coercions on the Search surface.
   const canonicalGraphText=serializeCanonicalGraph(homeGraph);
-  const canonicalDataScript='<script id="canonical-entity-graph" type="application/ld+json">'+canonicalGraphText+'</script>';
-  // Keep the document's UTF-8 declaration first for correct HTML decoding.
-  // Move the *full*, unmodified graph ahead of all nonessential head metadata:
-  // the extra safety margin matters for Google's 2MB HTML retrieval limit.
-  // The CSS request is launched early without putting user-visible text first.
-  const existingCharset = baseHead.match(/<meta\b[^>]*\bcharset\s*=\s*["']?utf-8["']?[^>]*>/i)?.[0];
+  const canonicalDataScript='<script id="canonical-entity-graph" type="application/json">'+canonicalGraphText+'</script>';
+  const homeSearchScript='<script id="schema-core-mainentity" type="application/ld+json">'+json(homeSearchGraph)+'</script>';
+  const existingCharset = baseHead.match(/<meta\\b[^>]*\\bcharset\\s*=\\s*["']?utf-8["']?[^>]*>/i)?.[0];
   const firstHead = existingCharset ?? '<meta charset="utf-8">';
   const remainingHead = existingCharset ? baseHead.replace(existingCharset,'') : baseHead;
-  const rawHome = shell(firstHead + `<link rel="stylesheet" href="${assets[0].path}">` + canonicalDataScript + remainingHead +
+  const rawHome = shell(firstHead + `<link rel="stylesheet" href="${assets[0].path}">` + homeSearchScript + remainingHead +
     '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' +
-    // The sole homepage JSON-LD document is the entire canonical RDF graph.
-    // Do not append a competing or partial Schema.org authority projection.
-    discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
+    discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
+    .replace('</body>',canonicalDataScript+'</body>');
   const stampedHome = readerScope.stampGuideSource(rawHome);
   // Internal entries need the authored article and compact Search interface,
   // rather than a second full document and its large discovery graph.
