@@ -47,7 +47,7 @@ def verify(payload, canonical):
     assert json.loads(full[0]["content"]) == canonical
     assert len(canonical["@graph"]) >= 1900
     assert payload.index(b"<main") < 1_900_000
-    assert re.search(rb"<h1\\b", payload).start() < 1_900_000
+    assert re.search(rb"<h1\b", payload).start() < 1_900_000
     assert payload.index(b'<script id="canonical-entity-graph"') > payload.index(b"<h1")
     return {"status": "PASS", "nodes": len(canonical["@graph"]), "mainByte": payload.index(b"<main")}
 
