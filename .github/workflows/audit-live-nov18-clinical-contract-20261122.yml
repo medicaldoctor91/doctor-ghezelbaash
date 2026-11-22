@@ -1,0 +1,180 @@
+name: Verify approved November 18 clinical-attribution contract on 72 LIVE HTML pages
+on:
+  push:
+    branches: [audit/nov18-contract-72-live-20261122]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Emit independent route contract manifest from release source
+        run: |
+          node --input-type=module - <<'JS'
+          import {SOURCE} from './src/canonical/source.mjs';
+          import {writeFileSync} from 'node:fs';
+          const manifest={origin:SOURCE.canonicalOrigin,routes:SOURCE.routes.resources.map(r=>({path:r.path,pagePurpose:r.pagePurpose,pageType:r.pageType})),schemaNodeCount:SOURCE.graph['@graph'].length};
+          writeFileSync('/tmp/nov18-route-contract.json',JSON.stringify(manifest));
+          console.log('SOURCE_CONTRACT='+JSON.stringify({routes:manifest.routes.length,sourceGraphNodes:manifest.schemaNodeCount,types:[...new Set(manifest.routes.map(x=>x.pagePurpose))]}))
+          JS
+      - run: python -m pip install requests beautifulsoup4 lxml PyLD==3.3.0
+      - name: Audit exact live 1.3.6 contract, all route mainEntity and focused schema projections
+        run: |
+          python - <<'PY'
+          import requests,json,collections,hashlib,statistics,concurrent.futures,xml.etree.ElementTree as ET
+          from bs4 import BeautifulSoup
+          from pyld import jsonld
+          ORIGIN='https://www.ghezelbaash.ir'
+          PERSON=ORIGIN+'/#saeed-ghezelbash'
+          CLINIC=ORIGIN+'/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          H={'User-Agent':'Nov18ContractIndependentLiveAudit/20261122','Cache-Control':'no-cache','Accept-Encoding':'identity'}
+          manifest=json.load(open('/tmp/nov18-route-contract.json'))
+          failures=[]
+          def check(ok,code,context=''):
+            if not ok: failures.append({'code':code,'context':context})
+          def get(url):
+            r=requests.get(url,headers=H,timeout=(12,95));r.raise_for_status();return r.content
+          liveCommit=json.loads(get(ORIGIN+'/release-provenance.json'))['sourceCommit']
+          check(liveCommit=='824c02f4bd495cdbc3091b7b3911a5470fd9104b','wrong_production_commit',liveCommit)
+          machineRaw=get(ORIGIN+'/graph.jsonld');machine=json.loads(machineRaw);nodes=machine.get('@graph',[])
+          byid={n.get('@id'):n for n in nodes if isinstance(n,dict) and n.get('@id')}
+          check(len(nodes)==1916,'canonical_graph_count',len(nodes))
+          check(len(byid)==1916,'canonical_duplicate_ids',len(byid))
+          def values(v):return v if isinstance(v,list) else [] if v is None else [v]
+          def typ(n,t):return t in values(n.get('@type')) if n else False
+          def ids(v):
+            return [x if isinstance(x,str) else x.get('@id') for x in values(v) if isinstance(x,str) or isinstance(x,dict) and isinstance(x.get('@id'),str)]
+          services=[n for n in nodes if typ(n,'Service')]
+          offers=[n for n in nodes if typ(n,'Offer')]
+          check(len(services)==124,'service_count',len(services))
+          check(len(offers)==124,'offer_count',len(offers))
+          for n in services:
+            check(ids(n.get('provider'))==[PERSON],'service_provider',n.get('@id'))
+            cid=ids(n.get('availableChannel'))
+            expected=ORIGIN+'/online-consultation-channel' if n['@id'].endswith('/free-online-aesthetic-initial-consultation') else ORIGIN+'/in-person-clinic-service-channel'
+            check(cid==[expected],'service_channel',n.get('@id'))
+            check(ids(byid.get(expected,{}).get('serviceLocation'))==([] if expected.endswith('online-consultation-channel') else [CLINIC]),'service_location',n.get('@id'))
+            check(len(ids(n.get('offers')))==1,'service_offer_count',n.get('@id'))
+          for n in offers:
+            check(ids(n.get('offeredBy'))==[PERSON],'offer_offeredBy',n.get('@id'))
+            check(len(ids(n.get('itemOffered')))==1,'offer_itemOffered',n.get('@id'))
+          clinic=byid[CLINIC];person=byid[PERSON]
+          for prop in ['medicalSpecialty','availableService','hasOfferCatalog','areaServed','makesOffer']:
+            check(prop not in clinic,'clinic_forbidden_property',prop)
+          check(ids(clinic.get('owner'))==[PERSON],'clinic_owner')
+          check(ids(person.get('practicesAt'))==[CLINIC],'physician_practicesAt')
+          catalog=[n for n in nodes if 'clinical-services-offer-catalog' in n.get('@id','')]
+          check(len(catalog)==1,'general_catalog_count',len(catalog))
+          if len(catalog)==1:
+            c=catalog[0]
+            check(typ(c,'ItemList') and not typ(c,'OfferCatalog'),'catalog_wrong_type')
+            listing=values(c.get('itemListElement'))
+            refs=[ids(x.get('item'))[0] if ids(x.get('item')) else None for x in listing if isinstance(x,dict)]
+            check(len(refs)==124 and len(set(refs))==124 and set(refs)=={x['@id'] for x in services},'catalog_service_set')
+            check(c.get('numberOfItems')==124,'catalog_numberOfItems')
+          photoMain=ORIGIN+'/webpage'
+          check(ids(byid[photoMain].get('mainEntity'))==[PERSON],'homepage_mainEntity')
+          check(ids(person.get('mainEntityOfPage'))==[photoMain],'physician_mainEntityOfPage')
+          sm=ET.fromstring(get(ORIGIN+'/sitemap.xml'))
+          ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          sitemap=[x.text for x in sm.findall('.//s:url/s:loc',ns)]
+          expectedURLs={ORIGIN+(x['path'] if x['path']!='/' else '/') for x in manifest['routes']}
+          check(len(sitemap)==len(set(sitemap))==72,'sitemap_count',len(sitemap))
+          check(set(sitemap)==expectedURLs,'source_sitemap_mismatch',str(sorted(set(sitemap)^expectedURLs)[:12]))
+          extra=collections.Counter()
+          rows=[]
+          servicePages={'/blepharoplasty-for-excess-eyelid-skin-and-fat','/body-filler','/botox','/buccal-fat-removal-facial-fullness-assessment','/central-lip-lift-for-long-upper-lip','/filler','/submental-liposuction-for-fat-dominant-fullness','/thread-lift'}
+          def routeCheck(resource):
+            path=resource['path'];url=ORIGIN+(path if path!='/' else '/')
+            response=get(url)
+            soup=BeautifulSoup(response,'lxml')
+            home=path=='/'
+            script=soup.find('script',id='canonical-entity-graph' if home else 'schema-core-mainentity')
+            errs=[]
+            if not script:return {'url':url,'path':path,'errors':['missing_active_schema_script'],'nodeCount':0}
+            try:doc=json.loads(script.string or script.get_text())
+            except Exception as e:return {'url':url,'path':path,'errors':['invalid_jsonld:'+str(e)[:110]],'nodeCount':0}
+            arr=doc.get('@graph',[])
+            local={n.get('@id'):n for n in arr if isinstance(n,dict) and n.get('@id')}
+            documentId=photoMain if home else url+'#webpage'
+            page=local.get(documentId,{});original=byid.get(documentId,{})
+            subject=ids(page.get('mainEntity'));expected=ids(original.get('mainEntity'))
+            if subject!=expected:errs.append('mainEntity_mismatch:'+str((subject,expected)))
+            if len(subject)!=1:errs.append('mainEntity_not_unique')
+            if subject and subject[0] not in local:errs.append('mainEntity_target_missing_from_inline_schema')
+            if subject and subject[0] not in byid:errs.append('mainEntity_target_missing_from_master')
+            if page.get('@id')!=documentId:errs.append('page_node_not_present')
+            if not home and ids(page.get('author'))!=[PERSON]:errs.append('physician_author_missing')
+            if not home and PERSON not in local:errs.append('physician_identity_missing')
+            if not home and CLINIC not in local:errs.append('clinic_identity_missing')
+            if soup.find('link',rel='canonical') is None or soup.find('link',rel='canonical').get('href')!=url:errs.append('html_canonical_mismatch')
+            if not soup.find('h1'):errs.append('missing_visible_h1')
+            if len(local)!=len(arr):errs.append('duplicate_node_id')
+            for n in arr:
+              if typ(n,'Service') and ids(n.get('provider'))!=[PERSON]:errs.append('inline_service_provider_mismatch:'+n.get('@id',''))
+            if path in servicePages:
+              if subject and not typ(byid.get(subject[0]),'Service'):errs.append('expected_primary_service_not_article')
+              articles=[n for n in arr if n.get('@id')==url+'#article' and typ(n,'Article')]
+              if len(articles)!=1:errs.append('secondary_article_missing')
+              if articles and 'mainEntityOfPage' in articles[0]:errs.append('secondary_article_claims_mainEntityOfPage')
+              if articles and url+'#article' not in ids(page.get('hasPart')):errs.append('supporting_article_hasPart_missing')
+            if resource['pagePurpose']=='professional-biography':
+              if not typ(page,'ProfilePage'):errs.append('biography_missing_ProfilePage')
+              if subject!=[PERSON]:errs.append('biography_wrong_mainEntity')
+            if resource['pagePurpose']=='clinic-profile':
+              if subject!=[CLINIC]:errs.append('clinic_profile_wrong_mainEntity')
+            if home:
+              if len(arr)!=1916:errs.append('home_not_full_graph')
+            else:
+              if len([n for n in arr if typ(n,'Person')])!=1:errs.append('focused_should_have_exactly_one_Person')
+              if len(arr)>=1916:errs.append('focused_schema_not_bounded')
+            types=values(byid.get(subject[0],{}).get('@type')) if subject else []
+            allScripts=soup.find_all('script',type='application/ld+json')
+            for s in allScripts:
+              try:json.loads(s.string or s.get_text())
+              except Exception:errs.append('invalid_supplemental_jsonld')
+            return {'url':url,'path':path,'purpose':resource['pagePurpose'],'pageType':values(page.get('@type')),
+                    'mainEntity':subject[0] if subject else None,'mainEntityTypes':types,
+                    'nodeCount':len(arr),'jsonldScriptCount':len(allScripts),
+                    'supportingArticle':url+'#article' in local,'questionCount':sum(typ(n,'Question') for n in arr),
+                    'videoCount':sum(typ(n,'VideoObject') for n in arr),'errors':errs}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as pool:
+            rows=sorted(pool.map(routeCheck,manifest['routes']),key=lambda r:r['path'])
+          for r in rows:
+            for e in r['errors']:failures.append({'code':'route_'+e,'path':r['path']})
+          mainCounts=collections.Counter((r['mainEntityTypes'][0] if r['mainEntityTypes'] else 'UNKNOWN') for r in rows)
+          purposeCounts=collections.Counter((r['purpose'] or 'unspecified') for r in rows)
+          focused=[r for r in rows if r['path']!='/']
+          profiles=[n for n in nodes if typ(n,'ProfilePage')]
+          body=get(ORIGIN+'/')
+          script=b'<script id="canonical-entity-graph" type="application/ld+json">'
+          start=body.index(script)+len(script);end=body.index(b'</script>',start)
+          embedded=json.loads(body[start:end])
+          opts={'algorithm':'URDNA2015','format':'application/n-quads'}
+          nqFull=jsonld.normalize(machine,opts);nqHome=jsonld.normalize(embedded,opts)
+          check(nqFull==nqHome,'homepage_RDF_not_equal')
+          check(len(nqHome.splitlines())==26761,'rdf_quad_count',len(nqHome.splitlines()))
+          report={
+            'status':'PASS' if not failures else 'FAIL','commit':liveCommit,'checkedRoutes':len(rows),
+            'sitemapMatchesSourceRoutes':set(sitemap)==expectedURLs,
+            'checkedAllLiveMainEntity':len(rows)-sum('mainEntity_mismatch' in str(r['errors']) for r in rows),
+            'mainEntityTypeDistribution':dict(mainCounts),'pagePurposeDistribution':dict(purposeCounts),
+            'focusedSchemaNodes':{'min':min(x['nodeCount'] for x in focused),'median':statistics.median(x['nodeCount'] for x in focused),'max':max(x['nodeCount'] for x in focused)},
+            'focusedJsonLdScripts':dict(collections.Counter(x['jsonldScriptCount'] for x in focused)),
+            'completeGraphOnlyOnHome':all(x['nodeCount']<1916 for x in focused),
+            'homepageGraphNodes':len(embedded.get('@graph',[])),'fullRdfQuads':len(nqHome.splitlines()),
+            'homeRdfSemanticMatch':nqFull==nqHome,'serviceCount':len(services),'offerCount':len(offers),
+            'mainEntity8PrimaryServices':sum(x['path'] in servicePages and not x['errors'] for x in rows),
+            'canonicalProfilePageCount':len(profiles),'canonicalProfileIds':[x['@id'] for x in profiles],
+            'failingPages':[x for x in rows if x['errors']],'failures':failures,
+            'allPages':[{'path':x['path'],'purpose':x['purpose'],'mainEntity':x['mainEntity'],'mainEntityTypes':x['mainEntityTypes'],'pageType':x['pageType'],'schemaNodes':x['nodeCount'],'schemas':x['jsonldScriptCount'],'errors':x['errors']} for x in rows],
+          }
+          print('NOV18_CONTRACT_REPORT='+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+          assert not failures,('Contract deviations',failures[:20])
+          PY
