@@ -404,8 +404,8 @@ def require_current_google_compatible_projection(graph_path, html):
     assert home_id in canonical_nodes and physician_id in canonical_nodes
     assert canonical_nodes[home_id]['mainEntity']['@id'] == physician_id
 
-    main = re.search(rb'<main\\b', payload, re.I)
-    h1 = re.search(rb'<h1\\b', payload, re.I)
+    main = re.search(rb'<main\b', payload, re.I)
+    h1 = re.search(rb'<h1\b', payload, re.I)
     assert main and h1, 'Primary visible content missing'
     search_prefix = search['end']
     visible_prefix = max(main.start(), h1.start())
