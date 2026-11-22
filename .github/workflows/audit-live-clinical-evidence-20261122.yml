@@ -1,0 +1,77 @@
+name: Read-only audit 72 page visible clinical evidence and semantic content coverage
+on:
+  push:
+    branches: [audit/algorithmic-entity-platform-effectiveness-20261122]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests beautifulsoup4 lxml
+      - name: Count real visible clinical citations, author bylines and service subjects on live pages
+        run: |
+          python - <<'PY'
+          import requests,re,json,collections,concurrent.futures,statistics,xml.etree.ElementTree as ET
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin,urlsplit
+          O='https://www.ghezelbaash.ir'
+          h={'User-Agent':'ReadOnlyVisibleClinicalEvidenceAudit/20261122','Accept-Encoding':'identity','Cache-Control':'no-cache'}
+          sm=requests.get(O+'/sitemap.xml',headers=h,timeout=30).content
+          r=ET.fromstring(sm);ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          urls=[x.text for x in r.findall('.//s:url/s:loc',ns)]
+          def values(x):return x if isinstance(x,list) else [] if x is None else [x]
+          def scan(u):
+            r=requests.get(u,headers=h,timeout=(12,60))
+            assert r.status_code==200
+            s=BeautifulSoup(r.content,'lxml')
+            main=s.find('main')
+            text=main.get_text(' ',strip=True) if main else ''
+            for t in s.find_all('script',type='application/ld+json'):
+              if t.get('id')=='schema-core-mainentity':
+                try:doc=json.loads(t.string or t.get_text())
+                except:doc={'@graph':[]}
+                break
+            else:doc={'@graph':[]}
+            nodes=doc.get('@graph',[])
+            articles=[n for n in nodes if 'Article' in values(n.get('@type'))]
+            citations=[c for x in articles for c in values(x.get('citation'))]
+            domains=collections.Counter()
+            refs=[]
+            for a in (main or s).find_all('a',href=True):
+              u2=urljoin(u,a['href']);host=urlsplit(u2).netloc
+              if host and host not in ('ghezelbaash.ir','www.ghezelbaash.ir'):
+                domains[host]+=1
+                if host in ('pubmed.ncbi.nlm.nih.gov','www.fda.gov','www.aad.org','www.nice.org.uk','www.who.int','www.cochranelibrary.com','jamanetwork.com','www.bmj.com','www.ncbi.nlm.nih.gov'):refs.append(u2)
+            h1=[t.get_text(' ',strip=True) for t in s.find_all('h1')]
+            path=u.replace(O,'')
+            purpose='clinical' if path not in ['/','/media-license','/saeed-ghezelbash-research-education-and-clinical-decisions'] and any('MedicalWebPage' in values(n.get('@type')) for n in nodes) else 'nonclinical'
+            authorMention=('قزلباش' in text or 'Ghezelbash' in text or 'Ghezelbaash' in text)
+            return {'path':path,'purpose':purpose,'visibleWords':len(text.split()),
+                    'h1Count':len(h1),'authorMention':authorMention,
+                    'articleSchemaCount':len(articles),
+                    'structuredArticleCitations':len(citations),
+                    'visibleSelectedMedicalReferenceLinks':len(refs),
+                    'visibleSelectedMedicalReferenceDomains':dict(collections.Counter(urlsplit(x).netloc for x in refs)),
+                    'allExternalDomains':dict(domains)}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=7) as pool:
+            pages=sorted(pool.map(scan,urls),key=lambda x:x['path'])
+          clinical=[x for x in pages if x['purpose']=='clinical']
+          report={
+            'pages':len(pages),'clinicalPagesDefinition':'HTML MedicalWebPage with path excluding home, biography, license',
+            'clinicalPages':len(clinical),
+            'noSelectedExternalMedicalReferences':sum(x['visibleSelectedMedicalReferenceLinks']==0 for x in clinical),
+            'withSelectedExternalMedicalReferences':sum(x['visibleSelectedMedicalReferenceLinks']>0 for x in clinical),
+            'withStructuredArticleCitations':sum(x['structuredArticleCitations']>0 for x in clinical),
+            'withAuthorMentionInVisibleMain':sum(x['authorMention'] for x in clinical),
+            'medianVisibleWordCount':statistics.median(x['visibleWords'] for x in clinical),
+            'shortestFive':sorted(clinical,key=lambda x:x['visibleWords'])[:5],
+            'medicalRefSamples':sorted(clinical,key=lambda x:-x['visibleSelectedMedicalReferenceLinks'])[:8],
+            'noSelectedMedicalRefsExamples':[x['path'] for x in clinical if x['visibleSelectedMedicalReferenceLinks']==0][:20]
+          }
+          print('CLINICAL_CONTENT_EVIDENCE='+json.dumps(report,ensure_ascii=False),flush=True)
+          PY
