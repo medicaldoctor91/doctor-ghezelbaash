@@ -1,4 +1,4 @@
-name: Publish full canonical RDF JSON-LD first in homepage
+name: Publish Google-compatible homepage with full canonical RDF preserved
 # Complete graph validation permits other Person entities while preserving one physician ID.
 # Deployment must be explicitly dispatched after the cross-platform release gates.
 # A development-branch merge must never publish only the website.
@@ -19,7 +19,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
       REVIEWED_COMMIT: ${{ github.sha }}
-      PREVIOUS_WEBSITE_COMMIT: 9f845123713f583b44c42b45bb79fd4bdd727746
+      PREVIOUS_WEBSITE_COMMIT: 89b0c9f40bbcb56f7c1998a5b17c1a9292bbafef
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
@@ -50,61 +50,28 @@ jobs:
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
-      - name: Verify complete RDF JSON-LD appears first and is fully within Googlebot HTML byte budget
+      - name: Verify Google-compatible homepage, full canonical RDF and upstream graph parity
         run: |
           python - <<'PY'
-          import json,os
+          import hashlib,json,sys,urllib.request
           from pathlib import Path
-          g=json.loads(Path('dist/graph.jsonld').read_text())['@graph']
-          get=lambda t:[n for n in g if t in ([n.get('@type')] if isinstance(n.get('@type'),str) else n.get('@type',[]))]
-          p=next(n for n in g if n.get('@id')=='https://www.ghezelbaash.ir/#saeed-ghezelbash')
-          a=lambda n,k:n.get(k,[]) if isinstance(n.get(k,[]),list) else ([n[k]] if k in n else [])
-          s=get('Service');o=get('Offer')
-          assert len(s)==124 and len(o)==124
-          assert all(x.get('provider',{}).get('@id')==p['@id'] for x in s)
-          assert len(a(p,'makesOffer'))==124
-          assert len(a(p,'skills'))==85 and len(a(p,'knowsAbout'))==221
-          assert p['hasOfferCatalog']['@id']=='https://www.ghezelbaash.ir/physician-clinical-offer-catalog'
-          assert all(x.get('@id')!='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah' or 'hasOfferCatalog' not in x for x in g)
-          assert all(len(a(x,'description'))>=1 and x.get('serviceType') and x.get('category') for x in s)
-          assert sum(bool(x.get('url')) for x in o)==10,'Offer landing-page count unexpectedly changed'
-          offer_by_id={x['@id']:x for x in o}
-          assert all(x.get('offers',{}).get('@id') in offer_by_id for x in s)
-          assert all(x.get('businessFunction',{}).get('@id')=='http://purl.org/goodrelations/v1#ProvideService' for x in o)
-          assert len(a(p,'availableService'))==122
-          assert len(a(p,'medicalSpecialty'))==1
-          html=Path('dist/index.html').read_text()
-          assert '<script id="schema-core-mainentity" type="application/ld+json">' not in html
-          assert '<script id="schema-physician-clinical-authority" type="application/ld+json">' not in html
-          # Count actual parsed HTML script elements, not JavaScript source
-          # strings containing the literal MIME type.
-          from html.parser import HTMLParser
-          class SchemaScripts(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.ids=[]
-              def handle_starttag(self,tag,attrs):
-                  if tag=='script' and dict(attrs).get('type')=='application/ld+json':
-                      self.ids.append(dict(attrs).get('id'))
-          parser=SchemaScripts()
-          parser.feed(html)
-          assert parser.ids==['canonical-entity-graph'],('Homepage JSON-LD scripts',parser.ids)
-          from pathlib import Path
-          import re
-          document=re.search(r'<script id="canonical-entity-graph" type="application/ld\+json">([\s\S]*?)</script>',html)
-          assert document,'Complete JSON-LD script not found'
-          assert html.count('<script id="canonical-entity-graph"')==1,'Duplicate canonical graph'
-          assert document.end()<html.index('</head>'),'Full JSON-LD must be in head'
-          assert document.end()<html.index('<body'),'Full JSON-LD must precede textual body'
-          assert document.start()<html.index('<title>')
-          assert html.lower().find('<meta charset=')>=0 and html.lower().find('<meta charset=')<document.start()
-          assert html.find('rel="stylesheet"')<document.start(),'load CSS before parsing large JSON-LD'
-          assert document.start()<html.index('<title>'),'full graph before text title'
-          assert len(html[:document.end()].encode('utf8'))<1_984_000,'Full graph must fit under 2MB with safety margin'
-          assert json.loads(document.group(1))==json.loads(Path('dist/graph.jsonld').read_text()),'Full homepage graph differs from canonical RDF resource'
-          assert html.count('<script id="canonical-entity-graph" type="application/json">')==0
-          assert json.loads(Path('dist/release-provenance.json').read_text())['sourceCommit']==os.environ['GITHUB_SHA']
-          print('Release candidate: complete canonical RDF JSON-LD first in HTML head and all clinical invariants intact',flush=True)
+          sys.path.insert(0,'.github/scripts')
+          from browser_projection import require_current_google_compatible_projection
+          proof=require_current_google_compatible_projection(Path('dist/graph.jsonld'),Path('dist/index.html').read_bytes())
+          assert proof['status']=='PASS'
+          body=Path('dist/graph.jsonld').read_bytes()
+          digest=hashlib.sha256(body).hexdigest()
+          upstream={
+            'huggingface': 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/graph.jsonld',
+            'kaggle': 'https://www.kaggle.com/api/v1/datasets/download/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data/graph.jsonld?raw=true'
+          }
+          for name,url in upstream.items():
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','Accept-Encoding':'identity','User-Agent':'Mozilla/5.0 Cross-Platform-Release-Gate'})
+              with urllib.request.urlopen(req,timeout=90) as response:
+                  remote=response.read()
+              assert hashlib.sha256(remote).hexdigest()==digest,(name,'RDF content mismatch; coordinated release required')
+          assert json.loads(Path('dist/release-provenance.json').read_text())['sourceCommit']==__import__('os').environ['GITHUB_SHA']
+          print(json.dumps({'status':'PASS','canonicalGraphSHA256':digest,'nodes':proof['nodes'],'googlePrefixBytes':proof['visibleContentPrefixEndByte'],'upstreams':list(upstream)},sort_keys=True))
           PY
       - name: Save the validated release
         uses: actions/upload-artifact@v4
@@ -119,7 +86,7 @@ jobs:
           import json,os,urllib.request
           assert json.load(urllib.request.urlopen('https://www.ghezelbaash.ir/release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
           PY
-          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-message='Publish complete RDF JSON-LD first in homepage HTML' --commit-dirty=false
+          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=codex/full-rdf-jsonld-homepage-first-1-3-6 --commit-hash="$GITHUB_SHA" --commit-message='Publish Google-safe Schema with lossless canonical RDF' --commit-dirty=false
       - name: Verify published representations and Content-Digest
         run: |
           python - <<'PY'

@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - fix/gsc-unparsable-jsonld-preserve-canonical-20261122
+      - codex/full-rdf-jsonld-homepage-first-1-3-6
   workflow_dispatch:
 permissions:
   contents: read
