@@ -1,7 +1,7 @@
-name: Verify 18 Nov 2026 approved clinical attribution on all 72 live pages (read-only)
+name: Verify post-GSC repair 72 live pages and four platforms (read-only)
 on:
   push:
-    branches: [audit/live-nov18-attribution-20261122]
+    branches: [audit/gsc-postrepair-four-platform-20261122]
   workflow_dispatch:
 permissions:
   contents: read
