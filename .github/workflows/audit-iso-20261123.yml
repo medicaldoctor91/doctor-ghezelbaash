@@ -1,0 +1,32 @@
+name: Independent RDF graph isomorphism verification (read only)
+on:
+  push:
+    branches: [audit/rdf-isomorphism-20261123]
+permissions: {contents: read}
+jobs:
+  canonical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install --disable-pip-version-check requests 'rdflib>=7,<8'
+      - name: Test blank-node-aware isomorphism of live Turtle and JSON-LD RDF
+        run: |
+          python - <<'PY'
+          import requests,time,json
+          from rdflib import Graph
+          from rdflib.compare import isomorphic
+          headers={"Accept-Encoding":"identity","Cache-Control":"no-cache"}
+          a=requests.get("https://www.ghezelbaash.ir/graph.jsonld",headers=headers,timeout=(12,90))
+          b=requests.get("https://www.ghezelbaash.ir/graph.ttl",headers=headers,timeout=(12,90))
+          a.raise_for_status();b.raise_for_status()
+          g1=Graph().parse(data=a.text,format="json-ld")
+          g2=Graph().parse(data=b.text,format="turtle")
+          start=time.monotonic()
+          identical=isomorphic(g1,g2)
+          print("BLANK_NODE_ISOMORPHISM="+json.dumps({"isomorphic":identical,"jsonldTriples":len(g1),"turtleTriples":len(g2),"durationSeconds":round(time.monotonic()-start,2)}),flush=True)
+          assert identical,"Semantic representations diverge beyond blank-node labels"
+          PY
