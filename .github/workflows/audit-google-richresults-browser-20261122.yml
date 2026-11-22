@@ -1,0 +1,58 @@
+name: Read-only Google Rich Results Test browser inspection of two published pages
+on:
+  push:
+    branches: [audit/profilepage-richresults-googlebot-20261122]
+permissions: {contents: read}
+jobs:
+  browse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install selenium requests
+      - name: Attempt Google public Rich Results Test inspection in isolated headless browser
+        run: |
+          python - <<'PY'
+          import os,time,json
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.common.keys import Keys
+          opts=Options()
+          for x in ['--headless=new','--disable-dev-shm-usage','--no-sandbox','--disable-gpu','--window-size=1440,1300']:opts.add_argument(x)
+          try:driver=webdriver.Chrome(options=opts)
+          except Exception as e:print('GOOGLE_RRT_BROWSER='+json.dumps({'error':str(e)[:600]}));raise SystemExit(0)
+          paths=['https://www.ghezelbaash.ir/','https://www.ghezelbaash.ir/saeed-ghezelbash-research-education-and-clinical-decisions']
+          for u in paths:
+            try:
+              driver.get('https://search.google.com/test/rich-results')
+              time.sleep(4)
+              inputs=driver.find_elements(By.CSS_SELECTOR,'input')
+              inputs=[x for x in inputs if x.is_displayed() and x.get_attribute('type') not in ['hidden','checkbox']]
+              before=driver.find_element(By.TAG_NAME,'body').text[:1800]
+              if inputs:
+                inputs[0].send_keys(u)
+                inputs[0].send_keys(Keys.ENTER)
+              else:
+                driver.get('https://search.google.com/test/rich-results?url='+u)
+              for i in range(16):
+                time.sleep(4)
+                body=driver.find_element(By.TAG_NAME,'body').text
+                if ('Detected structured data' in body or 'Test results' in body or 'Page is eligible' in body or 'couldn\'t be fetched' in body) and i>1:
+                  if ('Test results' in body or 'Detected structured data' in body):break
+              title=driver.title
+              text=driver.find_element(By.TAG_NAME,'body').text[:13000]
+              print('GOOGLE_RRT_BROWSER='+json.dumps({'url':u,'title':title,'browserUrl':driver.current_url,'visibleText':text,'initialText':before[:900]},ensure_ascii=False),flush=True)
+              driver.save_screenshot('/tmp/rrt-'+('home' if u.endswith('.ir/') else 'bio')+'.png')
+            except Exception as e:print('GOOGLE_RRT_BROWSER='+json.dumps({'url':u,'error':str(e)[:650]},ensure_ascii=False),flush=True)
+          driver.quit()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: google-rich-results-test-screenshots
+          path: /tmp/rrt-*.png
+          if-no-files-found: ignore
