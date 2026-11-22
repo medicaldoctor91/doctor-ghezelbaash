@@ -18,6 +18,16 @@ jobs:
         run: python -m pip install requests
       - name: Audit canonical graph and live JSON-LD on all 72 sitemap pages
         run: python .github/scripts/verify_nov18_live_site.py
+      - name: Independently verify four live platforms, exact content, Notebook and Hub viewer
+        run: python .github/scripts/verify_four_platforms_live.py
+      - name: Preserve four-platform file-level audit receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: four-platforms-live-verified-evidence
+          path: /tmp/four-platforms-live-evidence.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Preserve detailed per-page proof
         if: always()
         uses: actions/upload-artifact@v4
