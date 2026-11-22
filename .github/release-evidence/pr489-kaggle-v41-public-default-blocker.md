@@ -1,6 +1,6 @@
-# Kaggle v41 public-default regression blocking coordinated PR #489 release
+# Kaggle v41 public-default propagation lag / cache discrepancy: PR489 release observation
 
-Verified: 2026-11-22 UTC. This is a **provider-side public default/version selection mismatch**, not an unverified graph content discrepancy. All observations are read-only.
+Verified: 2026-11-22 UTC. This is an **observed discrepancy between authenticated version state, exact-version access, and public default resolution**. Backend cache/propagation delay is a viable explanation; these observations do **not** demonstrate a persistent Kaggle defect. All observations are read-only.
 
 ## Affected dataset
 
@@ -22,7 +22,7 @@ The **anonymous public** dataset `view` API instead reports `currentVersionNumbe
 
 The exact v41 page `/versions/41` is publicly accessible with the correct v41 dataset description and 26,649 RDF facts; exact-version v41 `list` contains 48 files and `checksums.sha256` covers the other 47. All exact-version `graph.jsonld` bytes match the active website and pinned HF graph. The exact-version v41 ZIP download endpoint responds HTTP 302 toward an archive, as does v40.
 
-However, the *unversioned* raw `kaggle-manifest.json` resolves to version 40; the dataset root page also presents v40 metadata. The unversioned ZIP endpoint responds HTTP 302, but that alone is not proof that its contents are v41. This mismatch persists after v41 became Ready.
+However, the *unversioned* raw `kaggle-manifest.json` resolves to version 40; the dataset root page also presents v40 metadata. The unversioned ZIP endpoint responds HTTP 302, but that alone is not proof that its contents are v41. This mismatch was observed after v41 became Ready. Cache-busted requests on both public API hostnames still reported 40; that does not rule out a stale upstream/server-side cache. The observation was made within roughly an hour of the version creation.
 
 The publication workflow for PR #486 failed with 90 attempts to verify public default 41 after Kaggle v41 had been created: https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/44965781154
 
@@ -41,14 +41,14 @@ A **new, independently validated** mutable-platform candidate for website, HF, K
 - The PR489 recovery workflows made no Kaggle version write, notebook push, website deploy, HF push, or immutable Zenodo change. This statement concerns these audited workflows; unrelated external activity is not assumed absent.
 - The old immutable Zenodo source commit remains `eafb138d596a91504ed0af66e2557f52848e36b6`.
 
-## Provider support request
+## Conditional provider support request (only if propagation remains stale)
 
-Please repair or explain why the authenticated current ready version is 41 while the anonymous public default/current version is 40, despite exact v41 being public and downloadable. We need the unversioned dataset page, `GET /api/v1/datasets/view`, and unversioned file manifest to resolve to v41. Please do not delete, overwrite or regenerate version 41. If promotion requires an owner action, supply a documented supported endpoint/procedure that promotes this exact ready version without creating another dataset version.
+After allowing time for normal cache propagation, if the mismatch persists, please investigate or explain why the authenticated current ready version is 41 while the anonymous public default/current version is 40, despite exact v41 being public and downloadable. We need the unversioned dataset page, `GET /api/v1/datasets/view`, and unversioned file manifest to resolve to v41. Please do not delete, overwrite or regenerate version 41. If promotion requires an owner action, supply a documented supported endpoint/procedure that promotes this exact ready version without creating another dataset version.
 
-This is the upstream prerequisite to safely publishing the next release candidate v42/Notebook v22 with full cross-platform verification.
+Current publication policy requires exact public-default convergence before declaring a fully synchronized release. This is a conservative gate, not proof that creating v42 would corrupt data. An exact-version-only publication path would require separate, explicit success semantics and could not claim that the unversioned public dataset or Notebook reflect v42.
 
 ## Evidence limitations
 
-This record does not imply that the v41 **default** ZIP equals the exact ZIP; nor does it assert that PR #489 was already deployed. The exact v41 graph matches published website/HF bytes; v42 is only frozen, not externally published. Provider state may change after the recorded check.
+This record does not imply that the v41 **default** ZIP equals the exact ZIP; nor does it assert that PR #489 was already deployed. The exact v41 graph matches published website/HF bytes; v42 is only frozen, not externally published. Provider state may change after the recorded check. In particular, a cache/replication delay is plausible while the newly Ready v41 is young. Do not escalate as a confirmed bug or manufacture a duplicate version solely on the basis of the lagging default number.
 
 Official Kaggle support: https://www.kaggle.com/contact
