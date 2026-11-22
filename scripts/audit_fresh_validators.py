@@ -66,7 +66,7 @@ async def test_validator(browser, name, url):
         tab = page.get_by_text("Fetch URL", exact=True)
         if await tab.count() and await tab.first.is_visible():
             await tab.first.click(timeout=5000)
-        inp = page.locator("#new-test-url")
+        inp = page.locator("#new-test-url-input")
         if not await inp.count() or not await inp.first.is_visible():
             inp = page.locator('input[type="url"]:visible')
         if not await inp.count():
@@ -83,6 +83,27 @@ async def test_validator(browser, name, url):
         results["final_url"] = page.url
         results["visible_result"] = (await page.locator("body").inner_text())[:12500]
         await page.screenshot(path=f"schema_{name}.png",full_page=True)
+        # Code-snippet mode avoids the validator's large whole-HTML limitation.
+        await page.goto("https://validator.schema.org/",wait_until="domcontentloaded",timeout=60000)
+        await page.get_by_text("Code snippet",exact=True).click()
+        raw = requests.get(url,timeout=60,headers={"Cache-Control":"no-cache"}).text
+        matched = re.search(r'<script id="canonical-entity-graph" type="application/ld\\+json">[\\s\\S]*?</script>',raw)
+        if not matched:
+            raise RuntimeError("Complete active JSON-LD script missing in code-mode input")
+        code=matched.group(0)
+        await page.evaluate("""(code)=>{
+            const el=[...document.querySelectorAll('.CodeMirror')].find(el=>el.CodeMirror);
+            if(el){el.CodeMirror.setValue(code);}
+            else {const input=document.querySelector('#new-test-textarea');
+                if(!input)throw new Error('Code editor missing');
+                input.value=code;
+                input.dispatchEvent(new Event('input',{bubbles:true}));}
+            }""",code)
+        await page.get_by_role("button", name=re.compile("run test",re.I)).first.click(timeout=15000)
+        await page.wait_for_timeout(25000)
+        results["code_input_bytes"]=len(code.encode("utf8"))
+        results["code_mode_result"]=(await page.locator("body").inner_text())[:14000]
+        await page.screenshot(path=f"schema_code_{name}.png",full_page=True)
     except Exception as e:
         results["error"] = repr(e)
         try: results["visible_result"] = (await page.locator("body").inner_text())[:3500]
@@ -128,7 +149,7 @@ async def main():
         # One fresh official parser session per target, with no sign-in and no mutations.
         for name,url in TARGETS.items():
             await test_validator(browser,name,url)
-            await test_google_rich_results(browser,name,url)
+            # Rich Results required login on both URLs in the first fresh run.
         await browser.close()
     Path("fresh_external_parser_report.json").write_text(
         json.dumps(REPORT,ensure_ascii=False,indent=2)
