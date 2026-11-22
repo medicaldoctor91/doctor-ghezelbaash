@@ -38,6 +38,24 @@ def kg_file(name, version):
                  + '/' + quote(name, safe='') + '?datasetVersionNumber='
                  + str(version) + '&raw=true')
 
+def zip_probe(version):
+    """Inspect download readiness without fetching an archive or URL credentials."""
+    query = '' if version is None else '?datasetVersionNumber=' + str(version)
+    url = 'https://www.kaggle.com/api/v1/datasets/download/' + REF + query
+    with requests.get(url, headers={'Cache-Control': 'no-cache, no-store',
+                                    'Accept-Encoding': 'identity'},
+                      timeout=45, allow_redirects=False, stream=True) as response:
+        result = {'requestedVersion': 'default' if version is None else version,
+                  'statusCode': response.status_code,
+                  'contentType': response.headers.get('Content-Type'),
+                  'contentLength': response.headers.get('Content-Length'),
+                  'redirect': bool(response.headers.get('Location'))}
+        if response.status_code >= 400:
+            # Only retain bounded noncredential-bearing error text.
+            result['failure'] = response.raw.read(250, decode_content=True).decode(
+                'utf-8', errors='replace')
+    return result
+
 def run():
     owner = json.loads(kaggle_client().dataset_status(
         REF, format='json(status,current_version_number)'))
@@ -71,6 +89,11 @@ def run():
     current = public['currentVersionNumber']
     owner_version = owner['current_version_number']
     owner_status = str(owner['status']).lower()
+    archive_probes = [zip_probe(v) for v in (40, 41, None)]
+    default_file_manifest = official_json(
+        'https://www.kaggle.com/api/v1/datasets/download/' + REF +
+        '/kaggle-manifest.json?raw=true')
+    assert default_file_manifest['desired_kaggle_version'] in (40, 41)
     result = {
         'status': 'BLOCKED_BY_PUBLIC_DEFAULT' if current != 41 else 'READY_FOR_NEXT_COHORT_PREFLIGHT',
         'oldCohort': {'websiteSource': site['sourceCommit'], 'huggingFaceRevision': hub['sha'],
@@ -79,6 +102,8 @@ def run():
                       'exactVersion41Files': 48, 'exactVersion41ChecksumFiles': len(hash_table),
                       'publishedGraphSHA256': v41_hash,
                       'websiteHfKaggle41ByteEqual': True,
+                      'archives': archive_probes,
+                      'defaultRawFileManifestVersion': default_file_manifest['desired_kaggle_version'],
                       'notebookPublicVersion': nb['metadata']['currentVersionNumber']},
         'nextCandidate': {'mergedGraphSource': TARGET_SOURCE,
                           'immutableArchiveSourcePreserved': EXPECTED_ARCHIVE_SOURCE},
