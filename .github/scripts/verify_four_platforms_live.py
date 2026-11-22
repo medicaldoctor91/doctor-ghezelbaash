@@ -13,7 +13,7 @@ HF = "doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
 KG = "saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data"
 NB = "saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-starter"
 SOURCE = "bc19dddf05b81d1cccd0cf1050b6af17d8b99943"  # Published Kaggle v42 data-source revision
-LIVE_SOURCE = "9c055c8ea6fba069ef80e07b6aded0bef24ece24"  # Full active graph HTML-only restoration
+LIVE_SOURCE = "71d137141022ff76bbe28f3ea20b862a06d7173f"  # Full active graph HTML-only restoration
 HF_SHA = "11f2af63dab81e3d717726ed1305bdc252bdf3e2"
 GRAPH_SHA = "25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50"
 ROWS = {"clinical_passages":3276,"clinical_answers":125,"entity_facts":26761,
@@ -46,7 +46,7 @@ report={"status":"FAIL","readOnly":True,"providerWrites":0,"sourceCommit":LIVE_S
         "hfRevision":HF_SHA,"canonicalGraphSHA256":GRAPH_SHA,"checks":{}}
 try:
     site=jget(SITE+"/release-provenance.json")
-    require(site["sourceCommit"]==LIVE_SOURCE,"Website is not at verified GSC repair commit")
+    require(site["sourceCommit"]==LIVE_SOURCE,"Website does not match reviewed Entity Home production release")
     report["checks"]["website"]={"status":"PASS","sourceCommit":site["sourceCommit"]}
     hub=jget("https://huggingface.co/api/datasets/"+HF)
     require(hub["sha"]==HF_SHA,"Hugging Face revision changed")
