@@ -1,0 +1,59 @@
+name: PR489 exact Kaggle v42 -> Notebook v22 completion (no dataset write)
+on:
+  push:
+    branches: [release/pr489-exact-v42-notebook-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pr489-exact-v42-notebook-singleflight
+  cancel-in-progress: false
+jobs:
+  notebook-exact-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      GIT_LFS_SKIP_SMUDGE: '1'
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify original source branch and immutable external publication
+        run: |
+          test "$(git ls-remote origin refs/heads/release/pr489-physician-graph-v42-20261122 | cut -f1)" = "bc19dddf05b81d1cccd0cf1050b6af17d8b99943"
+      - name: Install matching frozen-candidate Kaggle verification dependencies
+        run: python -m pip install requests six 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - uses: actions/download-artifact@v4
+        with:
+          name: pr489-frozen-candidate-v42
+          run-id: 44970743590
+          github-token: ${{ github.token }}
+          path: /tmp/pr489-artifact
+      - name: Restore exact already-validated release bytes
+        run: |
+          tar -xzf /tmp/pr489-artifact/pr489-candidate.tar.gz -C /tmp
+          python - <<'PY'
+          from pathlib import Path
+          from hashlib import sha256
+          p=Path('/tmp/mutable-release/frozen-sha256.json')
+          assert sha256(p.read_bytes()).hexdigest()=='886727638ebf2c914825d9577225f7e91a3d39fc8bdfb7647eed1e4794a49710'
+          print('Frozen candidate digest matches approved source')
+          PY
+      - name: Validate all 48 exact v42 public files and publish only missing notebook v22
+        run: python .github/scripts/pr489_exact_v42_notebook.py
+      - name: Save immutable audit receipts (never another provider version)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr489-exact-v42-notebook-completion-receipts
+          path: |
+            /tmp/mutable-release/exact-v42-notebook-outcome.json
+            /tmp/mutable-release/notebook-live.json
+            /tmp/mutable-release/notebook-execution-output/doi-release-execution.json
+            /tmp/mutable-release/notebook-submission-attempt.json
+          if-no-files-found: warn
+          retention-days: 30
