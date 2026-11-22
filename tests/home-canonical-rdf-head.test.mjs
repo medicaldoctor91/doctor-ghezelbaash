@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {parse} from 'parse5';
-import {serializeCanonicalGraph} from '../src/lib/jsonld.mjs';
+import {serializeCanonicalGraph,serializeGoogleCompatibleCanonicalGraph} from '../src/lib/jsonld.mjs';
 
 const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
 const exported=JSON.parse(readFileSync(new URL('../dist/graph.jsonld',import.meta.url),'utf8'));
-const transformed=JSON.parse(serializeCanonicalGraph(exported));
+const transformed=JSON.parse(serializeGoogleCompatibleCanonicalGraph(exported));
 const byteSize=text=>Buffer.byteLength(text,'utf8');
 const attr=(node,key)=>node?.attrs?.find(x=>x.name===key)?.value;
 const nodes=[];
