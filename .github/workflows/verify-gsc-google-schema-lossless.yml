@@ -86,7 +86,7 @@ jobs:
               b'https://pubmed.ncbi.nlm.nih.gov/34574943/'
           ]:
               assert uri in html.content[start_evidence:section_end], ('Missing authority evidence',uri)
-                    h1=html.content.index(b'<h1')
+          h1=html.content.index(b'<h1')
           assert h1<2_000_000,'Homepage main heading should be crawlable after priority JSON-LD'
           print(json.dumps({'preview':'PASS','nodes':1916,'activeScriptEndByte':end+9,'H1Byte':h1,'graphSHA256':hashlib.sha256(graph.content).hexdigest()}))
           PY
