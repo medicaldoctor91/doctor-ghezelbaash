@@ -1,58 +1,83 @@
-name: Read-only deployed Cloudflare preview parity check for LCP image preload
+name: Independently verify live Pages release, full RDF and all 72 routes (read-only)
 on:
   push:
     branches: [audit/preview-preload-http-20261122]
 permissions:
   contents: read
 jobs:
-  verify-preview:
+  live-http:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
-      PREVIEW_ORIGIN: https://a3c4f270.doctor-ghezelbaash.pages.dev
-      EXPECTED_PREVIEW_COMMIT: 3f7f78a602cb485cfe65c2ef6782d54833334295
-      EXPECTED_LIVE_COMMIT: 71d137141022ff76bbe28f3ea20b862a06d7173f
+      EXPECTED_NEW_LIVE_COMMIT: 824c02f4bd495cdbc3091b7b3911a5470fd9104b
       EXPECTED_GRAPH_SHA: 25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50
+      LIVE_ORIGIN: https://www.ghezelbaash.ir
     steps:
       - uses: actions/checkout@v4
         with: {persist-credentials: false}
-      - name: Check the actual published Preview and unchanged production (no deploy)
+      - name: Await exact reviewed Cloudflare production release and audit canonical graph, LCP, 72 routes
         run: |
           python - <<'PY'
-          import os,json,re,hashlib,urllib.request
-          base=os.environ['PREVIEW_ORIGIN']
-          def fetch(url):
-            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 PreviewReadOnlyReleaseGate','Cache-Control':'no-cache','Accept-Encoding':'identity'})
-            with urllib.request.urlopen(req,timeout=90) as r:
-              assert r.status==200,(url,r.status)
+          import os,re,json,time,hashlib,urllib.request,xml.etree.ElementTree as ET
+          from concurrent.futures import ThreadPoolExecutor,as_completed
+          origin=os.environ['LIVE_ORIGIN']
+          sha=os.environ['EXPECTED_NEW_LIVE_COMMIT']
+          def fetch(url,timeout=45):
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 ReleaseAuditReadOnly','Cache-Control':'no-cache','Accept-Encoding':'identity'})
+            with urllib.request.urlopen(req,timeout=timeout) as r:
+              assert r.status==200,(r.status,url)
               return r.read()
-          live=json.loads(fetch('https://www.ghezelbaash.ir/release-provenance.json'))
-          assert live['sourceCommit']==os.environ['EXPECTED_LIVE_COMMIT'],('Unexpected live production change',live.get('sourceCommit'))
-          provenance=json.loads(fetch(base+'/release-provenance.json'))
-          assert provenance['sourceCommit']==os.environ['EXPECTED_PREVIEW_COMMIT'],('Incorrect Preview commit',provenance.get('sourceCommit'))
-          body=fetch(base+'/')
-          graphBytes=fetch(base+'/graph.jsonld')
-          assert hashlib.sha256(graphBytes).hexdigest()==os.environ['EXPECTED_GRAPH_SHA'],'Graph byte drift'
-          graph=json.loads(graphBytes)
-          assert len(graph['@graph'])==1916
+          current=None
+          for attempt in range(55):
+            try:
+              current=json.loads(fetch(origin+'/release-provenance.json?verified_release='+str(attempt),timeout=30)).get('sourceCommit')
+              if current==sha:break
+              assert current=='71d137141022ff76bbe28f3ea20b862a06d7173f',('Unknown release superseded reviewed candidate',current)
+            except (TimeoutError,OSError) as e:
+              print('Transient release availability',str(e)[:90])
+            time.sleep(6)
+          else:raise AssertionError(('Cloudflare production failed to publish reviewed source before deadline',current,sha))
+          body=fetch(origin+'/')
+          graphBytes=fetch(origin+'/graph.jsonld')
+          digest=hashlib.sha256(graphBytes).hexdigest()
+          assert digest==os.environ['EXPECTED_GRAPH_SHA'],('Canonical graph drift',digest)
+          graph=json.loads(graphBytes);assert len(graph['@graph'])==1916
           tag=b'<script id="canonical-entity-graph" type="application/ld+json">'
           assert body.count(tag)==1
-          start=body.index(tag);end=body.index(b'</script>',start)+len(b'</script>')
-          assert end<2_000_000
-          active=json.loads(body[start+len(tag):end-len(b'</script>')])
-          assert len(active['@graph'])==1916
-          assert b'<title>' in body and b'<h1' in body
+          scriptStart=body.index(tag);scriptEnd=body.index(b'</script>',scriptStart)+9
+          assert scriptEnd<2_000_000 and scriptEnd<body.index(b'</head>')
+          embedded=json.loads(body[scriptStart+len(tag):scriptEnd-9])
+          assert len(embedded['@graph'])==1916
           head=body[:body.index(b'</head>')]
-          allLinks=re.findall(rb'<link\b[^>]*>',head,re.I)
-          preloads=[x for x in allLinks if re.search(rb'\brel="preload"',x,re.I) and re.search(rb'\bas="image"',x,re.I)]
-          assert len(preloads)==1,('Preload duplication or omission',len(preloads))
+          preloads=[x for x in re.findall(rb'<link\b[^>]*>',head,re.I)
+            if b'rel="preload"' in x and b'as="image"' in x]
+          assert len(preloads)==1,('image preload count',len(preloads))
           preload=preloads[0]
-          assert preload in head[:start],('LCP preload arrives after the enormous graph',head.find(preload),start)
-          for token in [b'type="image/avif"',b'href="/media/images/physician/saeed-ghezelbash-portrait-768.avif"',b'imagesrcset=',b'imagesizes=',b'fetchpriority="high"']:
-            assert token in preload,('Preload mismatch',token)
-          focused=fetch(base+'/filler')
-          assert b'<h1' in focused
-          assert b'<link rel="canonical" href="https://www.ghezelbaash.ir/filler">' in focused
-          assert not any(re.search(rb'\brel="preload"',x,re.I) and re.search(rb'\bas="image"',x,re.I) for x in re.findall(rb'<link\b[^>]*>',focused[:focused.find(b'</head>')],re.I)),'Homepage image preload leaked to /filler'
-          print(json.dumps({'status':'PASS','previewCommit':provenance['sourceCommit'],'liveCommit':live['sourceCommit'],'homepageBytes':len(body),'canonicalNodes':len(graph['@graph']),'graphSHA256':hashlib.sha256(graphBytes).hexdigest(),'preloadHeadByte':head.find(preload),'activeJsonldStartByte':start,'activeJsonldEndByte':end,'focusedFiller':'PASS'}))
+          assert head.find(preload)<scriptStart,('Preload not early enough',head.find(preload),scriptStart)
+          for t in [b'href="/media/images/physician/saeed-ghezelbash-portrait-768.avif"',
+                    b'type="image/avif"',b'imagesrcset=',b'imagesizes=',b'fetchpriority="high"']:
+            assert t in preload,('Unexpected live portrait preload',t)
+          sitemap=ET.fromstring(fetch(origin+'/sitemap.xml'))
+          ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          paths=[x.text for x in sitemap.findall('.//s:url/s:loc',ns) if x.text]
+          assert len(paths)==72,('Missing or duplicate canonical sitemap URLs',len(paths))
+          assert len(set(paths))==72
+          def check_page(url):
+            assert url.startswith(origin+'/'),('Off-origin sitemap entry',url)
+            if url==origin+'/':return url
+            page=fetch(url)
+            expected=('<link rel="canonical" href="'+url+'">').encode()
+            assert expected in page,('Canonical mismatch',url)
+            assert b'<h1' in page,('Focused page lacks native heading',url)
+            tagLinks=re.findall(rb'<link\b[^>]*>',page[:page.find(b'</head>')],re.I)
+            assert not any(b'rel="preload"' in a and b'as="image"' in a for a in tagLinks),('Home portrait preload leaked',url)
+            return url
+          with ThreadPoolExecutor(max_workers=7) as pool:
+            futures=[pool.submit(check_page,url) for url in paths]
+            done=[f.result() for f in as_completed(futures)]
+          assert len(done)==72
+          print(json.dumps({'status':'PASS','liveSourceCommit':sha,'canonicalRoutes':len(done),
+            'nodes':1916,'graphSHA256':digest,'homepageHTMLBytes':len(body),
+            'earlyPortraitPreloadByte':head.find(preload),'activeRDFBeginByte':scriptStart,
+            'activeRDFEndByte':scriptEnd,'desktopAndMobileSource':'same canonical HTML'},sort_keys=True))
           PY
