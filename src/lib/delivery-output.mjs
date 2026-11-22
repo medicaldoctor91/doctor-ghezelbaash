@@ -98,6 +98,15 @@ export function renderRedirects(rows){
     if(line.length>1000)throw new Error(`Cloudflare _redirects rule length limit exceeded: ${line.length}`);
     return line;
   });
+  // These files are produced by the distribution pipeline after the site build.
+  // Resolve stable site URLs to the same release that dataset consumers receive.
+  const dataset = 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/';
+  for (const file of ['query-matrix.jsonl', 'query-matrix.json-seq', 'current-release-matrix.json']) {
+    const path = '/' + file;
+    if (seen.has(path)) throw new Error('Duplicate distribution route: ' + path);
+    lines.push(path + ' ' + dataset + file + ' 302');
+    staticCount++;
+  }
   if(staticCount>2000)throw new Error(`Cloudflare _redirects static redirect limit exceeded: ${staticCount}`);
   if(dynamicCount>100)throw new Error(`Cloudflare _redirects dynamic redirect limit exceeded: ${dynamicCount}`);
   if(staticCount+dynamicCount>2100)throw new Error(`Cloudflare _redirects total limit exceeded: ${staticCount+dynamicCount}`);

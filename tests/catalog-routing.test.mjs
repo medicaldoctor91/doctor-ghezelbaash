@@ -64,3 +64,13 @@ test('catalog, current Dataset release and version-series membership describe on
     assert.equal(nodes.get(SOURCE.canonicalOrigin+path).version,dataset.version);
   }
 });
+
+
+test('public retrieval paths point to the current published dataset files',()=>{
+  const rules = renderRedirects(deriveRoutingRows(SOURCE,SOURCE.graph)).trim().split('\n');
+  for (const file of ['query-matrix.jsonl','query-matrix.json-seq','current-release-matrix.json']) {
+    assert.deepEqual(rules.filter(rule=>rule.startsWith('/'+file+' ')), [
+      '/'+file+' https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/'+file+' 302'
+    ]);
+  }
+});

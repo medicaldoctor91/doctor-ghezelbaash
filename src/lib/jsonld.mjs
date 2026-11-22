@@ -109,6 +109,23 @@ export function serializeGoogleCompatibleCanonicalGraph(graph) {
     }
     for (const child of Object.values(value)) visit(child);
   }
-  visit(compact['@graph']);
+  const nodes = compact['@graph'];
+  visit(nodes);
+  const home = nodes.find(node => node['@id'] === 'https://www.ghezelbaash.ir/webpage');
+  const person = nodes.find(node => node['@id'] === home?.mainEntity?.['@id']);
+  if (!person || ![person['@type']].flat().includes('Person') ||
+      person.mainEntityOfPage?.['@id'] !== home['@id']) {
+    throw new Error('Homepage profile and canonical physician must identify each other');
+  }
+  const primaryName = person.name.find(name => name['@language'] === 'fa');
+  if (!primaryName) throw new Error('Missing Persian physician name');
+  // Inline the existing language-tagged name as a string without changing its RDF literal.
+  home.mainEntity = {
+    '@context': {name: {'@id': 'https://schema.org/name', '@language': 'fa'}},
+    '@id': person['@id'],
+    '@type': 'Person',
+    name: primaryName['@value'],
+  };
+  compact['@graph'] = [home, person, ...nodes.filter(node => node !== home && node !== person)];
   return serializeInlineJsonLd(compact);
 }

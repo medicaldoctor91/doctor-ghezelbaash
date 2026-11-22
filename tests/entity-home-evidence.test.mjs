@@ -53,6 +53,10 @@ test('stronger visible physician identity does not demote or duplicate all canon
  assert.deepEqual(new Set(graph['@graph'].map(n=>n['@id'])),sourceIds);
  const home=graph['@graph'].find(n=>n['@id']==='https://www.ghezelbaash.ir/webpage');
  const p=graph['@graph'].find(n=>n['@id']===physicianId);
+ assert.equal(graph['@graph'][0],home);
+ assert.equal(graph['@graph'][1],p);
+ assert.equal(home.mainEntity?.['@type'],'Person');
+ assert.equal(home.mainEntity.name,p.name.find(value=>value['@language']==='fa')['@value']);
  assert.equal(home.mainEntity?.['@id'],physicianId);
  assert.equal(p.mainEntityOfPage?.['@id'],home['@id']);
  const headEnd=html.indexOf('</head>');
