@@ -89,12 +89,12 @@ export function serializeGoogleCompatibleCanonicalGraph(graph) {
     // Further standard IRI aliases create a safety reserve for HTTP response
     // headers and visible Entity Home evidence under Google's strict 2 MB cap.
     ['itemListElement','ile'],['acceptedAnswer','ans'],
-    ['mainEntity','me'],['alternateName','alt'],
-    ['subjectOf','sub'],['identifier','iden'],['hasPart','hp'],
-    ['datePublished','dp'],['serviceType','st'],['itemOffered','io'],
+    
+    ['subjectOf','sub'],['hasPart','hp'],
+    ['serviceType','st'],['itemOffered','io'],
     ['termCode','tc'],['offeredBy','ob'],['medicalAudience','ma'],
-    ['mainEntityOfPage','mep'],['encodingFormat','enc'],
-    ['dateCreated','dc'],['creator','cr'],['measurementMethod','mm'],
+    ['encodingFormat','enc'],
+    ['measurementMethod','mm'],
   ];
   for (const [original,alias] of aliases) {
     if (Object.hasOwn(context,alias) || Object.hasOwn(context,original))
