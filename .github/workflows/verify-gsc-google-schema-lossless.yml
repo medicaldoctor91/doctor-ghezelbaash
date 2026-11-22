@@ -4,6 +4,7 @@ on:
     branches:
       - fix/complete-active-rdf-jsonld-home-priority-20261122
       - codex/full-rdf-jsonld-homepage-first-1-3-6
+      - fix/safe-publish-workflow-live-audit-20261122
   workflow_dispatch:
 permissions:
   contents: read
@@ -52,11 +53,11 @@ jobs:
           assert left==right,'RDF triple set changed during explicit @id normalization'
           print(json.dumps({'status':'PASS','nodes':1916,'rdfQuadCount':len(right.splitlines()),'canonicalGraphSha256':hashlib.sha256(full_bytes).hexdigest(),'activeScriptEndByte':m.end()},sort_keys=True))
           PY
-      - name: Verify final Cloudflare preview serves the full active RDF and unchanged source graph
+      - name: Verify CURRENT PUBLISHED production baseline (not the candidate build) serves complete active RDF
         run: |
           python - <<'PY'
           import hashlib,json,requests
-          base='https://53fbc4c2.doctor-ghezelbaash.pages.dev'
+          base='https://www.ghezelbaash.ir'
           headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'}
           html=requests.get(base+'/',headers=headers,timeout=90)
           graph=requests.get(base+'/graph.jsonld',headers=headers,timeout=90)
@@ -74,5 +75,5 @@ jobs:
           assert len({n['@id'] for n in data['@graph']})==1916
           h1=html.content.index(b'<h1')
           assert h1<2_000_000,'Homepage main heading should be crawlable after priority JSON-LD'
-          print(json.dumps({'preview':'PASS','nodes':1916,'activeScriptEndByte':end+9,'H1Byte':h1,'graphSHA256':hashlib.sha256(graph.content).hexdigest()}))
+          print(json.dumps({'publishedBaseline':'PASS','nodes':1916,'activeScriptEndByte':end+9,'H1Byte':h1,'graphSHA256':hashlib.sha256(graph.content).hexdigest()}))
           PY
