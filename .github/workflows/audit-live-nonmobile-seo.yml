@@ -121,3 +121,31 @@ jobs:
           print('INDEPENDENT_SEO_REPORT='+json.dumps(summary,ensure_ascii=False))
           assert core['/release-provenance.json']['commit']=='824c02f4bd495cdbc3091b7b3911a5470fd9104b'
           PY
+
+      - name: Probe known historical third-party inbound links and obsolete media URLs (read-only)
+        run: |
+          python - <<'PY'
+          import concurrent.futures,requests,json
+          o='https://www.ghezelbaash.ir'
+          items=[
+            '/media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp',
+            '/best-mesotherapy-doctor-kermanshah/',
+            '/best-double-chin-surgeon-kermanshah/',
+            '/gel-injection-doctor-in-kermanshah/',
+            '/laser-scar-treatment-in-kermanshah/',
+            '/services/',
+            '/contact/',
+            '/best-lip-filler-doctor-in-kermanshah/',
+            '/clinic/',
+            '/best-botox-doctor-in-kermanshah/',
+          ]
+          def inspect(path):
+            url=o+path
+            try:
+              with requests.get(url,headers={'User-Agent':'MedicalWebsiteReadOnlyAudit','Cache-Control':'no-cache','Accept-Encoding':'identity'},stream=True,timeout=(12,32)) as r:
+                return {'path':path,'status':r.status_code,'final':r.url,'redirectCodes':[x.status_code for x in r.history],'robots':r.headers.get('X-Robots-Tag'),'contentType':r.headers.get('Content-Type')}
+            except Exception as e:return {'path':path,'error':str(e)[:135]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+            rows=list(pool.map(inspect,items))
+          print('HISTORIC_INBOUND_AUDIT='+json.dumps(rows,ensure_ascii=False))
+          PY
