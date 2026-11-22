@@ -36,4 +36,9 @@ jobs:
               results[name]={'error':type(e).__name__+': '+str(e)[:130]}
           print('ALIAS_AND_PORTRAIT='+json.dumps(results))
           assert results['portraitCurrent']['code']==200,('Replacement image absent',results['portraitCurrent'])
+          assert results['portraitLegacy']['code']==301,('Broken historic portrait link remains',results['portraitLegacy'])
+          assert results['portraitLegacy']['location']=='https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.webp'
+          assert results['kgHome']['code']==301 and results['kgHome']['location']=='https://www.ghezelbaash.ir/'
+          assert results['kgGraph']['code']==301 and results['kgGraph']['location']=='https://www.ghezelbaash.ir/graph.jsonld?provider=test'
+          print('VERIFIED_CANONICAL_ALIAS_AND_PORTRAIT=PASS')
           PY
