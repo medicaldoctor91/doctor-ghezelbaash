@@ -1,0 +1,123 @@
+name: Independent 72-page live technical SEO, social metadata, hreflang, security and redirects audit (read-only)
+on:
+  push:
+    branches: [audit/live-nonmobile-seo-security-20261122]
+permissions: {contents: read}
+jobs:
+  live-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml
+      - name: Fetch public HTML for every canonical page; verify metadata, links, headers (no writes)
+        run: |
+          python - <<'PY'
+          import collections,concurrent.futures,json,requests,xml.etree.ElementTree as ET
+          from urllib.parse import urljoin,urlsplit,urldefrag
+          from bs4 import BeautifulSoup
+          O='https://www.ghezelbaash.ir'
+          headers={'User-Agent':'DoctorGhezelbaashSEOAudit-readonly','Cache-Control':'no-cache','Accept-Encoding':'identity'}
+          def get(url):
+            r=requests.get(url,headers=headers,timeout=(12,65),allow_redirects=True)
+            return r
+          def scan(url):
+            r=get(url)
+            o={'url':url,'status':r.status_code,'final':r.url,'errors':[]}
+            if r.status_code!=200: return o
+            soup=BeautifulSoup(r.content,'lxml')
+            h=soup.head
+            def meta(name,att='name'):
+              t=h.find('meta',attrs={att:name}) if h else None
+              return t.get('content') if t else None
+            o['title']=soup.title.get_text(' ',strip=True) if soup.title else None
+            o['desc']=meta('description')
+            t=h.find('link',rel='canonical') if h else None
+            o['canonical']=t.get('href') if t else None
+            o['language']=soup.html.get('lang') if soup.html else None
+            o['h1']=len(soup.find_all('h1'))
+            o['ogTitle']=meta('og:title','property')
+            o['ogDesc']=meta('og:description','property')
+            o['ogImage']=meta('og:image','property')
+            o['ogUrl']=meta('og:url','property')
+            o['twitterCard']=meta('twitter:card')
+            o['robots']=meta('robots')
+            o['hreflang']=[(x.get('hreflang'),x.get('href')) for x in h.find_all('link',hreflang=True)] if h else []
+            o['missingAlt']=sum(t.get('alt') is None for t in soup.find_all('img'))
+            scripts=soup.find_all('script',attrs={'type':'application/ld+json'})
+            o['ldCount']=len(scripts)
+            o['ldNodes']=0
+            for script in scripts:
+              try:o['ldNodes']+=len(json.loads(script.string or script.get_text()).get('@graph',[]))
+              except Exception as e:o['errors'].append('invalid_JSONLD:'+str(e)[:90])
+            ids={t['id'] for t in soup.find_all(id=True)}
+            hrefs=[urljoin(url,a.get('href')) for a in soup.find_all('a',href=True) if a.get('href') and not a.get('href').startswith(('tel:','mailto:','javascript:','data:'))]
+            o['samePageBrokenFragments']=list(set(urlsplit(t).fragment for t in hrefs if urlsplit(t).fragment and urlsplit(t).path==urlsplit(url).path and urlsplit(t).netloc==urlsplit(url).netloc and urlsplit(t).fragment not in ids))[:15]
+            o['internalTargets']=sorted(set(urldefrag(t)[0] for t in hrefs if urlsplit(t).netloc in ['www.ghezelbaash.ir','ghezelbaash.ir']))
+            o['headers']={k:r.headers.get(k) for k in ['Strict-Transport-Security','Content-Security-Policy','X-Frame-Options','X-Content-Type-Options','Referrer-Policy','Permissions-Policy','Cache-Control','Content-Type']}
+            for k,ok in [('title',bool(o['title'])),('description',bool(o['desc'])),('canonical',o['canonical']==url),('h1',o['h1']==1),('ogTitle',bool(o['ogTitle'])),('ogDescription',bool(o['ogDesc'])),('ogImage',bool(o['ogImage'])),('twitterCard',bool(o['twitterCard'])),('jsonld',bool(o['ldCount']))]:
+              if not ok:o['errors'].append('bad_'+k)
+            if o['missingAlt']:o['errors'].append('images_missing_alt')
+            if o['samePageBrokenFragments']:o['errors'].append('local_fragment_missing')
+            if r.url.rstrip('/')!=url.rstrip('/'):o['errors'].append('unexpected_redirect')
+            return o
+          sm=get(O+'/sitemap.xml')
+          assert sm.status_code==200
+          root=ET.fromstring(sm.content);ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          urls=[loc.text.strip() for loc in root.findall('.//s:url/s:loc',ns)]
+          assert len(urls)==72 and len(set(urls))==72
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+            pages=sorted(pool.map(scan,urls),key=lambda x:x['url'])
+          idx={p['url']:p for p in pages}
+          issues=collections.Counter(error for p in pages for error in p['errors'])
+          affected=[{'url':p['url'],'errors':p['errors'],'fragments':p.get('samePageBrokenFragments')} for p in pages if p['errors']]
+          titles=collections.defaultdict(list);descs=collections.defaultdict(list)
+          hreflang=[]
+          for p in pages:
+            titles[p.get('title')].append(p['url'])
+            descs[p.get('desc')].append(p['url'])
+            for lang,target in p.get('hreflang',[]):
+              if lang=='x-default':continue
+              other=idx.get(target)
+              if not other:hreflang.append({'src':p['url'],'target':target,'issue':'target_missing_from_sitemap'})
+              elif not any(href==p['url'] for _,href in other.get('hreflang',[])):
+                hreflang.append({'src':p['url'],'target':target,'issue':'not_reciprocal'})
+          outside=collections.Counter(t for p in pages for t in p.get('internalTargets',[]) if t not in idx and t!=O+'/')
+          def probe(t):
+            try:r=get(t);return {'url':t,'status':r.status_code,'final':r.url}
+            except Exception as e:return {'url':t,'error':str(e)[:115]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+            extra=list(pool.map(probe,list(outside)[:25]))
+          canonURL=O+'/';home=idx[canonURL]
+          core={}
+          for path in ['/robots.txt','/graph.jsonld','/release-provenance.json','/integrity-manifest.json']:
+            r=get(O+path);core[path]={'http':r.status_code,'type':r.headers.get('Content-Type'),'bytes':len(r.content)}
+            if path=='/release-provenance.json':core[path]['commit']=r.json().get('sourceCommit')
+          redirects=[]
+          for u in ['http://ghezelbaash.ir/','http://www.ghezelbaash.ir/','https://ghezelbaash.ir/','https://doctor.ghezelbaash.ir/','https://kg.ghezelbaash.ir/']:
+            try:
+              r=get(u);redirects.append({'from':u,'status':r.status_code,'final':r.url,'hops':len(r.history)})
+            except Exception as e:redirects.append({'from':u,'error':str(e)[:120]})
+          summary={
+            'audit':'READ_ONLY_PRODUCTION','liveCommit':core['/release-provenance.json']['commit'],
+            'pages':len(pages),'http200':sum(p['status']==200 for p in pages),
+            'canonicalsCorrect':sum(p.get('canonical')==p['url'] for p in pages),
+            'allMetadataComplete':sum(bool(p.get('title') and p.get('desc') and p.get('ogImage')) for p in pages),
+            'h1ExactlyOne':sum(p.get('h1')==1 for p in pages),
+            'jsonldTotal':sum(p.get('ldCount',0) for p in pages),
+            'homeCanonicalNodeCount':home.get('ldNodes'),
+            'languages':dict(collections.Counter(p.get('language') for p in pages)),
+            'errors':dict(issues),'affected':affected[:35],
+            'duplicateTitles':{k:v for k,v in titles.items() if k and len(v)>1},
+            'duplicateDescriptions':{k:v for k,v in descs.items() if k and len(v)>1},
+            'hreflangProblems':hreflang[:35],
+            'extraInternalTargets':extra,'coreResources':core,'redirects':redirects,
+            'homepageHTTPHeaders':home.get('headers'),
+            'longTitles':sorted([{'url':p['url'],'chars':len(p.get('title') or '')} for p in pages],key=lambda x:-x['chars'])[:15],
+          }
+          print('INDEPENDENT_SEO_REPORT='+json.dumps(summary,ensure_ascii=False))
+          assert core['/release-provenance.json']['commit']=='824c02f4bd495cdbc3091b7b3911a5470fd9104b'
+          PY
