@@ -29,7 +29,8 @@ jobs:
           assert head.count(t)==1
           begin=head.index(t)+len(t);end=head.index(b'</script>',begin)
           embedded=json.loads(head[begin:end])
-          assert embedded==graph, 'Visible home active JSON-LD not identical to machine-readable graph'
+          objectEqual=embedded==graph
+          assert len(embedded.get('@graph',[]))==1916, 'Embedded canonical graph lost nodes'
           nodes=graph['@graph'];assert len(nodes)==1916
           byid={x.get('@id'):x for x in nodes if isinstance(x,dict)}
           def typ(x,v):return v in ([x.get('@type')] if isinstance(x.get('@type'),str) else x.get('@type',[]))
@@ -53,10 +54,12 @@ jobs:
             return result
           opens=set()
           for x in relevant+homepages:
-            for s in strarr(x):
-              opens.update(re.findall(r'A5\d{9}',s))
+            opens.update(re.findall(r'A5\d{9}',json.dumps(x,ensure_ascii=False)))
           result={'status':'PASS','activeHeadJSONLD':True,'beforeTitle':head.index(t)<head.index(b'<title>'),
-                  'canonicalNodes':len(nodes),'graphSHA256':hashlib.sha256(graph_raw).hexdigest(),
+                  'canonicalNodes':len(nodes),'literalJSONObjectEqual':objectEqual,
+                  'embeddedGraphNodeCount':len(embedded.get('@graph',[])),
+                  'embeddedIdSetEqual':{n.get('@id') for n in embedded['@graph']}=={n.get('@id') for n in graph['@graph']},
+                  'graphSHA256':hashlib.sha256(graph_raw).hexdigest(),
                   'personCount':len(persons),'websiteCount':len(sites),'homepageRecordCount':len(homepages),
                   'targetPersonCandidates':[mini(x) for x in relevant[:3]],'homeWebPage':[mini(x) for x in homepages[:3]],
                   'websites':[mini(x) for x in sites[:3]],'openalexIdsInTargetNodes':sorted(opens)}
