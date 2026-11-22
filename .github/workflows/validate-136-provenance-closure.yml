@@ -1,0 +1,68 @@
+name: Validate physician author and creator attribution closure (no publication)
+on:
+  push:
+    branches: [codex/physician-author-creator-provenance-20261122]
+permissions:
+  contents: read
+concurrency:
+  group: physician-author-creator-provenance-136
+  cancel-in-progress: true
+jobs:
+  graph-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install pinned site and graph validators
+        run: |
+          npm ci
+          python -m pip install 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - name: Build full 1.3.6 graph, homepage and machine exports
+        run: npm run build
+      - name: Run every Node graph and content regression
+        run: node --test --test-concurrency=1 tests/*.test.mjs
+      - name: Verify RDF, SHACL, cross-format and homepage parity
+        run: |
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+      - name: Check exactly sourced author and creator attributions and byte budget
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('dist')
+          raw=(root/'graph.jsonld').read_bytes()
+          g=json.loads(raw)
+          graph=g['@graph']
+          physician='https://www.ghezelbaash.ir/#saeed-ghezelbash'
+          items=lambda value:value if isinstance(value,list) else [] if value is None else [value]
+          ident=lambda value:value if isinstance(value,str) else value.get('@id')
+          credited=lambda work:any(ident(agent)==physician for field in ('author','creator') for agent in items(work.get(field)))
+          attributed=lambda work:any(ident(agent) in (physician,'site:#saeed-ghezelbash') for agent in items(work.get('at',work.get('prov:wasAttributedTo'))))
+          direct=[work for work in graph if credited(work)]
+          assert len(graph)==1916
+          assert len(direct)==427,(len(direct),427)
+          assert all(attributed(work) for work in direct),'Unattributed physician-authored or created work'
+          pub=next(x for x in graph if x['@id']=='https://www.ghezelbaash.ir/website')
+          assert not attributed(pub),'Publisher-only edge falsely promoted to authorship'
+          html=(root/'index.html').read_bytes()
+          end=html.index(b'</script>',html.index(b'id="canonical-entity-graph"'))+len(b'</script>')
+          assert end+4096<2000000,('Google HTML HEAD safety reserve',end)
+          policy=json.loads((root/'doi-policy.json').read_text())
+          assert policy['currentArchive']['sourceCommit']=='eafb138d596a91504ed0af66e2557f52848e36b6'
+          print(json.dumps({'validated':'PASS','directAuthorOrCreator':len(direct),'graphNodes':len(graph),
+            'graphSHA256':hashlib.sha256(raw).hexdigest(),'homepageScriptEndBytes':end,
+            'publication':'NO WRITES'},indent=2))
+          PY

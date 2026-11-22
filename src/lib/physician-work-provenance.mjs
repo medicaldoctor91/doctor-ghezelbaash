@@ -100,23 +100,23 @@ export function attributePhysicianWorks(graph, physician) {
   const nodes = new Map(graph['@graph'].map(node => [node['@id'], node]));
   for (const record of publications) setResearchCredit(nodes.get(origin + '/' + record.slug), record);
 
-  // Keep third-party coverage, merely reviewed works and patient testimony
-  // outside the corpus of physician-authored publications. Media credit
-  // describes creation of the media asset, separately from its subject.
-  const authoredTypes = new Set(['Article', 'Answer', 'MedicalWebPage', 'ProfilePage', 'WebPage', 'ContactPage']);
-  const createdTypes = new Set(['VideoObject', 'ImageObject', 'Dataset', 'SoftwareSourceCode', 'DigitalDocument']);
+  // Close attribution over every existing positive author/creator assertion,
+  // regardless of document subtype, hosting domain, or whether it is a
+  // downloadable distribution / physician-curated evidence collection.
+  // A publisher, subject, reviewer, quoted clinician, or merely mentioned
+  // person is NOT automatically the work's author or creator.
+  // Do not change the pre-existing author/creator assertions themselves.
   for (const node of nodes.values()) {
-    const types = values(node['@type']);
-    const authored = types.some(type => authoredTypes.has(type)) &&
-      node.url?.startsWith(sitePrefix) &&
-      values(node.author).some(author => author['@id'] === physicianId);
-    const created = types.some(type => createdTypes.has(type)) &&
-      values(node.creator).some(creator => creator['@id'] === physicianId);
-    if (!(authored || created)) continue;
+    if (node['@id'] === physicianId) continue;
+    const credited = ['author', 'creator'].some(property =>
+      values(node[property]).some(agent => agent?.['@id'] === physicianId));
+    if (!credited) continue;
     const key = 'prov:wasAttributedTo';
     const prior = values(node[key]);
+    if (prior.some(agent => agent?.['@id'] === physicianId ||
+      agent === physicianId || agent === 'site:#saeed-ghezelbash')) continue;
+    // Preserve independent existing attribution, including other agents.
     if (!prior.length) node[key] = 'site:#saeed-ghezelbash';
-    else if (!prior.some(agent => agent?.['@id'] === physicianId || agent === 'site:#saeed-ghezelbash'))
-      node[key] = [...prior, ref(physicianId)];
+    else node[key] = [...prior, ref(physicianId)];
   }
 }
