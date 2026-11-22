@@ -119,6 +119,7 @@ try:
         "clinicAsAuthorCreatorProvider":clinic_as_author[:15],
         "otherIndependentPhysicianClinicNodes":other_clinical_nodes[:20],
         "personAttributedWorks":len(works),
+        "clinicalWorkshopCourseNode": lookup.get(BASE+"advanced-thread-lift-workshop-course"),
         "nodesReferencingMissingClinicQ":wd_clinic_tokens}
     assert hashlib.sha256(graph_bytes).hexdigest()==EXPECTED_GRAPH,"Canonical graph hash drift"
     assert ids(home.get("mainEntity"))==[PERSON],"Homepage mainEntity is not physician"
@@ -231,4 +232,5 @@ finally:
           "inlinePersonPresent","inlineOfficePresent","inlineGraphNodeCount","bytesAfter2M")}
          for key,item in summary["homepage"].items()}
     print(json.dumps(summary,ensure_ascii=False,default=str))
+    print("COURSE_AUTHORITY_DETAIL",json.dumps(report.get("liveGraph",{}).get("clinicalWorkshopCourseNode"),ensure_ascii=False,default=str)[:3500])
 if report["status"]=="ERROR":sys.exit(1)
