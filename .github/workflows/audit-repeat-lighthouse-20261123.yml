@@ -1,0 +1,54 @@
+name: Repeated mobile Lighthouse variability check (read only)
+on:
+  push:
+    branches: [audit/repeated-mobile-lighthouse-20261123]
+permissions: {contents: read}
+jobs:
+  repeat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Run three independent mobile tests each on home and Botox without modifying site
+        run: |
+          mkdir -p repeat-results
+          for pair in 'home /' 'botox /botox'; do
+            set -- $pair
+            name="$1";route="$2"
+            for pass in 1 2 3; do
+              npx --yes lighthouse@12 "https://www.ghezelbaash.ir$route" \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --form-factor=mobile --throttling-method=simulate \
+                --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --disable-gpu" \
+                --max-wait-for-load=60000 --quiet --output=json \
+                --output-path="repeat-results/$name-$pass.json" \
+                >"repeat-results/$name-$pass.out" 2>"repeat-results/$name-$pass.err" || true
+            done
+          done
+      - name: Summarize lab median and spread
+        run: |
+          python - <<'PY'
+          import statistics,json,glob
+          for name in ['home','botox']:
+            files=glob.glob('repeat-results/'+name+'-*.json')
+            scores=[];lcps=[];tbts=[];doms=[];fcps=[]
+            for p in files:
+              j=json.load(open(p));a=j.get('audits',{})
+              if j.get('categories',{}).get('performance',{}).get('score') is None:continue
+              scores.append(round(j['categories']['performance']['score']*100))
+              lcps.append(a['largest-contentful-paint']['numericValue'])
+              fcps.append(a['first-contentful-paint']['numericValue'])
+              tbts.append(a['total-blocking-time']['numericValue'])
+              doms.append(a['dom-size']['numericValue'])
+            def stats(x):return {'median':round(statistics.median(x),2),'min':min(x),'max':max(x)} if x else None
+            print('REPEAT_LH='+json.dumps({'page':name,'runs':len(scores),'performance':stats(scores),'lcpMilliseconds':stats(lcps),'fcpMilliseconds':stats(fcps),'tbtMilliseconds':stats(tbts),'domNodes':stats(doms)}),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repeated-mobile-lighthouse-results
+          path: repeat-results/
+          retention-days: 20
