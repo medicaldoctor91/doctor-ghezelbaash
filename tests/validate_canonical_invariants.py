@@ -73,12 +73,12 @@ def validate(root: Path):
     if not (root / "graph.jsonld").is_file() or not (root / "index.html").is_file():
         raise AssertionError(f"built dist is incomplete: {root}")
 
-    # The active full-graph HEAD layout is a permanent 1.3.6 canonical
-    # invariant, not merely a one-off release workflow preference.
+    # Current Google-facing HTML must provide a bounded ProfilePage JSON-LD,
+    # while preserving all canonical triples in the embedded/external graph.
     scripts = Path(__file__).resolve().parents[1] / ".github" / "scripts"
     sys.path.insert(0, str(scripts))
-    from browser_projection import require_current_active_head_jsonld
-    homepage_schema = require_current_active_head_jsonld(
+    from browser_projection import require_current_google_compatible_projection
+    homepage_schema = require_current_google_compatible_projection(
         root / "graph.jsonld", (root / "index.html").read_bytes())
 
     files = list(text_files(root))
