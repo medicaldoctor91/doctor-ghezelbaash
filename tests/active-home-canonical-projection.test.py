@@ -1,79 +1,85 @@
-"""Regression checks for the active full canonical graph in the homepage HEAD."""
+"""Fail-closed checks for Google's bounded homepage schema and lossless canonical RDF payload."""
 import json
-import sys
-import tempfile
+import re
+from html.parser import HTMLParser
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / ".github/scripts"))
-from browser_projection import require_current_active_head_jsonld
+root = Path(__file__).resolve().parents[1]
+html = (root / "dist/index.html").read_bytes()
+graph = json.loads((root / "dist/graph.jsonld").read_text())
 
-graph_path = ROOT / "dist/graph.jsonld"
-html = (ROOT / "dist/index.html").read_bytes()
 
-proof = require_current_active_head_jsonld(graph_path, html)
-assert proof["status"] == "PASS"
-assert proof["canonicalGraphStorage"] == "application/ld+json#canonical-entity-graph"
-assert proof["nodes"] >= 1900
-assert proof["criticalReserveBytes"] > 4_096  # Hard 2 MB window with explicit 4 KB byte reserve
+class Scripts(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.items = []
+        self.current = None
 
-# The validator must fail closed if the purported canonical external graph
-# differs in even one node from the embedded schema.
-graph = json.loads(graph_path.read_text())
+    def handle_starttag(self, tag, attrs):
+        if tag != "script":
+            return
+        a = dict(attrs)
+        self.current = {"id": a.get("id"), "type": a.get("type"), "content": ""}
+
+    def handle_data(self, data):
+        if self.current is not None:
+            self.current["content"] += data
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self.current is not None:
+            self.items.append(self.current)
+            self.current = None
+
+
+def verify(payload, canonical):
+    parser = Scripts()
+    parser.feed(payload.decode("utf8"))
+    schemas = [i for i in parser.items if i["type"] == "application/ld+json"]
+    assert len(schemas) == 1 and schemas[0]["id"] == "schema-core-mainentity"
+    document = json.loads(schemas[0]["content"])
+    assert document["@context"] == "https://schema.org"
+    homepage = next(n for n in document["@graph"] if n["@id"] == "https://www.ghezelbaash.ir/webpage")
+    physician = "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+    assert homepage["mainEntity"]["@id"] == physician
+    assert any(n["@id"] == physician for n in document["@graph"])
+    full = [i for i in parser.items if i["id"] == "canonical-entity-graph"]
+    assert len(full) == 1 and full[0]["type"] == "application/json"
+    assert json.loads(full[0]["content"]) == canonical
+    assert len(canonical["@graph"]) >= 1900
+    assert payload.index(b"<main") < 1_900_000
+    assert re.search(rb"<h1\b", payload).start() < 1_900_000
+    assert payload.index(b'<script id="canonical-entity-graph"') > payload.index(b"<h1")
+    return {"status": "PASS", "nodes": len(canonical["@graph"]), "mainByte": payload.index(b"<main")}
+
+
+proof = verify(html, graph)
+
+# Tampering with the canonical RDF graph must fail.
 modified = json.loads(json.dumps(graph))
 modified["@graph"].pop()
-with tempfile.TemporaryDirectory() as d:
-    wrong = Path(d) / "graph.jsonld"
-    wrong.write_text(json.dumps(modified))
-    try:
-        require_current_active_head_jsonld(wrong, html)
-    except AssertionError:
-        pass
-    else:
-        raise AssertionError("Validator accepted a graph with an omitted node")
+try:
+    verify(html, modified)
+except AssertionError:
+    pass
+else:
+    raise AssertionError("An omitted canonical node escaped the guard")
 
-# A second JSON-LD script makes the visible page semantically ambiguous.
+# Rich Results ambiguity must fail.
 extra = b'<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person"}</script>'
-tampered = html.replace(b"</head>", extra + b"</head>", 1)
-assert tampered != html
 try:
-    require_current_active_head_jsonld(graph_path, tampered)
+    verify(html.replace(b"</head>", extra + b"</head>", 1), graph)
 except AssertionError:
     pass
 else:
-    raise AssertionError("Validator accepted a duplicate JSON-LD script")
+    raise AssertionError("Duplicate JSON-LD script escaped the guard")
 
-# Reject a regression to inert JSON even if the graph contents are unchanged.
-# Do not let the generic historical compatibility validator weaken this gate.
-legacy = html.replace(
-    b'<script id="canonical-entity-graph" type="application/ld+json">',
-    b'<script id="canonical-entity-graph" type="application/json">',
-    1,
-)
-assert legacy != html, "Expected the current active script marker in the homepage"
+# A giant RDF script must not move the physician H1 beyond the crawler budget.
+oversized = html.replace(b"<main", b" " * 2_000_000 + b"<main", 1)
 try:
-    require_current_active_head_jsonld(graph_path, legacy)
+    verify(oversized, graph)
 except AssertionError:
     pass
 else:
-    raise AssertionError("Current release accepted an inert/legacy canonical graph")
+    raise AssertionError("Googlebot main-content truncation escaped the guard")
 
-# Test must exceed the actual measured byte budget. A hardcoded 20 KB
-# padding can remain below the crawl limit after unrelated metadata shrinks.
-# This test adapts to the built file and is therefore not a false negative.
-padding_bytes = max(20_000, 2_000_000 - proof["canonicalGraphEndByte"] + 16_001)
-oversized = html.replace(
-    b'<script id="canonical-entity-graph" type="application/ld+json">',
-    b' ' * padding_bytes + b'<script id="canonical-entity-graph" type="application/ld+json">',
-    1,
-)
-assert oversized != html
-
-try:
-    require_current_active_head_jsonld(graph_path, oversized)
-except AssertionError:
-    pass
-else:
-    raise AssertionError("Current release accepted a graph beyond the strict HTML budget")
-
-print(json.dumps(proof, ensure_ascii=False, indent=2))
+print(json.dumps(proof, ensure_ascii=False))

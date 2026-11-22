@@ -361,6 +361,70 @@ def validate_home_html(graph_path, html):
     parser.feed(parser.html)
     return validate_home_projection(graph_path, [item['document'] for item in parser.search], html)
 
+def require_current_google_compatible_projection(graph_path, html):
+    """Fail-closed Google search boundary; all source RDF still survives verbatim.
+
+    Unlike the historical bounded projector, the homepage search boundary may
+    intentionally omit low-priority clinic contact details. Those details are
+    still required unchanged in the canonical JSON data and graph.jsonld.
+    """
+    import re
+
+    payload = html if isinstance(html, bytes) else html.encode('utf8')
+    parser = _InlineDocuments(payload.decode('utf8'))
+    parser.feed(parser.html)
+    graph = json.loads(Path(graph_path).read_text())
+    nodes = graph['@graph']
+    identifiers = [node['@id'] for node in nodes]
+    assert len(identifiers) == len(set(identifiers)) and len(nodes) >= 1900
+    assert len(parser.search) == 1 and len(parser.canonical) == 1, (
+        'One bounded Google JSON-LD and one complete inert RDF document required')
+
+    search = parser.search[0]
+    full = parser.canonical[0]
+    assert search['id'] == 'schema-core-mainentity' and search['inHead'] and not search['inBody']
+    assert full['id'] == 'canonical-entity-graph' and full['inBody'] and not full['inHead']
+    assert not parser.visible_after_canonical, 'Full RDF must follow visible content'
+    assert full['document'] == graph, 'Canonical embedded RDF differs from graph.jsonld'
+    assert search['document']['@context'] == 'https://schema.org'
+    assert len(search['text'].encode('utf8')) <= MAX_SEARCH_BYTES
+    assert search['document'] == expected_home_search_projection(graph), (
+        'Google search projection is not deterministic from the canonical graph')
+
+    origin = 'https://www.ghezelbaash.ir'
+    physician_id = origin + '/#saeed-ghezelbash'
+    home_id = origin + '/webpage'
+    search_nodes = {node['@id']: node for node in search['document']['@graph']}
+    home = search_nodes[home_id]
+    person = search_nodes[physician_id]
+    assert home['mainEntity']['@id'] == physician_id
+    assert 'ProfilePage' in _values(home.get('@type'))
+    assert 'Person' in _values(person.get('@type'))
+    canonical_nodes = {node['@id']: node for node in nodes}
+    assert home_id in canonical_nodes and physician_id in canonical_nodes
+    assert canonical_nodes[home_id]['mainEntity']['@id'] == physician_id
+
+    main = re.search(rb'<main\b', payload, re.I)
+    h1 = re.search(rb'<h1\b', payload, re.I)
+    assert main and h1, 'Primary visible content missing'
+    search_prefix = search['end']
+    visible_prefix = max(main.start(), h1.start())
+    boundary = max(search_prefix, visible_prefix) + HEADER_RESERVE_BYTES
+    assert boundary < CRAWL_PREFIX_BYTES - 50_000, (
+        'Googlebot must see heading and Search JSON-LD before the 2MB boundary')
+    assert full['start'] > h1.start(), 'Full RDF should follow visible physician H1'
+    return {
+        'status': 'PASS', 'nodes': len(nodes),
+        'canonicalGraphStorage': 'application/json#canonical-entity-graph',
+        'canonicalNodes': len(nodes), 'recognizedSearchEndByte': search_prefix,
+        'visibleContentPrefixEndByte': visible_prefix,
+        'criticalPrefixIncludingHeaderReserveBytes': boundary,
+        'crawlPrefixBytes': CRAWL_PREFIX_BYTES,
+        'htmlBytes': len(payload),
+        'fullRdfEndByte': full['end'],
+    }
+
+
 def require_current_active_head_jsonld(graph_path, html):
     """Mandatory 1.3.6 release gate, not an archive-format compatibility validator.
 
