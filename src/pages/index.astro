@@ -13,6 +13,7 @@ import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
 import {serializeCanonicalGraph, serializeGoogleCompatibleCanonicalGraph, serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {renderEntityHomeEvidence} from "../lib/entity-home-evidence.mjs";
 import {physicianAuthoritySupplement} from "../lib/physician-authority-supplement.mjs";
 import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
 import {renderEvidenceRelatedVideos} from "../lib/evidence-related-video-links.mjs";
@@ -324,6 +325,17 @@ blockquote {
   /* Admit the 4px high-contrast focus ring plus its 3px offset. */
   overflow-clip-margin: 8px;
 }
+.entity-home-evidence {
+  max-width: var(--reading-measure);
+  padding-block: 1.2rem 1.4rem;
+  margin-block: 0 2.5rem;
+  border-block: 1px solid rgb(47 97 77 / 0.22);
+}
+.entity-home-evidence h2 { font-size: clamp(1.1rem, 1.5vw, 1.35rem); margin-block: 0 0.65rem; }
+.entity-home-evidence p { margin-block: 0 0.7rem; }
+.entity-home-evidence ul { padding-inline-start: 1.25rem; margin-block: 0; }
+.entity-home-evidence li + li { margin-block-start: 0.55rem; }
+.entity-home-evidence a { text-underline-offset: 0.2em; }
 .entity-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
@@ -5069,6 +5081,24 @@ export function compileCanonicalSource() {
     // repeating every URL on each heading adds no browser or crawler behavior.
     if (node.tagName === 'a' && attr(node,'href')) set(node,'href',urlArchitecture.sourceNavigationUrl(attr(node,'href')));
   });
+  // The physician's Entity Home needs publicly inspectable evidence,
+  // not just dense machine-only RDF. Derive every proof link from the
+  // same frozen Person and publication nodes used in canonical JSON-LD.
+  let entityHero;
+  walk(body,node=>{
+    if(node.tagName==='header' && (attr(node,'class')??'').split(/\\s+/).includes('entity-hero')){
+      if(entityHero)throw new Error('Competing physician Entity Home hero');
+      entityHero=node;
+    }
+  });
+  if(!entityHero?.parentNode)throw new Error('Canonical physician Entity Home hero missing');
+  const visibleEvidence=parseFragment(renderEntityHomeEvidence(SOURCE.graph,{origin:base})).childNodes[0];
+  if(visibleEvidence?.tagName!=='section')throw new Error('Entity Home evidence did not render as section');
+  const evidenceParent=entityHero.parentNode;
+  const heroIndex=evidenceParent.childNodes.indexOf(entityHero);
+  if(heroIndex<0)throw new Error('Entity Home hero is not attached to source');
+  visibleEvidence.parentNode=evidenceParent;
+  evidenceParent.childNodes.splice(heroIndex+1,0,visibleEvidence);
   // Existing titles become native permalinks; no navigation box or new copy.
   const elements=[];walk(body,node=>{if(node.tagName)elements.push(node);});
   const byHtmlId=new Map(elements.filter(node=>attr(node,'id')).map(node=>[attr(node,'id'),node]));
