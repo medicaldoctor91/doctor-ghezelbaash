@@ -40,3 +40,5 @@ jobs:
           print('LIVE_CACHE_AUDIT='+json.dumps(report,ensure_ascii=False),flush=True)
           assert not errors,errors
           PY
+
+# Post-change verification: Cloudflare cache bypass rule fc365995493b4354a2943733e876fcbe.
