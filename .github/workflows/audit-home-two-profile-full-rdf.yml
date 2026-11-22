@@ -1,0 +1,74 @@
+name: Compare LIVE homepage RDF vs graph.jsonld and inspect BOTH ProfilePage nodes
+on:
+  push:
+    branches: [audit/home-double-profile-and-full-rdf-20261122]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests PyLD==3.3.0
+      - name: Independently inspect live production JSON-LD and RDF canonical normalization
+        run: |
+          python - <<'PY'
+          import requests,json,re,hashlib,collections,time
+          from pyld import jsonld
+          O='https://www.ghezelbaash.ir/'
+          H={'User-Agent':'ReadOnlySemanticGraphAudit/20261122','Accept-Encoding':'identity','Cache-Control':'no-cache'}
+          def get(u):
+            r=requests.get(u,headers=H,timeout=(12,90))
+            r.raise_for_status()
+            return r.content
+          home=get(O);graphbytes=get(O+'graph.jsonld');external=json.loads(graphbytes)
+          script=b'<script id="canonical-entity-graph" type="application/ld+json">'
+          assert home.count(script)==1,('active script count',home.count(script))
+          headend=home.index(b'</head>')
+          start=home.index(script)
+          assert start<headend
+          end=home.index(b'</script>',start)
+          embedded=json.loads(home[start+len(script):end])
+          nodes=embedded.get('@graph',[])
+          file_nodes=external.get('@graph',[])
+          assert len(nodes)==len(file_nodes)==1916
+          def valtype(n,t):
+            v=n.get('@type',[])
+            return t in (v if isinstance(v,list) else [v])
+          profiles=[x for x in nodes if valtype(x,'ProfilePage')]
+          persons=[x for x in nodes if valtype(x,'Person')]
+          webpages=[x for x in nodes if valtype(x,'WebPage') or valtype(x,'MedicalWebPage') or valtype(x,'ProfilePage')]
+          websit=[x for x in nodes if valtype(x,'WebSite')]
+          def concise(n):
+            return {k:n[k] for k in ['@id','@type','url','name','mainEntity','mainEntityOfPage','about','isPartOf','publisher','author'] if k in n}
+          # Normalize through W3C JSON-LD 1.1 and URDNA2015, compare entire RDF quad sets
+          t=time.time()
+          normalization={'algorithm':'URDNA2015','format':'application/n-quads'}
+          emb_nq=jsonld.normalize(embedded,normalization)
+          file_nq=jsonld.normalize(external,normalization)
+          emb_lines=set(emb_nq.splitlines());file_lines=set(file_nq.splitlines())
+          emb_ids={n.get('@id') for n in nodes if isinstance(n,dict)}
+          file_ids={n.get('@id') for n in file_nodes if isinstance(n,dict)}
+          triple_equal=emb_lines==file_lines
+          count_schema=sum(valtype(x,'ProfilePage') for x in nodes)
+          info={'status':'PASS' if triple_equal else 'MISMATCH',
+                'liveHomeBytes':len(home),'rdfScriptBeforeTitle':start<home.index(b'<title>'),
+                'headScriptStartByte':start,'headScriptEndByte':end+9,
+                'activeGraphNodes':len(nodes),'standaloneGraphNodes':len(file_nodes),
+                'profilePageCount':count_schema,'profilePages':[concise(p) for p in profiles],
+                'personCount':len(persons),'persons':[concise(p) for p in persons][:3],
+                'websites':[concise(x) for x in websit],
+                'standaloneGraphSHA256':hashlib.sha256(graphbytes).hexdigest(),
+                'jsonObjectsExactlyEqual':embedded==external,'idSetsEqual':emb_ids==file_ids,
+                'rdfQuadsEmbedded':len(emb_lines),'rdfQuadsStandalone':len(file_lines),
+                'allRdfQuadsExactlyEqual':triple_equal,
+                'onlyEmbeddedQuads':list(sorted(emb_lines-file_lines))[:6],
+                'onlyStandaloneQuads':list(sorted(file_lines-emb_lines))[:6],
+                'normalizationSeconds':round(time.time()-t,2)}
+          print('PROFILE_AND_RDF_AUDIT='+json.dumps(info,ensure_ascii=False))
+          assert triple_equal, 'LIVE HOME JSON-LD RDF DOES NOT MATCH STANDALONE GRAPH'
+          assert emb_ids==file_ids, 'IRI sets differ'
+          PY
