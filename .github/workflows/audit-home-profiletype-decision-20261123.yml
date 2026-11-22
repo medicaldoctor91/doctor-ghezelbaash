@@ -88,6 +88,9 @@ jobs:
             'home_html_bytes':len(pages['/']),
             'home_script_bytes':sum(len(json.dumps(d,ensure_ascii=False).encode()) for d in home_docs),
             'graph_node_count':len(external),
+  'home_inline_node_count':len(home),
+  'same_node_id_set':set(x.get('@id') for x in home)==set(x.get('@id') for x in external),
+  'home_external_difference_count':sum(1 for id in set(x.get('@id') for x in home)&set(x.get('@id') for x in external) if next(x for x in home if x.get('@id')==id)!=next(x for x in external if x.get('@id')==id)),
             'homepage_node_id':homepage_id,
             'person_id':p,
             'home_existing_types':types(H),
@@ -108,7 +111,7 @@ jobs:
           }
           print('DECISION_AUDIT_JSON='+json.dumps(out,ensure_ascii=False),flush=True)
           # Find code and tests that mandate two ProfilePage nodes or homepage specific type.
-          match=subprocess.run(['rg','-n','ProfilePage|MedicalWebPage','tests','src','build','.github/scripts'],text=True,capture_output=True)
+          match=subprocess.run(['grep','-R','-n','-E','ProfilePage|MedicalWebPage','tests','src','build','.github/scripts'],text=True,capture_output=True)
           lines=[s for s in match.stdout.splitlines() if re.search(r'homepage|home|webpage|ProfilePage',s,re.I)]
           summary={'total_matching_lines':len(match.stdout.splitlines()),'relevant_lines':lines[:50]}
           print('CODE_CONTRACT_REFERENCES='+json.dumps(summary,ensure_ascii=False),flush=True)
