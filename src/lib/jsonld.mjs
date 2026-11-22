@@ -21,48 +21,13 @@ export function serializeCanonicalGraph(graph) {
   const attribution = 'prov:wasAttributedTo';
   const alias = 'at';
   const term = context[attribution];
-  if (term?.['@id'] !== 'http://www.w3.org/ns/prov#wasAttributedTo' ||
-      term?.['@type'] !== '@id' ||
-      context[alias] !== undefined && (
-        context[alias]?.['@id'] !== term['@id'] ||
-        context[alias]?.['@type'] !== term['@type']))
+  if (context[alias] !== undefined ||
+      term?.['@id'] !== 'http://www.w3.org/ns/prov#wasAttributedTo' ||
+      term?.['@type'] !== '@id')
     throw new Error('Unexpected canonical provenance context; refusing lossy alias');
-  // The standalone /graph.jsonld is already provenance-compacted; accept the
-  // same equivalent alias on input, otherwise add it without changing triples.
-  if (context[alias] === undefined) context[alias] = structuredClone(term);
-
-  // Google Search Console reported Incorrect value type for precisely these
-  // eighteen JSON-LD @id-coerced Schema.org terms. Keep the entire RDF graph
-  // active on the homepage, but use explicit @id node objects rather than
-  // term-level coercions in the Google-facing serialization. The expanded RDF
-  // meaning of each property is unchanged; /graph.jsonld is untouched.
-  const explicitIriTerms = [
-    'image','url','sameAs','contentUrl','serviceUrl','dayOfWeek',
-    'additionalType','codeRepository','target','hasMap','license',
-    'measuredProperty','procedureType','thumbnailUrl','acquireLicensePage',
-    'eventAttendanceMode','isBasedOn','inDefinedTermSet',
-  ];
-  if (context['@vocab'] !== 'https://schema.org/')
-    throw new Error('Unexpected canonical @vocab; refusing non-equivalent Schema.org normalization');
-  for (const key of explicitIriTerms) {
-    const definition=context[key];
-    if (!definition || Object.keys(definition).length !== 1 || definition['@type'] !== '@id')
-      throw new Error('Unexpected IRI-coercion context for '+key);
-    // @vocab already expands these exact Schema.org predicates to the same IRIs.
-    delete context[key];
-  }
-  // Two high-frequency Schema.org predicates receive standard JSON-LD term
-  // aliases, reducing raw HEAD bytes without omitting any statement.
-  const compactSchemaTerms = [['description','d'],['inLanguage','l']];
-  for (const [original,short] of compactSchemaTerms) {
-    if (Object.hasOwn(context,short) || Object.hasOwn(context,original))
-      throw new Error('Unsafe Schema.org term alias '+short);
-    context[short]='https://schema.org/'+original;
-  }
-  const explicitIri = value => Array.isArray(value)
-    ? value.map(explicitIri)
-    : typeof value === 'string' ? {'@id':value} : value;
-
+  // Explicit IRI and @id coercion make the short key exactly equivalent to
+  // prov:wasAttributedTo. Never rewrite a scoped @context subtree.
+  context[alias] = structuredClone(term);
   function visit(value) {
     if (!value || typeof value !== 'object' || Object.hasOwn(value, '@context')) return;
     if (Object.hasOwn(value, '@value')) {
@@ -70,20 +35,72 @@ export function serializeCanonicalGraph(graph) {
       if (typeof type === 'string' && type.startsWith(xsd)) value['@type'] = 'xsd:' + type.slice(xsd.length);
       return;
     }
-    // Explicit node-object IRIs preserve the original expanded N-Quads.
-    for (const key of explicitIriTerms)
-      if (Object.hasOwn(value,key)) value[key]=explicitIri(value[key]);
-    for (const [original,short] of compactSchemaTerms) {
-      if (Object.hasOwn(value,original)) {
-        if (Object.hasOwn(value,short)) throw new Error('Conflicting compact Schema.org term '+short);
-        value[short]=value[original];delete value[original];
-      }
-    }
     if (Object.hasOwn(value, attribution)) {
       if (Object.hasOwn(value, alias))
         throw new Error('Existing at property conflicts with provenance compaction');
       value[alias] = value[attribution];
       delete value[attribution];
+    }
+    for (const child of Object.values(value)) visit(child);
+  }
+  visit(compact['@graph']);
+  return serializeInlineJsonLd(compact);
+}
+
+/**
+ * An independent, standards-equivalent representation of the FULL canonical
+ * RDF for the homepage only. Do not change serializeCanonicalGraph(): it
+ * publishes /graph.jsonld, whose exact SHA-256 is shared by four platforms.
+ * Explicit @id node objects avoid the 18 term-level @id coercions reported
+ * by Google; short Schema.org term aliases keep the active graph inside 2MB.
+ */
+export function serializeGoogleCompatibleCanonicalGraph(graph) {
+  const originalContext = graph['@context'];
+  if (originalContext?.['@vocab'] !== 'https://schema.org/')
+    throw new Error('Refusing unexpected JSON-LD vocabulary');
+  const provenance = originalContext?.['prov:wasAttributedTo'];
+  if (provenance?.['@id'] !== 'http://www.w3.org/ns/prov#wasAttributedTo' ||
+      provenance?.['@type'] !== '@id') throw new Error('Unexpected PROV context');
+  const alreadyAliased = originalContext.at !== undefined;
+  if (alreadyAliased &&
+    (originalContext.at?.['@id'] !== provenance['@id'] ||
+     originalContext.at?.['@type'] !== provenance['@type']))
+    throw new Error('Wrong provenance alias');
+  const compact = alreadyAliased ? structuredClone(graph) :
+    JSON.parse(serializeCanonicalGraph(graph));
+  const context = compact['@context'];
+  const uriTerms = [
+    'image','url','sameAs','contentUrl','serviceUrl','dayOfWeek',
+    'additionalType','codeRepository','target','hasMap','license',
+    'measuredProperty','procedureType','thumbnailUrl','acquireLicensePage',
+    'eventAttendanceMode','isBasedOn','inDefinedTermSet',
+  ];
+  for (const key of uriTerms) {
+    const definition = context[key];
+    if (!definition || Object.keys(definition).length!==1 || definition['@type']!=='@id')
+      throw new Error('Unexpected canonical IRI-coercion for '+key);
+    delete context[key]; // @vocab maps this key to the same Schema.org predicate
+  }
+  const aliases = [['description','d'],['inLanguage','l']];
+  for (const [original,alias] of aliases) {
+    if (Object.hasOwn(context,alias) || Object.hasOwn(context,original))
+      throw new Error('Unsafe schema term alias '+alias);
+    context[alias]='https://schema.org/'+original;
+  }
+  function convert(value) {
+    return Array.isArray(value) ? value.map(convert)
+      : typeof value==='string' ? {'@id':value} : value;
+  }
+  function visit(value) {
+    if (!value || typeof value!=='object' || Object.hasOwn(value,'@context')) return;
+    if (Object.hasOwn(value,'@value')) return;
+    if (Array.isArray(value)) { for (const item of value) visit(item); return; }
+    for (const key of uriTerms) if (Object.hasOwn(value,key)) value[key]=convert(value[key]);
+    for (const [original,alias] of aliases) {
+      if (Object.hasOwn(value,original)) {
+        if (Object.hasOwn(value,alias)) throw new Error('Conflicting JSON-LD alias '+alias);
+        value[alias]=value[original];delete value[original];
+      }
     }
     for (const child of Object.values(value)) visit(child);
   }
