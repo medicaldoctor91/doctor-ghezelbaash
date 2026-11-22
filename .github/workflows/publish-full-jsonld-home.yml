@@ -1,4 +1,4 @@
-name: Publish Google-compatible homepage with full canonical RDF preserved
+name: Publish complete canonical RDF as active homepage JSON-LD before text
 # Complete graph validation permits other Person entities while preserving one physician ID.
 # Deployment must be explicitly dispatched after the cross-platform release gates.
 # A development-branch merge must never publish only the website.
@@ -50,16 +50,23 @@ jobs:
           python tests/validate_platform_bundle.py dist --no-query --rdf
           python tests/validate_machine_resources.py dist
           python tests/validate_canonical_invariants.py dist
-      - name: Verify Google-compatible homepage, full canonical RDF and upstream graph parity
+      - name: Verify complete active JSON-LD, W3C RDF equivalence and upstream parity
         run: |
           python - <<'PY'
-          import hashlib,json,sys,urllib.request
+          import hashlib,json,sys,urllib.request,re
+          from pyld import jsonld
           from pathlib import Path
           sys.path.insert(0,'.github/scripts')
-          from browser_projection import require_current_google_compatible_projection
-          proof=require_current_google_compatible_projection(Path('dist/graph.jsonld'),Path('dist/index.html').read_bytes())
+          from browser_projection import require_current_full_semantic_jsonld
+          proof=require_current_full_semantic_jsonld(Path('dist/graph.jsonld'),Path('dist/index.html').read_bytes())
           assert proof['status']=='PASS'
           body=Path('dist/graph.jsonld').read_bytes()
+          html=Path('dist/index.html').read_bytes()
+          block=re.search(rb'<script id="canonical-entity-graph" type="application/ld\\+json">([\\s\\S]*?)</script>',html)
+          assert block and block.end()<2_000_000
+          active=json.loads(block.group(1))
+          canonical=json.loads(body)
+          assert jsonld.normalize(active,{'algorithm':'URDNA2015','format':'application/n-quads'})==jsonld.normalize(canonical,{'algorithm':'URDNA2015','format':'application/n-quads'})
           digest=hashlib.sha256(body).hexdigest()
           upstream={
             'huggingface': 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/graph.jsonld',
@@ -71,7 +78,7 @@ jobs:
                   remote=response.read()
               assert hashlib.sha256(remote).hexdigest()==digest,(name,'RDF content mismatch; coordinated release required')
           assert json.loads(Path('dist/release-provenance.json').read_text())['sourceCommit']==__import__('os').environ['GITHUB_SHA']
-          print(json.dumps({'status':'PASS','canonicalGraphSHA256':digest,'nodes':proof['nodes'],'googlePrefixBytes':proof['visibleContentPrefixEndByte'],'upstreams':list(upstream)},sort_keys=True))
+          print(json.dumps({'status':'PASS','canonicalGraphSHA256':digest,'nodes':proof['nodes'],'googlePrefixBytes':proof['canonicalGraphEndByte'],'upstreams':list(upstream)},sort_keys=True))
           PY
       - name: Save the validated release
         uses: actions/upload-artifact@v4
@@ -86,7 +93,7 @@ jobs:
           import json,os,urllib.request
           assert json.load(urllib.request.urlopen('https://www.ghezelbaash.ir/release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
           PY
-          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=codex/full-rdf-jsonld-homepage-first-1-3-6 --commit-hash="$GITHUB_SHA" --commit-message='Publish Google-safe Schema with lossless canonical RDF' --commit-dirty=false
+          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=codex/full-rdf-jsonld-homepage-first-1-3-6 --commit-hash="$GITHUB_SHA" --commit-message='Publish complete canonical RDF as active JSON-LD in homepage HEAD' --commit-dirty=false
       - name: Verify published representations and Content-Digest
         run: |
           python - <<'PY'

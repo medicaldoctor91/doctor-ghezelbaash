@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {parse} from 'parse5';
-import {serializeCanonicalGraph} from '../src/lib/jsonld.mjs';
+import {serializeGoogleCompatibleCanonicalGraph} from '../src/lib/jsonld.mjs';
 import {SOURCE} from '../src/canonical/source.mjs';
 import {physicianIdentityIds,resolvePhysicianPractice} from '../src/lib/physician-identity.mjs';
 import {assertBoundedSearchDocument,latestRecordedModification,truthText} from '../src/lib/search-contract.mjs';
@@ -33,31 +33,25 @@ test('every built public HTML page preserves its author, main subject, localized
     const filename=home?'index.html':resource.path.slice(1)+'.html';
     const html=readFileSync(new URL('../dist/'+filename,import.meta.url),'utf8');
     const dom=parse(html),element=find(dom,node=>node.tagName==='html');
-    const script=find(dom,node=>node.tagName==='script'&&attr(node,'id')==='schema-core-mainentity');
+    const script=find(dom,node=>node.tagName==='script'&&attr(node,'id')===(home?'canonical-entity-graph':'schema-core-mainentity'));
     assert.ok(script,resource.path+' emits the active Search document');
     assert.equal(attr(script,'type'),'application/ld+json',resource.path);
     const raw=script.childNodes.map(node=>node.value??'').join(''),document=JSON.parse(raw);
     const actual=new Map(document['@graph'].map(node=>[node['@id'],node]));
     if(home) {
-      const canonicalScript=find(dom,node=>node.tagName==='script'&&attr(node,'id')==='canonical-entity-graph');
-      assert.ok(canonicalScript,'complete canonical RDF is embedded unchanged');
-      assert.equal(attr(canonicalScript,'type'),'application/json','full graph is machine-readable without invalidating Google Rich Results');
-      const complete=JSON.parse(canonicalScript.childNodes.map(node=>node.value??'').join(''));
-      assert.deepEqual(complete,JSON.parse(serializeCanonicalGraph(SOURCE.graph)),'no RDF triple lost in homepage');
-      const fullMap=new Map(complete['@graph'].map(node=>[node['@id'],node]));
-      assert.equal(document['@context'],'https://schema.org','search parser receives simple context');
+      assert.deepEqual(document,JSON.parse(serializeGoogleCompatibleCanonicalGraph(SOURCE.graph)),'homepage publishes exactly the full canonical RDF graph');
       assert.equal([...dom.childNodes].filter(node=>node.tagName==='html').length,1);
-      assert.equal(complete['@graph'].filter(node=>node['@id']===personId).length,1,
-        'the canonical physician is unique even when other Persons occur in full RDF');
-      const page=actual.get(origin+'/webpage'),person=fullMap.get(personId);
+      assert.equal(document['@graph'].filter(node=>node['@id']===personId).length,1,'the canonical physician is unique even when other Persons occur in the complete graph');
+      const page=actual.get(origin+'/webpage'),person=actual.get(personId);
       assert.deepEqual(ids(page.mainEntity),[personId]);
       assert.deepEqual(ids(page.author),[personId]);
-      assert.ok(ids(person.owns).includes(practiceId),'physician owns clinic');
-      assert.deepEqual(ids(person.owns),ids(canonical.get(personId).owns));
+      assert.ok(ids(person.owns).includes(practiceId),'physician owns the clinic');
+      assert.deepEqual(ids(person.owns),ids(canonical.get(personId).owns),
+        'all authored ownership relations, including the separate data project, must remain intact');
       assert.equal(values(person.skills).length,85);
       assert.equal(values(person.knowsAbout).length,246);
       assert.equal(values(person.makesOffer).length,124);
-      assert.ok(fullMap.has(practiceId));
+      assert.ok(actual.has(practiceId));
       profiles++;
       continue; // Focused-page projections have a deliberately different contract.
     }
