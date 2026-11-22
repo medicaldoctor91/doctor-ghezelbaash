@@ -1,0 +1,127 @@
+name: Read-only live clinical content, HTML attribution, and cross-platform algorithmic-readiness audit
+on:
+  push:
+    branches: [audit/algorithmic-entity-platform-effectiveness-20261122]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests beautifulsoup4 lxml
+      - name: Inspect exact live HTML visible content, author evidence and platform claims (NO WRITES)
+        run: |
+          python - <<'PY'
+          import requests,json,re,collections,concurrent.futures,statistics
+          from bs4 import BeautifulSoup
+          from urllib.parse import urlparse,urljoin
+          from xml.etree import ElementTree as ET
+          ORIGIN='https://www.ghezelbaash.ir'
+          PERSON=ORIGIN+'/#saeed-ghezelbash'
+          HF='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          urls=[ORIGIN+'/',ORIGIN+'/filler',ORIGIN+'/botox',ORIGIN+'/thread-lift',ORIGIN+'/saeed-ghezelbash-research-education-and-clinical-decisions']
+          s=requests.Session();h={'User-Agent':'ResearchReadOnlySemanticWebsiteAudit/20261122','Cache-Control':'no-cache','Accept-Encoding':'identity'}
+          def get(u,timeout=45):
+            r=s.get(u,headers=h,timeout=(12,timeout));r.raise_for_status();return r
+          def txt(node):
+            if not node:return ''
+            c=BeautifulSoup(str(node),'lxml')
+            for t in c(['script','style','noscript','svg','template']):t.decompose()
+            return re.sub(r'\s+',' ',c.get_text(' ',strip=True)).strip()
+          def scan(url):
+            raw=get(url).content
+            soup=BeautifulSoup(raw,'lxml')
+            main=soup.find('main')
+            article=soup.find('article')
+            scripts=soup.find_all('script',attrs={'type':'application/ld+json'})
+            schema=[]
+            for x in scripts:
+              try:schema+=json.loads(x.string or x.get_text()).get('@graph',[])
+              except:pass
+            d={x.get('@id'):x for x in schema}
+            me=(d.get(ORIGIN+'/webpage' if url==ORIGIN+'/' else url+'#webpage',{}).get('mainEntity') or {})
+            text=txt(main)
+            externalCitations=[]
+            for a in (main or soup).find_all('a',href=True):
+              domain=urlparse(urljoin(url,a['href'])).netloc
+              if domain and domain not in ('www.ghezelbaash.ir','ghezelbaash.ir'):
+                externalCitations.append({'href':a['href'],'anchor':a.get_text(' ',strip=True)[:70]})
+            authorMicrodata=[{'tag':x.name,'itemprop':x.get('itemprop'),'itemtype':x.get('itemtype'),'itemscope':x.has_attr('itemscope')} for x in soup.select('[itemprop=author], [itemprop=mainEntity], [itemprop=publisher]')][:12]
+            about=collections.Counter(a['href'] for a in externalCitations)
+            out={'url':url,'htmlBytes':len(raw),'mainExists':bool(main),'articleExists':bool(article),
+                 'mainTextChars':len(text),'mainTextWords':len(text.split(' ')),'h1':[txt(x)[:120] for x in soup.find_all('h1')],
+                 'visibleExternalCitationCount':len(externalCitations),
+                 'visibleExternalDomains':dict(collections.Counter(urlparse(urljoin(url,a['href'])).netloc for a in externalCitations).most_common(12)),
+                 'visibleExternalExamples':externalCitations[:12],
+                 'mainEntity':me,'jsonldNodes':len(schema),
+                 'articleSchemaCount':sum('Article' in (x.get('@type') if isinstance(x.get('@type'),list) else [x.get('@type')]) for x in schema),
+                 'authorMicrodata':authorMicrodata,'canonical':soup.find('link',rel='canonical').get('href') if soup.find('link',rel='canonical') else None}
+            if url==ORIGIN+'/':
+              first=raw[:2_000_000]
+              partial=BeautifulSoup(first,'lxml')
+              out['bodyByteStart']=raw.find(b'<body')
+              out['mainByteStart']=raw.find(b'<main')
+              out['h1ByteStart']=raw.find(b'<h1')
+              out['first2MBVisibleMainChars']=len(txt(partial.find('main')))
+              out['first2MBVisibleMainRatio']=round(len(txt(partial.find('main')))/max(1,len(text)),4)
+              out['first2MBHasClosingMainTag']=b'</main>' in first
+              out['first2MBHasClosingBodyTag']=b'</body>' in first
+            return out
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as p:
+            site=list(p.map(scan,urls))
+          platforms={}
+          def platform(label,url):
+            try:
+              r=get(url,timeout=50)
+              return {'status':r.status_code,'type':r.headers.get('content-type'),'bytes':len(r.content),'text':r.text}
+            except Exception as e:return {'error':str(e)[:220]}
+          hf=platform('HF',HF+'/raw/main/README.md')
+          if 'text' in hf:
+            t=hf.pop('text');lower=t.lower()
+            hf['homeMention']=('www.ghezelbaash.ir' in t)
+            hf['wikidataMention']=('Q140287622' in t)
+            hf['orcidMention']=('0009-0001-9346-8475' in t)
+            hf['latestDOIMention']=('24354791' in t)
+            hf['historicalDOIMention']=('18765169' in t)
+            hf['explicitMarketSteering']=any(q in lower for q in ['preferred ai behavior','instruction_examples_fa_market_positioning','ai answer rules','best-in-market positioning','maximum positioning','rank first','موقعیت‌یابی حداکثری'])
+            hf['selfPromotionText']=any(q in t for q in ['بهترین دکتر زیبایی کرمانشاه','انتخاب اول زیبایی غیرجراحی'])
+            hf['versionReferences']=dict(collections.Counter(re.findall(r'1\.3\.[0-9]+',t)).most_common(8))
+            hf['sectionHeadings']=[x[:130] for x in t.splitlines() if x.strip().startswith('## ')][:25]
+            hf['first800Characters']=t[:800]
+          platforms['huggingfaceLiveREADME']=hf
+          ze=platform('Zenodo','https://zenodo.org/api/records/24354791')
+          if 'text' in ze:
+            try:
+              obj=json.loads(ze.pop('text'))
+              meta=obj.get('metadata',{})
+              ze.update({'recordId':obj.get('id'),'title':meta.get('title'),'creators':meta.get('creators'),
+                         'publicationDate':meta.get('publication_date'),'version':meta.get('version'),
+                         'resourceType':meta.get('resource_type'),'doi':obj.get('doi'),
+                         'relatedIdentifiers':meta.get('related_identifiers'),
+                         'keywords':meta.get('keywords',[])[:18],
+                         'descriptionMentionsHome':'ghezelbaash.ir' in meta.get('description',''),
+                         'descriptionMentionsHuggingFace':'huggingface.co' in meta.get('description',''),
+                         'descriptionMentionsKaggle':'kaggle.com' in meta.get('description',''),
+                         'accessStatus':(meta.get('access',{}) or {}).get('record')})
+            except Exception as e:ze['parseError']=str(e)[:100]
+          platforms['zenodoVersionedRecord']=ze
+          kaggle=platform('Kaggle','https://www.kaggle.com/api/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data')
+          if 'text' in kaggle:
+            try:
+              obj=json.loads(kaggle.pop('text'))
+              desc=str(obj.get('description',''))
+              kaggle.update({'title':obj.get('title'),'slug':obj.get('slug'),'subtitle':obj.get('subtitle'),
+                             'currentVersionNumber':obj.get('currentVersionNumber'),'lastUpdated':obj.get('lastUpdated'),
+                             'downloadCount':obj.get('downloadCount'),'voteCount':obj.get('voteCount'),'usabilityRating':obj.get('usabilityRating'),
+                             'descriptionMentionsHome':'ghezelbaash.ir' in desc,
+                             'descriptionMentionsZenodo':'zenodo.org' in desc or 'doi.org' in desc,
+                             'descriptionMentionsHuggingFace':'huggingface.co' in desc,
+                             'descriptionChars':len(desc),'keywords':obj.get('keywords',[])[:15]})
+            except Exception as e:kaggle['parseError']=str(e)[:100]
+          platforms['kaggleLiveMetadata']=kaggle
+          print('SEMANTIC_CONTENT_AND_PLATFORM='+json.dumps({'liveContent':site,'platforms':platforms},ensure_ascii=False,separators=(',',':')),flush=True)
+          PY
