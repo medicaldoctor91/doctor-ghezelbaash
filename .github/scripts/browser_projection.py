@@ -466,9 +466,9 @@ def require_current_full_semantic_jsonld(graph_path, html):
         assert key not in active['@context'],'Coercion reintroduced: '+key
     script = """
 import fs from 'node:fs';
-import {serializeCanonicalGraph} from './src/lib/jsonld.mjs';
+import {serializeGoogleCompatibleCanonicalGraph} from './src/lib/jsonld.mjs';
 const graph=JSON.parse(fs.readFileSync(0,'utf8'));
-process.stdout.write(serializeCanonicalGraph(graph));
+process.stdout.write(serializeGoogleCompatibleCanonicalGraph(graph));
 """
     expected=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,
                             input=json.dumps(original,ensure_ascii=False),text=True,
