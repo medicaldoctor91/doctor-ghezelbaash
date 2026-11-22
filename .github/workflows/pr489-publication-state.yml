@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Install Kaggle owner read-only client
-        run: python -m pip install 'kaggle==2.2.4' requests
+        run: python -m pip install 'kaggle==2.2.4' requests six
       - name: Check authenticated Kaggle status, public version and exact 48-file corpus
         run: python .github/scripts/pr489_publication_state.py
       - name: Retain findings without attempting deployment
