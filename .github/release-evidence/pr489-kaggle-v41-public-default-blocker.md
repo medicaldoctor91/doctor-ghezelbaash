@@ -38,7 +38,7 @@ A **new, independently validated** mutable-platform candidate for website, HF, K
 
 - Full candidate CI: https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/44969386832
 - Freeze: success; public Kaggle v41 default gate: correctly reports FALSE; publish: **SKIPPED**.
-- No new Kaggle version, notebook push, website deploy, HF push, or immutable Zenodo change has been performed since v41 publication.
+- The PR489 recovery workflows made no Kaggle version write, notebook push, website deploy, HF push, or immutable Zenodo change. This statement concerns these audited workflows; unrelated external activity is not assumed absent.
 - The old immutable Zenodo source commit remains `eafb138d596a91504ed0af66e2557f52848e36b6`.
 
 ## Provider support request
