@@ -81,7 +81,12 @@ export function serializeGoogleCompatibleCanonicalGraph(graph) {
       throw new Error('Unexpected canonical IRI-coercion for '+key);
     delete context[key]; // @vocab maps this key to the same Schema.org predicate
   }
-  const aliases = [['description','d'],['inLanguage','l']];
+  const aliases = [
+    ['description','d'],['inLanguage','l'],['isPartOf','ip'],
+    ['position','p'],['dateModified','dm'],['propertyID','pid'],
+    ['about','ab'],['publisher','pub'],['availableChannel','ac'],
+    ['businessFunction','bf'],
+  ];
   for (const [original,alias] of aliases) {
     if (Object.hasOwn(context,alias) || Object.hasOwn(context,original))
       throw new Error('Unsafe schema term alias '+alias);
