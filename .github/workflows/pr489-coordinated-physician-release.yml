@@ -1,0 +1,177 @@
+name: PR489 coordinated graph publication v42 (fail-closed)
+on:
+  push:
+    branches: [release/pr489-physician-graph-v42-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      BASELINE_HF: e7637866157b29ce9022040dfbac93cc8ef7a406
+      BASELINE_SITE: a62e2093c65464a83cc683f7e22e8c8d1f2077b7
+      BASELINE_KAGGLE: '41'
+      BASELINE_NOTEBOOK: '21'
+      BASELINE_KAGGLE_UPSTREAM_HF: e7637866157b29ce9022040dfbac93cc8ef7a406
+      BASELINE_KAGGLE_UPSTREAM_SITE: a62e2093c65464a83cc683f7e22e8c8d1f2077b7
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Ensure candidate includes merged PR489 with unchanged canonical source and tests
+        run: |
+          git merge-base --is-ancestor 96635cfd474566a1d0ff46f71036aa0f13ac7482 HEAD
+          git diff --quiet 96635cfd474566a1d0ff46f71036aa0f13ac7482 HEAD -- public src tests
+      - name: Install pinned build and RDF/platform validation dependencies
+        run: |
+          npm ci
+          python -m pip install requests six 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - name: Build all 72 routes, exact graph and machine-readable exports
+        run: npm run build
+      - name: Validate every Node and RDF/SHACL graph contract before provider access
+        run: |
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/mutable-platform-release.test.py
+          python tests/kaggle-baseline.test.py
+          python tests/immutable-archive.test.py
+      - name: Assert PR489 attribution count and Googlebot HTML byte ceiling
+        run: |
+          python - <<'PY'
+          import json,pathlib,hashlib
+          root=pathlib.Path('dist')
+          wire=(root/'graph.jsonld').read_bytes()
+          graph=json.loads(wire)['@graph']
+          physician='https://www.ghezelbaash.ir/#saeed-ghezelbash'
+          many=lambda x:x if isinstance(x,list) else [] if x is None else [x]
+          ident=lambda x:x if isinstance(x,str) else x.get('@id')
+          credited=lambda work:any(ident(x)==physician for k in ('author','creator') for x in many(work.get(k)))
+          attributed=lambda work:any(ident(x) in (physician,'site:#saeed-ghezelbash') for x in many(work.get('at',work.get('prov:wasAttributedTo'))))
+          works=[n for n in graph if credited(n)]
+          assert len(graph)==1916 and len(works)==427
+          assert all(attributed(x) for x in works),'Missing physician provenance closure'
+          assert hashlib.sha256(wire).hexdigest()=='25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50','PR489 canonical graph changed'
+          html=(root/'index.html').read_bytes()
+          end=html.index(b'</script>',html.index(b'id="canonical-entity-graph"'))+len(b'</script>')
+          assert end+4096<2000000,(end,'Googlebot byte budget breached')
+          print({'graphSHA256':hashlib.sha256(wire).hexdigest(),'graphNodes':len(graph),'attributedWorks':len(works),'homepageScriptEndByte':end,'archiveWrites':False})
+          PY
+      - name: Freeze PR489 as Kaggle v42 and Notebook v22 candidate without publication
+        run: python .github/scripts/mutable_platform_release.py preflight
+      - name: Preserve byte-frozen verified candidate for later gated publication
+        run: tar -czf /tmp/pr489-candidate.tar.gz -C /tmp mutable-release
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: pr489-frozen-candidate-v42
+          path: /tmp/pr489-candidate.tar.gz
+          compression-level: 0
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr489-frozen-receipts
+          path: |
+            /tmp/mutable-release/*.json
+            /tmp/mutable-release/*.log
+          if-no-files-found: warn
+          retention-days: 30
+
+  kaggle-public-default-gate:
+    needs: freeze
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.read.outputs.ready }}
+    steps:
+      - name: Permit coordinated provider writes only after Kaggle v41 is actual public default
+        id: read
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          url='https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data'
+          req=urllib.request.Request(url,headers={'Cache-Control':'no-cache, no-store','Pragma':'no-cache'})
+          x=json.load(urllib.request.urlopen(req,timeout=60))
+          latest=x['currentVersionNumber']
+          ready=next((v['status'] for v in x.get('versions',[]) if v['versionNumber']==41),None)
+          assert ready=='Ready' and latest in (40,41),(latest,ready)
+          eligible=latest==41
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output: output.write('ready='+str(eligible).lower()+'\n')
+          print({'kaggleLatestPublicDefault':latest,'kaggleExact41Status':ready,'allowNewProviderWrites':eligible})
+          PY
+
+  publish:
+    needs: [freeze, kaggle-public-default-gate]
+    if: needs.kaggle-public-default-gate.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions: {contents: read, actions: read}
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Install previously reviewed publication dependencies
+        run: python -m pip install requests six 'pyarrow==22.0.0' 'kaggle==2.2.4' 'huggingface_hub>=0.34,<1' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0' PyYAML
+      - uses: actions/download-artifact@v4
+        with:
+          name: pr489-frozen-candidate-v42
+          path: /tmp/pr489-artifact
+      - name: Restore exact frozen candidate and prevent drift or duplicate provider version
+        run: |
+          tar -xzf /tmp/pr489-artifact/pr489-candidate.tar.gz -C /tmp
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json,os,urllib.request
+          from pathlib import Path
+          w=Path('/tmp/mutable-release')
+          plan=json.loads((w/'release-plan.json').read_text())
+          report=json.loads((w/'preflight-report.json').read_text())
+          assert report['status']=='PASS' and plan['sourceCommit']==os.environ['GITHUB_SHA']
+          assert plan['archiveWrites'] is False
+          assert plan['kagglePreviousVersion']==41 and plan['kaggleVersion']==42
+          assert plan['notebookPreviousVersion']==21 and plan['notebookVersion']==22
+          req=urllib.request.Request('https://api.kaggle.com/v1/datasets/view/saeedghezelbash/dr-saeed-ghezelbash-knowledge-graph-and-nlp-data',headers={'Cache-Control':'no-cache, no-store'})
+          public=json.load(urllib.request.urlopen(req,timeout=60))
+          assert public['currentVersionNumber']==41,'Kaggle public default changed: fail without external writes'
+          assert all(v['versionNumber']<=41 for v in public['versions']),'Unexpected new Kaggle version: no duplicate write'
+          PY
+      - name: Publish and independently verify exactly four mutable distributions
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN || secrets.KAGGLE_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+        run: python .github/scripts/mutable_platform_release.py publish
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr489-publication-receipts
+          path: |
+            /tmp/mutable-release/*.json
+            /tmp/mutable-release/*.log
+            /tmp/mutable-release/viewer-response-evidence/
+          if-no-files-found: warn
+          retention-days: 30
