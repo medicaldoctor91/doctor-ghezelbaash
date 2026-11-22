@@ -1,7 +1,7 @@
-name: Verify post-GSC repair 72 live pages and four platforms (read-only)
+name: Verify full active homepage JSON-LD, 72 pages, and four live platforms (read-only)
 on:
   push:
-    branches: [audit/gsc-postrepair-four-platform-20261122]
+    branches: [audit/full-active-home-four-platform-20261122]
   workflow_dispatch:
 permissions:
   contents: read
