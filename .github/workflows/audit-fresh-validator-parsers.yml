@@ -1,0 +1,35 @@
+name: Independent fresh Google and Schema.org parser audit (read only)
+on:
+  push:
+    branches:
+      - audit/fresh-validator-parsers-20261122
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install read-only browser testing dependencies
+        run: |
+          python -m pip install --disable-pip-version-check requests beautifulsoup4 playwright
+          python -m playwright install --with-deps chromium
+      - name: Execute fresh official validator URL tests on production and latest preview
+        run: python scripts/audit_fresh_validators.py
+      - name: Save external parser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-live-parser-evidence
+          path: |
+            fresh_external_parser_report.json
+            schema_*.png
+            google_*.png
+          if-no-files-found: warn
