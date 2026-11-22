@@ -80,6 +80,21 @@ active=json.loads(home_html[first:last-len(b"</script>")])
 assert len(active["@graph"])==len(graph)==1916
 assert {n["@id"] for n in active["@graph"]}=={n["@id"] for n in graph}
 assert len(extract(home_html))==1, "Only full active canonical JSON-LD is permitted"
+# The strengthened Entity Home must be publicly visible and crawlable without
+# changing the canonical source RDF or introducing another Person identity.
+proof=re.search(rb'<section class="entity-home-evidence"[\\s\\S]*?</section>',home_html)
+assert proof and proof.end()<1_998_000, "Professional evidence is missing from first 2MB"
+section=proof.group(0)
+assert b'data-canonical-person="https://www.ghezelbaash.ir/#saeed-ghezelbash"' in section
+for external in (
+    b'membersearch.irimc.org/member/profile?',
+    b'orcid.org/0009-0001-9346-8475',
+    b'www.wikidata.org/entity/Q140287622',
+    b'pubmed.ncbi.nlm.nih.gov/27280013/',
+    b'pubmed.ncbi.nlm.nih.gov/34574943/',
+    b'saeed-ghezelbash-diagnostic-philosophy',
+):
+    assert external in section, ('Missing public source corroboration',external)
 
 assert "Person" in values(doctor.get("@type")) and "IndividualPhysician" in values(doctor.get("@type"))
 assert identity(doctor.get("practicesAt")) == OFFICE
@@ -153,6 +168,7 @@ result = {"status": "FAIL" if errors else "PASS", "source": SITE,
           "sourceCommit": json.loads(read(SITE + "/release-provenance.json"))["sourceCommit"],
           "graphSHA256": hashlib.sha256(graph_bytes).hexdigest(),
           "graphNodes": len(graph), "graphServices": len(services),
+          "fullActiveRdfEndByte":last, "physicianEvidenceEndByte":proof.end(),
           "providerOnlyPerson": sum([identity(x) for x in values(s.get("provider"))] == [PERSON] for s in services),
           "sitemapPages": len(urls), "pagesChecked": len(pages),
           "pagesWithJSONLD": sum(x["jsonldScripts"] > 0 for x in pages),
