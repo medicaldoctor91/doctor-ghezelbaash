@@ -56,7 +56,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib,json,requests
-          base='https://19d67396.doctor-ghezelbaash.pages.dev'
+          base='https://9d813bbe.doctor-ghezelbaash.pages.dev'
           headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'}
           html=requests.get(base+'/',headers=headers,timeout=90)
           graph=requests.get(base+'/graph.jsonld',headers=headers,timeout=90)
