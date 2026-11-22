@@ -1,0 +1,63 @@
+name: Read only exact production ProfilePage semantic and first 2MB audit
+on:
+  push:
+    branches: [audit/profilepage-richresults-googlebot-20261122]
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests beautifulsoup4 lxml
+      - name: Trace exact live ProfilePage and Person in the 2MB fetch window
+        run: |
+          python - <<'PY'
+          import requests,json,re,collections
+          from bs4 import BeautifulSoup
+          site='https://www.ghezelbaash.ir/'
+          person=site+'#saeed-ghezelbash'
+          pages=[site,site+'saeed-ghezelbash-research-education-and-clinical-decisions']
+          def valueids(x):
+            if isinstance(x,dict):return x.get('@id')
+            if isinstance(x,str):return x
+            return None
+          def types(n):
+            v=n.get('@type',[])
+            return v if isinstance(v,list) else [v]
+          for u in pages:
+            r=requests.get(u,headers={'Accept-Encoding':'identity','Cache-Control':'no-cache','User-Agent':'ReadOnlyTechnicalAudit/20261122'},timeout=60);r.raise_for_status();raw=r.content;html=r.text
+            s=BeautifulSoup(raw,'lxml')
+            scripts=s.select('script[type="application/ld+json"]')
+            scripts_meta=[]
+            nodes=[]
+            for sc in scripts:
+              content=(sc.string or sc.get_text() or '')
+              try:
+                j=json.loads(content)
+                data=j.get('@graph') if isinstance(j,dict) else None
+                if isinstance(data,list):nodes.extend(data)
+                elif isinstance(j,dict):nodes.append(j)
+                parse=True
+              except Exception as e:parse=str(e)
+              matched=re.search(re.escape(content[:min(120,len(content))]).encode(),raw) if content else None
+              start=matched.start() if matched else -1
+              scripts_meta.append({'id':sc.get('id'),'start':start,'end':start+len(content.encode('utf-8')) if start>=0 else -1,'completeWithin2MB':start>=0 and start+len(content.encode('utf-8'))<=2000000,'jsonParsed':parse,'bytes':len(content.encode('utf-8'))})
+            profiles=[{k:x.get(k) for k in ['@id','@type','url','name','mainEntity','about','isPartOf','hasPart','dateCreated','dateModified'] if k in x} for x in nodes if 'ProfilePage' in types(x)]
+            people=[{k:x.get(k) for k in ['@id','@type','name','mainEntityOfPage','url','image','sameAs','description','identifier'] if k in x} for x in nodes if x.get('@id')==person]
+            wp=[{k:x.get(k) for k in ['@id','@type','mainEntity','about','url'] if k in x} for x in nodes if 'WebPage' in types(x) and (x.get('url')==u or x.get('@id')==u+'#webpage')]
+            main=s.select_one('main');maintext=main.get_text(' ',strip=True) if main else ''
+            items={'uri':u,'bytes':len(raw),'headers':{k:r.headers.get(k) for k in ['content-type','cache-control','x-robots-tag','cf-cache-status']},
+                   'contentType':s.find('meta',attrs={'name':'description'}).get('content') if s.find('meta',attrs={'name':'description'}) else None,
+                   'scriptMetadata':scripts_meta,'nodeCount':len(nodes),'profiles':profiles,'person':people,'webPages':wp,
+                   'h1':[x.get_text(' ',strip=True) for x in s.select('h1')],'bodyStart':raw.find(b'<body'),'mainStart':raw.find(b'<main'),
+                   'firstMB':'', 'profileTagFirstOffset':raw.find(b'ProfilePage'),
+                   'personIdFirstOffset':raw.find(person.encode()),'profileTagBefore2MB':0<=raw.find(b'ProfilePage')<2000000,
+                   'personIdBefore2MB':0<=raw.find(person.encode())<2000000,
+                   'hasCompleteMainTagBefore2MB':b'</main>' in raw[:2000000],
+                   'visibleMainChars':len(maintext),'mainTags':len(s.select('main'))}
+            print('PROFILEPAGE_LIVE_AUDIT='+json.dumps(items,ensure_ascii=False,separators=(',',':')),flush=True)
+          PY
