@@ -1,0 +1,39 @@
+name: Independently verify Cloudflare legacy subdomain and historic portrait image URLs (read-only)
+on:
+  push:
+    branches: [audit/live-nonmobile-seo-security-20261122]
+permissions: {contents: read}
+jobs:
+  verify-alias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Probe canonical redirects and current portrait media (no writes)
+        run: |
+          python - <<'PY'
+          import urllib.request,urllib.error,json,time
+          origin='https://www.ghezelbaash.ir/'
+          targets={
+            'kgHome':'https://kg.ghezelbaash.ir/',
+            'kgGraph':'https://kg.ghezelbaash.ir/graph.jsonld?provider=test',
+            'portraitCurrent':origin+'media/images/physician/saeed-ghezelbash-portrait-960.webp',
+            'portraitLegacy':origin+'media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp',
+          }
+          results={}
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):return None
+          opener=urllib.request.build_opener(NoRedirect)
+          for name,url in targets.items():
+            try:
+              req=urllib.request.Request(url,headers={'User-Agent':'ReadOnlyCanonicalRedirectAudit','Cache-Control':'no-cache'},method='HEAD')
+              try:r=opener.open(req,timeout=25)
+              except urllib.error.HTTPError as e:r=e
+              results[name]={'code':r.status,'location':r.headers.get('Location'),'contentType':r.headers.get('Content-Type')}
+              r.close()
+            except Exception as e:
+              results[name]={'error':type(e).__name__+': '+str(e)[:130]}
+          print('ALIAS_AND_PORTRAIT='+json.dumps(results))
+          assert results['portraitCurrent']['code']==200,('Replacement image absent',results['portraitCurrent'])
+          PY
