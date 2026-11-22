@@ -39,7 +39,7 @@ jobs:
           graph=Path('dist/graph.jsonld').read_bytes()
           digest=hashlib.sha256(graph).hexdigest()
           assert digest==os.environ['EXPECTED_GRAPH_SHA256'],(digest,'graph drift')
-          m=re.search(rb'<script id="canonical-entity-graph" type="application/ld\\+json">([\\s\\S]*?)</script>',html)
+          m=re.search(rb'<script id="canonical-entity-graph" type="application/ld\+json">([\s\S]*?)</script>',html)
           assert m and m.end()<2_000_000
           assert html.count(b'<script id="canonical-entity-graph" type="application/ld+json">')==1
           embedded=json.loads(m.group(1)); source=json.loads(graph)
@@ -47,7 +47,7 @@ jobs:
           nq1=jsonld.normalize(embedded,{'algorithm':'URDNA2015','format':'application/n-quads'})
           nq2=jsonld.normalize(source,{'algorithm':'URDNA2015','format':'application/n-quads'})
           assert nq1==nq2
-          match=re.search(rb'<section class="entity-home-evidence"[\\s\\S]*?</section>',html)
+          match=re.search(rb'<section class="entity-home-evidence"[\s\S]*?</section>',html)
           assert match,'Visible physician evidence missing'
           assert match.end()<1_998_000,'Physician evidence outside Googlebot first 2MB'
           for literal in [b'pubmed.ncbi.nlm.nih.gov/27280013',b'pubmed.ncbi.nlm.nih.gov/34574943',
