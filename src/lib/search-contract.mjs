@@ -97,7 +97,9 @@ export function closeSearchReferences(document,{origin,graph,project,primaryPage
 
 const searchIdentity=['@id','@type','name','alternateName','description','url','sameAs','identifier'];
 const searchPage=[...searchIdentity,'inLanguage','dateCreated','dateModified','lastReviewed','author','publisher','reviewedBy','mainEntity','about','isPartOf','breadcrumb','primaryImageOfPage'];
-const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','affiliation','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
+// The complete canonical graph preserves Person.affiliation and reciprocal Organization.member.
+// The bounded, non-canonical Search view omits this redundant high-cardinality array.
+const searchPerson=[...searchIdentity,'additionalType','givenName','familyName','additionalName','birthDate','honorificPrefix','jobTitle','disambiguatingDescription','knowsLanguage','nationality','areaServed','alumniOf','hasOccupation','hasCredential','medicalSpecialty','address','geo','telephone','email','practicesAt','owns','image'];
 const profileTopics=['skill-botulinum-toxin-injection','skill-dermal-filler-injection','skill-subcision','skill-thread-lifting','skill-hyaluronidase-filler-revision-complication-management'];
 const searchClinic=[...searchIdentity,'telephone','address','geo','openingHoursSpecification','openingHours','hasMap','areaServed','image','logo','location','containedInPlace','contactPoint'];
 const searchImage=[...searchIdentity.filter(key=>key!=='description'),'caption','contentUrl','encodingFormat','width','height','thumbnailUrl','creator','copyrightNotice','creditText','license','acquireLicensePage','dateCreated','dateModified','representativeOfPage'];
@@ -188,6 +190,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
       .some(type=>['WebPageElement','Question','Answer'].includes(type)));
     const article=authoredArticle?structuredClone(authoredArticle):clinicalArticleForPage(primary,content);
+    // A terminal URL in the bounded projection avoids recursively framing the
+    // page through its primary Article. The full graph retains the named edge.
+    if (article.mainEntityOfPage) article.mainEntityOfPage = primary.url;
     article.inLanguage??=language;
     // Record the actual structured-metadata edit, independently of clinical
     // review dates and the unchanged original scientific edition.

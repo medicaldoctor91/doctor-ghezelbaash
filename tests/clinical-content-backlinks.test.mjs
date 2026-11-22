@@ -30,9 +30,9 @@ test('all authored Article/VideoObject relations are reflected in Service.subjec
       relatedWorks.add(work['@id']);
     }
   }
-  assert.equal(edges, 59, 'Approved authored-content relationship baseline changed');
-  assert.equal(relatedServices.size, 29);
-  assert.equal(relatedWorks.size, 44);
+  assert.equal(edges, 61, '61 direct authored Article/VideoObject relations must have truthful inverse subjectOf');
+  assert.equal(relatedServices.size, 31);
+  assert.equal(relatedWorks.size, 45);
   const cloned = structuredClone(graph);
   assert.equal(connectClinicalContentToServices(cloned, PERSON, ORIGIN).added, 0,
     'Backlinks should be idempotent');
@@ -48,7 +48,7 @@ test('Offer URLs, person identity and service inventory remain untouched', () =>
   assert.equal(offers.filter(n => n.url).length, 10);
   assert.equal(many(physician.makesOffer).length, 124);
   assert.equal(many(physician.skills).length, 85);
-  assert.equal(many(physician.knowsAbout).length, 221);
+  assert.equal(many(physician.knowsAbout).length, 246);
 });
 
 test('no backlinks are synthesized for other authors, unrelated content or off-site URLs', () => {

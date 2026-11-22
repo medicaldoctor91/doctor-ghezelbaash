@@ -12,7 +12,7 @@ import { createHash } from "node:crypto";
 import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
-import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {serializeCanonicalGraph, serializeInlineJsonLd} from "../lib/jsonld.mjs";
 import {physicianAuthoritySupplement} from "../lib/physician-authority-supplement.mjs";
 import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
 import {renderEvidenceRelatedVideos} from "../lib/evidence-related-video-links.mjs";
@@ -5172,7 +5172,8 @@ export function compileCanonicalSource() {
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
   // Full canonical RDF (all vocabularies) is the FIRST JSON-LD script in the
   // homepage HEAD. Nothing is filtered or reserialized as Schema.org-only.
-  const canonicalDataScript='<script id="canonical-entity-graph" type="application/ld+json">'+json(homeGraph)+'</script>';
+  const canonicalGraphText=serializeCanonicalGraph(homeGraph);
+  const canonicalDataScript='<script id="canonical-entity-graph" type="application/ld+json">'+canonicalGraphText+'</script>';
   // Keep the document's UTF-8 declaration first for correct HTML decoding.
   // Move the *full*, unmodified graph ahead of all nonessential head metadata:
   // the extra safety margin matters for Google's 2MB HTML retrieval limit.
@@ -5206,7 +5207,7 @@ export function compileCanonicalSource() {
   const lazySearchPointer = parseFragment(meta('guide-search-resource',searchAsset.path)).childNodes[0];
   lazySearchPointer.parentNode = readerHead; readerHead.childNodes.push(lazySearchPointer);
   const metadataAsset = asset('guide-meta','json',JSON.stringify({schemaVersion:1,sourceSignature,
-    canonicalGraph:{id:'canonical-entity-graph',text:json(homeGraph)},
+    canonicalGraph:{id:'canonical-entity-graph',text:canonicalGraphText},
     scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json'&&attr(node,'id')!=='canonical-entity-graph')
       .map(node=>({id:attr(node,'id'),text:node.childNodes.map(child=>child.value??'').join('')}))}), 'application/json; charset=utf-8');
   readerHead.childNodes = readerHead.childNodes.filter(node=>node.tagName==='title'||node.tagName==='meta'||

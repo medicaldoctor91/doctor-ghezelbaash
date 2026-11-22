@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import {serializeCanonicalGraph} from '../src/lib/jsonld.mjs';
 import {DOI_POLICY} from '../src/lib/doi-policy.mjs';
 
 import {
@@ -45,7 +46,7 @@ export async function materializeMachineResources({ source, authoredBody, distDi
   for (const name of ['instruction_examples_fa_market_positioning.jsonl', 'market-positioning-evidence.json', 'positioning-strategy.json']) {
     outputs.set('/enrichment/' + name, await fs.readFile(new URL('../src/canonical/enrichment/' + name, import.meta.url), 'utf8'));
   }
-  outputs.set('/graph.jsonld', json(source.graph));
+  outputs.set('/graph.jsonld', serializeCanonicalGraph(source.graph) + '\n');
   outputs.set('/graph.ttl', graphTtl);
   outputs.set('/shapes.ttl', buildShaclTurtle(source));
   outputs.set('/entity-facts.csv', serializeEntityFactsCsv(source.graph));

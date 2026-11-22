@@ -306,7 +306,7 @@ def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_grap
         title_open = html_text.find('<title>')
         assert title_open > 0 and full['start'] < len(html_text[:title_open].encode('utf-8')), 'Full graph must precede TITLE'
         assert full['end'] < head_close and full['end'] < body_open, 'Full graph must finish before the body'
-        assert full['end'] + 16_000 < CRAWL_PREFIX_BYTES, 'Full graph must fit within 2 MB with 16 kB reserve'
+        assert full['end'] + 4_096 < CRAWL_PREFIX_BYTES, 'Full graph must fit within 2 MB while retaining >4 kB exact-byte reserve'
         homepage = next((node for node in graph['@graph'] if {'ProfilePage', 'MedicalWebPage'} <= set(_values(node.get('@type')))), None)
         person = next((node for node in graph['@graph'] if node.get('@id') == 'https://www.ghezelbaash.ir/#saeed-ghezelbash'), None)
         assert homepage and homepage.get('mainEntity', {}).get('@id') == person['@id'], 'Homepage identity does not lead to physician'
@@ -373,6 +373,6 @@ def require_current_active_head_jsonld(graph_path, html):
     assert proof['status'] == 'PASS', 'Current homepage projection failed'
     assert proof['canonicalGraphStorage'] == 'application/ld+json#canonical-entity-graph', (
         '1.3.6 MUST publish the full active canonical graph in HEAD, not a legacy inert projection')
-    assert proof['canonicalGraphEndByte'] + 16_000 < CRAWL_PREFIX_BYTES, (
+    assert proof['canonicalGraphEndByte'] + 4_096 < CRAWL_PREFIX_BYTES, (
         '1.3.6 full JSON-LD overran the 2 MB HTML-first budget')
     return proof

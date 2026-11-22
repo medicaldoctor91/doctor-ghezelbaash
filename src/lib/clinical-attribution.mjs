@@ -1,5 +1,16 @@
 import {enforceVideoKeyMomentEligibility} from './video-key-moments.mjs';
 import {connectClinicalContentToServices} from './clinical-content-backlinks.mjs';
+import {enforcePhysicianOfferShaclContract} from './physician-offer-shacl-contract.mjs';
+import {enrichEvidenceBoundedMedicalAuthority} from './clinical-medical-authority.mjs';
+import {enrichMedicalResearchAndSpecialtyGraph} from './medical-research-specialty-graph.mjs';
+import {maximizeCanonicalPhysicianGraphAttribution} from './physician-max-attribution.mjs';
+import {closeNativePhysicianAuthoritySchema} from './physician-schema-native-closure.mjs';
+import {closePhysicianAndPracticeContactGraph} from './physician-practice-contact-closure.mjs';
+import {closePhysicianWebAndVideoSubjectOf} from './physician-subjectof-context-closure.mjs';
+import {closePhysicianPublishingAndPatientIntake} from './physician-publishing-intake-closure.mjs';
+import {attributePhysicianWorks} from './physician-work-provenance.mjs';
+import {linkHistoricAriaHospital} from './physician-historical-hospital-closure.mjs';
+import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
 import {enrichExistingClinicalServices} from './service-metadata-enrichment.mjs';
 const values = value => value == null ? [] : Array.isArray(value) ? value : [value];
@@ -46,7 +57,7 @@ export function clinicalArticleForPage(page, content, {isPrimary = true} = {}) {
     headline: structuredClone(page.name),
     inLanguage: structuredClone(page.inLanguage),
   };
-  if (isPrimary) article.mainEntityOfPage = page.url;
+  if (isPrimary) article.mainEntityOfPage = ref(page['@id']);
   for (const property of ['description', 'author', 'publisher', 'about', 'citation', 'datePublished', 'dateModified']) {
     if (property in page) article[property] = structuredClone(page[property]);
   }
@@ -132,6 +143,8 @@ export function applyClinicalAttribution(source) {
   catalog.numberOfItems = catalog.itemListElement.length;
   connectPhysicianServices(graph, physician, origin);
   strengthenPhysicianAuthority(graph, physician, origin);
+  // Schema.org-consistent Person↔Service/Offer parity; retain the older therapy as a generic RDF relation.
+  validateAndCorrectPhysicianServiceAttribution(graph, physician, origin);
 
   const medicalDegree = get('credential-doctor-of-medicine');
   const orcidEducation = ref(get('evidence-orcid-education-38054873')['@id']);
@@ -177,10 +190,33 @@ export function applyClinicalAttribution(source) {
   // Apply metadata only after route mainEntity values are finalized;
   // this prevents comparative educational pages from being offer landing URLs.
   enrichExistingClinicalServices(graph, physician, origin);
+  // Explicitly distinguish works about a service from works merely mentioning it.
+  connectEvidenceScopedServiceWorks(graph, physician, origin);
   // Only backlink exact authored Articles/Videos whose existing about includes this Service.
   connectClinicalContentToServices(graph, physician['@id'], origin);
+  // Medical ontology (typed procedures, conditions and independently authored evidence)
+  // is derived only after all authored Articles have been materialized.
+  enrichEvidenceBoundedMedicalAuthority(graph, physician, origin);
   // Google Clip/SeekToAction key moments require a >=30-second video.
   // Suppress only unsupported structured chapters; visible watch-page chapters remain.
   enforceVideoKeyMomentEligibility(graph);
+  // Keep the canonical published SHACL in lockstep with the Person / Offer / Service graph.
+  enforcePhysicianOfferShaclContract(source);
+  // Research-only disease concepts and relevant medical specialty are graph-only.
+  // No psychiatric treatment is added to availableService or Offer inventory.
+  enrichMedicalResearchAndSpecialtyGraph(source, physician, origin);
+  // Close all provable physician inverse-author / medical topic / specialty links.
+  maximizeCanonicalPhysicianGraphAttribution(source, physician, origin);
+  // Complete standard Schema.org membership, occupation, education and practice inverses.
+  closeNativePhysicianAuthoritySchema(graph, physician);
+  // Distinguish a shared physical reception line from direct online requests to the physician.
+  closePhysicianAndPracticeContactGraph(graph, physician);
+  // Exact inverse WebPage/VideoObject about/mainEntity physician links; lossless IRI context abbreviations.
+  closePhysicianWebAndVideoSubjectOf(source, physician);
+  // Graph-native physician editorial principles and current intake status.
+  closePhysicianPublishingAndPatientIntake(graph, physician);
+  // Historic Aria Hospital (Google Maps ID): contextualize existing 2020–2021 Role, not a present job.
+  linkHistoricAriaHospital(source, physician);
+  attributePhysicianWorks(source.graph, physician);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
