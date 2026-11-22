@@ -13,7 +13,8 @@ const physician=byId.get(DOCTOR);
 const role=byId.get(ROLE);
 
 test('named Aria Hospital is a typed Hospital, explicitly disambiguated as Kermanshah institution',()=>{
-  const hospital=physician.hospitalAffiliation;
+  assert.deepEqual(physician.hospitalAffiliation,{'@id':ROLE});
+  const hospital=role.hospitalAffiliation;
   assert.equal(hospital['@id'],HOSPITAL);
   assert.equal(hospital['@type'],'Hospital');
   assert.equal(hospital.name,'بیمارستان آریا');

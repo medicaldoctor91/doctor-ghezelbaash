@@ -93,7 +93,7 @@ export function enrichMedicalResearchAndSpecialtyGraph(source,physician,origin=O
     const article=byId.get(origin+'/'+articleSlug);
     if(!typed(condition,'DefinedTerm') ||
        !typed(article,'ScholarlyArticle') ||
-       refs(article.author).length!==1 || refs(article.author)[0]!==physicianId ||
+       !refs(article.author).includes(physicianId) ||
        !refs(article.about).includes(condition['@id']) ||
        !refs(physician.authoredWork).includes(article['@id']) ||
        !arr(condition.sameAs).length ||

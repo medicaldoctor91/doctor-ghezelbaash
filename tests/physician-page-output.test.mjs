@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {parse} from 'parse5';
+import {serializeCanonicalGraph} from '../src/lib/jsonld.mjs';
 import {SOURCE} from '../src/canonical/source.mjs';
 import {physicianIdentityIds,resolvePhysicianPractice} from '../src/lib/physician-identity.mjs';
 import {assertBoundedSearchDocument,latestRecordedModification,truthText} from '../src/lib/search-contract.mjs';
@@ -38,7 +39,7 @@ test('every built public HTML page preserves its author, main subject, localized
     const raw=script.childNodes.map(node=>node.value??'').join(''),document=JSON.parse(raw);
     const actual=new Map(document['@graph'].map(node=>[node['@id'],node]));
     if(home) {
-      assert.deepEqual(document,SOURCE.graph,'homepage publishes exactly the full canonical RDF graph');
+      assert.deepEqual(document,JSON.parse(serializeCanonicalGraph(SOURCE.graph)),'homepage publishes exactly the full canonical RDF graph');
       assert.equal([...dom.childNodes].filter(node=>node.tagName==='html').length,1);
       assert.equal(document['@graph'].filter(node=>node['@id']===personId).length,1,'the canonical physician is unique even when other Persons occur in the complete graph');
       const page=actual.get(origin+'/webpage'),person=actual.get(personId);
@@ -98,7 +99,7 @@ test('every built public HTML page preserves its author, main subject, localized
         assert.deepEqual(ids(actual.get(expected[0]).offers),[offerId],resource.path+' focused offer');
         assert.equal(actual.get(offerId)?.['@type'],'Offer',resource.path+' resolves the focused offer');
       } else {
-        assert.equal(authoredArticle.mainEntityOfPage,url,resource.path+' canonical primary article');
+        assert.deepEqual(authoredArticle.mainEntityOfPage,{'@id':authored['@id']},resource.path+' canonical primary article');
         assert.equal(article.mainEntityOfPage,url,resource.path+' inline primary article');
       }
     }

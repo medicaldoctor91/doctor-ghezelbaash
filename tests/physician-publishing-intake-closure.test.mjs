@@ -16,8 +16,9 @@ test('IndividualPhysician and the owned PhysiciansOffice explicitly accept new p
   assert.equal(person.practicesAt['@id'],CLINIC);
   assert.equal(clinic.owner['@id'],PID);
   assert.equal(clinic.founder['@id'],PID);
-  assert.equal(person.hospitalAffiliation['@id'],'https://maps.app.goo.gl/cknJK2yufL2e9idHA');
-  assert.equal(person.hospitalAffiliation['@type'],'Hospital');
+  const historicalRole=graph.find(n=>n['@id']===person.hospitalAffiliation['@id']);
+  assert.equal(historicalRole['dcterms:temporal'],'2020–2021');
+  assert.equal(historicalRole.hospitalAffiliation['@type'],'Hospital');
 });
 
 test('Clinical editorial policy is a genuine inline CreativeWork, not a nonexistent external URL',()=>{

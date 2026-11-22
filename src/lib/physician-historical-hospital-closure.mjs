@@ -45,18 +45,22 @@ export function linkHistoricAriaHospital(source,physician) {
      ids(oldRole.hasOccupation)[0]!==ORIGIN+'/occupation-hospital-medical-technical-director')
     throw new Error('Historical 2020–2021 hospital technical-director role missing');
 
-  // No fabricated current hospital job. Use the existing historical role to
-  // communicate the period for the otherwise timeless hospitalAffiliation.
+  // In Schema.org's Role pattern the same predicate connects both legs.
+  // This keeps the hospital relationship itself inside its historical role.
   if(physician.hospitalAffiliation!==undefined &&
-     JSON.stringify(physician.hospitalAffiliation)!==JSON.stringify(HOSPITAL))
+     physician.hospitalAffiliation?.['@id']!==ROLE)
     throw new Error('Unexpected hospital identity; refuse unrelated hospital');
   if(oldRole.roleContext!==undefined &&
      (ids(oldRole.roleContext).length!==1 || ids(oldRole.roleContext)[0]!==MAPS))
     throw new Error('Historical role points at a different hospital');
 
+  if(oldRole.hospitalAffiliation!==undefined &&
+     JSON.stringify(oldRole.hospitalAffiliation)!==JSON.stringify(HOSPITAL))
+    throw new Error('Unexpected hospital identity in historical role');
   const newHospital=physician.hospitalAffiliation===undefined;
   const newRole=oldRole.roleContext===undefined;
-  physician.hospitalAffiliation=structuredClone(HOSPITAL);
+  physician.hospitalAffiliation=ref(ROLE);
+  oldRole.hospitalAffiliation=structuredClone(HOSPITAL);
   oldRole.roleContext=ref(MAPS);
 
   // JSON-LD 1.1: @vocab maps these 18 schema.org terms to the same IRIs

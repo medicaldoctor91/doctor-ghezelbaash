@@ -190,6 +190,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     const content=values(primary.mainEntity).filter(ref=>values(source.get(ref?.['@id'])?.['@type'])
       .some(type=>['WebPageElement','Question','Answer'].includes(type)));
     const article=authoredArticle?structuredClone(authoredArticle):clinicalArticleForPage(primary,content);
+    // A terminal URL in the bounded projection avoids recursively framing the
+    // page through its primary Article. The full graph retains the named edge.
+    if (article.mainEntityOfPage) article.mainEntityOfPage = primary.url;
     article.inLanguage??=language;
     // Record the actual structured-metadata edit, independently of clinical
     // review dates and the unchanged original scientific edition.

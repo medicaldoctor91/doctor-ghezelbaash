@@ -26,8 +26,7 @@ export function closePhysicianPublishingAndPatientIntake(graph,physician) {
      clinic?.founder?.['@id']!==PERSON ||
      physician.practicesAt?.['@id']!==CLINIC ||
      (physician.hospitalAffiliation!==undefined &&
-       (physician.hospitalAffiliation['@id']!=='https://maps.app.goo.gl/cknJK2yufL2e9idHA' ||
-        physician.hospitalAffiliation['@type']!=='Hospital')))
+       physician.hospitalAffiliation['@id']!==ORIGIN+'/role-former-hospital-medical-technical-director'))
     throw new Error('Clinic ownership or historical hospital identity contract changed');
 
   // Acceptance at the sole physician/practice is a current operational flag,

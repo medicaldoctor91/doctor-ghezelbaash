@@ -8,6 +8,7 @@ import {closeNativePhysicianAuthoritySchema} from './physician-schema-native-clo
 import {closePhysicianAndPracticeContactGraph} from './physician-practice-contact-closure.mjs';
 import {closePhysicianWebAndVideoSubjectOf} from './physician-subjectof-context-closure.mjs';
 import {closePhysicianPublishingAndPatientIntake} from './physician-publishing-intake-closure.mjs';
+import {attributePhysicianWorks} from './physician-work-provenance.mjs';
 import {linkHistoricAriaHospital} from './physician-historical-hospital-closure.mjs';
 import {validateAndCorrectPhysicianServiceAttribution, connectEvidenceScopedServiceWorks} from './physician-service-entity-consistency.mjs';
 import {strengthenPhysicianAuthority} from './clinical-authority-extension.mjs';
@@ -56,7 +57,7 @@ export function clinicalArticleForPage(page, content, {isPrimary = true} = {}) {
     headline: structuredClone(page.name),
     inLanguage: structuredClone(page.inLanguage),
   };
-  if (isPrimary) article.mainEntityOfPage = page.url;
+  if (isPrimary) article.mainEntityOfPage = ref(page['@id']);
   for (const property of ['description', 'author', 'publisher', 'about', 'citation', 'datePublished', 'dateModified']) {
     if (property in page) article[property] = structuredClone(page[property]);
   }
@@ -216,5 +217,6 @@ export function applyClinicalAttribution(source) {
   closePhysicianPublishingAndPatientIntake(graph, physician);
   // Historic Aria Hospital (Google Maps ID): contextualize existing 2020–2021 Role, not a present job.
   linkHistoricAriaHospital(source, physician);
+  attributePhysicianWorks(source.graph, physician);
   source.machineProjection.discoveryGuide += '\n\nDr. Saeed Ghezelbash is the sole treating physician and provider of the listed clinical services. His private practice in Kermanshah is the location where he provides in-person clinical care; the service channel links each in-person service to that location.';
 }
