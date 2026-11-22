@@ -5,6 +5,7 @@ on:
       - fix/complete-active-rdf-jsonld-home-priority-20261122
       - codex/full-rdf-jsonld-homepage-first-1-3-6
       - fix/safe-publish-workflow-live-audit-20261122
+      - fix/live-home-portrait-preload-20261122
   workflow_dispatch:
 permissions:
   contents: read

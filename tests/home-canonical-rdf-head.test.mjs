@@ -65,3 +65,36 @@ test('progressive reader can restore the canonical graph as a single standard HE
   assert.match(js,/if \(state\.canonicalGraphScript\) d\.head\.append/);
   assert.doesNotMatch(js,/if \(state\.canonicalGraphScript\) d\.body\.append/);
 });
+
+test('homepage AVIF LCP preload exactly matches its authored responsive portrait and never leaks to focused pages',()=>{
+  const preloads=nodes.filter(n=>n.tagName==='link'&&attr(n,'rel')==='preload'&&attr(n,'as')==='image');
+  assert.equal(preloads.length,1,'only the first-screen physician portrait should be preloaded');
+  const preload=preloads[0];
+  assert.equal(preload.parentNode?.tagName,'head');
+  assert.equal(attr(preload,'type'),'image/avif');
+  assert.equal(attr(preload,'fetchpriority'),'high');
+  assert.equal(attr(preload,'href'),'/media/images/physician/saeed-ghezelbash-portrait-768.avif',
+    'preserve the already authored AVIF preload href unchanged');
+  const portrait=nodes.find(n=>n.tagName==='picture'&&attr(n,'id')==='image-saeed-ghezelbash-portrait-master-webp');
+  assert.ok(portrait,'original authored portrait preserved');
+  const source=portrait.childNodes.find(n=>n.tagName==='source'&&attr(n,'type')==='image/avif');
+  const img=portrait.childNodes.find(n=>n.tagName==='img');
+  assert.ok(source&&img,'original AVIF picture and fallback must remain');
+  assert.equal(attr(preload,'imagesrcset'),attr(source,'srcset'),'no duplicated or divergent image inventory');
+  assert.equal(attr(preload,'imagesizes'),attr(source,'sizes'),'responsive variant choice must agree');
+  assert.equal(attr(img,'loading'),'eager');
+  assert.equal(attr(img,'fetchpriority'),'high');
+  const hrefs=String(attr(preload,'imagesrcset')).split(',').map(s=>s.trim().split(/\s+/u)[0]);
+  for(const href of hrefs)assert.match(href,/^\/media\/images\/physician\/saeed-ghezelbash-portrait-\d+\.avif$/);
+  const rawPreload=[...html.matchAll(/<link\b[^>]*>/gu)].find(match=>{
+    const node=parse(match[0]).childNodes?.find(n=>n.tagName==='html')?.childNodes?.find(n=>n.tagName==='head')?.childNodes?.find(n=>n.tagName==='link');
+    return node&&attr(node,'rel')==='preload'&&attr(node,'as')==='image';
+  });
+  assert.ok(rawPreload,'rendered HTML must retain the original image preload');
+  const linkStart=rawPreload.index;
+  assert.ok(linkStart>0 && linkStart<firstOpen,'browser must discover LCP image ahead of large RDF script');
+  assert.ok(linkStart>html.indexOf('rel="stylesheet"'),'retain critical CSS before the image hint');
+  const focused=readFileSync(new URL('../dist/filler.html',import.meta.url),'utf8');
+  assert.doesNotMatch(focused,/<link\b[^>]*rel="preload"[^>]*as="image"/u,
+    'focused pages must not fetch a homepage portrait they do not render');
+});

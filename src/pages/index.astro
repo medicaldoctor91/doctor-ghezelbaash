@@ -5202,6 +5202,32 @@ export function compileCanonicalSource() {
   };
   const shell = (head, body, lang='fa-IR', dir='rtl', focused=false) => '<!doctype html><html lang="' + lang + '" dir="' + dir + '" prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"' +
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
+  // Source already declares a correct responsive, eager, high-priority AVIF
+  // portrait preload in the authored HEAD. Retain that SAME tag and move it
+  // before the ~2 MB active RDF block so mobile discovers the LCP image early.
+  // No new preload, authored image URL, graph entity or page text is introduced.
+  const portraitPictures=[];
+  walk(body,node=>{
+    if(node.tagName==='picture'&&attr(node,'id')==='image-saeed-ghezelbash-portrait-master-webp')portraitPictures.push(node);
+  });
+  if(portraitPictures.length!==1)throw new Error('Canonical homepage portrait picture missing or duplicated');
+  const portraitChildren=portraitPictures[0].childNodes??[];
+  const avifSources=portraitChildren.filter(node=>node.tagName==='source'&&attr(node,'type')==='image/avif');
+  const portraitImg=portraitChildren.find(node=>node.tagName==='img');
+  if(avifSources.length!==1||!portraitImg||attr(portraitImg,'loading')!=='eager'||attr(portraitImg,'fetchpriority')!=='high')
+    throw new Error('Canonical high-priority portrait source contract changed; review the existing preload');
+  const portraitSrcset=attr(avifSources[0],'srcset'),portraitSizes=attr(avifSources[0],'sizes');
+  const existingImagePreloads=[...baseHead.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]).filter(tag=>{
+    const node=parseFragment(tag).childNodes[0];
+    return node?.tagName==='link'&&(attr(node,'rel')??'').split(/\s+/).includes('preload')&&attr(node,'as')==='image';
+  });
+  if(existingImagePreloads.length!==1)throw new Error('Expected exactly one existing authored image preload');
+  const existingPortraitPreload=existingImagePreloads[0];
+  const preloadNode=parseFragment(existingPortraitPreload).childNodes[0];
+  if(attr(preloadNode,'type')!=='image/avif'||attr(preloadNode,'fetchpriority')!=='high'||
+     attr(preloadNode,'imagesrcset')!==portraitSrcset||attr(preloadNode,'imagesizes')!==portraitSizes||
+     attr(preloadNode,'href')!==portraitSrcset.split(',')[0]?.trim().split(/\s+/)[0])
+    throw new Error('Authored responsive image preload disagrees with the visible portrait; refusing reorder');
   // Full canonical RDF (all vocabularies) is the FIRST JSON-LD script in the
   // homepage HEAD. Nothing is filtered or reserialized as Schema.org-only.
   const canonicalGraphText=serializeGoogleCompatibleCanonicalGraph(homeGraph);
@@ -5212,8 +5238,8 @@ export function compileCanonicalSource() {
   // The CSS request is launched early without putting user-visible text first.
   const existingCharset = baseHead.match(/<meta\b[^>]*\bcharset\s*=\s*["']?utf-8["']?[^>]*>/i)?.[0];
   const firstHead = existingCharset ?? '<meta charset="utf-8">';
-  const remainingHead = existingCharset ? baseHead.replace(existingCharset,'') : baseHead;
-  const rawHome = shell(firstHead + `<link rel="stylesheet" href="${assets[0].path}">` + canonicalDataScript + remainingHead +
+  const remainingHead = (existingCharset ? baseHead.replace(existingCharset,'') : baseHead).replace(existingPortraitPreload,'');
+  const rawHome = shell(firstHead + `<link rel="stylesheet" href="${assets[0].path}">` + existingPortraitPreload + canonicalDataScript + remainingHead +
     '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
     '<link rel="canonical" href="' + homeUrl + '">' +
     // The sole homepage JSON-LD document is the entire canonical RDF graph.
