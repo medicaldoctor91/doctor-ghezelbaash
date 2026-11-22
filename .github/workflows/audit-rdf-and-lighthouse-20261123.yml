@@ -1,0 +1,71 @@
+name: Independent read-only RDF, SHACL and Lighthouse production audit
+on:
+  push:
+    branches: [audit/live-rdf-lighthouse-20261123]
+permissions: {contents: read}
+jobs:
+  rdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check requests beautifulsoup4 lxml rdflib 'pyshacl>=0.30,<1'
+      - run: python -m py_compile .github/audits/audit_live_rdf_semantics_20261123.py
+      - name: Parse and compare RDF serializations, apply published SHACL shapes, inspect crawl cutoff
+        run: python .github/audits/audit_live_rdf_semantics_20261123.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: read-only-rdf-shacl-crawl-window
+          path: extended-audit/
+          if-no-files-found: ignore
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Check available Chrome engine
+        run: |
+          (command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+      - name: Audit representative real production pages with Lighthouse mobile lab
+        run: |
+          mkdir -p lighthouse-results
+          for item in 'home /' 'botox /botox' 'biography /saeed-ghezelbash-research-education-and-clinical-decisions'; do
+            set -- $item
+            name="$1"
+            page_path="$2"
+            echo "Lighthouse start: $name"
+            npx --yes lighthouse@12 "https://www.ghezelbaash.ir$page_path" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --form-factor=mobile \
+              --throttling-method=simulate \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --disable-gpu" \
+              --max-wait-for-load=60000 --quiet --output=json \
+              --output-path="lighthouse-results/$name.json" \
+              >"lighthouse-results/$name.stdout.txt" 2>"lighthouse-results/$name.stderr.txt" || true
+          done
+      - name: Summarize Lighthouse scores and high-impact failed audits
+        run: |
+          python - <<'PY'
+          import json,glob,os
+          for p in sorted(glob.glob('lighthouse-results/*.json')):
+            try:
+              d=json.load(open(p))
+              cats={k:(round(v['score']*100) if isinstance(v.get('score'),(int,float)) else None) for k,v in d.get('categories',{}).items()}
+              metrics={k:{'value':d.get('audits',{}).get(k,{}).get('numericValue'),'display':d.get('audits',{}).get(k,{}).get('displayValue')} for k in ['first-contentful-paint','largest-contentful-paint','total-blocking-time','cumulative-layout-shift','speed-index','server-response-time','dom-size','render-blocking-resources','network-requests','total-byte-weight']}
+              failures=[{'id':k,'score':v['score'],'title':v.get('title'),'description':v.get('displayValue')} for k,v in d.get('audits',{}).items() if v.get('scoreDisplayMode')=='binary' and v.get('score')==0]
+              print('LIGHTHOUSE_AUDIT='+json.dumps({'page':os.path.basename(p),'categories':cats,'metrics':metrics,'binaryFailures':failures[:35]},ensure_ascii=False),flush=True)
+            except Exception as e:print('LIGHTHOUSE_PARSE_FAILED='+json.dumps({'path':p,'error':str(e)}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-real-production-mobile-lab
+          path: lighthouse-results/
+          retention-days: 30
