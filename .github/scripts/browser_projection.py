@@ -361,6 +361,22 @@ def validate_home_html(graph_path, html):
     parser.feed(parser.html)
     return validate_home_projection(graph_path, [item['document'] for item in parser.search], html)
 
+def require_current_google_compatible_projection(graph_path, html):
+    """Mandatory live-site contract: bounded Google schema and complete RDF payload.
+
+    The complete canonical graph remains independently published as graph.jsonld
+    and losslessly embedded after visible content. Google sees a simple one-script
+    Schema.org context; all RDF vocabulary and entities remain available.
+    """
+    proof = validate_home_html(graph_path, html)
+    assert proof["status"] == "PASS"
+    assert proof["canonicalGraphStorage"] == "application/json#canonical-entity-graph", (
+        "Homepage must not expose the advanced canonical @context as Rich Results JSON-LD")
+    assert proof["criticalPrefixIncludingHeaderReserveBytes"] < CRAWL_PREFIX_BYTES, (
+        "Search schema and visible content exceed the Googlebot HTML prefix")
+    return proof
+
+
 def require_current_active_head_jsonld(graph_path, html):
     """Mandatory 1.3.6 release gate, not an archive-format compatibility validator.
 
