@@ -63,6 +63,24 @@ doctor = by_id[PERSON]
 office = by_id[OFFICE]
 errors = []
 assert len(graph) == 1916, "Unexpected live canonical graph node count"
+
+# A hard owner requirement: ALL canonical RDF is active in homepage HEAD ahead
+# of text, not silently replaced by a partial Schema.org-only projection.
+home_html = read(SITE + "/")
+tag=b'<script id="canonical-entity-graph" type="application/ld+json">'
+assert home_html.count(tag)==1, "Missing or duplicated full active homepage JSON-LD"
+first=home_html.index(tag)+len(tag)
+last=home_html.index(b"</script>", first)+len(b"</script>")
+assert last<2_000_000, "Complete RDF must fit within first 2MB"
+h1=home_html.index(b"<h1")
+assert last<h1<2_000_000, "Full graph must precede crawlable main H1"
+assert last<home_html.index(b"</head>")<home_html.index(b"<body")
+assert b'<script id="schema-core-mainentity" type="application/ld+json">' not in home_html
+active=json.loads(home_html[first:last-len(b"</script>")])
+assert len(active["@graph"])==len(graph)==1916
+assert {n["@id"] for n in active["@graph"]}=={n["@id"] for n in graph}
+assert len(extract(home_html))==1, "Only full active canonical JSON-LD is permitted"
+
 assert "Person" in values(doctor.get("@type")) and "IndividualPhysician" in values(doctor.get("@type"))
 assert identity(doctor.get("practicesAt")) == OFFICE
 assert is_type(office, "PhysiciansOffice")
