@@ -19,7 +19,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
       REVIEWED_COMMIT: ${{ github.sha }}
-      PREVIOUS_WEBSITE_COMMIT: 89b0c9f40bbcb56f7c1998a5b17c1a9292bbafef
+      PREVIOUS_WEBSITE_COMMIT: 9c055c8ea6fba069ef80e07b6aded0bef24ece24
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
