@@ -87,7 +87,7 @@ async def test_validator(browser, name, url):
         await page.goto("https://validator.schema.org/",wait_until="domcontentloaded",timeout=60000)
         await page.get_by_text("Code snippet",exact=True).click()
         raw = requests.get(url,timeout=60,headers={"Cache-Control":"no-cache"}).text
-        matched = re.search(r'<script id="canonical-entity-graph" type="application/ld\\+json">[\\s\\S]*?</script>',raw)
+        matched = re.search(r'<script id="canonical-entity-graph" type="application/ld\+json">[\s\S]*?</script>',raw)
         if not matched:
             raise RuntimeError("Complete active JSON-LD script missing in code-mode input")
         code=matched.group(0)
