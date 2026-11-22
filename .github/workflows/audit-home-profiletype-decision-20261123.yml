@@ -1,0 +1,115 @@
+name: Read-only Python decision test - ProfilePage vs MedicalWebPage
+on:
+  push:
+    branches: [audit/semantic-home-type-decision-python-20261123]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests beautifulsoup4
+      - name: Audit exact live graph, simulate type-only change, trace source/test contracts
+        run: |
+          python - <<'PY'
+          import requests,json,hashlib,copy,re,subprocess
+          from bs4 import BeautifulSoup
+          origin='https://www.ghezelbaash.ir'
+          paths=['/','/graph.jsonld','/saeed-ghezelbash-research-education-and-clinical-decisions']
+          pages={}
+          for path in paths:
+            res=requests.get(origin+path,timeout=(15,90),headers={'Accept-Encoding':'identity','Cache-Control':'no-cache','User-Agent':'SemanticEntityReadOnlyAudit/20261123'})
+            res.raise_for_status()
+            pages[path]=res.content
+          def get_jsonld(html):
+            soup=BeautifulSoup(html,'lxml')
+            parsed=[]
+            for tag in soup.select('script[type="application/ld+json"]'):
+              parsed.append(json.loads(tag.string or tag.text))
+            return parsed
+          home_docs=get_jsonld(pages['/'])
+          bio_docs=get_jsonld(pages[paths[2]])
+          public_graph=json.loads(pages['/graph.jsonld'])
+          def nodes(docs):
+            result=[]
+            for doc in docs:
+              if isinstance(doc,list):result+=doc
+              elif isinstance(doc,dict) and isinstance(doc.get('@graph'),list):result+=doc['@graph']
+              else:result.append(doc)
+            return result
+          home=nodes(home_docs)
+          bio=nodes(bio_docs)
+          external=nodes([public_graph])
+          p=origin+'/#saeed-ghezelbash'
+          homepage_id=origin+'/webpage'
+          bio_id=origin+paths[2]+'#webpage'
+          def ids(v):
+            if isinstance(v,str):return [v]
+            if isinstance(v,dict):return [v.get('@id')] if v.get('@id') else []
+            if isinstance(v,list):return sum([ids(x) for x in v],[])
+            return []
+          def types(n):
+            x=n.get('@type',[])
+            return x if isinstance(x,list) else [x]
+          def matches(arr,ident):return [x for x in arr if isinstance(x,dict) and x.get('@id')==ident]
+          def profiles(arr):return [{'id':x.get('@id'),'types':types(x),'mainEntity':ids(x.get('mainEntity')),'partCount':len(x.get('hasPart',[])) if isinstance(x.get('hasPart'),list) else int(bool(x.get('hasPart')))} for x in arr if isinstance(x,dict) and 'ProfilePage' in types(x)]
+          H=matches(home,homepage_id)
+          P=matches(home,p)
+          B=matches(bio,bio_id)
+          E=matches(external,homepage_id)
+          assert len(H)==1 and len(P)==1 and len(B)==1 and len(E)==1,(len(H),len(P),len(B),len(E))
+          H=H[0];P=P[0];B=B[0];E=E[0]
+          original=copy.deepcopy(H)
+          candidate=copy.deepcopy(H)
+          candidate['@type']=[x for x in types(candidate) if x!='ProfilePage']
+          assert candidate['@type'], 'Resulting home has no type'
+          changed_fields=[k for k in sorted(set(original)|set(candidate)) if original.get(k)!=candidate.get(k)]
+          assert changed_fields==['@type'],changed_fields
+          assert ids(original['mainEntity'])==ids(candidate['mainEntity'])==[p]
+          assert ids(P['mainEntityOfPage'])==[homepage_id]
+          assert ids(B['mainEntity'])==[p]
+          assert types(E)==types(H)
+          mutated_graph=copy.deepcopy(external)
+          mutations=0
+          for node in mutated_graph:
+            if node.get('@id')==homepage_id:
+              node['@type']=[x for x in types(node) if x!='ProfilePage'];mutations+=1
+          assert mutations==1
+          diff=[{'id':a.get('@id'),'changedFields':[k for k in set(a)|set(b) if a.get(k)!=b.get(k)]} for a,b in zip(external,mutated_graph) if a!=b]
+          assert len(diff)==1 and diff[0]['id']==homepage_id and diff[0]['changedFields']==['@type'],diff
+          assert all(a.get('@id')==b.get('@id') for a,b in zip(external,mutated_graph))
+          assert all(a==b for a,b in zip(external,mutated_graph) if a.get('@id')!=homepage_id)
+          out={
+            'status':'PASS',
+            'home_html_bytes':len(pages['/']),
+            'home_script_bytes':sum(len(json.dumps(d,ensure_ascii=False).encode()) for d in home_docs),
+            'graph_node_count':len(external),
+            'homepage_node_id':homepage_id,
+            'person_id':p,
+            'home_existing_types':types(H),
+            'home_candidate_types':types(candidate),
+            'home_mainEntity':ids(H.get('mainEntity')),
+            'person_mainEntityOfPage':ids(P.get('mainEntityOfPage')),
+            'bio_types':types(B),
+            'bio_mainEntity':ids(B.get('mainEntity')),
+            'graph_public_types':types(E),
+            'profile_count_home_graph_before':len(profiles(home)),
+            'profile_count_home_graph_candidate':len([x for x in mutated_graph if 'ProfilePage' in types(x)]),
+            'profile_count_bio_inline':len(profiles(bio)),
+            'changed_fields_typeonly':changed_fields,
+            'differing_nodes_in_graph':diff,
+            'external_graph_equal_to_home_jsonld_nodes': len(home)==len(external) and home==external,
+            'home_profile_before':profiles(home),
+            'bio_profile':profiles(bio)
+          }
+          print('DECISION_AUDIT_JSON='+json.dumps(out,ensure_ascii=False),flush=True)
+          # Find code and tests that mandate two ProfilePage nodes or homepage specific type.
+          match=subprocess.run(['rg','-n','ProfilePage|MedicalWebPage','tests','src','build','.github/scripts'],text=True,capture_output=True)
+          lines=[s for s in match.stdout.splitlines() if re.search(r'homepage|home|webpage|ProfilePage',s,re.I)]
+          summary={'total_matching_lines':len(match.stdout.splitlines()),'relevant_lines':lines[:50]}
+          print('CODE_CONTRACT_REFERENCES='+json.dumps(summary,ensure_ascii=False),flush=True)
+          PY
