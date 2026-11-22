@@ -1,4 +1,6 @@
 name: PR489 coordinated graph publication v42 (fail-closed)
+# Publication re-armed only after verified public Kaggle default and raw manifest converged to v41 (2026-11-22 UTC).
+# This change triggers a new fully rebuilt/frozen source candidate; all public/src/tests bytes remain identical to merged PR489.
 on:
   push:
     branches: [release/pr489-physician-graph-v42-20261122]
