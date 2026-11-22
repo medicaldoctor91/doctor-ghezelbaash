@@ -99,7 +99,7 @@ def main():
                'defaultPointerParity': 'DEFERRED_TO_ORIGINAL_PUBLICATION_GATE'}
     release.dump(WORK / 'exact-v42-notebook-outcome.json',outcome)
     print(json.dumps({'status':outcome['status'],'notebookVersion':after,
-                      'kaggleDatasetVersion':42,'graphSHA256':GRAPH},flush=True))
+                      'kaggleDatasetVersion':42,'graphSHA256':GRAPH}), flush=True)
 
 if __name__ == '__main__':
     main()
