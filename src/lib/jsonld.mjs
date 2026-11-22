@@ -49,6 +49,14 @@ export function serializeCanonicalGraph(graph) {
     // @vocab already expands these exact Schema.org predicates to the same IRIs.
     delete context[key];
   }
+  // Two high-frequency Schema.org predicates receive standard JSON-LD term
+  // aliases, reducing raw HEAD bytes without omitting any statement.
+  const compactSchemaTerms = [['description','d'],['inLanguage','l']];
+  for (const [original,short] of compactSchemaTerms) {
+    if (Object.hasOwn(context,short) || Object.hasOwn(context,original))
+      throw new Error('Unsafe Schema.org term alias '+short);
+    context[short]='https://schema.org/'+original;
+  }
   const explicitIri = value => Array.isArray(value)
     ? value.map(explicitIri)
     : typeof value === 'string' ? {'@id':value} : value;
@@ -63,6 +71,12 @@ export function serializeCanonicalGraph(graph) {
     // Explicit node-object IRIs preserve the original expanded N-Quads.
     for (const key of explicitIriTerms)
       if (Object.hasOwn(value,key)) value[key]=explicitIri(value[key]);
+    for (const [original,short] of compactSchemaTerms) {
+      if (Object.hasOwn(value,original)) {
+        if (Object.hasOwn(value,short)) throw new Error('Conflicting compact Schema.org term '+short);
+        value[short]=value[original];delete value[original];
+      }
+    }
     if (Object.hasOwn(value, attribution)) {
       if (Object.hasOwn(value, alias))
         throw new Error('Existing at property conflicts with provenance compaction');
