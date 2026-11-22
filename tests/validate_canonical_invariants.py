@@ -164,8 +164,8 @@ def validate(root: Path):
         "homepage_schema": {
             "storage": homepage_schema["canonicalGraphStorage"],
             "nodes": homepage_schema["nodes"],
-            "end_byte": homepage_schema["canonicalGraphEndByte"],
-            "remaining_byte_reserve": homepage_schema["criticalReserveBytes"],
+            "end_byte": homepage_schema["recognizedSearchEndByte"],
+            "remaining_byte_reserve": homepage_schema["crawlPrefixBytes"] - homepage_schema["criticalPrefixIncludingHeaderReserveBytes"],
         },
     }
 
