@@ -1,0 +1,42 @@
+name: Read-only audit mutable machine files at Cloudflare edge versus immutable production Pages
+on:
+  push:
+    branches: [audit/live-cloudflare-mutable-machine-cache-20261122]
+permissions: {contents: read}
+jobs:
+  cache-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests
+      - name: Compare LIVE canonical CDN and immutable deployment for all mutable machine representations
+        run: |
+          python - <<'PY'
+          import requests,json,hashlib,concurrent.futures
+          public='https://www.ghezelbaash.ir'
+          immutable='https://9730f5cb.doctor-ghezelbaash.pages.dev'
+          paths=['/graph.jsonld','/graph.ttl','/entity-facts.csv','/shapes.ttl','/provenance.jsonld','/dcat.ttl','/void.ttl','/croissant.json','/answers.txt','/llms.txt','/sitemap.xml','/knowledge.xml','/release-provenance.json']
+          headers={'User-Agent':'ReadOnlyCloudflareCacheAudit/20261122','Accept-Encoding':'identity','Cache-Control':'no-cache'}
+          def fetch(u):
+            r=requests.get(u,headers=headers,timeout=(12,65))
+            return {'status':r.status_code,'bodyHash':hashlib.sha256(r.content).hexdigest(),'bytes':len(r.content),
+                    'cacheControl':r.headers.get('Cache-Control'),'cfCacheStatus':r.headers.get('CF-Cache-Status'),
+                    'cloudflareCDNCacheControl':r.headers.get('Cloudflare-CDN-Cache-Control'),
+                    'age':r.headers.get('Age'),'etag':r.headers.get('ETag'),
+                    'contentType':r.headers.get('Content-Type'),
+                    'cdn':r.headers.get('CDN-Cache-Control')}
+          def check(path):
+            return {'path':path,'custom':fetch(public+path),'immutable':fetch(immutable+path)}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as p:rows=list(p.map(check,paths))
+          for x in rows:x['bodiesEqual']=x['custom']['bodyHash']==x['immutable']['bodyHash']
+          errors=[{'path':x['path'],'reason':'body divergence or public error'} for x in rows if x['custom']['status']!=200 or x['immutable']['status']!=200 or not x['bodiesEqual']]
+          unsafe=[x['path'] for x in rows if x['custom']['cfCacheStatus'] in ['HIT','STALE','UPDATING','REVALIDATED'] and int(x['custom']['age'] or '0')>0]
+          report={'status':'PASS' if not errors and not unsafe else 'REVIEW','checked':len(rows),'bodyDivergences':errors,
+                  'unsafeCachedResponses':unsafe,'responses':rows}
+          print('LIVE_CACHE_AUDIT='+json.dumps(report,ensure_ascii=False),flush=True)
+          assert not errors,errors
+          PY
