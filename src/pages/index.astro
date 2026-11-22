@@ -5217,7 +5217,7 @@ export function compileCanonicalSource() {
   if(portraitAvifSources.length!==1||!portraitImg||attr(portraitImg,'loading')!=='eager'||attr(portraitImg,'fetchpriority')!=='high')
     throw new Error('Canonical high-priority portrait source contract changed; review preload instead of guessing');
   const portraitSrcset=attr(portraitAvifSources[0],'srcset'),portraitSizes=attr(portraitAvifSources[0],'sizes');
-  if(!portraitSrcset||!portraitSizes||!portraitSrcset.split(',').every(entry=>/^\\s*\\/media\\/images\\/physician\\/saeed-ghezelbash-portrait-[0-9]+\\.avif\\s+[0-9]+w\\s*$/.test(entry)))
+  if(!portraitSrcset||!portraitSizes||!portraitSrcset.split(',').every(entry=>/^\s*\/media\/images\/physician\/saeed-ghezelbash-portrait-[0-9]+\.avif\s+[0-9]+w\s*$/.test(entry)))
     throw new Error('Canonical portrait responsive sources unexpectedly changed');
   // imagesrcset/imagesizes match the AVIF <source> exactly. Omit href to avoid
   // downloading an unrelated fallback when the browser does not support AVIF.
