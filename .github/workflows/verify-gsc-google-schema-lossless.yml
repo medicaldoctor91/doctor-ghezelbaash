@@ -1,0 +1,47 @@
+name: GSC structured-data regression and cross-platform graph identity
+on:
+  push:
+    branches:
+      - fix/gsc-unparsable-jsonld-preserve-canonical-20261122
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      EXPECTED_GRAPH_SHA256: 25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run build
+      - name: Verify Google-safe HTML and complete RDF are lossless
+        run: |
+          node --test --test-concurrency=1 tests/home-canonical-rdf-head.test.mjs tests/physician-page-output.test.mjs
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_canonical_invariants.py dist
+      - name: Exact canonical graph matches live, HF, Kaggle dataset and Notebook baseline
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          graph=Path('dist/graph.jsonld').read_bytes()
+          sha=hashlib.sha256(graph).hexdigest()
+          assert sha==os.environ['EXPECTED_GRAPH_SHA256'], (sha,os.environ['EXPECTED_GRAPH_SHA256'])
+          html=Path('dist/index.html').read_bytes()
+          assert html.index(b'<h1')<1_900_000
+          assert html.count(b'<script id="canonical-entity-graph" type="application/json">')==1
+          assert html.count(b'<script id="schema-core-mainentity" type="application/ld+json">')==1
+          print(json.dumps({'status':'PASS','graphSHA256':sha,'graphBytes':len(graph),'h1Byte':html.index(b'<h1')}))
+          PY
