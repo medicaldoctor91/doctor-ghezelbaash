@@ -58,4 +58,11 @@ test('stronger visible physician identity does not demote or duplicate all canon
  const headEnd=html.indexOf('</head>');
  const sectionStart=html.indexOf('class="entity-home-evidence"');
  assert.ok(headEnd>0 && sectionStart>headEnd,'the entire RDF comes before human authority content');
+ const sectionEnd=html.indexOf('</section>',sectionStart)+'</section>'.length;
+ const sectionEndByte=Buffer.byteLength(html.slice(0,sectionEnd),'utf8');
+ assert.ok(sectionEnd>sectionStart,'complete visible physician evidence section is missing');
+ assert.ok(sectionEndByte<1_998_000,
+   'Googlebot must receive the full physician evidence section after the priority canonical RDF: '+sectionEndByte);
+ console.log(JSON.stringify({entityEvidenceEndByte:sectionEndByte,googlebotReserveBytes:2_000_000-sectionEndByte}));
+
 });
