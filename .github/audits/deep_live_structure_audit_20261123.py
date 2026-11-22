@@ -154,7 +154,7 @@ def parse_markup(content,path):
 sitemap_resp=req(geturl("/sitemap.xml"))
 sitemap_resp.raise_for_status()
 root=ET.fromstring(sitemap_resp.content)
-locs=[x.text.strip() for x in root.iter() if x.tag.endswith("loc") and x.text]
+locs=[x.text.strip() for x in root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc") if x.text] or [x.text.strip() for x in root.findall("./loc") if x.text]
 urls=[]
 for loc in locs:
     if urllib.parse.urlsplit(loc).hostname=="www.ghezelbaash.ir":
