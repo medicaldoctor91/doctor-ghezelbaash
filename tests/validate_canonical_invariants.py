@@ -73,12 +73,12 @@ def validate(root: Path):
     if not (root / "graph.jsonld").is_file() or not (root / "index.html").is_file():
         raise AssertionError(f"built dist is incomplete: {root}")
 
-    # Current Google-facing HTML must provide a bounded ProfilePage JSON-LD,
-    # while preserving all canonical triples in the embedded/external graph.
+    # The full canonical 1916-node RDF must be the single active homepage JSON-LD,
+    # located before any visible text and inside the Googlebot HTML retrieval window.
     scripts = Path(__file__).resolve().parents[1] / ".github" / "scripts"
     sys.path.insert(0, str(scripts))
-    from browser_projection import require_current_google_compatible_projection
-    homepage_schema = require_current_google_compatible_projection(
+    from browser_projection import require_current_full_semantic_jsonld
+    homepage_schema = require_current_full_semantic_jsonld(
         root / "graph.jsonld", (root / "index.html").read_bytes())
 
     files = list(text_files(root))
@@ -164,8 +164,8 @@ def validate(root: Path):
         "homepage_schema": {
             "storage": homepage_schema["canonicalGraphStorage"],
             "nodes": homepage_schema["nodes"],
-            "end_byte": homepage_schema["recognizedSearchEndByte"],
-            "remaining_byte_reserve": homepage_schema["crawlPrefixBytes"] - homepage_schema["criticalPrefixIncludingHeaderReserveBytes"],
+            "end_byte": homepage_schema["canonicalGraphEndByte"],
+            "remaining_byte_reserve": homepage_schema["criticalReserveBytes"],
         },
     }
 
