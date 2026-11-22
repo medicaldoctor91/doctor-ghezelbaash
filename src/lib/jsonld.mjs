@@ -21,13 +21,15 @@ export function serializeCanonicalGraph(graph) {
   const attribution = 'prov:wasAttributedTo';
   const alias = 'at';
   const term = context[attribution];
-  if (context[alias] !== undefined ||
-      term?.['@id'] !== 'http://www.w3.org/ns/prov#wasAttributedTo' ||
-      term?.['@type'] !== '@id')
+  if (term?.['@id'] !== 'http://www.w3.org/ns/prov#wasAttributedTo' ||
+      term?.['@type'] !== '@id' ||
+      context[alias] !== undefined && (
+        context[alias]?.['@id'] !== term['@id'] ||
+        context[alias]?.['@type'] !== term['@type']))
     throw new Error('Unexpected canonical provenance context; refusing lossy alias');
-  // Explicit IRI and @id coercion make the short key exactly equivalent to
-  // prov:wasAttributedTo. Never rewrite a scoped @context subtree.
-  context[alias] = structuredClone(term);
+  // The standalone /graph.jsonld is already provenance-compacted; accept the
+  // same equivalent alias on input, otherwise add it without changing triples.
+  if (context[alias] === undefined) context[alias] = structuredClone(term);
 
   // Google Search Console reported Incorrect value type for precisely these
   // eighteen JSON-LD @id-coerced Schema.org terms. Keep the entire RDF graph
