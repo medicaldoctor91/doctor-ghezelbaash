@@ -89,7 +89,7 @@ for fmt,raw in [("turtle",ttl),("json-ld",js)]:
 if len(graphs)==2:
  a=set(graphs["turtle"]);b=set(graphs["json-ld"])
  print("RDF_COMPARISON="+json.dumps({"ttlTriples":len(a),"jsonldTriples":len(b),"identicalTriples":len(a&b),"onlyTurtle":len(a-b),"onlyJsonld":len(b-a),
-        "turtleOnlySamples":[str(x)[:300] for x in list(a-b)[:4]],"jsonldOnlySamples":[str(x)[:300] for x in list(b-a)[:4]]},flush=True))
+        "turtleOnlySamples":[str(x)[:300] for x in list(a-b)[:4]],"jsonldOnlySamples":[str(x)[:300] for x in list(b-a)[:4]]}),flush=True)
 if "turtle" in graphs:
  try:
   sg=Graph();sg.parse(data=shapes.decode("utf8"),format="turtle")
