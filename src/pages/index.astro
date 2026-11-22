@@ -12,7 +12,7 @@ import { createHash } from "node:crypto";
 import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
-import {serializeCanonicalGraph, serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {serializeCanonicalGraph, serializeGoogleCompatibleCanonicalGraph, serializeInlineJsonLd} from "../lib/jsonld.mjs";
 import {physicianAuthoritySupplement} from "../lib/physician-authority-supplement.mjs";
 import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
 import {renderEvidenceRelatedVideos} from "../lib/evidence-related-video-links.mjs";
@@ -5171,7 +5171,7 @@ export function compileCanonicalSource() {
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
   // Full canonical RDF (all vocabularies) is the FIRST JSON-LD script in the
   // homepage HEAD. Nothing is filtered or reserialized as Schema.org-only.
-  const canonicalGraphText=serializeCanonicalGraph(homeGraph);
+  const canonicalGraphText=serializeGoogleCompatibleCanonicalGraph(homeGraph);
   const canonicalDataScript='<script id="canonical-entity-graph" type="application/ld+json">'+canonicalGraphText+'</script>';
   // Keep the document's UTF-8 declaration first for correct HTML decoding.
   // Move the *full*, unmodified graph ahead of all nonessential head metadata:
