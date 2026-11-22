@@ -1,0 +1,63 @@
+name: Independently audit four live video watch pages, media and video sitemap (read-only)
+on:
+  push:
+    branches: [audit/video-index-status-20261122]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install requests
+      - name: Inspect Googlebot parity on three excluded watch pages
+        run: python .github/scripts/audit_136_googlebot_video.py
+      - name: Inspect current sitemap and ALL four MP4/thumbnail metadata and byte ranges
+        run: |
+          python - <<'PY'
+          import json,requests,xml.etree.ElementTree as ET,hashlib,re
+          from html.parser import HTMLParser
+          O='https://www.ghezelbaash.ir'
+          H={'Accept-Encoding':'identity','Cache-Control':'no-cache'}
+          j=requests.get(O+'/graph.jsonld',headers=H,timeout=70);j.raise_for_status()
+          graph=j.json()['@graph']
+          vids=[x for x in graph if 'VideoObject' in ([x['@type']] if isinstance(x.get('@type'),str) else x.get('@type',[]))]
+          assert len(vids)==4
+          sm=requests.get(O+'/sitemap.xml',timeout=40);sm.raise_for_status()
+          root=ET.fromstring(sm.content)
+          NS={'s':'http://www.sitemaps.org/schemas/sitemap/0.9','v':'http://www.google.com/schemas/sitemap-video/1.1'}
+          site={}
+          for el in root.findall('.//s:url',NS):
+            loc=el.findtext('s:loc',default='',namespaces=NS)
+            vs=el.findall('v:video',NS)
+            if vs:site[loc]=vs
+          assert len(site)==4,('expected 4 watch pages in sitemap',list(site))
+          rows=[]
+          for v in vids:
+            url=v['url'];asset=v['contentUrl'];thumb=v['thumbnailUrl']
+            assert url in site,('video watch page not in video sitemap',url)
+            loc=site[url][0].findtext('v:content_loc',namespaces=NS)
+            assert loc==asset,('Sitemap MP4 inconsistent',url,loc,asset)
+            thumbLoc=site[url][0].findtext('v:thumbnail_loc',namespaces=NS)
+            assert thumbLoc==thumb,('Sitemap poster inconsistent',url)
+            r=requests.get(url,headers=H,timeout=45)
+            assert r.status_code==200
+            assert ('rel="canonical" href="'+url+'"').encode() in r.content
+            assert b'<video' in r.content and b'content="noindex"' not in r.content
+            assert asset.encode() in r.content and thumb.encode() in r.content
+            head=requests.head(asset,timeout=40)
+            assert head.status_code==200 and 'video/mp4' in head.headers.get('Content-Type','')
+            partial=requests.get(asset,headers={**H,'Range':'bytes=0-63'},stream=True,timeout=45)
+            chunk=partial.raw.read(65,decode_content=False)
+            assert partial.status_code==206 and len(chunk)==64
+            assert partial.headers.get('Content-Range','').startswith('bytes 0-63/')
+            p=requests.head(thumb,timeout=35)
+            assert p.status_code==200 and 'image' in p.headers.get('Content-Type','')
+            rows.append({'page':url,'watchHTTP':r.status_code,'mp4HEAD':head.status_code,
+                         'range':partial.status_code,'poster':p.status_code,
+                         'sitemapVideo':True,'canonical':True})
+          print('LIVE_VIDEO_AUDIT='+json.dumps({'pass':True,'videos':rows,'graphVideoCount':len(vids),'watchSitemapEntries':len(site)},ensure_ascii=False))
+          PY
