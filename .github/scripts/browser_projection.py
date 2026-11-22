@@ -445,7 +445,7 @@ def require_current_full_semantic_jsonld(graph_path, html):
     assert full['end'] < payload.index(b'</head>'), 'Complete JSON-LD must precede visible HTML'
     assert full['start'] < payload.index(b'<title>'), 'Complete RDF must precede page title'
     assert payload.index(b'<body') > full['end'], 'RDF must be received before text'
-    assert not re.search(rb'<script\\b[^>]*id=["\\']schema-core-mainentity',payload), (
+    assert b'<script id="schema-core-mainentity" type="application/ld+json">' not in payload, (
         'Partial profile projection may not replace complete active graph')
     original=json.loads(Path(graph_path).read_text())
     active=full['document']
