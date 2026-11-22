@@ -1,28 +1,58 @@
-name: Inspect all 72 published pages and graph discoverability (read-only)
+name: Read-only deployed Cloudflare preview parity check for LCP image preload
 on:
   push:
-    branches: [codex/136-comprehensive-quality-gates-20261121]
+    branches: [audit/preview-preload-http-20261122]
 permissions:
   contents: read
 jobs:
-  audit:
+  verify-preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 23
+    timeout-minutes: 12
+    env:
+      PREVIEW_ORIGIN: https://a3c4f270.doctor-ghezelbaash.pages.dev
+      EXPECTED_PREVIEW_COMMIT: 3f7f78a602cb485cfe65c2ef6782d54833334295
+      EXPECTED_LIVE_COMMIT: 71d137141022ff76bbe28f3ea20b862a06d7173f
+      EXPECTED_GRAPH_SHA: 25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install HTTP and HTML inspection libraries
-        run: python -m pip install requests beautifulsoup4 lxml
-      - name: Crawl all 72 published pages and public machine resources
-        run: python .github/scripts/audit_live_site_prepublication.py
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: complete-72-page-website-and-graph-audit
-          path: /tmp/136-site-audit/*.json
-          if-no-files-found: warn
-          retention-days: 30
+        with: {persist-credentials: false}
+      - name: Check the actual published Preview and unchanged production (no deploy)
+        run: |
+          python - <<'PY'
+          import os,json,re,hashlib,urllib.request
+          base=os.environ['PREVIEW_ORIGIN']
+          def fetch(url):
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 PreviewReadOnlyReleaseGate','Cache-Control':'no-cache','Accept-Encoding':'identity'})
+            with urllib.request.urlopen(req,timeout=90) as r:
+              assert r.status==200,(url,r.status)
+              return r.read()
+          live=json.loads(fetch('https://www.ghezelbaash.ir/release-provenance.json'))
+          assert live['sourceCommit']==os.environ['EXPECTED_LIVE_COMMIT'],('Unexpected live production change',live.get('sourceCommit'))
+          provenance=json.loads(fetch(base+'/release-provenance.json'))
+          assert provenance['sourceCommit']==os.environ['EXPECTED_PREVIEW_COMMIT'],('Incorrect Preview commit',provenance.get('sourceCommit'))
+          body=fetch(base+'/')
+          graphBytes=fetch(base+'/graph.jsonld')
+          assert hashlib.sha256(graphBytes).hexdigest()==os.environ['EXPECTED_GRAPH_SHA'],'Graph byte drift'
+          graph=json.loads(graphBytes)
+          assert len(graph['@graph'])==1916
+          tag=b'<script id="canonical-entity-graph" type="application/ld+json">'
+          assert body.count(tag)==1
+          start=body.index(tag);end=body.index(b'</script>',start)+len(b'</script>')
+          assert end<2_000_000
+          active=json.loads(body[start+len(tag):end-len(b'</script>')])
+          assert len(active['@graph'])==1916
+          assert b'<title>' in body and b'<h1' in body
+          head=body[:body.index(b'</head>')]
+          allLinks=re.findall(rb'<link\b[^>]*>',head,re.I)
+          preloads=[x for x in allLinks if re.search(rb'\brel="preload"',x,re.I) and re.search(rb'\bas="image"',x,re.I)]
+          assert len(preloads)==1,('Preload duplication or omission',len(preloads))
+          preload=preloads[0]
+          assert preload in head[:start],('LCP preload arrives after the enormous graph',head.find(preload),start)
+          for token in [b'type="image/avif"',b'href="/media/images/physician/saeed-ghezelbash-portrait-768.avif"',b'imagesrcset=',b'imagesizes=',b'fetchpriority="high"']:
+            assert token in preload,('Preload mismatch',token)
+          focused=fetch(base+'/filler')
+          assert b'<h1' in focused
+          assert b'<link rel="canonical" href="https://www.ghezelbaash.ir/filler">' in focused
+          assert not any(re.search(rb'\brel="preload"',x,re.I) and re.search(rb'\bas="image"',x,re.I) for x in re.findall(rb'<link\b[^>]*>',focused[:focused.find(b'</head>')],re.I)),'Homepage image preload leaked to /filler'
+          print(json.dumps({'status':'PASS','previewCommit':provenance['sourceCommit'],'liveCommit':live['sourceCommit'],'homepageBytes':len(body),'canonicalNodes':len(graph['@graph']),'graphSHA256':hashlib.sha256(graphBytes).hexdigest(),'preloadHeadByte':head.find(preload),'activeJsonldStartByte':start,'activeJsonldEndByte':end,'focusedFiller':'PASS'}))
+          PY
