@@ -50,8 +50,8 @@ export function renderEntityHomeEvidence(graph,{origin='https://www.ghezelbaash.
 
   // Publication topics are not represented as credentials in aesthetic medicine.
   // Clinical skill evidence and peer-reviewed research authorship remain distinct.
-  return `<section id="entity-home-evidence" class="entity-home-evidence" aria-labelledby="entity-home-evidence-heading" data-canonical-person="${escape(physicianId)}">
-    <h2 id="entity-home-evidence-heading">هویت حرفه‌ای، فعالیت بالینی و آثار پژوهشی دکتر سعید قزلباش</h2>
+  return `<section class="entity-home-evidence" aria-label="شواهد هویت حرفه‌ای، فعالیت بالینی و آثار پژوهشی" data-canonical-person="${escape(physicianId)}">
+    <h2>هویت حرفه‌ای، فعالیت بالینی و آثار پژوهشی دکتر سعید قزلباش</h2>
     <p>دکتر سعید قزلباش، پزشک دارای شماره نظام پزشکی ۱۶۷۴۳۰ و فعال در پزشکی زیبایی در کرمانشاه است. این صفحه مرجع اصلی معرفی حرفه‌ای اوست؛ مدارک هویتی و آثار پژوهشی از توضیح روش تصمیم‌گیری بالینی جداگانه قابل بررسی‌اند.</p>
     <ul>
       <li><strong>هویت و ثبت حرفه‌ای:</strong> <a href="${escape(medicalRegistry)}" rel="me external noopener">استعلام شماره نظام پزشکی ۱۶۷۴۳۰</a>، <a href="${escape(orcid)}" rel="me external noopener">شناسه ORCID</a> و <a href="${escape(wikidata)}" rel="me external noopener">شناسه Wikidata</a></li>
