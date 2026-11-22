@@ -29,6 +29,9 @@ jobs:
           node --test --test-concurrency=1 tests/home-canonical-rdf-head.test.mjs tests/physician-page-output.test.mjs
           python tests/active-home-canonical-projection.test.py
           python tests/validate_canonical_invariants.py dist
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
       - name: W3C JSON-LD normalized RDF N-Quads must be identical
         run: |
           python - <<'PY'
@@ -48,4 +51,25 @@ jobs:
           right=jsonld.normalize(external,{'algorithm':'URDNA2015','format':'application/n-quads'})
           assert left==right,'RDF triple set changed during explicit @id normalization'
           print(json.dumps({'status':'PASS','nodes':1916,'rdfQuadCount':len(right.splitlines()),'canonicalGraphSha256':hashlib.sha256(full_bytes).hexdigest(),'activeScriptEndByte':m.end()},sort_keys=True))
+          PY
+      - name: Verify Cloudflare preview serves the complete active RDF and unchanged source graph
+        run: |
+          python - <<'PY'
+          import hashlib,json,re,requests
+          from pathlib import Path
+          base='https://6d6b4b1f.doctor-ghezelbaash.pages.dev'
+          headers={'Cache-Control':'no-cache','Accept-Encoding':'identity'}
+          html=requests.get(base+'/',headers=headers,timeout=90)
+          graph=requests.get(base+'/graph.jsonld',headers=headers,timeout=90)
+          html.raise_for_status();graph.raise_for_status()
+          assert hashlib.sha256(graph.content).hexdigest()=='25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50'
+          m=re.search(rb'<script id="canonical-entity-graph" type="application/ld\\+json">([\\s\\S]*?)</script>',html.content)
+          assert m and m.end()<2_000_000
+          assert m.end()<html.content.index(b'</head>')<html.content.index(b'<body')
+          assert html.content.count(b'<script id="canonical-entity-graph" type="application/ld+json">')==1
+          assert b'<script id="schema-core-mainentity" type="application/ld+json">' not in html.content
+          data=json.loads(m.group(1))
+          assert len(data['@graph'])==1916
+          assert len({n['@id'] for n in data['@graph']})==1916
+          print(json.dumps({'preview':'PASS','nodes':1916,'activeScriptEndByte':m.end(),'graphSHA256':hashlib.sha256(graph.content).hexdigest()}))
           PY
