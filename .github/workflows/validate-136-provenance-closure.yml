@@ -50,7 +50,7 @@ jobs:
           items=lambda value:value if isinstance(value,list) else [] if value is None else [value]
           ident=lambda value:value if isinstance(value,str) else value.get('@id')
           credited=lambda work:any(ident(agent)==physician for field in ('author','creator') for agent in items(work.get(field)))
-          attributed=lambda work:any(ident(agent) in (physician,'site:#saeed-ghezelbash') for agent in items(work.get('prov:wasAttributedTo')))
+          attributed=lambda work:any(ident(agent) in (physician,'site:#saeed-ghezelbash') for agent in items(work.get('at',work.get('prov:wasAttributedTo'))))
           direct=[work for work in graph if credited(work)]
           assert len(graph)==1916
           assert len(direct)==427,(len(direct),427)
