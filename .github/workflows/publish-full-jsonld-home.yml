@@ -4,6 +4,15 @@ name: Publish complete canonical RDF as active homepage JSON-LD before text
 # A development-branch merge must never publish only the website.
 on:
   workflow_dispatch:
+    inputs:
+      reviewed_commit:
+        description: Exact reviewed source commit to publish (40 lowercase hex characters)
+        required: true
+        type: string
+      previous_website_commit:
+        description: Exact current production source commit, verified before deployment
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -18,8 +27,8 @@ jobs:
       ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-      REVIEWED_COMMIT: ${{ github.sha }}
-      PREVIOUS_WEBSITE_COMMIT: 71d137141022ff76bbe28f3ea20b862a06d7173f
+      REVIEWED_COMMIT: ${{ inputs.reviewed_commit }}
+      PREVIOUS_WEBSITE_COMMIT: ${{ inputs.previous_website_commit }}
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0, persist-credentials: false}
@@ -33,7 +42,8 @@ jobs:
           python - <<'PY'
           import json,os,re,urllib.request
           from pathlib import Path
-          assert re.fullmatch(r'[0-9a-f]{40}',os.environ['PREVIOUS_WEBSITE_COMMIT'])
+          assert re.fullmatch(r'[0-9a-f]{40}',os.environ['REVIEWED_COMMIT']), 'Invalid reviewed SHA'
+          assert re.fullmatch(r'[0-9a-f]{40}',os.environ['PREVIOUS_WEBSITE_COMMIT']), 'Invalid baseline SHA'
           origin='https://www.ghezelbaash.ir/'
           assert json.load(urllib.request.urlopen(origin+'release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
           Path(os.environ['RUNNER_TEMP'],'website-before-manifest.json').write_bytes(urllib.request.urlopen(origin+'integrity-manifest.json').read())
