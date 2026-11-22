@@ -14,8 +14,8 @@ const all=(node,fn,out=[])=>{
 };
 const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
 const document=parse(html);
-const evidence=all(document,n=>id(n)==='entity-home-evidence');
 const physicianId='https://www.ghezelbaash.ir/#saeed-ghezelbash';
+const evidence=all(document,n=>n.tagName==='section'&&attr(n,'data-canonical-person')===physicianId);
 
 test('Entity Home has one visible, source-backed physician expertise evidence section',()=>{
  assert.equal(evidence.length,1,'do not duplicate Entity Home evidence');
@@ -56,6 +56,6 @@ test('stronger visible physician identity does not demote or duplicate all canon
  assert.equal(home.mainEntity?.['@id'],physicianId);
  assert.equal(p.mainEntityOfPage?.['@id'],home['@id']);
  const headEnd=html.indexOf('</head>');
- const sectionStart=html.indexOf('id="entity-home-evidence"');
+ const sectionStart=html.indexOf('class="entity-home-evidence"');
  assert.ok(headEnd>0 && sectionStart>headEnd,'the entire RDF comes before human authority content');
 });
