@@ -5066,6 +5066,24 @@ export function compileCanonicalSource() {
   const set = (node, name, value) => { const old = attributes(node).find(a => a.name === name); if (old) old.value = String(value); else (node.attrs ??= []).push({name, value:String(value)}); };
   const walk = (node, visit) => { visit(node); for(const child of node.childNodes ?? []) walk(child, visit); if (node.content) walk(node.content, visit); };
   const body = parseFragment(AUTHORED_BODY);
+  walk(body,node=>{if(attr(node,'data-medical-review-date')!==undefined){const date=graphDates.temporalValue(page.lastReviewed);if(date){set(node,'datetime',date);node.childNodes=parseFragment(escape(date)).childNodes;for(const child of node.childNodes)child.parentNode=node;}}});
+  // The reader maps only canonical document paths to their in-page entry anchors.
+  const routeMap=Object.fromEntries(SOURCE.routes.resources.map(resource=>[resource.path,'/#'+resource.htmlId]));
+  walk(body,node=>{
+    if(attr(node,'id')!=='guide-search')return;
+    set(node,'data-canonical-origin',base);set(node,'data-content-route-map',JSON.stringify(routeMap));
+    set(node,'data-copy',JSON.stringify(SOURCE.search.copy));set(node,'data-entity-aliases',SOURCE.search.entityAliases);
+    set(node,'data-intent-targets',JSON.stringify(Object.fromEntries(Object.entries(SOURCE.search.intentTargets).map(([key,url])=>[key,urlArchitecture.resolveContentUrl(url,{absolute:true})]))));
+    set(node,'data-intent-headings',JSON.stringify(SOURCE.search.intentHeadings));
+  });
+  walk(body, node => {
+    // Search reads the same canonical htmlIdTargets ownership map directly;
+    // repeating every URL on each heading adds no browser or crawler behavior.
+    if (node.tagName === 'a' && attr(node,'href')) set(node,'href',urlArchitecture.sourceNavigationUrl(attr(node,'href')));
+  });
+  // Preserve the proof section's canonical internal URLs instead of rewiring
+  // them to reader-only fragment links: this strengthens crawlable author
+  // expertise attribution across independent topic pages.
   // The physician's Entity Home needs publicly inspectable evidence,
   // not just dense machine-only RDF. Derive every proof link from the
   // same frozen Person and publication nodes used in canonical JSON-LD.
@@ -5084,21 +5102,6 @@ export function compileCanonicalSource() {
   if(heroIndex<0)throw new Error('Entity Home hero is not attached to source');
   visibleEvidence.parentNode=evidenceParent;
   evidenceParent.childNodes.splice(heroIndex+1,0,visibleEvidence);
-  walk(body,node=>{if(attr(node,'data-medical-review-date')!==undefined){const date=graphDates.temporalValue(page.lastReviewed);if(date){set(node,'datetime',date);node.childNodes=parseFragment(escape(date)).childNodes;for(const child of node.childNodes)child.parentNode=node;}}});
-  // The reader maps only canonical document paths to their in-page entry anchors.
-  const routeMap=Object.fromEntries(SOURCE.routes.resources.map(resource=>[resource.path,'/#'+resource.htmlId]));
-  walk(body,node=>{
-    if(attr(node,'id')!=='guide-search')return;
-    set(node,'data-canonical-origin',base);set(node,'data-content-route-map',JSON.stringify(routeMap));
-    set(node,'data-copy',JSON.stringify(SOURCE.search.copy));set(node,'data-entity-aliases',SOURCE.search.entityAliases);
-    set(node,'data-intent-targets',JSON.stringify(Object.fromEntries(Object.entries(SOURCE.search.intentTargets).map(([key,url])=>[key,urlArchitecture.resolveContentUrl(url,{absolute:true})]))));
-    set(node,'data-intent-headings',JSON.stringify(SOURCE.search.intentHeadings));
-  });
-  walk(body, node => {
-    // Search reads the same canonical htmlIdTargets ownership map directly;
-    // repeating every URL on each heading adds no browser or crawler behavior.
-    if (node.tagName === 'a' && attr(node,'href')) set(node,'href',urlArchitecture.sourceNavigationUrl(attr(node,'href')));
-  });
   // Existing titles become native permalinks; no navigation box or new copy.
   const elements=[];walk(body,node=>{if(node.tagName)elements.push(node);});
   const byHtmlId=new Map(elements.filter(node=>attr(node,'id')).map(node=>[attr(node,'id'),node]));
