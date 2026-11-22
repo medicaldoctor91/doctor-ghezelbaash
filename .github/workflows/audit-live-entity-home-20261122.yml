@@ -1,0 +1,78 @@
+name: Read-only canonical entity-home linkage and identity cross-reference audit
+on:
+  push:
+    branches: [audit/entity-home-identity-20261122]
+permissions: {contents: read}
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Independent live Entity Home and Wikidata linkage audit (NO WRITES)
+        run: |
+          python - <<'PY'
+          import json,re,hashlib,urllib.request,urllib.error
+          O='https://www.ghezelbaash.ir/'
+          H={'User-Agent':'EntityHomeIntegrityAudit/1.0 (public data, no writes)','Cache-Control':'no-cache','Accept-Encoding':'identity'}
+          def get(u,timeout=45):
+            req=urllib.request.Request(u,headers=H)
+            with urllib.request.urlopen(req,timeout=timeout) as res:return res.read()
+          homepage=get(O)
+          graph_raw=get(O+'graph.jsonld')
+          graph=json.loads(graph_raw)
+          head=homepage[:homepage.index(b'</head>')]
+          t=b'<script id="canonical-entity-graph" type="application/ld+json">'
+          assert head.count(t)==1
+          begin=head.index(t)+len(t);end=head.index(b'</script>',begin)
+          embedded=json.loads(head[begin:end])
+          assert embedded==graph, 'Visible home active JSON-LD not identical to machine-readable graph'
+          nodes=graph['@graph'];assert len(nodes)==1916
+          byid={x.get('@id'):x for x in nodes if isinstance(x,dict)}
+          def typ(x,v):return v in ([x.get('@type')] if isinstance(x.get('@type'),str) else x.get('@type',[]))
+          def strarr(v):
+            if v is None:return []
+            if isinstance(v,list):return sum((strarr(i) for i in v),[])
+            if isinstance(v,dict):return strarr(v.get('@id') or v.get('url') or v.get('value') or v.get('name'))
+            return [str(v)]
+          persons=[x for x in nodes if typ(x,'Person')]
+          pages=[x for x in nodes if typ(x,'WebPage') or typ(x,'ProfilePage')]
+          sites=[x for x in nodes if typ(x,'WebSite')]
+          relevant=[x for x in persons if 'Ghezelbash' in ' '.join(strarr(x.get('name')))+' '.join(strarr(x.get('alternateName'))) or 'Q140287622' in json.dumps(x,ensure_ascii=False)]
+          homepages=[x for x in pages if O in strarr(x.get('url')) or x.get('@id') in [O,O+'#webpage']]
+          def mini(node):
+            fields=['@id','@type','url','name','alternateName','sameAs','identifier','mainEntity','mainEntityOfPage','about','isPartOf','publisher','author','subjectOf','hasPart']
+            result={}
+            for f in fields:
+              if f in node:
+                value=strarr(node[f])
+                result[f]=value[:32]
+            return result
+          opens=set()
+          for x in relevant+homepages:
+            for s in strarr(x):
+              opens.update(re.findall(r'A5\d{9}',s))
+          result={'status':'PASS','activeHeadJSONLD':True,'beforeTitle':head.index(t)<head.index(b'<title>'),
+                  'canonicalNodes':len(nodes),'graphSHA256':hashlib.sha256(graph_raw).hexdigest(),
+                  'personCount':len(persons),'websiteCount':len(sites),'homepageRecordCount':len(homepages),
+                  'targetPersonCandidates':[mini(x) for x in relevant[:3]],'homeWebPage':[mini(x) for x in homepages[:3]],
+                  'websites':[mini(x) for x in sites[:3]],'openalexIdsInTargetNodes':sorted(opens)}
+          wiki={}
+          try:
+            wd=json.loads(get('https://www.wikidata.org/wiki/Special:EntityData/Q140287622.json'))
+            entity=wd['entities']['Q140287622'];claims=entity.get('claims',{})
+            def wdvals(prop):
+              return [x.get('mainsnak',{}).get('datavalue',{}).get('value') for x in claims.get(prop,[]) if x.get('rank')!='deprecated']
+            wiki={'officialWebsite':wdvals('P856'),'openAlexId':wdvals('P10283'),'orcid':wdvals('P496'),'claimedGoogleKG':wdvals('P2671')}
+          except Exception as e:wiki={'error':type(e).__name__+': '+str(e)[:180]}
+          result['currentWikidata']=wiki
+          for oid in ['A5146521397','A5064828898']:
+            try:
+              data=json.loads(get('https://api.openalex.org/authors/'+oid,timeout=22))
+              result.setdefault('openAlex',{})[oid]={'id':data.get('id'),'name':data.get('display_name'),'orcid':data.get('orcid'),'worksCount':data.get('works_count'),'mergedIds':data.get('ids',{})}
+            except Exception as e:result.setdefault('openAlex',{})[oid]={'error':type(e).__name__+': '+str(e)[:160]}
+          print('LIVE_ENTITY_HOME_AUDIT='+json.dumps(result,ensure_ascii=False))
+          PY
