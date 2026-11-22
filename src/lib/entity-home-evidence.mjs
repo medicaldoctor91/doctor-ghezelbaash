@@ -36,14 +36,14 @@ export function renderEntityHomeEvidence(graph,{origin='https://www.ghezelbaash.
   if (!references(physician.hasCredential).includes(credential['@id']))
     throw new Error('Medical registration must attach to the canonical physician');
 
-  for (const paper of studies) {
+  const studyUrls = studies.map(paper => {
     const indexed = values(paper?.sameAs).find(x=>typeof x==='string'&&/^https:\/\/pubmed\.ncbi\.nlm\.nih\.gov\/\d+\/$/.test(x));
     if (!indexed || !references(physician.researchOutput).includes(paper['@id']) ||
         !values(paper.author).some(author=>author?.['@id']===physicianId ||
           /^(Mohammad )?Saeed Ghezelbash$/i.test(author?.name??'')))
       throw new Error('Evidence panel cannot assert unverified PubMed authorship');
-    paper.pubmed = indexed;
-  }
+    return indexed;
+  });
   if (clinical?.author?.['@id']!==physicianId ||
       clinical.url!==origin+'/saeed-ghezelbash-diagnostic-philosophy')
     throw new Error('Clinical expertise link must be authored by the same physician');
@@ -56,7 +56,7 @@ export function renderEntityHomeEvidence(graph,{origin='https://www.ghezelbaash.
     <ul>
       <li><strong>هویت و ثبت حرفه‌ای:</strong> <a href="${escape(medicalRegistry)}" rel="me external noopener">استعلام شماره نظام پزشکی ۱۶۷۴۳۰</a>، <a href="${escape(orcid)}" rel="me external noopener">شناسه ORCID</a> و <a href="${escape(wikidata)}" rel="me external noopener">شناسه Wikidata</a></li>
       <li><strong>فعالیت و دانش بالینی زیبایی:</strong> <a href="${escape(clinical.url)}">فلسفه تشخیص و ارزیابی صورت پیش از درمان</a> و <a href="/saeed-ghezelbash-research-education-and-clinical-decisions">زندگی‌نامه، آموزش و تصمیم‌گیری بالینی</a></li>
-      <li><strong>آثار پژوهشی نمایه‌شده:</strong> <a href="${escape(studies[0].pubmed)}" rel="external noopener">مقاله PubMed سال ۲۰۱۶</a> و <a href="${escape(studies[1].pubmed)}" rel="external noopener">مقاله PubMed سال ۲۰۲۱</a></li>
+      <li><strong>آثار پژوهشی نمایه‌شده:</strong> <a href="${escape(studyUrls[0])}" rel="external noopener">مقاله PubMed سال ۲۰۱۶</a> و <a href="${escape(studyUrls[1])}" rel="external noopener">مقاله PubMed سال ۲۰۲۱</a></li>
     </ul>
   </section>`;
 }
