@@ -1,0 +1,61 @@
+name: Validate 1.3.6 video and live technical fixes (read-only)
+on:
+  push:
+    branches: [codex/136-video-and-live-technical-fixes-20261121]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      GIT_LFS_SKIP_SMUDGE: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencies
+        run: |
+          npm ci
+          python -m pip install requests 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'PyLD==3.3.0' 'pyarrow==22.0.0' 'mlcroissant==1.1.1' PyYAML
+      - name: Rebuild new 1.3.6 pre-publication candidate
+        run: npm run build
+      - name: All regression tests including video duration, page SEO and cache coherence
+        run: node --test --test-concurrency=1 tests/*.test.mjs
+      - name: Canonical RDF/SHACL, frozen web graph, machine data checks
+        run: |
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/immutable-archive.test.py
+      - name: Read-only live video delivery check (MP4 HEAD/206 Range/Content-Digest and watch pages)
+        run: python tests/live-video-http-diagnostics.py dist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-video-delivery-evidence-136
+          path: /tmp/live-video-http-diagnostics.json
+          if-no-files-found: warn
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: prepublication-136-video-technical-validation
+          path: |
+            dist/graph.jsonld
+            dist/sitemap.xml
+            dist/_headers
+            dist/entity-facts.csv
+            dist/video-saeed-ghezelbash-kurdish-patient-review.html
+            dist/media-license.html
+          retention-days: 30

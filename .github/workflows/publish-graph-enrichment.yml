@@ -1,0 +1,164 @@
+name: Publish validated clinical service graph enrichment
+on:
+  push:
+    branches: [codex/graph-only-service-enrichment-1-3-6]
+    paths:
+      - '.github/workflows/publish-graph-enrichment.yml'
+permissions:
+  contents: read
+concurrency:
+  group: doctor-ghezelbaash-publication
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/codex/graph-only-service-enrichment-1-3-6'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      REVIEWED_COMMIT: ${{ github.sha }}
+      PREVIOUS_WEBSITE_COMMIT: 648be742e8cad0018c1d5f0d1d5d9e6b67eac610
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Check reviewed source and website revisions
+        run: |
+          test "$GITHUB_SHA" = "$REVIEWED_COMMIT"
+          python - <<'PY'
+          import json,os,re,urllib.request
+          from pathlib import Path
+          assert re.fullmatch(r'[0-9a-f]{40}',os.environ['PREVIOUS_WEBSITE_COMMIT'])
+          origin='https://www.ghezelbaash.ir/'
+          assert json.load(urllib.request.urlopen(origin+'release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
+          Path(os.environ['RUNNER_TEMP'],'website-before-manifest.json').write_bytes(urllib.request.urlopen(origin+'integrity-manifest.json').read())
+          PY
+      - name: Install build and standards validators
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4'
+      - name: Validate source and complete built release
+        run: |
+          npm run build
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+      - name: Verify graph completeness and unchanged homepage tag types
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          g=json.loads(Path('dist/graph.jsonld').read_text())['@graph']
+          get=lambda t:[n for n in g if t in ([n.get('@type')] if isinstance(n.get('@type'),str) else n.get('@type',[]))]
+          p=next(n for n in g if n.get('@id')=='https://www.ghezelbaash.ir/#saeed-ghezelbash')
+          a=lambda n,k:n.get(k,[]) if isinstance(n.get(k,[]),list) else ([n[k]] if k in n else [])
+          s=get('Service');o=get('Offer')
+          assert len(s)==124 and len(o)==124
+          assert all(x.get('provider',{}).get('@id')==p['@id'] for x in s)
+          assert len(a(p,'makesOffer'))==124
+          assert len(a(p,'skills'))==85 and len(a(p,'knowsAbout'))==221
+          assert p['hasOfferCatalog']['@id']=='https://www.ghezelbaash.ir/physician-clinical-offer-catalog'
+          assert all(x.get('@id')!='https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah' or 'hasOfferCatalog' not in x for x in g)
+          assert all(len(a(x,'description'))>=1 and x.get('serviceType') and x.get('category') for x in s)
+          assert sum(bool(x.get('url')) for x in o)==10,'Offer landing-page count unexpectedly changed'
+          offer_by_id={x['@id']:x for x in o}
+          assert all(x.get('offers',{}).get('@id') in offer_by_id for x in s)
+          assert all(x.get('businessFunction',{}).get('@id')=='http://purl.org/goodrelations/v1#ProvideService' for x in o)
+          assert len(a(p,'availableService'))==122
+          assert len(a(p,'medicalSpecialty'))==1
+          html=Path('dist/index.html').read_text()
+          assert 'schema-physician-clinical-authority' in html
+          assert '<script id="schema-core-mainentity" type="application/ld+json">' in html
+          assert '<script id="schema-physician-clinical-authority" type="application/ld+json">' in html
+          assert '<script id="canonical-entity-graph" type="application/json">' in html
+          assert json.loads(Path('dist/release-provenance.json').read_text())['sourceCommit']==os.environ['GITHUB_SHA']
+          print('Release candidate: 124 described/typed/categorized services; 124 offers including 10 eligible URLs',flush=True)
+          PY
+      - name: Save the validated release
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-validated-dist
+          path: dist/
+          include-hidden-files: true
+      - name: Deploy validated website
+        run: |
+          test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$REVIEWED_COMMIT"
+          python - <<'PY'
+          import json,os,urllib.request
+          assert json.load(urllib.request.urlopen('https://www.ghezelbaash.ir/release-provenance.json'))['sourceCommit']==os.environ['PREVIOUS_WEBSITE_COMMIT']
+          PY
+          npx --yes wrangler@4 pages deploy dist --project-name=doctor-ghezelbaash --branch=main --commit-hash="$GITHUB_SHA" --commit-message='Publish validated clinical service graph metadata' --commit-dirty=false
+      - name: Verify published representations and Content-Digest
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,time,urllib.request,urllib.parse,urllib.error
+          from pathlib import Path
+          origin='https://www.ghezelbaash.ir/'
+          def open_live(path):
+              req=urllib.request.Request(origin+path.lstrip('/'),headers={'Cache-Control':'no-cache','Pragma':'no-cache','Accept-Encoding':'identity'})
+              return urllib.request.urlopen(req,timeout=60)
+          def fetch(path):
+              with open_live(path) as response:
+                  return response.read()
+          for attempt in range(24):
+              live=json.loads(fetch('release-provenance.json?verify='+os.environ['GITHUB_SHA']+'-'+str(attempt)))
+              if live.get('sourceCommit')==os.environ['GITHUB_SHA']:break
+              time.sleep(5)
+          else:raise RuntimeError('Published release did not converge to the deployed commit')
+          before=json.loads(Path(os.environ['RUNNER_TEMP'],'website-before-manifest.json').read_text())
+          manifest=json.loads((Path('dist')/'integrity-manifest.json').read_text())
+          media_types={urllib.parse.urlparse(resource['path']).path.lstrip('/'):resource['mediatype'] for resource in json.loads((Path('dist')/'datapackage.json').read_text())['resources']}
+          targets={path.lstrip('/') for path,metadata in manifest['files'].items() if metadata['sha256']!=before['files'].get(path,{}).get('sha256')}
+          targets|={urllib.parse.urlparse(resource['path']).path.lstrip('/') for resource in json.loads((Path('dist')/'datapackage.json').read_text())['resources']}
+          targets|={'index.html','media-license.html','integrity-manifest.json','release-provenance.json'}
+          # Pages consumes these deployment controls; they are not public URLs.
+          # Verify their applied routing below through the data-catalog alias.
+          targets-={'_redirects','_headers','_worker.js','_routes.json'}
+          for control in ['_redirects','_headers','_worker.js','_routes.json']:
+              try:
+                  with open_live(control) as response:
+                      raise AssertionError(('Deployment control unexpectedly public',control,response.status))
+              except urllib.error.HTTPError as error:
+                  assert error.code==404,(control,error.code)
+          for name in sorted(targets):
+              public_path='' if name=='index.html' else name[:-5] if name.endswith('.html') else name
+              try:
+                  with open_live(public_path) as response:
+                      body=response.read()
+                      if name in media_types:
+                          assert response.headers.get_content_type()==media_types[name],(name,response.headers.get('Content-Type'),media_types[name])
+              except urllib.error.HTTPError as error:
+                  if name!='404.html' or error.code!=404:raise
+                  body=error.read()
+              assert hashlib.sha256(body).digest()==hashlib.sha256((Path('dist')/name).read_bytes()).digest(),name
+          assert 'https://www.ghezelbaash.ir/media-license' in fetch('media-license').decode()
+          for alias in ['data-catalog','procedure-botulinum-toxin-chronic-migraine','service-botulinum-toxin-chronic-migraine']:
+              with open_live(alias) as response:
+                  assert response.status==200 and response.headers.get_content_type()=='application/ld+json'
+                  assert response.read()==(Path('dist')/'graph.jsonld').read_bytes(),alias
+          eligibility=json.loads((Path('dist')/'content-digest-eligibility.json').read_text())
+          assert eligibility['status']=='configured-for-cloudflare-pages'
+          assert eligibility['algorithm']=='sha-256'
+          assert len(eligibility['eligible'])<=100
+          verified=0
+          for resource,expected in eligibility['eligible'].items():
+              if expected['sha256']==before['files'].get(resource,{}).get('sha256'):continue
+              with open_live(resource) as response:
+                  actual_header=response.headers.get('Content-Digest')
+                  assert actual_header==expected['contentDigest'],(resource,actual_header,expected['contentDigest'])
+                  digest=hashlib.sha256();size=0
+                  while True:
+                      chunk=response.read(1024*1024)
+                      if not chunk:break
+                      size+=len(chunk);digest.update(chunk)
+              assert size==expected['bytes'],(resource,size,expected['bytes'])
+              assert digest.hexdigest()==expected['sha256'],resource
+              verified+=1
+          print(f'Published machine resources match this build; verified {verified} live Content-Digest headers and byte identities')
+          PY

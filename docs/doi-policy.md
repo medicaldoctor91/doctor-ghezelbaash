@@ -5,16 +5,16 @@ The identifier policy is defined in `src/canonical/doi-policy.json`. Website gen
 | Role | Identifier | Use |
 | --- | --- | --- |
 | Public collection | `10.5281/zenodo.18765168` | Persistent collection and latest-version entry point |
-| Exact archive | `10.5281/zenodo.23965042` | Assigned release binding, packaging `1.3.5+zenodo.1`; availability is recorded in publication receipts |
-| Record-specific download | `https://zenodo.org/records/23965042/files/…` | A named archive file, verified by checksum during staging and public verification |
-| Previous archive | `10.5281/zenodo.23474664` | Historical packaging `1.3.4+zenodo.3`, with its own unchanged provenance and files |
+| Exact archive | Approved plan `policy.currentArchive.doi` | Cite with `policy.currentArchive.packagingVersion` once the publication receipt and public DOI verification confirm availability |
+| Record-specific download | Approved plan `policy.downloadBindings.publicPrefix` | Append the verified archive filename and check its checksum during staging and public verification |
+| Previous archive | The captured `previousPolicy.currentArchive.doi` for the selected release | Preserve the previous archive’s packaging, provenance and files |
 | Canonical dataset | `https://www.ghezelbaash.ir/graph.jsonld/dataset` | Stable identity shared by dataset projections |
 
 The physician, clinic, canonical dataset, collection and exact archive are distinct resources. Keep version relations such as `dcterms:hasVersion` and `dcterms:isVersionOf`; do not make a DOI `sameAs` the physician or clinic. General public links may use the collection DOI while reproducible citations select the exact archive and its packaging version.
 
 ## Source identities
 
-The previous archive `23474664` records scientific source `ed767f6e6726e1453196e2ec2b312fcad00677e2` and technical delivery source `0f72c5e6ef832adef66d003069e3e3c189cf5079` as separate roles. Those historical values remain unchanged. The new edition derives its source from the exact reviewed management/build commit M in the external release plan. The live website's `release-provenance.json` and platform publication receipts identify actual deployed revisions; a historical delivery commit is not a claim about the current website.
+The historical archive `23474664` records scientific source `ed767f6e6726e1453196e2ec2b312fcad00677e2` and technical delivery source `0f72c5e6ef832adef66d003069e3e3c189cf5079` as separate roles. Those historical values remain unchanged. The new edition derives its source from the exact reviewed management/build commit M in the external release plan. The live website's `release-provenance.json` and platform publication receipts identify actual deployed revisions; a historical delivery commit is not a claim about the current website.
 
 A repository tag identifies source contents; publication is established separately. New-edition builds select the reviewed `RELEASE_PLAN_PATH`, leave `ARCHIVE_SOURCE_COMMIT` unset and set `PREPARE_RESERVED_DOI` to the real reserved record. Published maintenance selects that edition's reviewed maintenance plan and pins its recorded M, with preparing mode empty. Historical verification supplies the captured historical policy explicitly. Never inherit an older edition's scientific source pin into a new record. See [the three source contexts](coordinated-release-plan.md#three-source-contexts).
 

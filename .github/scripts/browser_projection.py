@@ -1,8 +1,8 @@
-"""Validate preserved canonical data and the bounded homepage search projection.
+"""Validate the published homepage projection without weakening historical contracts.
 
-Published historical archives can explicitly opt into their former complete
-JSON-LD format. New candidates must preserve the graph as inert JSON at the end
-of the body and publish the deterministic, acyclic search document in the head.
+Published historical archives retain their explicit bounded/inert formats.
+The current 1.3.6 website publishes one complete canonical graph as active
+JSON-LD in the HEAD before the 2 MB crawl boundary, with no duplicate scripts.
 """
 import json
 import hashlib
@@ -290,6 +290,31 @@ def validate_home_projection(graph_path, blocks, html, *, allow_legacy_full_grap
     parser.feed(parser.html)
     assert len(blocks) == 1 and len(parser.search) == 1, 'Homepage must contain one recognized search JSON-LD document'
     assert [item['document'] for item in parser.search] == blocks, 'Parsed homepage search JSON-LD differs from supplied blocks'
+    # New production format: one *active*, complete JSON-LD document, as the
+    # first canonical schema script in HEAD. The old inert and historical
+    # projection checks below remain intact and are not loosened.
+    full = parser.search[0]
+    if full['id'] == 'canonical-entity-graph':
+        assert historical_policy is None, 'Archived formats require their original projection contract'
+        assert not parser.canonical, 'Duplicate inert canonical graph alongside the active graph'
+        assert full['inHead'] and not full['inBody'], 'Full RDF graph must be published in HEAD'
+        assert full['document'] == graph, 'Full homepage JSON-LD differs from graph.jsonld'
+        html_text = parser.html
+        assert '<head' in html_text and '</head>' in html_text and '<body' in html_text, 'HTML boundaries missing'
+        head_close = len(html_text[:html_text.index('</head>')].encode('utf-8'))
+        body_open = len(html_text[:html_text.index('<body')].encode('utf-8'))
+        title_open = html_text.find('<title>')
+        assert title_open > 0 and full['start'] < len(html_text[:title_open].encode('utf-8')), 'Full graph must precede TITLE'
+        assert full['end'] < head_close and full['end'] < body_open, 'Full graph must finish before the body'
+        assert full['end'] + 4_096 < CRAWL_PREFIX_BYTES, 'Full graph must fit within 2 MB while retaining >4 kB exact-byte reserve'
+        homepage = next((node for node in graph['@graph'] if {'ProfilePage', 'MedicalWebPage'} <= set(_values(node.get('@type')))), None)
+        person = next((node for node in graph['@graph'] if node.get('@id') == 'https://www.ghezelbaash.ir/#saeed-ghezelbash'), None)
+        assert homepage and homepage.get('mainEntity', {}).get('@id') == person['@id'], 'Homepage identity does not lead to physician'
+        assert person and 'Person' in _values(person.get('@type')), 'Canonical physician identity missing'
+        return {'status': 'PASS', 'nodes': len(ids), 'htmlBytes': len(html_text.encode('utf-8')),
+                'completeCanonicalGraph': True, 'canonicalGraphStorage': 'application/ld+json#canonical-entity-graph',
+                'canonicalGraphEndByte': full['end'], 'crawlPrefixBytes': CRAWL_PREFIX_BYTES,
+                'criticalReserveBytes': CRAWL_PREFIX_BYTES - full['end']}
     if allow_legacy_full_graph and not parser.canonical:
         assert blocks[0] == graph, 'Historical homepage inline graph differs from the complete canonical graph'
         return {'status': 'PASS', 'nodes': len(ids), 'htmlBytes': len(parser.html.encode()),
@@ -335,3 +360,140 @@ def validate_home_html(graph_path, html):
     parser = _InlineDocuments(html.decode() if isinstance(html, bytes) else html)
     parser.feed(parser.html)
     return validate_home_projection(graph_path, [item['document'] for item in parser.search], html)
+
+def require_current_google_compatible_projection(graph_path, html):
+    """Fail-closed Google search boundary; all source RDF still survives verbatim.
+
+    Unlike the historical bounded projector, the homepage search boundary may
+    intentionally omit low-priority clinic contact details. Those details are
+    still required unchanged in the canonical JSON data and graph.jsonld.
+    """
+    import re
+
+    payload = html if isinstance(html, bytes) else html.encode('utf8')
+    parser = _InlineDocuments(payload.decode('utf8'))
+    parser.feed(parser.html)
+    graph = json.loads(Path(graph_path).read_text())
+    nodes = graph['@graph']
+    identifiers = [node['@id'] for node in nodes]
+    assert len(identifiers) == len(set(identifiers)) and len(nodes) >= 1900
+    assert len(parser.search) == 1 and len(parser.canonical) == 1, (
+        'One bounded Google JSON-LD and one complete inert RDF document required')
+
+    search = parser.search[0]
+    full = parser.canonical[0]
+    assert search['id'] == 'schema-core-mainentity' and search['inHead'] and not search['inBody']
+    assert full['id'] == 'canonical-entity-graph' and full['inBody'] and not full['inHead']
+    assert not parser.visible_after_canonical, 'Full RDF must follow visible content'
+    assert full['document'] == graph, 'Canonical embedded RDF differs from graph.jsonld'
+    assert search['document']['@context'] == 'https://schema.org'
+    assert len(search['text'].encode('utf8')) <= MAX_SEARCH_BYTES
+    assert search['document'] == expected_home_search_projection(graph), (
+        'Google search projection is not deterministic from the canonical graph')
+
+    origin = 'https://www.ghezelbaash.ir'
+    physician_id = origin + '/#saeed-ghezelbash'
+    home_id = origin + '/webpage'
+    search_nodes = {node['@id']: node for node in search['document']['@graph']}
+    home = search_nodes[home_id]
+    person = search_nodes[physician_id]
+    assert home['mainEntity']['@id'] == physician_id
+    assert 'ProfilePage' in _values(home.get('@type'))
+    assert 'Person' in _values(person.get('@type'))
+    canonical_nodes = {node['@id']: node for node in nodes}
+    assert home_id in canonical_nodes and physician_id in canonical_nodes
+    assert canonical_nodes[home_id]['mainEntity']['@id'] == physician_id
+
+    main = re.search(rb'<main\b', payload, re.I)
+    h1 = re.search(rb'<h1\b', payload, re.I)
+    assert main and h1, 'Primary visible content missing'
+    search_prefix = search['end']
+    visible_prefix = max(main.start(), h1.start())
+    boundary = max(search_prefix, visible_prefix) + HEADER_RESERVE_BYTES
+    assert boundary < CRAWL_PREFIX_BYTES - 50_000, (
+        'Googlebot must see heading and Search JSON-LD before the 2MB boundary')
+    assert full['start'] > h1.start(), 'Full RDF should follow visible physician H1'
+    return {
+        'status': 'PASS', 'nodes': len(nodes),
+        'canonicalGraphStorage': 'application/json#canonical-entity-graph',
+        'canonicalNodes': len(nodes), 'recognizedSearchEndByte': search_prefix,
+        'visibleContentPrefixEndByte': visible_prefix,
+        'criticalPrefixIncludingHeaderReserveBytes': boundary,
+        'crawlPrefixBytes': CRAWL_PREFIX_BYTES,
+        'htmlBytes': len(payload),
+        'fullRdfEndByte': full['end'],
+    }
+
+
+
+def require_current_full_semantic_jsonld(graph_path, html):
+    """Primary contract: all canonical RDF in one active JSON-LD HEAD script.
+
+    Unlike Schema.org-only projections, every authored entity survives. Eighteen
+    coercion definitions are replaced with explicit @id objects in the
+    serialization; the standalone canonical file remains byte-identical.
+    """
+    import re
+    payload = html if isinstance(html,bytes) else html.encode('utf8')
+    parser = _InlineDocuments(payload.decode('utf8'))
+    parser.feed(parser.html)
+    assert len(parser.search)==1 and not parser.canonical, (
+        'Homepage must contain exactly one active full RDF JSON-LD script')
+    full=parser.search[0]
+    assert full['id']=='canonical-entity-graph' and full['inHead'] and not full['inBody']
+    assert full['end'] < CRAWL_PREFIX_BYTES, 'Full RDF falls outside the Googlebot 2MB retrieval window'
+    assert full['end'] < payload.index(b'</head>'), 'Complete JSON-LD must precede visible HTML'
+    assert full['start'] < payload.index(b'<title>'), 'Complete RDF must precede page title'
+    assert payload.index(b'<body') > full['end'], 'RDF must be received before text'
+    assert b'<script id="schema-core-mainentity" type="application/ld+json">' not in payload, (
+        'Partial profile projection may not replace complete active graph')
+    original=json.loads(Path(graph_path).read_text())
+    active=full['document']
+    originals={node['@id'] for node in original['@graph']}
+    active_ids={node['@id'] for node in active['@graph']}
+    assert len(originals)==len(original['@graph'])>=1900
+    assert len(active_ids)==len(active['@graph']) and active_ids==originals, (
+        'Active JSON-LD must include every original canonical entity exactly once')
+    assert original['@context'].get('@vocab')=='https://schema.org/'
+    iri_terms=[
+      'image','url','sameAs','contentUrl','serviceUrl','dayOfWeek',
+      'additionalType','codeRepository','target','hasMap','license',
+      'measuredProperty','procedureType','thumbnailUrl','acquireLicensePage',
+      'eventAttendanceMode','isBasedOn','inDefinedTermSet'
+    ]
+    for key in iri_terms:
+        assert original['@context'].get(key)=={'@type':'@id'},key
+        assert key not in active['@context'],'Coercion reintroduced: '+key
+    script = """
+import fs from 'node:fs';
+import {serializeGoogleCompatibleCanonicalGraph} from './src/lib/jsonld.mjs';
+const graph=JSON.parse(fs.readFileSync(0,'utf8'));
+process.stdout.write(serializeGoogleCompatibleCanonicalGraph(graph));
+"""
+    expected=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,
+                            input=json.dumps(original,ensure_ascii=False),text=True,
+                            capture_output=True,check=True,timeout=60)
+    assert active==json.loads(expected.stdout), (
+        'Active full graph differs from deterministic lossless RDF serializer')
+    return {'status':'PASS','nodes':len(originals),
+            'canonicalGraphStorage':'application/ld+json#canonical-entity-graph',
+            'canonicalGraphEndByte':full['end'],
+            'criticalReserveBytes':CRAWL_PREFIX_BYTES-full['end'],
+            'htmlBytes':len(payload),'crawlPrefixBytes':CRAWL_PREFIX_BYTES}
+
+
+def require_current_active_head_jsonld(graph_path, html):
+    """Mandatory 1.3.6 release gate, not an archive-format compatibility validator.
+
+    Fail closed if the current release reverts to bounded search JSON-LD,
+    inert BODY JSON, duplicate JSON-LD, or an embedded graph not identical to
+    the stand-alone graph.jsonld. Historical archive validation deliberately
+    keeps its separate version-specific contracts.
+    """
+    proof = validate_home_html(graph_path, html)
+    assert proof['status'] == 'PASS', 'Current homepage projection failed'
+    assert proof['canonicalGraphStorage'] == 'application/ld+json#canonical-entity-graph', (
+        '1.3.6 MUST publish the full active canonical graph in HEAD, not a legacy inert projection')
+    assert proof['canonicalGraphEndByte'] + 4_096 < CRAWL_PREFIX_BYTES, (
+        '1.3.6 full JSON-LD overran the 2 MB HTML-first budget')
+    return proof

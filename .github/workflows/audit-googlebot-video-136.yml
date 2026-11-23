@@ -1,0 +1,30 @@
+name: Audit Googlebot parity, six excluded URLs and watch videos (read-only)
+on:
+  push:
+    branches: [codex/136-live-site-full-audit-fixes-20261121]
+permissions:
+  contents: read
+concurrency:
+  group: googlebot-watch-136
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check requests
+      - name: Check crawler parity, exact canonicals and watch video discoverability
+        run: python .github/scripts/audit_136_googlebot_video.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: googlebot-video-watch-136-evidence
+          path: /tmp/googlebot-video-136/report.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -12,8 +12,12 @@ import { createHash } from "node:crypto";
 import { deriveRoutingRows, renderRobotsTxt } from "../lib/delivery-output.mjs";
 import {projectHomeGraph} from "../lib/home-projection.mjs";
 import {renderCompactMachineDiscoveryLinks} from "../lib/home-graph-discovery.mjs";
-import {serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {serializeCanonicalGraph, serializeGoogleCompatibleCanonicalGraph, serializeInlineJsonLd} from "../lib/jsonld.mjs";
+import {renderEntityHomeEvidence} from "../lib/entity-home-evidence.mjs";
+import {physicianAuthoritySupplement} from "../lib/physician-authority-supplement.mjs";
 import {buildGuideSearchManifest, guideSearchCopy} from "../lib/guide-search-manifest.mjs";
+import {renderEvidenceRelatedVideos} from "../lib/evidence-related-video-links.mjs";
+import {conciseFocusedMetaDescription} from "../lib/concise-focused-meta-description.mjs";
 import {resolvePhysicianPractice} from "../lib/physician-identity.mjs";
 import {closeSearchReferences, projectBoundedSearchDocument, projectHomeSearchGraph, renderMedicalTrust} from "../lib/search-contract.mjs";
 export const prerender = true;
@@ -321,6 +325,17 @@ blockquote {
   /* Admit the 4px high-contrast focus ring plus its 3px offset. */
   overflow-clip-margin: 8px;
 }
+.entity-home-evidence {
+  max-width: var(--reading-measure);
+  padding-block: 1.2rem 1.4rem;
+  margin-block: 0 2.5rem;
+  border-block: 1px solid rgb(47 97 77 / 0.22);
+}
+.entity-home-evidence h2 { font-size: clamp(1.1rem, 1.5vw, 1.35rem); margin-block: 0 0.65rem; }
+.entity-home-evidence p { margin-block: 0 0.7rem; }
+.entity-home-evidence ul { padding-inline-start: 1.25rem; margin-block: 0; }
+.entity-home-evidence li + li { margin-block-start: 0.55rem; }
+.entity-home-evidence a { text-underline-offset: 0.2em; }
 .entity-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
@@ -2204,7 +2219,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       metas: [...doc.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"]')].map(copy),
       canonical: copy(doc.head.querySelector('link[rel="canonical"]')),
       alternates: [...doc.head.querySelectorAll('link[rel="alternate"][hreflang]')].map(copy),
-      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].map(copy),
+      scripts: [...doc.querySelectorAll('script[type="application/ld+json"]')].filter(node=>node.id!=="canonical-entity-graph").map(copy),
       canonicalGraphScript: copy(doc.getElementById("canonical-entity-graph")),
       searchUi: copy(doc.getElementById("guide-search")),
     };
@@ -2418,9 +2433,11 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
     for (const node of d.head.querySelectorAll('meta[name="description"],meta[name="author"],meta[property^="og:"],meta[property^="profile:"],meta[name^="twitter:"],meta[name="guide-source-signature"],meta[name="guide-search-resource"],#guide-reader-scope,link[rel="canonical"],link[rel="alternate"][hreflang]')) node.remove();
     for (const node of d.querySelectorAll('script[type="application/ld+json"]')) node.remove();
     d.getElementById("canonical-entity-graph")?.remove();
-    for (const node of [...state.metas, state.sourceMarker, state.searchMarker, state.scopeScript, state.canonical, ...state.alternates, ...state.scripts].filter(Boolean))
+    for (const node of [...state.metas, state.sourceMarker, state.searchMarker, state.scopeScript, state.canonical, ...state.alternates].filter(Boolean))
       d.head.append(node.cloneNode(true));
-    if (state.canonicalGraphScript) d.body.append(state.canonicalGraphScript.cloneNode(true));
+    // Restore the entire active canonical RDF JSON-LD in HEAD on Home transitions.
+    if (state.canonicalGraphScript) d.head.append(state.canonicalGraphScript.cloneNode(true));
+    for (const node of state.scripts) d.head.append(node.cloneNode(true));
     const search = d.getElementById("guide-search"), ui = state.searchUi;
     if (search && ui) {
       for (const attr of ["aria-label","lang","dir","data-copy"]) {
@@ -2450,10 +2467,11 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
       if (mode === "expanded" && !await loadFullSource()) return null;
       // Lazy Home payloads omit the discovery graph. Load its bounded head only
       // for a real Home transition, never for a focused topic or Search query.
-      if (key === "/" && state.metadataPath && !state.scripts.length) {
+      if (key === "/" && state.metadataPath && !state.canonicalGraphScript) {
         const metadata = await fetchContent(state.metadataPath, {json:true, signal:controller.signal});
         if (metadata.schemaVersion !== 1 || metadata.sourceSignature !== state.sourceSignature ||
-          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 1) return null;
+          !Array.isArray(metadata.scripts) || metadata.scripts.length !== 0 ||
+          !metadata.canonicalGraph) return null;
         state.scripts = metadata.scripts.map(({id,text}) => {
           JSON.parse(text);
           const script = d.createElement("script"); script.type = "application/ld+json";
@@ -2461,7 +2479,7 @@ function createGuideSearch({ aliases = [], stopWords = [], synonyms = {}, detect
         });
         if (metadata.canonicalGraph) {
           JSON.parse(metadata.canonicalGraph.text);
-          const script = d.createElement("script"); script.type = "application/json";
+          const script = d.createElement("script"); script.type = "application/ld+json";
           script.id = "canonical-entity-graph"; script.textContent = metadata.canonicalGraph.text;
           state.canonicalGraphScript = script;
         }
@@ -5063,6 +5081,27 @@ export function compileCanonicalSource() {
     // repeating every URL on each heading adds no browser or crawler behavior.
     if (node.tagName === 'a' && attr(node,'href')) set(node,'href',urlArchitecture.sourceNavigationUrl(attr(node,'href')));
   });
+  // Preserve the proof section's canonical internal URLs instead of rewiring
+  // them to reader-only fragment links: this strengthens crawlable author
+  // expertise attribution across independent topic pages.
+  // The physician's Entity Home needs publicly inspectable evidence,
+  // not just dense machine-only RDF. Derive every proof link from the
+  // same frozen Person and publication nodes used in canonical JSON-LD.
+  let entityHero;
+  walk(body,node=>{
+    if(node.tagName==='header' && (attr(node,'class')??'').split(/\\s+/).includes('entity-hero')){
+      if(entityHero)throw new Error('Competing physician Entity Home hero');
+      entityHero=node;
+    }
+  });
+  if(!entityHero?.parentNode)throw new Error('Canonical physician Entity Home hero missing');
+  const visibleEvidence=parseFragment(renderEntityHomeEvidence(SOURCE.graph,{origin:base})).childNodes[0];
+  if(visibleEvidence?.tagName!=='section')throw new Error('Entity Home evidence did not render as section');
+  const evidenceParent=entityHero.parentNode;
+  const heroIndex=evidenceParent.childNodes.indexOf(entityHero);
+  if(heroIndex<0)throw new Error('Entity Home hero is not attached to source');
+  visibleEvidence.parentNode=evidenceParent;
+  evidenceParent.childNodes.splice(heroIndex+1,0,visibleEvidence);
   // Existing titles become native permalinks; no navigation box or new copy.
   const elements=[];walk(body,node=>{if(node.tagName)elements.push(node);});
   const byHtmlId=new Map(elements.filter(node=>attr(node,'id')).map(node=>[attr(node,'id'),node]));
@@ -5163,11 +5202,49 @@ export function compileCanonicalSource() {
   };
   const shell = (head, body, lang='fa-IR', dir='rtl', focused=false) => '<!doctype html><html lang="' + lang + '" dir="' + dir + '" prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"' +
     (focused ? ' data-route-view="focused"' : '') + '><head>' + head + '</head><body lang="' + lang + '" dir="' + dir + '">' + body + `<script id="site-runtime" defer src="${assets[1].path}"></script></body></html>`;
-  const canonicalDataScript='<script id="canonical-entity-graph" type="application/json">'+json(homeGraph)+'</script>';
-  const rawHome = shell(baseHead + '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
-    '<link rel="canonical" href="' + homeUrl + '">' + `<link rel="stylesheet" href="${assets[0].path}">` +
-    '<script id="schema-core-mainentity" type="application/ld+json">' + json(homeSearchGraph) + '</script>' + discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml)
-    .replace('</body>',canonicalDataScript+'</body>');
+  // Source already declares a correct responsive, eager, high-priority AVIF
+  // portrait preload in the authored HEAD. Retain that SAME tag and move it
+  // before the ~2 MB active RDF block so mobile discovers the LCP image early.
+  // No new preload, authored image URL, graph entity or page text is introduced.
+  const portraitPictures=[];
+  walk(body,node=>{
+    if(node.tagName==='picture'&&attr(node,'id')==='image-saeed-ghezelbash-portrait-master-webp')portraitPictures.push(node);
+  });
+  if(portraitPictures.length!==1)throw new Error('Canonical homepage portrait picture missing or duplicated');
+  const portraitChildren=portraitPictures[0].childNodes??[];
+  const avifSources=portraitChildren.filter(node=>node.tagName==='source'&&attr(node,'type')==='image/avif');
+  const portraitImg=portraitChildren.find(node=>node.tagName==='img');
+  if(avifSources.length!==1||!portraitImg||attr(portraitImg,'loading')!=='eager'||attr(portraitImg,'fetchpriority')!=='high')
+    throw new Error('Canonical high-priority portrait source contract changed; review the existing preload');
+  const portraitSrcset=attr(avifSources[0],'srcset'),portraitSizes=attr(avifSources[0],'sizes');
+  const existingImagePreloads=[...baseHead.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]).filter(tag=>{
+    const node=parseFragment(tag).childNodes[0];
+    return node?.tagName==='link'&&(attr(node,'rel')??'').split(/\s+/).includes('preload')&&attr(node,'as')==='image';
+  });
+  if(existingImagePreloads.length!==1)throw new Error('Expected exactly one existing authored image preload');
+  const existingPortraitPreload=existingImagePreloads[0];
+  const preloadNode=parseFragment(existingPortraitPreload).childNodes[0];
+  if(attr(preloadNode,'type')!=='image/avif'||attr(preloadNode,'fetchpriority')!=='high'||
+     attr(preloadNode,'imagesrcset')!==portraitSrcset||attr(preloadNode,'imagesizes')!==portraitSizes||
+     attr(preloadNode,'href')!==portraitSrcset.split(',')[0]?.trim().split(/\s+/)[0])
+    throw new Error('Authored responsive image preload disagrees with the visible portrait; refusing reorder');
+  // Full canonical RDF (all vocabularies) is the FIRST JSON-LD script in the
+  // homepage HEAD. Nothing is filtered or reserialized as Schema.org-only.
+  const canonicalGraphText=serializeGoogleCompatibleCanonicalGraph(homeGraph);
+  const canonicalDataScript='<script id="canonical-entity-graph" type="application/ld+json">'+canonicalGraphText+'</script>';
+  // Keep the document's UTF-8 declaration first for correct HTML decoding.
+  // Move the *full*, unmodified graph ahead of all nonessential head metadata:
+  // the extra safety margin matters for Google's 2MB HTML retrieval limit.
+  // The CSS request is launched early without putting user-visible text first.
+  const existingCharset = baseHead.match(/<meta\b[^>]*\bcharset\s*=\s*["']?utf-8["']?[^>]*>/i)?.[0];
+  const firstHead = existingCharset ?? '<meta charset="utf-8">';
+  const remainingHead = (existingCharset ? baseHead.replace(existingCharset,'') : baseHead).replace(existingPortraitPreload,'');
+  const rawHome = shell(firstHead + `<link rel="stylesheet" href="${assets[0].path}">` + existingPortraitPreload + canonicalDataScript + remainingHead +
+    '<title>' + escape(title) + '</title>' + meta('description',description) + meta('author',author) +
+    '<link rel="canonical" href="' + homeUrl + '">' +
+    // The sole homepage JSON-LD document is the entire canonical RDF graph.
+    // Do not append a competing or partial Schema.org authority projection.
+    discoveryHead + socialMeta(title,description,homeUrl,'fa-IR','ProfilePage'),bodyHtml);
   const stampedHome = readerScope.stampGuideSource(rawHome);
   // Internal entries need the authored article and compact Search interface,
   // rather than a second full document and its large discovery graph.
@@ -5188,8 +5265,8 @@ export function compileCanonicalSource() {
   const lazySearchPointer = parseFragment(meta('guide-search-resource',searchAsset.path)).childNodes[0];
   lazySearchPointer.parentNode = readerHead; readerHead.childNodes.push(lazySearchPointer);
   const metadataAsset = asset('guide-meta','json',JSON.stringify({schemaVersion:1,sourceSignature,
-    canonicalGraph:{id:'canonical-entity-graph',text:json(homeGraph)},
-    scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json')
+    canonicalGraph:{id:'canonical-entity-graph',text:canonicalGraphText},
+    scripts:readerHead.childNodes.filter(node=>node.tagName==='script'&&attr(node,'type')==='application/ld+json'&&attr(node,'id')!=='canonical-entity-graph')
       .map(node=>({id:attr(node,'id'),text:node.childNodes.map(child=>child.value??'').join('')}))}), 'application/json; charset=utf-8');
   readerHead.childNodes = readerHead.childNodes.filter(node=>node.tagName==='title'||node.tagName==='meta'||
     node.tagName==='link'&&['canonical','alternate'].includes(attr(node,'rel')));
@@ -5307,7 +5384,7 @@ export function compileCanonicalSource() {
     const trustParent = trustAnchor.parentNode;
     trustParent.childNodes.splice(trustParent.childNodes.indexOf(trustAnchor)+1,0,...trustNodes);
     for (const node of trustNodes) node.parentNode = trustParent;
-    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + readerControls(record) + topicNavigation.renderTopicNavigation(record) + '</article>' + homeSuffix;
+    let result = homePrefix + '<article class="medical-guide" aria-labelledby="' + escape(headingId) + '" lang="' + record.lang + '" dir="' + record.dir + '">' + serialize(primary) + readerControls(record) + topicNavigation.renderTopicNavigation(record) + renderEvidenceRelatedVideos({record,recordByPath,graph:SOURCE.graph,physicianId:person['@id']}) + '</article>' + homeSuffix;
     const document = parse(result);
     const head = document.childNodes.find(n=>n.tagName==='html').childNodes.find(n=>n.tagName==='head');
     head.childNodes = head.childNodes.filter(n => !(n.tagName==='title' || n.tagName==='script' && ['application/ld+json','application/json'].includes(attr(n,'type')) ||
@@ -5316,9 +5393,15 @@ export function compileCanonicalSource() {
     const locales=record.alternates.filter(alternate=>alternate.hrefLang!=='x-default').map(alternate=>alternate.hrefLang==='en'?'en_US':alternate.hrefLang.replace('-','_'));
     const watch=SOURCE.discovery.sitemapPolicy.videoWatchPages.find(w=>w.path===path),thumbnail=watch?byId.get(watch.videoId)?.thumbnailUrl:undefined;
     const routeImage=thumbnail?SOURCE.graph['@graph'].find(n=>n.contentUrl===thumbnail&&[n['@type']].flat().includes('ImageObject'))??{contentUrl:thumbnail,encodingFormat:new URL(thumbnail).pathname.endsWith('.webp')?'image/webp':'image/jpeg',name:byId.get(watch.videoId).name}:social;
-    const extras = '<title>' + escape(record.documentTitle) + '</title>' + meta('description',record.description) + meta('author',local(person.name,record.lang)) + socialMeta(record.documentTitle,record.description,record.canonicalUrl,record.lang,record.pageType,locales,routeImage) +
+    // Search/social summaries are exact, complete sentences from authored descriptions.
+    // JSON-LD and canonical medical content remain untouched.
+    const searchDescription=conciseFocusedMetaDescription(record.path,record.description);
+    const extras = '<title>' + escape(record.documentTitle) + '</title>' + meta('description',searchDescription) + meta('author',local(person.name,record.lang)) + socialMeta(record.documentTitle,searchDescription,record.canonicalUrl,record.lang,record.pageType,locales,routeImage) +
       '<link rel="canonical" href="' + record.canonicalUrl + '">' + record.alternates.map(a=>'<link rel="alternate" hreflang="'+escape(a.hrefLang)+'" href="'+escape(a.href)+'">').join('') +
-      '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.searchDocument)+'</script>';
+      '<script id="guide-reader-scope" type="application/json">'+json(record.readerScope)+'</script><script id="schema-core-mainentity" type="application/ld+json">'+json(record.searchDocument)+'</script>' +
+      (record.pagePurpose==='professional-biography'
+        ? '<script id="schema-physician-clinical-authority" type="application/ld+json">'+json(physicianAuthoritySupplement(SOURCE.graph,{origin:base,language:record.lang}))+'</script>'
+        : '');
     const extrasDoc=parseFragment(extras);
     for(const n of extrasDoc.childNodes){n.parentNode=head;head.childNodes.push(n);}
     const root = document.childNodes.find(n=>n.tagName==='html'),bodyNode=root.childNodes.find(n=>n.tagName==='body');set(bodyNode,'lang',record.lang);set(bodyNode,'dir',record.dir);set(root,'lang',record.lang);set(root,'dir',record.dir);set(root,'data-route-view','focused');

@@ -1,0 +1,37 @@
+name: Validate graph-only service metadata enrichment
+on:
+  push:
+    branches: [codex/graph-only-service-enrichment-1-3-6]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  graph-test:
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      ASTRO_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22.19.0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: npm ci
+      - run: python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD==3.3.0'
+      - run: npm run build
+      - run: node --test --test-concurrency=1 tests/*.test.mjs
+      - run: |
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: graph-only-release-candidate
+          path: |
+            dist/graph.jsonld
+            dist/release-provenance.json
+            dist/integrity-manifest.json
+          retention-days: 14

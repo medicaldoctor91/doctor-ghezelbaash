@@ -1,0 +1,30 @@
+name: Browser audit all 72 pages on mobile and desktop (read-only)
+on:
+  push:
+    branches: [codex/136-comprehensive-quality-gates-20261121]
+permissions:
+  contents: read
+jobs:
+  browser-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test dependency
+        run: |
+          npm install --no-save --no-package-lock playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Audit all sitemap pages on mobile and desktop
+        run: node .github/scripts/audit_live_browser_136.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-audit-72-pages-mobile-desktop
+          path: /tmp/136-browser-audit/*.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -206,7 +206,7 @@ def validate(root):
     authored = set(graph.subjects(RDF.type, SH.NodeShape))
     published = set(shapes.subjects(RDF.type, SH.NodeShape))
     assert authored <= published, 'Standalone SHACL omitted authored shapes'
-    assert len(published) == 68, len(published)
+    assert len(published) == 71, len(published)  # 8 clinical treatments, 2 research-only conditions, Offer/specialty validation.
 
     dcat = rdflib.Graph().parse(root / 'dcat.ttl', format='turtle')
     DCAT = rdflib.Namespace('http://www.w3.org/ns/dcat#')

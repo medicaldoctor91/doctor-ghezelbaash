@@ -35,6 +35,22 @@ def snapshot(w):
  for name in ['release-provenance.json','integrity-manifest.json']:(w/('before-'+name)).write_bytes(read(SITE+name).content)
  print(json.dumps(state),flush=True);return state
 
+def mutable_citation_version(platform, revision):
+    """Label mutable bytes by the approved 1.3.6 baseline, not archived packaging.
+
+    A current HF commit or Kaggle dataset revision is NOT a replacement for
+    the immutable Zenodo exact-DOI snapshot. Keep their citations distinct.
+    """
+    baseline=DOI_POLICY['currentArchive']['contentBaseline']
+    assert re.fullmatch(r'[0-9]+[.][0-9]+[.][0-9]+',baseline), 'Invalid content baseline'
+    if platform=='hf':
+        assert isinstance(revision,str) and re.fullmatch(r'[a-f0-9]{40}',revision), 'Invalid HF source commit'
+        return baseline+'+source.'+revision[:12]
+    if platform=='kaggle':
+        assert isinstance(revision,int) and revision>0, 'Invalid Kaggle version'
+        return baseline+'+kaggle.'+str(revision)
+    raise ValueError('Unknown mutable citation platform '+str(platform))
+
 def archive_scope(text, published=False, *, archive=None):
  if published:
   binding=archive or DOI_POLICY['currentArchive']
@@ -141,7 +157,21 @@ def preflight(w,expected):
  with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:list(pool.map(hub_file,load(w/'hf-before-info.json')['siblings']))
  for n,v in load(baseline/'dist-sha256.json')['files'].items():assert sha(baseline/n)==v['sha256'],('HF baseline integrity',n)
  kg_before=w/'kaggle-before'
- kg_baseline=prepare_baseline(w,KAGGLE_REF,expected['kaggleVersion'],state['hfRevision'],load(baseline/'release-provenance.json')['sourceCommit'],read,extract_package,kg_publication)
+ # A failed previous cohort may already have advanced HF/site while Kaggle
+ # remains pinned to its older exact-version input. Verify BOTH time-specific
+ # baselines instead of silently treating old Kaggle files as a new HF revision.
+ historical_hf=expected.get('kaggleHistoricalHfRevision',state['hfRevision'])
+ historical_site=expected.get('kaggleHistoricalSiteSource',load(baseline/'release-provenance.json')['sourceCommit'])
+ assert re.fullmatch(r'[a-f0-9]{40}',historical_hf), 'Invalid historical Kaggle upstream revision'
+ assert re.fullmatch(r'[a-f0-9]{40}',historical_site), 'Invalid historical Kaggle source commit'
+ if historical_hf!=state['hfRevision'] or historical_site!=load(baseline/'release-provenance.json')['sourceCommit']:
+  old_provenance=read('https://huggingface.co/datasets/'+HF_REPO+'/resolve/'+historical_hf+'/release-provenance.json').json()
+  assert old_provenance['sourceCommit']==historical_site, 'Historical Kaggle upstream HF/site provenance mismatch'
+ dump(w/'kaggle-historical-lineage.json',{'kaggleBaselineVersion':expected['kaggleVersion'],
+   'kaggleHistoricalHFRevision':historical_hf,'kaggleHistoricalWebsiteSource':historical_site,
+   'currentHFRevision':state['hfRevision'],'currentWebsiteSource':state['siteSource'],
+   'historicalProvenanceChecked':True,'newDatasetWillUseFrozenCurrentHF':True})
+ kg_baseline=prepare_baseline(w,KAGGLE_REF,expected['kaggleVersion'],historical_hf,historical_site,read,extract_package,kg_publication)
  ctx=mutable_context(source)
  # Keep platform_bundle's resolved archive source pin; its template has no sourceCommit.
  hf=w/'hf-stage';build_hf(w/'website',baseline,hf,ctx)
@@ -156,7 +186,7 @@ def preflight(w,expected):
  # CFF describes these mutable bytes by source and preserves the archive's own citation.
  import yaml
  if (hf/'CITATION.cff').exists():
-  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+source.'+source[:12],url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
+  cff=yaml.safe_load((hf/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=mutable_citation_version('hf',source),url='https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/'+source,message='Cite this mutable distribution by its pinned platform revision and website source. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; collection DOI '+gates.P['concept']['doi']+' remains stable.')
   for ref in cff.get('references',[]):
    if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
   (hf/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
@@ -176,7 +206,7 @@ def preflight(w,expected):
  scope_notebook_archive(kg/'starter.ipynb',archive_doi=archive['doi'],archive_source_commit=archive['sourceCommit'])
  # The archive citation remains a reference; changed mutable bytes keep their own version.
  import yaml
- cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version='1.3.4+kaggle.'+str(expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
+ cff=yaml.safe_load((kg/'CITATION.cff').read_text());cff.pop('doi',None);cff.update(version=mutable_citation_version('kaggle',expected['kaggleVersion']+1),url='https://www.kaggle.com/datasets/'+KAGGLE_REF+'/versions/'+str(expected['kaggleVersion']+1),message='Cite this mutable distribution by its pinned Kaggle version, Hugging Face revision and website source commit. Immutable archive DOI '+archive['doi']+' preserves source '+archive['sourceCommit']+'; the collection DOI remains stable.')
  for ref in cff.get('references',[]):
   if ref.get('doi')==gates.P['currentArchive']['doi']:ref['title']='Published immutable archive '+gates.P['currentArchive']['packagingVersion']
  (kg/'CITATION.cff').write_text(yaml.safe_dump(cff,allow_unicode=True,sort_keys=False))
@@ -226,18 +256,38 @@ def verify_media(w):
   out[path]={'fullSHA256':meta['sha256'],'partialChecks':checks,'HEAD304416':True}
  return out
 
-def fresh_viewer_reads(work,original):
- """Refresh Viewer API cache keys only; retain all revision/row/type gates."""
+def fresh_viewer_reads(work,original,*,max_attempts=7,sleeper=time.sleep):
+ """Retry only independently identified transient Viewer indexing/gateway failures.
+
+ Preserve every response (including failed requests) and keep all frozen
+ hashes, revision, typed rows, search, filter and statistics gates unchanged.
+ Never convert ResponseNotReady or any other 5xx into a successful result.
+ No retries for 4xx, malformed 200 responses or unexpected application errors.
+ """
  from urllib.parse import urlsplit
+ assert isinstance(max_attempts,int) and 1<=max_attempts<=10, 'Invalid bounded Viewer retry count'
  def fresh(url):
   if urlsplit(url).netloc!='datasets-server.huggingface.co':return original(url)
-  token=str(time.time_ns())
-  r=requests.get(url,params={'live_audit':token},headers={'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache','Accept-Encoding':'identity'},timeout=90)
   folder=Path(work)/'viewer-response-evidence';folder.mkdir(exist_ok=True)
-  name=token+'-'+urlsplit(url).path.strip('/').replace('/','-')
-  (folder/(name+'.body')).write_bytes(r.content)
-  dump(folder/(name+'.json'),{'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'requestedURL':url,'finalURL':r.url,'status':r.status_code,'headers':dict(r.headers),'bytes':len(r.content),'sha256':hashlib.sha256(r.content).hexdigest()})
-  r.raise_for_status();return r
+  for attempt in range(max_attempts):
+   token=str(time.time_ns())
+   r=requests.get(url,params={'live_audit':token},headers={'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache','Accept-Encoding':'identity'},timeout=90)
+   name=token+'-'+urlsplit(url).path.strip('/').replace('/','-')
+   transient=(r.status_code==500 and r.headers.get('x-error-code')=='ResponseNotReady') or r.status_code in (502,503,504)
+   (folder/(name+'.body')).write_bytes(r.content)
+   dump(folder/(name+'.json'),{'observedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+    'requestedURL':url,'finalURL':r.url,'status':r.status_code,
+    'headers':dict(r.headers),'bytes':len(r.content),
+    'sha256':hashlib.sha256(r.content).hexdigest(),
+    'attempt':attempt+1,'transient':transient,'maxAttempts':max_attempts})
+   if 200<=r.status_code<400:return r
+   if not transient or attempt+1==max_attempts:r.raise_for_status()
+   delay=min(2*(2**attempt),20)
+   print('HF Viewer endpoint still indexing '+urlsplit(url).path+
+         ', attempt '+str(attempt+1)+'/'+str(max_attempts)+
+         ', HTTP '+str(r.status_code)+'; preserving exact failure',flush=True)
+   sleeper(delay)
+  raise AssertionError('Unreachable Viewer retry termination')
  return fresh
 
 def guard_hf_git(w,plan):
@@ -249,9 +299,9 @@ def guard_hf_git(w,plan):
 
 def guard_frozen_home_projection(w):
  """Recheck actual restored HTML before any publication API can write."""
- from browser_projection import validate_home_html
+ from browser_projection import require_current_active_head_jsonld
  home=w/'website/index.html';graph=w/'website/graph.jsonld'
- proof=validate_home_html(graph,home.read_bytes())
+ proof=require_current_active_head_jsonld(graph,home.read_bytes())
  proof.update(homepageSHA256=sha(home),canonicalGraphSHA256=sha(graph))
  dump(w/'frozen-home-projection.json',proof)
  return proof
@@ -390,7 +440,7 @@ def complete_notebook_exact_version(w):
 def main():
  p=argparse.ArgumentParser();p.add_argument('operation',choices=['inspect','preflight','publish','publish-primary-viewer','complete-notebook','complete-notebook-exact-version']);p.add_argument('--root',type=Path,default=Path('/tmp/mutable-release'));a=p.parse_args();a.root.mkdir(exist_ok=True,parents=True)
  if a.operation=='inspect':snapshot(a.root)
- elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK'])})
+ elif a.operation=='preflight':preflight(a.root,{'hfRevision':os.environ['BASELINE_HF'],'siteSource':os.environ['BASELINE_SITE'],'kaggleVersion':int(os.environ['BASELINE_KAGGLE']),'notebookVersion':int(os.environ['BASELINE_NOTEBOOK']),'kaggleHistoricalHfRevision':os.environ.get('BASELINE_KAGGLE_UPSTREAM_HF',os.environ['BASELINE_HF']),'kaggleHistoricalSiteSource':os.environ.get('BASELINE_KAGGLE_UPSTREAM_SITE',os.environ['BASELINE_SITE'])})
  elif a.operation=='complete-notebook':complete_notebook(a.root)
  elif a.operation=='complete-notebook-exact-version':complete_notebook_exact_version(a.root)
  else:publish(a.root,runtime_features=a.operation!='publish-primary-viewer')

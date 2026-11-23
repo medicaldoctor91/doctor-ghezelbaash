@@ -108,6 +108,25 @@ test('knowledge XML resolves the solo-practice PhysiciansOffice without MedicalC
   assert.ok(!xml.includes('<clinic id=""><name></name></clinic>'));
 });
 
+test('knowledge XML projects each service provider and channel location from the graph', () => {
+  const source = soloPracticeFixture();
+  const physicalChannel = origin + '/in-person';
+  const onlineChannel = origin + '/online';
+  source.graph['@graph'].push(
+    {'@id': physicalChannel, '@type': 'ServiceChannel', serviceLocation: {'@id': clinicId}},
+    {'@id': onlineChannel, '@type': 'ServiceChannel', serviceUrl: origin + '/contact'},
+    {'@id': origin + '/treatment', '@type': 'Service', name: 'Treatment & assessment', provider: {'@id': physicianId}, availableChannel: physicalChannel},
+    {'@id': origin + '/consultation', '@type': ['Service'], name: 'Consultation', provider: [{'@id': physicianId}], availableChannel: [{'@id': onlineChannel}, {'@id': physicalChannel}]},
+    {'@id': origin + '/online-only', '@type': 'Service', name: 'Online consultation', provider: physicianId, availableChannel: {'@id': onlineChannel}},
+  );
+  const xml = buildKnowledgeXml(source);
+  const physical = `<availableChannel id="${physicalChannel}" serviceLocation="${clinicId}"/>`;
+  const online = `<availableChannel id="${onlineChannel}"/>`;
+  assert.ok(xml.includes(`<service id="${origin}/treatment" provider="${physicianId}">Treatment &amp; assessment${physical}</service>`));
+  assert.ok(xml.includes(`<service id="${origin}/consultation" provider="${physicianId}">Consultation${online}${physical}</service>`));
+  assert.ok(xml.includes(`<service id="${origin}/online-only" provider="${physicianId}">Online consultation${online}</service>`));
+});
+
 test('vCard folds long Unicode content at 75 UTF-8 octets without corrupting unfolded values', () => {
   const source = sourceFixture();
   const name = 'دکتر سعید قزلباش 🩺 '.repeat(12);

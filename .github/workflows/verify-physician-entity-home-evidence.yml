@@ -1,0 +1,58 @@
+name: Verify physician Entity Home evidence without altering 1916-node canonical RDF
+on:
+  push:
+    branches: [fix/physician-entity-home-evidence-isolated-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+      EXPECTED_GRAPH_SHA256: 25440dbc062dc69131341744562da86e30037f00af681d8e8fc55ad078cb2f50
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .nvmrc, cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: npm ci
+      - run: python -m pip install 'PyLD>=2,<4' 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1'
+      - run: npm run build
+      - name: Check all existing site regressions and visible independent expertise evidence
+        run: |
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/active-home-canonical-projection.test.py
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/validate_machine_resources.py dist
+      - name: Verify exact four-platform graph bytes, complete active RDF and public evidence in crawler window
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,re
+          from pathlib import Path
+          from pyld import jsonld
+          html=Path('dist/index.html').read_bytes()
+          graph=Path('dist/graph.jsonld').read_bytes()
+          digest=hashlib.sha256(graph).hexdigest()
+          assert digest==os.environ['EXPECTED_GRAPH_SHA256'],(digest,'graph drift')
+          m=re.search(rb'<script id="canonical-entity-graph" type="application/ld\+json">([\s\S]*?)</script>',html)
+          assert m and m.end()<2_000_000
+          assert html.count(b'<script id="canonical-entity-graph" type="application/ld+json">')==1
+          embedded=json.loads(m.group(1)); source=json.loads(graph)
+          assert len(embedded['@graph'])==len(source['@graph'])==1916
+          nq1=jsonld.normalize(embedded,{'algorithm':'URDNA2015','format':'application/n-quads'})
+          nq2=jsonld.normalize(source,{'algorithm':'URDNA2015','format':'application/n-quads'})
+          assert nq1==nq2
+          match=re.search(rb'<section class="entity-home-evidence"[\s\S]*?</section>',html)
+          assert match,'Visible physician evidence missing'
+          assert match.end()<1_998_000,'Physician evidence outside Googlebot first 2MB'
+          for literal in [b'pubmed.ncbi.nlm.nih.gov/27280013',b'pubmed.ncbi.nlm.nih.gov/34574943',
+                          b'orcid.org/0009-0001-9346-8475',b'www.wikidata.org/entity/Q140287622']:
+              assert literal in match.group(0),literal
+          print(json.dumps({'status':'PASS','activeJsonLdNodes':1916,'rdfQuads':len(nq1.splitlines()),
+            'activeJsonLdEndByte':m.end(),'entityEvidenceEndByte':match.end(),'sha256':digest},sort_keys=True))
+          PY

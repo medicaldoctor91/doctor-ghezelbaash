@@ -181,12 +181,12 @@ export function htmlToPlainText(html) {
     .split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
 }
 
+const refId = (value) => typeof value === 'string' ? value : value?.['@id'];
+
 function clinicNode(source) {
   const nodes = source.graph['@graph'];
   const person = nodes.find((node) => node['@id'] === source.canonicalOrigin + '/#saeed-ghezelbash');
-  const relationIds = [...values(person?.owns), ...values(person?.practicesAt)]
-    .map((value) => typeof value === 'string' ? value : value?.['@id'])
-    .filter(Boolean);
+  const relationIds = [...values(person?.owns), ...values(person?.practicesAt)].map(refId).filter(Boolean);
   return relationIds.map((id) => nodes.find((node) => node['@id'] === id)).find(Boolean)
     ?? nodes.find((node) => values(node['@type']).includes('PhysiciansOffice'))
     ?? nodes.find((node) => values(node['@type']).includes('MedicalClinic'));
@@ -195,15 +195,28 @@ function clinicNode(source) {
 const xmlEscape = (value) => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');
 export function buildKnowledgeXml(source) {
   const nodes = source.graph['@graph'];
+  const nodesById = new Map(nodes.filter(refId).map((node) => [refId(node), node]));
   const person = nodes.find((node) => node['@id'] === source.canonicalOrigin + '/#saeed-ghezelbash');
   const clinic = clinicNode(source);
   const services = nodes.filter((node) => values(node['@type']).includes('Service'));
   const videos = nodes.filter((node) => values(node['@type']).includes('VideoObject'));
   const questions = nodes.filter((node) => values(node['@type']).includes('Question'));
+  const referenceAttribute = (name, value) => {
+    const ids = [...new Set(values(value).map(refId).filter(Boolean))];
+    return ids.length ? ` ${name}="${xmlEscape(ids.join(' '))}"` : '';
+  };
+  const serviceEntries = services.map((service) => {
+    const provider = referenceAttribute('provider', service.provider);
+    const channels = values(service.availableChannel).map((channel) => {
+      const location = channel?.serviceLocation ?? nodesById.get(refId(channel))?.serviceLocation;
+      return `<availableChannel${referenceAttribute('id', channel)}${referenceAttribute('serviceLocation', location)}/>`;
+    }).join('');
+    return `<service id="${xmlEscape(service['@id'])}"${provider}>${xmlEscape(literal(service.name))}${channels}</service>`;
+  });
   return `<?xml version="1.0" encoding="UTF-8"?>\n<knowledge origin="${xmlEscape(source.canonicalOrigin)}">\n` +
     `  <physician id="${xmlEscape(person?.['@id'])}" url="${xmlEscape(person?.url)}"><name>${xmlEscape(literal(person?.name))}</name></physician>\n` +
     `  <clinic id="${xmlEscape(clinic?.['@id'])}"><name>${xmlEscape(literal(clinic?.name))}</name></clinic>\n` +
-    `  <services>${services.map((node) => `<service id="${xmlEscape(node['@id'])}">${xmlEscape(literal(node.name))}</service>`).join('')}</services>\n` +
+    `  <services>${serviceEntries.join('')}</services>\n` +
     `  <videos>${videos.map((node) => `<video id="${xmlEscape(node['@id'])}" url="${xmlEscape(node.url)}" contentUrl="${xmlEscape(node.contentUrl)}">${xmlEscape(literal(node.name))}</video>`).join('')}</videos>\n` +
     `  <questions>${questions.map((node) => `<question id="${xmlEscape(node['@id'])}">${xmlEscape(literal(node.name))}</question>`).join('')}</questions>\n` +
     `</knowledge>\n`;
@@ -229,7 +242,6 @@ function foldVCardLine(line) {
   folded.push(part);
   return folded.join('\r\n');
 }
-const refId = (value) => typeof value === 'string' ? value : value?.['@id'];
 export function buildVCard(source, kind) {
   const nodes = source.graph['@graph'];
   const person = nodes.find((node) => node['@id'] === source.canonicalOrigin + '/#saeed-ghezelbash');

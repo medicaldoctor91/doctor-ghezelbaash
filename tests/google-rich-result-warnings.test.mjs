@@ -62,16 +62,18 @@ test('a declared end is retained and unknown or intermediate ends are not guesse
   assert.equal(videoFixture({duration:'PT20.162S'}).project().endOffset,20.162);
 });
 
-test('the actual Kurdish final chapter has a known valid end in the Google projection',()=>{
+test('the real 20-second Kurdish video preserves watch-page chapters without Google-ineligible Clip markup',()=>{
   const nodes=byId(SOURCE.graph),videoId=origin+'/video-kurdish-patient-experience',clipId=origin+'/video-kurdish-patient-experience-clip-03';
-  const video=nodes.get(videoId),clip=nodes.get(clipId);
+  const video=nodes.get(videoId);
   assert.equal(video.duration,'PT20S');
-  assert.equal(clip.endOffset,undefined);
+  assert.equal(video.hasPart,undefined);
+  assert.equal(nodes.get(clipId),undefined);
   const vtt=readFileSync(new URL('../public/media/video-tracks/testimonials/saeed-ghezelbash-kurdish-patient-review.chapters.fa.vtt',import.meta.url),'utf8');
   assert.match(vtt,/00:00:16\.000 --> 00:00:20\.162/);
   const pageId=origin+'/video-saeed-ghezelbash-kurdish-patient-review#webpage';
   const graph=structuredClone(SOURCE.graph);
   const projected=projectBoundedSearchDocument(graph,{graph,primaryPageId:pageId,visibleMediaIds:[videoId]});
-  assert.equal(byId(projected).get(clipId).endOffset,20);
-  assert.ok(byId(projected).get(clipId).endOffset>clip.startOffset);
+  assert.equal(byId(projected).get(clipId),undefined,'Google must not see a Clip for a 20-second video');
+  assert.equal(byId(projected).get(videoId).hasPart,undefined,'No ineligible key moments on watch page');
+  assert.ok(byId(projected).get(videoId),'VideoObject remains discoverable');
 });

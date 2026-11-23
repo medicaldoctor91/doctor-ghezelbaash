@@ -1,0 +1,29 @@
+name: Audit every live site page and machine-readable resource (read-only)
+on:
+  push:
+    branches: [codex/136-live-site-full-audit-fixes-20261121]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install minimal read-only audit utilities
+        run: python -m pip install requests beautifulsoup4
+      - name: Check 72 sitemap pages and internal URLs, JSON-LD, metadata, robots and all graph entrypoints
+        run: python .github/scripts/audit_live_72_pages_136.py
+      - name: Upload full per-page evidence for remediation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-136-all-pages-audit
+          path: /tmp/site-136-full-audit/
+          if-no-files-found: warn
+          retention-days: 30

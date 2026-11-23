@@ -59,8 +59,18 @@ function globalBlock(delivery){
 function machineBlock({origin,resource,resourceByPath,delivery,detachHtml=false}){
   const lines=[resource.path];
   if(detachHtml){lines.push('  ! Cache-Control','  ! Link');}
-  const cache=resource.indexing==='canonical-html'?delivery.html.cacheControl:delivery.machine.cacheControl;
+  // These release-cohort resources have stable URLs but change bytes on
+  // publication. A one-hour freshness lifetime can expose old CSV while a
+  // newer graph.jsonld and release-provenance are already public. Force a
+  // revalidation on each request, while retaining ETag-based cache benefits.
+  // Versioned /assets/*, video and image caching policies remain unchanged.
+  const cache=resource.indexing==='canonical-html'
+    ? delivery.html.cacheControl
+    : 'public, max-age=0, must-revalidate';
   lines.push(`  Cache-Control: ${cache}`);
+  // The canonical machine URL must not persist an obsolete cohort in CF CDN.
+  // Browser revalidation alone does not govern intermediary edge storage.
+  if(resource.indexing!=='canonical-html')lines.push('  Cloudflare-CDN-Cache-Control: no-store');
   lines.push(`  Content-Type: ${contentType(resource)}`);
   lines.push(`  Link: ${resourceLinks(origin,resource,resourceByPath,delivery.http.documentIdentity?.about??[])}`);
   const profile=profileFor(delivery,resource.indexing);

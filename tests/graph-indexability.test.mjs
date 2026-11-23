@@ -9,14 +9,14 @@ const options={origin:SOURCE.canonicalOrigin,routes:SOURCE.routes.resources.map(
   cssPath:'/assets/style.css',delivery:SOURCE.delivery,machineResources:SOURCE.machineResources};
 const blocks=headers=>new Map(headers.trim().split(/\n\s*\n/).map(block=>[block.split('\n')[0],block]));
 
-test('the full canonical graph is indexable at its own URL without changing other representation policies',()=>{
+test('the full canonical graph remains indexable with synchronized mutable-resource caching',()=>{
   assert.deepEqual(SOURCE.delivery.http.indexingProfiles.machine.resourceOverrides,{'/graph.jsonld':'index, follow'});
   const result=blocks(generateHeaders(options)),graph=result.get('/graph.jsonld');
   assert.match(graph,/^  X-Robots-Tag: index, follow$/m);
   assert.match(graph,/^  Content-Type: application\/ld\+json(?:;[^\n]+)?$/m);
   assert.match(graph,/^  Link: <https:\/\/www\.ghezelbaash\.ir\/graph\.jsonld>; rel=canonical/m);
   assert.match(graph,/^  Access-Control-Allow-Origin: \*$/m);
-  assert.match(graph,new RegExp('^  Cache-Control: '+SOURCE.delivery.machine.cacheControl.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$','m'));
+  assert.match(graph,/^  Cache-Control: public, max-age=0, must-revalidate$/m,'mutable JSON-LD must revalidate to prevent cross-release CSV/graph drift');
   for(const path of ['/graph.ttl','/provenance.jsonld','/doctor.vcf','/clinic.vcf'])
     assert.match(result.get(path),/^  X-Robots-Tag: noindex, follow$/m,path);
   for(const path of ['/data-catalog','/graph.jsonld/*'])
