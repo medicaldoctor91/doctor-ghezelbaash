@@ -1,3 +1,30 @@
+# Current production freeze and main migration — 2026-11-23
+
+The currently published website source is frozen at Git commit
+`824c02f4bd495cdbc3091b7b3911a5470fd9104b` (Git tree
+`03fba3db6f818677ab38e6702bbf111e79e2c6d7`). It contains
+290 tracked source blobs, of which the four freeze-management files
+are separately managed, leaving 286 immutable baseline inputs.
+
+- Deployment ID: `9730f5cb-d6f8-4ba2-9413-bd64eb700bbb`
+- Originating production branch: `codex/full-rdf-jsonld-homepage-first-1-3-6`
+- Independent recovery branch: `archive/frozen-production-2026-11-22-824c02f4`
+- Immutable commit and archived ZIP: exact restore reference; neither is an
+  automatic deployment or a new dataset edition.
+- The exact production commit precedes this housekeeping migration; the
+  updated freeze-verifier and this documentation are management-only changes.
+- Historical tags and earlier frozen commits are retained unchanged.
+- The name `source-frozen-2026-11-22-production-824c02f4` in the validator
+  is an optional future tag verification target; **its existence and ruleset
+  protection must not be claimed unless separately confirmed**.
+- The site must only be deployed from a reviewed commit descended from
+  the current live `release-provenance.json` source commit; compare the
+  immutable Git tree and verify the newly published provenance.
+
+This migration does not re-publish the website or release external datasets.
+
+---
+
 # Fixed source and isolated additions
 
 The refined 1.3.6 application checkpoint `d579b61e662c22515dbeab5a936a195169fb2a8d` has tree `8517bd4f385a157961b4a92723948bde932a45e2` and 204 application files. The platform card uses measured Viewer table counts and the release plan updates the existing reserved record.
