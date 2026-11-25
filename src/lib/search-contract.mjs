@@ -170,6 +170,9 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   const physician=source.get(physicianId);
   const practice=resolvePhysicianPractice(graph,{origin});
   const clinic=practice&&source.get(practice['@id']);
+  // Only the dedicated practice page publishes both directions of this relationship.
+  // Source these additional facts from the canonical graph, not page overrides.
+  const clinicPage=Boolean(clinic&&primaryPageId===practice['@id']+'#webpage'&&primary.mainEntity?.['@id']===practice['@id']);
   const home=values(primary['@type']).includes('ProfilePage')&&primary.url===origin+'/';
   const physicianProfile=values(primary['@type']).includes('ProfilePage')&&primary.mainEntity?.['@id']===physicianId;
   const topicIds=new Set([...values(primary.mainEntity),...values(primary.about)].map(ref=>ref?.['@id']).filter(Boolean));
@@ -261,8 +264,8 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
     if(isTopicOnly)types=types.filter(type=>type!=='Service');
     let keys;
     if(id===primaryPageId)keys=secondaryArticleId?[...searchPage,'hasPart']:searchPage;
-    else if(id===physicianId)keys=searchPerson;
-    else if(node===clinic)keys=searchClinic;
+    else if(id===physicianId)keys=clinicPage?[...searchPerson,'workLocation']:searchPerson;
+    else if(node===clinic)keys=clinicPage?[...searchClinic,'founder','owner']:searchClinic;
     else if(types.includes('Article'))keys=searchArticle;
     else if(types.includes('Service'))keys=id===primary.mainEntity?.['@id']?[...searchService,'offers']:searchService;
     // The exact offer resolves here without cycling back to its service or physician.
@@ -289,7 +292,11 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
   if(!home)for(const id of [...visibleQuestionIds,...visibleMediaIds])resolve(id);
   for(let i=0;i<queue.length;i++) {
     const {node,output,keys}=queue[i];
-    for(const key of keys)if(key in node) {
+    for(const key of keys) {
+      const canonicalRelationship=clinicPage&&((node['@id']===physicianId&&key==='workLocation')||
+        (node['@id']===practice['@id']&&['founder','owner'].includes(key)));
+      const value=canonicalRelationship?truth.get(node['@id'])?.[key]:node[key];
+      if(value===undefined)continue;
       // Google's ProfilePage dates require DateTime. A recorded calendar date
       // remains authoritative in the canonical graph; never invent its hour.
       if(home&&node['@id']===primaryPageId&&['dateCreated','dateModified'].includes(key)&&
@@ -309,7 +316,7 @@ export function projectBoundedSearchDocument(document,{graph,primaryPageId,langu
       }
       else if((key==='image'||key==='logo')&&(node['@id']===physicianId||node===clinic))item=imageUrls(node[key]);
       else if((key==='width'||key==='height')&&node[key]?.['@id'])item=node[key].value??source.get(node[key]['@id'])?.value??OMIT;
-      else item=normalized(node[key],key);
+      else item=normalized(value,key);
       if(item!==OMIT)output[key]=item;
     }
     // The last chapter may end implicitly at the video's recorded duration.
@@ -361,7 +368,11 @@ export function projectHomeSearchGraph(graph,origin='https://www.ghezelbaash.ir'
   return result;
 }
 
-/** Reject both identifier cycles and excessive per-path tree expansion. */
+/** Reject unexpected identifier cycles and excessive per-path tree expansion.
+ * The dedicated practice page may retain its canonical owner/founder backlinks.
+ * These exact bare references count as terminal references for expansion only;
+ * the published JSON-LD still contains the complete named edges.
+ */
 export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedObjects=4096,maxDepth=12}={}) {
   const nodes=document['@graph'];
   if(!Array.isArray(nodes)||!nodes.length||nodes.length>maxNodes)throw new Error('Search graph node budget exceeded');
@@ -369,7 +380,10 @@ export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedOb
   if(byId.size!==nodes.length)throw new Error('Duplicate Search entity identifier');
   const rootId=nodes[0]['@id'];
   const origin=new URL(rootId).origin;
-  const {personId}=physicianIdentityIds(origin);
+  const {personId,practiceId}=physicianIdentityIds(origin);
+  const practicePage=rootId===practiceId+'#webpage'&&
+    nodes[0].mainEntity?.['@id']===practiceId&&
+    Boolean(resolvePhysicianPractice(document,{origin}));
   // Each answer can repeat the already present physician identity. Keep the
   // original budget for the rest of the graph and bound the full expansion.
   const maxWithAnswerAuthors=2*maxExpandedObjects;
@@ -385,7 +399,13 @@ export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedOb
   }
   for(const node of nodes){
     const out=[],answer=values(node['@type']).includes('Answer');
-    for(const [key,item]of Object.entries(node))if(key!=='@id'&&key!=='@type')refs(item,out,answer&&key==='author');
+    for(const [key,item]of Object.entries(node))if(key!=='@id'&&key!=='@type') {
+      const reciprocal=practicePage&&node['@id']===practiceId&&['founder','owner'].includes(key)&&
+        values(item).length>0&&values(item).every(ref=>ref&&typeof ref==='object'&&
+          Object.keys(ref).length===1&&ref['@id']===personId&&byId.has(personId));
+      if(reciprocal)for(const ref of values(item))out.push({target:ref['@id'],terminal:true});
+      else refs(item,out,answer&&key==='author');
+    }
     edges.set(node['@id'],out);
   }
   const memo=new Map(),active=new Set();
@@ -393,8 +413,8 @@ export function assertBoundedSearchDocument(document,{maxNodes=256,maxExpandedOb
     if(active.has(id))throw new Error('Cyclic Search entity reference: '+[...active,id].join(' -> '));
     if(memo.has(id))return memo.get(id);
     active.add(id);let count=1,baseCount=1,height=0;
-    for(const {target,answerAuthor} of edges.get(id)){
-      const child=expanded(target);
+    for(const {target,answerAuthor,terminal} of edges.get(id)){
+      const child=terminal?{count:1,baseCount:1,height:0}:expanded(target);
       count+=child.count;
       if(!answerAuthor)baseCount+=child.baseCount;
       height=Math.max(height,child.height+1);
