@@ -1,37 +1,31 @@
-# Current website source freeze — main
+# Website source freeze — reviewed successor, deployment pending
 
-**Single authoritative website source:** GitHub `main` in `medicaldoctor91/doctor-ghezelbaash`.
+**Authoritative website source:** GitHub `main` in `medicaldoctor91/doctor-ghezelbaash`.
 
-**Published application baseline (immutable Git commit):**
-`824c02f4bd495cdbc3091b7b3911a5470fd9104b`
+## Reviewed successor checkpoint
 
-**Published application Git tree:**
-`03fba3db6f818677ab38e6702bbf111e79e2c6d7`
+- Application commit: `82d9805e0d9bff0c736cfa76c0275d5050319d5c`
+- Exact Git tree: `b94b00eedd08ab20f0858bba01878dad6e3dd501`
+- Application files excluding the four freeze-management files: 287
+- Validation: [successful full build and 72-page regression, RDF, machine outputs and DOI policy](https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/45702641869).
+- Scope: the reciprocal physician/practice Search JSON-LD references on the dedicated clinic page, regression tests and validation workflow. No canonical scientific facts, package version or archive DOI changes.
 
-**Source-management promotion:** PR #500 brought the published source into `main` without editing any website source bytes. The promoted management files are
-`.github/scripts/source_freeze.py` and this documentation. The latest validated main head at the time of consolidation was
-`6cdf7be7d16813c7eea0916e73c7079eb65ab4b4`.
+The successor is a reviewed source checkpoint, **not a statement that it is deployed**. PR #502 is the proposed promotion. Before deployment, reverify the actual production commit and the final approved source. Do not change the archive or external dataset releases for this HTML-projection-only correction.
 
-**Actual Cloudflare production:** project `doctor-ghezelbaash`, branch `main`, deployed source commit
-`824c02f4bd495cdbc3091b7b3911a5470fd9104b`, deployment
-`9730f5cb-d6f8-4ba2-9413-bd64eb700bbb`. Automatic production and preview deployment are disabled.
+## Previous production checkpoint (preserved)
 
-## Freeze policy
+- Commit: `824c02f4bd495cdbc3091b7b3911a5470fd9104b`
+- Tree: `03fba3db6f818677ab38e6702bbf111e79e2c6d7`
+- Previously recorded Cloudflare deployment: `9730f5cb-d6f8-4ba2-9413-bd64eb700bbb`
+- Historical tag, if present: `source-frozen-2026-11-22-production-824c02f4`.
 
-1. The production website baseline is exactly the published commit/tree above. The `source_freeze.py` verifier pins its tree and 286 application source blobs, and allows only the four specified freeze-management files to differ.
-2. `main` is the **only authoritative website freeze reference**. Historical commits remain available in Git history but are not additional current baselines.
-3. The active `Frozen source main` GitHub ruleset protects `main`: deletion and non-fast-forward updates are prohibited; changes require a pull request and a passing `Frozen source integrity` status check. A separate GitHub administrator-level **Restrict updates** rule would be necessary for a total lock against even compliant pull requests.
-4. The `Frozen source integrity` workflow verifies source bytes and does not deploy. To validate locally:
-   ```sh
-   python3 .github/scripts/source_freeze.py check
-   python3 tests/source-freeze.test.py
-   ```
-5. Before any future deployment, verify its source is descended from the published commit, with explicitly reviewed deltas and a successful integrity/build regression suite. Do not force-push `main`, re-label historical releases as current, or silently deploy from unrelated branches.
+The previous commit/tree and tag must not be rewritten or deleted. Production remains independently verified; automatic production and preview deployment were disabled at the prior freeze.
 
-## Cleanup boundary
+## Freeze and authorized promotion policy
 
-Earlier website freeze tags, archive branches and superseded website-"final" GitHub releases are **not authoritative**. Removing repository refs, releases, or legacy rulesets requires GitHub repository administrator permissions and must be performed separately. This document alone does not delete GitHub objects.
-
-Versioned scientific and dataset releases, published external records, Git commit history, and deployed Cloudflare artifacts are separate records and must not be destroyed as part of website freeze consolidation.
-
-**No site content, HTML, JSON-LD graph, SEO metadata, or Cloudflare deployment was changed by this documentation consolidation.**
+1. The successor source verifier pins the exact reviewed commit/tree and application blobs. It rejects other changes and source-sensitive additions; the existing four management-file exceptions remain unchanged.
+2. `main` remains the only authoritative current source. The successor checkpoint is an immutable commit used to verify its application bytes, not a separate mutable source of truth.
+3. The active `Frozen source main` ruleset restricts updates, disallows deletion/non-fast-forward updates, and requires a PR plus the passing `Frozen source integrity` check. An authorized administrator may temporarily permit updates only for the reviewed promotion while retaining the other protections. Restore the full restriction immediately after promotion.
+4. The management workflow does not deploy. Run `python3 .github/scripts/source_freeze.py check` and `python3 tests/source-freeze.test.py`. Exact checkpoint recovery includes historical management bytes; use the current verifier from the authoritative source to validate that recovered checkout.
+5. Deploy only the approved main source after successful integrity/build checks and live baseline verification. Verify the live clinic JSON-LD and the other route outputs. Record the actual deployment only after confirmation.
+6. Keep version 1.3.6, both DOI bindings and all previously published scientific/dataset artifacts unchanged. No force push, archive rewrite, or unsolicited external platform publication.

@@ -14,7 +14,8 @@ export function physicianIdentityIds(origin='https://www.ghezelbaash.ir') {
 /**
  * Resolve the canonical sole-provider practice, never the first owned asset or
  * arbitrary LocalBusiness. Inspect the full authored graph: bounded Search
- * documents deliberately omit reciprocal owner/founder edges to stay acyclic.
+ * documents normally omit reciprocal owner/founder edges; the dedicated practice
+ * page preserves those exact references under its scoped expansion contract.
  * Return the original node without mutating it, or null when identity,
  * practice typing, or physician ownership does not agree.
  */

@@ -156,7 +156,7 @@ class FrozenSourceTests(unittest.TestCase):
         self.assertTrue(all(not (destination/name).exists() for name in freeze.MANAGEMENT_ADDITIONS))
         self.assertEqual(self.git('rev-parse', historical_tag).strip(), self.commit)
 
-    def test_checkpoint_containing_management_is_not_a_valid_materialization_contract(self):
+    def test_checkpoint_containing_management_materializes_exact_tree(self):
         for name in freeze.MANAGEMENT_ADDITIONS:
             self.write(name, 'management fixture\n')
         bad_checkpoint = self.commit_change()
@@ -164,8 +164,11 @@ class FrozenSourceTests(unittest.TestCase):
         self.git('tag', '-f', freeze.FROZEN_TAG, bad_checkpoint)
         with mock.patch.object(freeze, 'FROZEN_COMMIT', bad_checkpoint), mock.patch.object(freeze, 'FROZEN_TREE', tree):
             self.assertEqual(freeze.check(self.root)['status'], 'PASS')
-            with self.assertRaises(freeze.FreezeError):
-                freeze.materialize(Path(self.folder.name)/'invalid-recovery', self.root)
+            destination = Path(self.folder.name)/'management-checkpoint-recovery'
+            result = freeze.materialize(destination, self.root)
+            self.assertEqual(result['frozenCommit'], bad_checkpoint)
+            self.assertEqual(freeze._tree(destination, 'HEAD'), freeze._tree(self.root, bad_checkpoint))
+            self.assertEqual(freeze.check(destination)['status'], 'PASS')
 
     def test_changed_commit_and_moved_tag_fail(self):
         self.write('src/main.mjs', 'later source\n')

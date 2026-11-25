@@ -16,10 +16,12 @@ import subprocess
 import sys
 
 
-FROZEN_COMMIT = '824c02f4bd495cdbc3091b7b3911a5470fd9104b'
-FROZEN_TREE = '03fba3db6f818677ab38e6702bbf111e79e2c6d7'
-FROZEN_FILE_COUNT = 286
-FROZEN_TAG = 'source-frozen-2026-11-22-production-824c02f4'
+# Reviewed successor checkpoint: the validated application tree, not a claim of deployment.
+# Historical production checkpoint 824c02f4bd495cdbc3091b7b3911a5470fd9104b remains in Git history.
+FROZEN_COMMIT = '82d9805e0d9bff0c736cfa76c0275d5050319d5c'
+FROZEN_TREE = 'b94b00eedd08ab20f0858bba01878dad6e3dd501'
+FROZEN_FILE_COUNT = 287
+FROZEN_TAG = 'source-frozen-physician-practice-schema-82d9805e'
 ROOT = Path(__file__).resolve().parents[2]
 MANAGEMENT_ADDITIONS = frozenset({
     '.github/scripts/source_freeze.py',
@@ -222,7 +224,10 @@ def materialize(destination: Path, root: Path = ROOT) -> dict:
     git(root, 'worktree', 'add', '--detach', str(destination), FROZEN_COMMIT)
     if git(destination, 'rev-parse', 'HEAD').decode().strip() != FROZEN_COMMIT:
         raise FreezeError('Materialized checkout has the wrong source identity')
-    if _tree(destination, 'HEAD') != _baseline(root):
+    # The successor checkpoint includes freeze-management files. Verify its
+    # entire exact tree (including those historical management bytes), then
+    # use this current verifier for the application/working-tree check.
+    if _tree(destination, 'HEAD') != _tree(root, FROZEN_COMMIT):
         raise FreezeError('Materialized checkout differs from the frozen source')
     if git(destination, 'status', '--porcelain', '--untracked-files=all'):
         raise FreezeError('Materialized checkout is not clean')

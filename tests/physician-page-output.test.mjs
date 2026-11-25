@@ -155,8 +155,15 @@ test('every built public HTML page preserves its author, main subject, localized
       assert.equal(actual.get(practiceId)[key],truthText(clinic[key],native?language:'en'),resource.path+' practice '+key);
     }
     assert.deepEqual(ids(actual.get(personId).owns),[practiceId],resource.path+' physician ownership');
-    assert.equal(actual.get(practiceId).owner,undefined,resource.path+' avoids inverse ownership expansion');
-    assert.equal(actual.get(practiceId).founder,undefined,resource.path+' avoids inverse founder expansion');
+    if(resource.pagePurpose==='clinic-profile' && page['@id']===practiceId+'#webpage') {
+      assert.deepEqual(ids(actual.get(practiceId).owner),[personId],resource.path+' preserves canonical ownership backlink');
+      assert.deepEqual(ids(actual.get(practiceId).founder),[personId],resource.path+' preserves canonical founder backlink');
+      assert.deepEqual(ids(actual.get(personId).workLocation),ids(canonical.get(personId).workLocation),resource.path+' preserves canonical work locations');
+    } else {
+      assert.equal(actual.get(practiceId).owner,undefined,resource.path+' avoids unrelated inverse ownership expansion');
+      assert.equal(actual.get(practiceId).founder,undefined,resource.path+' avoids unrelated inverse founder expansion');
+      assert.equal(actual.get(personId).workLocation,undefined,resource.path+' avoids unrelated work-location expansion');
+    }
     assert.doesNotThrow(()=>assertBoundedSearchDocument(document),resource.path);
     // The homepage is verified above as the full graph. Focused JSON-LD
     // projections are checked here and by the Search contract tests.

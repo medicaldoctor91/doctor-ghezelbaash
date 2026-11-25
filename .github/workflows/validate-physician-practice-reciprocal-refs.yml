@@ -1,0 +1,60 @@
+name: Validate scoped physician-practice schema correction
+on:
+  push:
+    branches: [schema/physician-practice-reciprocal-refs]
+permissions:
+  contents: read
+concurrency:
+  group: physician-practice-reciprocal-refs-validation
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ARCHIVE_SOURCE_COMMIT: eafb138d596a91504ed0af66e2557f52848e36b6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies and validation libraries
+        run: |
+          npm ci
+          python -m pip install --disable-pip-version-check 'rdflib>=7,<8' 'pyshacl>=0.30,<1' 'mlcroissant==1.1.1' 'PyLD>=2,<4'
+      - name: Build and validate all pages without publication
+        run: |
+          npm run build
+          node --test --test-concurrency=1 tests/*.test.mjs
+          python tests/validate_machine_resources.py dist
+          python tests/validate_canonical_invariants.py dist
+          python tests/validate_platform_bundle.py dist --no-query --rdf
+          python tests/active-home-canonical-projection.test.py
+      - name: Guard version and DOI policy
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          package=json.loads(Path('package.json').read_text())
+          assert package['version']=='1.3.6'
+          policy=json.loads(Path('dist/doi-policy.json').read_text())
+          assert policy['currentArchive']['doi']=='10.5281/zenodo.24354791'
+          assert policy['currentArchive']['contentBaseline']=='1.3.6'
+          assert policy['concept']['doi']=='10.5281/zenodo.18765168'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reciprocal-practice-schema-validation
+          path: |
+            dist/release-provenance.json
+            dist/integrity-manifest.json
+          if-no-files-found: warn

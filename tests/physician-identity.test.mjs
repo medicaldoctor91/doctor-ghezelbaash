@@ -84,6 +84,55 @@ test('a projected practice template keeps the clinical identity fields validated
   assert.doesNotThrow(()=>assertBoundedSearchDocument(result));
 });
 
+test('dedicated practice Search graph preserves canonical reciprocal references without affecting other routes',()=>{
+  const graph=fixture(),canonical=byId(graph);
+  const clinicPageId=practiceId+'#webpage';
+  const cityId=origin+'/city';
+  const clinicPage={'@id':clinicPageId,'@type':'MedicalWebPage',mainEntity:{'@id':practiceId},about:[{'@id':personId},{'@id':practiceId}]};
+  graph['@graph'].push(clinicPage,{'@id':cityId,'@type':'City',name:'City'});
+  canonical.get(personId).workLocation=[{'@id':practiceId},{'@id':cityId}];
+  const before=structuredClone(graph);
+  const document=structuredClone(graph);
+  // Deliberately omit the relationships from the focused templates. They must
+  // come from the authoritative graph, not require duplicate authored facts.
+  const templates=byId(document);
+  delete templates.get(personId).workLocation;
+  delete templates.get(practiceId).owner;
+  delete templates.get(practiceId).founder;
+  const projected=projectBoundedSearchDocument(document,{graph,primaryPageId:clinicPageId,language:'en'});
+  const actual=byId(projected);
+  assert.deepEqual(actual.get(personId).workLocation,canonical.get(personId).workLocation);
+  for(const key of ['owner','founder'])assert.deepEqual(actual.get(practiceId)[key],canonical.get(practiceId)[key]);
+  assert.deepEqual(ids(actual.get(personId).owns),[practiceId]);
+  assert.deepEqual(ids(actual.get(personId).practicesAt),[practiceId]);
+  assert.equal(actual.get(clinicPageId).mainEntity['@id'],practiceId);
+  assert.notEqual(personId,practiceId);
+  assert.doesNotThrow(()=>assertBoundedSearchDocument(projected));
+  assert.throws(()=>assertBoundedSearchDocument(projected,{maxExpandedObjects:1}),/expansion budget/);
+  assert.throws(()=>assertBoundedSearchDocument(projected,{maxDepth:0}),/depth budget/);
+  assert.throws(()=>assertBoundedSearchDocument(projected,{maxNodes:1}),/node budget/);
+  for(const change of [
+    g=>{byId(g).get(practiceId).employee={'@id':personId};},
+    g=>{byId(g).get(practiceId).owner={'@id':personId,name:'Not a bare reference'};},
+    g=>{byId(g).get(practiceId).founder=[{'@id':personId},{'@id':cityId}];},
+    g=>{g['@graph'][0]['@id']=origin+'/different#webpage';},
+  ]) {
+    const broken=structuredClone(projected);change(broken);
+    assert.throws(()=>assertBoundedSearchDocument(broken),/Cyclic Search entity reference/);
+  }
+  const dangling=structuredClone(projected);
+  byId(dangling).get(practiceId).founder={'@id':origin+'/missing-founder'};
+  assert.throws(()=>assertBoundedSearchDocument(dangling),/Unresolved local Search entity/);
+  const duplicate=structuredClone(projected);
+  duplicate['@graph'].push(structuredClone(actual.get(personId)));
+  assert.throws(()=>assertBoundedSearchDocument(duplicate),/Duplicate Search entity identifier/);
+  const other=byId(projectBoundedSearchDocument(document,{graph,primaryPageId:origin+'/treatment#webpage',language:'en'}));
+  assert.equal(other.get(personId).workLocation,undefined);
+  assert.equal(other.get(practiceId).owner,undefined);
+  assert.equal(other.get(practiceId).founder,undefined);
+  assert.deepEqual(graph,before,'canonical graph remains byte-equivalent as data');
+});
+
 test('the recorded homepage projection preserves convergence IDs and acyclic ownership inside the serialized byte budget',t=>{
   const graph=SOURCE.graph,before=structuredClone(graph),canonical=byId(graph);
   const {personId:physicianId,practiceId:clinicId}=physicianIdentityIds(SOURCE.canonicalOrigin);
@@ -138,6 +187,14 @@ test('all declared routes preserve the physician author, page subject and locali
     assert.equal(projected['@graph'].filter(node=>values(node['@type']).includes('ProfilePage')).length,home||biography?1:0,resource.path);
     assert.deepEqual(ids(primary.mainEntity),ids(page.mainEntity),resource.path+' mainEntity');
     assert.ok(actual.has(clinicId),resource.path+' includes the same personal practice');
+    if(primaryPageId===clinicId+'#webpage') {
+      assert.deepEqual(actual.get(physicianId).workLocation,canonical.get(physicianId).workLocation);
+      for(const key of ['owner','founder'])assert.deepEqual(actual.get(clinicId)[key],clinic[key]);
+    } else {
+      assert.equal(actual.get(physicianId).workLocation,undefined,resource.path);
+      assert.equal(actual.get(clinicId).owner,undefined,resource.path);
+      assert.equal(actual.get(clinicId).founder,undefined,resource.path);
+    }
     for(const key of ['name','description'])if(key in clinic)
       assert.equal(actual.get(clinicId)[key],truthText(clinic[key],language),resource.path+' practice '+key);
     for(const node of projected['@graph'])if(values(node['@type']).some(type=>['Role','Occupation'].includes(type))) {
