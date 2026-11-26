@@ -61,7 +61,7 @@ test('complete JSON-LD and visible physician evidence fit with response headers 
   collectPrefix(criticalContent);
   const completeGraph=elements.find(node=>node.tagName==='script'&&attr(node,'id')==='canonical-entity-graph');
   assert.deepEqual(JSON.parse(contents(completeGraph)),transformed);
-  assert.ok(elements.some(node=>node.tagName==='h1'&&contents(node).includes('قزلباش')));
+  assert.ok(elements.some(node=>node.tagName==='h1'&&attr(node,'id')==='saeed-ghezelbash'));
   const links=elements.filter(node=>node.tagName==='a').map(node=>attr(node,'href'));
   for(const href of [
     'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e',
