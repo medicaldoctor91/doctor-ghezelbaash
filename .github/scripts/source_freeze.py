@@ -18,10 +18,10 @@ import sys
 
 # Reviewed successor checkpoint: the validated application tree, not a claim of deployment.
 # Historical production checkpoint 824c02f4bd495cdbc3091b7b3911a5470fd9104b remains in Git history.
-FROZEN_COMMIT = '9bc6d4ce2b9051879332f9395d2925e99a217514'
-FROZEN_TREE = '74156f7c541210218effd6feec231ee8fe050503'
+FROZEN_COMMIT = '39f0db9f390be1743e787956350e89be3cf713ab'
+FROZEN_TREE = 'b7b5baf53574c2933587239f2f37fedcbeba0cda'
 FROZEN_FILE_COUNT = 288
-FROZEN_TAG = 'source-frozen-physician-evidence-9bc6d4ce'
+FROZEN_TAG = 'source-frozen-physician-evidence-39f0db9f'
 ROOT = Path(__file__).resolve().parents[2]
 MANAGEMENT_ADDITIONS = frozenset({
     '.github/scripts/source_freeze.py',

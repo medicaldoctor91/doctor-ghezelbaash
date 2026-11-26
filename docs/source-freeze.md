@@ -4,8 +4,8 @@
 
 ## Successor checkpoint
 
-- Application commit: `9bc6d4ce2b9051879332f9395d2925e99a217514`
-- Exact Git tree: `74156f7c541210218effd6feec231ee8fe050503`
+- Application commit: `39f0db9f390be1743e787956350e89be3cf713ab`
+- Exact Git tree: `b7b5baf53574c2933587239f2f37fedcbeba0cda`
 - Application files excluding the four freeze-management files: 288
 - Scope: lossless homepage JSON-LD compaction, early identity metadata, physician profile Microdata, and scoped research and workshop evidence in the corresponding HTML routes.
 - Source validation and production deployment are recorded separately. Deploy from `main` after integrity checks and a live baseline check.
