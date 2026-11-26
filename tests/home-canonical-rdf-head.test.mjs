@@ -34,6 +34,8 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
     attr(node,'content')==='دکتر سعید قزلباش'));
   const graph=JSON.parse(contents(full[0]));
   assert.ok(graph['@context']&&Array.isArray(graph['@graph']));
+  assert.equal(graph['@context'].site,'https://www.ghezelbaash.ir/');
+  assert.match(contents(full[0]),/"@id":"site:country-iran"/);
   assert.ok(graph['@graph'].length>=1900,'no missing canonical nodes');
   assert.deepEqual(graph,transformed,'every canonical entity must appear in the deterministic, semantics-preserving full JSON-LD serialization');
   assert.equal(graph['@graph'].length,exported['@graph'].length);

@@ -4,6 +4,7 @@ function escapeScriptText(text) {
   return text.replaceAll('<','\\u003c').replaceAll('\u2028','\\u2028').replaceAll('\u2029','\\u2029');
 }
 
+
 /** Safe for Astro set:html and HTML's raw-text script parser. */
 export function serializeInlineJsonLd(value) {
   return escapeScriptText(JSON.stringify(value));
@@ -110,7 +111,12 @@ export function serializeGoogleCompatibleCanonicalGraph(graph, { compactHomepage
     for (const child of Object.values(value)) visit(child);
   }
   visit(compact['@graph']);
-  if (compactHomepageReferences) compactInternalReferences(compact['@graph'], uriTerms);
+  if (compactHomepageReferences) {
+    if (context.site !== 'https://www.ghezelbaash.ir/')
+      throw new Error('Unexpected homepage IRI prefix');
+    // Compact IRIs expand without the HTML document base.
+    compactInternalReferences(compact['@graph'], uriTerms);
+  }
   return serializeInlineJsonLd(compact);
 }
 
@@ -141,7 +147,7 @@ function compactInternalReferences(nodes, urlProperties) {
     const id = value['@id'];
     if (Object.keys(value).length === 1 && typeof id === 'string' &&
         id.startsWith(origin + '/') && !fixedIds.has(id) && !urlFields.has(property)) {
-      value['@id'] = id.slice(origin.length);
+      value['@id'] = 'site:' + id.slice(origin.length + 1);
       return;
     }
     for (const [key, child] of Object.entries(value)) visit(child, key);
