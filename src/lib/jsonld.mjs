@@ -54,7 +54,7 @@ export function serializeCanonicalGraph(graph) {
  * Explicit @id node objects avoid the 18 term-level @id coercions reported
  * by Google; short Schema.org term aliases keep the active graph inside 2MB.
  */
-export function serializeGoogleCompatibleCanonicalGraph(graph) {
+export function serializeGoogleCompatibleCanonicalGraph(graph, { compactHomepageReferences = false } = {}) {
   const originalContext = graph['@context'];
   if (originalContext?.['@vocab'] !== 'https://schema.org/')
     throw new Error('Refusing unexpected JSON-LD vocabulary');
@@ -110,5 +110,44 @@ export function serializeGoogleCompatibleCanonicalGraph(graph) {
     for (const child of Object.values(value)) visit(child);
   }
   visit(compact['@graph']);
+  if (compactHomepageReferences) compactInternalReferences(compact['@graph'], uriTerms);
   return serializeInlineJsonLd(compact);
+}
+
+function compactInternalReferences(nodes, urlProperties) {
+  const origin = 'https://www.ghezelbaash.ir';
+  const personId = origin + '/#saeed-ghezelbash';
+  const clinicId = origin + '/dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
+  const fixedIds = new Set([personId, clinicId, origin + '/webpage', origin + '/']);
+  const fixedNodes = new Set(fixedIds);
+  const protectedTypes = new Set([
+    'ProfilePage', 'ScholarlyArticle', 'EducationalOccupationalCredential',
+    'PhysiciansOffice', 'MedicalClinic',
+  ]);
+  const person = nodes.find(node => node['@id'] === personId);
+  if (!person) throw new Error('Homepage reference compaction requires the canonical physician');
+  for (const field of ['identifier','hasCredential','hasOccupation','image','alumniOf','medicalSpecialty','nationality','address']) {
+    for (const value of [person[field]].flat()) {
+      if (value?.['@id']) fixedNodes.add(value['@id']);
+    }
+  }
+  const urlFields = new Set(urlProperties);
+  function visit(value, property) {
+    if (!value || typeof value !== 'object' || '@context' in value || '@value' in value) return;
+    if (Array.isArray(value)) {
+      for (const entry of value) visit(entry, property);
+      return;
+    }
+    const id = value['@id'];
+    if (Object.keys(value).length === 1 && typeof id === 'string' &&
+        id.startsWith(origin + '/') && !fixedIds.has(id) && !urlFields.has(property)) {
+      value['@id'] = id.slice(origin.length);
+      return;
+    }
+    for (const [key, child] of Object.entries(value)) visit(child, key);
+  }
+  for (const node of nodes) {
+    if (fixedNodes.has(node['@id']) || [node['@type']].flat().some(type => protectedTypes.has(type))) continue;
+    visit(node);
+  }
 }

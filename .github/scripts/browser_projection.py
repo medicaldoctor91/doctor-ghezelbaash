@@ -443,7 +443,8 @@ def require_current_full_semantic_jsonld(graph_path, html):
     assert full['id']=='canonical-entity-graph' and full['inHead'] and not full['inBody']
     assert full['end'] < CRAWL_PREFIX_BYTES, 'Full RDF falls outside the Googlebot 2MB retrieval window'
     assert full['end'] < payload.index(b'</head>'), 'Complete JSON-LD must precede visible HTML'
-    assert full['start'] < payload.index(b'<title>'), 'Complete RDF must precede page title'
+    for marker in (b'<title>', b'<meta name="description"', b'<link rel="canonical"'):
+        assert 0 < payload.index(marker) < full['start'], 'Essential page metadata must precede the graph'
     assert payload.index(b'<body') > full['end'], 'RDF must be received before text'
     assert b'<script id="schema-core-mainentity" type="application/ld+json">' not in payload, (
         'Partial profile projection may not replace complete active graph')
@@ -468,7 +469,7 @@ def require_current_full_semantic_jsonld(graph_path, html):
 import fs from 'node:fs';
 import {serializeGoogleCompatibleCanonicalGraph} from './src/lib/jsonld.mjs';
 const graph=JSON.parse(fs.readFileSync(0,'utf8'));
-process.stdout.write(serializeGoogleCompatibleCanonicalGraph(graph));
+process.stdout.write(serializeGoogleCompatibleCanonicalGraph(graph,{compactHomepageReferences:true}));
 """
     expected=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,
                             input=json.dumps(original,ensure_ascii=False),text=True,
@@ -490,7 +491,7 @@ def require_current_active_head_jsonld(graph_path, html):
     the stand-alone graph.jsonld. Historical archive validation deliberately
     keeps its separate version-specific contracts.
     """
-    proof = validate_home_html(graph_path, html)
+    proof = require_current_full_semantic_jsonld(graph_path, html)
     assert proof['status'] == 'PASS', 'Current homepage projection failed'
     assert proof['canonicalGraphStorage'] == 'application/ld+json#canonical-entity-graph', (
         '1.3.6 MUST publish the full active canonical graph in HEAD, not a legacy inert projection')
