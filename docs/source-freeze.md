@@ -2,24 +2,20 @@
 
 **Authoritative website source:** GitHub `main` in `medicaldoctor91/doctor-ghezelbaash`.
 
-## Reviewed successor checkpoint
+## Successor checkpoint
 
-- Application commit: `82d9805e0d9bff0c736cfa76c0275d5050319d5c`
-- Exact Git tree: `b94b00eedd08ab20f0858bba01878dad6e3dd501`
-- Application files excluding the four freeze-management files: 287
-- Validation: [successful full build and 72-page regression, RDF, machine outputs and DOI policy](https://github.com/medicaldoctor91/doctor-ghezelbaash/actions/runs/45702641869).
-- Scope: the reciprocal physician/practice Search JSON-LD references on the dedicated clinic page, regression tests and validation workflow. No canonical scientific facts, package version or archive DOI changes.
+- Application commit: `c4abc2978c596ba03ac64401f0a0695829a59ac9`
+- Exact Git tree: `e795dfa5204dc4e7468766d24cc2ff01dba1d62b`
+- Application files excluding the four freeze-management files: 288
+- Scope: lossless homepage JSON-LD compaction, early identity metadata, physician profile Microdata, and scoped research and workshop evidence in the corresponding HTML routes.
+- Source validation and production deployment are recorded separately. Deploy from `main` after integrity checks and a live baseline check.
 
-The successor is a reviewed source checkpoint, **not a statement that it is deployed**. PR #502 is the proposed promotion. Before deployment, reverify the actual production commit and the final approved source. Do not change the archive or external dataset releases for this HTML-projection-only correction.
+## Previous checkpoints (preserved)
 
-## Previous production checkpoint (preserved)
-
-- Commit: `824c02f4bd495cdbc3091b7b3911a5470fd9104b`
-- Tree: `03fba3db6f818677ab38e6702bbf111e79e2c6d7`
-- Previously recorded Cloudflare deployment: `9730f5cb-d6f8-4ba2-9413-bd64eb700bbb`
-- Historical tag, if present: `source-frozen-2026-11-22-production-824c02f4`.
-
-The previous commit/tree and tag must not be rewritten or deleted. Production remains independently verified; automatic production and preview deployment were disabled at the prior freeze.
+- Production commit before this change: `046df540af0752eb5dd51b3ae4af7ce80c90eef8` (Cloudflare deployment `3c52611c-5d94-49b4-8cb3-b04fdf7837c3`).
+- Physician practice schema checkpoint: `82d9805e0d9bff0c736cfa76c0275d5050319d5c` (tree `b94b00eedd08ab20f0858bba01878dad6e3dd501`).
+- Historical production checkpoint: `824c02f4bd495cdbc3091b7b3911a5470fd9104b` (tree `03fba3db6f818677ab38e6702bbf111e79e2c6d7`).
+- Keep all historical references intact. Production deployment is explicit.
 
 ## Freeze and authorized promotion policy
 
@@ -27,5 +23,5 @@ The previous commit/tree and tag must not be rewritten or deleted. Production re
 2. `main` remains the only authoritative current source. The successor checkpoint is an immutable commit used to verify its application bytes, not a separate mutable source of truth.
 3. The active `Frozen source main` ruleset restricts updates, disallows deletion/non-fast-forward updates, and requires a PR plus the passing `Frozen source integrity` check. An authorized administrator may temporarily permit updates only for the reviewed promotion while retaining the other protections. Restore the full restriction immediately after promotion.
 4. The management workflow does not deploy. Run `python3 .github/scripts/source_freeze.py check` and `python3 tests/source-freeze.test.py`. Exact checkpoint recovery includes historical management bytes; use the current verifier from the authoritative source to validate that recovered checkout.
-5. Deploy only the approved main source after successful integrity/build checks and live baseline verification. Verify the live clinic JSON-LD and the other route outputs. Record the actual deployment only after confirmation.
+5. Deploy only the approved main source after successful integrity/build checks and live baseline verification. Verify the live homepage, biography and workshop JSON-LD and the other route outputs. Record the actual deployment only after confirmation.
 6. Keep version 1.3.6, both DOI bindings and all previously published scientific/dataset artifacts unchanged. No force push, archive rewrite, or unsolicited external platform publication.

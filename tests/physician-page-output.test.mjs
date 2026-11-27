@@ -39,7 +39,7 @@ test('every built public HTML page preserves its author, main subject, localized
     const raw=script.childNodes.map(node=>node.value??'').join(''),document=JSON.parse(raw);
     const actual=new Map(document['@graph'].map(node=>[node['@id'],node]));
     if(home) {
-      assert.deepEqual(document,JSON.parse(serializeGoogleCompatibleCanonicalGraph(SOURCE.graph)),'homepage publishes exactly the full canonical RDF graph');
+      assert.deepEqual(document,JSON.parse(serializeGoogleCompatibleCanonicalGraph(SOURCE.graph,{compactHomepageReferences:true})),'homepage publishes the full canonical RDF graph');
       assert.equal([...dom.childNodes].filter(node=>node.tagName==='html').length,1);
       assert.equal(document['@graph'].filter(node=>node['@id']===personId).length,1,'the canonical physician is unique even when other Persons occur in the complete graph');
       const page=actual.get(origin+'/webpage'),person=actual.get(personId);
@@ -63,6 +63,22 @@ test('every built public HTML page preserves its author, main subject, localized
     assert.equal(actual.get(personId).birthDate,'1991-05-29',resource.path+' publishes the existing canonical birth date');
     const routeProfiles=document['@graph'].filter(node=>values(node['@type']).includes('ProfilePage'));
     const biography=resource.pagePurpose==='professional-biography';
+    const papers=[
+      origin+'/article-omega-3-bipolar-i-2016',
+      origin+'/article-mdd-attachment-dissociation-trauma-2021',
+    ];
+    for(const id of papers){
+      if(biography){
+        assert.ok(ids(page.citation).includes(id));
+        assert.deepEqual(actual.get(id).author,values(canonical.get(id).author));
+        assert.ok(ids(actual.get(id).author).includes(personId));
+      }else assert.ok(!actual.has(id),resource.path+' does not publish unrelated papers');
+    }
+    const workshopId=origin+'/advanced-thread-lift-workshop-tehran-1403-11';
+    if(resource.path==='/video-saeed-ghezelbash-thread-lift-workshop'){
+      assert.deepEqual(ids(actual.get(ids(page.mainEntity)[0]).recordedAt),[workshopId]);
+      assert.deepEqual(ids(actual.get(workshopId).instructor),[personId]);
+    }else assert.ok(!actual.has(workshopId),resource.path+' does not publish the unrelated workshop');
     assert.equal(routeProfiles.length,home||biography?1:0,resource.path+' profile scope');
     profiles+=routeProfiles.length;
     if(biography)assert.equal(values(actual.get(personId).knowsAbout).length,5);

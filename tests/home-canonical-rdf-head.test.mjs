@@ -6,7 +6,7 @@ import {serializeCanonicalGraph,serializeGoogleCompatibleCanonicalGraph} from '.
 
 const html=readFileSync(new URL('../dist/index.html',import.meta.url),'utf8');
 const exported=JSON.parse(readFileSync(new URL('../dist/graph.jsonld',import.meta.url),'utf8'));
-const transformed=JSON.parse(serializeGoogleCompatibleCanonicalGraph(exported));
+const transformed=JSON.parse(serializeGoogleCompatibleCanonicalGraph(exported,{compactHomepageReferences:true}));
 const byteSize=text=>Buffer.byteLength(text,'utf8');
 const attr=(node,key)=>node?.attrs?.find(x=>x.name===key)?.value;
 const nodes=[];
@@ -24,8 +24,18 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
   assert.equal(attr(full[0],'type'),'application/ld+json');
   assert.equal(full[0].parentNode?.tagName,'head');
   assert.deepEqual(ldScripts,[full[0]],'homepage contains exactly one JSON-LD script');
+  const profile=nodes.find(node=>attr(node,'itemtype')==='https://schema.org/ProfilePage');
+  const mainEntity=nodes.find(node=>attr(node,'itemprop')==='mainEntity');
+  assert.equal(attr(profile,'itemid'),'https://www.ghezelbaash.ir/webpage');
+  assert.equal(mainEntity.parentNode,profile);
+  assert.equal(attr(mainEntity,'itemtype'),'https://schema.org/Person');
+  assert.equal(attr(mainEntity,'itemid'),'https://www.ghezelbaash.ir/#saeed-ghezelbash');
+  assert.ok(mainEntity.childNodes.some(node=>attr(node,'itemprop')==='name' &&
+    attr(node,'content')==='دکتر سعید قزلباش'));
   const graph=JSON.parse(contents(full[0]));
   assert.ok(graph['@context']&&Array.isArray(graph['@graph']));
+  assert.equal(graph['@context'].site,'https://www.ghezelbaash.ir/');
+  assert.match(contents(full[0]),/"@id":"site:country-iran"/);
   assert.ok(graph['@graph'].length>=1900,'no missing canonical nodes');
   assert.deepEqual(graph,transformed,'every canonical entity must appear in the deterministic, semantics-preserving full JSON-LD serialization');
   assert.equal(graph['@graph'].length,exported['@graph'].length);
@@ -34,7 +44,10 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
   assert.ok(html.toLowerCase().indexOf('<meta charset=')>=0);
   assert.ok(html.toLowerCase().indexOf('<meta charset=')<firstOpen,'first UTF-8 declaration before the large graph');
   assert.ok(html.indexOf('rel="stylesheet"')<firstOpen,'critical stylesheet can load before the large graph');
-  assert.ok(firstOpen<html.indexOf('<title>'),'full graph before document title and text');
+  for(const selector of ['<title>','<meta name="description"','<link rel="canonical"']){
+    const start=html.indexOf(selector);
+    assert.ok(start>0 && start<firstOpen,'essential metadata precedes the full graph: '+selector);
+  }
   assert.ok(fullEnd<html.indexOf('</head>'),'complete graph ends within HEAD');
   assert.ok(fullEnd<html.indexOf('<body'),'full graph precedes all visible text');
   assert.ok(!/<script id="canonical-entity-graph" type="application\/json">/.test(html));
@@ -42,10 +55,22 @@ test('homepage embeds the entire canonical RDF JSON-LD as the first standard sch
     assert.equal(scripts.filter(node=>attr(node,'id')===name).length,0,
       'homepage must not publish duplicate or partial JSON-LD projections');
 });
-test('the complete JSON-LD is fully received before the strict 2,000,000 byte Googlebot budget',()=>{
-  const first2MB=2_000_000;
-  const endByte=byteSize(html.slice(0,fullEnd));
-  assert.ok(endByte<first2MB,'entire active RDF graph must finish within the 2MB Googlebot budget; actual end '+endByte);
+test('complete JSON-LD and visible physician evidence fit with response headers and growth reserve',()=>{
+  const budget=2_000_000-8_192-32*1024;
+  const criticalContent=parse(Buffer.from(html).subarray(0,budget).toString('utf8'));
+  const elements=[];
+  function collectPrefix(node){elements.push(node);for(const child of node.childNodes??[])collectPrefix(child);}
+  collectPrefix(criticalContent);
+  const completeGraph=elements.find(node=>node.tagName==='script'&&attr(node,'id')==='canonical-entity-graph');
+  assert.deepEqual(JSON.parse(contents(completeGraph)),transformed);
+  assert.ok(elements.some(node=>node.tagName==='h1'&&attr(node,'id')==='saeed-ghezelbash'));
+  const links=elements.filter(node=>node.tagName==='a').map(node=>attr(node,'href'));
+  for(const href of [
+    'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e',
+    'https://orcid.org/0009-0001-9346-8475',
+    'https://pubmed.ncbi.nlm.nih.gov/27280013/',
+    'https://pubmed.ncbi.nlm.nih.gov/34574943/',
+  ]) assert.ok(links.includes(href),'visible evidence within the byte budget: '+href);
   assert.ok(byteSize(contents(full[0]))>1_000_000,'complete graph, not a tiny projection');
 });
 test('progressive reader can restore the canonical graph as a single standard HEAD script',()=>{
